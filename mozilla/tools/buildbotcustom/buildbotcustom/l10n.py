@@ -381,7 +381,6 @@ class Scheduler(BaseUpstreamScheduler):
     props = properties.Properties()
     props.updateFromProperties(self.properties)
     props.update(dict(app=app, locale=locale, tree=tree,
-                      MOZ_CO_LOCALES = self.locales[tree],
                       needsCheckout = True), 'Scheduler')
     bs = buildset.BuildSet(builders,
                            Scheduler.NoMergeStamp(changes=changes),

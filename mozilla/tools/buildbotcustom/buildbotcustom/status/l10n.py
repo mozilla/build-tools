@@ -65,8 +65,8 @@ class CompareBuild(base.HtmlResource):
     build = dict()
     for k in ['locale', 'app', 'buildername', 'buildnumber']:
       build[k] = self.build_status.getProperty(k)
-    startTime = round(self.build_status.getTimes()[0]) + time.timezone
-    build['starttime'] = datetime.fromtimestamp(startTime)
+    startTime = round(self.build_status.getTimes()[0])
+    build['starttime'] = datetime.utcfromtimestamp(startTime)
     return self.template.render(result=result, summary=summary, build=build)
 
 class CompareBuilder(base.HtmlResource):
@@ -209,5 +209,5 @@ class LatestL10n(StatusReceiverMultiService):
     return base.StatusReceiverMultiService.disownServiceParent(self)
   def getTimes(self, status):
     def toISO8601(t):
-      return datetime.fromtimestamp(round(t)+time.timezone).isoformat() + 'Z'
+      return datetime.utcfromtimestamp(round(t)).isoformat() + 'Z'
     return map(toISO8601, status.getTimes())

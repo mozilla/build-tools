@@ -99,15 +99,12 @@ class MakeCheckout(ShellCommand):
       return builder.SKIPPED
     
     app = self.getProperty('app')
-    try:
-      locales = ','.join(self.getProperty('MOZ_CO_LOCALES'))
-    except KeyError:
-      locales = 'all'
+    locale = self.getProperty('locale')
     
     if 'env' not in self.remote_kwargs:
       self.remote_kwargs['env'] = {}
     self.remote_kwargs['env']['MOZ_CO_PROJECT'] = app
-    self.remote_kwargs['env']['MOZ_CO_LOCALES'] = locales
+    self.remote_kwargs['env']['MOZ_CO_LOCALES'] = locale
     self.remote_kwargs['env']['LOCALES_CVSROOT'] = repositories.l10n.repository
     self.remote_kwargs['env']['CVS_RSH'] = 'ssh'
     

@@ -57,9 +57,9 @@ class Build(object):
       return False
     self.l10nchange = isL10n(bs)
     self.results = bs.getResults()
-    times = map(lambda t: round(t) + time.timezone, bs.getTimes())
-    self.starttime = datetime.fromtimestamp(times[0])
-    self.endtime = datetime.fromtimestamp(times[1])
+    times = map(round, bs.getTimes())
+    self.starttime = datetime.utcfromtimestamp(times[0])
+    self.endtime = datetime.utcfromtimestamp(times[1])
     summary = bs.getProperty('coverage-result')
     for k in ['completion', 'missing', 'keys', 'unchanged', 'changed',
               'missingInFiles', 'obsolete', 'total']:
