@@ -51,6 +51,8 @@ class Build(object):
     prefix = 'l10n/' + self.locale
     def isL10n(bs_):
       for c in bs_.getChanges():
+        if hasattr(c, 'locale') and c.locale is self.locale:
+          return True
         for f in c.files:
           if f.startswith(prefix):
             return True
