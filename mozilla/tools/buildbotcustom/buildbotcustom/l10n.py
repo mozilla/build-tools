@@ -284,7 +284,7 @@ class HgL10nDispatcher(L10nDispatcher):
     if not hasattr(change, 'locale'):
       log2.msg("I'm confused, the branches match, but this is not a locale change")
       return
-    doBuild = not change.files
+    doBuild = False
     for file in change.files:
       for basepath in self.paths:
         if file.startswith(basepath):
