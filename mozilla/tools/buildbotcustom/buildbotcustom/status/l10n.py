@@ -42,7 +42,6 @@ from buildbot.status.web.slaves import BuildSlavesResource
 from buildbot.status.web.changes import ChangesResource
 from buildbot.status.web.about import AboutBuildbot
 from buildbot.status.base import StatusReceiverMultiService
-from buildbot.sourcestamp import SourceStamp
 from buildbot.process.base import BuildRequest
 
 from mako.template import Template
@@ -55,6 +54,7 @@ from datetime import datetime
 from ConfigParser import ConfigParser
 
 from buildbotcustom.status import stats
+from buildbotcustom.l10n import Scheduler
 import simplejson
 
 dummycontent = '''<h1>Comparisons</h1>
@@ -168,7 +168,7 @@ function onSelectTree(elem) {
     locales = locales.split()
     builders = builders.split()
     r = "%s %s (forced)"
-    s = SourceStamp()
+    s = Scheduler.NoMergeStamp()
     log.msg("forcing " + ', '.join(locales) + " on " + app)
     count = 0
     for locale in locales:
