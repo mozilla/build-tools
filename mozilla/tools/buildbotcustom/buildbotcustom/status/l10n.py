@@ -42,14 +42,20 @@ from buildbot.status.web.slaves import BuildSlavesResource
 from buildbot.status.web.changes import ChangesResource
 from buildbot.status.web.about import AboutBuildbot
 from buildbot.status.base import StatusReceiverMultiService
+from buildbot.sourcestamp import SourceStamp
+from buildbot.process.base import BuildRequest
+
 from mako.template import Template
 from twisted.python import log
+from twisted.web.util import Redirect
 import os.path
 import urllib
 import time
 from datetime import datetime
+from ConfigParser import ConfigParser
 
 from buildbotcustom.status import stats
+import simplejson
 
 dummycontent = '''<h1>Comparisons</h1>
 The best way to find comparisons is to go through the <a href="waterfall">waterfall</a> or the <a href="/dashboard/">Dashboard</a>.'''
@@ -109,6 +115,78 @@ class Comparisons(base.HtmlResource):
 
     return base.HtmlResource.getChild(self, path, req)
 
+class ForceL10n(base.HtmlResource):
+  title = "Force l10n builds"
+  my_js = '''<script type="application/javascript">
+var trees = %s;
+function onSelectTree(elem) {
+  var tree = trees[elem.value];
+  document.getElementById('app').value = tree.app;
+  var tmpl = '<input name="builders" type="checkbox" value="BUILDER" checked>BUILDER<br>\\n';
+  var inner = '';
+  for (var i in tree.builders) {
+    inner += tmpl.replace(new RegExp('BUILDER', 'g'), tree.builders[i]);
+  }
+  document.getElementById('builders').innerHTML = inner;
+};
+</script>
+'''
+  def __init__(self):
+    base.HtmlResource.__init__(self)
+    cp = ConfigParser()
+    cp.read('l10nbuilds.ini')
+    self.trees = dict()
+    for section in cp.sections():
+      self.trees[section] = dict(app = cp.get(section, 'app'),
+                                 locales = cp.get(section, 'locales').split(),
+                                 builders = cp.get(section, 'builders').split())
+    self.template = None
+  def head(self, req):
+    return self.my_js % simplejson.dumps(self.trees);
+  def body(self, req):
+    content = '''<form method="POST" action="#">
+  <p>Trees:</p>'''
+    for tree in self.trees.keys():
+      content += '<input name="tree" type="radio" size="30" value="%(tree)s" onclick="onSelectTree(this)">%(tree)s<br>' % dict(tree = tree)
+    content += '''<input name="app" type="hidden" id="app">
+  <p>Builders:</p>
+  <p id="builders"></p>
+  Locales: <input name="locales" type="text" size="30"><br>
+  <input type="submit" value="Force">
+'''
+    return content
+  def render(self, req):
+    if req.method == "POST":
+      return self.force(req)
+    return base.HtmlResource.render(self, req)
+  def force(self, req):
+    c = self.getControl(req)
+    tree = req.args.get('tree', [''])[0]
+    app = req.args.get('app', [''])[0]
+    locales = req.args.get('locales', [''])[0]
+    builders = req.args.get('builders', [''])[0]
+    locales = locales.split()
+    builders = builders.split()
+    r = "%s %s (forced)"
+    s = SourceStamp()
+    log.msg("forcing " + ', '.join(locales) + " on " + app)
+    count = 0
+    for locale in locales:
+      for builder in builders:
+        req = BuildRequest(r % (tree, locale), s, builderName = builder)
+        req.properties.update(dict(app=app,
+                                   locale=locale,
+                                   tree=tree,
+                                   needsCheckout=True), "Forced")
+        try:
+          bc = c.getBuilder(builder)
+          bc.requestBuildSoon(req)
+        except Exception, e:
+          log.msg("failed to force build, " + str(e))
+        count += 1
+    return "Forced %i builds" % count
+  
+
 class WebStatus(baseweb.WebStatus):
   def setupUsualPages(self):
     self.putChild("waterfall", WaterfallStatusResource())
@@ -119,6 +197,8 @@ class WebStatus(baseweb.WebStatus):
     self.comparisons = Comparisons()
     self.putChild("compare", self.comparisons)
     self.putChild("statistics", stats.StatsResource())
+    if self.allowForce:
+      self.putChild("force-l10n", ForceL10n())
   def setupSite(self):
     htmldir = os.path.join(self.parent.basedir, "public_html")
     self.comparisons.loadTemplate(htmldir)
