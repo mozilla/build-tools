@@ -1,6 +1,7 @@
 import time
 from calendar import timegm
 from xml.dom import minidom, Node
+import operator
 
 from twisted.python import log, failure
 from twisted.internet import defer, reactor
@@ -159,6 +160,12 @@ def _parse_changes(query, lastChange):
         nameNode = i.getElementsByTagName("author")[0].childNodes[1]
         d["author"] = nameNode.firstChild.wholeText
         d["link"] = i.getElementsByTagName("link")[0].getAttribute("href")
+        files = filter(lambda e: 'file' in e.getAttribute('class').split(),
+                       i.getElementsByTagName('li'))
+        d["files"] = map(lambda e: reduce(operator.add,
+                                          map(lambda t:t.data, e.childNodes),
+                                          ''),
+                         files)
         if d["updated"] > lastChange:
             changes.append(d)
     changes.reverse() # want them in chronological order
@@ -259,7 +266,7 @@ class HgPoller(base.ChangeSource, BaseHgPoller):
         for change in change_list:
             adjustedChangeTime = change["updated"]
             c = changes.Change(who = change["author"],
-                               files = [], # sucks
+                               files = change["files"],
                                revision = change["changeset"],
                                comments = change["link"],
                                when = adjustedChangeTime,
@@ -291,7 +298,7 @@ class HgLocalePoller(BaseHgPoller):
         for change in change_list:
             adjustedChangeTime = change["updated"]
             c = changes.Change(who = change["author"],
-                               files = [], # sucks
+                               files = change["files"],
                                revision = change["changeset"],
                                comments = change["link"],
                                when = adjustedChangeTime,
