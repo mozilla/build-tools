@@ -284,7 +284,6 @@ class HgLocalePoller(BaseHgPoller):
         self.lastChange = time.time()
 
     def getData(self):
-        log.msg("Polling l10n Hg server at %s" % self.url)
         return getPage(self.url)
 
     def processData(self, query):
