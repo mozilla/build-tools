@@ -147,7 +147,8 @@ def configureDispatcher(config, section, scheduler):
       scheduler.addDispatcher(EnDispatcher(dirs, locales, builders,
                                            config.get(section, 'app'),
                                            config.get(section, 'mozilla'),
-                                           section))
+                                           section,
+                                           prefix = 'mozilla/'))
       log2.msg('both dispatchers added for ' + section)
     else:
       scheduler.addDispatcher(HgL10nDispatcher(dirs, locales, builders,
@@ -155,7 +156,11 @@ def configureDispatcher(config, section, scheduler):
                                                config.get(section, 'l10n'),
                                                section),
                               section, locales)
-      log2.msg('hg l10n dispatcher added for ' + section)
+      scheduler.addDispatcher(EnDispatcher(dirs, locales, builders,
+                                           config.get(section, 'app'),
+                                           config.get(section, 'mozilla'),
+                                           section))
+      log2.msg('both hg l10n dispatchers added for ' + section)
     buildermap = scheduler.parent.botmaster.builders
     for b in builders:
       try:
@@ -279,6 +284,15 @@ class HgL10nDispatcher(L10nDispatcher):
     if not hasattr(change, 'locale'):
       log2.msg("I'm confused, the branches match, but this is not a locale change")
       return
+    doBuild = not change.files
+    for file in change.files:
+      for basepath in self.paths:
+        if file.startswith(basepath):
+          doBuild = True
+          break
+    if not doBuild:
+      self.debug("dropping change %d, not our app" % change.number)
+      return
     self.parent.queueBuild(self.app, change.locale, self.builders, change,
                            tree = self.tree)
 
@@ -294,7 +308,7 @@ class EnDispatcher(IBaseDispatcher):
   """
   
   def __init__(self, paths, locales, builders, app,
-               branch = None, tree = None):
+               branch , tree , prefix = ''):
     self.locales = locales
     self.paths = paths
     self.builders = builders
@@ -303,8 +317,8 @@ class EnDispatcher(IBaseDispatcher):
     self.tree = tree
     self.parent = None
     self.log += '.en'
-    if tree:
-      self.log += '.' + tree
+    self.log += '.' + tree
+    self.prefix = prefix
 
   def setParent(self, parent):
     self.parent = parent
@@ -320,13 +334,14 @@ class EnDispatcher(IBaseDispatcher):
       return
     needsBuild = False
     for file in change.files:
-      if not file.startswith("mozilla/"):
+      if not file.startswith(self.prefix):
         self.debug("Ignoring change %d, not our rep" % change.number)
         return
+      file = file.replace(self.prefix, '', 1)
       modEnd = file.find('/locales/en-US/')
       if modEnd < 0:
         continue
-      basedir = file[len('mozilla/'):modEnd]
+      basedir = file[:modEnd]
       for bd in self.paths:
         if bd != basedir:
           continue
