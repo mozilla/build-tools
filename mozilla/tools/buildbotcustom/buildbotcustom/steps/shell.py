@@ -1,6 +1,7 @@
 from twisted.internet import defer, reactor
 from buildbot.process.buildstep import BuildStep
 from buildbot.steps.shell import ShellCommand, WithProperties
+from buildbot.steps.source import Mercurial
 from buildbot.process.buildstep import LoggingBuildStep, LoggedRemoteCommand
 from buildbot.status import builder
 from buildbotcustom.l10n import repositories
@@ -74,6 +75,82 @@ class CVSCO(ShellCommand):
     self.command.extend(targets)
     
     return ShellCommand.start(self)
+
+
+class NonLocaleMercurial(Mercurial):
+    """Subclass of Mercurial pull step for the main tree of a l10n build."""
+
+    def __init__(self, repourl, mainBranch, **kwargs):
+        Mercurial.__init__(self, repourl=repourl, **kwargs)
+        self.mainBranch = mainBranch
+        self.addFactoryArguments(mainBranch=mainBranch)
+
+    def startVC(self, branch, revision, patch):
+        # strip out the "branch" which is fake... we always use a repourl
+        self.repourl = self.build.getProperties().render(self.repourl)
+        self.args = self.build.getProperties().render(self.args)
+        Mercurial.startVC(self, None, revision, patch)
+
+    def computeSourceRevision(self, changes):
+        """Walk backwards through the list of changes: find the revision of
+        the last change associated with our 'branch'."""
+
+        if not changes:
+            return None
+
+        for change in changes[::-1]:
+            if change.branch == self.mainBranch:
+                return change.revision
+
+        return None
+
+
+class LocaleMercurial(Mercurial):
+    """Subclass of Mercurial pull step for localized pulls."""
+
+    haltOnFailure = True
+
+    def __init__(self, locale, repourl, localesBranch, baseURL=None, **kwargs):
+        if baseURL is not None:
+            raise ValueError("baseURL must not be used with MercurialLocale")
+        Mercurial.__init__(self, repourl=repourl, **kwargs)
+        self.locale = locale
+        self.localesBranch = localesBranch
+        self.addFactoryArguments(locale=locale,
+                                 localesBranch=localesBranch)
+
+    def startVC(self, branch, revision, patch):
+        # if we're running a main tree and locales in the same tree,
+        # we get a "branch" parameter here which doesn't have the locale
+        # information which is encoded in repoURL. Strip it.
+        self.repourl = self.build.getProperties().render(self.repourl)
+        self.locale = self.build.getProperties().render(self.locale)
+        self.args = self.build.getProperties().render(self.args)
+        log.msg("starting LocaleMercurial with repo %s and locale %s" % \
+                (self.repourl, self.locale))
+        Mercurial.startVC(self, None, revision, patch)
+
+    def computeSourceRevision(self, changes):
+        """Walk backwards through the list of changes: find the revision of
+        the last change associated with this locale."""
+
+        if not changes:
+            return None
+
+        for change in changes[::-1]:
+            if change.branch == self.localesBranch and change.locale == self.locale:
+                return change.revision
+
+        return None
+
+    def describe(self, done=False):
+      # better be safe than sorry, not sure when startVC is called
+      self.locale = self.build.getProperties().render(self.locale)
+      return [done and "updated" or "updating", self.locale]
+
+    def commandComplete(self, cmd):
+        self.step_status.locale = self.locale
+        Mercurial.commandComplete(self, cmd)
 
 
 class MakeCheckout(ShellCommand):

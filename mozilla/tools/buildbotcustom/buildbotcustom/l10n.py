@@ -123,43 +123,60 @@ class repositories(object):
   l10n.repository = 'l10nbld@cvs.mozilla.org:/l10n'
 
 
-def configureDispatcher(config, section, scheduler, builders):
+def configureDispatcher(config, section, scheduler):
   """
   """
   log2.msg('configureDispatcher for ' + section)
-  if config.get(section, 'type', 'cvs') != 'cvs':
+  buildtype = config.get(section, 'type')
+  if buildtype not in ['cvs', 'hg']:
     raise RuntimeError('non-cvs l10n builds not supported yet')
-  CVSAsyncLoader.CVSROOT = repositories.mozilla.repository
-  cp = CVSAsyncLoader(config.get(section, 'l10n.ini'))
-  cp.BRANCH = config.get(section, 'mozilla', None)
-  def _addDispatchers(dirs, locales):
-    scheduler.addDispatcher(L10nDispatcher(dirs, locales, builders,
+  if buildtype == 'cvs':
+    CVSAsyncLoader.CVSROOT = repositories.mozilla.repository
+    cp = CVSAsyncLoader(config.get(section, 'l10n.ini'))
+    cp.BRANCH = config.get(section, 'mozilla')
+  else:
+    l10n_ini_temp = '%(repo)s/%(mozilla)s/index.cgi/raw-file/tip/%(l10n.ini)s'
+    cp = AsyncLoader(l10n_ini_temp % dict(config.items(section)))
+  def _addDispatchers(dirs, locales, builders):
+    if buildtype == 'cvs':
+      scheduler.addDispatcher(L10nDispatcher(dirs, locales, builders,
+                                             config.get(section, 'app'),
+                                             config.get(section, 'l10n'),
+                                             section),
+                              section, locales)
+      scheduler.addDispatcher(EnDispatcher(dirs, locales, builders,
                                            config.get(section, 'app'),
-                                           config.get(section, 'l10n'),
-                                           section),
-                            section, locales)
-    scheduler.addDispatcher(EnDispatcher(dirs, locales, builders,
-                                         config.get(section, 'app'),
-                                         config.get(section, 'mozilla'),
-                                         section))
-    log2.msg('both dispatchers added for ' + section)
+                                           config.get(section, 'mozilla'),
+                                           section))
+      log2.msg('both dispatchers added for ' + section)
+    else:
+      scheduler.addDispatcher(HgL10nDispatcher(dirs, locales, builders,
+                                               config.get(section, 'app'),
+                                               config.get(section, 'l10n'),
+                                               section),
+                              section, locales)
+      log2.msg('hg l10n dispatcher added for ' + section)
     buildermap = scheduler.parent.botmaster.builders
     for b in builders:
-      buildermap[b].builder_status.addPointEvent([section, "set", "up"])
-  def _cbLoadedLocales(locales, dirs):
+      try:
+        buildermap[b].builder_status.addPointEvent([section, "set", "up"])
+      except KeyError:
+        log2.msg("Can't find builder %s for %s" % (b, section))
+  def _cbLoadedLocales(locales, dirs, builders):
     log2.msg("loaded all locales")
     locales = locales.split()
-    _addDispatchers(dirs, locales)
+    _addDispatchers(dirs, locales, builders)
   def _cbLoadedConfig(rv):
     log2.msg('config loaded for ' + section)
     dirs = dict(cp.directories()).keys()
     dirs.sort()
-    locales = config.get(section, 'locales', 'all')
+    builders = config.get(section, 'builders').split()
+    locales = config.get(section, 'locales')
     if locales == 'all':
       d = cp.getAllLocales()
-      d.addCallback(_cbLoadedLocales, dirs)
+      d.addCallback(_cbLoadedLocales, dirs, builders)
       return
-    _addDispatchers(dirs, locales.split())
+    _addDispatchers(dirs, locales.split(), builders)
     return
   def _errBack(msg):
     log2.msg("loading %s failed with %s" % (section, msg))
@@ -252,6 +269,18 @@ class L10nDispatcher(IBaseDispatcher):
       self.parent.queueBuild(self.app, loc, self.builders, change,
                              tree = self.tree)
 
+class HgL10nDispatcher(L10nDispatcher):
+  def dispatchChange(self, change):   
+    self.debug("adding change %d" % change.number)
+    if self.branch and self.branch != change.branch:
+      self.debug("not our branch, ignore, %s != %s" %
+                 (self.branch, change.branch))
+      return
+    if not hasattr(change, 'locale'):
+      log2.msg("I'm confused, the branches match, but this is not a locale change")
+      return
+    self.parent.queueBuild(self.app, change.locale, self.builders, change,
+                           tree = self.tree)
 
 class EnDispatcher(IBaseDispatcher):
   """
@@ -348,7 +377,7 @@ class Scheduler(BaseUpstreamScheduler):
     cp.read(self.inipath)
     for tree in cp.sections():
       reactor.callWhenRunning(configureDispatcher,
-                              cp, tree, self, ['linux-langpack'])
+                              cp, tree, self)
 
   class NoMergeStamp(SourceStamp):
     """
