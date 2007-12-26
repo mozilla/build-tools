@@ -43,6 +43,7 @@ import re
 import logging
 import Parser
 import Paths
+from collections import defaultdict
 
 class FileCollector:
   def __init__(self):
@@ -126,7 +127,7 @@ def collectFiles(aComparer, apps = None, locales = None):
       for loc in locales[cat]:
         fls = dict(en_fls) # create copy for modification
         for l_fl, l_path in l10n.iterateFiles(mod, loc):
-          if fls.has_key(l_fl):
+          if l_fl in fls:
             # file in both en-US and locale, compare
             aComparer.compareFile(mod, loc, l_fl)
             del fls[l_fl]
@@ -147,43 +148,38 @@ def collectFiles(aComparer, apps = None, locales = None):
 
   return fltr
 
+class listdict(defaultdict):
+  def __init__(self):
+    defaultdict.__init__(self, list)
+
 class CompareCollector(object):
   'collects files to be compared, added, removed'
   def __init__(self):
-    self.cl = {}
-    self.files = {}
-    self.modules = {}
+    self.cl = listdict()
+    self.files = defaultdict(listdict)
+    self.modules = listdict()
   def notifyLocales(self, aModule, aLocaleList):
     for loc in aLocaleList:
-      if self.modules.has_key(loc):
-        self.modules[loc].append(aModule)
-      else:
-        self.modules[loc] = [aModule]
+      self.modules[loc].append(aModule)
   def addFile(self, aModule, aLocale, aLeaf):
     logging.debug(" add %s for %s in %s" % (aLeaf, aLocale, aModule))
-    if not self.files.has_key(aLocale):
-      self.files[aLocale] = {'missingFiles': [(aModule, aLeaf)],
-                             'obsoleteFiles': []}
-    else:
-      self.files[aLocale]['missingFiles'].append((aModule, aLeaf))
+    self.files[aLocale]['missingFiles'].append((aModule, aLeaf))
     pass
   def compareFile(self, aModule, aLocale, aLeaf):
-    if not self.cl.has_key((aModule, aLeaf)):
-      self.cl[(aModule, aLeaf)] = [aLocale]
-    else:
-      self.cl[(aModule, aLeaf)].append(aLocale)
+    self.cl[(aModule, aLeaf)].append(aLocale)
     pass
   def removeFile(self, aModule, aLocale, aLeaf):
     logging.debug(" remove %s from %s in %s" % (aLeaf, aLocale, aModule))
-    if not self.files.has_key(aLocale):
-      self.files[aLocale] = {'obsoleteFiles': [(aModule, aLeaf)],
-                             'missingFiles':[]}
-    else:
-      self.files[aLocale]['obsoleteFiles'].append((aModule, aLeaf))
+    self.files[aLocale]['obsoleteFiles'].append((aModule, aLeaf))
     pass
 
+class resultdict(dict):
+  def __init__(self):
+    dict.__init__(self, {'missing':[],'obsolete':[],
+                         'changed':0,'unchanged':0,'keys':0})
+
 def compare(apps=None, testLocales=None):
-  result = {}
+  result = defaultdict(resultdict)
   c = CompareCollector()
   fltr = collectFiles(c, apps=apps, locales=testLocales)
   
@@ -199,9 +195,6 @@ def compare(apps=None, testLocales=None):
     logging.debug(" Parsing en-US " + path + " in " + mod)
     (enList, enMap) = parser.parse()
     for loc in locales:
-      if not result.has_key(loc):
-        result[loc] = {'missing':[],'obsolete':[],
-                       'changed':0,'unchanged':0,'keys':0}
       enTmp = dict(enMap)
       parser.readFile(Paths.get_path(mod, loc, path))
       logging.debug(" Parsing " + loc + " " + path + " in " + mod)
@@ -210,11 +203,11 @@ def compare(apps=None, testLocales=None):
       logging.debug(" Checking existing entities of " + path + " in " + mod)
       for k,i in l10nMap.items():
         if not fltr(mod, path, k):
-          if enTmp.has_key(k):
+          if k in enTmp:
             del enTmp[k]
             del l10nTmp[k]
           continue
-        if not enTmp.has_key(k):
+        if k not in enTmp:
           result[loc]['obsolete'].append((mod,path,k))
           continue
         enVal = enList[enTmp[k]]['val']
@@ -231,12 +224,8 @@ def compare(apps=None, testLocales=None):
             result[loc]['changed'] +=1
       result[loc]['missing'].extend(filter(lambda t: fltr(*t),
                                            [(mod,path,k) for k in enTmp.keys()]))
-  for loc,dics in c.files.iteritems():
-    if not result.has_key(loc):
-      result[loc] = dics
-    else:
-      for key, list in dics.iteritems():
-        result[loc][key] = list
+  for loc, file_results in c.files.iteritems():
+    result[loc].update(file_results)
   for loc, mods in c.modules.iteritems():
     result[loc]['tested'] = mods
   return result

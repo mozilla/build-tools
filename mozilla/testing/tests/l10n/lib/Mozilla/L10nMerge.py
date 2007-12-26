@@ -45,9 +45,10 @@ import codecs
 import logging
 import time
 import shutil
+from collections import defaultdict
 import Parser
 import Paths
-from CompareLocales import FileCollector, CompareCollector, collectFiles
+from CompareLocales import FileCollector, CompareCollector, collectFiles, resultdict
 
 options = {}
 
@@ -68,7 +69,7 @@ class MergeCollector(CompareCollector):
     pass
 
 def merge(apps=None, testLocales=[]):
-  result = {}
+  result = defaultdict(resultdict)
   c = MergeCollector()
   fltr = collectFiles(c, apps=apps, locales=testLocales)
   
@@ -85,9 +86,6 @@ def merge(apps=None, testLocales=[]):
     logging.debug(" Parsing en-US " + path + " in " + mod)
     (enList, enMap) = parser.parse()
     for loc in locales:
-      if not result.has_key(loc):
-        result[loc] = {'missing':[],'obsolete':[],
-                       'changed':0,'unchanged':0,'keys':0}
       enTmp = dict(enMap)
       parser.readFile(Paths.get_path(mod, loc, path))
       logging.debug(" Parsing " + loc + " " + path + " in " + mod)
@@ -96,11 +94,11 @@ def merge(apps=None, testLocales=[]):
       logging.debug(" Checking existing entities of " + path + " in " + mod)
       for k,i in l10nMap.items():
         if not fltr(mod, path, k):
-          if enTmp.has_key(k):
+          if k in enTmp:
             del enTmp[k]
             del l10nTmp[k]
           continue
-        if not enTmp.has_key(k):
+        if k not in enTmp:
           result[loc]['obsolete'].append((mod,path,k))
           continue
         enVal = enList[enTmp[k]]['val']
@@ -168,12 +166,8 @@ def merge(apps=None, testLocales=[]):
         except UnicodeDecodeError, e:
           logging.getLogger('locales').error("Can't write file: " + file + ';' + str(e))
         f.close()
-  for loc,dics in c.files.iteritems():
-    if not result.has_key(loc):
-      result[loc] = dics
-    else:
-      for key, list in dics.iteritems():
-        result[loc][key] = list
+  for loc, file_results in c.files.iteritems():
+    result[loc].update(file_results)
   for loc, mods in c.modules.iteritems():
     result[loc]['tested'] = mods
   return result
