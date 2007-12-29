@@ -43,7 +43,18 @@ import re
 import logging
 import Parser
 import Paths
-from collections import defaultdict
+try:
+  from collections import defaultdict
+except ImportError:
+  class defaultdict(dict):
+    def __init__(self, defaultclass):
+      dict.__init__(self)
+      self.__defaultclass = defaultclass
+    def __getitem__(self, k):
+      if not dict.__contains__(self, k):
+        self[k] = self.__defaultclass()
+      return dict.__getitem__(self, k)
+    
 
 class FileCollector:
   def __init__(self):
@@ -84,10 +95,10 @@ def collectFiles(aComparer, apps = None, locales = None):
   if locales:
     apps = locales.keys()
     # add toolkit, with all of the languages of all apps
-    all = set()
+    all = {}
     for locs in locales.values():
-      all.update(locs)
-    locales['toolkit'] = list(all)
+      all.update(dict.fromkeys(locs))
+    locales['toolkit'] = all.keys()
   else:
     locales = Paths.allLocales(apps)
   modules = Paths.Modules(apps)

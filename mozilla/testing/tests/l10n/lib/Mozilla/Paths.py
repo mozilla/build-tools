@@ -36,7 +36,7 @@
 # ***** END LICENSE BLOCK *****
 
 import os.path
-from subprocess import *
+import os
 
 
 class Modules(dict):
@@ -81,12 +81,12 @@ def allLocales(apps):
   Adds a module 'toolkit' holding all languages for all applications, too.
   '''
   locales = {}
-  all = set()
+  all = {}
   for app in apps:
     path = 'mozilla/%s/locales/all-locales' % app
     locales[app] = [l.strip() for l in open(path)]
-    all.update(locales[app])
-  locales['toolkit'] = list(all)
+    all.update(dict.fromkeys(locales[app]))
+  locales['toolkit'] = all.keys()
   return locales
 
 def get_base_path(mod, loc):

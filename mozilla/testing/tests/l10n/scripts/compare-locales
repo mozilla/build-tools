@@ -60,7 +60,8 @@ if len(args) == 0:
   parser.error('At least one language required')
 
 # log as verbose or quiet as we want, warn by default
-logging.basicConfig(level=(logging.WARNING - (options.v - options.q)*10))
+logging.basicConfig()
+logging.getLogger().setLevel(logging.WARNING - (options.v - options.q)*10)
 
 # import Paths loaded all-locales for both browser and mail, we overwrite
 # that with our settings before calling into CompareLocales

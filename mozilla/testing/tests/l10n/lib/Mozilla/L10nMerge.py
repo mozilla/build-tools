@@ -45,7 +45,10 @@ import codecs
 import logging
 import time
 import shutil
-from collections import defaultdict
+try:
+  from collections import defaultdict
+except ImportError:
+  from CompareLocales import defaultdict
 import Parser
 import Paths
 from CompareLocales import FileCollector, CompareCollector, collectFiles, resultdict
