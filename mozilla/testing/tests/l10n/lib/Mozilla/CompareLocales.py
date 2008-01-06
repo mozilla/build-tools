@@ -41,8 +41,7 @@ import os
 import os.path
 import re
 import logging
-import Parser
-import Paths
+from difflib import SequenceMatcher
 try:
   from collections import defaultdict
 except ImportError:
@@ -54,7 +53,100 @@ except ImportError:
       if not dict.__contains__(self, k):
         self[k] = self.__defaultclass()
       return dict.__getitem__(self, k)
-    
+
+import Parser
+import Paths
+
+class Tree(object):
+  def __init__(self):
+    self.branches = dict()
+    self.values = []
+  def add(self, leaf, value = None):
+    parts = leaf.split('/')
+    self.__add(parts, value)
+  def __add(self, parts, value):
+    common = None
+    old = None
+    new = tuple(parts)
+    t = self
+    for k, v in self.branches.iteritems():
+      for i, part in enumerate(zip(k, parts)):
+        if part[0] != part[1]:
+          i -= 1
+          break
+      if i < 0:
+        continue
+      i += 1
+      common = tuple(k[:i])
+      old = tuple(k[i:])
+      new = tuple(parts[i:])
+      break
+    if old:
+      self.branches.pop(k)
+      t = Tree()
+      t.branches[old] = v
+      self.branches[common] = t
+    elif common:
+      t = self.branches[common]
+    if new:
+      if common:
+        t.__add(new, value)
+        return
+      t2 = t
+      t = Tree()
+      t2.branches[new] = t
+    if value is not None:
+      t.values.append(value)
+    return
+  indent = '  '
+  def getStrRows(self, indent = ''):
+    keys = self.branches.keys()
+    keys.sort()
+    vals = []
+    for key in keys:
+      vals.append(indent + '/'.join(key))
+      val = self.branches[key]
+      if val:
+        vals += val.getStrRows(indent + self.indent)
+    return vals
+  def __str__(self):
+    return '\n'.join(self.getStrRows())
+  def __iter__(self):
+    keys = self.branches.keys()
+    keys.sort()
+    for key in keys:
+      child = self.branches[key]
+      if child.values:
+        yield (key, child.values)
+      for childkey, value in child:
+        yield (key + '/' + childkey, value)
+
+class DirectoryCompare(SequenceMatcher):
+  def __init__(self, reference):
+    SequenceMatcher.__init__(self, None, [i for i in reference],
+                             [])
+    self.watchers = []
+  def addWatcher(self, watcher):
+    self.watchers.append(watcher)
+  def compareWith(self, other):
+    self.set_seq2([i for i in other])
+    missing = []
+    obsolete = []
+    compare = []
+    for tag, i1, i2, j1, j2 in self.get_opcodes():
+      if tag == 'equal':
+        compare += zip(self.a[j1:j2], self.b[i1:i2])
+      elif tag == 'delete':
+        missing += self.b[i1:i2]
+      elif tag == 'insert':
+        obsolete += self.a[j1:j2]
+      else:
+        missing += self.b[i1:i2]
+        obsolete += self.a[j1:j2]
+    for watcher in self.watchers:
+      watcher.compare(compare)
+      watcher.add(missing)
+      watcher.remove(obsolete)
 
 class FileCollector:
   def __init__(self):

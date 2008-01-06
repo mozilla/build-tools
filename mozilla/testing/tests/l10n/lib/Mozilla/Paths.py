@@ -37,7 +37,7 @@
 
 import os.path
 import os
-
+from Mozilla.CompareLocales import defaultdict
 
 class Modules(dict):
   '''
@@ -88,6 +88,93 @@ def allLocales(apps):
     all.update(dict.fromkeys(locales[app]))
   locales['toolkit'] = all.keys()
   return locales
+
+class File(object):
+  def __init__(self, path, file, module = None):
+    self.module = module
+    self.path = path
+    self.file = file
+    pass
+  def __hash__(self):
+    f = self.file
+    if self.module:
+      f = self.module + '/' + f
+    return hash(f)
+  def __str__(self):
+    return self.path
+  def __cmp__(self, other):
+    if not isinstance(other, File):
+      raise NotImplementedError
+    rv = cmp(self.module, other.module)
+    if rv != 0:
+      return rv
+    return cmp(self.file, other.file)
+
+class EnumerateDir(object):
+  ignore_dirs = ['CVS', '.svn', '.hg']
+  def __init__(self, basepath, module = None):
+    self.basepath = basepath
+    self.module = module
+    pass
+  def __iter__(self):
+    dirs = [os.curdir]
+    while dirs:
+      dir = dirs.pop(0)
+      if not os.path.isdir(self.basepath + '/' + dir):
+        continue
+      entries = os.listdir(self.basepath + '/' + dir)
+      entries.sort()
+      for entry in entries:
+        if os.path.isdir('/'.join([self.basepath, dir, entry])):
+          if entry not in self.ignore_dirs:
+            dirs.append(dir + '/' + entry)
+          continue
+        yield File(os.path.normpath('/'.join([self.basepath, dir, entry])), 
+                   os.path.normpath(dir + '/' + entry), self.module)
+
+class LocalesWrap(object):
+  def __init__(self, base, module, locales):
+    self.base = base
+    self.module = module
+    self.locales = locales
+  def __iter__(self):
+    for locale in self.locales:
+      path = self.base + '/' + get_base_path(self.module, locale)
+      yield (locale, EnumerateDir(path, self.module))
+
+class EnumerateApp(object):
+  echo_var = 'make -f mozilla/client.mk echo-variable-LOCALES_%s'
+  reference =  'en-US'
+  def __init__(self, basepath = os.curdir):
+    self.modules=defaultdict(dict)
+    self.basepath = os.path.abspath(basepath)
+    pass
+  def addApplication(self, app, locales = None):
+    cwd = os.getcwd()
+    os.chdir(self.basepath)
+    try:
+      modules = os.popen(self.echo_var % app).read().strip().split()
+      if not locales:
+        locales = allLocales([app])[app]
+    finally:
+      os.chdir(cwd)
+    for mod in modules:
+      self.modules[mod].update(dict.fromkeys(locales))
+  def __iter__(self):
+    '''
+    Iterate over all modules, return en-US directory enumerator, and an
+    iterator over all locales in each iteration. Per locale, the locale
+    code and an directory enumerator will be given.
+    '''
+    modules = self.modules.keys()
+    modules.sort()
+    for mod in modules:
+      locales = self.modules[mod].keys()
+      locales.sort()
+      base = self.basepath
+      yield (mod,
+             EnumerateDir(base + '/' + get_base_path(mod, self.reference), mod),
+             LocalesWrap(base, mod, locales))
 
 def get_base_path(mod, loc):
   'statics for path patterns and conversion'
