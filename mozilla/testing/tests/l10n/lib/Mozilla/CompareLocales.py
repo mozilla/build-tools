@@ -58,13 +58,19 @@ import Parser
 import Paths
 
 class Tree(object):
-  def __init__(self):
+  def __init__(self, valuetype):
     self.branches = dict()
-    self.values = []
-  def add(self, leaf, value = None):
-    parts = leaf.split('/')
-    self.__add(parts, value)
-  def __add(self, parts, value):
+    self.valuetype = valuetype
+    self.value = None
+  def __getitem__(self, leaf):
+    parts = []
+    if isinstance(leaf, Paths.File):
+      parts = [p for p in [leaf.locale, leaf.module] if p] + \
+          leaf.file.split('/')
+    else:
+      parts = leaf.split('/')
+    return self.__get(parts)
+  def __get(self, parts):
     common = None
     old = None
     new = tuple(parts)
@@ -83,26 +89,27 @@ class Tree(object):
       break
     if old:
       self.branches.pop(k)
-      t = Tree()
+      t = Tree(self.valuetype)
       t.branches[old] = v
       self.branches[common] = t
     elif common:
       t = self.branches[common]
     if new:
       if common:
-        t.__add(new, value)
-        return
+        return t.__get(new)
       t2 = t
-      t = Tree()
+      t = Tree(self.valuetype)
       t2.branches[new] = t
-    if value is not None:
-      t.values.append(value)
-    return
+    if t.value is None:
+      t.value = t.valuetype()
+    return t.value
   indent = '  '
   def getStrRows(self, indent = ''):
     keys = self.branches.keys()
     keys.sort()
     vals = []
+    if self.value is not None:
+      vals.append(indent + self.indent*2 + str(self.value))
     for key in keys:
       vals.append(indent + '/'.join(key))
       val = self.branches[key]
@@ -117,36 +124,65 @@ class Tree(object):
     for key in keys:
       child = self.branches[key]
       if child.values:
-        yield (key, child.values)
+        yield (key, child.value)
       for childkey, value in child:
         yield (key + '/' + childkey, value)
+
+class AddRemove(SequenceMatcher):
+  def __init__(self):
+    SequenceMatcher.__init__(self, None, None, None)
+  def set_left(self, left):
+    if not isinstance(left, list):
+      left = [l for l in left]
+    self.set_seq1(left)
+  def set_right(self, right):
+    if not isinstance(right, list):
+      right = [l for l in right]
+    self.set_seq2(right)
+  def __iter__(self):
+    for tag, i1, i2, j1, j2 in self.get_opcodes():
+      if tag == 'equal':
+        for pair in zip(self.a[i1:i2], self.b[j1:j2]):
+          yield ('equal', pair)
+      elif tag == 'delete':
+        for item in self.a[i1:i2]:
+          yield ('delete', item)
+      elif tag == 'insert':
+        for item in self.b[j1:j2]:
+          yield ('add', item)
+      else:
+        # tag == 'replace'
+        for item in self.a[i1:i2]:
+          yield ('delete', item)
+        for item in self.b[j1:j2]:
+          yield ('add', item)
 
 class DirectoryCompare(SequenceMatcher):
   def __init__(self, reference):
     SequenceMatcher.__init__(self, None, [i for i in reference],
                              [])
-    self.watchers = []
-  def addWatcher(self, watcher):
-    self.watchers.append(watcher)
+    self.watcher = None
+  def setWatcher(self, watcher):
+    self.watcher = watcher
   def compareWith(self, other):
+    if not self.watcher:
+      return
     self.set_seq2([i for i in other])
-    missing = []
-    obsolete = []
-    compare = []
     for tag, i1, i2, j1, j2 in self.get_opcodes():
       if tag == 'equal':
-        compare += zip(self.a[j1:j2], self.b[i1:i2])
+        for i, j in zip(xrange(i1,i2), xrange(j1,j2)):
+          self.watcher.compare(self.a[i], self.b[j])
       elif tag == 'delete':
-        missing += self.b[i1:i2]
+        for i in xrange(i1,i2):
+          self.watcher.add(self.a[i], other.cloneFile(self.a[i]))
       elif tag == 'insert':
-        obsolete += self.a[j1:j2]
+        for j in xrange(j1, j2):
+          self.watcher.remove(self.b[j])
       else:
-        missing += self.b[i1:i2]
-        obsolete += self.a[j1:j2]
-    for watcher in self.watchers:
-      watcher.compare(compare)
-      watcher.add(missing)
-      watcher.remove(obsolete)
+        for j in xrange(j1, j2):
+          self.watcher.remove(self.b[j])
+        for i in xrange(i1,i2):
+          self.watcher.add(self.a[i], other.cloneFile(self.a[i]))
 
 class FileCollector:
   def __init__(self):

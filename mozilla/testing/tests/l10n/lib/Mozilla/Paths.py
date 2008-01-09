@@ -90,18 +90,21 @@ def allLocales(apps):
   return locales
 
 class File(object):
-  def __init__(self, path, file, module = None):
-    self.module = module
-    self.path = path
+  def __init__(self, fullpath, file, module = None, locale = None):
+    self.fullpath = fullpath
     self.file = file
+    self.module = module
+    self.locale = locale
     pass
+  def getContents(self):
+    return open(self.fullpath).read()
   def __hash__(self):
     f = self.file
     if self.module:
       f = self.module + '/' + f
     return hash(f)
   def __str__(self):
-    return self.path
+    return self.fullpath
   def __cmp__(self, other):
     if not isinstance(other, File):
       raise NotImplementedError
@@ -112,10 +115,18 @@ class File(object):
 
 class EnumerateDir(object):
   ignore_dirs = ['CVS', '.svn', '.hg']
-  def __init__(self, basepath, module = None):
+  def __init__(self, basepath, module = None, locale = None):
     self.basepath = basepath
     self.module = module
+    self.locale = locale
     pass
+  def cloneFile(self, other):
+    '''
+    Return a File object that this enumerator would return, if it had it.
+    '''
+    return File(os.path.normpath('/'.join([self.basepath, other.file])),
+                                 other.file,
+                                 self.module, self.locale)
   def __iter__(self):
     dirs = [os.curdir]
     while dirs:
@@ -130,7 +141,8 @@ class EnumerateDir(object):
             dirs.append(dir + '/' + entry)
           continue
         yield File(os.path.normpath('/'.join([self.basepath, dir, entry])), 
-                   os.path.normpath(dir + '/' + entry), self.module)
+                   os.path.normpath(dir + '/' + entry),
+                   self.module, self.locale)
 
 class LocalesWrap(object):
   def __init__(self, base, module, locales):
@@ -140,14 +152,16 @@ class LocalesWrap(object):
   def __iter__(self):
     for locale in self.locales:
       path = self.base + '/' + get_base_path(self.module, locale)
-      yield (locale, EnumerateDir(path, self.module))
+      yield (locale, EnumerateDir(path, self.module, locale))
 
 class EnumerateApp(object):
   echo_var = 'make -f mozilla/client.mk echo-variable-LOCALES_%s'
+  filterpath = 'mozilla/%s/locales/filter.py'
   reference =  'en-US'
   def __init__(self, basepath = os.curdir):
     self.modules=defaultdict(dict)
     self.basepath = os.path.abspath(basepath)
+    self.filters = []
     pass
   def addApplication(self, app, locales = None):
     cwd = os.getcwd()
@@ -156,10 +170,30 @@ class EnumerateApp(object):
       modules = os.popen(self.echo_var % app).read().strip().split()
       if not locales:
         locales = allLocales([app])[app]
+      # get filters
+      self.addFilterFrom(self.filterpath % app)
     finally:
       os.chdir(cwd)
     for mod in modules:
       self.modules[mod].update(dict.fromkeys(locales))
+  def addFilterFrom(self, filterpath):
+    if not os.path.exists(filterpath):
+      return
+    l = {}
+    execfile(filterpath, {}, l)
+    if 'test' not in l or not callable(l['test']):
+      # XXX error handling?
+      return
+    self.filters.append(l['test'])
+  def filter(self, l10n_file, entity = None):
+    for f in self.filters:
+      try: 
+        if not f(l10n_file.module, l10n_file.file, entity):
+          return False
+      except:
+        # XXX error handling
+        continue
+    return True
   def __iter__(self):
     '''
     Iterate over all modules, return en-US directory enumerator, and an
@@ -173,7 +207,8 @@ class EnumerateApp(object):
       locales.sort()
       base = self.basepath
       yield (mod,
-             EnumerateDir(base + '/' + get_base_path(mod, self.reference), mod),
+             EnumerateDir(base + '/' + get_base_path(mod, self.reference),
+                          mod, self.reference),
              LocalesWrap(base, mod, locales))
 
 def get_base_path(mod, loc):
