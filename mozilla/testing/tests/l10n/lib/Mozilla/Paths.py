@@ -158,9 +158,12 @@ class EnumerateApp(object):
   echo_var = 'make -f mozilla/client.mk echo-variable-LOCALES_%s'
   filterpath = 'mozilla/%s/locales/filter.py'
   reference =  'en-US'
-  def __init__(self, basepath = os.curdir):
+  def __init__(self, basepath = os.curdir, l10nbase = None):
     self.modules=defaultdict(dict)
     self.basepath = os.path.abspath(basepath)
+    if l10nbase is None:
+      l10nbase = self.basepath
+    self.l10nbase = os.path.abspath(l10nbase)
     self.filters = []
     pass
   def addApplication(self, app, locales = None):
@@ -209,7 +212,7 @@ class EnumerateApp(object):
       yield (mod,
              EnumerateDir(base + '/' + get_base_path(mod, self.reference),
                           mod, self.reference),
-             LocalesWrap(base, mod, locales))
+             LocalesWrap(self.l10nbase, mod, locales))
 
 def get_base_path(mod, loc):
   'statics for path patterns and conversion'

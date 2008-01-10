@@ -104,29 +104,28 @@ class Tree(object):
       t.value = t.valuetype()
     return t.value
   indent = '  '
-  def getStrRows(self, indent = ''):
+  def getContent(self, depth = 0):
+    '''
+    Returns iterator of (depth, flag, key_or_value) tuples.
+    If flag is 'value', key_or_value is a value object, otherwise
+    (flag is 'key') it's a key string.
+    '''
     keys = self.branches.keys()
     keys.sort()
-    vals = []
     if self.value is not None:
-      vals.append(indent + self.indent*2 + str(self.value))
+      yield (depth, 'value', self.value)
     for key in keys:
-      vals.append(indent + '/'.join(key))
-      val = self.branches[key]
-      if val:
-        vals += val.getStrRows(indent + self.indent)
-    return vals
+      yield (depth, 'key', key)
+      for child in self.branches[key].getContent(depth + 1):
+        yield child
+  def getStrRows(self):
+    def tostr(t):
+      if t[1] == 'key':
+        return '  ' * t[0] + '/'.join(t[2])
+      return '  ' * (t[0] + 1) + str(t[2])
+    return map(tostr, self.getContent())
   def __str__(self):
     return '\n'.join(self.getStrRows())
-  def __iter__(self):
-    keys = self.branches.keys()
-    keys.sort()
-    for key in keys:
-      child = self.branches[key]
-      if child.values:
-        yield (key, child.value)
-      for childkey, value in child:
-        yield (key + '/' + childkey, value)
 
 class AddRemove(SequenceMatcher):
   def __init__(self):
@@ -184,229 +183,113 @@ class DirectoryCompare(SequenceMatcher):
         for i in xrange(i1,i2):
           self.watcher.add(self.a[i], other.cloneFile(self.a[i]))
 
-class FileCollector:
+class Observer:
+  stat_cats = ['missing', 'obsolete', 'missingInFiles']
   def __init__(self):
-    pass
-  def getFiles(self, mod, locale):
-    fls = {}
-    for leaf, path in self.iterateFiles(mod,locale):
-      fls[leaf] = path
-    return fls
-  def iterateFiles(self, mod, locale):
-    base = Paths.get_base_path(mod, locale)
-    cutoff  = len(base) + 1
-    for dirpath, dirnames, filenames in os.walk(base):
-      try:
-        # ignore CVS dirs
-        dirnames.remove('CVS')
-      except ValueError:
-        pass
-      dirnames.sort()
-      filenames.sort()
-      for f in filenames:
-        leaf = dirpath + '/' + f
-        yield (leaf[cutoff:], leaf)
+    self.stats = defaultdict(int)
+    self.files = Tree(dict)
+    self.filter = None
+  def notify(self, category, file, data):
+    if category in self.stat_cats:
+      self.stats[category] += data
+    elif category in ['missingFile', 'obsoleteFile']:
+      if self.filter is None or self.filter(file):
+        self.files[file][category] = True
+    elif category in ['missingEntity', 'obsoleteEntity']:
+      if self.filter is not None and not self.filter(file, data):
+        return
+      v = self.files[file]
+      if 'entities' not in v:
+        v['entities'] = dict()
+      v['entities'][data] = ['add', 'remove'][category == 'obsoleteEntity']
 
-def collectFiles(aComparer, apps = None, locales = None):
-  '''
-  returns new files, files to compare, files to remove
-  apps or locales need to be given, apps is a list, locales is a
-  hash mapping applications to languages.
-  If apps is given, it will look up all-locales for all apps for the
-  languages to test.
-  'toolkit' is added to the list of modules, too.
-  '''
-  if not apps and not locales:
-    raise RuntimeError, "collectFiles needs either apps or locales"
-  if apps and locales:
-    raise RuntimeError, "You don't want to give both apps or locales"
-  if locales:
-    apps = locales.keys()
-    # add toolkit, with all of the languages of all apps
-    all = {}
-    for locs in locales.values():
-      all.update(dict.fromkeys(locs))
-    locales['toolkit'] = all.keys()
-  else:
-    locales = Paths.allLocales(apps)
-  modules = Paths.Modules(apps)
-  en = FileCollector()
-  l10n = FileCollector()
-  # load filter functions for each app
-  fltrs = []
-  for app in apps:
-    filterpath = 'mozilla/%s/locales/filter.py' % app
-    if not os.path.exists(filterpath):
-      continue
-    l = {}
-    execfile(filterpath, {}, l)
-    if 'test' not in l or not callable(l['test']):
-      logging.debug('%s does not define function "test"' % filterpath)
-      continue
-    fltrs.append(l['test'])
-  
-  # define fltr function to be used, calling into the app specific ones
-  # if one of our apps wants us to know about a triple, make it so
-  def fltr(mod, lpath, entity = None):
-    for f in fltrs:
-      keep  = True
+class ContentComparer:
+  def __init__(self):
+    self.module = ''
+    self.reference = dict()
+    self.observers = []
+    self.filter = dict(error = True,
+                       missingEntity = True, obsoleteEntity = True,
+                       missingInFiles = True,
+                       missingFile = True, obsoleteFile = True,
+                       missing = True, obsolete = True)
+  def set_module(self, module):
+    self.module = module + '/'
+  def add_observer(self, obs):
+    self.observers.append(obs)
+  def notify(self, category, file, data):
+    if category in self.filter:
+      for obs in self.observers:
+        obs.notify(category, file, data)
+  def remove(self, obsolete):
+    self.notify('obsoleteFile', obsolete, None)
+    pass
+  def compare(self, ref_file, l10n):
+    if ref_file not in self.reference:
+      # we didn't parse this before
       try:
-        keep = f(mod, lpath, entity)
+        p = Parser.getParser(ref_file.file)
+      except UserWarning:
+        # no comparison, XXX report?
+        return
+      try:
+        p.readContents(ref_file.getContents())
       except Exception, e:
-        logging.error(str(e))
-      if not keep:
-        return False
-    return True
-  
-  for cat in modules.keys():
-    logging.debug(" testing " + cat+ " on " + str(modules))
-    aComparer.notifyLocales(cat, locales[cat])
-    for mod in modules[cat]:
-      en_fls = en.getFiles(mod, 'en-US')
-      for loc in locales[cat]:
-        fls = dict(en_fls) # create copy for modification
-        for l_fl, l_path in l10n.iterateFiles(mod, loc):
-          if l_fl in fls:
-            # file in both en-US and locale, compare
-            aComparer.compareFile(mod, loc, l_fl)
-            del fls[l_fl]
-          else:
-            if fltr(mod, l_fl):
-              # file in locale, but not in en-US, remove
-              aComparer.removeFile(mod, loc, l_fl)
-            else:
-              logging.debug(" ignoring %s from %s in %s" %
-                            (l_fl, loc, mod))
-        # all locale files dealt with, remaining fls need to be added?
-        for lf in fls.keys():
-          if fltr(mod, lf):
-            aComparer.addFile(mod,loc,lf)
-          else:
-            logging.debug(" ignoring %s from %s in %s" %
-                          (lf, loc, mod))
-
-  return fltr
-
-class listdict(defaultdict):
-  def __init__(self):
-    defaultdict.__init__(self, list)
-
-class CompareCollector(object):
-  'collects files to be compared, added, removed'
-  def __init__(self):
-    self.cl = listdict()
-    self.files = defaultdict(listdict)
-    self.modules = listdict()
-  def notifyLocales(self, aModule, aLocaleList):
-    for loc in aLocaleList:
-      self.modules[loc].append(aModule)
-  def addFile(self, aModule, aLocale, aLeaf):
-    logging.debug(" add %s for %s in %s" % (aLeaf, aLocale, aModule))
-    self.files[aLocale]['missingFiles'].append((aModule, aLeaf))
-    pass
-  def compareFile(self, aModule, aLocale, aLeaf):
-    self.cl[(aModule, aLeaf)].append(aLocale)
-    pass
-  def removeFile(self, aModule, aLocale, aLeaf):
-    logging.debug(" remove %s from %s in %s" % (aLeaf, aLocale, aModule))
-    self.files[aLocale]['obsoleteFiles'].append((aModule, aLeaf))
-    pass
-
-class resultdict(dict):
-  def __init__(self):
-    dict.__init__(self, {'missing':[],'obsolete':[],
-                         'changed':0,'unchanged':0,'keys':0})
-
-def compare(apps=None, testLocales=None):
-  result = defaultdict(resultdict)
-  c = CompareCollector()
-  fltr = collectFiles(c, apps=apps, locales=testLocales)
-  
-  key = re.compile('[kK]ey')
-  for fl, locales in c.cl.iteritems():
-    (mod,path) = fl
+        self.notify('error', ref_file, str(e))
+        return
+      self.reference[ref_file] = p.parse()
+    ref = self.reference[ref_file]
+    ref_list = ref[1].keys()
+    ref_list.sort()
     try:
-      parser = Parser.getParser(path)
-    except UserWarning:
-      logging.warning(" Can't compare " + path + " in " + mod)
-      continue
-    parser.readFile(Paths.get_path(mod, 'en-US', path))
-    logging.debug(" Parsing en-US " + path + " in " + mod)
-    (enList, enMap) = parser.parse()
-    for loc in locales:
-      enTmp = dict(enMap)
-      parser.readFile(Paths.get_path(mod, loc, path))
-      logging.debug(" Parsing " + loc + " " + path + " in " + mod)
-      (l10nList, l10nMap) = parser.parse()
-      l10nTmp = dict(l10nMap)
-      logging.debug(" Checking existing entities of " + path + " in " + mod)
-      for k,i in l10nMap.items():
-        if not fltr(mod, path, k):
-          if k in enTmp:
-            del enTmp[k]
-            del l10nTmp[k]
-          continue
-        if k not in enTmp:
-          result[loc]['obsolete'].append((mod,path,k))
-          continue
-        enVal = enList[enTmp[k]]['val']
-        del enTmp[k]
-        del l10nTmp[k]
-        if key.search(k):
-          result[loc]['keys'] += 1
-        else:
-          if enVal == l10nList[i]['val']:
-            result[loc]['unchanged'] +=1
-            logging.info('%s in %s unchanged' %
-                         (k, Paths.get_path(mod, loc, path)))
-          else:
-            result[loc]['changed'] +=1
-      result[loc]['missing'].extend(filter(lambda t: fltr(*t),
-                                           [(mod,path,k) for k in enTmp.keys()]))
-  for loc, file_results in c.files.iteritems():
-    result[loc].update(file_results)
-  for loc, mods in c.modules.iteritems():
-    result[loc]['tested'] = mods
-  return result
-
-# helper class to merge all the lists into more consice
-# dicts
-class Separator:
-  def __init__(self, apps):
-    self.components = Paths.Components(apps)
+      p.readContents(l10n.getContents())
+      l10n_entities, l10n_map = p.parse()
+    except Exception, e:
+      self.notify('error', l10n, str(e))
+      return
+    l10n_list = l10n_map.keys()
+    l10n_list.sort()
+    ar = AddRemove()
+    ar.set_left(ref_list)
+    ar.set_right(l10n_list)
+    missing = keys = obsolete = 0
+    for action, item_or_pair in ar:
+      if action == 'delete':
+        # missing entity
+        self.notify('missingEntity', l10n, item_or_pair)
+        missing += 1
+      elif action == 'add':
+        # obsolete entity
+        self.notify('obsoleteEntity', l10n, item_or_pair)
+        obsolete += 1
+      else:
+        # compare
+        pass
+    if missing:
+      self.notify('missing', l10n, missing)
+    if obsolete:
+      self.notify('obsolete', l10n, obsolete)
     pass
-  def getDetails(self, res, locale):
-    dic = {}
-    res[locale]['tested'].sort()
-    self.collectList('missing', res[locale], dic)
-    self.collectList('obsolete', res[locale], dic)
-    return dic
-  def collectList(self, name, res, dic):
-    dic[name] = {}
-    if name not in res:
-      res[name] = []
-    counts = dict([(mod,0) for mod in res['tested']])
-    counts['total'] = len(res[name])
-    for mod, path, key in res[name]:
-      counts[self.components[mod]] +=1
-      if mod not in  dic[name]:
-        dic[name][mod] = {path:[key]}
-        continue
-      if path not in dic[name][mod]:
-        dic[name][mod][path] = [key]
-      else:
-        dic[name][mod][path].append(key)
-    res[name] = counts
-    name += 'Files'
-    dic[name] = {}
-    if name not in res:
-      res[name] = []
-    counts = dict([(mod,0) for mod in res['tested']])
-    counts['total'] = len(res[name])
-    for mod, path in res[name]:
-      counts[self.components[mod]] +=1
-      if mod not in dic[name]:
-        dic[name][mod] = [path]
-      else:
-        dic[name][mod].append(path)
-    res[name] = counts
+  def add(self, orig, missing):
+    self.notify('missingFile', missing, None)
+    f = orig
+    try:
+      p = Parser.getParser(f.file)
+    except UserWarning:
+      return
+    p.readContents(f.getContents())
+    entities, map = p.parse()
+    self.notify('missingInFiles', missing, len(map))
+
+def compareApp(app):
+  dm = ContentComparer()
+  o  = Observer()
+  dm.add_observer(o)
+  o.filter = app.filter
+  for module, reference, locales in app:
+    dc = DirectoryCompare(reference)
+    dc.setWatcher(dm)
+    dm.set_module(module)
+    for locale, localization in locales:
+      dc.compareWith(localization)
+  return o
