@@ -187,12 +187,15 @@ class Observer:
   stat_cats = ['missing', 'obsolete', 'missingInFiles',
                'changed', 'unchanged', 'keys']
   def __init__(self):
-    self.summary = defaultdict(int)
+    class intdict(defaultdict):
+      def __init__(self):
+        defaultdict.__init__(self, int)
+    self.summary = defaultdict(intdict)
     self.details = Tree(dict)
     self.filter = None
   def notify(self, category, file, data):
     if category in self.stat_cats:
-      self.summary[category] += data
+      self.summary[file.locale][category] += data
     elif category in ['missingFile', 'obsoleteFile']:
       if self.filter is None or self.filter(file):
         self.details[file][category] = True
@@ -203,6 +206,8 @@ class Observer:
       if 'entities' not in v:
         v['entities'] = dict()
       v['entities'][data] = ['add', 'remove'][category == 'obsoleteEntity']
+    elif category == 'error':
+      self.details[file][category] = data
   def serialize(self, type="text/plain"):
     def tostr(t):
       if t[1] == 'key':
@@ -225,23 +230,25 @@ class Observer:
       else:
         o.append(indent + str(t[2]))
       return '\n'.join(o)
-    summary = '\n'.join(k + ': ' + str(v) for k,v in self.summary.iteritems())
-    total = sum([self.summary[k] \
-                   for k in ['changed','unchanged','missing','missingInFiles'] \
-                   if k in self.summary])
-    rate = (('changed' in self.summary and self.summary['changed'] * 100)
-            or 0) / total
-    summary += '\n%d%% of entries changed' % rate
-    return '\n'.join(map(tostr, self.details.getContent())) + '\n' + summary
+    out = []
+    for locale, summary in self.summary.iteritems():
+      if locale is not None:
+        out.append(locale + ':')
+      out += [k + ': ' + str(v) for k,v in summary.iteritems()]
+      total = sum([summary[k] \
+                     for k in ['changed','unchanged','missing',
+                               'missingInFiles'] \
+                     if k in summary])
+      rate = (('changed' in summary and summary['changed'] * 100)
+              or 0) / total
+      out.append('%d%% of entries changed' % rate)
+    return '\n'.join(map(tostr, self.details.getContent()) + out)
 
 class ContentComparer:
   keyRE = re.compile('[kK]ey')
   def __init__(self):
-    self.module = ''
     self.reference = dict()
     self.observers = []
-  def set_module(self, module):
-    self.module = module + '/'
   def add_observer(self, obs):
     self.observers.append(obs)
   def notify(self, category, file, data):
@@ -251,13 +258,13 @@ class ContentComparer:
     self.notify('obsoleteFile', obsolete, None)
     pass
   def compare(self, ref_file, l10n):
+    try:
+      p = Parser.getParser(ref_file.file)
+    except UserWarning:
+      # no comparison, XXX report?
+      return
     if ref_file not in self.reference:
       # we didn't parse this before
-      try:
-        p = Parser.getParser(ref_file.file)
-      except UserWarning:
-        # no comparison, XXX report?
-        return
       try:
         p.readContents(ref_file.getContents())
       except Exception, e:
@@ -330,7 +337,6 @@ def compareApp(app):
   for module, reference, locales in app:
     dc = DirectoryCompare(reference)
     dc.setWatcher(dm)
-    dm.set_module(module)
     for locale, localization in locales:
       dc.compareWith(localization)
   return o
