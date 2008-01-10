@@ -128,12 +128,12 @@ for loc in locales:
   sets[loc] = {'list': []}
   regprop = Paths.get_path('browser', loc, 'chrome/browser-region/region.properties')
   p = Parser.getParser(regprop)
-  p.read(regprop)
+  p.readContents(Paths.File(regprop, 'chrome/browser-region/region.properties').getContents())
   orders = {}
-  for key, val in p:
-    m = re.match('browser.search.order.([1-9])', key)
+  for entity in p:
+    m = re.match('browser.search.order.([1-9])', entity['key'])
     if m:
-      orders[val.strip()] = int(m.group(1))
+      orders[entity['val'].strip()] = int(m.group(1))
   sets[loc]['orders'] = orders
   for fn in lst:
     name = fn.strip()
