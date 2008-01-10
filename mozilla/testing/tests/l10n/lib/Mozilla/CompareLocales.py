@@ -330,13 +330,13 @@ class ContentComparer:
     self.notify('missingInFiles', missing, len(map))
 
 def compareApp(app):
-  dm = ContentComparer()
+  cc = ContentComparer()
   o  = Observer()
-  dm.add_observer(o)
+  cc.add_observer(o)
   o.filter = app.filter
   for module, reference, locales in app:
     dc = DirectoryCompare(reference)
-    dc.setWatcher(dm)
+    dc.setWatcher(cc)
     for locale, localization in locales:
       dc.compareWith(localization)
   return o

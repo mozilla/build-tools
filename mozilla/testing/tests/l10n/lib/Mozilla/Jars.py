@@ -1,4 +1,3 @@
-#! python
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -36,34 +35,52 @@
 #
 # ***** END LICENSE BLOCK *****
 
-
-import logging
+from zipfile import ZipFile
+from difflib import SequenceMatcher
 import os.path
 import re
-from optparse import OptionParser
-from pprint   import pprint
-from zipfile  import ZipFile
 
-from Mozilla.Jars import compareJars
+from Paths import File
+import CompareLocales
 
-usage = 'usage: %prog [options] language-pack reference-pack'
-parser = OptionParser(usage=usage)
+class JarEntry(File):
+  def __init__(self, zf, file, fakefile):
+    File.__init__(self, None, fakefile)
+    self.realfile = file
+    self.zipfile = zf
+  def __str__(self):
+    return self.zipfile.filename + '!' + self.realfile
+  def getContents(self):
+    return self.zipfile.read(self.realfile)
 
-parser.add_option('-v', '--verbose', action='count', dest='v', default=0,
-                  help='Report more detail')
-parser.add_option('-q', '--quiet', action='count', dest='q', default=0,
-                  help='Report less detail')
+class EnumerateJar(object):
+  def __init__(self, basepath):
+    basepath = os.path.abspath(basepath)
+    if not basepath.endswith('.jar'):
+      raise RuntimeError("Only jar files supported")
+    self.basepath = basepath
+    # best guess we have on locale code
+    self.locale = os.path.split(basepath)[1].replace('.jar','')
+    self.zf = ZipFile(basepath, 'r')
+  def cloneFile(self, other):
+    return JarEntry(self.zf, other.file, other.fakefile)
+  def __iter__(self):
+    # get all entries, drop those ending with '/', those are dirs.
+    files = [f for f in self.zf.namelist() if not f.endswith('/')]
+    files.sort()
+    # unfortunately, we have to fake file paths of the form
+    # locale/AB-CD/
+    # for comparison.
+    # For real, the corresponding manifest would tell us. Whichever.
+    localesub = re.compile('^locale/' + self.locale)
+    for f in files:
+      yield JarEntry(self.zf, f, localesub.sub('locale/@AB_CD@', f))
 
-(options, args) = parser.parse_args()
-if len(args) != 2:
-  parser.error('language pack and reference pack required')
-
-# log as verbose or quiet as we want, warn by default
-logging.basicConfig(level=(logging.WARNING - (options.v - options.q)*10))
-
-# we expect two jar files
-if not (args[0].endswith('.jar') and args[1].endswith('.jar')):
-  parser.error('Please specify two jar files to compare')
-
-o = compareJars(*args)
-print o.serialize()
+def compareJars(ref, l10n):
+  cc = CompareLocales.ContentComparer()
+  o  = CompareLocales.Observer()
+  cc.add_observer(o)
+  dc = CompareLocales.DirectoryCompare(EnumerateJar(ref))
+  dc.setWatcher(cc)
+  dc.compareWith(EnumerateJar(l10n))
+  return o

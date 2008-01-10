@@ -39,7 +39,6 @@
 
 import logging
 from optparse import OptionParser
-from pprint import pprint
 
 from Mozilla.Paths import EnumerateApp
 from Mozilla.CompareLocales import compareApp
