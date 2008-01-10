@@ -41,8 +41,8 @@ import logging
 from optparse import OptionParser
 from pprint import pprint
 
-from Mozilla import Paths, CompareLocales
-from Mozilla.CompareLocales import Separator
+from Mozilla.Paths import EnumerateApp
+from Mozilla.CompareLocales import compareApp
 
 usage = 'usage: %prog [options] language1 [language2 ...]'
 parser = OptionParser(usage=usage)
@@ -54,6 +54,15 @@ parser.add_option('-v', '--verbose', action='count', dest='v', default=0,
                   help='Make more noise')
 parser.add_option('-q', '--quiet', action='count', dest='q', default=0,
                   help='Make more noise')
+parser.add_option('-s', '--source', default='.', dest='source',
+                  help='Explicitly set a source directory for the reference '+
+                  'localization. [default: .]')
+parser.add_option('-l', '--l10n', default=None, dest='l10n',
+                  help='Explicitly set a source directory for the '+
+                  'localizations to compare. [default: reference source]')
+parser.add_option('-r', '--reference', default='en-US', dest='reference',
+                  help='Explicitly set the reference '+
+                  'localization. [default: en-US]')
 
 (options, args) = parser.parse_args()
 if len(args) == 0:
@@ -63,22 +72,9 @@ if len(args) == 0:
 logging.basicConfig()
 logging.getLogger().setLevel(logging.WARNING - (options.v - options.q)*10)
 
-# import Paths loaded all-locales for both browser and mail, we overwrite
-# that with our settings before calling into CompareLocales
-locales = {options.application: args}
+app = EnumerateApp(options.source, options.l10n)
+app.reference = options.reference
+app.addApplication(options.application, args)
 
-# actually compare the localizations
-res = CompareLocales.compare(testLocales=locales)
-
-s = Separator([options.application])
-
-# pretty print results for all localizations
-for loc in args:
-  print(loc + ':')
-  pprint(s.getDetails(res, loc))
-  result = res[loc]
-  pprint(result)
-  rate = result['changed']*100/ \
-         (result['changed'] + result['unchanged'] + \
-          result['missing']['total'])
-  print('%d%% of entries changed' % rate)
+o = compareApp(app)
+print o.serialize()

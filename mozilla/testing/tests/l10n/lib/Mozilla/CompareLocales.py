@@ -121,8 +121,8 @@ class Tree(object):
   def getStrRows(self):
     def tostr(t):
       if t[1] == 'key':
-        return '  ' * t[0] + '/'.join(t[2])
-      return '  ' * (t[0] + 1) + str(t[2])
+        return self.indent * t[0] + '/'.join(t[2])
+      return self.indent * (t[0] + 1) + str(t[2])
     return map(tostr, self.getContent())
   def __str__(self):
     return '\n'.join(self.getStrRows())
@@ -184,43 +184,69 @@ class DirectoryCompare(SequenceMatcher):
           self.watcher.add(self.a[i], other.cloneFile(self.a[i]))
 
 class Observer:
-  stat_cats = ['missing', 'obsolete', 'missingInFiles']
+  stat_cats = ['missing', 'obsolete', 'missingInFiles',
+               'changed', 'unchanged', 'keys']
   def __init__(self):
-    self.stats = defaultdict(int)
-    self.files = Tree(dict)
+    self.summary = defaultdict(int)
+    self.details = Tree(dict)
     self.filter = None
   def notify(self, category, file, data):
     if category in self.stat_cats:
-      self.stats[category] += data
+      self.summary[category] += data
     elif category in ['missingFile', 'obsoleteFile']:
       if self.filter is None or self.filter(file):
-        self.files[file][category] = True
+        self.details[file][category] = True
     elif category in ['missingEntity', 'obsoleteEntity']:
       if self.filter is not None and not self.filter(file, data):
         return
-      v = self.files[file]
+      v = self.details[file]
       if 'entities' not in v:
         v['entities'] = dict()
       v['entities'][data] = ['add', 'remove'][category == 'obsoleteEntity']
+  def serialize(self, type="text/plain"):
+    def tostr(t):
+      if t[1] == 'key':
+        return '  ' * t[0] + '/'.join(t[2])
+      o = []
+      indent = '  ' * (t[0] + 1)
+      if 'entities' in t[2]:
+        v = t[2]['entities']
+        entities = v.keys()
+        entities.sort()
+        for entity in entities:
+          op = '+'
+          if v[entity] == 'remove':
+            op = '-'
+          o.append(indent + op + entity)
+      elif 'missingFile' in t[2]:
+        o.append(indent + '// add and localize this file')
+      elif 'obsoleteFile' in t[2]:
+        o.append(indent + '// remove this file')
+      else:
+        o.append(indent + str(t[2]))
+      return '\n'.join(o)
+    summary = '\n'.join(k + ': ' + str(v) for k,v in self.summary.iteritems())
+    total = sum([self.summary[k] \
+                   for k in ['changed','unchanged','missing','missingInFiles'] \
+                   if k in self.summary])
+    rate = (('changed' in self.summary and self.summary['changed'] * 100)
+            or 0) / total
+    summary += '\n%d%% of entries changed' % rate
+    return '\n'.join(map(tostr, self.details.getContent())) + '\n' + summary
 
 class ContentComparer:
+  keyRE = re.compile('[kK]ey')
   def __init__(self):
     self.module = ''
     self.reference = dict()
     self.observers = []
-    self.filter = dict(error = True,
-                       missingEntity = True, obsoleteEntity = True,
-                       missingInFiles = True,
-                       missingFile = True, obsoleteFile = True,
-                       missing = True, obsolete = True)
   def set_module(self, module):
     self.module = module + '/'
   def add_observer(self, obs):
     self.observers.append(obs)
   def notify(self, category, file, data):
-    if category in self.filter:
-      for obs in self.observers:
-        obs.notify(category, file, data)
+    for obs in self.observers:
+      obs.notify(category, file, data)
   def remove(self, obsolete):
     self.notify('obsoleteFile', obsolete, None)
     pass
@@ -252,7 +278,7 @@ class ContentComparer:
     ar = AddRemove()
     ar.set_left(ref_list)
     ar.set_right(l10n_list)
-    missing = keys = obsolete = 0
+    missing = obsolete = changed = unchanged = keys = 0
     for action, item_or_pair in ar:
       if action == 'delete':
         # missing entity
@@ -263,12 +289,27 @@ class ContentComparer:
         self.notify('obsoleteEntity', l10n, item_or_pair)
         obsolete += 1
       else:
-        # compare
+        entity = item_or_pair[0]
+        if self.keyRE.search(entity):
+          keys += 1
+        else:
+          refVal = ref[0][ref[1][entity]]['val']
+          l10nVal = l10n_entities[l10n_map[entity]]['val']
+          if refVal == l10nVal:
+            unchanged += 1
+          else:
+            changed += 1
         pass
     if missing:
       self.notify('missing', l10n, missing)
     if obsolete:
       self.notify('obsolete', l10n, obsolete)
+    if changed:
+      self.notify('changed', l10n, changed)
+    if unchanged:
+      self.notify('unchanged', l10n, unchanged)
+    if keys:
+      self.notify('keys', l10n, keys)
     pass
   def add(self, orig, missing):
     self.notify('missingFile', missing, None)
