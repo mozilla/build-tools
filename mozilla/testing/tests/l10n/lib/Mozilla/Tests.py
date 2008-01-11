@@ -39,6 +39,14 @@ import logging
 import Paths
 import Parser
 
+def getRegionProperties(loc):
+  regprop = Paths.get_path('browser', loc,
+                           'chrome/browser-region/region.properties')
+  p = Parser.getParser(regprop)
+  f = Paths.File(regprop, 'chrome/browser-region/region.properties')
+  p.readContents(f.getContents())
+  return p
+
 class Base:
   '''Base class for all tests'''
   def __init__(self):
@@ -62,10 +70,14 @@ class CompareTest(Base):
   def __init__(self):
     '''Initializes the test object'''
     # nothing to be done here
+    self.apps = ['browser', 'mail']
     pass
   def run(self):
-    '''Runs CompareLocales.compare()'''
-    return CompareLocales.compare(apps=['browser','mail'])
+    '''Runs CompareLocales.compareApp()'''
+    app = Paths.EnumerateApp()
+    for appname in self.apps:
+      app.addApplication(appname)
+    return CompareLocales.compareApp(app)
   def serialize(self, result, saveHandler):
     '''Serialize the CompareLocales result by locale into
       cmp-details-ab-CD
@@ -73,51 +85,10 @@ class CompareTest(Base):
       cmp-data
 
     '''
-    class Separator:
-      def __init__(self):
-        self.leafBase = 'cmp-details-'
-        self.components = Paths.Components(['browser','mail'])
-      def getDetails(self, res, locale):
-        dic = {}
-        res[locale]['tested'].sort()
-        self.collectList('missing', res[locale], dic)
-        self.collectList('obsolete', res[locale], dic)
-        saveHandler(dic, self.leafBase + locale + '.json')
-      def collectList(self, name, res, dic):
-        dic[name] = {}
-        if not res.has_key(name):
-          res[name] = []
-        counts = dict([(mod,0) for mod in res['tested']])
-        counts['total'] = len(res[name])
-        for mod, path, key in res[name]:
-          counts[self.components[mod]] +=1
-          if not dic[name].has_key(mod):
-            dic[name][mod] = {path:[key]}
-            continue
-          if not dic[name][mod].has_key(path):
-            dic[name][mod][path] = [key]
-          else:
-            dic[name][mod][path].append(key)
-        res[name] = counts
-        name += 'Files'
-        dic[name] = {}
-        if not res.has_key(name):
-          res[name] = []
-        counts = dict([(mod,0) for mod in res['tested']])
-        counts['total'] = len(res[name])
-        for mod, path in res[name]:
-          counts[self.components[mod]] +=1
-          if not dic[name].has_key(mod):
-            dic[name][mod] = [path]
-          else:
-            dic[name][mod].append(path)
-        res[name] = counts
-    
-    s = Separator()
-    for loc, lResult in result.iteritems():
-      s.getDetails(result, loc)
-    
-    saveHandler(result, 'cmp-data.json')
+    #for locale, stats in result.details:
+    #  assert locale is not None
+    #  saveHandler(foo, 'cmp-details-%s.json' % locale)
+    saveHandler(result.summary, 'cmp-data.json')
     
   def failureTest(self, myResult, failureResult):
     '''signal pass/warn/failure for each locale'''
@@ -277,16 +248,14 @@ class SearchTest(Base):
           }
         continue
       sets[loc] = {'list': []}
-      regprop = Paths.get_path('browser', loc, 'chrome/browser-region/region.properties')
-      p = Parser.getParser(regprop)
-      p.read(regprop)
+      p = getRegionProperties(loc)
       orders = {}
-      for key, val in p:
-        m = re.match('browser.search.order.([1-9])', key)
+      for entity in p:
+        m = re.match('browser.search.order.([1-9])', entity['key'])
         if m:
-          orders[val.strip()] = int(m.group(1))
-        elif key == 'browser.search.defaultenginename':
-          sets[loc]['default'] = val.strip()
+          orders[entity['val'].strip()] = int(m.group(1))
+        elif entity['key'] == 'browser.search.defaultenginename':
+          sets[loc]['default'] = entity['val'].strip()
       sets[loc]['orders'] = orders
       for fn in lst:
         name = fn.strip()
@@ -360,12 +329,12 @@ class RSSReaderTest(Base):
     res = {}
     for loc in locales:
       l = logging.getLogger('locales.' + loc)
-      regprop = Paths.get_path('browser', loc, 'chrome/browser-region/region.properties')
-      p = Parser.getParser(regprop)
-      p.read(regprop)
+      p = getRegionProperties(loc)
       uris = {}
       titles = {}
-      for key, val in p:
+      for entity in p:
+        key = entity['key']
+        val = entity['val']
         m = uri.match(key)
         if m:
           o = int(m.group(1))
@@ -403,7 +372,7 @@ class BookmarksTest(Base):
     res = {}
     for loc in locales:
       try:
-        bm.read('l10n/%s/browser/profile/bookmarks.html'%loc)
+        bm.readFile('l10n/%s/browser/profile/bookmarks.html'%loc)
         res[loc] = bm.getDetails()
       except Exception, e:
         logging.getLogger('locale.%s'%loc).error('Bookmarks are busted, %s'%e)
