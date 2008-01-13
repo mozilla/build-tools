@@ -118,6 +118,21 @@ class Tree(object):
       yield (depth, 'key', key)
       for child in self.branches[key].getContent(depth + 1):
         yield child
+  def toJSON(self):
+    '''
+    Returns this Tree as a JSON-able tree of hashes.
+    Only the values need to take care that they're JSON-able.
+    '''
+    json = {}
+    keys = self.branches.keys()
+    keys.sort()
+    if self.value is not None:
+      json['value'] = self.value
+    children = dict(('/'.join(key), self.branches[key].toJSON())
+                    for key in keys)
+    if children:
+      json['children'] = children
+    return json
   def getStrRows(self):
     def tostr(t):
       if t[1] == 'key':
@@ -183,7 +198,7 @@ class DirectoryCompare(SequenceMatcher):
         for i in xrange(i1,i2):
           self.watcher.add(self.a[i], other.cloneFile(self.a[i]))
 
-class Observer:
+class Observer(object):
   stat_cats = ['missing', 'obsolete', 'missingInFiles',
                'changed', 'unchanged', 'keys']
   def __init__(self):
@@ -193,6 +208,26 @@ class Observer:
     self.summary = defaultdict(intdict)
     self.details = Tree(dict)
     self.filter = None
+  # support pickling
+  def __getstate__(self):
+    return dict(summary = self.getSummary(), details = self.details)
+  def __setstate__(self, state):
+    class intdict(defaultdict):
+      def __init__(self):
+        defaultdict.__init__(self, int)
+    self.summary = defaultdict(intdict)
+    if 'summary' in state:
+      for loc, stats in state['summary'].iteritems():
+        self.summary[loc].update(stats)
+    self.details = state['details']
+    self.filter = None
+  def getSummary(self):
+    plaindict = {}
+    for k, v in self.summary.iteritems():
+      plaindict[k] = dict(v)
+    return plaindict
+  def toJSON(self):
+    return dict(summary = self.getSummary(), details = self.details.toJSON())
   def notify(self, category, file, data):
     if category in self.stat_cats:
       self.summary[file.locale][category] += data
@@ -243,6 +278,8 @@ class Observer:
               or 0) / total
       out.append('%d%% of entries changed' % rate)
     return '\n'.join(map(tostr, self.details.getContent()) + out)
+  def __str__(self):
+    return 'observer'
 
 class ContentComparer:
   keyRE = re.compile('[kK]ey')

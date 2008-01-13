@@ -21,6 +21,7 @@ class ResultRemoteCommand(LoggedRemoteCommand):
     except KeyError:
       pass
     try:
+      # get the Observer instance from the slave
       result = update.pop('result')
     except KeyError:
       pass
@@ -33,25 +34,22 @@ class ResultRemoteCommand(LoggedRemoteCommand):
       return
 
     rmsg = {}
-    ## only one language, strip that from the result
     self.rc = SUCCESS
-    for k, v in result.iteritems():
-      if k.startswith('obsolete') or k.startswith('missing'):
-        if not v or not len(v):
-          continue
-        rmsg[k] = v
-        if k.startswith('missing'):
-          # flag this as error
-          self.rc = FAILURE
-        elif self.rc == SUCCESS:
-          self.rc = WARNINGS
-    changed = result['changed']
-    unchanged = result['unchanged']
+    summary = result.summary[self.args['locale']]
+    if 'obsolete' in summary and summary['obsolete'] > 0:
+      self.rc = WARNINGS
+    if 'missing' in summary and summary['missing'] > 0:
+      self.rc = FAILURE
+    if 'missingInFiles' in summary and summary['missingInFiles'] > 0:
+      self.rc = FAILURE
     self.addHeader(Results[self.rc]+'\n')
+    total = sum(summary[k] for k in ['changed','unchanged','missing',
+                                     'missingInFiles'])
+    self.completion = int((summary['changed'] * 100) / total)
+    changed = summary['changed']
+    unchanged = summary['unchanged']
     self.addHeader('%d translated, %d untranslated, %d%%\n'
-                   % (changed, unchanged,
-                      100*changed/(unchanged+changed)))
-    self.completion = int(100*changed/(unchanged+changed))
+                   % (changed, unchanged, self.completion))
     tbmsg = ''
     if 'tree' in self.args:
       tbmsg = self.args['tree'] + ': '
@@ -60,19 +58,15 @@ class ResultRemoteCommand(LoggedRemoteCommand):
     self.addStdout('TinderboxPrint:<a title="Completion">%d/%d (%d%%)</a>\n' %
                     (changed, unchanged, self.completion))
     if self.rc == FAILURE:
-      counts = [0, 0]
-      if 'missing' in result:
-        counts[0] = sum([sum([len(vv) for vv in v.values()]) \
-                         for v in result['missing'].values()])
-      if 'missingFiles' in result:
-        counts[1] = sum([len(v.keys()) for v in result['missingFiles'].values()])
-      self.addStdout('TinderboxPrint:<a title="Missing Strings/Files">' + 
-                     '%d/%d' % tuple(counts) + 
+      missing = sum([summary[k] \
+                       for k in ['missing', 'missingInFiles'] \
+                       if k in summary])
+      self.addStdout('TinderboxPrint:<a title="Missing Strings">' + 
+                     '%d' % missing + 
                      '</a>\n')
-    self.addStdout(pformat(rmsg))
-    self.step.setProperty('compare-result', rmsg)
-    self.step.setProperty('coverage-result', dict(changed=changed,
-                                                  unchanged=unchanged))
+    self.addStdout(result.serialize())
+    self.step.setProperty('compare-result', result.details)
+    self.step.setProperty('coverage-result', result.getSummary())
   
   def remoteComplete(self, maybeFailure):
     log.msg('end with compare, rc: %s, maybeFailure: %s'%(self.rc, maybeFailure))
