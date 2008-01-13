@@ -128,8 +128,8 @@ class Tree(object):
     keys.sort()
     if self.value is not None:
       json['value'] = self.value
-    children = dict(('/'.join(key), self.branches[key].toJSON())
-                    for key in keys)
+    children = [('/'.join(key), self.branches[key].toJSON())
+                    for key in keys]
     if children:
       json['children'] = children
     return json
@@ -238,9 +238,10 @@ class Observer(object):
       if self.filter is not None and not self.filter(file, data):
         return
       v = self.details[file]
-      if 'entities' not in v:
-        v['entities'] = dict()
-      v['entities'][data] = ['add', 'remove'][category == 'obsoleteEntity']
+      try:
+        v[category].append(data)
+      except KeyError:
+        v[category] = [data]
     elif category == 'error':
       self.details[file][category] = data
   def serialize(self, type="text/plain"):
@@ -249,13 +250,16 @@ class Observer(object):
         return '  ' * t[0] + '/'.join(t[2])
       o = []
       indent = '  ' * (t[0] + 1)
-      if 'entities' in t[2]:
-        v = t[2]['entities']
-        entities = v.keys()
+      if 'missingEntity' in t[2] or 'obsoleteEntity' in t[2]:
+        missingEntities = ('missingEntity' in t[2] and t[2]['missingEntity']) \
+            or []
+        obsoleteEntities = ('obsoleteEntity' in t[2] and
+                            t[2]['obsoleteEntity']) or []
+        entities = missingEntities + obsoleteEntities
         entities.sort()
         for entity in entities:
           op = '+'
-          if v[entity] == 'remove':
+          if entity in obsoleteEntities:
             op = '-'
           o.append(indent + op + entity)
       elif 'missingFile' in t[2]:
