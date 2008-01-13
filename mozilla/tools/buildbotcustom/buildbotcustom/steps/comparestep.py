@@ -65,8 +65,8 @@ class ResultRemoteCommand(LoggedRemoteCommand):
                      '%d' % missing + 
                      '</a>\n')
     self.addStdout(result.serialize())
-    self.step.setProperty('compare-result', result.details)
-    self.step.setProperty('coverage-result', result.getSummary())
+    self.step.setProperty('compare-result', result.details.toJSON())
+    self.step.setProperty('coverage-result', result.getSummary()[self.args['locale']])
   
   def remoteComplete(self, maybeFailure):
     log.msg('end with compare, rc: %s, maybeFailure: %s'%(self.rc, maybeFailure))
