@@ -1,9 +1,10 @@
 from twisted.internet import reactor, defer
 from twisted.python import log
+from twisted.python.failure import Failure
 
 from buildbot.slave.registry import registerSlaveCommand
 from buildbot.slave.commands import Command
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
+from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 
 import os
 from Mozilla.Paths import EnumerateApp
@@ -50,7 +51,13 @@ class CompareCommand(Command):
       log.msg('trying to import Mozilla from %s'%os.getcwd())
     app = EnumerateApp(workingdir)
     app.addApplication(self.application, [self.locale])
-    o = compareApp(app)
+    try:
+      o = compareApp(app)
+    except Exception, e:
+      log.msg('%s comparison failed with %s' % (self.locale, str(e)))
+      log.msg(Failure().getTraceback())
+      self.rc = EXCEPTION
+      return
     self.rc = SUCCESS
     summary = o.summary[self.locale]
     if 'obsolete' in summary and summary['obsolete'] > 0:
@@ -67,8 +74,7 @@ class CompareCommand(Command):
     summary['total'] = total
 
     self.sendStatus({'result': dict(summary=dict(summary),
-                                    details=o.details.toJSON()),
-                     'rc': self. rc})
+                                    details=o.details.toJSON())
     pass
 
   def finished(self, *args):
