@@ -16,12 +16,12 @@ class ResultRemoteCommand(LoggedRemoteCommand):
     log.msg("remoteUpdate called")
     result = None
     try:
-      rc = update.pop('rc')
+      self.rc = update.pop('rc')
       log.msg('Comparison of localizations completed')
     except KeyError:
       pass
     try:
-      # get the Observer instance from the slave
+      # get the Observer data from the slave
       result = update.pop('result')
     except KeyError:
       pass
@@ -34,18 +34,8 @@ class ResultRemoteCommand(LoggedRemoteCommand):
       return
 
     rmsg = {}
-    self.rc = SUCCESS
-    summary = result.summary[self.args['locale']]
-    if 'obsolete' in summary and summary['obsolete'] > 0:
-      self.rc = WARNINGS
-    if 'missing' in summary and summary['missing'] > 0:
-      self.rc = FAILURE
-    if 'missingInFiles' in summary and summary['missingInFiles'] > 0:
-      self.rc = FAILURE
-    self.addHeader(Results[self.rc]+'\n')
-    total = sum(summary[k] for k in ['changed','unchanged','missing',
-                                     'missingInFiles'])
-    self.completion = int((summary['changed'] * 100) / total)
+    summary = result['summary']
+    self.completion = summary['completion']
     changed = summary['changed']
     unchanged = summary['unchanged']
     self.addHeader('%d translated, %d untranslated, %d%%\n'
@@ -55,8 +45,8 @@ class ResultRemoteCommand(LoggedRemoteCommand):
       tbmsg = self.args['tree'] + ': '
     tbmsg += "%(application)s %(locale)s" % self.args
     self.addStdout('TinderboxPrint:<a title="Build type">' + tbmsg + '</a>\n')
-    self.addStdout('TinderboxPrint:<a title="Completion">%d/%d (%d%%)</a>\n' %
-                    (changed, unchanged, self.completion))
+    self.addStdout('TinderboxPrint:<a title="Completion">%d%%</a>\n' %
+                   self.completion)
     if self.rc == FAILURE:
       missing = sum([summary[k] \
                        for k in ['missing', 'missingInFiles'] \
@@ -64,9 +54,22 @@ class ResultRemoteCommand(LoggedRemoteCommand):
       self.addStdout('TinderboxPrint:<a title="Missing Strings">' + 
                      '%d' % missing + 
                      '</a>\n')
-    self.addStdout(result.serialize())
-    self.step.setProperty('compare-result', result.details.toJSON())
-    self.step.setProperty('coverage-result', result.getSummary()[self.args['locale']])
+    self.addStdout(str(summary) + '\n')
+    self.addStdout(pformat(result['details']) + '\n')
+    self.step.setProperty('compare-result', result['details'])
+    self.step.setProperty('coverage-result', summary)
+    # It'd be nice if we didn't have to hardcode the URL to the comparison
+    # Picking one that is relative to the waterfall
+    self.step.addURL('comparison',
+                     '../compare/%s/%d' % \
+                     (self.step.build.getProperty('buildername'),
+                      self.step.build.getProperty('buildnumber')))
+    # duh, really hardcoding for tinderbox.
+    self.addStdout('TinderboxPrint:<a title="detailed comparison" ' +
+                   'href="http://l10n.mozilla.org/buildbot/compare/%s/%d">' % \
+                   (self.step.build.getProperty('buildername'),
+                   self.step.build.getProperty('buildnumber')) +
+                   'CL</a>\n')
   
   def remoteComplete(self, maybeFailure):
     log.msg('end with compare, rc: %s, maybeFailure: %s'%(self.rc, maybeFailure))
@@ -80,7 +83,7 @@ class CompareLocale(LoggingBuildStep):
   This class hooks up CompareLocales in the build master.
   """
 
-  name = "moz:comparelocales"
+  name = "moz_comparelocales"
   haltOnFailure = 1
 
   description = ["comparing"]

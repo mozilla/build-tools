@@ -7,5 +7,6 @@ setup(name='buildbotcustom',
       description='Mozilla custom buildbot infrastructure',
       author='Axel Hecht',
       author_email='l10n@mozilla.com',
-      packages=['buildbotcustom','buildbotcustom.steps','buildbotcustom.slave']
+      packages=['buildbotcustom','buildbotcustom.steps','buildbotcustom.slave','buildbotcustom.status'],
+      package_data={'buildbotcustom.status': ['*.mako']}
      )

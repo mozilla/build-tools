@@ -3,7 +3,7 @@ from twisted.python import log
 
 from buildbot.slave.registry import registerSlaveCommand
 from buildbot.slave.commands import Command
-from buildbot.status.builder import SUCCESS
+from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
 
 import os
 from Mozilla.Paths import EnumerateApp
@@ -51,11 +51,25 @@ class CompareCommand(Command):
     app = EnumerateApp(workingdir)
     app.addApplication(self.application, [self.locale])
     o = compareApp(app)
-    self.sendStatus({'result': o})
+    self.rc = SUCCESS
+    summary = o.summary[self.locale]
+    if 'obsolete' in summary and summary['obsolete'] > 0:
+      self.rc = WARNINGS
+    if 'missing' in summary and summary['missing'] > 0:
+      self.rc = FAILURE
+    if 'missingInFiles' in summary and summary['missingInFiles'] > 0:
+      self.rc = FAILURE
+    total = sum(summary[k] for k in ['changed','unchanged','missing',
+                                     'missingInFiles'])
+    summary['completion'] = int((summary['changed'] * 100) / total)
+    summary['total'] = total
+
+    self.sendStatus({'result': dict(summary=dict(summary),
+                                    details=o.details.toJSON()),
+                     'rc': self. rc})
     pass
 
   def finished(self, *args):
-    log.msg('finished called with args: %s'%args)
-    self.sendStatus({'rc':0})
+    self.sendStatus({'rc': self.rc})
 
-registerSlaveCommand('moz:comparelocales', CompareCommand, '0.1')
+registerSlaveCommand('moz_comparelocales', CompareCommand, '0.1')

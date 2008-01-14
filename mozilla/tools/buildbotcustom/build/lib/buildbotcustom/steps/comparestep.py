@@ -16,11 +16,12 @@ class ResultRemoteCommand(LoggedRemoteCommand):
     log.msg("remoteUpdate called")
     result = None
     try:
-      rc = update.pop('rc')
+      self.rc = update.pop('rc')
       log.msg('Comparison of localizations completed')
     except KeyError:
       pass
     try:
+      # get the Observer data from the slave
       result = update.pop('result')
     except KeyError:
       pass
@@ -33,46 +34,42 @@ class ResultRemoteCommand(LoggedRemoteCommand):
       return
 
     rmsg = {}
-    ## only one language, strip that from the result
-    self.rc = SUCCESS
-    for k, v in result.iteritems():
-      if k.startswith('obsolete') or k.startswith('missing'):
-        if not v or not len(v):
-          continue
-        rmsg[k] = v
-        if k.startswith('missing'):
-          # flag this as error
-          self.rc = FAILURE
-        elif self.rc == SUCCESS:
-          self.rc = WARNINGS
-    changed = result['changed']
-    unchanged = result['unchanged']
-    self.addHeader(Results[self.rc]+'\n')
+    summary = result['summary']
+    self.completion = summary['completion']
+    changed = summary['changed']
+    unchanged = summary['unchanged']
     self.addHeader('%d translated, %d untranslated, %d%%\n'
-                   % (changed, unchanged,
-                      100*changed/(unchanged+changed)))
-    self.completion = int(100*changed/(unchanged+changed))
+                   % (changed, unchanged, self.completion))
     tbmsg = ''
     if 'tree' in self.args:
       tbmsg = self.args['tree'] + ': '
     tbmsg += "%(application)s %(locale)s" % self.args
     self.addStdout('TinderboxPrint:<a title="Build type">' + tbmsg + '</a>\n')
-    self.addStdout('TinderboxPrint:<a title="Completion">%d/%d (%d%%)</a>\n' %
-                    (changed, unchanged, self.completion))
+    self.addStdout('TinderboxPrint:<a title="Completion">%d%%</a>\n' %
+                   self.completion)
     if self.rc == FAILURE:
-      counts = [0, 0]
-      if 'missing' in result:
-        counts[0] = sum([sum([len(vv) for vv in v.values()]) \
-                         for v in result['missing'].values()])
-      if 'missingFiles' in result:
-        counts[1] = sum([len(v.keys()) for v in result['missingFiles'].values()])
-      self.addStdout('TinderboxPrint:<a title="Missing Strings/Files">' + 
-                     '%d/%d' % tuple(counts) + 
+      missing = sum([summary[k] \
+                       for k in ['missing', 'missingInFiles'] \
+                       if k in summary])
+      self.addStdout('TinderboxPrint:<a title="Missing Strings">' + 
+                     '%d' % missing + 
                      '</a>\n')
-    self.addStdout(pformat(rmsg))
-    self.step.setProperty('compare-result', rmsg)
-    self.step.setProperty('coverage-result', dict(changed=changed,
-                                                  unchanged=unchanged))
+    self.addStdout(str(summary) + '\n')
+    self.addStdout(pformat(result['details']) + '\n')
+    self.step.setProperty('compare-result', result['details'])
+    self.step.setProperty('coverage-result', summary)
+    # It'd be nice if we didn't have to hardcode the URL to the comparison
+    # Picking one that is relative to the waterfall
+    self.step.addURL('comparison',
+                     '../compare/%s/%d' % \
+                     (self.step.build.getProperty('buildername'),
+                      self.step.build.getProperty('buildnumber')))
+    # duh, really hardcoding for tinderbox.
+    self.addStdout('TinderboxPrint:<a title="detailed comparison" ' +
+                   'href="http://l10n.mozilla.org/buildbot/compare/%s/%d">' % \
+                   (self.step.build.getProperty('buildername'),
+                   self.step.build.getProperty('buildnumber')) +
+                   'CL</a>\n')
   
   def remoteComplete(self, maybeFailure):
     log.msg('end with compare, rc: %s, maybeFailure: %s'%(self.rc, maybeFailure))
@@ -86,7 +83,7 @@ class CompareLocale(LoggingBuildStep):
   This class hooks up CompareLocales in the build master.
   """
 
-  name = "moz:comparelocales"
+  name = "moz_comparelocales"
   haltOnFailure = 1
 
   description = ["comparing"]

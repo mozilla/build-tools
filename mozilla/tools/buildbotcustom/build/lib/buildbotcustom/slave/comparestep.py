@@ -3,9 +3,11 @@ from twisted.python import log
 
 from buildbot.slave.registry import registerSlaveCommand
 from buildbot.slave.commands import Command
-from buildbot.status.builder import SUCCESS
+from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
 
 import os
+from Mozilla.Paths import EnumerateApp
+from Mozilla.CompareLocales import compareApp
 
 class CompareCommand(Command):
   """
@@ -43,38 +45,31 @@ class CompareCommand(Command):
     cwd = os.getcwd()
     if self.debug:
       log.msg("I'm in  %s"%os.getcwd())
-    try:
-      wd = os.path.join(self.builder.basedir, self.workdir)
-      os.chdir(wd)
-      if self.debug:
-        log.msg('trying to import Mozilla from %s'%os.getcwd())
-      from Mozilla import CompareLocales
-      rv = CompareLocales.compare(testLocales =
-                                  {self.application: [self.locale]})
-      ## compress results a bit
-      ## XXX should be part of CompareLocales, really
-      rv = rv[self.locale]
-      for k, lst in rv.iteritems():
-        if not k.startswith('missing') and not k.startswith('obsolete'):
-          continue
-        nv = {}
-        for v in lst:
-          if v[0] not in nv:
-            nv[v[0]] = {}
-          if v[1] not in nv[v[0]]:
-            nv[v[0]][v[1]] = []
-          if len(v) > 2:
-            nv[v[0]][v[1]].append(v[2])
-            ## this could be prettier, but lets just sort() each time
-            nv[v[0]][v[1]].sort()
-        rv[k] = nv
-      self.sendStatus({'result':rv})
-      pass
-    finally:
-      os.chdir(cwd)
+    workingdir = os.path.join(self.builder.basedir, self.workdir)
+    if self.debug:
+      log.msg('trying to import Mozilla from %s'%os.getcwd())
+    app = EnumerateApp(workingdir)
+    app.addApplication(self.application, [self.locale])
+    o = compareApp(app)
+    self.rc = SUCCESS
+    summary = o.summary[self.locale]
+    if 'obsolete' in summary and summary['obsolete'] > 0:
+      self.rc = WARNINGS
+    if 'missing' in summary and summary['missing'] > 0:
+      self.rc = FAILURE
+    if 'missingInFiles' in summary and summary['missingInFiles'] > 0:
+      self.rc = FAILURE
+    total = sum(summary[k] for k in ['changed','unchanged','missing',
+                                     'missingInFiles'])
+    summary['completion'] = int((summary['changed'] * 100) / total)
+    summary['total'] = total
+
+    self.sendStatus({'result': dict(summary=dict(summary),
+                                    details=o.details.toJSON()),
+                     'rc': self. rc})
+    pass
 
   def finished(self, *args):
-    log.msg('finished called with args: %s'%args)
-    self.sendStatus({'rc':0})
+    self.sendStatus({'rc': self.rc})
 
-registerSlaveCommand('moz:comparelocales', CompareCommand, '0.1')
+registerSlaveCommand('moz_comparelocales', CompareCommand, '0.1')
