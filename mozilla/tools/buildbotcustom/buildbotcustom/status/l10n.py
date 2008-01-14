@@ -116,6 +116,7 @@ class LatestL10n(StatusReceiverMultiService):
         props[key] = build.getProperty(key)
     except KeyError:
       log.msg('reported build not proper, %s is missing' % key)
+      return
     coverage = props.pop('coverage-result')
     for k, v in coverage.iteritems():
       props['coverage-' + k] = v
