@@ -52,7 +52,7 @@ class ResultRemoteCommand(LoggedRemoteCommand):
                        for k in ['missing', 'missingInFiles'] \
                        if k in summary])
       self.addStdout('TinderboxPrint:<a title="Missing Strings">' + 
-                     '%d' % missing + 
+                     'M: %d' % missing + 
                      '</a>\n')
     self.addStdout(str(summary) + '\n')
     self.addStdout(pformat(result['details']) + '\n')
@@ -61,7 +61,7 @@ class ResultRemoteCommand(LoggedRemoteCommand):
     # It'd be nice if we didn't have to hardcode the URL to the comparison
     # Picking one that is relative to the waterfall
     self.step.addURL('comparison',
-                     '../compare/%s/%d' % \
+                     'compare/%s/%d' % \
                      (self.step.build.getProperty('buildername'),
                       self.step.build.getProperty('buildnumber')))
     # duh, really hardcoding for tinderbox.
