@@ -113,14 +113,14 @@ class LatestL10n(StatusReceiverMultiService):
     log.msg("LatestL10n getting notified")
     props = {}
     try:
-      for key in ['tree', 'locale', 'app', 'coverage-result', 'buildnumber']:
+      for key in ['tree', 'locale', 'app', 'coverage-result', 'buildnumber', 'buildername', 'slavename']:
         props[key] = build.getProperty(key)
     except KeyError:
       log.msg('reported build not proper, %s is missing' % key)
       return
     coverage = props.pop('coverage-result')
     for k, v in coverage.iteritems():
-      props['coverage-' + k] = v
+      props['coverage_' + k] = v
     props['result'] = Results[results]
     starttime, endtime = self.getTimes(build)
     props.update(dict(starttime=starttime, endtime=endtime))
@@ -131,7 +131,7 @@ class LatestL10n(StatusReceiverMultiService):
       pass
     items = status['items']
     rv = dict(props)
-    id = '/'.join((builderName, props['app'], props['locale']))
+    id = '/'.join((builderName, props['tree'], props['app'], props['locale']))
     rv['id'] = id
     rv['label'] = props['locale']
     rv['type'] = 'Build'
