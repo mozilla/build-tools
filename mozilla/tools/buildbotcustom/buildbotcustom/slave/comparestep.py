@@ -70,6 +70,11 @@ class CompareCommand(Command):
     pass
 
   def finished(self, *args):
-    self.sendStatus({'rc': self.rc})
+    # sometimes self.rc isn't set here, no idea why
+    try:
+      rc = self.rc
+    except AttibuteError:
+      rc = FAILURE
+    self.sendStatus({'rc': rc})
 
 registerSlaveCommand('moz_comparelocales', CompareCommand, '0.1')
