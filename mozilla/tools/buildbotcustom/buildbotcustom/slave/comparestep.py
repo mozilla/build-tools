@@ -73,7 +73,7 @@ class CompareCommand(Command):
     # sometimes self.rc isn't set here, no idea why
     try:
       rc = self.rc
-    except AttibuteError:
+    except AttributeError:
       rc = FAILURE
     self.sendStatus({'rc': rc})
 
