@@ -106,6 +106,7 @@ class WebStatus(baseweb.WebStatus):
 import simplejson
 import time
 from datetime import datetime
+from buildbot.status.builder import Results
 
 class LatestL10n(StatusReceiverMultiService):
   def buildFinished(self, builderName, build, results):
@@ -120,7 +121,7 @@ class LatestL10n(StatusReceiverMultiService):
     coverage = props.pop('coverage-result')
     for k, v in coverage.iteritems():
       props['coverage-' + k] = v
-    props['result'] = results
+    props['result'] = Results[results]
     starttime, endtime = self.getTimes(build)
     props.update(dict(starttime=starttime, endtime=endtime))
     status = dict(items=[])
@@ -132,6 +133,7 @@ class LatestL10n(StatusReceiverMultiService):
     rv = dict(props)
     id = '/'.join((builderName, props['app'], props['locale']))
     rv['id'] = id
+    rv['label'] = props['locale']
     rv['type'] = 'Build'
     needsAppend = True
     for item in items:
