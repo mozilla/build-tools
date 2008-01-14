@@ -74,7 +74,7 @@ class CompareCommand(Command):
     summary['total'] = total
 
     self.sendStatus({'result': dict(summary=dict(summary),
-                                    details=o.details.toJSON()))
+                                    details=o.details.toJSON())})
     pass
 
   def finished(self, *args):
