@@ -161,8 +161,7 @@ class DefinesParser(Parser):
 
 DECL, COMMENT, START, END, CONTENT = range(5)
 
-class BookmarksParser(HTMLParser, Parser):
-  canMerge = False
+class BookmarksParserInner(HTMLParser):
 
   class Token(object):
     _type = None
@@ -210,32 +209,13 @@ class BookmarksParser(HTMLParser, Parser):
   
   def __init__(self):
     HTMLParser.__init__(self)
-    Parser.__init__(self)
     self.tokens = []
 
-  def __iter__(self):
+  def parse(self, contents):
     self.tokens = []
-    self.feed(self.contents)
+    self.feed(contents)
     self.close()
-    tks = self.tokens
-    i = 0
-    k = []
-    for i in xrange(len(tks)):
-      t = tks[i]
-      if t._type == START:
-        k.append(t.tag)
-        for attrname in sorted(t.attrs.keys()):
-          yield dict(key = '.'.join(k) + '.@' + attrname,
-                     val = t.attrs[attrname])
-        if i + 1 < len(tks) and tks[i+1]._type == CONTENT:
-          i += 1
-          t = tks[i]
-          v = t.content.strip()
-          if v:
-            yield dict(key = '.'.join(k),
-                       val = v)
-      elif t._type == END:
-        k.pop()
+    return self.tokens
 
   # Called when we hit an end DL tag to reset the folder selections
   def handle_decl(self, decl):
@@ -264,6 +244,32 @@ class BookmarksParser(HTMLParser, Parser):
   # Called when we hit an end DL tag to reset the folder selections
   def handle_endtag(self, tag):
     self.tokens.append(self.EndToken(tag))
+
+class BookmarksParser(Parser):
+  canMerge = False
+
+  def __iter__(self):
+    p = BookmarksParserInner()
+    tks = p.parse(self.contents)
+    i = 0
+    k = []
+    for i in xrange(len(tks)):
+      t = tks[i]
+      if t._type == START:
+        k.append(t.tag)
+        for attrname in sorted(t.attrs.keys()):
+          yield dict(key = '.'.join(k) + '.@' + attrname,
+                     val = t.attrs[attrname])
+        if i + 1 < len(tks) and tks[i+1]._type == CONTENT:
+          i += 1
+          t = tks[i]
+          v = t.content.strip()
+          if v:
+            yield dict(key = '.'.join(k),
+                       val = v)
+      elif t._type == END:
+        k.pop()
+
 
 __constructors = [('\\.dtd', DTDParser()),
                   ('\\.properties', PropertiesParser()),
