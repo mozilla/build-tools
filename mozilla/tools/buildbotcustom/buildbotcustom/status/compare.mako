@@ -9,8 +9,9 @@
 <div class="filepath">${span(label, base + label)}</div>
       % if 'value' in child:
 <%
+from xml.sax.saxutils import escape
 v = child['value']
-errors = ('error' in v and v['error']) or []
+errors = ('error' in v and [escape(v['error'])]) or []
 missings = ('missingEntity' in v and v['missingEntity']) or []
 obsoletes = ('obsoleteEntity' in v and v ['obsoleteEntity']) or []
 entities = missings + obsoletes
