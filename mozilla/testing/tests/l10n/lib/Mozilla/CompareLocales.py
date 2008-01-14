@@ -244,13 +244,16 @@ class Observer(object):
         v[category] = [data]
     elif category == 'error':
       self.details[file][category] = data
+      self.summary[file.locale]['errors'] += 1
   def serialize(self, type="text/plain"):
     def tostr(t):
       if t[1] == 'key':
         return '  ' * t[0] + '/'.join(t[2])
       o = []
       indent = '  ' * (t[0] + 1)
-      if 'missingEntity' in t[2] or 'obsoleteEntity' in t[2]:
+      if 'error' in t[2]:
+        o.append(indent + 'ERROR: ' + t[2]['error'])
+      elif 'missingEntity' in t[2] or 'obsoleteEntity' in t[2]:
         missingEntities = ('missingEntity' in t[2] and t[2]['missingEntity']) \
             or []
         obsoleteEntities = ('obsoleteEntity' in t[2] and

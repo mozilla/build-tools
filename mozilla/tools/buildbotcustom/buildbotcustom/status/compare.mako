@@ -10,12 +10,13 @@
       % if 'value' in child:
 <%
 v = child['value']
+errors = ('error' in v and v['error']) or []
 missings = ('missingEntity' in v and v['missingEntity']) or []
 obsoletes = ('obsoleteEntity' in v and v ['obsoleteEntity']) or []
 entities = missings + obsoletes
 entities.sort()
 cls = ['obsolete','missing']
-out = [(cls[e in missings], e) for e in entities]
+out = [('error', e) for e in errors] + [(cls[e in missings], e) for e in entities]
 %>
         % if len(out):
 <div class="diff">
@@ -48,6 +49,10 @@ ${format(child, base + label + '/')}
 .obsoleteFile {
   text-decoration: line-through;
   color: grey;
+}
+.error {
+  color: red;
+  font-weight: bolder;
 }
 .obsolete {
   text-decoration: line-through;

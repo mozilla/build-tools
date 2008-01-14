@@ -59,6 +59,8 @@ class CompareCommand(Command):
       self.rc = FAILURE
     if 'missingInFiles' in summary and summary['missingInFiles'] > 0:
       self.rc = FAILURE
+    if 'errors' in summary and summary['errors'] > 0:
+      self.rc = FAILURE
     total = sum(summary[k] for k in ['changed','unchanged','missing',
                                      'missingInFiles'])
     summary['completion'] = int((summary['changed'] * 100) / total)
