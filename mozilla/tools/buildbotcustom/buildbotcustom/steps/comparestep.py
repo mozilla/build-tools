@@ -139,7 +139,7 @@ class CompareLocale(LoggingBuildStep):
   def getText(self, cmd, results):
     assert cmd.rc == results, "This should really be our own result"
     log.msg("called getText")
-    txt = "no completion found for result %s" % results
+    text = ["no completion found for result %s" % results]
     if hasattr(cmd, 'completion'):
       log.msg("rate is %d, results is %s" % (cmd.completion,results))
       text = ['%d%% translated' % cmd.completion]
