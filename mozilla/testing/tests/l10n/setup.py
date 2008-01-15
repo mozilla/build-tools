@@ -1,6 +1,31 @@
-from distutils.core import setup
+"""Python library and scripts to assist in localizing Mozilla applications
 
-from distutils.cmd import Command
+Localization of XUL applications in general and Mozilla applications in
+particular are done by a number of different file formats. Independent
+of the format, the Mozilla architecture does not provide fallback strings
+at runtime. This library and the calling scripts provide a way to check
+a given localization for completeness. For more information see
+http://developer.mozilla.org/en/docs/Compare-locales
+"""
+
+docstrings = __doc__.split("\n")
+
+from setuptools import setup, find_packages
+
+classifiers = """\
+Development Status :: 4 - Beta
+Intended Audience :: Developers
+License :: OSI Approved :: GNU General Public License (GPL)
+License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)
+License :: OSI Approved :: Mozilla Public License 1.1 (MPL 1.1)
+Operating System :: OS Independent
+Programming Language :: Python
+Topic :: Software Development :: Libraries :: Python Modules
+Topic :: Software Development :: Localization
+Topic :: Software Development :: Testing
+"""
+
+from setuptools import Command
 import glob
 
 class web(Command):
@@ -19,10 +44,16 @@ class web(Command):
         continue
       self.copy_file(f, self.target)
 
-setup(name="l10n-tools",
-      version="0.2",
+setup(name="compare-locales",
+      version="0.3",
       author="Axel Hecht",
-      author_email="l10n@mozilla.com",
+      author_email="axel@mozilla.com",
+      description=docstrings[0],
+      long_description="\n".join(docstrings[2:]),
+      license="MPL 1.1/GPL 2.0/LGPL 2.1",
+      url="http://developer.mozilla.org/en/docs/Compare-locales",
+      classifiers=filter(None, classifiers.split("\n")),
+      platforms=["any"],
       scripts=['scripts/compare-locales', 'scripts/verify-search',
                'scripts/test-locales',
                'scripts/verify-rss-redirects'],
