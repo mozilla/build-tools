@@ -124,24 +124,28 @@ class EnumerateDir(object):
     '''
     Return a File object that this enumerator would return, if it had it.
     '''
-    return File(os.path.normpath('/'.join([self.basepath, other.file])),
-                                 other.file,
-                                 self.module, self.locale)
+    return File(os.path.join(self.basepath, other.file), other.file,
+                self.module, self.locale)
   def __iter__(self):
-    dirs = [os.curdir]
+    # our local dirs are given as a tuple of path segments, starting off
+    # with an empty sequence for the basepath.
+    dirs = [()]
     while dirs:
       dir = dirs.pop(0)
-      if not os.path.isdir(self.basepath + '/' + dir):
+      fulldir = os.path.join(self.basepath, *dir)
+      try:
+        entries = os.listdir(fulldir)
+      except OSError:
+        # we probably just started off in a non-existing dir, ignore
         continue
-      entries = os.listdir(self.basepath + '/' + dir)
       entries.sort()
       for entry in entries:
-        if os.path.isdir('/'.join([self.basepath, dir, entry])):
+        leaf = os.path.join(fulldir, entry)
+        if os.path.isdir(leaf):
           if entry not in self.ignore_dirs:
-            dirs.append(dir + '/' + entry)
+            dirs.append(dir + (entry,))
           continue
-        yield File(os.path.normpath('/'.join([self.basepath, dir, entry])), 
-                   os.path.normpath(dir + '/' + entry),
+        yield File(leaf, '/'.join(dir + (entry,)),
                    self.module, self.locale)
 
 class LocalesWrap(object):
