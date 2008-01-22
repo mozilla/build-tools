@@ -80,7 +80,7 @@ ${format(child, base + label + '/')}
 <body>
 <h1>Comparison for ${build['app']}-${build['locale']}</h1>
 <p id="backlink">
-<a href="../../../builders/${build['buildername']}/builds/${build['buildnumber']}">Build ${build['buildnumber']}</a> from ${build['starttime'].ctime()}
+<a href="../../builders/${build['buildername']}/builds/${build['buildnumber']}">Build ${build['buildnumber']}</a> from ${build['starttime'].ctime()}
 </p>
 <p id="stats">
 <%
