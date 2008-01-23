@@ -10,6 +10,9 @@ http://developer.mozilla.org/en/docs/Compare-locales
 
 docstrings = __doc__.split("\n")
 
+import ez_setup
+ez_setup.use_setuptools()
+
 from setuptools import setup, find_packages
 
 classifiers = """\
