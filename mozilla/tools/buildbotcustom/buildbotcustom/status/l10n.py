@@ -46,6 +46,8 @@ from mako.template import Template
 from twisted.python import log
 import os.path
 import urllib
+import time
+from datetime import datetime
 
 class CompareBuild(base.HtmlResource):
   def __init__(self, template, build_status):
@@ -55,7 +57,12 @@ class CompareBuild(base.HtmlResource):
   def content(self, req):
     result = self.build_status.getProperty('compare-result')
     summary = self.build_status.getProperty('coverage-result')
-    return self.template.render(result=result, summary=summary)
+    build = dict()
+    for k in ['locale', 'app', 'buildername', 'buildnumber']:
+      build[k] = self.build_status.getProperty(k)
+    startTime = round(self.build_status.getTimes()[0]) + time.timezone
+    build['starttime'] = datetime.fromtimestamp(startTime)
+    return self.template.render(result=result, summary=summary, build=build)
 
 class CompareBuilder(base.HtmlResource):
   title = "Compares for a builder"
@@ -104,8 +111,6 @@ class WebStatus(baseweb.WebStatus):
     baseweb.WebStatus.setupSite(self)
 
 import simplejson
-import time
-from datetime import datetime
 from buildbot.status.builder import Results
 
 class LatestL10n(StatusReceiverMultiService):

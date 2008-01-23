@@ -37,7 +37,7 @@ ${format(child, base + label + '/')}
 </%def>
 <html>
 <head>
-<title>Comparison</title>
+<title>Comparison for ${build['app']}-${build['locale']} (${build['buildnumber']})</title>
 <style type="text/css">
 .json-child {
   padding-left:1em;
@@ -78,10 +78,14 @@ ${format(child, base + label + '/')}
 </style>
 </head>
 <body>
-<h1>Comparison</h1>
+<h1>Comparison for ${build['app']}-${build['locale']}</h1>
+<p id="backlink">
+<a href="../../builders/${build['buildername']}/builds/${build['buildnumber']}">Build ${build['buildnumber']}</a> from ${build['starttime'].ctime()}
+</p>
 <p id="stats">
 <%
 total = sum(summary[k] for k in ['changed','unchanged','missing','missingInFiles'] if k in summary)
+total_missing = sum(summary[k] for k in ['missing','missingInFiles'] if k in summary)
 width = 300
 %>
 ${summary['completion']}% changed, ignoring ${summary['keys']} keys
@@ -94,6 +98,21 @@ ${summary['completion']}% changed, ignoring ${summary['keys']} keys
 </tr>
 </table>
 </p>
+% if total_missing > 0:
+<%
+sep = ''
+if 'missing' in summary and summary['missing'] != total_missing:
+  sep = ', '
+%>
+<p id="missing">
+  % if 'missing' in summary and summary['missing'] > 0:
+ ${summary['missing']} entries missing in existing files${sep}
+  % endif
+  % if 'missingInFiles' in summary and summary['missingInFiles'] > 0:
+ ${summary['missingInFiles']} entries missing in new files
+  % endif
+</p>
+% endif
 <p id="blurb">
 Below you see the files and localizable strings missing and obsolete. The obsolete ones are striked through and grey. The data is organized hierarchically, the full path for a file is available as an tooltip.
 </p>
