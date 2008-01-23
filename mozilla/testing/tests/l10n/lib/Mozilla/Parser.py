@@ -159,6 +159,23 @@ class DefinesParser(Parser):
     self.reFooter = re.compile('\s*(#(?!define\s).*\s*)*$',re.M)
     Parser.__init__(self)
 
+class IniParser(Parser):
+  '''
+  Parse files of the form:
+  # initial comment
+  [cat]
+  whitespace*
+  #comment
+  string=value
+  ...
+  '''
+  def __init__(self):
+    self.reHeader = re.compile('^\s*#.*\n\[.+?\]\n', re.M)
+    self.reKey = re.compile('(\s*)((?:#.*\n\s*)*)((.+?)=(.*))(\n?)')
+    self.reFooter = re.compile('\s*')
+    Parser.__init__(self)
+
+
 DECL, COMMENT, START, END, CONTENT = range(5)
 
 class BookmarksParserInner(HTMLParser):
@@ -273,5 +290,6 @@ class BookmarksParser(Parser):
 
 __constructors = [('\\.dtd', DTDParser()),
                   ('\\.properties', PropertiesParser()),
+                  ('\\.ini', IniParser()),
                   ('\\.inc', DefinesParser()),
                   ('bookmarks\\.html', BookmarksParser())]
