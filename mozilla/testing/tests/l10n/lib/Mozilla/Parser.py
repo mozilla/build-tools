@@ -288,8 +288,8 @@ class BookmarksParser(Parser):
         k.pop()
 
 
-__constructors = [('\\.dtd', DTDParser()),
-                  ('\\.properties', PropertiesParser()),
-                  ('\\.ini', IniParser()),
-                  ('\\.inc', DefinesParser()),
-                  ('bookmarks\\.html', BookmarksParser())]
+__constructors = [('\\.dtd$', DTDParser()),
+                  ('\\.properties$', PropertiesParser()),
+                  ('\\.ini$', IniParser()),
+                  ('\\.inc$', DefinesParser()),
+                  ('bookmarks\\.html$', BookmarksParser())]

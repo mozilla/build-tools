@@ -369,8 +369,12 @@ class ContentComparer:
       p = Parser.getParser(f.file)
     except UserWarning:
       return
-    p.readContents(f.getContents())
-    entities, map = p.parse()
+    try:
+      p.readContents(f.getContents())
+      entities, map = p.parse()
+    except Exception, e:
+      self.notify('error', f, str(e))
+      return
     self.notify('missingInFiles', missing, len(map))
 
 def compareApp(app):
