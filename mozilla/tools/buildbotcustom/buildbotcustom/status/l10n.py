@@ -49,6 +49,11 @@ import urllib
 import time
 from datetime import datetime
 
+from buildbotcustom.status import stats
+
+dummycontent = '''<h1>Comparisons</h1>
+The best way to find comparisons is to go through the <a href="waterfall">waterfall</a> or the <a href="/dashboard/">Dashboard</a>.'''
+
 class CompareBuild(base.HtmlResource):
   def __init__(self, template, build_status):
     base.HtmlResource.__init__(self)
@@ -70,6 +75,8 @@ class CompareBuilder(base.HtmlResource):
     base.HtmlResource.__init__(self)
     self.template = template
     self.builder_status = builder_status
+  def body(self, req):
+    return dummycontent
   def getChild(self, path, req):
     try:
       num = int(path)
@@ -88,13 +95,15 @@ class Comparisons(base.HtmlResource):
   def loadTemplate(self, path):
     return
     self.template = Template(filename=os.path.join(path, 'compare.mako'))
+  def body(self, req):
+    return dummycontent
   def getChild(self, path, req):
     s = self.getStatus(req)
     if path in s.getBuilderNames():
       builder_status = s.getBuilder(path)
       return CompareBuilder(self.template, builder_status)
 
-    return HtmlResource.getChild(self, path, req)
+    return base.HtmlResource.getChild(self, path, req)
 
 class WebStatus(baseweb.WebStatus):
   def setupUsualPages(self):
@@ -105,6 +114,7 @@ class WebStatus(baseweb.WebStatus):
     self.putChild("about", AboutBuildbot())
     self.comparisons = Comparisons()
     self.putChild("compare", self.comparisons)
+    self.putChild("statistics", stats.StatsResource())
   def setupSite(self):
     htmldir = os.path.join(self.parent.basedir, "public_html")
     self.comparisons.loadTemplate(htmldir)
@@ -112,10 +122,32 @@ class WebStatus(baseweb.WebStatus):
 
 import simplejson
 from buildbot.status.builder import Results
+from buildbotcustom.status.l10ndb import Build, Active, session
+
+def addBuild(buildstatus):
+  try:
+    b = Build(buildstatus)
+  except Exception, e:
+    log.msg("Creating build database object raised " + str(e))
+    return
+  session.save(b)
+  session.commit()
+  # check if we need to add this to our active table
+  aq = session.query(Active)
+  if aq.filter_by(**b.dict()).count():
+    # we already have this one
+    return
+  a = Active(b)
+  session.save(a)
+  session.commit()
+    
 
 class LatestL10n(StatusReceiverMultiService):
   def buildFinished(self, builderName, build, results):
     log.msg("LatestL10n getting notified")
+    # notify db
+    addBuild(build)
+    # db done, now try update json
     props = {}
     try:
       for key in ['tree', 'locale', 'app', 'coverage-result', 'buildnumber', 'buildername', 'slavename']:
