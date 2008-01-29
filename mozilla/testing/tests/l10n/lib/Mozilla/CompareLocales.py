@@ -232,11 +232,12 @@ class Observer(object):
     if category in self.stat_cats:
       self.summary[file.locale][category] += data
     elif category in ['missingFile', 'obsoleteFile']:
-      if self.filter is None or self.filter(file):
-        self.details[file][category] = True
+      if self.filter is not None and not self.filter(file):
+        return False
+      self.details[file][category] = True
     elif category in ['missingEntity', 'obsoleteEntity']:
       if self.filter is not None and not self.filter(file, data):
-        return
+        return False
       v = self.details[file]
       try:
         v[category].append(data)
@@ -245,6 +246,7 @@ class Observer(object):
     elif category == 'error':
       self.details[file][category] = data
       self.summary[file.locale]['errors'] += 1
+    return True
   def serialize(self, type="text/plain"):
     def tostr(t):
       if t[1] == 'key':
@@ -296,8 +298,7 @@ class ContentComparer:
   def add_observer(self, obs):
     self.observers.append(obs)
   def notify(self, category, file, data):
-    for obs in self.observers:
-      obs.notify(category, file, data)
+    return any(map(lambda o: o.notify(category, file, data), self.observers))
   def remove(self, obsolete):
     self.notify('obsoleteFile', obsolete, None)
     pass
@@ -333,12 +334,12 @@ class ContentComparer:
     for action, item_or_pair in ar:
       if action == 'delete':
         # missing entity
-        self.notify('missingEntity', l10n, item_or_pair)
-        missing += 1
+        if self.notify('missingEntity', l10n, item_or_pair):
+          missing += 1
       elif action == 'add':
         # obsolete entity
-        self.notify('obsoleteEntity', l10n, item_or_pair)
-        obsolete += 1
+        if self.notify('obsoleteEntity', l10n, item_or_pair):
+          obsolete += 1
       else:
         entity = item_or_pair[0]
         if self.keyRE.search(entity):
@@ -363,7 +364,9 @@ class ContentComparer:
       self.notify('keys', l10n, keys)
     pass
   def add(self, orig, missing):
-    self.notify('missingFile', missing, None)
+    if not self.notify('missingFile', missing, None):
+      # filter said that we don't need this file, don't count it
+      return
     f = orig
     try:
       p = Parser.getParser(f.file)
