@@ -11,8 +11,12 @@ from sqlalchemy import select, and_
 
 from buildbotcustom.status import l10ndb
 
-statstemplate = Template(resource_string(__name__, 'stats_plot.mako'))
-pickertemplate = Template(resource_string(__name__, 'stats_picker.mako'))
+statstemplate = Template(resource_string(__name__, 'stats_plot.mako'),
+                         output_encoding='utf-8',
+                         encoding_errors='replace')
+pickertemplate = Template(resource_string(__name__, 'stats_picker.mako'),
+                          output_encoding='utf-8',
+                          encoding_errors='replace')
 
 class StatsResource(base.HtmlResource):
   days = 30

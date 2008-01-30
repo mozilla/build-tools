@@ -90,11 +90,15 @@ class Comparisons(base.HtmlResource):
   def __init__(self):
     base.HtmlResource.__init__(self)
     path = __file__[:__file__.rfind('l10n.py')-1]
-    self.template = Template(filename=os.path.join(path, 'compare.mako'))
+    self.template = Template(filename=os.path.join(path, 'compare.mako'),
+                             output_encoding='utf-8',
+                             encoding_errors='replace')
     log.msg('Comparison resource started')
   def loadTemplate(self, path):
     return
-    self.template = Template(filename=os.path.join(path, 'compare.mako'))
+    self.template = Template(filename=os.path.join(path, 'compare.mako'),
+                             output_encoding='utf-8',
+                             encoding_errors='replace')
   def body(self, req):
     return dummycontent
   def getChild(self, path, req):
