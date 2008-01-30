@@ -244,7 +244,10 @@ class Observer(object):
       except KeyError:
         v[category] = [data]
     elif category == 'error':
-      self.details[file][category] = data
+      try:
+        self.details[file][category].append(data)
+      except KeyError:
+        self.details[file][category] = [data]
       self.summary[file.locale]['errors'] += 1
     return True
   def serialize(self, type="text/plain"):
@@ -254,8 +257,8 @@ class Observer(object):
       o = []
       indent = '  ' * (t[0] + 1)
       if 'error' in t[2]:
-        o.append(indent + 'ERROR: ' + t[2]['error'])
-      elif 'missingEntity' in t[2] or 'obsoleteEntity' in t[2]:
+        o += [indent + 'ERROR: ' + e for e in t[2]['error']]
+      if 'missingEntity' in t[2] or 'obsoleteEntity' in t[2]:
         missingEntities = ('missingEntity' in t[2] and t[2]['missingEntity']) \
             or []
         obsoleteEntities = ('obsoleteEntity' in t[2] and
@@ -271,8 +274,6 @@ class Observer(object):
         o.append(indent + '// add and localize this file')
       elif 'obsoleteFile' in t[2]:
         o.append(indent + '// remove this file')
-      else:
-        o.append(indent + str(t[2]))
       return '\n'.join(o)
     out = []
     for locale, summary in self.summary.iteritems():
@@ -337,16 +338,20 @@ class ContentComparer:
         if self.notify('missingEntity', l10n, item_or_pair):
           missing += 1
       elif action == 'add':
-        # obsolete entity
-        if self.notify('obsoleteEntity', l10n, item_or_pair):
+        # obsolete entity or junk
+        if isinstance(l10n_entities[l10n_map[item_or_pair]], Parser.Junk):
+          junk = l10n_entities[l10n_map[item_or_pair]]
+          params = (junk.val,) + junk.span
+          self.notify('error', l10n, 'Unparsed content "%s" at %d-%d' % params)
+        elif self.notify('obsoleteEntity', l10n, item_or_pair):
           obsolete += 1
       else:
         entity = item_or_pair[0]
         if self.keyRE.search(entity):
           keys += 1
         else:
-          refVal = ref[0][ref[1][entity]]['val']
-          l10nVal = l10n_entities[l10n_map[entity]]['val']
+          refVal = ref[0][ref[1][entity]].val
+          l10nVal = l10n_entities[l10n_map[entity]].val
           if refVal == l10nVal:
             unchanged += 1
           else:

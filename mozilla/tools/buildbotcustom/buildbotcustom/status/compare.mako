@@ -11,7 +11,14 @@
 <%
 from xml.sax.saxutils import escape
 v = child['value']
-errors = ('error' in v and [escape(v['error'])]) or []
+# errors used be strings, and are now arrays, support both
+if 'error' in v and v['error']:
+  errors = v['error']
+  if not isinstance(errors, list):
+    errors = [errors]
+  errors = map(escape, errors)
+else:
+  errors = []
 missings = ('missingEntity' in v and v['missingEntity']) or []
 obsoletes = ('obsoleteEntity' in v and v ['obsoleteEntity']) or []
 entities = missings + obsoletes

@@ -39,6 +39,7 @@
 
 import logging
 from optparse import OptionParser
+import codecs
 
 from Mozilla.Paths import EnumerateApp
 from Mozilla.CompareLocales import compareApp
@@ -76,4 +77,4 @@ app.reference = options.reference
 app.addApplication(options.application, args)
 
 o = compareApp(app)
-print o.serialize()
+print codecs.utf_8_encode(o.serialize())[0]

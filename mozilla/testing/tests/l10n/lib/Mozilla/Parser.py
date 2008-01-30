@@ -45,6 +45,94 @@ from HTMLParser import HTMLParser
 
 __constructors = []
 
+class Entity(object):
+  '''
+  Abstraction layer for a localizable entity.
+  Currently supported are grammars of the form:
+
+  1: pre white space
+  2: pre comments
+  3: entity definition
+  4: entity key (name)
+  5: entity value
+  6: post comment (and white space) in the same line (dtd only)
+                                            <--[1]
+  <!-- pre comments -->                     <--[2]
+  <!ENTITY key "value"> <!-- comment -->
+  
+  <-------[3]---------><------[6]------>
+  '''
+  def __init__(self, contents, pp,
+               span, pre_ws_span, pre_comment_span, def_span,
+               key_span, val_span, post_span):
+    self.contents = contents
+    self.span = span
+    self.pre_ws_span = pre_ws_span
+    self.pre_comment_span = pre_comment_span
+    self.def_span = def_span
+    self.key_span = key_span
+    self.val_span = val_span
+    self.post_span = post_span
+    self.pp = pp
+    pass
+
+  # getter helpers
+
+  def get_all(self):
+    return self.contents[self.span[0] : self.span[1]]
+  def get_pre_ws(self):
+    return self.contents[self.pre_ws_span[0] : self.pre_ws_span[1]]
+  def get_pre_comment(self):
+    return self.contents[self.pre_comment_span[0] : self.pre_comment_span[1]]
+  def get_def(self):
+    return self.contents[self.def_span[0] : self.def_span[1]]
+  def get_key(self):
+    return self.contents[self.key_span[0] : self.key_span[1]]
+  def get_val(self):
+    return self.pp(self.contents[self.val_span[0] : self.val_span[1]])
+  def get_post(self):
+    return self.contents[self.post_span[0] : self.post_span[1]]
+
+  # getters
+
+  all = property(get_all)
+  pre_ws = property(get_pre_ws)
+  pre_comment = property(get_pre_comment)
+  definition = property(get_def)
+  key = property(get_key)
+  val = property(get_val)
+  post = property(get_post)
+
+  def __repr__(self):
+    return self.key
+
+class Junk(object):
+  '''
+  An almost-Entity, representing junk data that we didn't parse.
+  This way, we can signal bad content as stuff we don't understand.
+  And the either fix that, or report real bugs in localizations.
+  '''
+  junkid = 0
+  def __init__(self, contents, span):
+    self.contents = contents
+    self.span = span
+    self.pre_ws = self.pre_comment = self.definition = self.post = ''
+    self.__class__.junkid += 1
+    self.key = '_junk_%d_%d-%d' % (self.__class__.junkid, span[0], span[1])
+
+  # getter helpers
+
+  def get_all(self):
+    return self.contents[self.span[0] : self.span[1]]
+
+  # getters
+
+  all = property(get_all)
+  val = property(get_all)
+  def __repr__(self):
+    return self.key
+
+
 class Parser:
   canMerge = True
   def __init__(self):
@@ -65,30 +153,45 @@ class Parser:
     l = []
     m = {}
     for e in self:
-      m[e['key']] = len(l)
+      m[e.key] = len(l)
       l.append(e)
     return (l, m)
   def postProcessValue(self, val):
     return val
   def __iter__(self):
-    self.offset = 0
+    contents = self.contents
+    offset = 0
     self.header = ''
     self.footer = ''
-    h = self.reHeader.search(self.contents)
+    h = self.reHeader.match(contents)
     if h:
       self.header = h.group()
-      self.offset = h.end()
-    return self
-  def next(self):
-    m = self.reKey.search(self.contents, self.offset)
-    if not m or m.start() != self.offset:
-      t = self.reFooter.search(self.contents, self.offset)
-      if t:
-        self.footer = t.group()
-        self.offset = t.end()
-      raise StopIteration
-    self.offset = m.end()
-    return {'key': m.group(4), 'val': self.postProcessValue(m.group(5)), 'all': m.group(0), 'prespace': m.group(1), 'precomment': m.group(2), 'def': m.group(3), 'post': m.group(6)}
+      offset = h.end()
+    entity, offset = self.getEntity(contents, offset)
+    while entity:
+      yield entity
+      entity, offset = self.getEntity(contents, offset)
+    f = self.reFooter.match(contents, offset)
+    if f:
+      self.footer = f.group()
+      offset = f.end()
+    if len(contents) > offset:
+      yield Junk(contents, (offset, len(contents)))
+    pass
+  def getEntity(self, contents, offset):
+    m = self.reKey.match(contents, offset)
+    if m:
+      offset = m.end()
+      entity = Entity(contents, self.postProcessValue,
+                      *[m.span(i) for i in xrange(7)])
+      return (entity, offset)
+    m = self.reKey.search(contents, offset)
+    if m:
+      # we didn't match, but search, so there's junk between offset
+      # and start. We'll match() on the next turn
+      junkend = m.start()
+      return (Junk(contents, (offset, junkend)), junkend)
+    return (None, offset)
 
 def getParser(path):
   for item in __constructors:
@@ -129,15 +232,31 @@ class DTDParser(Parser):
     NameChar = NameStartChar + ur'\-\.0-9' + u'\xB7\u0300-\u036F\u203F-\u2040'
     Name = '[' + NameStartChar + '][' + NameChar + ']*'
     self.reKey = re.compile('(\s*)((?:<!--(?:[^-]+-)*[^-]+-->\s*)*)(<!ENTITY\s+(' + Name + ')\s+(\"[^\"]*\"|\'[^\']*\')\s*>)([ \t]*(?:<!--(?:[^\n-]+-)*[^\n-]+-->[ \t]*)*\n?)?')
-    # allow parameter entity reference only in the header block
-    self.reHeader = re.compile('^(\s*<!ENTITY\s+%\s+' + Name + '\s+SYSTEM\s+(\"[^\"]*\"|\'[^\']*\')\s*>\s*%[\w\.]+;)?(\s*<!--([^-]+-)*[^-]+-->)?')
+    self.reHeader = re.compile('^(\s*<!--.*LICENSE BLOCK([^-]+-)*[^-]+-->)?')
     self.reFooter = re.compile('\s*(<!--([^-]+-)*[^-]+-->\s*)*$')
+    self.rePE = re.compile('(\s*)((?:<!--(?:[^-]+-)*[^-]+-->\s*)*)(<!ENTITY\s+%\s+(' + Name + ')\s+SYSTEM\s+(\"[^\"]*\"|\'[^\']*\')\s*>\s*%' + Name + ';)([ \t]*(?:<!--(?:[^\n-]+-)*[^\n-]+-->[ \t]*)*\n?)?')
     Parser.__init__(self)
+  def getEntity(self, contents, offset):
+    '''
+    Overload Parser.getEntity to special-case ParsedEntities.
+    Just check for a parsed entity if that method claims junk.
+
+    <!ENTITY % foo SYSTEM "url">
+    %foo;
+    '''
+    entity, inneroffset = Parser.getEntity(self, contents, offset)
+    if (entity and isinstance(entity, Junk)) or entity is None:
+      m = self.rePE.match(contents, offset)
+      if m:
+        inneroffset = m.end()
+        entity = Entity(contents, self.postProcessValue,
+                        *[m.span(i) for i in xrange(7)])
+    return (entity, inneroffset)
 
 class PropertiesParser(Parser):
   def __init__(self):
-    self.reKey = re.compile('^(\s*)((?:[#!].*\n\s*)*)(([^#!\s\r\n][^=:\r\n]*?)\s*[:=][ \t]*(.*?))([ \t]*$\n?)',re.M)
-    self.reHeader = re.compile('^\s*([#!].*\s*)*')
+    self.reKey = re.compile('^(\s*)((?:[#!].*\r?\n\s*)*)(([^#!\s\r\n][^=:\r\n]*?)\s*[:=][ \t]*(.*?))([ \t]*$\r?\n?)',re.M)
+    self.reHeader = re.compile('^\s*([#!].*LICENSE BLOCK.*\s*)([#!].*\s*)*')
     self.reFooter = re.compile('\s*([#!].*\s*)*$')
     self._post = re.compile('\\\\u([0-9a-fA-F]{4})')
     Parser.__init__(self)
@@ -154,7 +273,7 @@ class PropertiesParser(Parser):
 
 class DefinesParser(Parser):
   def __init__(self):
-    self.reKey = re.compile('^(\s*)((?:^#(?!define\s).*\s*)*)(#define[ \t]+(\w+)[ \t]+(.*?))([ \t]*$\n?)',re.M)
+    self.reKey = re.compile('^(\s*)((?:^#(?!define\s).*\s*)*)(#define[ \t]+(\w+)[ \t]+(.*?))([ \t]*$\r?\n?)',re.M)
     self.reHeader = re.compile('^\s*(#(?!define\s).*\s*)*')
     self.reFooter = re.compile('\s*(#(?!define\s).*\s*)*$',re.M)
     Parser.__init__(self)
@@ -170,8 +289,8 @@ class IniParser(Parser):
   ...
   '''
   def __init__(self):
-    self.reHeader = re.compile('^\s*#.*\n\[.+?\]\n', re.M)
-    self.reKey = re.compile('(\s*)((?:#.*\n\s*)*)((.+?)=(.*))(\n?)')
+    self.reHeader = re.compile('^(\s*[;#].*\r?\n)*\[.+?\]\r?\n', re.M)
+    self.reKey = re.compile('(\s*)((?:[;#].*\r?\n\s*)*)((.+?)=(.*))(\r?\n?)')
     self.reFooter = re.compile('\s*')
     Parser.__init__(self)
 
@@ -265,6 +384,11 @@ class BookmarksParserInner(HTMLParser):
 class BookmarksParser(Parser):
   canMerge = False
 
+  class BMEntity(object):
+    def __init__(self, key, val):
+      self.key = key
+      self.val = val
+
   def __iter__(self):
     p = BookmarksParserInner()
     tks = p.parse(self.contents)
@@ -275,15 +399,14 @@ class BookmarksParser(Parser):
       if t._type == START:
         k.append(t.tag)
         for attrname in sorted(t.attrs.keys()):
-          yield dict(key = '.'.join(k) + '.@' + attrname,
-                     val = t.attrs[attrname])
+          yield self.BMEntity('.'.join(k) + '.@' + attrname,
+                              t.attrs[attrname])
         if i + 1 < len(tks) and tks[i+1]._type == CONTENT:
           i += 1
           t = tks[i]
           v = t.content.strip()
           if v:
-            yield dict(key = '.'.join(k),
-                       val = v)
+            yield self.BMEntity('.'.join(k), v)
       elif t._type == END:
         k.pop()
 
