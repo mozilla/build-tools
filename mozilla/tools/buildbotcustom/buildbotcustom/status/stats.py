@@ -67,7 +67,7 @@ class StatsResource(base.HtmlResource):
       e = eventdoc.createElement('event')
       e.setAttribute('start', b.starttime.isoformat() + 'Z')
       e.setAttribute('title', ', '.join(build.getResponsibleUsers()))
-      e.setAttribute('link', self.getBonsai(b.starttime))
+      e.setAttribute('link', self.getBonsai(b.starttime, b.locale))
       eventdoc.documentElement.appendChild(e)
       comments = '\n'.join([c.comments for c in build.getChanges()])
       e.appendChild(eventdoc.createTextNode('<pre>%s</pre>' % comments))
@@ -75,8 +75,8 @@ class StatsResource(base.HtmlResource):
                              buildername = builder.getName(),
                              tree = tree, app = app, locale = locale)
 
-  def getBonsai(self, d):
-    burl = 'http://bonsai-l10n.mozilla.org/cvsquery.cgi?treeid=default&module=all&dir=l10n&sortby=Date&date=explicit&cvsroot=%2Fl10n&'
+  def getBonsai(self, d, loc):
+    burl = 'http://bonsai-l10n.mozilla.org/cvsquery.cgi?treeid=default&module=all&sortby=Date&date=explicit&cvsroot=%2Fl10n&dir=l10n/' + loc + '&'
     half = timedelta(hours=.5)
     return burl + 'mindate=%sZ&maxdate=%sZ' % \
         ((d-half).isoformat(),(d+half).isoformat())
