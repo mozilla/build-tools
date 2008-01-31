@@ -179,6 +179,7 @@ class LatestL10n(StatusReceiverMultiService):
     needsAppend = True
     for item in items:
       if item['id'] == id:
+        item.clear()
         item.update(props)
         needsAppend = False
         break
