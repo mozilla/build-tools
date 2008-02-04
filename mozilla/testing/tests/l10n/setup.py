@@ -48,7 +48,7 @@ class web(Command):
       self.copy_file(f, self.target)
 
 setup(name="compare-locales",
-      version="0.3.5",
+      version="0.4",
       author="Axel Hecht",
       author_email="axel@mozilla.com",
       description=docstrings[0],
