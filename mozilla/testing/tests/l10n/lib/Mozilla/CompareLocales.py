@@ -53,6 +53,16 @@ except ImportError:
       if not dict.__contains__(self, k):
         self[k] = self.__defaultclass()
       return dict.__getitem__(self, k)
+# backwards compat hack for any(), new in python 2.5
+try:
+  any([True])
+except NameError:
+  def any(sequence):
+    for item in sequence:
+      if item:
+        return True
+    return False
+
 
 import Parser
 import Paths
