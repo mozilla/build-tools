@@ -39,6 +39,13 @@ import os.path
 import os
 from Mozilla.CompareLocales import defaultdict
 
+# check if MAKE is in the environment, to specify a particular make version
+# FreeBSD would like this to hack around gmake, at least
+MAKE = "make"
+if "MAKE" in os.environ:
+  MAKE = os.environ['MAKE']
+MAKE_CLIENT_MK = MAKE + ' -f mozilla/client.mk '
+
 class Modules(dict):
   '''
   Subclass of dict to hold information on which directories belong to a
@@ -52,7 +59,7 @@ class Modules(dict):
     super(dict, self).__init__()
     lapps = apps[:]
     lapps.insert(0, 'toolkit')
-    of  = os.popen('make -f mozilla/client.mk ' + \
+    of  = os.popen(MAKE_CLIENT_MK + \
                    ' '.join(['echo-variable-LOCALES_' + app for app in lapps]))
     
     for val in of.readlines():
@@ -159,7 +166,7 @@ class LocalesWrap(object):
       yield (locale, EnumerateDir(path, self.module, locale))
 
 class EnumerateApp(object):
-  echo_var = 'make -f mozilla/client.mk echo-variable-LOCALES_%s'
+  echo_var = MAKE_CLIENT_MK + 'echo-variable-LOCALES_%s'
   filterpath = 'mozilla/%s/locales/filter.py'
   reference =  'en-US'
   def __init__(self, basepath = os.curdir, l10nbase = None):
