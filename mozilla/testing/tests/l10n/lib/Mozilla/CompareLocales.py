@@ -309,7 +309,7 @@ class ContentComparer:
   def add_observer(self, obs):
     self.observers.append(obs)
   def notify(self, category, file, data):
-    return any(map(lambda o: o.notify(category, file, data), self.observers))
+    return all(map(lambda o: o.notify(category, file, data), self.observers))
   def remove(self, obsolete):
     self.notify('obsoleteFile', obsolete, None)
     pass
@@ -363,6 +363,7 @@ class ContentComparer:
           refVal = ref[0][ref[1][entity]].val
           l10nVal = l10n_entities[l10n_map[entity]].val
           if refVal == l10nVal:
+            self.doUnchanged(l10n_entities[l10n_map[entity]])
             unchanged += 1
           else:
             changed += 1
@@ -394,11 +395,16 @@ class ContentComparer:
       self.notify('error', f, str(e))
       return
     self.notify('missingInFiles', missing, len(map))
+  def doUnchanged(self, entity):
+    # overload this if needed
+    pass
 
-def compareApp(app):
+def compareApp(app, otherObserver = None):
   cc = ContentComparer()
   o  = Observer()
   cc.add_observer(o)
+  if otherObserver is not None:
+    cc.add_observer(otherObserver)
   o.filter = app.filter
   for module, reference, locales in app:
     dc = DirectoryCompare(reference)
