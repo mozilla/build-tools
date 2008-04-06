@@ -1,6 +1,18 @@
 //Draw canvas
 const Ci = Components.interfaces;
 
+var platformSuffix;
+switch (navigator.platform.substr(0,3).toLowerCase()) {
+ case 'mac':
+  platformSuffix = '_mac';
+  break;
+ case 'win':
+   platformSuffix = '_win';
+   break;
+ case 'lin':
+   platformSuffix = '_linux';
+}
+
 function doMyScreen() {
   if (window.arguments.length < 2) {
     throw "not enough arguments";
@@ -26,7 +38,7 @@ function doMyScreen() {
   // convert string filepath to an nsIFile
   var file = Components.classes["@mozilla.org/file/local;1"]
                        .createInstance(Components.interfaces.nsILocalFile);
-  file.initWithPath('/Users/axel/tmp/screens/' + leafname + '.png');
+  file.initWithPath('/Users/axel/tmp/screens/' + leafname + platformSuffix + '.png');
 
   // create a data url from the canvas and then create URIs of the source and targets  
   var io = Components.classes["@mozilla.org/network/io-service;1"]
@@ -49,6 +61,5 @@ function doMyScreen() {
   
   // save the canvas data to the file
   persist.saveURI(source, null, null, null, null, file);
-  Components.utils.reportError("closing " + window.location);
   window.close();
 }

@@ -36,12 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 var isMac = navigator.platform.substr(0,3) == "Mac";
-function waitForMac() {
-  if (!isMac) return;
-  Stack.suspend();
-  window.setTimeout(function(){Stack.continue();}, 1000);
-}
-
 function WaitForMac(period) {
   this.args = [period];
 };
@@ -57,21 +51,75 @@ WaitForMac.prototype = {
 /**
  * Item to show the next pane in a prefs window
  */
-function ShowPaneObj(aPane, aLoader) {
-  this.args = [aPane, aLoader];
+function ShowPaneObj(aPane) {
+  this.args = [aPane];
 }
 ShowPaneObj.prototype = {
   args: null,
-  method: function _openMenu(aPane, aLoader) {
+  method: function _showPane(aPane) {
     Stack.suspend();
-    Stack.push(aLoader);
-    Stack.push(new Screenshot(aPane.getAttribute('id')));
     aPane.parentNode.showPane(aPane);
-    if (isMac) {
-      Stack.push(new WaitForMac(1000));
-    }
   }
 };
+
+/**
+ * Item to show the next pane in a prefs window
+ */
+function TabAdvancer(tabbox, ids) {
+  this.args = [tabbox, ids];
+}
+TabAdvancer.prototype = {
+  args: null,
+  method: function _advanceTab(tabbox, ids) {
+    tabbox.tabs.advanceSelectedTab(1, false);
+    ids.pop();
+    ids.push(tabbox.selectedTab.getAttribute('id'));
+    // XXX openDialog
+    if ('dialogHook' in window) {
+      dialogHook(aPane, ids);
+    }
+    Stack.push(new Screenshot(ids.join('_')));
+  }
+};
+
+function handlePrefPane(aPane, aLoader) {
+  // in reverse polish notation:
+  // wait for the mac
+  // for each tab
+  //   select tab
+  //   doScreenshot
+  //   XXX openDialog?
+  // show next pane
+  // wait for pane
+  var nextPane = aPane.nextSibling;
+  while (nextPane && nextPane.nodeName != 'prefpane') {
+    nextPane = nextPane.nextSibling;
+  }
+  if (nextPane) {
+    Stack.push(aLoader);
+    Stack.push(new ShowPaneObj(nextPane));
+  }
+  var advanceTabs = 0;
+  var ids = ['prefs', aPane.getAttribute('id')];
+  var tabbox;
+  if (aPane.getElementsByTagName('tabbox').length) {
+    tabbox = aPane.getElementsByTagName('tabbox')[0];
+    tabbox.selectedIndex = 0;
+    advanceTabs = tabbox.tabs.itemCount - 1;
+    ids.push(tabbox.selectedTab.getAttribute('id'));
+  }
+  for (var i = 0; i < advanceTabs; ++i) {
+    Stack.push(new TabAdvancer(tabbox, ids));
+  }
+  // XXX openDialog
+  if ('dialogHook' in window) {
+    dialogHook(aPane, ids);
+  }
+  Stack.push(new Screenshot(ids.join('_')));
+  if (isMac) {
+    Stack.push(new WaitForMac(1000));
+  }  
+}
 
 /**
  * Item to close the preferences window once the tests are done
@@ -101,16 +149,8 @@ PrefPaneLoader.prototype = {
   _currentPane: null,
   args: [],
   method: function() {
-    // the pane is loaded, kick off the load of the next one, if available
-    pane = this._currentPane.nextSibling;
-    this._currentPane = null;
-    while (pane) {
-      if (pane.nodeName == 'prefpane') {
-        Stack.push(new ShowPaneObj(pane, this));
-        return;
-      }
-      pane = pane.nextSibling;
-    }
+    // the pane is loaded, handle it
+    handlePrefPane(this._currentPane, this);
   },
   // nsIDOMEventListener
   handleEvent: function _hv(aEvent) {
@@ -135,6 +175,7 @@ RootPreference.prototype = {
   method: function(aWindow, startPane) {
     WM.addListener(this);
     aWindow.openPreferences(startPane);
+    Stack.suspend();
   },
   // nsIWindowMediatorListener
   onWindowTitleChange: function(aWindow, newTitle){},
@@ -148,12 +189,7 @@ RootPreference.prototype = {
     aWindow.docShell.QueryInterface(Ci.nsIInterfaceRequestor);
     var DOMwin = aWindow.docShell.getInterface(Ci.nsIDOMWindow);
     DOMwin.addEventListener('paneload', ppl, false);
-    Stack.suspend();
     Stack.push(ppl);
-    Stack.push(new Screenshot(this.args[1]));
-    if (isMac) {
-      Stack.push(new WaitForMac(1000));
-    }
   },
   onCloseWindow: function(aWindow){}
 };

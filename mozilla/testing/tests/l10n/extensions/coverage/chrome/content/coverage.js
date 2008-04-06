@@ -165,7 +165,6 @@ function doScreenShot(name) {
 }
 
 function Screenshot(name) {
-  Components.utils.reportError("doing screenshot for " + name);
   this.args = [name];
 };
 Screenshot.prototype = {
