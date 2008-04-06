@@ -99,6 +99,11 @@ RootMenu.prototype = {
   _w: null
 };
 
-toRun.push(new TestDone('MENUS'));
-toRun.push(new RootMenu(wins[0]));
-toRun.push(new TestStart('MENUS'));
+if (navigator.platform.substr(0,3) != "Mac") {
+  // Menu code doesn't work on macs
+  toRun.push(new TestDone('MENUS'));
+  toRun.push(new RootMenu(wins[0]));
+  toRun.push(new TestStart('MENUS'));
+} else {
+  Components.utils.reportError("On a mac, ignoring menus");
+}
