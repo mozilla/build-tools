@@ -42,6 +42,7 @@
         onload="return onLoad(event)"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
  <script type="application/javascript;version=1.7" src="coverage.js"/>
+ <script type="application/javascript;version=1.7" src="coverage-dialogs.js"/>
  <script type="application/javascript;version=1.7" src="coverage-prefs.js"/>
  <script type="application/javascript;version=1.7" src="coverage-menu.js"/>
  <label value="test"/>

@@ -149,9 +149,10 @@ function onLoad() {
 /**
  * Screenshot helper
  */
-function doScreenShot(name) {
+function doScreenShot(name, win) {
   var _base = null;
-  var actor = WM.getMostRecentWindow(null).QueryInterface(Ci.nsIDOMWindow);
+  var actor = win;
+  if (!actor) actor = WM.getMostRecentWindow(null).QueryInterface(Ci.nsIDOMWindow);
   var params = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
   params.appendElement(actor, false);
   var _name = Cc["@mozilla.org/supports-string;1"].
@@ -164,14 +165,14 @@ function doScreenShot(name) {
   return foo;
 }
 
-function Screenshot(name) {
-  this.args = [name];
+function Screenshot(name, win) {
+  this.args = [name, win];
 };
 Screenshot.prototype = {
  args: null,
- method: function _doScreenshot(name) {
+ method: function _doScreenshot(name, win) {
     Stack.suspend();
-    var w = doScreenShot(name);
+    var w = doScreenShot(name, win);
     var obs = {
       // nsIWindowMediatorListener
     onWindowTitleChange: function(aWindow, newTitle){},

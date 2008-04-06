@@ -76,7 +76,7 @@ TabAdvancer.prototype = {
     ids.push(tabbox.selectedTab.getAttribute('id'));
     // XXX openDialog
     if ('dialogHook' in window) {
-      dialogHook(aPane, ids);
+      dialogHook(tabbox.selectedTab, ids);
     }
     Stack.push(new Screenshot(ids.join('_')));
   }
