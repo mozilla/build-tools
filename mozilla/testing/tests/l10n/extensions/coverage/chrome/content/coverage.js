@@ -45,9 +45,15 @@ var Ci = Components.interfaces;
 var Cc = Components.classes;
 var Cr = Components.results;
 
+const NS_DIRECTORY_SERVICE_CONTRACTID = "@mozilla.org/file/directory_service;1";
+
 var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 var ds = Cc[NS_DIRECTORY_SERVICE_CONTRACTID].getService(Ci.nsIProperties);
-const WM = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
+const WM = Cc["@mozilla.org/appshell/window-mediator;1"]
+  .getService(Ci.nsIWindowMediator);
+const WW = Cc["@mozilla.org/embedcomp/window-watcher;1"]
+  .getService(Ci.nsIWindowWatcher);
+
 
 /**
  * Global Stack object
@@ -57,6 +63,7 @@ const WM = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindow
 var Stack = {
   _stack: [],
   _time: 250,
+  _waiting: 0,
   _timer: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
   notify: function _notify(aTimer) {
     this.pop();
@@ -69,6 +76,9 @@ var Stack = {
     }
   },
   pop: function _pop() {
+    if (this._waiting) {
+      return;
+    }
     var obj = this._stack.pop();
     try {
       obj.method.apply(obj, obj.args);
@@ -78,6 +88,13 @@ var Stack = {
     if (!this._stack.length) {
       this._timer.cancel();
     }
+  },
+  suspend: function _suspend() {
+    this._waiting += 1;
+  },
+  continue: function _continue() {
+    this._waiting -= 1;
+    if (this._waiting < 0) Components.utils.reportError("non-matched continue");
   }
 };
 /**
@@ -128,3 +145,58 @@ function onLoad() {
     Stack.push(obj);
   }
 }
+
+/**
+ * Screenshot helper
+ */
+function doScreenShot(name) {
+  var _base = null;
+  var actor = WM.getMostRecentWindow(null).QueryInterface(Ci.nsIDOMWindow);
+  var params = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+  params.appendElement(actor, false);
+  var _name = Cc["@mozilla.org/supports-string;1"].
+    createInstance(Ci.nsISupportsString);
+  _name.data = name;
+  params.appendElement(_name, false);
+  var foo = WW.openWindow(null,
+			  "chrome://coverage/content/screen-helper.html",
+			  null, null, params);
+  return foo;
+}
+
+function Screenshot(name) {
+  Components.utils.reportError("doing screenshot for " + name);
+  this.args = [name];
+};
+Screenshot.prototype = {
+ args: null,
+ method: function _doScreenshot(name) {
+    Stack.suspend();
+    var w = doScreenShot(name);
+    var obs = {
+      // nsIWindowMediatorListener
+    onWindowTitleChange: function(aWindow, newTitle){},
+    onOpenWindow: function(aWindow) {},
+    onCloseWindow: function(aWindow){
+	if (!(aWindow.docShell instanceof Ci.nsIInterfaceRequestor)) {
+	  Components.utils.reportError("my docshell is bad");
+	}
+	var aDOMWin = aWindow.docShell.getInterface(Ci.nsIDOMWindow);
+	try {
+	  aDOMWin.QueryInterface(Ci.nsIDOMWindowInternal);
+	} catch (e) {
+	  Components.utils.reportError("aDOMWin is not nsIDOMWindow")
+	}
+	if (aDOMWin.location != w.location) {
+	  var msg = "screenshot saw unknown window dying: ";
+	  var details = w.location + ", " + aWindow.location;
+	  Components.utils.reportError(msg + details);
+	  return;
+	}
+	Stack.continue();
+	WM.removeListener(this);
+      }
+    };
+    WM.addListener(obs);
+  }
+};

@@ -35,6 +35,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var isMac = navigator.platform.substr(0,3) == "Mac";
+function waitForMac() {
+  if (!isMac) return;
+  Stack.suspend();
+  window.setTimeout(function(){Stack.continue();}, 1000);
+}
+
+function WaitForMac(period) {
+  this.args = [period];
+};
+WaitForMac.prototype = {
+ args: null,
+ method: function _waitForMac(period) {
+    if (!isMac) return;
+    Stack.suspend()
+    window.setTimeout(function() {Stack.continue()}, period);
+  }
+};
+
 /**
  * Item to show the next pane in a prefs window
  */
@@ -44,8 +63,13 @@ function ShowPaneObj(aPane, aLoader) {
 ShowPaneObj.prototype = {
   args: null,
   method: function _openMenu(aPane, aLoader) {
+    Stack.suspend();
     Stack.push(aLoader);
+    Stack.push(new Screenshot(aPane.getAttribute('id')));
     aPane.parentNode.showPane(aPane);
+    if (isMac) {
+      Stack.push(new WaitForMac(1000));
+    }
   }
 };
 
@@ -77,11 +101,6 @@ PrefPaneLoader.prototype = {
   _currentPane: null,
   args: [],
   method: function() {
-    if (!this._currentPane) {
-      // The pane we're waiting for hasn't been loaded yet, do me again
-      Stack.push(this);
-      return;
-    }
     // the pane is loaded, kick off the load of the next one, if available
     pane = this._currentPane.nextSibling;
     this._currentPane = null;
@@ -96,6 +115,7 @@ PrefPaneLoader.prototype = {
   // nsIDOMEventListener
   handleEvent: function _hv(aEvent) {
     this._currentPane = aEvent.target;
+    Stack.continue();
   }
 };
 
@@ -107,14 +127,14 @@ PrefPaneLoader.prototype = {
  * the panes from left to right, and that all are not loaded yet.
  * WFM.
  */
-function RootPreference(aWindow) {
-  this.args = [aWindow];
+function RootPreference(aWindow, startPane) {
+  this.args = [aWindow, startPane];
 };
 RootPreference.prototype = {
   args: [],
-  method: function(aWindow) {
+  method: function(aWindow, startPane) {
     WM.addListener(this);
-    aWindow.openPreferences('paneMain');
+    aWindow.openPreferences(startPane);
   },
   // nsIWindowMediatorListener
   onWindowTitleChange: function(aWindow, newTitle){},
@@ -128,11 +148,16 @@ RootPreference.prototype = {
     aWindow.docShell.QueryInterface(Ci.nsIInterfaceRequestor);
     var DOMwin = aWindow.docShell.getInterface(Ci.nsIDOMWindow);
     DOMwin.addEventListener('paneload', ppl, false);
+    Stack.suspend();
     Stack.push(ppl);
+    Stack.push(new Screenshot(this.args[1]));
+    if (isMac) {
+      Stack.push(new WaitForMac(1000));
+    }
   },
   onCloseWindow: function(aWindow){}
 };
 
 toRun.push(new TestDone('PREFERENCES'));
-toRun.push(new RootPreference(wins[0]));
+toRun.push(new RootPreference(wins[0], 'paneMain'));
 toRun.push(new TestStart('PREFERENCES'));

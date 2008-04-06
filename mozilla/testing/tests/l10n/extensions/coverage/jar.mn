@@ -6,3 +6,5 @@ coverage.jar:
   content/coverage-prefs.js (chrome/content/coverage-prefs.js)
   content/neterror-coverage.xul (chrome/content/neterror-coverage.xul)
   content/coverage-neterror.js (chrome/content/coverage-neterror.js)
+  content/screen-helper.html (chrome/content/screen-helper.html)
+  content/screen-helper.js (chrome/content/screen-helper.js)
