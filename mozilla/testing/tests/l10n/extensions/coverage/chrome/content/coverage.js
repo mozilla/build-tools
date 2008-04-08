@@ -54,6 +54,10 @@ const WM = Cc["@mozilla.org/appshell/window-mediator;1"]
 const WW = Cc["@mozilla.org/embedcomp/window-watcher;1"]
   .getService(Ci.nsIWindowWatcher);
 
+function debug(msg) {
+  Components.utils.reportError(msg);
+};
+
 
 /**
  * Global Stack object
@@ -91,10 +95,12 @@ var Stack = {
   },
   suspend: function _suspend() {
     this._waiting += 1;
+    debug('suspending from ' + Components.stack.caller);
   },
   continue: function _continue() {
     this._waiting -= 1;
     if (this._waiting < 0) Components.utils.reportError("non-matched continue");
+    debug('continuing from ' + Components.stack.caller);
   }
 };
 /**
@@ -159,9 +165,10 @@ function doScreenShot(name, win) {
     createInstance(Ci.nsISupportsString);
   _name.data = name;
   params.appendElement(_name, false);
-  var foo = WW.openWindow(null,
+  var features = "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable";
+  var foo = WW.openWindow(win,
 			  "chrome://coverage/content/screen-helper.html",
-			  null, null, params);
+			  null, features, params);
   return foo;
 }
 
@@ -171,6 +178,7 @@ function Screenshot(name, win) {
 Screenshot.prototype = {
  args: null,
  method: function _doScreenshot(name, win) {
+    debug("doing screenshot for " + name);
     Stack.suspend();
     var w = doScreenShot(name, win);
     var obs = {

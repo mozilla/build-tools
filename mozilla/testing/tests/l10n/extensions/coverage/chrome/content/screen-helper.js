@@ -35,10 +35,15 @@ function doMyScreen() {
 		 actor.outerWidth, actor.outerHeight,
 		 "rgb(0,0,0)");
   ctx.restore();
+  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+    getService(Components.interfaces.nsIPrefService).
+    getBranch('l10n.coverage.');
+  var outdir = prefs.getCharPref('outdir');
   // convert string filepath to an nsIFile
   var file = Components.classes["@mozilla.org/file/local;1"]
                        .createInstance(Components.interfaces.nsILocalFile);
-  file.initWithPath('/Users/axel/tmp/screens/' + leafname + platformSuffix + '.png');
+  file.initWithPath(outdir);
+  file.append(leafname + platformSuffix + '.png');
 
   // create a data url from the canvas and then create URIs of the source and targets  
   var io = Components.classes["@mozilla.org/network/io-service;1"]

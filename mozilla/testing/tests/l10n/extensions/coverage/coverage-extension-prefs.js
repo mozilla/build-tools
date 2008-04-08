@@ -1,3 +1,3 @@
 pref('javascript.options.showInConsole', true);
-pref('testing.extensions.l10n.coverage', 'chrome://coverage/content/');
+pref('l10n.coverage.outdir', 'C:\\Sources\\screens');
 pref('testing.extensions.l10n.neterror-coverage', 'chrome://coverage/content/neterror-coverage.xul');

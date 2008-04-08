@@ -44,6 +44,6 @@
  <script type="application/javascript;version=1.7" src="coverage.js"/>
  <script type="application/javascript;version=1.7" src="coverage-dialogs.js"/>
  <script type="application/javascript;version=1.7" src="coverage-prefs.js"/>
- <script type="application/javascript;version=1.7" src="coverage-menu.js"/>
+<!-- <script type="application/javascript;version=1.7" src="coverage-menu.js"/> -->
  <label value="test"/>
 </window>

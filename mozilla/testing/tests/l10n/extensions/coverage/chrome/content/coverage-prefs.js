@@ -73,10 +73,10 @@ TabAdvancer.prototype = {
   method: function _advanceTab(tabbox, ids) {
     tabbox.tabs.advanceSelectedTab(1, false);
     ids.pop();
-    ids.push(tabbox.selectedTab.getAttribute('id'));
-    // XXX openDialog
+    ids.push(tabbox.selectedPanel.getAttribute('id'));
+    // openDialog
     if ('dialogHook' in window) {
-      dialogHook(tabbox.selectedTab, ids);
+      dialogHook(tabbox.selectedPanel, ids);
     }
     Stack.push(new Screenshot(ids.join('_')));
   }
@@ -88,7 +88,7 @@ function handlePrefPane(aPane, aLoader) {
   // for each tab
   //   select tab
   //   doScreenshot
-  //   XXX openDialog?
+  //   openDialog?
   // show next pane
   // wait for pane
   var nextPane = aPane.nextSibling;
@@ -106,12 +106,11 @@ function handlePrefPane(aPane, aLoader) {
     tabbox = aPane.getElementsByTagName('tabbox')[0];
     tabbox.selectedIndex = 0;
     advanceTabs = tabbox.tabs.itemCount - 1;
-    ids.push(tabbox.selectedTab.getAttribute('id'));
+    ids.push(tabbox.selectedPanel.getAttribute('id'));
   }
   for (var i = 0; i < advanceTabs; ++i) {
     Stack.push(new TabAdvancer(tabbox, ids));
   }
-  // XXX openDialog
   if ('dialogHook' in window) {
     dialogHook(aPane, ids);
   }
@@ -173,9 +172,9 @@ function RootPreference(aWindow, startPane) {
 RootPreference.prototype = {
   args: [],
   method: function(aWindow, startPane) {
+    Stack.suspend();
     WM.addListener(this);
     aWindow.openPreferences(startPane);
-    Stack.suspend();
   },
   // nsIWindowMediatorListener
   onWindowTitleChange: function(aWindow, newTitle){},
