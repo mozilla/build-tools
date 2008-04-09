@@ -62,26 +62,6 @@ ShowPaneObj.prototype = {
   }
 };
 
-/**
- * Item to show the next pane in a prefs window
- */
-function TabAdvancer(tabbox, ids) {
-  this.args = [tabbox, ids];
-}
-TabAdvancer.prototype = {
-  args: null,
-  method: function _advanceTab(tabbox, ids) {
-    tabbox.tabs.advanceSelectedTab(1, false);
-    ids.pop();
-    ids.push(tabbox.selectedPanel.getAttribute('id'));
-    // openDialog
-    if ('dialogHook' in window) {
-      dialogHook(tabbox.selectedPanel, ids);
-    }
-    Stack.push(new Screenshot(ids.join('_')));
-  }
-};
-
 function handlePrefPane(aPane, aLoader) {
   // in reverse polish notation:
   // wait for the mac

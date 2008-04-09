@@ -208,3 +208,23 @@ Screenshot.prototype = {
     WM.addListener(obs);
   }
 };
+
+/**
+ * Item to show the next pane in a tabbox
+ */
+function TabAdvancer(tabbox, ids, aWin) {
+  this.args = [tabbox, ids, aWin];
+}
+TabAdvancer.prototype = {
+  args: null,
+  method: function _advanceTab(tabbox, ids, aWin) {
+    tabbox.tabs.advanceSelectedTab(1, false);
+    ids.pop();
+    ids.push(tabbox.selectedPanel.getAttribute('id'));
+    // openDialog
+    if ('dialogHook' in window) {
+      dialogHook(tabbox.selectedPanel, ids);
+    }
+    Stack.push(new Screenshot(ids.join('_'), aWin));
+  }
+};

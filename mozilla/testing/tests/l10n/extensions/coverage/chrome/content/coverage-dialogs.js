@@ -30,6 +30,31 @@ function dialogHook(aElem, ids) {
   }
 };
 
+function DialogLoadHandler(ids) {
+  this.ids = ids;
+};
+DialogLoadHandler.prototype = {
+  handleEvent: function _dlh(aEvent) {
+    var targetDoc = aEvent.target;
+    var ids = this.ids;
+    var advanceTabs = 0;
+    var tabbox;
+    if (targetDoc.getElementsByTagName('tabbox').length) {
+      tabbox = targetDoc.getElementsByTagName('tabbox')[0];
+      tabbox.selectedIndex = 0;
+      advanceTabs = tabbox.tabs.itemCount - 1;
+      ids.push(tabbox.selectedPanel.getAttribute('id'));
+    }
+    debug("dialog " + ids[ids.length-1] + " has " + (advanceTabs+1) + " shots")
+    for (var i = 0; i < advanceTabs ; ++i) {
+      Stack.push(new TabAdvancer(tabbox, ids, targetDoc.window));
+    }
+    // dialog hook again?
+    Stack.push(new Screenshot(ids.join('_'), targetDoc.window));
+    Stack.continue();    
+  }
+};
+
 function DialogShot(elem, ids) {
   this.args = [elem, ids];
 }
@@ -40,7 +65,8 @@ DialogShot.prototype = {
     // the following two actions are set in onOpenWindow, we have the 
     // window then:
     // Stack.push(close)
-    // Stack.push(new Screenshot(ids.join('_')));
+    // if tabbox, for all panels:
+    //   Stack.push(new Screenshot(ids.join('_')));
     WM.addListener(this);
     elem.doCommand();
     Components.utils.reportError("I'd open " +  ids);
@@ -64,8 +90,9 @@ DialogShot.prototype = {
       }
     };
     Stack.push(closer);
-    Stack.push(new Screenshot(this.args[1].join('_'), DOMwin));
-    Stack.continue();
+    DOMwin.addEventListener('load',
+                            new DialogLoadHandler(this.args[1]),
+                            false);
   },
   onCloseWindow: function(aWindow){}
 };
