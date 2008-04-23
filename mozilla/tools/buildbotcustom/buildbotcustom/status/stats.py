@@ -31,6 +31,10 @@ class StatsResource(base.HtmlResource):
         args[arg] = req.args[arg]
     if not args:
       return self.renderPicker(req)
+    try:
+      days = int(req.args['days'][0])
+    except (KeyError, ValueError):
+      days = self.days
     clause = and_()
     for k, values in args.iteritems():
       clause.append(l10ndb.Active.c[k].in_(values))
@@ -42,11 +46,11 @@ class StatsResource(base.HtmlResource):
     builder_status = s.getBuilder(build['buildername'])
     
     return self.renderStats(builder_status, build['tree'], build['app'],
-                            build['locale'])
+                            build['locale'], days)
   def renderPicker(self, req, args = None):
     return pickertemplate.render(args = args)
-  def renderStats(self, builder, tree, app, locale):
-    starttime = datetime.utcnow() - timedelta(self.days)
+  def renderStats(self, builder, tree, app, locale, days):
+    starttime = datetime.utcnow() - timedelta(days)
     eventdoc = getDOMImplementation().createDocument(None, 'data', None)
     eventdoc.documentElement.setAttribute('date-time-format', 'iso8601')
     statrows = []
