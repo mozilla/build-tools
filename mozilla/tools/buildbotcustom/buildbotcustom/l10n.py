@@ -447,10 +447,8 @@ class Build(process.base.Build):
     if not bd:
       raise Exception("No build found for %s on %s, bad mojo" % \
                       (self.builder.name, self.slavename))
-    changes = self.build_status.getChanges()
-    log.debug("build",
-              'do we really have no changes here yet? len is '+str(len(changes)))
-    changes += bd.changes
+    process.base.Build.setupBuild(self, expectations)
+    self.build_status.changes = tuple(bd.changes)
     self.setProperty('app', bd.app)
     self.setProperty('locale', bd.locale)
     self.setProperty('needsCheckout', bd.needsCheckout)
@@ -458,8 +456,6 @@ class Build(process.base.Build):
     if bd.tree:
       self.setProperty('tree', bd.tree)
       reason = bd.tree + ': ' + reason
-
-    process.base.Build.setupBuild(self, expectations)
     
     # overwrite the reason, we know better than base.Build
     self.build_status.setReason(reason)
