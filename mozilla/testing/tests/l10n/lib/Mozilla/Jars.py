@@ -63,7 +63,7 @@ class EnumerateJar(object):
     self.locale = os.path.split(basepath)[1].replace('.jar','')
     self.zf = ZipFile(basepath, 'r')
   def cloneFile(self, other):
-    return JarEntry(self.zf, other.file, other.fakefile)
+    return JarEntry(self.zf, other.realfile, other.file)
   def __iter__(self):
     # get all entries, drop those ending with '/', those are dirs.
     files = [f for f in self.zf.namelist() if not f.endswith('/')]
