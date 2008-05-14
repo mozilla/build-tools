@@ -412,3 +412,14 @@ def compareApp(app, otherObserver = None):
     for locale, localization in locales:
       dc.compareWith(localization)
   return o
+
+def compareDirs(reference, locale, otherObserver = None):
+  cc = ContentComparer()
+  o  = Observer()
+  cc.add_observer(o)
+  if otherObserver is not None:
+    cc.add_observer(otherObserver)
+  dc = DirectoryCompare(Paths.EnumerateDir(reference))
+  dc.setWatcher(cc)
+  dc.compareWith(Paths.EnumerateDir(locale))
+  return o
