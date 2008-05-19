@@ -11,67 +11,102 @@ from buildbot.test.runutils import SlaveCommandTestBase
 from shutil import copytree
 import pdb
 
+def createStage(basedir, *files):
+    '''Create a staging environment in the given basedir
+
+    Each argument is a tuple of
+    - a tuple with path segments
+    - the content of the file to create
+    '''
+    for pathsteps, content in files:
+        try:
+            os.makedirs(os.path.join(basedir, *pathsteps[:-1]))
+        except OSError, e:
+            if e.errno != 17:
+                raise e
+        f = open(os.path.join(basedir, *pathsteps), 'w')
+        f.write(content)
+        f.close()
+
+
 class SlaveSide(SlaveCommandTestBase, unittest.TestCase):
-    def testCompareCommand(self):
-        basedir = "test_compare.testOne"
-        self.setUpBuilder(basedir)
-        # copy our own working dir into the sandbox
-        repbase = __file__[:__file__.rfind('mozilla')]
-        for mod in ['mozilla', 'l10n']:
-            copytree(repbase + mod, basedir + '/' + mod)
+    basedir = "test_compare.testSuccess"
+    stageFiles = ((('mozilla', 'client.mk'),
+                     '''echo-variable-LOCALES_app:
+\t@echo app
+'''),
+                  (('mozilla','app','locales','en-US','dir','file.dtd'),
+                   '<!ENTITY test "value">\n<!ENTITY test2 "value2">\n'),
+                  (('l10n','good','app','dir','file.dtd'),
+                   '''
+<!ENTITY test "local value">
+<!ENTITY test2 "local value2">
+'''),
+                  (('l10n','obsolete','app','dir','file.dtd'),
+                   '''
+<!ENTITY test "local value">
+<!ENTITY test2 "local value 2">
+<!ENTITY test3 "local value 3">
+'''),
+                  (('l10n','missing','app','dir','file.dtd'),
+                   '<!ENTITY test "local value">\n'))
+    def setUp(self):
+        self.setUpBuilder(self.basedir)
+        createStage(self.basedir, *self.stageFiles)
+
+    def testGood(self):
         args = {
             'application': "app",
-            'locale': "partial",
+            'locale': "good",
             'workdir': ".",
             }
-        finishd = self.startCommand(CompareCommand, args)
-        self._check_timeout = 10
-        d = self._check_and_wait()
-        def _wait_for_finish(res, finishd):
-            return finishd
-        d.addCallback(_wait_for_finish, finishd)
-        d.addCallback(self.collectUpdates)
-        def _check(logs):
-            self.assertEqual(logs, {'header': 'Comparing partial against en-US for .\n', 'result': 'observer'})
-            return
-        d.addCallback(_check)
-        d.addBoth(self._maybePrintError)
+        d = self.startCommand(CompareCommand, args)
+        d.addCallback(self._check,
+                      0,
+                      dict(),
+                      dict(completion=100))
         return d
 
-    def _check_and_wait(self, res=None):
-        self._check_timeout -= 1
-        if self._check_timeout <= 0:
-            raise defer.TimeoutError("gave up on command")
-        logs = self.collectUpdates()
-        if not self.cmd.running:
-            return
-        spin = defer.Deferred()
-        spin.addCallback(self._check_and_wait)
-        reactor.callLater(1, spin.callback, None)
-        return spin
+    def testObsolete(self):
+        args = {
+            'application': "app",
+            'locale': "obsolete",
+            'workdir': ".",
+            }
+        d = self.startCommand(CompareCommand, args)
+        d.addCallback(self._check,
+                      1,
+                      None,
+                      dict(completion=100))
+        return d
 
-    def _maybePrintError(self, res):
-        rc = self.findRC()
-        if rc != 0:
-            print "Command ended with rc=%s" % rc
-            print "STDERR:"
-            self.printStderr()
-        return res
+    def testMissing(self):
+        args = {
+            'application': "app",
+            'locale': "missing",
+            'workdir': ".",
+            }
+        d = self.startCommand(CompareCommand, args)
+        d.addCallback(self._check,
+                      2,
+                      None,
+                      dict(completion=50))
+        return d
 
-    def collectUpdates(self, res=None):
-        logs = {}
-        for u in self.builder.updates:
-            for k in u.keys():
-                if k == "log":
-                    logname,data = u[k]
-                    oldlog = logs.get(("log",logname), "")
-                    logs[("log",logname)] = oldlog + data
-                elif k == "rc":
-                    pass
-                else:
-                    logs[k] = logs.get(k, "") + str(u[k])
-        return logs
+    def _check(self, res, expectedRC, expectedDetails, exSummary):
+        self.assertEqual(self.findRC(), expectedRC)
+        res = self._getResults()
+        details = res['details']
+        summary = res['summary']
+        if expectedDetails is not None:
+            self.assertEquals(details, dict())
+        for k, v in exSummary.iteritems():
+            self.assertEquals(summary[k], v)
+        return
 
-class Other(unittest.TestCase):
-    def test_misc(self):
-        self.assertEqual('foo','foo')
+    def _getResults(self):
+        rv = dict()
+        for d in self.builder.updates:
+            if 'result' in d:
+                rv.update(d['result'])
+        return rv
