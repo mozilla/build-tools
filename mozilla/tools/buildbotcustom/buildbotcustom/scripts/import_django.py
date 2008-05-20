@@ -5,8 +5,8 @@ from datetime import datetime
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
-from builds.models import *
-from status.dbbuilds import updateBuildFrom
+from buildbotcustom.builds.models import *
+from buildbotcustom.status.dbbuilds import updateBuildFrom
 
 isBuild = re.compile('/\d+$')
 
