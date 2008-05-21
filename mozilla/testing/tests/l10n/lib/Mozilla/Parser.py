@@ -232,7 +232,8 @@ class DTDParser(Parser):
     NameChar = NameStartChar + ur'\-\.0-9' + u'\xB7\u0300-\u036F\u203F-\u2040'
     Name = '[' + NameStartChar + '][' + NameChar + ']*'
     self.reKey = re.compile('(\s*)((?:<!--(?:[^-]+-)*[^-]+-->\s*)*)(<!ENTITY\s+(' + Name + ')\s+(\"[^\"]*\"|\'[^\']*\')\s*>)([ \t]*(?:<!--(?:[^\n-]+-)*[^\n-]+-->[ \t]*)*\n?)?')
-    self.reHeader = re.compile('^(\s*<!--.*LICENSE BLOCK([^-]+-)*[^-]+-->)?')
+    # add BOM to DTDs, details in bug 435002
+    self.reHeader = re.compile(u'^\ufeff?(\s*<!--.*LICENSE BLOCK([^-]+-)*[^-]+-->)?')
     self.reFooter = re.compile('\s*(<!--([^-]+-)*[^-]+-->\s*)*$')
     self.rePE = re.compile('(\s*)((?:<!--(?:[^-]+-)*[^-]+-->\s*)*)(<!ENTITY\s+%\s+(' + Name + ')\s+SYSTEM\s+(\"[^\"]*\"|\'[^\']*\')\s*>\s*%' + Name + ';)([ \t]*(?:<!--(?:[^\n-]+-)*[^\n-]+-->[ \t]*)*\n?)?')
     Parser.__init__(self)
