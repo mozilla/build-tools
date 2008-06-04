@@ -256,7 +256,7 @@ class DTDParser(Parser):
 
 class PropertiesParser(Parser):
   def __init__(self):
-    self.reKey = re.compile('^(\s*)((?:[#!].*\r?\n\s*)*)(([^#!\s\r\n][^=:\r\n]*?)\s*[:=][ \t]*(.*?))([ \t]*$\r?\n?)',re.M)
+    self.reKey = re.compile('^(\s*)((?:[#!].*\n\s*)*)(([^#!\s\n][^=:\n]*?)\s*[:=][ \t]*(.*?))([ \t]*$\n?)',re.M)
     self.reHeader = re.compile('^\s*([#!].*LICENSE BLOCK.*\s*)([#!].*\s*)*')
     self.reFooter = re.compile('\s*([#!].*\s*)*$')
     self._post = re.compile('\\\\u([0-9a-fA-F]{4})')
@@ -274,7 +274,7 @@ class PropertiesParser(Parser):
 
 class DefinesParser(Parser):
   def __init__(self):
-    self.reKey = re.compile('^(\s*)((?:^#(?!define\s).*\s*)*)(#define[ \t]+(\w+)[ \t]+(.*?))([ \t]*$\r?\n?)',re.M)
+    self.reKey = re.compile('^(\s*)((?:^#(?!define\s).*\s*)*)(#define[ \t]+(\w+)[ \t]+(.*?))([ \t]*$\n?)',re.M)
     self.reHeader = re.compile('^\s*(#(?!define\s).*\s*)*')
     self.reFooter = re.compile('\s*(#(?!define\s).*\s*)*$',re.M)
     Parser.__init__(self)
@@ -290,8 +290,8 @@ class IniParser(Parser):
   ...
   '''
   def __init__(self):
-    self.reHeader = re.compile('^(\s*[;#].*\r?\n)*\[.+?\]\r?\n', re.M)
-    self.reKey = re.compile('(\s*)((?:[;#].*\r?\n\s*)*)((.+?)=(.*))(\r?\n?)')
+    self.reHeader = re.compile('^(\s*[;#].*\n)*\[.+?\]\n', re.M)
+    self.reKey = re.compile('(\s*)((?:[;#].*\n\s*)*)((.+?)=(.*))(\n?)')
     self.reFooter = re.compile('\s*')
     Parser.__init__(self)
 

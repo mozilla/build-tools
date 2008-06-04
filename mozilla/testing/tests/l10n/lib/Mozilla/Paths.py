@@ -104,7 +104,8 @@ class File(object):
     self.locale = locale
     pass
   def getContents(self):
-    return open(self.fullpath).read()
+    # open with universal line ending support and read
+    return open(self.fullpath, 'rU').read()
   def __hash__(self):
     f = self.file
     if self.module:
