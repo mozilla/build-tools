@@ -256,7 +256,7 @@ class DTDParser(Parser):
 
 class PropertiesParser(Parser):
   def __init__(self):
-    self.reKey = re.compile('^(\s*)((?:[#!].*\n\s*)*)(([^#!\s\n][^=:\n]*?)\s*[:=][ \t]*(.*?))([ \t]*$\n?)',re.M)
+    self.reKey = re.compile('^(\s*)((?:[#!].*?\n\s*)*)(([^#!\s\n][^=:\n]*?)\s*[:=][ \t]*((?:[^\\\\]|\\\\.)*?))([ \t]*$\n?)',re.M|re.S)
     self.reHeader = re.compile('^\s*([#!].*LICENSE BLOCK.*\s*)([#!].*\s*)*')
     self.reFooter = re.compile('\s*([#!].*\s*)*$')
     self._post = re.compile('\\\\u([0-9a-fA-F]{4})')
