@@ -63,6 +63,8 @@ parser.add_option('-l', '--l10n', default=None, dest='l10n',
 parser.add_option('-r', '--reference', default='en-US', dest='reference',
                   help='Explicitly set the reference '+
                   'localization. [default: en-US]')
+parser.add_option('-m', '--merge',
+                  help='Use this directory to stage merged files')
 
 (options, args) = parser.parse_args()
 if len(args) == 0:
@@ -76,5 +78,5 @@ app = EnumerateApp(options.source, options.l10n)
 app.reference = options.reference
 app.addApplication(options.application, args)
 
-o = compareApp(app)
+o = compareApp(app, merge_stage = options.merge)
 print codecs.utf_8_encode(o.serialize())[0]

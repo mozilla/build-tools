@@ -37,8 +37,10 @@
 
 'Mozilla l10n compare locales tool'
 
+import codecs
 import os
 import os.path
+import shutil
 import re
 import logging
 from difflib import SequenceMatcher
@@ -306,8 +308,26 @@ class ContentComparer:
   def __init__(self):
     self.reference = dict()
     self.observers = []
+    self.merge_stage = None
   def add_observer(self, obs):
     self.observers.append(obs)
+  def set_merge_stage(self, merge_stage):
+    self.merge_stage = merge_stage
+  def merge(self, ref_entities, ref_map, ref_file, l10n_file, missing, p):
+    outfile = os.path.join(self.merge_stage, l10n_file.module, l10n_file.file)
+    outdir = os.path.dirname(outfile)
+    if not os.path.isdir(outdir):
+      os.makedirs(outdir)
+    if not p.canMerge:
+      shutil.copyfile(ref_file.fullpath, outfile)
+      print "copied reference to " + outfile
+      return
+    trailing = [ref_entities[ref_map[key]].all for key in missing]
+    shutil.copyfile(l10n_file.fullpath, outfile)
+    print "adding to " + outfile
+    f = codecs.open(outfile, 'ab', p.encoding)
+    f.write(''.join(trailing))
+    f.close()
   def notify(self, category, file, data):
     return all(map(lambda o: o.notify(category, file, data), self.observers))
   def remove(self, obsolete):
@@ -342,11 +362,13 @@ class ContentComparer:
     ar.set_left(ref_list)
     ar.set_right(l10n_list)
     missing = obsolete = changed = unchanged = keys = 0
+    missings = []
     for action, item_or_pair in ar:
       if action == 'delete':
         # missing entity
         if self.notify('missingEntity', l10n, item_or_pair):
           missing += 1
+          missings.append(item_or_pair)
       elif action == 'add':
         # obsolete entity or junk
         if isinstance(l10n_entities[l10n_map[item_or_pair]], Parser.Junk):
@@ -370,6 +392,8 @@ class ContentComparer:
         pass
     if missing:
       self.notify('missing', l10n, missing)
+      if self.merge_stage is not None:
+        self.merge(ref[0], ref[1], ref_file, l10n, missings, p)
     if obsolete:
       self.notify('obsolete', l10n, obsolete)
     if changed:
@@ -399,12 +423,13 @@ class ContentComparer:
     # overload this if needed
     pass
 
-def compareApp(app, otherObserver = None):
+def compareApp(app, otherObserver = None, merge_stage = None):
   cc = ContentComparer()
   o  = Observer()
   cc.add_observer(o)
   if otherObserver is not None:
     cc.add_observer(otherObserver)
+  cc.set_merge_stage(merge_stage)
   o.filter = app.filter
   for module, reference, locales in app:
     dc = DirectoryCompare(reference)
