@@ -251,11 +251,11 @@ class SearchTest(Base):
       p = getRegionProperties(loc)
       orders = {}
       for entity in p:
-        m = re.match('browser.search.order.([1-9])', entity['key'])
+        m = re.match('browser.search.order.([1-9])', entity.key)
         if m:
-          orders[entity['val'].strip()] = int(m.group(1))
-        elif entity['key'] == 'browser.search.defaultenginename':
-          sets[loc]['default'] = entity['val'].strip()
+          orders[entity.val.strip()] = int(m.group(1))
+        elif entity.key == 'browser.search.defaultenginename':
+          sets[loc]['default'] = entity.val.strip()
       sets[loc]['orders'] = orders
       for fn in lst:
         name = fn.strip()
@@ -333,8 +333,8 @@ class RSSReaderTest(Base):
       uris = {}
       titles = {}
       for entity in p:
-        key = entity['key']
-        val = entity['val']
+        key = entity.key
+        val = entity.val
         m = uri.match(key)
         if m:
           o = int(m.group(1))
