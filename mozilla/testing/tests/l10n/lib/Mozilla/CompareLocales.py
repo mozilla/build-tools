@@ -329,7 +329,9 @@ class ContentComparer:
     f.write(''.join(trailing))
     f.close()
   def notify(self, category, file, data):
-    return all(map(lambda o: o.notify(category, file, data), self.observers))
+    # hack around the lack of all() prior to python2.5
+    results = map(lambda o: o.notify(category, file, data), self.observers)
+    return reduce(lambda l,r: l and r, results, True)
   def remove(self, obsolete):
     self.notify('obsoleteFile', obsolete, None)
     pass

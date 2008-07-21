@@ -37,64 +37,73 @@
 
 import os.path
 import os
+from ConfigParser import ConfigParser, NoSectionError, NoOptionError
+from urlparse import urlparse, urljoin
+from urllib import pathname2url, url2pathname
+from urllib2 import urlopen
 from Mozilla.CompareLocales import defaultdict
 
-# check if MAKE is in the environment, to specify a particular make version
-# FreeBSD would like this to hack around gmake, at least
-MAKE = "make"
-if "MAKE" in os.environ:
-  MAKE = os.environ['MAKE']
-MAKE_CLIENT_MK = MAKE + ' -f mozilla/client.mk '
+class L10nConfigParser(object):
+  '''Helper class to gather application information from ini files.
 
-class Modules(dict):
+  This class is working on synchronous open to read files or web data.
+  Subclass this and overwrite loadConfigs and addChild if you need async.
   '''
-  Subclass of dict to hold information on which directories belong to a
-  particular app.
-  It expects to have mozilla/client.mk right there from the working dir,
-  and asks that for the LOCALES_foo variables.
-  This only works for toolkit applications, as it's assuming that the
-  apps include toolkit.
-  '''
-  def __init__(self, apps):
-    super(dict, self).__init__()
-    lapps = apps[:]
-    lapps.insert(0, 'toolkit')
-    of  = os.popen(MAKE_CLIENT_MK + \
-                   ' '.join(['echo-variable-LOCALES_' + app for app in lapps]))
-    
-    for val in of.readlines():
-      self[lapps.pop(0)] = val.strip().split()
-    for k,v in self.iteritems():
-      if k == 'toolkit':
-        continue
-      self[k] = [d for d in v if d not in self['toolkit']]
+  def __init__(self, inipath, **kwargs):
+    pwdurl = 'file:%s/' % pathname2url(os.getcwd())
+    self.inipath = urljoin(pwdurl, inipath)
+    self.children = []
+    self.dirs = []
+    self.defaults = kwargs
 
-class Components(dict):
-  '''
-  Subclass of dict to map module dirs to applications. This reverses the
-  mapping you'd get from a Modules class, and it in fact uses one to do
-  its job.
-  '''
-  def __init__(self, apps):
-    modules = Modules(apps)
-    for mod, lst in modules.iteritems():
-      for c in lst:
-        self[c] = mod
+  def loadConfigs(self):
+    self.onLoadConfig(urlopen(self.inipath))
 
-def allLocales(apps):
-  '''
-  Get a locales hash for the given list of applications, mapping
-  applications to the list of languages given by all-locales.
-  Adds a module 'toolkit' holding all languages for all applications, too.
-  '''
-  locales = {}
-  all = {}
-  for app in apps:
-    path = 'mozilla/%s/locales/all-locales' % app
-    locales[app] = [l.strip() for l in open(path)]
-    all.update(dict.fromkeys(locales[app]))
-  locales['toolkit'] = all.keys()
-  return locales
+  def onLoadConfig(self, inifile):
+    cp = ConfigParser(self.defaults)
+    cp.readfp(inifile)
+    try:
+      depth = cp.get('general', 'depth')
+    except:
+      depth = '.'
+    self.baseurl = urljoin(self.inipath, depth)
+    try:
+      for category, path in cp.items('includes'):
+        # skip default items
+        if category in self.defaults:
+          continue
+        # add child config parser
+        self.addChild(urljoin(self.baseurl, path))
+    except NoSectionError:
+      pass
+    try:
+      self.dirs.extend(cp.get('compare', 'dirs').split())
+    except (NoOptionError, NoSectionError):
+      pass
+    try:
+      self.all_url = urljoin(self.baseurl, cp.get('general', 'all'))
+    except (NoOptionError, NoSectionError):
+      self.all_url = None
+
+  def addChild(self, url):
+    cp = L10nConfigParser(url, **self.defaults)
+    cp.loadConfigs()
+    self.children.append(cp)
+
+  def directories(self):
+    url = urlparse(self.baseurl)
+    basepath = None
+    if url[0] == 'file':
+      basepath = url2pathname(url[2])
+    for dir in self.dirs:
+      yield (dir, basepath)
+    for child in self.children:
+      for t in child.directories():
+        yield t
+
+  def allLocales(self):
+    return urlopen(self.all_url).read().splitlines()
+
 
 class File(object):
   def __init__(self, fullpath, file, module = None, locale = None):
@@ -163,34 +172,21 @@ class LocalesWrap(object):
     self.locales = locales
   def __iter__(self):
     for locale in self.locales:
-      path = self.base + '/' + get_base_path(self.module, locale)
+      path = os.path.join(self.base, locale, self.module)
       yield (locale, EnumerateDir(path, self.module, locale))
 
 class EnumerateApp(object):
-  echo_var = MAKE_CLIENT_MK + 'echo-variable-LOCALES_%s'
-  filterpath = 'mozilla/%s/locales/filter.py'
   reference =  'en-US'
-  def __init__(self, basepath = os.curdir, l10nbase = None):
-    self.modules=defaultdict(dict)
-    self.basepath = os.path.abspath(basepath)
-    if l10nbase is None:
-      l10nbase = self.basepath
+  def __init__(self, inipath, l10nbase, locales = None):
+    self.modules = defaultdict(dict)
+    self.config = L10nConfigParser(inipath)
+    self.config.loadConfigs()
     self.l10nbase = os.path.abspath(l10nbase)
     self.filters = []
+    self.addFilterFrom(url2pathname(urlparse(urljoin(inipath,'filter.py'))[2]))
+    self.locales = locales or self.config.allLocales()
+    self.locales.sort()
     pass
-  def addApplication(self, app, locales = None):
-    cwd = os.getcwd()
-    os.chdir(self.basepath)
-    try:
-      modules = os.popen(self.echo_var % app).read().strip().split()
-      if not locales:
-        locales = allLocales([app])[app]
-      # get filters
-      self.addFilterFrom(self.filterpath % app)
-    finally:
-      os.chdir(cwd)
-    for mod in modules:
-      self.modules[mod].update(dict.fromkeys(locales))
   def addFilterFrom(self, filterpath):
     if not os.path.exists(filterpath):
       return
@@ -215,16 +211,16 @@ class EnumerateApp(object):
     iterator over all locales in each iteration. Per locale, the locale
     code and an directory enumerator will be given.
     '''
-    modules = self.modules.keys()
-    modules.sort()
-    for mod in modules:
-      locales = self.modules[mod].keys()
-      locales.sort()
-      base = self.basepath
-      yield (mod,
-             EnumerateDir(base + '/' + get_base_path(mod, self.reference),
-                          mod, self.reference),
-             LocalesWrap(self.l10nbase, mod, locales))
+    dirmap = dict(self.config.directories())
+    mods = dirmap.keys()
+    mods.sort()
+    for mod in mods:
+      if self.reference == 'en-US':
+        base = os.path.join(dirmap[mod], mod, 'locales', 'en-US')
+      else:
+        base = os.path.join(self.l10nbase, self.reference, mod)
+      yield (mod, EnumerateDir(base, mod, self.reference),
+             LocalesWrap(self.l10nbase, mod, self.locales))
 
 def get_base_path(mod, loc):
   'statics for path patterns and conversion'

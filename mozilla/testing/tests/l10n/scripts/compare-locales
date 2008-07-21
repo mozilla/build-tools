@@ -44,22 +44,13 @@ import codecs
 from Mozilla.Paths import EnumerateApp
 from Mozilla.CompareLocales import compareApp
 
-usage = 'usage: %prog [options] language1 [language2 ...]'
+usage = 'usage: %prog [options] l10n.ini l10n_base_dir language1 [language2 ...]'
 parser = OptionParser(usage=usage)
 
-parser.add_option('-a', '--application', default='browser',
-                  help='compare localizations for the specified application'+
-                  ' [default: browser]')
 parser.add_option('-v', '--verbose', action='count', dest='v', default=0,
                   help='Make more noise')
 parser.add_option('-q', '--quiet', action='count', dest='q', default=0,
                   help='Make more noise')
-parser.add_option('-s', '--source', default='.', dest='source',
-                  help='Explicitly set a source directory for the reference '+
-                  'localization. [default: .]')
-parser.add_option('-l', '--l10n', default=None, dest='l10n',
-                  help='Explicitly set a source directory for the '+
-                  'localizations to compare. [default: reference source]')
 parser.add_option('-r', '--reference', default='en-US', dest='reference',
                   help='Explicitly set the reference '+
                   'localization. [default: en-US]')
@@ -67,16 +58,17 @@ parser.add_option('-m', '--merge',
                   help='Use this directory to stage merged files')
 
 (options, args) = parser.parse_args()
-if len(args) == 0:
+if len(args) < 3:
   parser.error('At least one language required')
+inipath, l10nbase = args[:2]
+locales = args[2:]
 
 # log as verbose or quiet as we want, warn by default
 logging.basicConfig()
 logging.getLogger().setLevel(logging.WARNING - (options.v - options.q)*10)
 
-app = EnumerateApp(options.source, options.l10n)
+app = EnumerateApp(inipath, l10nbase, locales)
 app.reference = options.reference
-app.addApplication(options.application, args)
 
 o = compareApp(app, merge_stage = options.merge)
 print codecs.utf_8_encode(o.serialize())[0]

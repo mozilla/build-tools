@@ -25,7 +25,8 @@ class CompareCommand(Command):
   
   def setup(self, args):
     self.locale = args['locale']
-    self.application = args['application']
+    self.inipath = args['inipath']
+    self.l10nbase = args['l10nbase']
     self.workdir = args['workdir']
     ## more
 
@@ -43,14 +44,12 @@ class CompareCommand(Command):
     log.msg('Starting to compare %s in %s' % (self.locale, self.workdir))
     self.sendStatus({'header': 'Comparing %s against en-US for %s\n' \
                      % (self.locale, self.workdir)})
-    cwd = os.getcwd()
-    if self.debug:
-      log.msg("I'm in  %s"%os.getcwd())
     workingdir = os.path.join(self.builder.basedir, self.workdir)
     if self.debug:
       log.msg('trying to import Mozilla from %s'%os.getcwd())
-    app = EnumerateApp(workingdir)
-    app.addApplication(self.application, [self.locale])
+    app = EnumerateApp(os.path.join(workingdir, self.inipath),
+                       os.path.join(workingdir, self.l10nbase),
+                       [self.locale])
     try:
       o = compareApp(app)
     except Exception, e:
@@ -85,4 +84,4 @@ class CompareCommand(Command):
       rc = FAILURE
     self.sendStatus({'rc': rc})
 
-registerSlaveCommand('moz_comparelocales', CompareCommand, '0.1')
+registerSlaveCommand('moz_comparelocales', CompareCommand, '0.2')

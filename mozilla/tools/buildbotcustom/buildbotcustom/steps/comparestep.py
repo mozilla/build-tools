@@ -43,7 +43,7 @@ class ResultRemoteCommand(LoggedRemoteCommand):
     tbmsg = ''
     if 'tree' in self.args:
       tbmsg = self.args['tree'] + ': '
-    tbmsg += "%(application)s %(locale)s" % self.args
+    tbmsg += "%(label)s %(locale)s" % self.args
     self.addStdout('TinderboxPrint:<a title="Build type">' + tbmsg + '</a>\n')
     self.addStdout('TinderboxPrint:<a title="Completion">%d%%</a>\n' %
                    self.completion)
@@ -89,25 +89,32 @@ class CompareLocale(LoggingBuildStep):
   description = ["comparing"]
   descriptionDone = ["compare", "locales"]
 
-  def __init__(self, workdir, locale, application, **kwargs):
+  def __init__(self, workdir, inipath, l10nbase, locale, label, **kwargs):
     """
     @type  workdir: string
     @param workdir: local directory (relative to the Builder's root)
                     where the mozilla and the l10n trees reside
 
+    @type inipath: string
+    @param inipath: path to the l10n.ini file, relative to the workdir
+
+    @type l10nbase: string
+    @param l10nbase: path to the localization dirs, relative to the workdir
+
     @type  locale: string
     @param locale: Language code of the localization to be compared.
 
-    @type  application: string
-    @param application: Module name of the application to be compared,
-                        for example, browser, or mail.
+    @type  label: string
+    @param label: Description used for output, usually the tree or app.
     """
 
     LoggingBuildStep.__init__(self, **kwargs)
 
     self.args = {'workdir'    : workdir,
+                 'inipath'    : inipath,
+                 'l10nbase'   : l10nbase,
                  'locale'     : locale,
-                 'application': application}
+                 'label'      : label}
 
   def describe(self, done=False):
     if done:
@@ -125,7 +132,7 @@ class CompareLocale(LoggingBuildStep):
       args['tree'] = self.build.getProperty('tree')
     except KeyError:
       pass
-    self.descriptionDone = [args['locale'], args['application']]
+    self.descriptionDone = [args['locale'], args['label']]
     cmd = ResultRemoteCommand(self.name, args)
     self.startCommand(cmd, [])
   
