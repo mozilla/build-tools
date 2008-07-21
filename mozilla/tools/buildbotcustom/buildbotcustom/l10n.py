@@ -1,73 +1,99 @@
+from twisted.python import log as log2
 from buildbotcustom import log
 from buildbot.scheduler import BaseUpstreamScheduler
 from buildbot.sourcestamp import SourceStamp
 from buildbot import buildset, process
-from subprocess import *
+from twisted.internet import protocol, utils, reactor, error, defer
+from twisted.web.client import HTTPClientFactory, getPage
 from itertools import izip
+from ConfigParser import ConfigParser
+from cStringIO import StringIO
 import os
 import os.path
 
-"""
-mozl10n holds helper classes to factor information about repositories (l10n
-and mozilla), getting relevant information from mozilla/client.mk.
-It also provides schedulers and build classes to dispatch changesets onto
-l10n builds, trying to be somewhat clever on check-outs.
-"""
+from Mozilla import Paths
 
-class tree(object):
-  """
-  tree holds classmethods to retrieve l10n data about a particular branch
-  by asking mozilla/client.mk.
-  """
-  
-  @classmethod
-  def ensureClientMk(self, branch):
-    """
-    Get client.mk for the specified branch locally.
-    """
-    rv = call(["cvs", "-z3",
-               "-dl10nbld@cvs.mozilla.org:/cvsroot",
-               "co", "-r", branch, "mozilla/client.mk"])
-    if rv < 0:
-      print >>sys.stderr, "cvs co failed", -rv
-    return
 
-  @classmethod
-  def l10nDirs(self, branch, apps):
-    """
-    For the given branch and applications, return the list of directories
-    with localization files, per client.mk.
-    """
-    lapps = apps[:]
-    self.ensureClientMk(branch)
-    of  = os.popen('make -f mozilla/client.mk ' + \
-                   ' '.join(['echo-variable-LOCALES_' + app for app in lapps]))
-    rv = {}
-    for val in of.readlines():
-      rv[lapps.pop(0)] = val.strip().split()
-    
-    return rv
+class AsyncLoader(Paths.L10nConfigParser):
+  pendingLoads = 0
+  def loadConfigs(self):
+    self.d = defer.Deferred()
+    self.pendingLoads += 1
+    d = self._getPage(self.inipath)
+    def _cbDone(contents):
+      self.onLoadConfig(StringIO(contents))
+      return defer.succeed(True)
+    def _cbErr(rv):
+      self.pendingLoads -= 1
+      return self.d.errback(rv)
+    d.addCallback(_cbDone)
+    d.addCallbacks(self._loadDone, _cbErr)
+    return self.d
 
-  @classmethod
-  def allLocales(self, branch, apps):
-    """
-    For the given branch and applications, return a hash mapping application
-    to locales, as given by mozilla/foo/locales/all-locales.
-    """
-    lapps = apps[:]
-    alllocales = ['mozilla/%s/locales/all-locales' % app \
-                  for app in lapps]
-    rv = call(["cvs", "-z3",
-               "-dl10nbld@cvs.mozilla.org:/cvsroot",
-               "co", "-r", branch] + alllocales)
-    if rv < 0:
-      print >>sys.stderr, "cvs co failed", -rv
-      return []
-    rv = {}
-    for app, allpath in izip(lapps, alllocales):
-      rv[app] = [loc.strip() for loc in open(allpath).readlines()]
+  def onLoadConfig(self, f):
+    log2.msg("onLoadConfig called")
+    Paths.L10nConfigParser.onLoadConfig(self,f)
 
-    return rv
+  def addChild(self, url):
+    cp = self.__class__(url, **self.defaults)
+    d = cp.loadConfigs()
+    self.pendingLoads += 1
+    d.addCallbacks(self._loadDone, self.d.errback)
+    self.children.append(cp)
+
+  def getAllLocales(self):
+    return self._getPage(self.all_url)
+
+  def _getPage(self, path):
+    return getPage(path)
+
+  def _loadDone(self, result):
+    self.pendingLoads -= 1
+    if not self.pendingLoads:
+      self.d.callback(True)
+
+class CVSProtocol(protocol.ProcessProtocol):
+
+  def __init__(self, cmd):
+    self.d = defer.Deferred()
+    self.data = ''
+    self.errdata = ''
+    self.cmd = cmd
+
+  def connectionMade(self):
+    self.transport.closeStdin()
+
+  def outReceived(self, data):
+    self.data += data
+
+  def errReceived(self, data):
+    # chew away what cvs blurbs at us
+    self.errdata += data
+    pass
+
+  def processEnded(self, reason):
+    if isinstance(reason.value, error.ProcessDone):
+      self.d.callback(self.data)
+    else:
+      reason.value.args = (self.errdata,)
+      self.d.errback(reason)
+
+class CVSAsyncLoader(AsyncLoader):
+  CVSROOT = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'
+  BRANCH = None
+
+  def __init__(self, inipath, **kwargs):
+    AsyncLoader.__init__(self, inipath, **kwargs)
+    self.inipath = inipath
+
+  def _getPage(self, path):
+    args = ['cvs', '-d', self.CVSROOT, 'co']
+    if self.BRANCH is not None:
+      args += ['-r', self.BRANCH]
+    args += ['-p', path]
+    pp = CVSProtocol(' '.join(args))
+    reactor.spawnProcess(pp, 'cvs', args, {})
+    return pp.d
 
 
 class repositories(object):
@@ -96,36 +122,51 @@ class repositories(object):
   l10n.repository = 'l10nbld@cvs.mozilla.org:/l10n'
 
 
-def getInfoFor(workdir, branch, apps=None, locales=None):
+def configureDispatcher(config, section, scheduler, builders):
   """
-  getInfoFor gathers a pathmap (list of directory application tuples)
-  and locales info for a given branch and either a list of apps or
-  locales info. It's using the workdir to check out client.mk and, if
-  needed, app/locales/all-locales.
   """
-  if not apps:
-    apps = locales.keys()
-  try:
-    if not os.path.isdir(workdir):
-      os.mkdir(workdir)
-    os.chdir(workdir)
-    
-    L10nDirs = tree.l10nDirs(branch, apps)
-    if not locales:
-      locales = tree.allLocales(branch, apps)
-  finally:
-    os.chdir('..')
-  
-  tmp = {}
-  for app, dirs in L10nDirs.iteritems():
-    for basedir in dirs:
-      if basedir not in tmp:
-        tmp[basedir] = []
-      tmp[basedir].append(app)
-        
-  pathmap = [(basedir, appl) for basedir, appl in tmp.iteritems()]
-  return (pathmap, locales)
-
+  log2.msg('configureDispatcher for ' + section)
+  if config.get(section, 'type', 'cvs') != 'cvs':
+    raise RuntimeError('non-cvs l10n builds not supported yet')
+  CVSAsyncLoader.CVSROOT = repositories.mozilla.repository
+  cp = CVSAsyncLoader(config.get(section, 'l10n.ini'))
+  cp.BRANCH = config.get(section, 'mozilla', None)
+  def _addDispatchers(dirs, locales):
+    scheduler.addDispatcher(L10nDispatcher(dirs, locales, builders,
+                                           config.get(section, 'app'),
+                                           config.get(section, 'l10n'),
+                                           section))
+    scheduler.addDispatcher(EnDispatcher(dirs, locales, builders,
+                                         config.get(section, 'app'),
+                                         config.get(section, 'mozilla'),
+                                         section))
+    log2.msg('both dispatchers added for ' + section)
+    buildermap = scheduler.parent.botmaster.builders
+    for b in builders:
+      buildermap[b].builder_status.addPointEvent([section, "set", "up"])
+  def _cbLoadedLocales(locales, dirs):
+    log2.msg("loaded all locales")
+    locales = locales.split()
+    _addDispatchers(dirs, locales)
+  def _cbLoadedConfig(rv):
+    log2.msg('config loaded for ' + section)
+    dirs = dict(cp.directories()).keys()
+    dirs.sort()
+    locales = config.get(section, 'locales', 'all')
+    if locales == 'all':
+      d = cp.getAllLocales()
+      d.addCallback(_cbLoadedLocales, dirs)
+      return
+    _addDispatchers(dirs, locales)
+    return
+  def _errBack(msg):
+    log2.msg("loading %s failed with %s" % (section, msg))
+    buildermap = scheduler.parent.botmaster.builders
+    for b in builders:
+      buildermap[b].builder_status.addPointEvent([section, "setup", "failed"])
+  d = cp.loadConfigs()
+  d.addCallbacks(_cbLoadedConfig, _errBack)
+  return d
 
 """
 Dispatchers
@@ -163,11 +204,12 @@ class L10nDispatcher(IBaseDispatcher):
   It can pass around a tree name, too.
   """
   
-  def __init__(self, pathmap, locales, builders,
+  def __init__(self, paths, locales, builders, app, 
                branch = None, tree = None):
     self.locales = locales
-    self.paths = pathmap
+    self.paths = paths
     self.builders = builders
+    self.app = app
     self.branch = branch
     self.tree = tree
     self.parent = None
@@ -197,29 +239,16 @@ class L10nDispatcher(IBaseDispatcher):
         self.debug("l10n path doesn't contain locale and path")
         return
       loc, path = pathparts[1:]
-      required_apps = set()
-      for basepath, apps in self.paths:
+      if loc not in self.locales:
+        continue
+      for basepath in self.paths:
         if not path.startswith(basepath):
           continue
-        apps = [app for app in apps if loc in self.locales[app]]
-        if not apps:
-          # this application / locale combination is not ours
-          continue
-        required_apps.update(apps)
-      if not required_apps:
-        continue
-      try:
-        to_add = required_apps - toBuild[loc]
-        toBuild[loc].update(to_add)
-      except KeyError:
-        toBuild[loc] = required_apps
-        to_add = required_apps
-      if to_add:
-        self.debug("adding %s for %s" % (', '.join(to_add), loc))
-    for loc, apps in toBuild.iteritems():
-      for app in apps:
-        self.parent.queueBuild(app, loc, self.builders, change,
-                               tree = self.tree)
+      toBuild[loc] = True
+      self.debug("adding %s for %s" % (self.app, loc))
+    for loc in toBuild.iterkeys():
+      self.parent.queueBuild(self.app, loc, self.builders, change,
+                             tree = self.tree)
 
 
 class EnDispatcher(IBaseDispatcher):
@@ -233,11 +262,12 @@ class EnDispatcher(IBaseDispatcher):
   It can pass around a tree name, too.
   """
   
-  def __init__(self, pathmap, locales, builders,
+  def __init__(self, paths, locales, builders, app,
                branch = None, tree = None):
     self.locales = locales
-    self.paths = pathmap
+    self.paths = paths
     self.builders = builders
+    self.app = app
     self.branch = branch
     self.tree = tree
     self.parent = None
@@ -257,7 +287,7 @@ class EnDispatcher(IBaseDispatcher):
       self.debug("not our branch, ignore, %s != %s" %
                  (self.branch, change.branch))
       return
-    apps = set()
+    needsBuild = False
     for file in change.files:
       if not file.startswith("mozilla/"):
         self.debug("Ignoring change %d, not our rep" % change.number)
@@ -266,14 +296,14 @@ class EnDispatcher(IBaseDispatcher):
       if modEnd < 0:
         continue
       basedir = file[len('mozilla/'):modEnd]
-      for bd, newapps in self.paths:
+      for bd in self.paths:
         if bd != basedir:
           continue
-        apps.update(newapps)
+        needsBuild = True
         break
-    for app in apps:
-      for loc in self.locales[app]:
-        self.parent.queueBuild(app, loc, self.builders, change,
+    if needsBuild:
+      for loc in self.locales:
+        self.parent.queueBuild(self.app, loc, self.builders, change,
                                tree = self.tree)
 
 
@@ -290,7 +320,7 @@ class Scheduler(BaseUpstreamScheduler):
   
   compare_attrs = ('name', 'treeStableTimer')
   
-  def __init__(self, name, treeStableTimer = None):
+  def __init__(self, name, inipath, treeStableTimer = None):
     """
     @param name: the name of this Scheduler
     @param treeStableTimer: the duration, in seconds, for which the tree
@@ -300,6 +330,7 @@ class Scheduler(BaseUpstreamScheduler):
     """
     
     BaseUpstreamScheduler.__init__(self, name)
+    self.inipath = inipath
     self.treeStableTimer = treeStableTimer
     self.nextBuildTime = None
     self.timer = None
@@ -307,7 +338,16 @@ class Scheduler(BaseUpstreamScheduler):
     self.dispatchers = []
     self.queue = []
     self.lastChange = {}
-  
+    self.locales = []
+
+  def startService(self):
+    log2.msg("starting l10n scheduler")
+    cp = ConfigParser()
+    cp.read(self.inipath)
+    for tree in cp.sections():
+      reactor.callWhenRunning(configureDispatcher,
+                              cp, tree, self, ['linux-langpack'])
+
   class NoMergeStamp(SourceStamp):
     """
     We're going to submit a bunch of build requests for each change. That's
@@ -341,12 +381,14 @@ class Scheduler(BaseUpstreamScheduler):
       return "Build: %s %s %s" % (self.tree, self.app, self.locale)
 
   # dispatching routines
-  def addDispatcher(self, dispatcher):
+  def addDispatcher(self, dispatcher, tree = None, locales = None):
     """
     Add an IBaseDispatcher instance to this Scheduler.
     """
     self.dispatchers.append(dispatcher)
     dispatcher.setParent(self)
+    if tree is not None and locales is not None:
+      self.locales[tree] = locales
 
   def queueBuild(self, app, locale, builders, change, tree = None):
     """

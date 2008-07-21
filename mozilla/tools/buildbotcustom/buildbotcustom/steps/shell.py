@@ -59,7 +59,9 @@ class CVSCO(ShellCommand):
         b = b[self.getProperty('tree')]
       except KeyError:
         b = b[self.getProperty('buildername')]
-    self.command = ['cvs', '-q', '-z3', 'co', '-r', b]
+    self.command = ['cvs', '-q', '-z3', 'co']
+    if b is not None:
+      self.command += ['-r', b]
     if self.date:
       self.command += ['-D', self.date]
     targets = self.targets
@@ -78,13 +80,10 @@ class MakeCheckout(ShellCommand):
   
   debug = True
   
-  def __init__(self, workdir, apps, **kwargs):
+  def __init__(self, workdir, **kwargs):
     """
-    workdir is the workdir, apps is 
-    - a hash mapping either the 'tree' or the 'buildername' to a list of apps
-    - a list of app names.
+    workdir is the workdir
     """
-    self.apps = apps
     
     ShellCommand.__init__(self, workdir, **kwargs)
 
@@ -98,18 +97,12 @@ class MakeCheckout(ShellCommand):
         log.msg("skipping MakeCheckout")
       return builder.SKIPPED
     
-    try:
-      apps = self.apps[self.getProperty('tree')]
-    except KeyError:
-      apps = self.apps[self.getProperty('buildername')]
-    except KeyError, e:
-      if not isinstance(apps, list):
-        raise e
-      apps = self.apps
+    app = self.getProperty('app')
     
     if 'env' not in self.remote_kwargs:
       self.remote_kwargs['env'] = {}
-    self.remote_kwargs['env']['MOZ_CO_PROJECT'] = ','.join(apps)
+    self.remote_kwargs['env']['MOZ_CO_PROJECT'] = app
+    self.remote_kwargs['env']['MOZ_CO_LOCALES'] = 'all'
     self.remote_kwargs['env']['CVS_RSH'] = 'ssh'
     
     return ShellCommand.start(self)
