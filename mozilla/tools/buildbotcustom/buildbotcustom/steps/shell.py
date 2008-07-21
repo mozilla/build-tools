@@ -135,10 +135,10 @@ class Configure(ShellCommand):
   def start(self):
     srcdir = self.srcdir
     if isinstance(srcdir, WithProperties):
-      srcdir = srcdir.render(self.build)
+      srcdir = self.build.getProperties().render(srcdir)
     app = self.app
     if isinstance(app, WithProperties):
-      app = app.render(self.build)
+      app = self.build.getProperties().render(app)
     self.command = [srcdir + '/configure'] + self.configure_args
     self.command.append('--enable-application=%s' % app)
 
@@ -164,10 +164,10 @@ class Upload(ShellCommand):
   def start(self):
     href = self.http_dest
     if isinstance(href, WithProperties):
-      href = href.render(self.build)
+      href = self.build.getProperties().render(href)
     dest = self.scp_dest
     if isinstance(dest, WithProperties):
-      dest = dest.render(self.build)
+      dest = self.build.getProperties().render(dest)
     self.addURL("D", href)
     self.command = "mkdir -p " + dest + "&&chmod 755 " + dest + "&& chmod 644 * && scp -p * " + dest + "&& rm *"
 

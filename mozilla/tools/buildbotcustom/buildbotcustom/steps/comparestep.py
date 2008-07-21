@@ -56,8 +56,8 @@ class ResultRemoteCommand(LoggedRemoteCommand):
                      '</a>\n')
     self.addStdout(str(summary) + '\n')
     self.addStdout(pformat(result['details']) + '\n')
-    self.step.setProperty('compare-result', result['details'])
-    self.step.setProperty('coverage-result', summary)
+    self.step.setProperty('compare-result', result['details'], 'compare')
+    self.step.setProperty('coverage-result', summary, 'compare')
     # It'd be nice if we didn't have to hardcode the URL to the comparison
     # Picking one that is relative to the waterfall
     self.step.addURL('comparison',
@@ -120,7 +120,7 @@ class CompareLocale(LoggingBuildStep):
     args.update(self.args)
     for k, v in args.iteritems():
       if isinstance(v, WithProperties):
-                args[k] = v.render(self.build)
+                args[k] = self.build.getProperties().render(v)
     try:
       args['tree'] = self.build.getProperty('tree')
     except KeyError:

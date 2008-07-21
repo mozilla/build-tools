@@ -380,7 +380,7 @@ class Scheduler(BaseUpstreamScheduler):
                                                tree))
       bs = buildset.BuildSet([builder],
                              Scheduler.NoMergeStamp(changes=changes))
-      self.submit(bs)
+      self.submitBuildSet(bs)
   
   def popBuildDesc(self, buildername, slavename):
     """
@@ -449,12 +449,12 @@ class Build(process.base.Build):
                       (self.builder.name, self.slavename))
     process.base.Build.setupBuild(self, expectations)
     self.build_status.changes = tuple(bd.changes)
-    self.setProperty('app', bd.app)
-    self.setProperty('locale', bd.locale)
-    self.setProperty('needsCheckout', bd.needsCheckout)
+    self.setProperty('app', bd.app, 'setup')
+    self.setProperty('locale', bd.locale, 'setup')
+    self.setProperty('needsCheckout', bd.needsCheckout, 'setup')
     reason = bd.app + ' ' + bd.locale
     if bd.tree:
-      self.setProperty('tree', bd.tree)
+      self.setProperty('tree', bd.tree, 'setup')
       reason = bd.tree + ': ' + reason
     
     # overwrite the reason, we know better than base.Build

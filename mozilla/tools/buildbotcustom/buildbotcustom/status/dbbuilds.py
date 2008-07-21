@@ -53,7 +53,7 @@ def updateBuildFrom(dbbuild, buildstatus):
   dbbuild.starttime = times[0]
   dbbuild.endtime = times[1]
   build = Build.objects.all()[0]
-  for k, v in buildstatus.properties.iteritems():
+  for k, v, s in buildstatus.getProperties.asList():
     dbbuild.setProperty(k, v)
   dbbuild.slavename = buildstatus.getSlavename()
   dbbuild.results = buildstatus.getResults()
