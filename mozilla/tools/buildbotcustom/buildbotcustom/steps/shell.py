@@ -3,6 +3,7 @@ from buildbot.process.buildstep import BuildStep
 from buildbot.steps.shell import ShellCommand, WithProperties
 from buildbot.process.buildstep import LoggingBuildStep, LoggedRemoteCommand
 from buildbot.status import builder
+from buildbotcustom.l10n import repositories
 
 from twisted.python import log
 
@@ -98,11 +99,16 @@ class MakeCheckout(ShellCommand):
       return builder.SKIPPED
     
     app = self.getProperty('app')
+    try:
+      locales = ','.join(self.getProperty('MOZ_CO_LOCALES'))
+    except KeyError:
+      locales = 'all'
     
     if 'env' not in self.remote_kwargs:
       self.remote_kwargs['env'] = {}
     self.remote_kwargs['env']['MOZ_CO_PROJECT'] = app
-    self.remote_kwargs['env']['MOZ_CO_LOCALES'] = 'all'
+    self.remote_kwargs['env']['MOZ_CO_LOCALES'] = locales
+    self.remote_kwargs['env']['LOCALES_CVSROOT'] = repositories.l10n.repository
     self.remote_kwargs['env']['CVS_RSH'] = 'ssh'
     
     return ShellCommand.start(self)

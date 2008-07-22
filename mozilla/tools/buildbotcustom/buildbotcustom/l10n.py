@@ -3,6 +3,7 @@ from buildbotcustom import log
 from buildbot.scheduler import BaseUpstreamScheduler
 from buildbot.sourcestamp import SourceStamp
 from buildbot import buildset, process
+from buildbot.process import properties
 from twisted.internet import protocol, utils, reactor, error, defer
 from twisted.web.client import HTTPClientFactory, getPage
 from itertools import izip
@@ -135,7 +136,8 @@ def configureDispatcher(config, section, scheduler, builders):
     scheduler.addDispatcher(L10nDispatcher(dirs, locales, builders,
                                            config.get(section, 'app'),
                                            config.get(section, 'l10n'),
-                                           section))
+                                           section),
+                            section, locales)
     scheduler.addDispatcher(EnDispatcher(dirs, locales, builders,
                                          config.get(section, 'app'),
                                          config.get(section, 'mozilla'),
@@ -157,7 +159,7 @@ def configureDispatcher(config, section, scheduler, builders):
       d = cp.getAllLocales()
       d.addCallback(_cbLoadedLocales, dirs)
       return
-    _addDispatchers(dirs, locales)
+    _addDispatchers(dirs, locales.split())
     return
   def _errBack(msg):
     log2.msg("loading %s failed with %s" % (section, msg))
@@ -338,7 +340,7 @@ class Scheduler(BaseUpstreamScheduler):
     self.dispatchers = []
     self.queue = []
     self.lastChange = {}
-    self.locales = []
+    self.locales = {}
 
   def startService(self):
     log2.msg("starting l10n scheduler")
@@ -356,29 +358,6 @@ class Scheduler(BaseUpstreamScheduler):
     """
     def canBeMergedWith(self, other):
       return False
-
-  class BuildDesc(object):
-    """
-    Helper object. We could actually use a dictionary, too, but this
-    scopes the information clearly and makes up for nicer code via
-    build.app instead of build['app'] etc.
-    """
-    def __init__(self, app, locale, builder, changes, tree = None):
-      self.app = app
-      self.locale = locale
-      self.builder = builder
-      self.changes = changes
-      self.tree = tree
-      self.needsCheckout = True
-    
-    def __eq__(self, other):
-      return self.app == other.app and \
-          self.locale == other.locale and \
-          self.builder == other.builder and \
-          self.tree == other.tree
-    
-    def __repr__(self):
-      return "Build: %s %s %s" % (self.tree, self.app, self.locale)
 
   # dispatching routines
   def addDispatcher(self, dispatcher, tree = None, locales = None):
@@ -399,63 +378,17 @@ class Scheduler(BaseUpstreamScheduler):
     changes = [change]
     log.debug("scheduler", "queueBuild: build %s for change %d" % 
               (', '.join(builders), change.number))
-    # create our own copy of the builder list to modify
-    builders = list(builders)
-    for build in self.queue:
-      if app == build.app and \
-         locale == build.locale and \
-         build.builder in builders:
-        log.debug("scheduler", "queueBuild found build for %s, %s on %s" %
-                  (build.app, build.locale, build.builder))
-        build.changes.append(change)
-        builders.remove(build.builder)
-        self.queue.remove(build)
-        self.queue.insert(0, build)
-        if not builders:
-          log.debug("scheduler", "no new build needed for change %d" % change.number)
-          return
-
-    for builder in builders:
-      log.debug("scheduler",
-                "adding change %d to %s"  % (change.number, builder))
-      self.queue.insert(0, Scheduler.BuildDesc(app, locale, builder, changes,
-                                               tree))
-      bs = buildset.BuildSet([builder],
-                             Scheduler.NoMergeStamp(changes=changes))
-      self.submitBuildSet(bs)
+    props = properties.Properties()
+    props.updateFromProperties(self.properties)
+    props.update(dict(app=app, locale=locale, tree=tree,
+                      MOZ_CO_LOCALES = self.locales[tree],
+                      needsCheckout = True), 'Scheduler')
+    bs = buildset.BuildSet(builders,
+                           Scheduler.NoMergeStamp(changes=changes),
+                           reason = "%s %s" % (tree, locale),
+                           properties = props)
+    self.submitBuildSet(bs)
   
-  def popBuildDesc(self, buildername, slavename):
-    """
-    Pop pending build details from the list for the given builder.
-    Depending on the changes and the slave, it will request a checkout,
-    or even a clobber (clobber not implemented).
-    """
-    if not self.queue:
-      # no more builds pending
-      log.debug("scheduler",
-                "no more builds for %s, slave %s" % (buildername,slavename))
-      return
-
-    # get the latest build
-    build = self.queue.pop()
-    lastChange = build.changes[-1].number
-    log.debug("scheduler", "popping 'til change %d, builder %s, slave %s" %
-              (lastChange, buildername, slavename))
-    log.debug("scheduler",
-              "lastChange: %d, hash: %s" % (lastChange, str(self.lastChange)))
-    log.debug("scheduler", "Building %s" % str(build))
-    try:
-      build.needsCheckout =  self.lastChange[(slavename, buildername)] < \
-                            lastChange
-    except KeyError:
-      build.needsCheckout = True
-
-    # it'd be cool if we could do this on successful check-out, but let's
-    # be ignorant for now and assume that succeeds
-    self.lastChange[(slavename, buildername)] = lastChange
-    
-    return build
-
   # Implement IScheduler
   def addChange(self, change):
     log.debug("scheduler",
@@ -480,24 +413,4 @@ class Build(process.base.Build):
   I subclass process.Build just to set some properties I get from
   the scheduler in setupBuild.
   """
-  
-  # this is the scheduler, needs to be set on the class in master.cfg
-  buildQueue = None
-
-  def setupBuild(self, expectations):
-    bd = self.buildQueue.popBuildDesc(self.builder.name, self.slavename)
-    if not bd:
-      raise Exception("No build found for %s on %s, bad mojo" % \
-                      (self.builder.name, self.slavename))
-    process.base.Build.setupBuild(self, expectations)
-    self.build_status.changes = tuple(bd.changes)
-    self.setProperty('app', bd.app, 'setup')
-    self.setProperty('locale', bd.locale, 'setup')
-    self.setProperty('needsCheckout', bd.needsCheckout, 'setup')
-    reason = bd.app + ' ' + bd.locale
-    if bd.tree:
-      self.setProperty('tree', bd.tree, 'setup')
-      reason = bd.tree + ': ' + reason
-    
-    # overwrite the reason, we know better than base.Build
-    self.build_status.setReason(reason)
+  pass
