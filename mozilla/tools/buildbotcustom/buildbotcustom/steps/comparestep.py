@@ -11,9 +11,13 @@ class ResultRemoteCommand(LoggedRemoteCommand):
   """
   Helper command class, extracts compare locale results from updates.
   """
-  
+
+  def __init__(self, name, args, report):
+    LoggedRemoteCommand.__init__(self, name, args)
+    self.report = report
+
   def remoteUpdate(self, update):
-    log.msg("remoteUpdate called")
+    log.msg("remoteUpdate called with keys: " + ", ".join(update.keys()))
     result = None
     try:
       self.rc = update.pop('rc')
@@ -56,6 +60,10 @@ class ResultRemoteCommand(LoggedRemoteCommand):
                      '</a>\n')
     self.addStdout(str(summary) + '\n')
     self.addStdout(pformat(result['details']) + '\n')
+    # stdout is OK up to tinderbox, which we leave out.
+    # Return before setting the build properties if we're not supposed to.
+    if not self.report:
+      return
     self.step.setProperty('compare-result', result['details'], 'compare')
     self.step.setProperty('coverage-result', summary, 'compare')
     # It'd be nice if we didn't have to hardcode the URL to the comparison
@@ -89,7 +97,8 @@ class CompareLocale(LoggingBuildStep):
   description = ["comparing"]
   descriptionDone = ["compare", "locales"]
 
-  def __init__(self, workdir, inipath, l10nbase, locale, label, **kwargs):
+  def __init__(self, workdir, inipath, l10nbase, locale, label,
+               report = False, mergedir = None, **kwargs):
     """
     @type  workdir: string
     @param workdir: local directory (relative to the Builder's root)
@@ -106,6 +115,13 @@ class CompareLocale(LoggingBuildStep):
 
     @type  label: string
     @param label: Description used for output, usually the tree or app.
+
+    @type report: bool
+    @param report: Pass true if this step is supposed to add build properties
+                   with the comparison results.
+
+    @type mergedir: string
+    @param mergedir: path to the dir where to put merge output, rel to workdir.
     """
 
     LoggingBuildStep.__init__(self, **kwargs)
@@ -114,7 +130,9 @@ class CompareLocale(LoggingBuildStep):
                  'inipath'    : inipath,
                  'l10nbase'   : l10nbase,
                  'locale'     : locale,
-                 'label'      : label}
+                 'label'      : label,
+                 'mergedir'   : mergedir}
+    self.report = report
 
   def describe(self, done=False):
     if done:
@@ -133,7 +151,7 @@ class CompareLocale(LoggingBuildStep):
     except KeyError:
       pass
     self.descriptionDone = [args['locale'], args['label']]
-    cmd = ResultRemoteCommand(self.name, args)
+    cmd = ResultRemoteCommand(self.name, args, self.report)
     self.startCommand(cmd, [])
   
   def evaluateCommand(self, cmd):

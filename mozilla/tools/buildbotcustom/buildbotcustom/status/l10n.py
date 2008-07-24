@@ -147,7 +147,13 @@ def addBuild(buildstatus):
     
 
 class LatestL10n(StatusReceiverMultiService):
+  def __init__(self, builders):
+    StatusReceiverMultiService.__init__(self)
+    self.builders = builders
   def buildFinished(self, builderName, build, results):
+    if builderName not in self.builders:
+      # we don't listen to this one
+      return
     log.msg("LatestL10n getting notified")
     # notify db
     addBuild(build)

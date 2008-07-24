@@ -7,7 +7,7 @@ import urllib
 from buildbot.status.web import baseweb, base
 from twisted.web.util import Redirect
 from twisted.python import log
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, desc
 
 from buildbotcustom.status import l10ndb
 
@@ -50,7 +50,9 @@ class StatsResource(base.HtmlResource):
   def renderPicker(self, req, args = None):
     return pickertemplate.render(args = args)
   def renderStats(self, builder, tree, app, locale, days):
-    starttime = datetime.utcnow() - timedelta(days)
+    endtime = datetime.utcnow()
+    starttime = endtime - timedelta(days)
+    second = timedelta(0, 1)
     eventdoc = getDOMImplementation().createDocument(None, 'data', None)
     eventdoc.documentElement.setAttribute('date-time-format', 'iso8601')
     statrows = []
@@ -59,11 +61,25 @@ class StatsResource(base.HtmlResource):
     q = l10ndb.q.filter_by(tree = tree,
                            app = app,
                            locale = locale)
+    b = q.filter(startcol < starttime).order_by(desc(startcol)).first()
+    if b is not None:
+      d = dict(missing = b.c_missing + b.c_missingInFiles,
+               obsolete = b.c_obsolete,
+               unchanged = b.c_unchanged,
+               time = starttime.isoformat() + 'Z')
+    else:
+      d = dict(missing = 0, obsolete = 0, unchanged = 0,
+               time = starttime.isoformat() + 'Z')
+    statrows.append(d)
     for b in q.filter(startcol > starttime).order_by(startcol):
-      statrows.append(dict(missing = b.c_missing + b.c_missingInFiles,
-                           obsolete = b.c_obsolete,
-                           unchanged = b.c_unchanged,
-                           time = b.starttime.isoformat() + 'Z'))
+      d = dict(d)
+      d['time'] = (b.starttime - second).isoformat() + 'Z'
+      statrows.append(d)
+      d = dict(missing = b.c_missing + b.c_missingInFiles,
+               obsolete = b.c_obsolete,
+               unchanged = b.c_unchanged,
+               time = b.starttime.isoformat() + 'Z')
+      statrows.append(d)
       if not b.l10nchange:
         # only add localizer changes to the events
         continue
@@ -75,6 +91,10 @@ class StatsResource(base.HtmlResource):
       eventdoc.documentElement.appendChild(e)
       comments = '\n'.join([c.comments for c in build.getChanges()])
       e.appendChild(eventdoc.createTextNode('<pre>%s</pre>' % comments))
+    # pad artificial data point at start and end
+    d = dict(d)
+    d['time'] = endtime.isoformat() + 'Z'
+    statrows.append(d)
     return statstemplate.render(rows=statrows, events = eventdoc,
                              buildername = builder.getName(),
                              tree = tree, app = app, locale = locale)

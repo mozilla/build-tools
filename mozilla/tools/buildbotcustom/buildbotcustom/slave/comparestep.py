@@ -28,6 +28,7 @@ class CompareCommand(Command):
     self.inipath = args['inipath']
     self.l10nbase = args['l10nbase']
     self.workdir = args['workdir']
+    self.mergedir = args['mergedir']
     ## more
 
   def start(self):
@@ -47,11 +48,14 @@ class CompareCommand(Command):
     workingdir = os.path.join(self.builder.basedir, self.workdir)
     if self.debug:
       log.msg('trying to import Mozilla from %s'%os.getcwd())
-    app = EnumerateApp(os.path.join(workingdir, self.inipath),
-                       os.path.join(workingdir, self.l10nbase),
-                       [self.locale])
     try:
-      o = compareApp(app)
+      app = EnumerateApp(os.path.join(workingdir, self.inipath),
+                         os.path.join(workingdir, self.l10nbase),
+                         [self.locale])
+      merge_stage = None
+      if self.mergedir is not None:
+        merge_stage = os.path.join(workingdir, self.mergedir)
+      o = compareApp(app, merge_stage = merge_stage)
     except Exception, e:
       log.msg('%s comparison failed with %s' % (self.locale, str(e)))
       log.msg(Failure().getTraceback())
