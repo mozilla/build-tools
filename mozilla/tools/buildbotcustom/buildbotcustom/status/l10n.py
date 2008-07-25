@@ -186,13 +186,13 @@ class LatestL10n(StatusReceiverMultiService):
     for item in items:
       if item['id'] == id:
         item.clear()
-        item['id'] = id
-        item.update(props)
+        item.update(rv)
         needsAppend = False
         break
     if needsAppend:
       items.append(rv)
     simplejson.dump(dict(items=items), open(self.json, 'w'))
+    log.msg("wrote out %s with %d items" % (self.json, len(items)))
   def builderAdded(self, name, builder):
     log.msg("subscribing to " + name)
     return self
