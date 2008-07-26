@@ -246,7 +246,7 @@ class L10nDispatcher(IBaseDispatcher):
       for basepath in self.paths:
         if not path.startswith(basepath):
           continue
-      toBuild[loc] = True
+        toBuild[loc] = True
       self.debug("adding %s for %s" % (self.app, loc))
     for loc in toBuild.iterkeys():
       self.parent.queueBuild(self.app, loc, self.builders, change,
