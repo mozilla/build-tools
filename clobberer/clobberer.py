@@ -56,8 +56,9 @@ else:
   print "Last clobber: %s" % datetime_to_str(last_clobber)
   print "Current time: %s" % datetime_to_str(cur_date)
   if (last_clobber + PERIODIC_CLOBBER_TIME < cur_date):
-    print "More than %s have passed since the last clobber, clobbering "
-    print "build directory" % PERIODIC_CLOBBER_TIME
+    print "More than %s have passed since the last clobber, clobbering " % \
+      PERIODIC_CLOBBER_TIME
+    print "build directory"
     do_clobber()
     # if do_clobber fails the script will exit and this will not be executed
     write_file(cur_date, "last-clobber")
