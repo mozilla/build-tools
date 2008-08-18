@@ -384,12 +384,13 @@ class ContentComparer:
         if self.keyRE.search(entity):
           keys += 1
         else:
-          refVal = ref[0][ref[1][entity]].val
-          l10nVal = l10n_entities[l10n_map[entity]].val
-          if refVal == l10nVal:
-            self.doUnchanged(l10n_entities[l10n_map[entity]])
+          refent = ref[0][ref[1][entity]]
+          l10nent = l10n_entities[l10n_map[entity]]
+          if refent.val == l10nent.val:
+            self.doUnchanged(l10nent)
             unchanged += 1
           else:
+            self.doChanged(ref_file, refent, l10nent)
             changed += 1
         pass
     if missing:
@@ -422,6 +423,9 @@ class ContentComparer:
       return
     self.notify('missingInFiles', missing, len(map))
   def doUnchanged(self, entity):
+    # overload this if needed
+    pass
+  def doChanged(self, file, ref_entity, l10n_entity):
     # overload this if needed
     pass
 
