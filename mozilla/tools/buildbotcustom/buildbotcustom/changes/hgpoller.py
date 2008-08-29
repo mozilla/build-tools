@@ -248,7 +248,7 @@ class HgPoller(base.ChangeSource, BaseHgPoller):
         if self.pushlogUrlOverride:
             url = self.pushlogUrlOverride
         else:
-            url = "%s/index.cgi/%s/pushlog" % (self.hgURL, self.branch)
+            url = "%s/%s/pushlog" % (self.hgURL, self.branch)
 
         if self.tipsOnly:
             url += '?tipsonly=1'
