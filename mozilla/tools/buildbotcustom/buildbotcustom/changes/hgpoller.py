@@ -185,17 +185,19 @@ class BaseHgPoller(object):
             d = self.getData()
             d.addCallback(self.processData)
             d.addCallbacks(self.dataFinished, self.dataFailed)
+            d.addCallback(self.pollDone)
 
     def dataFinished(self, res):
         assert self.working
         self.working = False
-        return res
 
     def dataFailed(self, res):
         assert self.working
         self.working = False
         log.msg("%s: polling failed, result %s" % (self, res))
-        return None
+
+    def pollDone(self, res):
+        pass
 
 class HgPoller(base.ChangeSource, BaseHgPoller):
     """This source will poll a Mercurial server over HTTP using
@@ -309,10 +311,13 @@ class HgLocalePoller(BaseHgPoller):
                                when = adjustedChangeTime,
                                branch = self.branch)
             c.locale = self.locale
-            self.parent.addChange(c)
+            self.parent.parent.addChange(c)
         if len(change_list) > 0:
             self.lastChange = max(self.lastChange, *[c["updated"]
                                                      for c in change_list])
+
+    def pollDone(self, res):
+        self.parent.localeDone(self.locale)
 
     def __str__(self):
         return "<HgLocalePoller for %s>" % self.url
@@ -327,6 +332,7 @@ class HgAllLocalesPoller(base.ChangeSource, BaseHgPoller):
     volatile = ['loop']
 
     timeout = 10
+    parallelRequests = 2
 
     def __init__(self, allLocalesURL, localePushlogURL, branch=None,
                  pollInterval=120):
@@ -351,6 +357,8 @@ class HgAllLocalesPoller(base.ChangeSource, BaseHgPoller):
         self.pollInterval = pollInterval
         self.lastChange = time.time()
         self.localePollers = {}
+        self.locales = []
+        self.pendingLocales = []
 
     def startService(self):
         self.loop = LoopingCall(self.poll)
@@ -371,15 +379,28 @@ class HgAllLocalesPoller(base.ChangeSource, BaseHgPoller):
     def getLocalePoller(self, locale):
         if locale not in self.localePollers:
             self.localePollers[locale] = \
-                HgLocalePoller(locale, self.parent, self.branch,
+                HgLocalePoller(locale, self, self.branch,
                                self.localePushlogURL % {'locale': locale})
         return self.localePollers[locale]
 
     def processData(self, data):
-        for l in data.splitlines():
-            l = l.strip()
-            if l == '': continue
-            self.getLocalePoller(l).poll()
+        locales = filter(None, data.split())
+        log.msg(locales)
+        self.locales = locales
+        self.pendingLocales = locales[:]
+        reactor.callLater(0, self.pollNextLocale)
+
+    def pollNextLocale(self):
+        for i in xrange(self.parallelRequests):
+            if not self.pendingLocales:
+                return
+            loc = self.pendingLocales.pop(0)
+            poller = self.getLocalePoller(loc)
+            poller.poll()
+
+    def localeDone(self, loc):
+        log.msg("done with " + loc)
+        reactor.callLater(0, self.pollNextLocale)        
 
     def __str__(self):
         return "<HgAllLocalesPoller for %s>" % self.allLocalesURL
