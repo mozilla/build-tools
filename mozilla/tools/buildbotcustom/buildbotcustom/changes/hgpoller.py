@@ -283,17 +283,22 @@ class HgLocalePoller(BaseHgPoller):
     """This helper class for HgAllLocalesPoller polls a single locale and
     submits changes if necessary."""
 
+    timeout = 10
+
     def __init__(self, locale, parent, branch, url):
         self.locale = locale
         self.parent = parent
         self.branch = branch
         self.url = url
         self.lastChange = time.time()
+        self.startLoad = self.loadTime = 0
 
     def getData(self):
-        return getPage(self.url)
+        self.startLoad = time.time()
+        return getPage(self.url, timeout = self.timeout)
 
     def processData(self, query):
+        self.loadTime = time.time() - self.startLoad
         change_list = _parse_changes(query, self.lastChange)
         for change in change_list:
             adjustedChangeTime = change["updated"]
@@ -320,6 +325,8 @@ class HgAllLocalesPoller(base.ChangeSource, BaseHgPoller):
     parent = None
     loop = None
     volatile = ['loop']
+
+    timeout = 10
 
     def __init__(self, allLocalesURL, localePushlogURL, branch=None,
                  pollInterval=120):
@@ -359,7 +366,7 @@ class HgAllLocalesPoller(base.ChangeSource, BaseHgPoller):
 
     def getData(self):
         log.msg("Polling all-locales at %s" % self.allLocalesURL)
-        return getPage(self.allLocalesURL)
+        return getPage(self.allLocalesURL, timeout = self.timeout)
 
     def getLocalePoller(self, locale):
         if locale not in self.localePollers:
