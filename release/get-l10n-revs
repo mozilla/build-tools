@@ -3,9 +3,9 @@
 # This script requires an input of a list of locales. For each locale given it
 # will retrieve the current tip-most revision of that locale's repository.
 # Locale repositories are assumed to live one level deeper than $L10N_CENTRAL.
-# eg. http://hg.mozilla.org/l10n-central/index.cgi/af
+# eg. http://hg.mozilla.org/l10n-central/af
 
-L10N_CENTRAL='http://hg.mozilla.org/l10n-central/index.cgi'
+L10N_CENTRAL='http://hg.mozilla.org/l10n-central'
 DUMP_FILE='l10n-changesets'
 
 if [ -f $DUMP_FILE ]; then
