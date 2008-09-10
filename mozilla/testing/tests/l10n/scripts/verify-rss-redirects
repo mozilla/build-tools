@@ -47,7 +47,7 @@ EN_US_FEED = 'http://newsrss.bbc.co.uk/rss/newsonline_world_edition/front_page/r
 FEEDSERVER = '%s.fxfeeds.mozilla.com'
 FEEDPATH   = '/%s/firefox/headlines.xml'
 
-L10NFEEDS = 'http://wiki.mozilla.org/Firefox/L10n_Feed_Redirects?action=raw'
+L10NFEEDS = 'https://wiki.mozilla.org/index.php?title=Firefox/L10n_Feed_Redirects&action=raw'
 
 op = OptionParser()
 op.add_option('--oldid', dest='oldid',
