@@ -222,6 +222,8 @@ class DTDParser(Parser):
     # | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] |
     # [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] |
     # [#x10000-#xEFFFF]
+    CharMinusDash = u'\x09\x0A\x0D\u0020-\u002C\u002E-\uD7FF\uE000-\uFFFD'
+    XmlComment = '<!--(?:-?[%s])*?-->' % CharMinusDash
     NameStartChar = u':A-Z_a-z\xC0-\xD6\xD8-\xF6\xF8-\u02FF' + \
         u'\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF'+\
         u'\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD'
@@ -231,11 +233,11 @@ class DTDParser(Parser):
     #   [#x0300-#x036F] | [#x203F-#x2040]
     NameChar = NameStartChar + ur'\-\.0-9' + u'\xB7\u0300-\u036F\u203F-\u2040'
     Name = '[' + NameStartChar + '][' + NameChar + ']*'
-    self.reKey = re.compile('(\s*)((?:<!--(?:[^-]+-)*[^-]+-->\s*)*)(<!ENTITY\s+(' + Name + ')\s+(\"[^\"]*\"|\'[^\']*\')\s*>)([ \t]*(?:<!--(?:[^\n-]+-)*[^\n-]+-->[ \t]*)*\n?)?')
+    self.reKey = re.compile('(?:(\s*)((?:' + XmlComment + '\s*)*)(<!ENTITY\s+(' + Name + ')\s+(\"[^\"]*\"|\'[^\']*\')\s*>)([ \t]*(?:' + XmlComment + '\s*)*\n?)?)')
     # add BOM to DTDs, details in bug 435002
     self.reHeader = re.compile(u'^\ufeff?(\s*<!--.*LICENSE BLOCK([^-]+-)*[^-]+-->)?')
     self.reFooter = re.compile('\s*(<!--([^-]+-)*[^-]+-->\s*)*$')
-    self.rePE = re.compile('(\s*)((?:<!--(?:[^-]+-)*[^-]+-->\s*)*)(<!ENTITY\s+%\s+(' + Name + ')\s+SYSTEM\s+(\"[^\"]*\"|\'[^\']*\')\s*>\s*%' + Name + ';)([ \t]*(?:<!--(?:[^\n-]+-)*[^\n-]+-->[ \t]*)*\n?)?')
+    self.rePE = re.compile('(?:(\s*)((?:' + XmlComment + '\s*)*)(<!ENTITY\s+%\s+(' + Name + ')\s+SYSTEM\s+(\"[^\"]*\"|\'[^\']*\')\s*>\s*%' + Name + ';)([ \t]*(?:' + XmlComment + '\s*)*\n?)?)')
     Parser.__init__(self)
   def getEntity(self, contents, offset):
     '''
