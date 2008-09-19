@@ -187,6 +187,22 @@ class BaseHgPoller(object):
             d.addCallbacks(self.dataFinished, self.dataFailed)
             d.addCallback(self.pollDone)
 
+    def processData(self, query):
+        change_list = _parse_changes(query, self.lastChange)
+        for change in change_list:
+            adjustedChangeTime = change["updated"]
+            c = changes.Change(who = change["author"],
+                               files = change["files"],
+                               revision = change["changeset"],
+                               comments = change["link"],
+                               when = adjustedChangeTime,
+                               branch = self.branch)
+            self.changeHook(c)
+            self.parent.addChange(c)
+        if len(change_list) > 0:
+            self.lastChange = max(self.lastChange, *[c["updated"]
+                                                     for c in change_list])
+
     def dataFinished(self, res):
         assert self.working
         self.working = False
@@ -197,6 +213,9 @@ class BaseHgPoller(object):
         log.msg("%s: polling failed, result %s" % (self, res))
 
     def pollDone(self, res):
+        pass
+
+    def changeHook(self, change):
         pass
 
 class HgPoller(base.ChangeSource, BaseHgPoller):
@@ -256,27 +275,11 @@ class HgPoller(base.ChangeSource, BaseHgPoller):
             url += '?tipsonly=1'
 
         return url
-    
 
     def getData(self):
         url = self._make_url()
         log.msg("Polling Hg server at %s" % url)
         return getPage(url)
-
-    def processData(self, query):
-        change_list = _parse_changes(query, self.lastChange)
-        for change in change_list:
-            adjustedChangeTime = change["updated"]
-            c = changes.Change(who = change["author"],
-                               files = change["files"],
-                               revision = change["changeset"],
-                               comments = change["link"],
-                               when = adjustedChangeTime,
-                               branch = self.branch)
-            self.parent.addChange(c)
-        if len(change_list) > 0:
-            self.lastChange = max(self.lastChange, *[c["updated"]
-                                                     for c in change_list])
 
     def __str__(self):
         return "<HgPoller for %s%s>" % (self.hgURL, self.branch)
@@ -301,20 +304,10 @@ class HgLocalePoller(BaseHgPoller):
 
     def processData(self, query):
         self.loadTime = time.time() - self.startLoad
-        change_list = _parse_changes(query, self.lastChange)
-        for change in change_list:
-            adjustedChangeTime = change["updated"]
-            c = changes.Change(who = change["author"],
-                               files = change["files"],
-                               revision = change["changeset"],
-                               comments = change["link"],
-                               when = adjustedChangeTime,
-                               branch = self.branch)
-            c.locale = self.locale
-            self.parent.parent.addChange(c)
-        if len(change_list) > 0:
-            self.lastChange = max(self.lastChange, *[c["updated"]
-                                                     for c in change_list])
+        BaseHgPoller.processData(self, query)
+
+    def changeHook(self, change):
+        change.locale = self.locale
 
     def pollDone(self, res):
         self.parent.localeDone(self.locale)
@@ -368,6 +361,9 @@ class HgAllLocalesPoller(base.ChangeSource, BaseHgPoller):
     def stopService(self):
         self.loop.stop()
         return base.ChangeSource.stopService(self)
+
+    def addChange(self, change):
+        self.parent.addChange(change)
 
     def describe(self):
         return "Getting changes from all-locales at %s for repositories at %s" % (self.allLocalesURL, self.localePushlogURL)
