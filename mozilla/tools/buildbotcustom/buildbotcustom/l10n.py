@@ -186,8 +186,8 @@ def configureDispatcher(config, section, scheduler):
   def _errBack(msg):
     log2.msg("loading %s failed with %s" % (section, msg))
     buildermap = scheduler.parent.botmaster.builders
-    for b in builders:
-      buildermap[b].builder_status.addPointEvent([section, "setup", "failed"])
+    # for b in builders:
+    #   buildermap[b].builder_status.addPointEvent([section, "setup", "failed"])
   d = cp.loadConfigs()
   d.addCallbacks(_cbLoadedConfig, _errBack)
   return d
