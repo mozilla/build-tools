@@ -182,6 +182,7 @@ class BasePoller(object):
     def poll(self):
         if self.working:
             log.msg("Not polling %s because last poll is still working" % self)
+            reactor.callLater(0, self.pollDone)
             return
         self.working = True
         self.startLoad = time.time()
@@ -438,7 +439,6 @@ class HgAllLocalesPoller(base.ChangeSource, BasePoller):
                 msg = "Done with all locales"
                 loadTimes = map(lambda p: p.loadTime, self.localePollers.values())
                 goodTimes = filter(lambda t: t is not None, loadTimes)
-                msg = ''
                 if not goodTimes:
                     msg += ". All %d locale pollers failed" % len(loadTimes)
                 else:
