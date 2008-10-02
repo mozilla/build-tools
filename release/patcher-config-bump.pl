@@ -179,7 +179,7 @@ sub BumpPatcherConfig {
         $currentUpdateObj->{'from'} = $oldVersion;
     }
 
-    $currentUpdateObj->{'details'} = 'http://%locale%.www.mozilla.com/%locale%/' .
+    $currentUpdateObj->{'details'} = 'http://www.mozilla.com/%locale%/' .
                                       $product . '/' . $appVersion . '/releasenotes/';
 
     if ($useBetaChannel) {
@@ -378,7 +378,7 @@ sub RunUnitTests {
     $bCurrentUpdate->{'beta-dir'} = "beta";
     $bCurrentUpdate->{'channel'} = "beta release";
     $bCurrentUpdate->{'testchannel'} = "betatest releasetest";
-    $bCurrentUpdate->{'details'} = "http://%locale%.www.mozilla.com/%locale%/$product/$oldVersion/releasenotes/";
+    $bCurrentUpdate->{'details'} = "http://www.mozilla.com/%locale%/$product/$oldVersion/releasenotes/";
     $bCurrentUpdate->{'from'} = $oldOldVersion;
     $bCurrentUpdate->{'to'} = $oldVersion;
     $bCurrentUpdate->{'complete'} = {};
@@ -437,7 +437,7 @@ sub RunUnitTests {
     $aCurrentUpdate->{'beta-dir'} = "beta";
     $aCurrentUpdate->{'channel'} = "beta release";
     $aCurrentUpdate->{'testchannel'} = "betatest releasetest";
-    $aCurrentUpdate->{'details'} = "http://%locale%.www.mozilla.com/%locale%/$product/$version/releasenotes/";
+    $aCurrentUpdate->{'details'} = "http://www.mozilla.com/%locale%/$product/$version/releasenotes/";
     $aCurrentUpdate->{'from'} = $oldVersion;
     $aCurrentUpdate->{'to'} = $version;
     $aCurrentUpdate->{'complete'} = {};
