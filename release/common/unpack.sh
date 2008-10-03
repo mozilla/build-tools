@@ -1,4 +1,11 @@
 #!/bin/bash
+
+function cleanup() { 
+    hdiutil detach ${DEV_NAME} || 
+      { sleep 5 && hdiutil detach ${DEV_NAME} -force; }; 
+    return $1 && $?; 
+};
+
 unpack_build () {
     unpack_platform="$1"
     dir_name="$2"
@@ -12,9 +19,13 @@ unpack_build () {
             cd ../
             mkdir -p mnt
             echo "mounting $pkg_file"
-            echo "y" | PAGER="/bin/cat"  hdiutil attach -quiet -puppetstrings -noautoopen -mountpoint ./mnt "$pkg_file" > /dev/null
-            rsync -a ./mnt/* $dir_name/ 
-            hdiutil detach mnt > /dev/null
+            expect ../common/installdmg.ex "$pkg_file" > hdi.output || cleanup 1;
+	    DEV_NAME=`perl -n -e 'if($_=~/(\/dev\/disk[^ ]*)/) {print $1."\n";exit;}'< hdi.output`;
+            if [ ! $DEV_NAME ]; then cleanup 1; fi
+            MOUNTPOINT=`perl -n -e 'split(/\/dev\/disk[^ ]*/,$_,2);if($_[1]=~/(\/.[^\r]*)/) {print $1;exit;}'< hdi.output`;
+            if [ ! $MOUNTPOINT ]; then cleanup 1; fi
+            rsync -a ${MOUNTPOINT}/* $dir_name/ || cleanup 1;
+	    cleanup 0;
             cd $dir_name
             ;;
         win32|WINNT_x86-msvc)
