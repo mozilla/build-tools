@@ -68,12 +68,12 @@ class L10nConfigParser(object):
       depth = '.'
     self.baseurl = urljoin(self.inipath, depth)
     try:
-      for category, path in cp.items('includes'):
+      for title, path in cp.items('includes'):
         # skip default items
-        if category in self.defaults:
+        if title in self.defaults:
           continue
         # add child config parser
-        self.addChild(urljoin(self.baseurl, path))
+        self.addChild(title, path, cp)
     except NoSectionError:
       pass
     try:
@@ -85,18 +85,23 @@ class L10nConfigParser(object):
     except (NoOptionError, NoSectionError):
       self.all_url = None
 
-  def addChild(self, url):
-    cp = L10nConfigParser(url, **self.defaults)
+  def addChild(self, title, path, orig_cp):
+    cp = L10nConfigParser(urljoin(self.baseurl, path), **self.defaults)
     cp.loadConfigs()
     self.children.append(cp)
 
-  def directories(self):
+  def dirsIter(self):
     url = urlparse(self.baseurl)
     basepath = None
     if url[0] == 'file':
       basepath = url2pathname(url[2])
     for dir in self.dirs:
       yield (dir, basepath)
+    
+
+  def directories(self):
+    for t in self.dirsIter():
+      yield t
     for child in self.children:
       for t in child.directories():
         yield t

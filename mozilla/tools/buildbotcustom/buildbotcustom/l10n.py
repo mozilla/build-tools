@@ -11,12 +11,19 @@ from ConfigParser import ConfigParser
 from cStringIO import StringIO
 import os
 import os.path
+from urlparse import urljoin
 
 from Mozilla import Paths
 
 
 class AsyncLoader(Paths.L10nConfigParser):
-  pendingLoads = 0
+  type = 'hg'
+
+  def __init__(self, inipath, branch):
+    Paths.L10nConfigParser.__init__(self, inipath)
+    self.branch = branch
+    self.pendingLoads = 0
+
   def loadConfigs(self):
     self.d = defer.Deferred()
     self.pendingLoads += 1
@@ -35,8 +42,24 @@ class AsyncLoader(Paths.L10nConfigParser):
     log2.msg("onLoadConfig called")
     Paths.L10nConfigParser.onLoadConfig(self,f)
 
-  def addChild(self, url):
-    cp = self.__class__(url, **self.defaults)
+  def addChild(self, title, path, orig_cp):
+    # check if there's a section with details for this include
+    # we might have to check a different repo, or even VCS
+    details = 'include_' + title
+    if orig_cp.has_section(details):
+      type = orig_cp.get(details, 'type')
+      if type not in ['hg', 'cvs']:
+        log2.msg("Cannot load l10n.ini for %s with type %s" % (title, type))
+        return
+      branch = orig_cp.get(details, 'mozilla')
+      if type == 'cvs':
+        cp = CVSAsyncLoader(orig_cp.get(details, 'l10n.ini'), branch)
+      else:
+        l10n_ini_temp = '%(repo)s%(mozilla)s/raw-file/tip/%(l10n.ini)s'
+        cp = AsyncLoader(l10n_ini_temp % dict(orig_cp.items(details)), branch)
+    else:
+      cp = self.__class__(urljoin(self.baseurl, path), self.branch,
+                          **self.defaults)
     d = cp.loadConfigs()
     self.pendingLoads += 1
     d.addCallbacks(self._loadDone, self.d.errback)
@@ -81,16 +104,16 @@ class CVSProtocol(protocol.ProcessProtocol):
 
 class CVSAsyncLoader(AsyncLoader):
   CVSROOT = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot'
-  BRANCH = None
+  type = 'cvs'
 
-  def __init__(self, inipath, **kwargs):
-    AsyncLoader.__init__(self, inipath, **kwargs)
+  def __init__(self, inipath, branch, **kwargs):
+    AsyncLoader.__init__(self, inipath, branch, **kwargs)
     self.inipath = inipath
 
   def _getPage(self, path):
     args = ['cvs', '-d', self.CVSROOT, 'co']
-    if self.BRANCH is not None:
-      args += ['-r', self.BRANCH]
+    if self.branch is not None:
+      args += ['-r', self.branch]
     args += ['-p', path]
     pp = CVSProtocol(' '.join(args))
     reactor.spawnProcess(pp, 'cvs', args, {})
@@ -130,37 +153,47 @@ def configureDispatcher(config, section, scheduler):
   buildtype = config.get(section, 'type')
   if buildtype not in ['cvs', 'hg']:
     raise RuntimeError('non-cvs l10n builds not supported yet')
+  branch = config.get(section, 'mozilla')
   if buildtype == 'cvs':
     CVSAsyncLoader.CVSROOT = repositories.mozilla.repository
-    cp = CVSAsyncLoader(config.get(section, 'l10n.ini'))
-    cp.BRANCH = config.get(section, 'mozilla')
+    cp = CVSAsyncLoader(config.get(section, 'l10n.ini'), branch)
   else:
-    l10n_ini_temp = '%(repo)s/%(mozilla)s/index.cgi/raw-file/tip/%(l10n.ini)s'
-    cp = AsyncLoader(l10n_ini_temp % dict(config.items(section)))
+    l10n_ini_temp = '%(repo)s%(mozilla)s/raw-file/tip/%(l10n.ini)s'
+    cp = AsyncLoader(l10n_ini_temp % dict(config.items(section)), branch)
   def _addDispatchers(dirs, locales, builders):
-    if buildtype == 'cvs':
-      scheduler.addDispatcher(L10nDispatcher(dirs, locales, builders,
+    alldirs = []
+    if dirs['cvs']:
+      for branch, endirs in dirs['cvs'].iteritems():
+        scheduler.addDispatcher(EnDispatcher(endirs, locales, builders,
                                              config.get(section, 'app'),
-                                             config.get(section, 'l10n'),
-                                             section),
-                              section, locales)
-      scheduler.addDispatcher(EnDispatcher(dirs, locales, builders,
-                                           config.get(section, 'app'),
-                                           config.get(section, 'mozilla'),
-                                           section,
-                                           prefix = 'mozilla/'))
-      log2.msg('both dispatchers added for ' + section)
-    else:
-      scheduler.addDispatcher(HgL10nDispatcher(dirs, locales, builders,
+                                             branch, section,
+                                             prefix = 'mozilla/'))
+        alldirs += endirs
+      log2.msg('en cvs dispatchers added for ' + section)
+    if dirs['hg']:
+      for branch, endirs in dirs['hg'].iteritems():
+        log2.msg('adding EnDispatcher for %s on %s for %s' %
+                 (section, branch, ' '.join(endirs)))
+        scheduler.addDispatcher(EnDispatcher(endirs, locales, builders,
+                                             config.get(section, 'app'),
+                                             branch, section))
+        alldirs += endirs
+
+      # if we have one hg dispatcher, l10n is on hg
+      scheduler.addDispatcher(HgL10nDispatcher(alldirs, locales, builders,
                                                config.get(section, 'app'),
                                                config.get(section, 'l10n'),
                                                section),
                               section, locales)
-      scheduler.addDispatcher(EnDispatcher(dirs, locales, builders,
-                                           config.get(section, 'app'),
-                                           config.get(section, 'mozilla'),
-                                           section))
-      log2.msg('both hg l10n dispatchers added for ' + section)
+      log2.msg('both hg dispatchers added for ' + section)
+    else:
+      # only pure cvs projects have l10n on cvs
+      scheduler.addDispatcher(L10nDispatcher(alldirs, locales, builders,
+                                             config.get(section, 'app'),
+                                             config.get(section, 'l10n'),
+                                             section),
+                              section, locales)
+      log2.msg('l10n cvs dispatchers added for ' + section)
     buildermap = scheduler.parent.botmaster.builders
     for b in builders:
       try:
@@ -173,8 +206,19 @@ def configureDispatcher(config, section, scheduler):
     _addDispatchers(dirs, locales, builders)
   def _cbLoadedConfig(rv):
     log2.msg('config loaded for ' + section)
-    dirs = dict(cp.directories()).keys()
-    dirs.sort()
+    dirs = {'hg':{}, 'cvs':{}}
+    loaders = [cp]
+    while loaders:
+      l = loaders.pop(0)
+      ldirs = dict(l.dirsIter()).keys()
+      if l.branch not in dirs[l.type]:
+        dirs[l.type][l.branch] = ldirs
+      else:
+        dirs[l.type][l.branch] += ldirs
+      loaders += l.children
+    for d in dirs.itervalues():
+      for dd in d.itervalues():
+        dd.sort()
     builders = config.get(section, 'builders').split()
     locales = config.get(section, 'locales')
     if locales == 'all':
@@ -184,7 +228,8 @@ def configureDispatcher(config, section, scheduler):
     _addDispatchers(dirs, locales.split(), builders)
     return
   def _errBack(msg):
-    log2.msg("loading %s failed with %s" % (section, msg))
+    log2.msg("loading %s failed with %s" % (section, msg.value.message))
+    log2.msg(section + " has inipath " + cp.inipath)
     buildermap = scheduler.parent.botmaster.builders
     # for b in builders:
     #   buildermap[b].builder_status.addPointEvent([section, "setup", "failed"])
@@ -292,6 +337,7 @@ class HgL10nDispatcher(L10nDispatcher):
           break
     if not doBuild:
       self.debug("dropping change %d, not our app" % change.number)
+      self.debug("%s listens to %s" % (self.app, ' '.join(self.paths)))
       return
     self.parent.queueBuild(self.app, change.locale, self.builders, change,
                            tree = self.tree)
