@@ -102,6 +102,39 @@ __USAGE__
 
 }    
 
+sub BumpFilePath {
+    my %args = @_;
+    my $oldFilePath = $args{'oldFilePath'};
+    my $product = $config{'product'};
+    my $version = $config{'version'};
+    my $oldVersion = $config{'old-version'};
+
+    # we need an escaped copy of oldVersion so we can accurately match
+    # filenames
+    my $escapedOldVersion = $oldVersion;
+    $escapedOldVersion =~ s/\./\\./g;
+
+    # strip out everything up to and including 'buildN/'
+    my $newPath = $oldFilePath;
+    $newPath =~ s/.*\/build\d+\///;
+    # We need to handle partials and complete MARs differently
+    if ($newPath =~ m/\.partial\.mar$/) {
+        $newPath =~ s/$product-.+?-$escapedOldVersion\.
+                     /$product-$oldVersion-$version./x
+                     or die("ASSERT: BumpFilePath() - Could not bump path: " .
+                            "$oldFilePath");
+    } elsif ($newPath =~ m/\.complete\.mar$/) {
+        $newPath =~ s/$product-$escapedOldVersion\.
+                     /$product-$version./x
+                     or die("ASSERT: BumpFilePath() - Could not bump path: " .
+                            "$oldFilePath");
+    } else {
+        die("ASSERT: BumpFilePath() - Unknown file type for '$oldFilePath'");
+    }
+
+    return $newPath;
+}
+
 sub BumpPatcherConfig {
     my $product = $config{'product'};
     my $version = $config{'version'};
@@ -198,21 +231,25 @@ sub BumpPatcherConfig {
                               $oldVersion .
                              '&os=%bouncer-platform%&lang=%locale%';
 
-    $partialUpdate->{'path'} = catfile($product, 'nightly', $version . 
-                               '-candidates', $buildStr, $product. '-' . 
-                               $oldVersion . '-' . $version .
-                               '.%locale%.%platform%.partial.mar');
+    my $pPath = BumpFilePath(
+      oldFilePath => $currentUpdateObj->{'partial'}->{'path'});
+    $partialUpdate->{'path'} = catfile($product, 'nightly', $version .
+                               '-candidates', $buildStr, $pPath);
 
+    my $pBetatestPath = BumpFilePath(
+      oldFilePath => $currentUpdateObj->{'partial'}->{'betatest-url'});
     $partialUpdate->{'betatest-url'} =
      'http://' . $stagingServer. '/pub/mozilla.org/' . $product . 
-     '/nightly/' .  $version . '-candidates/' . $buildStr . '/' . $product . 
-     '-' . $oldVersion .  '-' . $version . '.%locale%.%platform%.partial.mar';
+     '/nightly/' .  $version . '-candidates/' . $buildStr . '/' .
+     $pBetatestPath;
 
     if ($useBetaChannel) {
-       $partialUpdate->{'beta-url'} =
-        'http://' . $ftpServer . '/pub/mozilla.org/' . $product. '/nightly/' . 
-         $version . '-candidates/' . $buildStr . '/' . $product . '-' . $oldVersion . 
-        '-' . $version . '.%locale%.%platform%.partial.mar';
+      my $pBetaPath = BumpFilePath(
+        oldFilePath => $currentUpdateObj->{'partial'}->{'beta-url'});
+      $partialUpdate->{'beta-url'} =
+       'http://' . $ftpServer . '/pub/mozilla.org/' . $product. '/nightly/' . 
+        $version . '-candidates/' . $buildStr . '/' . 
+        $pBetaPath;
     }
     $currentUpdateObj->{'partial'} = $partialUpdate;
 
@@ -222,20 +259,24 @@ sub BumpPatcherConfig {
      $product . '-' . $version . 
      '-complete&os=%bouncer-platform%&lang=%locale%';
 
+    my $cPath = BumpFilePath(
+      oldFilePath => $currentUpdateObj->{'complete'}->{'path'});
     $completeUpdate->{'path'} = catfile($product, 'nightly', $version . 
-     '-candidates', $buildStr, $product . '-' . $appVersion .
-     '.%locale%.%platform%.complete.mar');
+     '-candidates', $buildStr, $cPath);
 
+    my $cBetatestPath = BumpFilePath(
+      oldFilePath => $currentUpdateObj->{'complete'}->{'betatest-url'});
     $completeUpdate->{'betatest-url'} = 
      'http://' . $stagingServer . '/pub/mozilla.org/' . $product . 
-     '/nightly/' .  $version . '-candidates/' . $buildStr .  '/' . $product . 
-     '-' . $appVersion .  '.%locale%.%platform%.complete.mar';
+     '/nightly/' .  $version . '-candidates/' . $buildStr . '/' .
+     $cBetatestPath;
 
     if ($useBetaChannel) {
+       my $cBetaPath = BumpFilePath(
+         oldFilePath => $currentUpdateObj->{'complete'}->{'beta-url'});
        $completeUpdate->{'beta-url'} = 
         'http://' . $ftpServer . '/pub/mozilla.org/' . $product. '/nightly/' .
-        $version . '-candidates/' . $buildStr .  '/' . $product . '-' . $appVersion .
-        '.%locale%.%platform%.complete.mar';
+        $version . '-candidates/' . $buildStr .  '/' . $cBetaPath;
     }
     $currentUpdateObj->{'complete'} = $completeUpdate;
 
@@ -275,10 +316,13 @@ sub BumpPatcherConfig {
 
     $releaseObj->{'locales'} = join(' ', sort (keys(%{$localeInfo})));
 
+    my $oldCompleteMarPath =
+      $appObj->{'release'}->{$oldVersion}->{'completemarurl'};
+    my $completeMarPath = BumpFilePath(oldFilePath => $oldCompleteMarPath);
     $releaseObj->{'completemarurl'} = 
      'http://' . $stagingServer . '/pub/mozilla.org/' . $product. 
-     '/nightly/' .  $version . '-candidates/' . $buildStr . '/' . $product . '-'. 
-     $appVersion . '.%locale%.%platform%.complete.mar',
+     '/nightly/' .  $version . '-candidates/' . $buildStr . '/' .
+     $completeMarPath;
 
     # Compute locale exceptions; 
     # $localeInfo is hash ref of locales -> array of platforms the locale
