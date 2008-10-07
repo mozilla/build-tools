@@ -182,7 +182,7 @@ class BasePoller(object):
     def poll(self):
         if self.working:
             log.msg("Not polling %s because last poll is still working" % self)
-            reactor.callLater(0, self.pollDone)
+            reactor.callLater(0, self.pollDone, None)
             return
         self.working = True
         self.startLoad = time.time()
