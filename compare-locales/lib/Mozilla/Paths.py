@@ -50,8 +50,11 @@ class L10nConfigParser(object):
   Subclass this and overwrite loadConfigs and addChild if you need async.
   '''
   def __init__(self, inipath, **kwargs):
-    pwdurl = 'file:%s/' % pathname2url(os.getcwd())
-    self.inipath = urljoin(pwdurl, inipath)
+    if os.path.isabs(inipath):
+      self.inipath = 'file:%s' % pathname2url(inipath)
+    else:
+      pwdurl = 'file:%s/' % pathname2url(os.getcwd())
+      self.inipath = urljoin(pwdurl, inipath)
     self.children = []
     self.dirs = []
     self.defaults = kwargs
@@ -188,7 +191,9 @@ class EnumerateApp(object):
     self.config.loadConfigs()
     self.l10nbase = os.path.abspath(l10nbase)
     self.filters = []
-    self.addFilterFrom(url2pathname(urlparse(urljoin(inipath,'filter.py'))[2]))
+    drive, tail = os.path.splitdrive(inipath)
+    filterpath = drive + url2pathname(urlparse(urljoin(tail,'filter.py'))[2])
+    self.addFilterFrom(filterpath)
     self.locales = locales or self.config.allLocales()
     self.locales.sort()
     pass

@@ -14,6 +14,11 @@ import ez_setup
 ez_setup.use_setuptools()
 
 from setuptools import setup, find_packages
+import sys
+import os.path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'lib'))
+
+from Mozilla import version
 
 classifiers = """\
 Development Status :: 4 - Beta
@@ -48,7 +53,7 @@ class web(Command):
       self.copy_file(f, self.target)
 
 setup(name="compare-locales",
-      version="0.5",
+      version=version,
       author="Axel Hecht",
       author_email="axel@mozilla.com",
       description=docstrings[0],

@@ -43,9 +43,10 @@ import codecs
 
 from Mozilla.Paths import EnumerateApp
 from Mozilla.CompareLocales import compareApp
+from Mozilla import version
 
 usage = 'usage: %prog [options] l10n.ini l10n_base_dir language1 [language2 ...]'
-parser = OptionParser(usage=usage)
+parser = OptionParser(usage = usage, version = "%%prog %s" % version)
 
 parser.add_option('-v', '--verbose', action='count', dest='v', default=0,
                   help='Make more noise')
