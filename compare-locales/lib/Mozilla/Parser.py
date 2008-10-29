@@ -275,6 +275,8 @@ class PropertiesParser(Parser):
     return val
 
 class DefinesParser(Parser):
+  # can't merge, #unfilter needs to be the last item, which we don't support
+  canMerge = False
   def __init__(self):
     self.reKey = re.compile('^(\s*)((?:^#(?!define\s).*\s*)*)(#define[ \t]+(\w+)[ \t]+(.*?))([ \t]*$\n?)',re.M)
     self.reHeader = re.compile('^\s*(#(?!define\s).*\s*)*')
