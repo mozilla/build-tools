@@ -27,7 +27,7 @@ maxNightlyAge = timedelta(180)
 # end options
 
 # RE to get the version number without alpha/beta designation
-versionRE = re.compile("^(\d+(\.\d+)*)")
+versionRE = re.compile("^(\d+\.\d+)")
 
 parser = OptionParser(usage="usage: %prog [options] <symbol path>")
 parser.add_option("-d", "--dry-run",
