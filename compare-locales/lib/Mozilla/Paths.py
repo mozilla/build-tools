@@ -84,8 +84,10 @@ class L10nConfigParser(object):
     except (NoOptionError, NoSectionError):
       pass
     try:
-      self.all_url = urljoin(self.baseurl, cp.get('general', 'all'))
+      self.all_path = cp.get('general', 'all')
+      self.all_url = urljoin(self.baseurl, self.all_path)
     except (NoOptionError, NoSectionError):
+      self.all_path = None
       self.all_url = None
 
   def addChild(self, title, path, orig_cp):
