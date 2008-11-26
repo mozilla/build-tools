@@ -21,9 +21,11 @@ unpack_build () {
             echo "mounting $pkg_file"
             expect ../common/installdmg.ex "$pkg_file" > hdi.output || cleanup 1;
 	    DEV_NAME=`perl -n -e 'if($_=~/(\/dev\/disk[^ ]*)/) {print $1."\n";exit;}'< hdi.output`;
-            if [ ! $DEV_NAME ]; then cleanup 1; fi
+            if [ ! $DEV_NAME -o "$DEV_NAME" = "" ]; then cleanup 1; fi
             MOUNTPOINT=`perl -n -e 'split(/\/dev\/disk[^ ]*/,$_,2);if($_[1]=~/(\/.[^\r]*)/) {print $1;exit;}'< hdi.output`;
-            if [ ! $MOUNTPOINT ]; then cleanup 1; fi
+            if [ ! $MOUNTPOINT -o "$MOUNTPOINT" = "" ]; then 
+                cleanup 1; 
+            fi
             rsync -a ${MOUNTPOINT}/* $dir_name/ || cleanup 1;
 	    cleanup 0;
             cd $dir_name
