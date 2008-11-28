@@ -75,6 +75,7 @@ sub Bump {
     my $moduleVer = catfile($appName, 'app', 'module.ver');
     my $versionTxt = catfile($appName, 'config', 'version.txt');
     my $milestoneTxt = catfile('config', 'milestone.txt');
+    my $jsMilestoneTxt = catfile('js', 'src', 'config', 'milestone.txt');
     
     foreach my $fileName (@bumpFiles) {
         my $found = 0;
@@ -109,7 +110,7 @@ sub Bump {
         } elsif ($fileName eq $versionTxt) {
             $preVersion = $appVersion . 'pre';
             %searchReplace = ('^' . $preVersion . '$' => $appVersion);
-        } elsif ($fileName eq $milestoneTxt) {
+        } elsif ($fileName eq $milestoneTxt || $fileName eq $jsMilestoneTxt) {
             $preVersion = $milestone . 'pre';
             %searchReplace = ('^' . $preVersion . '$' => $milestone);
         } else {
