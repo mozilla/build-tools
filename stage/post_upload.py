@@ -74,8 +74,8 @@ def ReleaseToLatest(options, upload_dir, files):
     latestPath = os.path.join(NIGHTLY_PATH, latestDir)
 
     for f in files:
-        if f.endswith('.xpi')
-        CopyFileToDir(f, upload_dir, latestPath)
+        if f.endswith('.xpi'):
+            CopyFileToDir(f, upload_dir, latestPath)
 
 def ReleaseToTinderboxBuilds(options, upload_dir, files, dated=True):
     tinderboxBuildsPath = TINDERBOX_BUILDS_PATH % \
