@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
     parser.add_option('-s', '--size',
             help='free space required (in GB, default 5)', dest='size',
-            type='int')
+            type='float')
 
     parser.add_option('-n', '--not', help='do not delete this directory',
             action='append', dest='skip')
