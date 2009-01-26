@@ -66,8 +66,14 @@ def ReleaseToDated(options, upload_dir, files):
 
     for f in files:
         CopyFileToDir(f, upload_dir, longDatedPath)
+
+    try:
+        cwd = os.getcwd()
         os.chdir(NIGHTLY_PATH)
-        os.symlink(longDir, shortDir)
+        if not os.path.exists(shortDir):
+            os.symlink(longDir, shortDir)
+    finally:
+        os.chdir(cwd)
 
 def ReleaseToLatest(options, upload_dir, files):
     latestDir = LATEST_DIR % {'branch': options.branch}
@@ -85,6 +91,9 @@ def ReleaseToTinderboxBuilds(options, upload_dir, files, dated=True):
         tinderboxBuildsPath = os.path.join(tinderboxBuildsPath, buildid)
 
     for f in files:
+        # Reject MAR files. They don't belong here.
+        if f.endswith('.mar'):
+            continue
         CopyFileToDir(f, upload_dir, tinderboxBuildsPath)
         
 def ReleaseToTinderboxBuildsOverwrite(options, upload_dir, files):
