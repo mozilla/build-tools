@@ -1,0 +1,17 @@
+html {
+    font-family: "Lucida Grande", Verdana, sans-serif;
+    line-height: 1.5;
+}
+
+table {
+    font-size: 0.8em;
+    border-collapse: collapse;
+}
+
+td {
+    padding: 5px 5px 0 0;
+}
+
+input {
+    vertical-align: middle;
+}
