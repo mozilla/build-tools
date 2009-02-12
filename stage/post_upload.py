@@ -65,6 +65,8 @@ def ReleaseToDated(options, upload_dir, files):
     shortDatedPath = os.path.join(NIGHTLY_PATH, shortDir)
 
     for f in files:
+        if f.endswith('crashreporter-symbols.zip'):
+            continue
         CopyFileToDir(f, upload_dir, longDatedPath)
 
     try:
@@ -80,6 +82,8 @@ def ReleaseToLatest(options, upload_dir, files):
     latestPath = os.path.join(NIGHTLY_PATH, latestDir)
 
     for f in files:
+        if f.endswith('crashreporter-symbols.zip'):
+            continue
         CopyFileToDir(f, upload_dir, latestPath)
 
 def ReleaseToTinderboxBuilds(options, upload_dir, files, dated=True):
@@ -105,6 +109,8 @@ def ReleaseToCandidatesDir(options, upload_dir, files):
     candidatesPath = os.path.join(NIGHTLY_PATH, candidatesDir)
 
     for f in files:
+        if f.endswith('crashreporter-symbols.zip'):
+            continue
         realCandidatesPath = candidatesPath
         if 'win32' in f:
             realCandidatesPath = os.path.join(realCandidatesPath, 'unsigned')
