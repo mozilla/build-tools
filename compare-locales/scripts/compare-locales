@@ -1,0 +1,75 @@
+#! python
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is l10n test automation.
+#
+# The Initial Developer of the Original Code is
+# Mozilla Foundation
+# Portions created by the Initial Developer are Copyright (C) 2006
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#	Axel Hecht <l10n@mozilla.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+
+import logging
+from optparse import OptionParser
+import codecs
+
+from Mozilla.Paths import EnumerateApp
+from Mozilla.CompareLocales import compareApp
+from Mozilla import version
+
+usage = 'usage: %prog [options] l10n.ini l10n_base_dir language1 [language2 ...]'
+parser = OptionParser(usage = usage, version = "%%prog %s" % version)
+
+parser.add_option('-v', '--verbose', action='count', dest='v', default=0,
+                  help='Make more noise')
+parser.add_option('-q', '--quiet', action='count', dest='q', default=0,
+                  help='Make more noise')
+parser.add_option('-r', '--reference', default='en-US', dest='reference',
+                  help='Explicitly set the reference '+
+                  'localization. [default: en-US]')
+parser.add_option('-m', '--merge',
+                  help='Use this directory to stage merged files')
+
+(options, args) = parser.parse_args()
+if len(args) < 3:
+  parser.error('At least one language required')
+inipath, l10nbase = args[:2]
+locales = args[2:]
+
+# log as verbose or quiet as we want, warn by default
+logging.basicConfig()
+logging.getLogger().setLevel(logging.WARNING - (options.v - options.q)*10)
+
+app = EnumerateApp(inipath, l10nbase, locales)
+app.reference = options.reference
+
+o = compareApp(app, merge_stage = options.merge)
+print codecs.utf_8_encode(o.serialize())[0]
