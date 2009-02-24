@@ -68,6 +68,7 @@ def ReleaseToDated(options, upload_dir, files):
         if f.endswith('crashreporter-symbols.zip'):
             continue
         CopyFileToDir(f, upload_dir, longDatedPath)
+    os.utime(longDatedPath, None)
 
     try:
         cwd = os.getcwd()
@@ -85,6 +86,7 @@ def ReleaseToLatest(options, upload_dir, files):
         if f.endswith('crashreporter-symbols.zip'):
             continue
         CopyFileToDir(f, upload_dir, latestPath)
+    os.utime(latestPath, None)
 
 def ReleaseToTinderboxBuilds(options, upload_dir, files, dated=True):
     tinderboxBuildsPath = TINDERBOX_BUILDS_PATH % \
@@ -99,6 +101,7 @@ def ReleaseToTinderboxBuilds(options, upload_dir, files, dated=True):
         if f.endswith('.mar'):
             continue
         CopyFileToDir(f, upload_dir, tinderboxBuildsPath)
+    os.utime(tinderboxBuildsPath, None)
         
 def ReleaseToTinderboxBuildsOverwrite(options, upload_dir, files):
     ReleaseToTinderboxBuilds(options, upload_dir, files, dated=False)
