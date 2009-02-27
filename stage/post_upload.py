@@ -9,6 +9,10 @@ from time import mktime, strptime
 
 NIGHTLY_PATH = "/home/ftp/pub/%(product)s/nightly"
 TINDERBOX_BUILDS_PATH = "/home/ftp/pub/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
+# For staging
+#TINDERBOX_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
+# For production
+TINDERBOX_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
 LATEST_DIR = "latest-%(branch)s"
 LONG_DATED_DIR = "%(year)s/%(month)s/%(year)s-%(month)s-%(day)s-%(hour)s-%(branch)s"
 SHORT_DATED_DIR = "%(year)s-%(month)s-%(day)s-%(hour)s-%(branch)s"
@@ -92,15 +96,20 @@ def ReleaseToTinderboxBuilds(options, upload_dir, files, dated=True):
     tinderboxBuildsPath = TINDERBOX_BUILDS_PATH % \
       {'product': options.product,
        'tinderbox_builds_dir': options.tinderbox_builds_dir}
+    tinderboxUrl = TINDERBOX_URL_PATH % \
+      {'product': options.product,
+       'tinderbox_builds_dir': options.tinderbox_builds_dir}
     if dated:
         buildid = str(BuildIDToUnixTime(options.buildid))
         tinderboxBuildsPath = os.path.join(tinderboxBuildsPath, buildid)
+        tinderboxUrl = os.path.join(tinderboxUrl, buildid)
 
     for f in files:
         # Reject MAR files. They don't belong here.
         if f.endswith('.mar'):
             continue
         CopyFileToDir(f, upload_dir, tinderboxBuildsPath)
+        sys.stderr.write("%s\n" % os.path.join(tinderboxUrl, os.path.basename(f)))
     os.utime(tinderboxBuildsPath, None)
         
 def ReleaseToTinderboxBuildsOverwrite(options, upload_dir, files):
