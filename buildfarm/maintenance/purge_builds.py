@@ -77,3 +77,4 @@ will be listed in the order in which they would be deleted.''')
         sys.exit(1)
 
     purge(args[0], options.size, options.skip, options.dry_run)
+    print "%1.2f GB of space available" % (freespace(args[0])/(1024*1024*1024.0))
