@@ -32,6 +32,38 @@ def mtime_sort(p1, p2):
     "sorting function for sorting a list of paths by mtime"
     return cmp(os.path.getmtime(p1), os.path.getmtime(p2))
 
+def rmdirRecursive(dir):
+    """This is a replacement for shutil.rmtree that works better under
+    windows. Thanks to Bear at the OSAF for the code.
+    (Borrowed from buildbot.slave.commands)"""
+    if not os.path.exists(dir):
+        return
+
+    if os.path.islink(dir):
+        os.remove(dir)
+        return
+
+    # Verify the directory is read/write/execute for the current user
+    os.chmod(dir, 0700)
+
+    for name in os.listdir(dir):
+        full_name = os.path.join(dir, name)
+        # on Windows, if we don't have write permission we can't remove
+        # the file/directory either, so turn that on
+        if os.name == 'nt':
+            if not os.access(full_name, os.W_OK):
+                # I think this is now redundant, but I don't have an NT
+                # machine to test on, so I'm going to leave it in place
+                # -warner
+                os.chmod(full_name, 0600)
+
+        if os.path.isdir(full_name):
+            rmdirRecursive(full_name)
+        else:
+            os.chmod(full_name, 0700)
+            os.remove(full_name)
+    os.rmdir(dir)
+
 def purge(base_dir, gigs, ignore, dry_run=False):
     """Delete directories under `base_dir` until `gigs` GB are free
 
@@ -47,7 +79,7 @@ def purge(base_dir, gigs, ignore, dry_run=False):
         d = dirs.pop(0)
         print "Deleting", d
         if not dry_run:
-            shutil.rmtree(d, ignore_errors=True)
+            rmdirRecursive(d)
 
 if __name__ == '__main__':
     import sys
