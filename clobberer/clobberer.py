@@ -24,6 +24,43 @@ def read_file(fn):
   except ValueError:
     return None
 
+def rmdirRecursive(dir):
+    """This is a replacement for shutil.rmtree that works better under
+    windows. Thanks to Bear at the OSAF for the code.
+    (Borrowed from buildbot.slave.commands)"""
+    if not os.path.exists(dir):
+        # This handles broken links
+        if os.path.islink(dir):
+            os.remove(dir)
+        return
+
+    if os.path.islink(dir):
+        os.remove(dir)
+        return
+
+    # Verify the directory is read/write/execute for the current user
+    os.chmod(dir, 0700)
+
+    for name in os.listdir(dir):
+        full_name = os.path.join(dir, name)
+        # on Windows, if we don't have write permission we can't remove
+        # the file/directory either, so turn that on
+        if os.name == 'nt':
+            if not os.access(full_name, os.W_OK):
+                # I think this is now redundant, but I don't have an NT
+                # machine to test on, so I'm going to leave it in place
+                # -warner
+                os.chmod(full_name, 0600)
+
+        if os.path.isdir(full_name):
+            rmdirRecursive(full_name)
+        else:
+            # Don't try to chmod links
+            if not os.path.islink(full_name):
+                os.chmod(full_name, 0700)
+            os.remove(full_name)
+    os.rmdir(dir)
+
 def do_clobber(dryrun=False, skip=None):
   try:
     for f in os.listdir("."):
@@ -37,7 +74,7 @@ def do_clobber(dryrun=False, skip=None):
       elif os.path.isdir(f):
         print "Removing %s/" % f
         if not dryrun:
-          shutil.rmtree(f)
+          rmdirRecursive(f)
   except:
     print "Couldn't clobber properly, bailing out."
     sys.exit(1)
