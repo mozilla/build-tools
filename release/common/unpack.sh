@@ -37,9 +37,12 @@ unpack_build () {
               mkdir bin/
               cp -rp nonlocalized/* bin/
               cp -rp localized/*    bin/
+              rm -rf nonlocalized
+              rm -rf localized
               if [ $(find optional/ | wc -l) -gt 1 ]
               then 
                 cp -rp optional/*     bin/
+                rm -rf optional
               fi
             else
               for file in *.xpi
