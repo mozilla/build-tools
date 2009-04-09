@@ -113,18 +113,20 @@ sub BumpFilePath {
     # filenames
     my $escapedOldVersion = $oldVersion;
     $escapedOldVersion =~ s/\./\\./g;
+    my $escapedVersion = $version;
+    $escapedVersion =~ s/\./\\./g;
 
     # strip out everything up to and including 'buildN/'
     my $newPath = $oldFilePath;
     $newPath =~ s/.*\/build\d+\///;
     # We need to handle partials and complete MARs differently
     if ($newPath =~ m/\.partial\.mar$/) {
-        $newPath =~ s/$product-.+?-$escapedOldVersion\.
+        $newPath =~ s/$product-.+?-($escapedOldVersion|$escapedVersion)\.
                      /$product-$oldVersion-$version./x
                      or die("ASSERT: BumpFilePath() - Could not bump path: " .
                             "$oldFilePath");
     } elsif ($newPath =~ m/\.complete\.mar$/) {
-        $newPath =~ s/$product-$escapedOldVersion\.
+        $newPath =~ s/$product-($escapedOldVersion|$escapedVersion)\.
                      /$product-$version./x
                      or die("ASSERT: BumpFilePath() - Could not bump path: " .
                             "$oldFilePath");
