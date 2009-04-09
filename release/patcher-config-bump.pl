@@ -28,7 +28,7 @@ if (defined $config{'run-tests'}) {
 sub ProcessArgs {
     GetOptions(
         \%config,
-        "product|p=s", "version|v=s", "old-version|o=s", "appVersion|a=s",
+        "product|p=s", "version|v=s", "old-version|o=s", "app-version|a=s",
         "build-number|b=s", "patcher-config|c=s", "staging-server|t=s",
         "ftp-server|f=s", "bouncer-server|d=s", "use-beta-channel|u",
         "shipped-locales|l=s", "help|h", "run-tests"

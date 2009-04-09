@@ -172,7 +172,7 @@ sub BumpVerifyConfig {
         $ftpOsname = 'linux-i686';
         $releaseFile = $product.'-'.$oldVersion.'.tar.'.$linuxExtension;
         if ($prettyCandidatesDir) {
-            $nightlyFile = 'linux-i686/%locale%/'.$product.'-'.$appVersion.
+            $nightlyFile = 'linux-i686/%locale%/'.$product.'-'.$version.
              '.tar.'.$linuxExtension;
         } else {
             $nightlyFile = $product.'-'.$appVersion.'.%locale%.linux-i686.tar.'.
