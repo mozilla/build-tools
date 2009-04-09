@@ -118,6 +118,11 @@ function toggleall(node, klass)
 </script>
 </head>
 <body>
+<p>This page is used for clobbering buildbot-based builds.</p>
+<p>Please read
+<a href="https://wiki.mozilla.org/Build:ClobberingATinderbox">Build:ClobberingATinderbox</a>
+and/or <a href="https://wiki.mozilla.org/Clobbering_the_Tree">Clobbering the Tree</a>
+for more information about what this page is for, and how to use it.</p>
 <form method="POST">
 <table border="1" cellspacing="0" cellpadding="1">
  <thead>
