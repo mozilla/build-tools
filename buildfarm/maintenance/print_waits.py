@@ -1,14 +1,18 @@
 import cPickle, os, re, math, time
 
-def format_hist(h, scale=1):
+def format_hist(h, units=1):
     retval = []
     if not h:
         h[0] = 0
     keys = sorted(h.keys())
     min_key = min(keys)
     max_key = max(keys)
+
     for i in range(min_key, max_key+1):
-        retval.append("%4i %s" % (i*scale, "#" * h.get(i, 0)))
+        n = h.get(i, 0)
+        bar = "#" * n
+
+        retval.append("%4i %s (%i)" % (i*units, bar, n))
     return "\n".join(retval)
 
 def scan_builder(builder, starttime, endtime, minutes_per_block, times, change_as_submittime=True):
