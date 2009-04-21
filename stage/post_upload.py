@@ -31,7 +31,7 @@ def CopyFileToDir(original_file, source_dir, dest_dir, preserve_dirs=False):
     new_file = os.path.join(dest_dir, relative_path)
     full_dest_dir = os.path.dirname(new_file)
     if not os.path.isdir(full_dest_dir):
-        os.makedirs(full_dest_dir)
+        os.makedirs(full_dest_dir, 0755)
     if os.path.exists(new_file):
         os.unlink(new_file)
     shutil.copyfile(original_file, new_file)
@@ -127,6 +127,15 @@ def ReleaseToCandidatesDir(options, upload_dir, files):
         if 'win32' in f:
             realCandidatesPath = os.path.join(realCandidatesPath, 'unsigned')
         CopyFileToDir(f, upload_dir, realCandidatesPath, preserve_dirs=True)
+        # We always want release files chmod'ed this way so other users in
+        # the group cannot overwrite them.
+        os.chmod(f, 0644)
+
+    # Same thing for directories, but 0755
+    for root,dirs,files in os.walk(candidatesPath):
+        for d in dirs:
+            os.chmod(os.path.join(root, d), 0755)
+
 
 
 if __name__ == '__main__':
