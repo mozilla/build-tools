@@ -41,7 +41,7 @@ SEVENZIP        = $(WORKDIR)/7-Zip/7z.exe
 UPX_BIN         = $(WORKDIR)/upx/upx.exe
 
 
-all: setup download sign verify fake-upload
+all: setup download sign stage verify fake-upload
 
 echo:
 	@echo EMAIL: $(EMAIL)
@@ -57,6 +57,8 @@ echo:
 setup:
 	# Pull/copy the required tools.
 	cvs -d:ext:cltbld@cvs.mozilla.org:/mofo co -d signing release/signing/tools
+	cvs -d:ext:cltbld@cvs.mozilla.org:/mofo co -d stage release/stage
+	cvs -d:ext:cltbld@cvs.mozilla.org:/mofo co -d key-checkout release/keys/pgp
 	cvs -d:ext:cltbld@cvs.mozilla.org:/cvsroot co -d MozBuild mozilla/tools/release/MozBuild
 	rsync -av $(HOME)/signing-utils/7-Zip . 
 	rsync -av $(HOME)/signing-utils/mar.exe . 
@@ -96,6 +98,26 @@ sign-installers:
 	     -subject "Running sign-files for $(PRODUCT) $(VERSION), waiting on passphrase" \
 		 -body "EOM"
 	cd $(WORKDIR)/signed-build$(BUILD) && sign-files .
+
+stage: create-contrib checksum-files fix-permissions
+
+create-contrib:
+	mkdir -m 2775 $(WORKDIR)/signed-build$(BUILD)/contrib
+	mkdir -m 2775 $(WORKDIR)/signed-build$(BUILD)/contrib-localized
+	cp $(WORKDIR)/key-checkout/PUBLIC-KEY $(WORKDIR)/signed-build$(BUILD)/KEY
+
+checksum-files:
+	$(WORKDIR)/stage/checksum-files $(WORKDIR)/signed-build$(BUILD)
+
+fix-permissions:
+	# Because these files will be owned by 'firefox' (which has users in it
+	# whom we don't want to be able to mess with release files) we need to
+	# ensure the permissions are locked down. Everything should already only
+	# be writeable by the owning user, but this will make sure of that.
+	# Additionally, when the MARs are signed they end up with 755 permissions,
+	# which is a little silly. This will fix them to be 644, too.
+	find $(WORKDIR)/signed-build$(BUILD)/ -type f \
+	  -exec chmod 644 {} \;
 
 verify: verify-signatures verify-win32 verify-asc
 	echo "Verification completed"
