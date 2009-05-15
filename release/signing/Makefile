@@ -135,11 +135,11 @@ verify-win32: DIFF_FILES=$(strip $(shell diff -rq $(WORKDIR)/unsigned-build$(BUI
 verify-win32: TOTAL_FILES=$(strip $(shell find $(WORKDIR)/unsigned-build$(BUILD)/unsigned/ \
                             -name '*.exe' -or -name '*.mar' | wc -l))
 verify-win32:
-	test $(TOTAL_FILES) -gt 0 || \
+	@test $(TOTAL_FILES) -gt 0 || \
 	  (echo "No files in $(WORKDIR)/unsigned-build$(BUILD)/unsigned, bailing..." && exit 1)
-	test $(DIFF_FILES) -eq $(TOTAL_FILES) || \
+	@test $(DIFF_FILES) -eq $(TOTAL_FILES) || \
 	  (echo "Some files are unsigned, bailing..." && exit 1)
-	echo "Win32 installers appear to be signed properly"
+	@echo "Win32 installers appear to be signed properly"
 
 # Finally, this test makes sure we have asc files for every build in
 # signed-build$(BUILD). Note that we do not generate detached sigs for MARs,
@@ -149,13 +149,14 @@ verify-asc: ASC_FILES=$(strip $(shell find $(WORKDIR)/signed-build$(BUILD)/ \
                         -name "*.asc" -type f | wc -l))
 verify-asc: TOTAL_FILES=$(strip $(shell find $(WORKDIR)/signed-build$(BUILD)/ \
                           -not -wholename '*update*' -not -name "*.xpi" -not -name "*.asc" \
-                          -not -name "*.txt" -not -name "*.log" -type f | wc -l))
+                          -not -name "*.txt" -not -name "*.log"  -not -name '*SUMS' \
+                          -not -name KEY -type f | wc -l))
 verify-asc:
-	test $(TOTAL_FILES) -gt 0 || \
+	@test $(TOTAL_FILES) -gt 0 || \
 	  (echo "No files in $(WORKDIR)/signed-build$(BUILD), bailing..." && exit 1)
-	test $(ASC_FILES) -eq $(TOTAL_FILES) || \
+	@test $(ASC_FILES) -eq $(TOTAL_FILES) || \
 	  (echo "Incorrect number of .asc files" && exit 1)
-	echo "Correct number of .asc files are present"
+	@echo "Correct number of .asc files are present"
 
 fake-upload:
 	rsync -n -e "ssh -i $(SSH_KEY)" -av signed-build$(BUILD)/ \
