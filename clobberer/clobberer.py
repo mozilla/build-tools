@@ -117,12 +117,15 @@ if __name__ == "__main__":
   print "Our last clobber date: ", our_clobber_date
   print "Server clobber date:   ", server_clobber_date
 
-  if server_clobber_date is not None:
+  # If we don't have a last clobber date, then this is probably a fresh build.
+  # We should only do a forced server clobber if we know when our last clobber
+  # was, and if the server date is more recent than that.
+  if server_clobber_date is not None and our_clobber_date is not None:
     # If the server is giving us a clobber date, compare the server's idea of
     # the clobber date to our last clobber date
-    if our_clobber_date is None or server_clobber_date > our_clobber_date:
-      # If we've never been clobbered, or if the server's clobber date is greater
-      # than our last clobber date, then we should clobber.
+    if server_clobber_date > our_clobber_date:
+      # If the server's clobber date is greater than our last clobber date,
+      # then we should clobber.
       clobber = True
       # We should also update our clobber date to match the server's
       our_clobber_date = server_clobber_date
