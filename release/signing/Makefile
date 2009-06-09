@@ -25,6 +25,9 @@
 #     make upload
 # with all of the same variable definitions which will rsync the signed builds
 # back from whence they came.
+# And use
+#     make upload-log
+# to upload the exe/dll signing log, which triggers the automation to continue.
 
 # Make sure necessary variables are defined / set defaults
 VERSION         = $(error VERSION must be defined)
@@ -168,4 +171,8 @@ fake-upload:
 
 upload:
 	rsync -e "ssh -i $(SSH_KEY)" -av signed-build$(BUILD)/ \
+	  $(STAGE_USERNAME)@stage.mozilla.org:/home/ftp/pub/$(PRODUCT)/nightly/$(VERSION)-candidates/build$(BUILD)/
+
+upload-log:
+	rsync -e "ssh -i $(SSH_KEY)" -av win32_signing_build${BUILD}.log \
 	  $(STAGE_USERNAME)@stage.mozilla.org:/home/ftp/pub/$(PRODUCT)/nightly/$(VERSION)-candidates/build$(BUILD)/
