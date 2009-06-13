@@ -16,6 +16,8 @@ example:
 
 import os, shutil, re, sys
 
+clobber_suffix='.deleteme'
+
 if sys.platform == 'win32':
     # os.statvfs doesn't work on Windows
     import win32file
@@ -32,6 +34,43 @@ def mtime_sort(p1, p2):
     "sorting function for sorting a list of paths by mtime"
     return cmp(os.path.getmtime(p1), os.path.getmtime(p2))
 
+def rmdirRecursive(dir):
+    """This is a replacement for shutil.rmtree that works better under
+    windows. Thanks to Bear at the OSAF for the code.
+    (Borrowed from buildbot.slave.commands)"""
+    if not os.path.exists(dir):
+        # This handles broken links
+        if os.path.islink(dir):
+            os.remove(dir)
+        return
+
+    if os.path.islink(dir):
+        os.remove(dir)
+        return
+
+    # Verify the directory is read/write/execute for the current user
+    os.chmod(dir, 0700)
+
+    for name in os.listdir(dir):
+        full_name = os.path.join(dir, name)
+        # on Windows, if we don't have write permission we can't remove
+        # the file/directory either, so turn that on
+        if os.name == 'nt':
+            if not os.access(full_name, os.W_OK):
+                # I think this is now redundant, but I don't have an NT
+                # machine to test on, so I'm going to leave it in place
+                # -warner
+                os.chmod(full_name, 0600)
+
+        if os.path.isdir(full_name):
+            rmdirRecursive(full_name)
+        else:
+            # Don't try to chmod links
+            if not os.path.islink(full_name):
+                os.chmod(full_name, 0700)
+            os.remove(full_name)
+    os.rmdir(dir)
+
 def purge(base_dir, gigs, ignore, dry_run=False):
     """Delete directories under `base_dir` until `gigs` GB are free
 
@@ -47,7 +86,18 @@ def purge(base_dir, gigs, ignore, dry_run=False):
         d = dirs.pop(0)
         print "Deleting", d
         if not dry_run:
-            shutil.rmtree(d, ignore_errors=True)
+            try:
+                clobber_path=d+clobber_suffix
+                if os.path.exists(clobber_path):
+                   rmdirRecursive(clobber_path)
+                # Prevent repeated moving.
+                if d.endswith(clobber_suffix):
+                    rmdirRecursive(d)
+                else:              
+                    shutil.move(d, clobber_path)
+                    rmdirRecursive(clobber_path)
+            except:
+                print >>sys.stderr, "Couldn't purge %s properly. Skipping." % d
 
 if __name__ == '__main__':
     import sys

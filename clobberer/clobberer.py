@@ -1,6 +1,8 @@
 import sys, shutil, urllib2, urllib, os
 from datetime import datetime, timedelta
 
+clobber_suffix='.deleteme'
+
 def str_to_datetime(s):
   return datetime.strptime(s, "%Y-%m-%d %H:%M:%S")
 
@@ -67,14 +69,29 @@ def do_clobber(dryrun=False, skip=None):
       if skip is not None and f in skip:
         print "Skipping", f
         continue
+      clobber_path=f+clobber_suffix
       if os.path.isfile(f):
         print "Removing", f
         if not dryrun:
-          os.unlink(f)
+          if os.path.exists(clobber_path):
+            os.unlink(clobber_path)
+          # Prevent repeated moving.
+          if f.endswith(clobber_suffix):
+            os.unlink(f)
+          else:
+            shutil.move(f, clobber_path)
+            os.unlink(clobber_path)
       elif os.path.isdir(f):
         print "Removing %s/" % f
         if not dryrun:
-          rmdirRecursive(f)
+          if os.path.exists(clobber_path):
+            rmdirRecursive(clobber_path)
+          # Prevent repeated moving.
+          if d.endswith(clobber_suffix):
+            rmdirRecursive(d)
+          else:              
+            shutil.move(f, clobber_path)
+            rmdirRecursive(clobber_path)
   except:
     print "Couldn't clobber properly, bailing out."
     sys.exit(1)
