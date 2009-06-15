@@ -87,8 +87,8 @@ def do_clobber(dryrun=False, skip=None):
           if os.path.exists(clobber_path):
             rmdirRecursive(clobber_path)
           # Prevent repeated moving.
-          if d.endswith(clobber_suffix):
-            rmdirRecursive(d)
+          if f.endswith(clobber_suffix):
+            rmdirRecursive(f)
           else:              
             shutil.move(f, clobber_path)
             rmdirRecursive(clobber_path)
