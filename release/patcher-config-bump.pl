@@ -14,7 +14,8 @@ use Bootstrap::Util qw(GetBouncerPlatforms GetBouncerToPatcherPlatformMap
 
 $|++;
 
-my $RELEASE_CANDIDATE_CHANNELS = ['betatest', 'DisableCompleteJump'];
+# we disable this for bug 498273
+# my $RELEASE_CANDIDATE_CHANNELS = ['betatest', 'DisableCompleteJump'];
 
 my %config;
 
@@ -217,13 +218,14 @@ sub BumpPatcherConfig {
     $currentUpdateObj->{'details'} = 'http://www.mozilla.com/%locale%/' .
                                       $product . '/' . $appVersion . '/releasenotes/';
 
-    if ($useBetaChannel) {
-        push(@{$RELEASE_CANDIDATE_CHANNELS},'beta');
-    }
+    # we disable this for bug 498273, except for ensuring the block is empty
+    #if ($useBetaChannel) {
+    #    push(@{$RELEASE_CANDIDATE_CHANNELS},'beta');
+    #}
     $currentUpdateObj->{'rc'} = {};
-    foreach my $c (@{$RELEASE_CANDIDATE_CHANNELS}) {
-        $currentUpdateObj->{'rc'}->{$c} = "$build";
-    }
+    #foreach my $c (@{$RELEASE_CANDIDATE_CHANNELS}) {
+    #    $currentUpdateObj->{'rc'}->{$c} = "$build";
+    #}
 
     my $buildStr = 'build' . $build;
 
@@ -289,7 +291,8 @@ sub BumpPatcherConfig {
 
     $releaseObj->{'schema'} = '1';
     $releaseObj->{'version'} = $releaseObj->{'extension-version'} = $appVersion;
-    $releaseObj->{'prettyVersion'} = $prettyVersion;
+    # we disable this for bug 498273, human friendly versions can't be used any more
+    #$releaseObj->{'prettyVersion'} = $prettyVersion;
 
     my $linBuildId;
     my $winBuildId;
