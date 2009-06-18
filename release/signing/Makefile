@@ -95,12 +95,12 @@ sign-internal:
 
 sign-installers:
 	# Sign win32 installers.
-	cd $(WORKDIR)/signed-build$(BUILD)/win32 && sign-release
+	cd $(WORKDIR)/signed-build$(BUILD)/win32 && ../../signing/sign-release
 	# Generate detached sigs.
 	blat -to $(EMAIL) \
 	     -subject "Running sign-files for $(PRODUCT) $(VERSION), waiting on passphrase" \
 		 -body "EOM"
-	cd $(WORKDIR)/signed-build$(BUILD) && sign-files .
+	cd $(WORKDIR)/signed-build$(BUILD) && ../signing/sign-files .
 
 stage: create-contrib checksum-files fix-permissions
 
@@ -129,7 +129,7 @@ verify: verify-signatures verify-win32 verify-asc
 # a valid root certificate. Basically, it runs 'chktrust /q *.exe' for every
 # win32 locale directory.
 verify-signatures:
-	cd $(WORKDIR)/signed-build$(BUILD)/win32 && verify-signatures
+	cd $(WORKDIR)/signed-build$(BUILD)/win32 && ../../signing/verify-signatures
 
 # This test ensures that every exe and mar in the signed-build$(BUILD) directory
 # differs from its unsigned counterpart.
