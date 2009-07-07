@@ -95,10 +95,10 @@ do
       then
         if [ "$runmode" == "$TEST_ONLY" ]
         then
-          download_mars "${aus_server}/update/1/$product/$release/$build_id/$platform/$locale/$channel/update.xml" $patch_type 1
+          download_mars "${aus_server}/update/1/$product/$release/$build_id/$platform/$locale/$channel/update.xml?force=1" $patch_type 1
           err=$?
         else
-          download_mars "${aus_server}/update/1/$product/$release/$build_id/$platform/$locale/$channel/update.xml" $patch_type
+          download_mars "${aus_server}/update/1/$product/$release/$build_id/$platform/$locale/$channel/update.xml?force=1" $patch_type
           err=$?
         fi
         if [ "$err" != "0" ]; then
@@ -109,7 +109,7 @@ do
         update_path="$product/$release/$build_id/$platform/$locale/$channel"
         mkdir -p updates/$update_path/complete
         mkdir -p updates/$update_path/partial
-        wget --no-check-certificate -q -O $patch_type updates/$update_path/$patch_type/update.xml "${aus_server}/update/1/$update_path/update.xml"
+        wget --no-check-certificate -q -O $patch_type updates/$update_path/$patch_type/update.xml "${aus_server}/update/1/$update_path/update.xml?force=1"
 
       fi
       if [ "$runmode" == "$COMPLETE" ]
