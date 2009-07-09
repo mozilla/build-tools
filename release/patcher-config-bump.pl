@@ -29,10 +29,10 @@ if (defined $config{'run-tests'}) {
 sub ProcessArgs {
     GetOptions(
         \%config,
-        "product|p=s", "version|v=s", "old-version|o=s", "app-version|a=s",
-        "build-number|b=s", "patcher-config|c=s", "staging-server|t=s",
-        "ftp-server|f=s", "bouncer-server|d=s", "use-beta-channel|u",
-        "shipped-locales|l=s", "help|h", "run-tests"
+        "product|p=s", "brand|r=s", "version|v=s", "old-version|o=s",
+        "app-version|a=s", "build-number|b=s", "patcher-config|c=s",
+        "staging-server|t=s", "ftp-server|f=s", "bouncer-server|d=s",
+        "use-beta-channel|u", "shipped-locales|l=s", "help|h", "run-tests"
     );
 
     if ($config{'help'}) {
@@ -40,7 +40,9 @@ sub ProcessArgs {
 Usage: bump-patcher-config.pl [options]
 This script depends on the MozBuild::Util and Bootstrap::Util modules.
 Options: 
-  -p The product name (eg. firefox, thunderbird, etc.)
+  -p The product name (eg. firefox, thunderbird, seamonkey, etc.)
+  -r The brand name (eg. Firefox, Thunderbird, SeaMonkey, etc.)
+     If not specified, a first-letter-uppercased product name is assumed.
   -v The current version of the product (eg. 3.1a1, 3.0rc1)
   -a The current 'app version' of the product (eg. 3.1a1, 3.0). If not
      specified is assumed to be the same as version
@@ -94,6 +96,9 @@ __USAGE__
     }
 
     # set sane defaults
+    if (! defined $config{'brand'}) {
+        $config{'brand'} = ucfirst($config{'product'});
+    }
     if (! defined $config{'app-version'}) {
         $config{'app-version'} = $config{'version'};
     }
@@ -140,6 +145,7 @@ sub BumpFilePath {
 
 sub BumpPatcherConfig {
     my $product = $config{'product'};
+    my $brand = $config{'brand'};
     my $version = $config{'version'};
     my $oldVersion = $config{'old-version'};
     my $appVersion = $config{'app-version'};
@@ -168,7 +174,7 @@ sub BumpPatcherConfig {
     die "ASSERT: BumpPatcherConfig(): null rawConfig" 
      if (0 == scalar(keys(%rawConfig)));
 
-    my $appObj = $rawConfig{'app'}->{ucfirst($product)};
+    my $appObj = $rawConfig{'app'}->{$brand};
     die "ASSERT: BumpPatcherConfig(): null appObj" if (! defined($appObj));
 
     my $currentUpdateObj = $appObj->{'current-update'};
@@ -215,8 +221,14 @@ sub BumpPatcherConfig {
         $currentUpdateObj->{'from'} = $oldVersion;
     }
 
-    $currentUpdateObj->{'details'} = 'http://www.mozilla.com/%locale%/' .
-                                      $product . '/' . $appVersion . '/releasenotes/';
+    if ($product eq 'seamonkey') {
+      $currentUpdateObj->{'details'} = 'http://www.seamonkey-project.org/releases/' .
+                                        $product . $appVersion . '/';
+    }
+    else {
+      $currentUpdateObj->{'details'} = 'http://www.mozilla.com/%locale%/' .
+                                        $product . '/' . $appVersion . '/releasenotes/';
+    }
 
     # we disable this for bug 498273, except for ensuring the block is empty
     #if ($useBetaChannel) {
@@ -381,6 +393,7 @@ sub BumpPatcherConfig {
 sub RunUnitTests {
     my $workdir = tempdir(CLEANUP => 1);
     my $product = 'firefox';
+    my $brand = 'Firefox';
     my $version = '2.0.0.16';
     my $appVersion = '2.0.0.16';
     my $prettyVersion = "2.0.0.16";
@@ -420,8 +433,6 @@ sub RunUnitTests {
     my $aCurrentUpdate = {};
     my $aReleases = {};
     my $bumpedAfterConfig = {};
-
-    my $uProduct = ucfirst($product);
 
     # create the before config
     $bCurrentUpdate->{'beta-dir'} = "beta";
@@ -478,9 +489,9 @@ sub RunUnitTests {
     $bReleases->{$oldVersion}{'platforms'}{'mac'} = '2008070824';
 
     $beforeConfig->{'app'} = {};
-    $beforeConfig->{'app'}->{$uProduct} = {};
-    $beforeConfig->{'app'}->{$uProduct}->{'current-update'} = $bCurrentUpdate;
-    $beforeConfig->{'app'}->{$uProduct}->{'release'} = $bReleases;
+    $beforeConfig->{'app'}->{$brand} = {};
+    $beforeConfig->{'app'}->{$brand}->{'current-update'} = $bCurrentUpdate;
+    $beforeConfig->{'app'}->{$brand}->{'release'} = $bReleases;
 
     # now create the after config
     $aCurrentUpdate->{'beta-dir'} = "beta";
@@ -553,14 +564,14 @@ sub RunUnitTests {
     $aReleases->{$version}{'platforms'}{'mac'} = '2008070205';
 
     $afterConfig->{'app'} = {};
-    $afterConfig->{'app'}->{$uProduct} = {};
-    $afterConfig->{'app'}->{$uProduct}->{'current-update'} = $aCurrentUpdate;
-    $afterConfig->{'app'}->{$uProduct}->{'release'} = $aReleases;
+    $afterConfig->{'app'}->{$brand} = {};
+    $afterConfig->{'app'}->{$brand}->{'current-update'} = $aCurrentUpdate;
+    $afterConfig->{'app'}->{$brand}->{'release'} = $aReleases;
     # The patcher config we're bumping does not contain any past-update lines.
     # Patcher doesn't deal with this well - it will insert an empty
     # past-update line along with the valid one. Rather than fix this bug we'll
     # just test patcher's existing behaviour.
-    $afterConfig->{'app'}->{$uProduct}->{'past-update'} = [
+    $afterConfig->{'app'}->{$brand}->{'past-update'} = [
         "",
         "$oldOldVersion $oldVersion betatest releasetest beta release"
     ];
@@ -572,6 +583,7 @@ sub RunUnitTests {
     # We need to build up the global config object before calling
     # BumpPatcherConfig
     $config{'product'} = $product;
+    $config{'brand'} = $brand;
     $config{'version'} = $version;
     $config{'old-version'} = $oldVersion;
     $config{'app-version'} = $appVersion;

@@ -23,7 +23,7 @@ if (defined $config{'run-tests'}) {
 sub ProcessArgs {
 	GetOptions(
 		\%config,
-        "osname|o=s", "product|p=s", "old-version=s", "old-app-version=s",
+        "osname|o=s", "product|p=s", "brand|r=s", "old-version=s", "old-app-version=s",
         "old-long-version=s", "version|v=s", "app-version=s", "long-version=s",
         "build-number|n=s", "aus-server-url|a=s", "staging-server|s=s",
         "verify-config|c=s", "old-candidates-dir|d=s", "linux-extension|e=s",
@@ -36,7 +36,9 @@ Usage: update-verify-bump.pl [options]
 This script depends on the MozBuild::Util and Bootstrap::Util modules.
 Options:
   --osname/-o             One of (linux, macosx, win32).
-  --product/-p            The product name (eg. firefox, thunderbird, etc.).
+  --product/-p            The product name (eg. firefox, thunderbird, seamonkey, etc.).
+  --brand/-r              The brand name (eg. Firefox, Thunderbird, SeaMonkey, etc.)
+                          If not specified, a first-letter-uppercased product name is assumed.
   --old-version           The previous version of the product.
   --old-app-version       The previous 'app version of the product'.
                           If not passed, is assumed to be the same as
@@ -112,6 +114,9 @@ __USAGE__
         }
 
         # set sane defaults
+        if (! defined $config{'brand'}) {
+            $config{'brand'} = ucfirst($config{'product'});
+        }
         if (! defined $config{'old-app-version'}) {
             $config{'old-app-version'} = $config{'old-version'};
         }
@@ -138,6 +143,7 @@ sub BumpVerifyConfig {
 
     my $osname = $config{'osname'};
     my $product = $config{'product'};
+    my $brand = $config{'brand'};
     my $oldVersion = $config{'old-version'};
     my $oldAppVersion = $config{'old-app-version'};
     my $oldLongVersion = $config{'old-long-version'};
@@ -182,9 +188,9 @@ sub BumpVerifyConfig {
         $buildTarget = 'Darwin_Universal-gcc3';
         $platform = 'osx';
         $ftpOsname = 'mac';
-        $releaseFile = ucfirst($product).' '.$oldLongVersion.'.dmg';
+        $releaseFile = $brand.' '.$oldLongVersion.'.dmg';
         if ($prettyCandidatesDir) {
-            $nightlyFile = 'mac/%locale%/'.ucfirst($product).' '.$longVersion.
+            $nightlyFile = 'mac/%locale%/'.$brand.' '.$longVersion.
              '.dmg';
         } else {
             $nightlyFile = $product.'-'.$appVersion.'.%locale%.mac.dmg';
@@ -193,9 +199,9 @@ sub BumpVerifyConfig {
         $buildTarget = 'WINNT_x86-msvc';
         $platform = 'win32';
         $ftpOsname = 'win32';
-        $releaseFile = ucfirst($product).' Setup '.$oldLongVersion.'.exe';
+        $releaseFile = $brand.' Setup '.$oldLongVersion.'.exe';
         if ($prettyCandidatesDir) {
-            $nightlyFile = 'win32/%locale%/'.ucfirst($product). ' Setup '.
+            $nightlyFile = 'win32/%locale%/'.$brand. ' Setup '.
              $longVersion.'.exe';
         } else {
             $nightlyFile = $product.'-'.$appVersion.
@@ -242,7 +248,7 @@ sub BumpVerifyConfig {
 
     # add data for latest release
     my @data = ("# $oldVersion $osname\n",
-                'release="' . $oldAppVersion . '" product="' . ucfirst($product) . 
+                'release="' . $oldAppVersion . '" product="' . $brand . 
                 '" platform="' .$buildTarget . '" build_id="' . $buildID . 
                 '" locales="' . join(' ', sort(@locales)) . '" channel="' . 
                 $channel . '" from="/' . $product . '/releases/' . 
