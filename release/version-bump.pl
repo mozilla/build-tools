@@ -73,7 +73,7 @@ sub Bump {
     my @bumpFiles = @{$config{'bumpFiles'}};
     
     my $moduleVer = catfile($appName, 'app', 'module.ver');
-    my $versionTxt = catfile($appName, 'config', 'version.txt');
+    my $versionTxt = catfile($appName, 'config', 'version.*\.txt');
     my $milestoneTxt = catfile('config', 'milestone.txt');
     my $jsMilestoneTxt = catfile('js', 'src', 'config', 'milestone.txt');
     
@@ -107,7 +107,7 @@ sub Bump {
             %searchReplace = ('^WIN32_MODULE_PRODUCTVERSION_STRING=' .
              $preVersion . '$' => 'WIN32_MODULE_PRODUCTVERSION_STRING=' .
              $appVersion);
-        } elsif ($fileName eq $versionTxt) {
+        } elsif ($fileName =~ /$versionTxt/) {
             $preVersion = $appVersion . 'pre';
             %searchReplace = ('^' . $preVersion . '$' => $appVersion);
         } elsif ($fileName eq $milestoneTxt || $fileName eq $jsMilestoneTxt) {
