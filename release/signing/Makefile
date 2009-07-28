@@ -5,11 +5,13 @@
 #  2. mkdir ~/signing-work/$product-$version
 #  3. cd ~/signing-work/$product-$version
 #  4. cp ~/Makefile .
-#  5. make MAIL=yourname@domain.com BUILD=1 VERSION=3.1b1 \
+#  5. make EMAIL=yourname@domain.com BUILD=1 VERSION=3.1b1 \
 #          TAG=FIREFOX_3_1b1_RELEASE REPO=releases/mozilla-1.9.1
 #
 # You can pass the other variables listed below, too, if you want to use a
 # different stage server, ssh key or username, or sign a different product, etc.
+#
+# Set USE_NEW to 1 to use the new signing script (sign-release.py)
 #
 # You should receive mail a few times during this process:
 #  * Right before sign-release.pl starts
@@ -33,7 +35,8 @@
 VERSION         = $(error VERSION must be defined)
 BUILD           = $(error BUILD must be defined)
 REPO            = $(error REPO must be defined)
-TAG             = $(error TAG must be defined)
+TAG            ?= FIREFOX_$(subst .,_,$(VERSION))_RELEASE
+HGROOT         ?= https://hg.mozilla.org/
 EMAIL          ?= release@mozilla.com
 STAGE_USERNAME ?= ffxbld
 SSH_KEY        ?= $(HOME)/.ssh/ffxbld_dsa
@@ -42,9 +45,17 @@ WORKDIR         = $(HOME)/signing-work/$(PRODUCT)-$(VERSION)
 MAR             = $(WORKDIR)/mar.exe
 SEVENZIP        = $(WORKDIR)/7-Zip/7z.exe
 UPX_BIN         = $(WORKDIR)/upx/upx.exe
+CONCURRENCY    ?= 4
+KEYDIR         ?= d:/2008-keys
+ifeq ($(PRODUCT),firefox)
+PRODUCT_DIR     = browser
+endif
 
-
+ifdef USE_NEW
+all: setup download stubs sign2 stage verify fake-upload
+else
 all: setup download sign stage verify fake-upload
+endif
 
 echo:
 	@echo EMAIL: $(EMAIL)
@@ -67,15 +78,39 @@ setup:
 	rsync -av $(HOME)/signing-utils/mar.exe . 
 	rsync -av $(HOME)/signing-utils/upx . 
 
+ifneq ($(filter 3.0.%,$(VERSION)),)
+stubs: stubs-cvs checkouts/stubs/7z/7zSD.sfx.compressed
+
+else
+stubs: stubs-hg checkouts/stubs/7z/7zSD.sfx.compressed
+
+endif
+
+checkouts/stubs/7z/7zSD.sfx.compressed: checkouts/stubs/7z/7zSD.sfx
+	$(UPX_BIN) --best -o $@ $<
+
+stubs-cvs:
+	rm -rf checkouts/stubs
+	mkdir -p checkouts/stubs
+	(cd checkouts/stubs; cvs -d:ext:cltbld@cvs.mozilla.org:/cvsroot co -r $(TAG) -d 7z mozilla/other-licenses/7zstub/$(PRODUCT))
+	(cd checkouts/stubs; cvs -d:ext:cltbld@cvs.mozilla.org:/cvsroot co -r $(TAG) -d tagfile mozilla/$(PRODUCT_DIR)/installer/windows/app.tag)
+
+stubs-hg:
+	rm -rf checkouts/stubs
+	mkdir -p checkouts/stubs/7z
+	mkdir -p checkouts/stubs/tagfile
+	(cd checkouts/stubs/7z; wget -O 7zSD.sfx $(HGROOT)$(REPO)/raw-file/$(TAG)/other-licenses/7zstub/$(PRODUCT)/7zSD.sfx)
+	(cd checkouts/stubs/tagfile; wget -O app.tag $(HGROOT)$(REPO)/raw-file/$(TAG)/$(PRODUCT_DIR)/installer/windows/app.tag)
+
 download:
 	# Download the builds.
-	rsync -av --exclude '*.zip' -e "ssh -i $(SSH_KEY)" \
+	rsync -av --exclude-from download-exclude.list -e "ssh -i $(SSH_KEY)" \
 	  $(STAGE_USERNAME)@stage.mozilla.org:/home/ftp/pub/$(PRODUCT)/nightly/$(VERSION)-candidates/build$(BUILD)/ \
 	  unsigned-build$(BUILD)
 	# Copy linux/mac builds over to the signed dir, because they don't need internal signing.
 	rsync -av --exclude '*unsigned*' unsigned-build$(BUILD)/ signed-build$(BUILD)/
 
-sign: sign-internal sign-installers
+sign: sign-internal sign-installers create-sigs
 
 sign-internal:
 	blat -to $(EMAIL) \
@@ -96,6 +131,22 @@ sign-internal:
 sign-installers:
 	# Sign win32 installers.
 	cd $(WORKDIR)/signed-build$(BUILD)/win32 && ../../signing/sign-release
+
+sign2: sign-files create-sigs
+
+sign-files:
+	blat -to $(EMAIL) \
+	     -subject "sign-release.py for $(PRODUCT) $(VERSION) starting" \
+		 -body "EOM"
+	./sign-release.py --keydir $(KEYDIR) -j$(CONCURRENCY) -o signed-build$(BUILD) unsigned-build$(BUILD) >> win32_signing_build$(BUILD).log 2>&1
+	# And copy over the info file and XPIs.
+	cp -pv ./unsigned-build$(BUILD)/unsigned/win32_info.txt ./signed-build$(BUILD)/
+	rsync -av ./unsigned-build$(BUILD)/unsigned/win32/xpi ./signed-build$(BUILD)/win32
+	blat -to $(EMAIL) \
+	     -subject "sign-release.py for $(PRODUCT) $(VERSION) completed" \
+		 -body "EOM"
+
+create-sigs:
 	# Generate detached sigs.
 	blat -to $(EMAIL) \
 	     -subject "Running sign-files for $(PRODUCT) $(VERSION), waiting on passphrase" \
@@ -131,6 +182,16 @@ verify: verify-signatures verify-win32 verify-asc
 verify-signatures:
 	cd $(WORKDIR)/signed-build$(BUILD)/win32 && ../../signing/verify-signatures
 
+verify-signatures2:
+	if ./verify-signature.py unsigned-build$(BUILD) signed-build$(BUILD) > verify-signatures-build${BUILD}.log 2>&1; then \
+	    blat -to $(EMAIL) \
+		 -subject "Signature verification succeeded"\
+		 -body "EOM"; \
+	else \
+	    blat verify-signatures-build${BUILD}.log -to $(EMAIL) \
+		 -subject "Signature verification failed"; \
+	fi
+
 # This test ensures that every exe and mar in the signed-build$(BUILD) directory
 # differs from its unsigned counterpart.
 verify-win32: DIFF_FILES=$(strip $(shell diff -rq $(WORKDIR)/unsigned-build$(BUILD)/unsigned/ \
@@ -152,7 +213,7 @@ verify-asc: ASC_FILES=$(strip $(shell find $(WORKDIR)/signed-build$(BUILD)/ \
                         -name "*.asc" -type f | wc -l))
 verify-asc: TOTAL_FILES=$(strip $(shell find $(WORKDIR)/signed-build$(BUILD)/ \
                           -not -wholename '*update*' -not -name "*.xpi" -not -name "*.asc" \
-                          -not -name "*.txt" -not -name "*.log"  -not -name '*SUMS' \
+                          -not -name "*.txt" -not -name "*.log" \
                           -not -name KEY -type f | wc -l))
 verify-asc:
 	@test $(TOTAL_FILES) -gt 0 || \
@@ -168,6 +229,8 @@ fake-upload:
 	blat -to $(EMAIL) \
 	     -subject "Signing of $(PRODUCT) $(VERSION) done, ready for inspection"\
 	     -body "EOM"
+
+postsign: upload upload-log verify-signatures2
 
 upload:
 	rsync -e "ssh -i $(SSH_KEY)" -av signed-build$(BUILD)/ \

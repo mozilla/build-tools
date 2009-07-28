@@ -1,0 +1,9 @@
+- *.zip
+- *.partial.mar
+- *.asc
+- /contrib/
+- /contrib-localized/
+# Skip the root update directory
+- /update/
+# Skip previously signed windows builds
+- /win32/
