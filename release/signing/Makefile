@@ -110,7 +110,7 @@ download:
 	# Copy linux/mac builds over to the signed dir, because they don't need internal signing.
 	rsync -av --exclude '*unsigned*' unsigned-build$(BUILD)/ signed-build$(BUILD)/
 
-sign: sign-internal sign-installers create-sigs
+sign: sign-internal sign-installers checksum-files create-sigs
 
 sign-internal:
 	blat -to $(EMAIL) \
@@ -132,7 +132,7 @@ sign-installers:
 	# Sign win32 installers.
 	cd $(WORKDIR)/signed-build$(BUILD)/win32 && ../../signing/sign-release
 
-sign2: sign-files create-sigs
+sign2: sign-files checksum-files create-sigs
 
 sign-files:
 	blat -to $(EMAIL) \
@@ -153,7 +153,7 @@ create-sigs:
 		 -body "EOM"
 	cd $(WORKDIR)/signed-build$(BUILD) && ../signing/sign-files .
 
-stage: create-contrib checksum-files fix-permissions
+stage: create-contrib fix-permissions
 
 create-contrib:
 	mkdir -m 2775 $(WORKDIR)/signed-build$(BUILD)/contrib
