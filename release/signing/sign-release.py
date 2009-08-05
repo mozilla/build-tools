@@ -158,8 +158,10 @@ class Signer:
             unpackfile(pkgfile, tmpdir)
             # Swap in files we have already signed
             for f in findfiles(tmpdir):
-                # Possible future optimization: only hash files we know might
-                # change, like .exe's and .dll's
+                # We don't need to do anything to files we're not going to sign
+                if not shouldSign(f):
+                    continue
+
                 h = sha1sum(f)
                 basename = os.path.basename(f)
                 nFiles += 1
@@ -176,7 +178,7 @@ class Signer:
                     # are mode 0666.  In the mar files, executables have mode
                     # 0777, so we want to preserve that.
                     copyfile(cachedFile, f, copymode=False)
-                elif shouldSign(f):
+                else:
                     # We need to sign this file
                     # If this file is compressed, check if we have a cached copy that
                     # is uncompressed
@@ -347,6 +349,9 @@ class Signer:
                     log.info("Unpacking %s into %s", sf, signed_dir)
                     unpackfile(sf, signed_dir)
                     for f in findfiles(unsigned_dir):
+                        # We don't need to cache things that aren't signed
+                        if not shouldSign(f):
+                            continue
                         # Calculate the hash of the original, unsigned file
                         h = sha1sum(f)
                         sf = signed_dir + f[len(unsigned_dir):]
