@@ -239,6 +239,12 @@ sub BumpPatcherConfig {
     #    $currentUpdateObj->{'rc'}->{$c} = "$build";
     #}
 
+    # When useBetaChannel is true we need to make sure that we separate
+    # the release and beta channel snippets by setting beta-dir
+    if ($useBetaChannel) {
+        $currentUpdateObj->{'beta-dir'} = 'beta';
+    }
+
     my $buildStr = 'build' . $build;
 
     my $partialUpdate = {};
