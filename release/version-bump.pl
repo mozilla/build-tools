@@ -7,18 +7,6 @@ use Getopt::Long;
 
 $|++;
 
-# We need to bump the version and milestone files in many different scenarios.
-# In each scenario the existing version numbers in the files will be different.
-#  * build1 on a new relbranch - the version in this case should be the same as
-#    appVersion, but with 'pre' on the end of it
-#  * build1 on an existing relbranch (a) - version files contain appVersion
-#    with 'pre' at the end of it
-#  * build1 on an existing relbranch (b) - version files contain oldAppVersion
-#
-# In order to avoid very messy logic for consumers we simply replace any
-# version number we find in those files.
-my $VERSION_REGEXP = '[\d\.]+((((a|b|(rc))\d+)|(pre)))?';
-
 my %config;
 
 ProcessArgs();
@@ -115,13 +103,16 @@ sub Bump {
              '^LDAPCSDK_CO_TAG\s+=.*$' =>
               'LDAPCSDK_CO_TAG      = ' . $releaseTag);
         } elsif ($fileName eq $moduleVer) {
+            $preVersion = $appVersion . 'pre';
             %searchReplace = ('^WIN32_MODULE_PRODUCTVERSION_STRING=' .
-             $VERSION_REGEXP . '$' => 'WIN32_MODULE_PRODUCTVERSION_STRING=' .
+             $preVersion . '$' => 'WIN32_MODULE_PRODUCTVERSION_STRING=' .
              $appVersion);
         } elsif ($fileName =~ /$versionTxt/) {
-            %searchReplace = ('^' . $VERSION_REGEXP . '$' => $appVersion);
+            $preVersion = $appVersion . 'pre';
+            %searchReplace = ('^' . $preVersion . '$' => $appVersion);
         } elsif ($fileName eq $milestoneTxt || $fileName eq $jsMilestoneTxt) {
-            %searchReplace = ('^' . $VERSION_REGEXP . '$' => $milestone);
+            $preVersion = $milestone . 'pre';
+            %searchReplace = ('^' . $preVersion . '$' => $milestone);
         } else {
             die("ASSERT: do not know how to bump file $fileName");
         }
