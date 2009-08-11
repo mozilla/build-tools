@@ -41,14 +41,18 @@ EMAIL          ?= release@mozilla.com
 STAGE_USERNAME ?= ffxbld
 SSH_KEY        ?= $(HOME)/.ssh/ffxbld_dsa
 PRODUCT        ?= firefox
-WORKDIR         = $(HOME)/signing-work/$(PRODUCT)-$(VERSION)
+BRAND_NAME     ?= $(PRODUCT)
+WORKDIR         = $(PWD)
 MAR             = $(WORKDIR)/mar.exe
 SEVENZIP        = $(WORKDIR)/7-Zip/7z.exe
 UPX_BIN         = $(WORKDIR)/upx/upx.exe
 CONCURRENCY    ?= 4
 KEYDIR         ?= d:/2008-keys
+
 ifeq ($(PRODUCT),firefox)
-PRODUCT_DIR     = browser
+APP_NAME       ?= browser
+else
+APP_NAME        = $(error APP_NAME must be defined)
 endif
 
 ifdef USE_NEW
@@ -93,14 +97,14 @@ stubs-cvs:
 	rm -rf checkouts/stubs
 	mkdir -p checkouts/stubs
 	(cd checkouts/stubs; cvs -d:ext:cltbld@cvs.mozilla.org:/cvsroot co -r $(TAG) -d 7z mozilla/other-licenses/7zstub/$(PRODUCT))
-	(cd checkouts/stubs; cvs -d:ext:cltbld@cvs.mozilla.org:/cvsroot co -r $(TAG) -d tagfile mozilla/$(PRODUCT_DIR)/installer/windows/app.tag)
+	(cd checkouts/stubs; cvs -d:ext:cltbld@cvs.mozilla.org:/cvsroot co -r $(TAG) -d tagfile mozilla/$(APP_NAME)/installer/windows/app.tag)
 
 stubs-hg:
 	rm -rf checkouts/stubs
 	mkdir -p checkouts/stubs/7z
 	mkdir -p checkouts/stubs/tagfile
 	(cd checkouts/stubs/7z; wget -O 7zSD.sfx $(HGROOT)$(REPO)/raw-file/$(TAG)/other-licenses/7zstub/$(PRODUCT)/7zSD.sfx)
-	(cd checkouts/stubs/tagfile; wget -O app.tag $(HGROOT)$(REPO)/raw-file/$(TAG)/$(PRODUCT_DIR)/installer/windows/app.tag)
+	(cd checkouts/stubs/tagfile; wget -O app.tag $(HGROOT)$(REPO)/raw-file/$(TAG)/$(APP_NAME)/installer/windows/app.tag)
 
 download:
 	# Download the builds.
@@ -138,7 +142,7 @@ sign-files:
 	blat -to $(EMAIL) \
 	     -subject "sign-release.py for $(PRODUCT) $(VERSION) starting" \
 		 -body "EOM"
-	./sign-release.py --keydir $(KEYDIR) -j$(CONCURRENCY) -o signed-build$(BUILD) unsigned-build$(BUILD) >> win32_signing_build$(BUILD).log 2>&1
+	./sign-release.py --keydir $(KEYDIR) -j$(CONCURRENCY) --product $(BRAND_NAME) -o signed-build$(BUILD) unsigned-build$(BUILD) >> win32_signing_build$(BUILD).log 2>&1
 	# And copy over the info file and XPIs.
 	cp -pv ./unsigned-build$(BUILD)/unsigned/win32_info.txt ./signed-build$(BUILD)/
 	rsync -av ./unsigned-build$(BUILD)/unsigned/win32/xpi ./signed-build$(BUILD)/win32
@@ -183,7 +187,7 @@ verify-signatures:
 	cd $(WORKDIR)/signed-build$(BUILD)/win32 && ../../signing/verify-signatures
 
 verify-signatures2:
-	if ./verify-signature.py --product $(PRODUCT) unsigned-build$(BUILD) signed-build$(BUILD) > verify-signatures-build${BUILD}.log 2>&1; then \
+	if ./verify-signature.py --product $(BRAND_NAME) unsigned-build$(BUILD) signed-build$(BUILD) > verify-signatures-build${BUILD}.log 2>&1; then \
 	    blat -to $(EMAIL) \
 		 -subject "Signature verification succeeded"\
 		 -body "EOM"; \
