@@ -183,7 +183,7 @@ verify-signatures:
 	cd $(WORKDIR)/signed-build$(BUILD)/win32 && ../../signing/verify-signatures
 
 verify-signatures2:
-	if ./verify-signature.py unsigned-build$(BUILD) signed-build$(BUILD) > verify-signatures-build${BUILD}.log 2>&1; then \
+	if ./verify-signature.py --product $(PRODUCT) unsigned-build$(BUILD) signed-build$(BUILD) > verify-signatures-build${BUILD}.log 2>&1; then \
 	    blat -to $(EMAIL) \
 		 -subject "Signature verification succeeded"\
 		 -body "EOM"; \

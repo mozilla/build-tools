@@ -103,13 +103,15 @@ if __name__ == "__main__":
     import sys, os, logging
     from optparse import OptionParser
 
-    parser = OptionParser("%prog [--fake] unsigned-dir signed-dir")
+    parser = OptionParser("%prog [--fake] [--product <product>] unsigned-dir signed-dir")
     parser.set_defaults(
             fake=False,
             abortOnFail=False,
+            product="firefox",
             )
     parser.add_option("", "--fake", dest="fake", action="store_true", help="Don't verify signatures, just compare file hashes")
     parser.add_option("", "--abort-on-fail", dest="abortOnFail", action="store_true", help="Stop processing after the first error")
+    parser.add_option("", "--product", dest="product", help="product name")
 
     logging.basicConfig(level=logging.INFO, format="%(message)s")
 
@@ -134,7 +136,7 @@ if __name__ == "__main__":
         if not uf.endswith(".mar") and not uf.endswith(".exe"):
             continue
         sf = convertPath(uf, signed_dir)
-        result, msg = check_repack(uf, sf, options.fake)
+        result, msg = check_repack(uf, sf, options.fake, options.product)
         print sf, result, msg
         if not result:
             failed = True
