@@ -134,7 +134,7 @@ sign-internal:
 
 sign-installers:
 	# Sign win32 installers.
-	cd $(WORKDIR)/signed-build$(BUILD)/win32 && ../../signing/sign-release
+	cd $(WORKDIR)/signed-build$(BUILD)/win32 && ../../signing/sign-release $(KEYDIR)
 
 sign2: sign-files checksum-files create-sigs
 
