@@ -1,5 +1,11 @@
 #!/bin/bash
 
+function cleanup() { 
+    hdiutil detach ${DEV_NAME} || 
+      { sleep 5 && hdiutil detach ${DEV_NAME} -force; }; 
+    return $1 && $?; 
+};
+
 unpack_build () {
     unpack_platform="$1"
     dir_name="$2"
@@ -10,9 +16,28 @@ unpack_build () {
     pushd $dir_name > /dev/null
     case $unpack_platform in
         mac|mac-ppc|Darwin_ppc-gcc|Darwin_Universal-gcc3)
-            cd ../
-            echo "installing $pkg_file"
-            ../common/unpack-diskimage.sh "$pkg_file" mnt $dir_name
+            # Thunderbird 2.0.0.x (and others) have a license file and build on
+            # 10.4. For these, we need to use an expect script to mount them.
+            osver=`uname -r | cut -f1 -d.`
+            if [ $osver -eq 8 ]
+            then
+                cd ../
+                mkdir -p mnt
+                echo "mounting $pkg_file"
+                expect ../common/installdmg.ex "$pkg_file" > hdi.output || cleanup 1;
+                DEV_NAME=`perl -n -e 'if($_=~/(\/dev\/disk[^ ]*)/) {print $1."\n";exit;}'< hdi.output`;
+                if [ ! $DEV_NAME -o "$DEV_NAME" = "" ]; then cleanup 1; fi
+                MOUNTPOINT=`perl -n -e 'split(/\/dev\/disk[^ ]*/,$_,2);if($_[1]=~/(\/.[^\r]*)/) {print $1;exit;}'< hdi.output`;
+                if [ ! $MOUNTPOINT -o "$MOUNTPOINT" = "" ]; then 
+                    cleanup 1; 
+                fi
+                rsync -a ${MOUNTPOINT}/* $dir_name/ || cleanup 1;
+                cleanup 0;
+            else
+                cd ../
+                echo "installing $pkg_file"
+                ../common/unpack-diskimage.sh "$pkg_file" mnt $dir_name
+            fi
             ;;
         win32|WINNT_x86-msvc)
             7z x ../"$pkg_file" > /dev/null
