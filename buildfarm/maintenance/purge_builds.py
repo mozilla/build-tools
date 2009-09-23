@@ -127,4 +127,12 @@ will be listed in the order in which they would be deleted.''')
         sys.exit(1)
 
     purge(args[0], options.size, options.skip, options.dry_run)
-    print "%1.2f GB of space available" % (freespace(args[0])/(1024*1024*1024.0))
+    after = freespace(args[0])/(1024*1024*1024.0)
+    if after < options.size:
+        print "Error: unable to free %1.2f GB of space. " % options.size + \
+              "Free space only %1.2f GB" % after
+        sys.exit(1)
+    else:
+        print "%1.2f GB of space available" % after
+        sys.exit(0)
+
