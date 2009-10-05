@@ -191,9 +191,16 @@ sub BumpPatcherConfig {
 
     my $doOnetimePatcherBumps = ($currentUpdateObj->{'to'} ne $version);
 
-    if ($doOnetimePatcherBumps) {
+    # Don't try to modify past-update if this is the first time
+    # we're doing updates (as proxied by undefined "from")
+    if ($doOnetimePatcherBumps && defined($currentUpdateObj->{'from'})) {
         my $pastUpdateObj = $appObj->{'past-update'};
-        if (ref($pastUpdateObj) ne 'ARRAY') {
+        # no existing past-update's, initialize
+        if (! defined($pastUpdateObj)) {
+            $appObj->{'past-update'} = $pastUpdateObj = [];
+        }
+        # one prior past-update, convert to array
+        elsif (ref($pastUpdateObj) ne 'ARRAY') {
             my $oldSinglePastUpdateStr = $pastUpdateObj;
             $appObj->{'past-update'} = $pastUpdateObj = [];
             push(@{$pastUpdateObj}, $oldSinglePastUpdateStr);
