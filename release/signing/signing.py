@@ -262,7 +262,7 @@ def shouldSign(filename):
     """Returns True if filename should be signed."""
     # We don't sign these files here, since it would invalidate the
     # .chk files
-    _dont_sign = ['freebl3.dll', 'softokn3.dll']
+    _dont_sign = ['freebl3.dll', 'softokn3.dll', 'nssdbm3.dll']
     ext = os.path.splitext(filename)[1]
     b = os.path.basename(filename)
     if ext in ('.dll', '.exe') and b not in _dont_sign:
