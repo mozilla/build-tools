@@ -1,0 +1,210 @@
+#!/usr/bin/env python
+### BEGING CONFIG
+slavedir = '/builds/buildbot'
+standalone = '/builds/standalone.txt'
+logFile = '/builds/logs/buildbot-daemon.log'
+dataDeviceFile = '/dev/mmcblk1p2'
+dataMountpoint = '/media/mmc2/'
+swapFile = '/media/mmc2/swapfile'
+swap1KBlocks = 131204
+max_try = 600
+delay = 3
+# Prefix all commands in an exec array, for debugging
+#execPrefix = ["echo", "WOULD BE DOING: "] 
+# For realzies
+execPrefix = []
+### END CONFIG
+
+import sys, os, time, logging, logging.handlers
+import subprocess, socket
+sys.path.append(slavedir)
+import host
+
+n810 = socket.gethostname() 
+master = host.buildmaster_host
+port = host.port
+
+log = logging.getLogger(n810)
+log.setLevel(logging.DEBUG)
+fileHandler = logging.handlers.TimedRotatingFileHandler(
+    logFile, when='midnight',)
+fileFormatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+fileHandler.setFormatter(fileFormatter)
+consoleHandler = logging.StreamHandler()
+consoleFormatter = logging.Formatter("%(levelname)s - %(message)s")
+consoleHandler.setFormatter(consoleFormatter)
+#networkHandler = logging.handlers.SocketHandler('johnford.info',
+#                         logging.handlers.DEFAULT_TCP_LOGGING_PORT)
+#networkFormatter = logging.Formatter("%(asctime)s -%(name)s - %(levelname)s" +
+#                                     " - $(message)s")
+#networkHandler.setFormatter(networkFormatter)
+log.addHandler(fileHandler)
+log.addHandler(consoleHandler)
+#log.addHandler(networkHandler)
+
+def exit(rv, msg="No Message.  GRRR!"):
+    """This is a bit of a hack I (john f) know.  Patches welcome"""
+    if rv is not 0:
+        log.info('Exiting/Rebooting due to initialization failure')
+        subprocess.call(execPrefix + ["osso-xterm", "moz-alert %s" % msg])
+        subprocess.call(execPrefix + ["reboot"])
+    else:
+        log.info('Exiting cleanly')
+    sys.exit(rv)
+
+
+def post(msg):
+    pass
+
+def environment(ignoreVars=[]):
+    """Set up the environment ignoring specified 
+       environmental variables"""
+    env = {}
+
+    # Get environmental vars
+    for i in os.environ:
+      if i not in ignoreVars:
+        env[i]=os.environ[i]
+
+    # Our custom settings
+    env['PYTHONPATH'] = '' + \
+      '/tools/twisted/twisted-2.4.0/lib/python2.5/site-packages:' + \
+      '/tools/twisted/twisted-core-2.4.0/lib/python2.5/site-packages:' + \
+      '/tools/twisted/zope-interface-3.3.0/lib/python2.5/site-packages'
+    env['DBUS_SESSION_BUS_ADDRESS'] = 'unix:path=/tmp/session_bus_socket'
+    env['GTK2_RC_FILES'] = '/home/user/.osso/current-gtk-theme:' + \
+            '/home/user/.osso/current-gtk-key-theme'
+    env['HOME'] = '/root'
+    env['TMPDIR'] = '/var/tmp'
+    env['USER'] = 'root'
+    env['DISPLAY'] = ':0.0'
+    return env
+
+def connectable(hostname, port):
+    """Test if a server is connectable by doing a DNS lookup
+       and trying to establish a TCP connection.  TCP Connection
+       does nothing"""
+    try:
+        ip = socket.gethostbyname(hostname)
+    except socket.gaierror:
+        log.error('Could not resolve %s' % hostname)
+        return False
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((ip,int(port)))
+        s.shutdown(2)
+        log.info('Established TCP connection on %s:%s' % (hostname, port))
+        return True
+    except:
+        log.error('Could not establish TCP connection on %s:%s' % (hostname, 
+                                                                   port))
+        return False
+
+def standaloneTest():
+    """Test that a blocking file is not present"""
+    outcome = os.path.exists(standalone)
+    if outcome is True:
+        log.error('Found standalone blocking startup at %s' % standalone)
+        exit(0)
+    else:
+        log.info('No standalone file blocking start')
+    return outcome
+
+def mkfs(file):
+    log.info('Unmounting old data partition')
+    subprocess.call(execPrefix + ["umount", file])
+    log.info('Making data partition')
+    try:
+        subprocess.check_call(execPrefix + ["mkfs.ext2", "-L", n810, file])
+        log.info('Successfully created data partition')
+    except subprocess.CalledProcessError:
+        log.error('Could not create data filesystem on device %s' % file)
+        exit(1, "Error creating data filesystem 'mkfs(%s)" % file)
+
+def swapoff(file):
+    log.info('Turning off swap file at %s' % file)
+    subprocess.call(execPrefix + ["swapoff", file])
+
+def swapon(file):
+    log.info('Making swap file')
+    try:
+        subprocess.check_call(execPrefix + ['dd', 'if=/dev/zero', 'of=%s' % file, 
+                                            'bs=1024', 'count=' +
+                                            str(swap1KBlocks)])
+    except:
+        log.error('Could not create swap file')
+        exit(1, "Error writing(dd) swap file 'swapon(%s)'" % file)
+    try:
+        subprocess.check_call(execPrefix + ["mkswap", file])
+        log.info('Successfully created swap file')
+    except subprocess.CalledProcessError:
+        log.error('Could not create swap at %s' % file)
+        exit(1, "Error creating(mkswap) swap file 'swapon(%s)'" % file)
+    try:
+        subprocess.check_call(execPrefix + ["swapon", file])
+        log.info('Swapfile is on')
+    except subprocess.CalledProcessError:
+        log.error('Could not turn on swap file')
+        exit(1, "Error turning on swap file 'swapon(%s)'" % file)
+
+def mountData(file, mountPoint):
+    log.info('Mounting data partition')
+    try:
+        subprocess.check_call(execPrefix + ["mount", file, mountPoint])
+        log.info('Successfully mounted')
+    except subprocess.CalledProcessError:
+        log.error('Could not mount %s on %s' % (file, mountPoint))
+        exit(1, "Error mounting data partition 'mountData(%s, %s)'" %(file, mountPoint))
+
+def setupFS():
+    log.info('Setting up filesystem')
+    swapoff('/media/mmc2/.swap')
+    mkfs(dataDeviceFile)
+    mountData(dataDeviceFile, dataMountpoint)
+    swapon(swapFile)
+    
+def start():
+    standaloneTest()
+    i = 0
+    while not connectable(master,port):
+        if i > max_try - 1:
+            log.error('Tried to connect and failed %d times' % i)
+            exit(1, "Tried connecting %d times and failed to %s:%s" %(i, master, port))
+        i+=1
+        log.info('Connection test attempt %d' % i)
+        time.sleep(delay)
+    setupFS()
+    try:
+        subprocess.check_call(execPrefix + ["buildbot", "start", slavedir],
+                   env=environment(ignoreVars=['CONSOLE']))
+    except subprocess.CalledProcessError:
+        log.error("Buildbot had non-zero return code")
+        #except:
+            #error("Failed to call buildbot start", critical=True)
+
+def stop():
+  subprocess.call(execPrefix + ["buildbot", "stop", slavedir],
+                  env=environment(ignoreVars=['CONSOLE']))
+  log.info('Stopping buildbot.  Either restart buildbot manually or reboot')
+
+if __name__ == '__main__':
+    usageString = 'Usage: %s start|stop|restart' % sys.argv[0]
+    if len(sys.argv) is not 2:
+        log.error("Not the correct number of arguments")
+        log.error(usageString)
+        exit(0)
+    else:
+        mode = sys.argv[1]
+        log.info("N810=%s;BUILDMASTER_HOST=%s;PORT=%d" % (n810,
+                                                          master, port))
+        if mode == 'start':
+            start()
+        elif mode == 'restart':
+            stop()
+            start()
+        elif mode == 'stop':
+            stop()
+        else:
+            log.error("Specified argument '%s' is not valid" % mode)
+            log.error(usageString)
+            exit(0)
