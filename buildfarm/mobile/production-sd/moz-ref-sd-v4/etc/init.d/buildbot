@@ -20,7 +20,7 @@ import subprocess, socket
 sys.path.append(slavedir)
 import host
 
-n810 = socket.gethostname() 
+n810 = socket.gethostname()
 master = host.buildmaster_host
 port = host.port
 
@@ -96,7 +96,7 @@ def connectable(hostname, port):
         log.info('Established TCP connection on %s:%s' % (hostname, port))
         return True
     except:
-        log.error('Could not establish TCP connection on %s:%s' % (hostname, 
+        log.error('Could not establish TCP connection on %s:%s' % (hostname,
                                                                    port))
         return False
 
@@ -128,7 +128,7 @@ def swapoff(file):
 def swapon(file):
     log.info('Making swap file')
     try:
-        subprocess.check_call(execPrefix + ['dd', 'if=/dev/zero', 'of=%s' % file, 
+        subprocess.check_call(execPrefix + ['dd', 'if=/dev/zero', 'of=%s' % file,
                                             'bs=1024', 'count=' +
                                             str(swap1KBlocks)])
     except:
@@ -156,6 +156,15 @@ def mountData(file, mountPoint):
         log.error('Could not mount %s on %s' % (file, mountPoint))
         exit(1, "Error mounting data partition 'mountData(%s, %s)'" %(file, mountPoint))
 
+def ntpd():
+    log.info('Running ntpd once')
+    try:
+        subprocess.check_call(execPrefix + ["/etc/init.d/openntpd", 'start'])
+        log.info('Successfully mounted')
+    except subprocess.CalledProcessError:
+        log.error('Could not run ntpd')
+        exit(1, "Error running ntpd")
+
 def setupFS():
     log.info('Setting up filesystem')
     swapoff('/media/mmc2/.swap')
@@ -173,6 +182,7 @@ def start():
         i+=1
         log.info('Connection test attempt %d' % i)
         time.sleep(delay)
+    ntpd()
     setupFS()
     try:
         subprocess.check_call(execPrefix + ["buildbot", "start", slavedir],
