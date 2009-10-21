@@ -1,9 +1,17 @@
 #!/bin/bash
 # Useful for finding out which devices: find /dev | grep "/dev/sd.[0-9]"
 
+EXCLUDE_FILE=/flashing/exclude_list.txt
+
 if [ $# -eq 0 ] ; then
   echo Please specify devices from this list
-  find /dev/ | grep "/dev/sd[^a]1"
+  devlist=`find /dev -name "sd?" -maxdepth 1`
+  for i in $devlist; do
+    grep -q "$i" exclude
+    if [ $? -ne 0 ] ; then
+      echo $i
+    fi
+  done
 fi
 
 for i in "$@" ; do

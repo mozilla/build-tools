@@ -1,0 +1,13 @@
+#!/bin/sh
+
+EXCLUDE_FILE=/flashing/exclude_list.txt
+
+case "$1" in
+  *start)
+    find /dev -name "sd?" -maxdepth 1 > $EXCLUDE_FILE
+  ;;
+  *)
+    echo $"Usage: $0 {start}"
+    exit 1
+  ;;
+esac
