@@ -63,9 +63,9 @@ def rmdirRecursive(dir):
             os.remove(full_name)
     os.rmdir(dir)
 
-def do_clobber(dryrun=False, skip=None):
+def do_clobber(dir, dryrun=False, skip=None):
   try:
-    for f in os.listdir("."):
+    for f in os.listdir(dir):
       if skip is not None and f in skip:
         print "Skipping", f
         continue
@@ -115,6 +115,8 @@ if __name__ == "__main__":
       default=24*7, help="hours between periodic clobbers")
   parser.add_option('-s', '--skip', help='do not delete this directory',
       action='append', dest='skip', default=['last-clobber'])
+  parser.add_option('-d', '--dir', help='clobber this directory',
+      dest='dir', default='.', type='string')
 
   options, args = parser.parse_args()
   periodicClobberTime = timedelta(hours = options.period)
@@ -166,6 +168,9 @@ if __name__ == "__main__":
 
   if clobber:
     # Finally, perform a clobber if we're supposed to
-    print "Clobbering..."
-    do_clobber(options.dryrun, options.skip)
+    if os.path.exists(options.dir):
+      print "Clobbering..."
+      do_clobber(options.dir, options.dryrun, options.skip)
+    else:
+      print "Clobber failed because '%s' doesn't exist" % options.dir
     write_file(our_clobber_date, "last-clobber")
