@@ -90,4 +90,5 @@ else
   copy
   modify_image
   eject
+  echo "All done on $SDDEV"
 fi

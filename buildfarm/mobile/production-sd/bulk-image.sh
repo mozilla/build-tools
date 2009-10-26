@@ -1,5 +1,6 @@
 #!/bin/bash
 # Useful for finding out which devices: find /dev | grep "/dev/sd.[0-9]"
+ROOTFSDIR='moz-ref-sd-v4'
 
 EXCLUDE_FILE=/flashing/exclude_list.txt
 
@@ -15,7 +16,8 @@ if [ $# -eq 0 ] ; then
 fi
 
 for i in "$@" ; do
-  BATCH='yes' ./moz-image.sh moz-ref-sd-v4 /dev/sd${i} maemo-n810-ref > $i.log&
+  BATCH='yes' ./moz-image.sh $ROOTFSDIR /dev/sd${i} maemo-n810-ref &
 done
 
 wait
+echo "BULK IMAGING COMPLETED"
