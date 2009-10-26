@@ -73,7 +73,8 @@ function modify_image {
 function eject {
   info "Unmounting"
   sync
-  umount ${SDDEV}1 || warn "could not umount $SDDEV"
+  umount ${SDDEV}1 || warn "could not umount rootfs partition ${SDDEV}1"
+  umount ${SDDEV}2 || warn "could not umount data partition ${SDDEV}2"
   rm -rf $MOUNT
 }
 
