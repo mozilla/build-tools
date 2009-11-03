@@ -47,7 +47,7 @@ MAR             = $(WORKDIR)/mar.exe
 SEVENZIP        = $(WORKDIR)/7-Zip/7z.exe
 UPX_BIN         = $(WORKDIR)/upx/upx.exe
 CONCURRENCY    ?= 4
-KEYDIR         ?= d:/2008-keys
+KEYDIR         ?= d:/2009-keys
 
 ifeq ($(PRODUCT),firefox)
 APP_NAME       ?= browser
