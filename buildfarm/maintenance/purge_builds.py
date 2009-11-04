@@ -2,16 +2,21 @@
 # Written for Mozilla by Chris AtLee <catlee@mozilla.com> 2008
 """Delete old buildbot builds to make room for the current build.
 
-%prog [options] base_dir
+%prog [options] base_dir1 [base_dir2 ...]
 
-base_dir is the root of the directory tree you want to delete builds
+base_dir1 is the root of the directory tree you want to delete builds
 from.
 
-Sub-directories of base_dir will be deleted, in order from oldest to newest,
+Sub-directories of base_dir1 will be deleted, in order from oldest to newest,
 until the specified amount of space is free.
 
+base_dir1 will always be used for space calculations, but if other base_dir# 
+are provided, subdirectories within those dirs will also be purged. This will
+obviously only increase the available space if the other base_dirs are on the
+same mountpoint, but this can be useful for, e.g., cleaning up scratchbox.
+
 example:
-    python %prog -s 6 /builds/moz2_slave
+    python %prog -s 6 /builds/moz2_slave /scratchbox/users/cltbld/home/cltbld/build
 """
 
 import os, shutil, re, sys
@@ -71,18 +76,25 @@ def rmdirRecursive(dir):
             os.remove(full_name)
     os.rmdir(dir)
 
-def purge(base_dir, gigs, ignore, dry_run=False):
-    """Delete directories under `base_dir` until `gigs` GB are free
+def purge(base_dirs, gigs, ignore, dry_run=False):
+    """Delete directories under `base_dirs` until `gigs` GB are free
 
     Will not delete directories listed in the ignore list."""
     gigs *= 1024 * 1024 * 1024
 
-    if freespace(base_dir) >= gigs:
+    if freespace(base_dirs[0]) >= gigs:
         return
 
-    dirs = [os.path.join(base_dir, d) for d in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, d)) and d not in ignore]
+    dirs = []
+    for base_dir in base_dirs:
+        if os.path.exists(base_dir):
+            for d in os.listdir(base_dir):
+                if os.path.isdir(os.path.join(base_dir, d)) and \
+                   d not in ignore:
+                    dirs.append(os.path.join(base_dir, d))
     dirs.sort(mtime_sort)
-    while dirs and freespace(base_dir) < gigs:
+
+    while dirs and freespace(base_dirs[0]) < gigs:
         d = dirs.pop(0)
         print "Deleting", d
         if not dry_run:
@@ -117,16 +129,16 @@ if __name__ == '__main__':
             dest='dry_run',
             help='''do not delete anything, just print out what would be
 deleted.  note that since no directories are deleted, if the amount of free
-disk space in base_dir is less than the required size, then ALL directories
+disk space in base_dir(s) is less than the required size, then ALL directories
 will be listed in the order in which they would be deleted.''')
 
     options, args = parser.parse_args()
 
-    if len(args) != 1:
-        parser.error("Must specify exactly one base_dir")
+    if len(args) < 1:
+        parser.error("Must specify one or more base_dirs")
         sys.exit(1)
 
-    purge(args[0], options.size, options.skip, options.dry_run)
+    purge(args, options.size, options.skip, options.dry_run)
     after = freespace(args[0])/(1024*1024*1024.0)
     if after < options.size:
         print "Error: unable to free %1.2f GB of space. " % options.size + \
