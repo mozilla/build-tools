@@ -459,7 +459,7 @@ if __name__ == "__main__":
             first_locale="en-US",
             concurrency=1,
             keep_cache=False,
-            keydir="e:/2008-keys",
+            keydir=None,
             fake=False,
             prev=False,
             product="firefox",
@@ -478,6 +478,8 @@ if __name__ == "__main__":
     options, args = parser.parse_args()
     if not options.dest:
         parser.error("Must specify a destination directory")
+    if not options.keydir:
+        parser.error("Must specify a key directory")
 
     try:
         checkTools()
