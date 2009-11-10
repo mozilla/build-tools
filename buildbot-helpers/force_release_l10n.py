@@ -73,12 +73,12 @@ def getShippedLocales(shippedLocales):
     for locale,platforms in parsed.iteritems():
         if platforms:
             for p in platforms:
-                # skip platforms we don't know about
-                if p not in properlyParsed.keys():
-                    continue
                 # map the bouncer/shipped-locales platforms to automation ones
                 if p == 'osx':
                     p = 'macosx'
+                # skip platforms we don't know about
+                if p not in properlyParsed.keys():
+                    continue
                 properlyParsed[p].append(locale)
         else:
             for p in properlyParsed.iterkeys():
