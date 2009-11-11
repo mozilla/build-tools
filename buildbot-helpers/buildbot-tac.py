@@ -23,6 +23,7 @@ s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
 s.setServiceParent(application)
 """
 BUILD_BUILDMASTER = "staging-master.build.mozilla.org"
+TRY_BUILDMASTER   = "sm-staging-try-master.mozilla.org"
 TALOS_BUILDMASTER = "talos-master.build.mozilla.org"
 
 def quote_option(str, raw=False):
@@ -36,15 +37,22 @@ def get_default_options(slavename):
     d = {'slavename': quote_option(slavename)}
     basedir = None
     buildmaster_host = None
-    if 'moz2' in slavename or 'xserve' in slavename:
-        buildmaster_host = BUILD_BUILDMASTER
-        if 'linux' in slavename or 'darwin9' in slavename or 'xserve' in slavename:
+    if 'moz2' in slavename or 'xserve' in slavename or 'try-' in slavename:
+        if 'try-' in slavename:
+            buildmaster_host = TRY_BUILDMASTER
+            d['port'] = 9982
+        else:
+            buildmaster_host = BUILD_BUILDMASTER
+        if 'linux' in slavename or 'darwin9' in slavename or \
+          'xserve' in slavename or 'mac' in slavename:
             basedir = '/builds/slave'
         elif 'win32' in slavename:
             basedir = '/e/builds/moz2_slave'
-    elif 'talos' in slavename:
+    elif 'talos' in slavename or '-try' in slavename:
         buildmaster_host = TALOS_BUILDMASTER
-        if 'linux' in slavename:
+        if '-try' in slavename:
+            d['port'] = 9011
+        if 'linux' in slavename or 'ubuntu' in slavename:
             basedir = '/home/mozqa/talos-slave'
         elif 'tiger' in slavename or 'leopard' in slavename:
             basedir = '/Users/mozqa/talos-slave'
@@ -98,7 +106,7 @@ class BuildbotTac:
             if o not in self.tacOptions:
                 missingOptions.append(o)
         if missingOptions:
-            raise MissingOptionsException("Missing %s, cannot save %s" % \
+            raise MissingOptionsError("Missing %s, cannot save %s" % \
               (missingOptions, self.filename))
         # If there wasn't any, save the file
         f = open(self.filename, "w")
