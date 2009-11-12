@@ -23,6 +23,7 @@ def signfile(filename, keydir, fake=False):
         '-v', '%s/MozAuthenticode.pvk' % keydir,
         '-t', 'http://timestamp.verisign.com/scripts/timestamp.dll',
         '-i', 'http://www.mozilla.com',
+        '-a', 'sha1',
         # Try 5 times, and wait 60 seconds between tries
         '-tr', '5',
         '-tw', '60',
