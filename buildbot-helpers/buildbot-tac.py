@@ -24,7 +24,7 @@ s.setServiceParent(application)
 """
 BUILD_BUILDMASTER = "staging-master.build.mozilla.org"
 TRY_BUILDMASTER   = "sm-staging-try-master.mozilla.org"
-TALOS_BUILDMASTER = "talos-master.build.mozilla.org"
+TALOS_BUILDMASTER = "talos-master.mozilla.org"
 
 def quote_option(str, raw=False):
     str = re.sub("'", "\\'", str)
