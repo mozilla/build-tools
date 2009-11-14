@@ -17,6 +17,10 @@ LATEST_DIR = "latest-%(branch)s"
 LONG_DATED_DIR = "%(year)s/%(month)s/%(year)s-%(month)s-%(day)s-%(hour)s-%(branch)s"
 SHORT_DATED_DIR = "%(year)s-%(month)s-%(day)s-%(hour)s-%(branch)s"
 CANDIDATES_DIR = "%(version)s-candidates/build%(buildnumber)s"
+# For staging
+#CANDIDATES_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/nightly/%(version)s-candidates/build%(buildnumber)s"
+# For production
+CANDIDATES_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/nightly/%(version)s-candidates/build%(buildnumber)s"
 
 def CopyFileToDir(original_file, source_dir, dest_dir, preserve_dirs=False):
     if not original_file.startswith(source_dir):
@@ -119,14 +123,27 @@ def ReleaseToCandidatesDir(options, upload_dir, files):
     candidatesDir = CANDIDATES_DIR % {'version': options.version,
                                       'buildnumber': options.build_number}
     candidatesPath = os.path.join(NIGHTLY_PATH, candidatesDir)
+    candidatesUrl = CANDIDATES_URL_PATH % {
+            'version': options.version,
+            'buildnumber': options.build_number,
+            'product': options.product,
+            }
 
     for f in files:
-        if f.endswith('crashreporter-symbols.zip'):
-            continue
         realCandidatesPath = candidatesPath
         if 'win32' in f:
             realCandidatesPath = os.path.join(realCandidatesPath, 'unsigned')
+            url = os.path.join(candidatesUrl, 'unsigned')
+        else:
+            url = candidatesUrl
         CopyFileToDir(f, upload_dir, realCandidatesPath, preserve_dirs=True)
+        # Output the URL to the candidate build
+        if f.startswith(upload_dir):
+            relpath = f[len(upload_dir):].lstrip("/")
+        else:
+            relpath = f.lstrip("/")
+
+        sys.stderr.write("%s\n" % os.path.join(url, relpath))
         # We always want release files chmod'ed this way so other users in
         # the group cannot overwrite them.
         os.chmod(f, 0644)

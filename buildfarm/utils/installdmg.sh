@@ -15,7 +15,7 @@ trap "{ if [ -d mnt ]; then hdiutil detach mnt -force; rm -rdfv mnt; fi; }" EXIT
 
 mkdir -p mnt
 
-hdiutil attach -verbose -noautoopen -mountpoint ./mnt $1
+hdiutil attach -verbose -noautoopen -mountpoint ./mnt "$1"
 # Wait for files to show up
 # hdiutil uses a helper process, diskimages-helper, which isn't always done its
 # work by the time hdiutil exits.  So we wait until something shows up in the
