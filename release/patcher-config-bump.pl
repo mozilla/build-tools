@@ -316,8 +316,7 @@ sub BumpPatcherConfig {
 
     $releaseObj->{'schema'} = '1';
     $releaseObj->{'version'} = $releaseObj->{'extension-version'} = $appVersion;
-    # we disable this for bug 498273, human friendly versions can't be used any more
-    #$releaseObj->{'prettyVersion'} = $prettyVersion;
+    $releaseObj->{'prettyVersion'} = $prettyVersion;
 
     my $linBuildId;
     my $winBuildId;
