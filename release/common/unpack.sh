@@ -12,6 +12,9 @@ unpack_build () {
     pkg_file="$3"
     locale=$4
 
+    if [ ! -f "$pkg_file" ]; then
+      return 1
+    fi 
     mkdir -p $dir_name
     pushd $dir_name > /dev/null
     case $unpack_platform in

@@ -20,11 +20,12 @@ download_builds() {
     cd downloads 
     if [ -f "$source_file" ]; then rm "$source_file"; fi
     wget --no-check-certificate -nv $PARAMS "$url" 2>&1
-    if [ $? != 0 ]; then
+    status=$?
+    if [ $status != 0 ]; then
       echo "FAIL: Could not download source $source_file from $url"
       echo "skipping.."
       cd ../
-      continue
+      return $status
     fi
     cd ../
   done
