@@ -37,7 +37,8 @@ def get_default_options(slavename):
     d = {'slavename': quote_option(slavename)}
     basedir = None
     buildmaster_host = None
-    if 'moz2' in slavename or 'xserve' in slavename or 'try-' in slavename:
+    if 'moz2' in slavename or 'xserve' in slavename or 'try-' in slavename or \
+      slavename.startswith('win32'):
         if 'try-' in slavename:
             buildmaster_host = TRY_BUILDMASTER
             d['port'] = 9982
