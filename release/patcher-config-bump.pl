@@ -232,6 +232,9 @@ sub BumpPatcherConfig {
       $currentUpdateObj->{'details'} = 'http://www.seamonkey-project.org/releases/' .
                                         $product . $appVersion . '/';
     }
+    elsif ($product eq 'thunderbird') {
+     $currentUpdateObj->{'details'} = 'http://www.mozillamessaging.com/%locale%/' .
+                                        $product . '/' . $appVersion . '/releasenotes/';
     else {
       $currentUpdateObj->{'details'} = 'http://www.mozilla.com/%locale%/' .
                                         $product . '/' . $appVersion . '/releasenotes/';
