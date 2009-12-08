@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import re
+import os
 
 DEFAULT_HEADER = """\
 from twisted.application import service
@@ -101,6 +102,7 @@ class BuildbotTac:
         self.filename = filename
 
     def save(self):
+        tmpfile = '%s.tmp' % self.filename
         # Look for necessary, but missing options
         missingOptions = []
         for o in self.requiredOptions:
@@ -110,11 +112,13 @@ class BuildbotTac:
             raise MissingOptionsError("Missing %s, cannot save %s" % \
               (missingOptions, self.filename))
         # If there wasn't any, save the file
-        f = open(self.filename, "w")
+        f = open(tmpfile, "w")
         f.write(self.header)
         for key,value in self.tacOptions.iteritems():
             f.write("%s = %s\n" % (key, value))
         f.write(self.footer)
+        f.close()
+        os.rename(tmpfile, self.filename)
 
 
 
