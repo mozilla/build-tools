@@ -5,8 +5,13 @@ from cPickle import load
 
 def maybe_delete(filename, timestamp):
     """Delete filename if it's older than timestamp"""
-    if os.path.getmtime(filename) < timestamp:
-        os.unlink(filename)
+    try:
+        if os.path.getmtime(filename) < timestamp:
+            os.unlink(filename)
+    except OSError:
+        # Ignore this error.  The file may have already been moved.
+        # We'll get it next time!
+        pass
 
 def clean_dir(dirname, timestamp):
     """Delete old twisted log files, and old builder files from dirname"""
