@@ -101,7 +101,7 @@ echo:
 	@echo -e $(INSTALL_CONTENTS) > "$@"
 
 sign:
-	$(SBOX_PATH) -p -d $(SBOX_WORKDIR) dpkg-scanpackages dists/$(MAEMO_VERSION)/$(REPO_SECTION)/binary-armel/ /dev/null | gzip -9c > $(WORKDIR)/dists/$(MAEMO_VERSION)/$(REPO_SECTION)/binary-armel/Packages.gz
+	$(SBOX_PATH) -p -d $(SBOX_WORKDIR) apt-ftparchive packages dists/$(MAEMO_VERSION)/$(REPO_SECTION)/binary-armel | gzip -9c > $(WORKDIR)/dists/$(MAEMO_VERSION)/$(REPO_SECTION)/binary-armel/Packages.gz
 	for i in dists/$(MAEMO_VERSION)/$(REPO_SECTION)/binary-armel dists/$(MAEMO_VERSION)/$(REPO_SECTION) dists/$(MAEMO_VERSION); do \
 	  rm -f $(WORKDIR)/$${i}/Release.gpg; \
 	  $(SBOX_PATH) -p -d $(SBOX_WORKDIR)/$${i} apt-ftparchive release . > $(WORKDIR)/$${i}/Release; \
