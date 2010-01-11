@@ -23,6 +23,12 @@ s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
                keepalive, usepty, umask=umask, maxdelay=maxdelay)
 s.setServiceParent(application)
 """
+TALOS_FOOTER = """
+application = service.Application('buildslave')
+s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
+               keepalive, usepty, umask=umask)
+s.setServiceParent(application)
+"""
 BUILD_BUILDMASTER = "staging-master.build.mozilla.org"
 TRY_BUILDMASTER   = "sm-staging-try-master.mozilla.org"
 TALOS_BUILDMASTER = "talos-master.mozilla.org"
@@ -36,6 +42,8 @@ def quote_option(str, raw=False):
 
 def get_default_options(slavename):
     d = {'slavename': quote_option(slavename)}
+    header = DEFAULT_HEADER
+    footer = DEFAULT_FOOTER
     basedir = None
     buildmaster_host = None
     if 'moz2' in slavename or 'xserve' in slavename or 'try-' in slavename or \
@@ -52,13 +60,14 @@ def get_default_options(slavename):
             basedir = 'e:\\builds\\moz2_slave'
     elif 'talos' in slavename or '-try' in slavename:
         buildmaster_host = TALOS_BUILDMASTER
+        footer = TALOS_FOOTER
         if '-try' in slavename:
             d['port'] = 9011
         if 'linux' in slavename or 'ubuntu' in slavename:
-            basedir = '/home/mozqa/talos-slave'
+            basedir = '/home/cltbld/talos-slave'
         elif 'tiger' in slavename or 'leopard' in slavename:
-            basedir = '/Users/mozqa/talos-slave'
-        elif 'xp' in slavename or 'vista' in slavename:
+            basedir = '/Users/cltbld/talos-slave'
+        elif 'xp' in slavename or 'w7' in slavename:
             basedir = 'C:\\talos-slave'
     # quote_option will throw if defaults couldn't be found for either of these
     # These are processed separately because they should be unset if a default
@@ -74,7 +83,7 @@ def get_default_options(slavename):
     except TypeError:
         pass
 
-    return d
+    return d, header, footer
 
 
 class MissingOptionsError(Exception):
@@ -137,12 +146,13 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     slavename = options.slavename or socket.gethostname().split('.')[0]
-    tacOptions = get_default_options(slavename)
+    tacOptions,header,footer = get_default_options(slavename)
     tacOptions['passwd'] = quote_option(options.password)
     if options.basedir:
         tacOptions['basedir'] = quote_option(options.basedir, raw=True)
     if options.buildmaster:
         tacOptions['buildmaster'] = quote_option(options.buildmaster)
 
-    tac = BuildbotTac(tacOptions, filename=options.filename)
+    tac = BuildbotTac(tacOptions, filename=options.filename, header=header,
+                      footer=footer)
     tac.save()

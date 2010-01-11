@@ -10,14 +10,21 @@ from socket import gethostname
 KEY_FILE=path.join("c:\\", "program files", "opsi.org", "preloginloader",
                    "cfg", "locked.cfg")
 LOG_FILE=path.join("c:\\", "tmp", "key-generator.log")
-REF_PLATFORMS=['win2k3-ref-img']
+REF_PLATFORMS={'build': 'win2k3-ref-img', 'talos-xp': 'talos-r3-xp-ref',
+               'talos-win7': 'talos-r3-w7-ref'}
 
 def generate_hash(str):
     return md5(str).hexdigest()
 
-def get_ref_platform_key():
-    # TODO: support talos platforms in here
-    return generate_hash(REF_PLATFORMS[0])
+def get_ref_platform_key(hostname):
+    if 'talos' in hostname:
+        if 'xp' in hostname:
+            return generate_hash(REF_PLATFORMS['talos-xp'])
+        elif 'w7' in hostname:
+            return generate_hash(REF_PLATFORMS['talos-win7'])
+        else:
+            return None
+    return generate_hash(REF_PLATFORMS['build'])
 
 def write_new_key(host, cp, keyfile):
     newKey = generate_hash(host)
@@ -52,7 +59,7 @@ if __name__ == '__main__':
 
     # Gather information before evaluating what to do
     hostname = gethostname()
-    refKey = get_ref_platform_key()
+    refKey = get_ref_platform_key(hostname)
     currentKey = None
     cp = ConfigParser()
     try:
