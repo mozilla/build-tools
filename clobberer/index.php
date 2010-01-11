@@ -8,8 +8,51 @@ every build.
 http://hg.mozilla.org/build/buildbotcustom/file/default/process/factory.py
 */
 
-$CLOBBERER_DB = '/var/www/html/build/stage-clobberer/db/clobberer.db';
-//$CLOBBERER_DB = '/var/www/html/build/clobberer/clobberer.db';
+$CLOBBERER_DB = 'db/clobberer.db';
+
+$RELEASE_BUILDERS = array(
+  'linux_build',
+  'macosx_build',
+  'win32_build',
+  'wince_build',
+
+  'linux_repack',
+  'macosx_repack',
+  'win32_repack',
+  'wince_repack',
+
+  'linux_update_verify',
+  'macosx_update_verify',
+  'win32_update_verify',
+  'wince_update_verify',
+
+  'release-linux-unittest-mochitests',
+  'release-linux-unittest-everythingelse',
+  'release-win32-unittest-mochitests',
+  'release-win32-unittest-everythingelse',
+  'release-macosx-unittest-mochitests',
+  'release-macosx-unittest-everythingelse',
+
+  'final_verification',
+  'l10n_verification',
+  'tag',
+  'source',
+  'updates',
+);
+
+// TODO: Figure out if we can use LDAP to do this
+$SPECIAL_PEOPLE = array(
+  'anodelman@mozilla.com',
+  'armenzg@mozilla.com',
+  'asasaki@mozilla.com',
+  'bhearsum@mozilla.com',
+  'catlee@mozilla.com',
+  'coop@mozilla.com',
+  'jhford@mozilla.com',
+  'joduinn@mozilla.com',
+  'lsblakk@mozilla.com',
+  'nthomas@mozilla.com',
+);
 
 $dbh = new PDO("sqlite:$CLOBBERER_DB");
 if (!$dbh) {
@@ -22,17 +65,47 @@ if (!$dbh) {
 $q = $dbh->query('SELECT count(*) FROM sqlite_master WHERE NAME="clobber_times"');
 $exists = $q->fetch(PDO::FETCH_NUM);
 if (!$exists or !$exists[0]) {
+  $res = $dbh->exec('CREATE TABLE builds ('
+                   .'id INTEGER PRIMARY KEY AUTOINCREMENT,'
+                   .'master VARCHAR(100),'
+                   .'branch VARCHAR(50),'
+                   .'buildername VARCHAR(100),'
+                   .'builddir VARCHAR(100),'
+                   .'slave VARCHAR(30),'
+                   .'last_build_time INTEGER)');
+  if ($res === FALSE) {
+    die(print_r($dbh->errorInfo(), TRUE));
+  }
+
   $res = $dbh->exec('CREATE TABLE clobber_times ('
                    .'id INTEGER PRIMARY KEY AUTOINCREMENT,'
+                   .'master VARCHAR(100),'
                    .'branch VARCHAR(50),'
-                   .'builder VARCHAR(50),'
+                   .'builddir VARCHAR(100),'
                    .'slave VARCHAR(30),'
-                   .'lastclobber VARCHAR(30),'
-                   .'clobberer VARCHAR(50))');
+                   .'lastclobber INTEGER,'
+                   .'who VARCHAR(50))');
   if ($res === FALSE) {
     die(print_r($dbh->errorInfo(), TRUE));
   }
   chmod($CLOBBERER_DB, 0660);
+}
+
+function isSpecial($user)
+{
+  // TODO: Figure out if we can use LDAP to get the group of $user
+  global $SPECIAL_PEOPLE;
+  return in_array($user, $SPECIAL_PEOPLE);
+}
+
+function canSee($builddir, $user)
+{
+  global $RELEASE_BUILDERS;
+  if (!in_array($builddir, $RELEASE_BUILDERS)) {
+    return true;
+  }
+
+  return isSpecial($user);
 }
 
 function b64_encode($s)
@@ -46,20 +119,135 @@ function e($str)
   return $dbh->quote($str);
 }
 
+function getBuilders($slave)
+{
+  global $dbh;
+  $slave = e($slave);
+  $retval = array();
+  $builders = $dbh->query("SELECT DISTINCT builddir from builds where slave=$slave");
+  while ($r = $builders->fetch(PDO::FETCH_ASSOC)) {
+    // Find the most recent build for this builder
+    $builddir = e($r['builddir']);
+    $build = $dbh->query("SELECT buildername, builddir, branch FROM builds WHERE builddir = $builddir ORDER by last_build_time DESC LIMIT 1");
+    $r = $build->fetch(PDO::FETCH_ASSOC);
+    if ($r) {
+      $retval[] = $r;
+    }
+  }
+  return $retval;
+}
+
+function getMasters()
+{
+  global $dbh;
+  $retval = array();
+  $masters = $dbh->query("SELECT DISTINCT master from builds");
+  while ($r = $masters->fetch(PDO::FETCH_ASSOC)) {
+    $retval[] = $r['master'];
+  }
+  return $retval;
+}
+
+function updateBuildTime($master, $branch, $buildername, $builddir, $slave)
+{
+  global $dbh;
+  $master = e($master);
+  $branch = e($branch);
+  $buildername = e($buildername);
+  $builddir = e($builddir);
+  $slave = e($slave);
+  $now = time();
+
+  $rows = $dbh->exec("UPDATE builds SET last_build_time = $now WHERE master=$master AND "
+      ."branch=$branch AND buildername=$buildername AND slave=$slave");
+  if ($rows == 0) {
+      $dbh->exec("INSERT INTO builds "
+          ."(master, branch, buildername, builddir, slave, last_build_time) VALUES "
+          ."($master, $branch, $buildername, $builddir, $slave, $now)");
+      return true;
+  }
+  return false;
+}
+
+function getClobberTime($master, $branch, $builddir, $slave)
+{
+  global $dbh;
+  $master = e($master);
+  $branch = e($branch);
+  $builddir = e($builddir);
+  $slave = e($slave);
+  $q = "SELECT id, who, lastclobber FROM clobber_times WHERE "
+      ."builddir = $builddir AND (branch IS NULL OR branch = $branch) AND "
+      ."(master IS NULL OR master = $master) AND (slave IS NULL OR slave = $slave) "
+      ."ORDER BY lastclobber DESC LIMIT 1";
+  $s = $dbh->query($q);
+  $r = $s->fetch(PDO::FETCH_ASSOC);
+  if (!$r) {
+    return null;
+  }
+  else
+  {
+    return $r;
+  }
+}
+
 //
 // Handle form submission
 //
 if ($_POST['form_submitted']) {
   $clobbers = array();
   $slaves = array();
+  $user = $_SERVER['REMOTE_USER'];
+  $e_user = e($user);
+  $now = time();
   foreach ($_POST as $k => $v) {
+    if ($k == "master") {
+      if (isSpecial($user)) {
+        $branch = $_POST['branch'];
+        if ($branch != '') {
+          $branch = e($branch);
+        } else {
+          $branch = 'NULL';
+        }
+        $builddir = $_POST['builddir'];
+        if ($builddir != '') {
+            $builders = array($builddir);
+        } else {
+            $builders = $RELEASE_BUILDERS;
+        }
+        if ($v != '') {
+          $master = e($v);
+        } else {
+          $master = 'NULL';
+        }
+        foreach ($builders as $builddir) {
+          $builddir = e($builddir);
+          $q = "INSERT INTO clobber_times "
+              ."(master, branch, builddir, slave, who, lastclobber) VALUES "
+              ."($master, $branch, $builddir, NULL, $e_user, $now)";
+          $dbh->exec($q) or die(print_r($dbh->errorInfo(), TRUE));
+        }
+      }
+      continue;
+    }
     $t = explode('-', $k, 2);
     // We only care about slave-<$row_id>
     // This corresponds to a row that specifies which branch/builder/slave to clobber
     if ($t[0] == 'slave') {
       $row_id = e($t[1]);
-      $user = e($_SERVER['REMOTE_USER']);
-      $dbh->exec("UPDATE clobber_times SET lastclobber = DATETIME(\"NOW\"), clobberer = $user WHERE id = $row_id");
+      $s = $dbh->query("SELECT * from builds where id = $row_id");
+      $r = $s->fetch(PDO::FETCH_ASSOC);
+      if ($r)
+      {
+        $builddir = e($r['builddir']);
+        $branch = e($r['branch']);
+        $slave = e($r['slave']);
+        if (canSee($builddir, $user)) {
+            $dbh->exec("INSERT INTO clobber_times "
+                ."(master, branch, builddir, slave, who, lastclobber) VALUES "
+                ."(NULL, $branch, $builddir, $slave, $e_user, $now)") or die(print_r($$dbh->errorInfo(), TRUE));
+        }
+      }
     }
   }
   // Redirect the user to the main page
@@ -68,11 +256,13 @@ if ($_POST['form_submitted']) {
   header("Location: " . $_SERVER['REQUEST_URI']);
 }
 
-$builder = $_GET['builder'];
-$slave = $_GET['slave'];
-$branch = $_GET['branch'];
+$buildername = urldecode($_GET['buildername']);
+$builddir = urldecode($_GET['builddir']);
+$slave = urldecode($_GET['slave']);
+$branch = urldecode($_GET['branch']);
+$master = urldecode($_GET['master']);
 // Show the administration page if no clobber time is being queried
-if (!$builder) {
+if (!$buildername) {
 ?>
 <html>
 <head>
@@ -123,6 +313,61 @@ function toggleall(node, klass)
 <a href="https://wiki.mozilla.org/Build:ClobberingATinderbox">Build:ClobberingATinderbox</a>
 and/or <a href="https://wiki.mozilla.org/Clobbering_the_Tree">Clobbering the Tree</a>
 for more information about what this page is for, and how to use it.</p>
+<?php
+  if (in_array($_SERVER['REMOTE_USER'], $SPECIAL_PEOPLE)) {
+?>
+<h1>Release Clobbers</h1>
+<form method="POST">
+<input type="hidden" name="form_submitted" value="true">
+Clobber all release builders on <select name="master">
+<option value="">Any master</option>
+<?php
+  $masters = getMasters();
+  foreach ($masters as $master) {
+    $e_master = htmlspecialchars($master);
+    print "<option value=\"$e_master\">$master</option>\n";
+  }
+?>
+</select>
+<select name="branch">
+<option value="">Any release</option>
+<?php
+  $builders = "";
+  $first = true;
+  foreach ($RELEASE_BUILDERS as $b) {
+    if (!$first) {
+      $builders .= ",";
+    }
+    $first = false;
+    $builders .= e($b);
+  }
+  $releases = $dbh->query("SELECT DISTINCT branch FROM builds WHERE builddir IN ($builders)");
+  while ($release = $releases->fetch(PDO::FETCH_ASSOC)) {
+    $release = $release['branch'];
+    $e_release = htmlspecialchars($release);
+    print "<option value=\"$e_release\">$release</option>\n";
+  }
+?>
+</select>
+<select name="builddir">
+<option value="">Any builder</option>
+<?php
+  $builders = "";
+  $first = true;
+  foreach ($RELEASE_BUILDERS as $b) {
+    $e_b = htmlspecialchars($b);
+    print "<option value=\"$e_b\">$b</option>\n";
+  }
+?>
+</select>
+
+<input type="submit" value="Wipe them out!">
+</form>
+
+<h1>Regular Clobbers</h1>
+
+<?php } ?>
+
 <form method="POST">
 <table border="1" cellspacing="0" cellpadding="1">
  <thead>
@@ -130,23 +375,26 @@ for more information about what this page is for, and how to use it.</p>
  </thead>
  <tbody>
 <?php
-  $allbuilders = $dbh->query('SELECT * FROM clobber_times ORDER BY branch ASC, builder ASC');
+  $allbuilders = $dbh->query('SELECT DISTINCT id, branch, builddir, buildername, slave FROM builds ORDER BY branch ASC, buildername ASC');
   if ($allbuilders) {
     $last_branch = null;
     $last_builder = null;
-    // First pass: count the number of rows for each branch / builder so we can 
+    // First pass: count the number of rows for each branch / buildername so we can 
     // set the 'rowspan' attribute
     $rows_per_branch = array();
     $rows_per_builder = array();
     $rows = array();
     while ($r = $allbuilders->fetch(PDO::FETCH_ASSOC)) {
+      if (!canSee($r['builddir'], $_SERVER['REMOTE_USER'])) {
+        continue;
+      }
       $rows[] = $r;
-      $builder = $r['builder'];
+      $buildername = $r['buildername'];
       $branch = $r['branch'];
-      if (!array_key_exists($builder, $rows_per_builder)) {
-        $rows_per_builder[$builder] = 1;
+      if (!array_key_exists($buildername, $rows_per_builder)) {
+        $rows_per_builder[$buildername] = 1;
       } else {
-        $rows_per_builder[$builder] += 1;
+        $rows_per_builder[$buildername] += 1;
       }
       if (!array_key_exists($branch, $rows_per_branch)) {
         $rows_per_branch[$branch] = 1;
@@ -160,7 +408,7 @@ for more information about what this page is for, and how to use it.</p>
       if ($c1 != 0) {
         return $c1;
       }
-      $c2 = strnatcmp($r1['builder'], $r2['builder']);
+      $c2 = strnatcmp($r1['buildername'], $r2['buildername']);
       if ($c2 != 0) {
         return $c2;
       }
@@ -177,25 +425,26 @@ for more information about what this page is for, and how to use it.</p>
         print "<input type=\"checkbox\" id=\"$branch_id\" onchange=\"toggleall(this, &quot;$branch_id&quot;)\" />";
         print htmlspecialchars($r['branch']) . "</td>\n";
       }
-      if ($last_builder != $r['builder']) {
-        $rowspan = $rows_per_builder[$r['builder']];
-        $builder_id = b64_encode($r['builder']);
+      if ($last_builder != $r['buildername']) {
+        $rowspan = $rows_per_builder[$r['buildername']];
+        $builder_id = b64_encode($r['buildername']);
         $classes = b64_encode($r['branch']);
         print "<td rowspan=\"$rowspan\"><input type=\"checkbox\" id=\"$builder_id\" class=\"$classes\" onchange=\"toggleall(this, &quot;$builder_id&quot;)\" />";
-        print htmlspecialchars($r['builder']) . "</td>\n";
+        print htmlspecialchars($r['buildername']) . "</td>\n";
       }
-      $classes = b64_encode($r['builder']) . " " . b64_encode($r['branch']);
+      $classes = b64_encode($r['buildername']) . " " . b64_encode($r['branch']);
       $name = "slave-" . $r['id'];
       print "<td><input type=\"checkbox\" name=\"$name\" class=\"$classes\" onchange=\"toggleall(this)\" />";
       print htmlspecialchars($r['slave']) . "</td>\n";
-      if ($r['lastclobber']) {
-        print "<td>" . htmlspecialchars($r['lastclobber']) . "(UTC) by " . htmlspecialchars($r['clobberer']) . "</td>\n";
+      $lastclobber = getClobberTime(null, $r['branch'], $r['builddir'], $r['slave']);
+      if ($lastclobber) {
+        print "<td>" . strftime("%Y-%m-%d %H:%M:%S %Z", $lastclobber['lastclobber']) . " by " . htmlspecialchars($lastclobber['who']) . "</td>\n";
       } else {
         print "<td></td>\n";
       }
       print "</tr>\n";
       $last_branch = $r['branch'];
-      $last_builder = $r['builder'];
+      $last_builder = $r['buildername'];
     }
   } else {
     print "<tr><td colspan=\"9\">No data</td></tr>\n";
@@ -213,22 +462,46 @@ for more information about what this page is for, and how to use it.</p>
 }
 
 // Handle requests from slaves asking about their last clobber date
-$e_builder = e($builder);
-$e_slave = e($slave);
-$e_branch = e($branch);
-$s = $dbh->query("SELECT id, lastclobber FROM clobber_times WHERE builder = $e_builder AND slave = $e_slave AND branch = $e_branch");
-$r = $s->fetch(PDO::FETCH_ASSOC);
-if (!$r) {
-  // If this branch/builder/slave combination doesn't yet exist in the 
-  // database, then insert it
-  $res = $dbh->exec("INSERT INTO clobber_times (branch, builder, slave) VALUES ($e_branch, $e_builder, $e_slave)");
-  if ($res === false) {
-    header("HTTP/1.x 500 Internal Server Error");
-    print "Couldn't insert row<br/>\n";
-    die(print_r($dbh->errorInfo(), TRUE));
+
+// First, find the list of builders for this slave
+$slave_builders = getBuilders($slave);
+
+// Make sure that the current branch/builder is in that list
+$found = false;
+foreach ($slave_builders as $sb) {
+    if ($sb['builddir'] == $builddir && $sb['branch'] == $branch) {
+        $found = true;
+        break;
+    }
+}
+if (!$found) {
+    $slave_builders[] = array('builddir' => $builddir, 'branch' => $branch);
+}
+
+// And check the clobber time for each buildername
+$clobber_times = array();
+foreach ($slave_builders as $sb) {
+  $r = getClobberTime($master, $sb['branch'], $sb['builddir'], $slave);
+  if ($r) {
+    if (!array_key_exists($sb['builddir'], $clobber_times)) {
+      $clobber_times[$sb['builddir']] = array('lastclobber'=>$r['lastclobber'], 'who'=>$r['who']);
+    } else {
+      $t = $clobber_times[$sb['builddir']]['lastclobber'];
+      if ($r['lastclobber'] > $t) {
+        $clobber_times[$sb['builddir']] = array('lastclobber'=>$r['lastclobber'], 'who'=>$r['who']);
+      }
+    }
   }
 }
-else {
-  print $r['lastclobber'];
+
+// Tell the slave what to clobber
+foreach ($clobber_times as $b => $r) {
+  $lastclobber = $r['lastclobber'];
+  $who = $r['who'];
+  print "$b:$lastclobber:$who\n";
 }
+
+// Finally, update our table of when builds are happening
+$new = updateBuildTime($master, $branch, $buildername, $builddir, $slave);
+
 ?>

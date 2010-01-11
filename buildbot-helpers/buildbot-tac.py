@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import re
+import os
 
 DEFAULT_HEADER = """\
 from twisted.application import service
@@ -37,7 +38,8 @@ def get_default_options(slavename):
     d = {'slavename': quote_option(slavename)}
     basedir = None
     buildmaster_host = None
-    if 'moz2' in slavename or 'xserve' in slavename or 'try-' in slavename:
+    if 'moz2' in slavename or 'xserve' in slavename or 'try-' in slavename or \
+      slavename.startswith('win32'):
         if 'try-' in slavename:
             buildmaster_host = TRY_BUILDMASTER
             d['port'] = 9982
@@ -46,7 +48,7 @@ def get_default_options(slavename):
         if 'linux' in slavename or 'darwin9' in slavename or \
           'xserve' in slavename or 'mac' in slavename:
             basedir = '/builds/slave'
-        elif 'win32' in slavename:
+        elif 'win32' in slavename or 'w32' in slavename:
             basedir = 'e:\\builds\\moz2_slave'
     elif 'talos' in slavename or '-try' in slavename:
         buildmaster_host = TALOS_BUILDMASTER
@@ -100,6 +102,7 @@ class BuildbotTac:
         self.filename = filename
 
     def save(self):
+        tmpfile = '%s.tmp' % self.filename
         # Look for necessary, but missing options
         missingOptions = []
         for o in self.requiredOptions:
@@ -109,11 +112,13 @@ class BuildbotTac:
             raise MissingOptionsError("Missing %s, cannot save %s" % \
               (missingOptions, self.filename))
         # If there wasn't any, save the file
-        f = open(self.filename, "w")
+        f = open(tmpfile, "w")
         f.write(self.header)
         for key,value in self.tacOptions.iteritems():
             f.write("%s = %s\n" % (key, value))
         f.write(self.footer)
+        f.close()
+        os.rename(tmpfile, self.filename)
 
 
 

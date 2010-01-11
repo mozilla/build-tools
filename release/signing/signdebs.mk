@@ -6,7 +6,8 @@ RSYNC_ARGS		?= --delete --progress --partial
 MAEMO_VERSION	?= chinook
 FENNEC_FILEURL	?= $(error FENNEC_FILEURL must be defined)
 XULRUNNER_VERSION	?=
-SBOX_WORKDIR	?= sign-debs/$(BRANCH_NICK)_$(LOCALE)
+SIGNDEBS_BASEDIR	?= sign-debs
+SBOX_WORKDIR	?= $(SIGNDEBS_BASEDIR)/$(BRANCH_NICK)_$(LOCALE)
 WORKDIR			?= /scratchbox/users/cltbld/home/cltbld/$(SBOX_WORKDIR)
 
 BASE_STAGE_PATH	?= /home/ftp/pub/mozilla.org/mobile/repos
@@ -26,7 +27,7 @@ XULRUNNER_FILENAME	= xulrunner_$(XULRUNNER_VERSION)_armel.deb
 XULRUNNER_FILEURL	= $(BASE_XULRUNNER_URL)/$(XULRUNNER_FILENAME)
 XULRUNNER_FILEPATH	= $(WORKDIR)/dists/$(MAEMO_VERSION)/$(REPO_SECTION)/binary-armel/$(XULRUNNER_FILENAME)
 
-TARGETS = echo setup download-repository
+TARGETS = echo setup download-repository clean-install-file
 
 ifndef RELEASE
 REPO_SECTION	:= extras
@@ -46,7 +47,7 @@ else
 TARGETS += download-xulrunner
 endif
 
-TARGETS += sign touch-repository upload
+TARGETS += sign upload
 
 all: $(TARGETS)
 
@@ -54,7 +55,12 @@ setup:
 	mkdir -p $(WORKDIR)/dists/$(MAEMO_VERSION)/$(REPO_SECTION)/binary-armel
 
 download-repository:
-	rsync -azv -e 'ssh -i $(SSH_KEY)' $(RSYNC_ARGS) $(STAGE_USERNAME)@$(STAGE_SERVER):$(STAGE_PATH)/dists/. $(WORKDIR)/dists/.
+	ssh -i $(SSH_KEY) $(STAGE_USERNAME)@$(STAGE_SERVER) "test -d $(STAGE_PATH)/dists" && \
+	  rsync -azv -e 'ssh -i $(SSH_KEY)' $(RSYNC_ARGS) $(STAGE_USERNAME)@$(STAGE_SERVER):$(STAGE_PATH)/dists/. $(WORKDIR)/dists/. || \
+	  echo "No repository to download."
+
+clean-install-file:
+	rm -f $(WORKDIR)/*.install
 
 clean-repository:
 	find $(WORKDIR)/dists/$(MAEMO_VERSION)/$(REPO_SECTION)/binary-armel/. -name \*.deb -exec rm {} \;
@@ -64,6 +70,7 @@ download-fennec:
 	wget -O $(FENNEC_FILEPATH) $(FENNEC_FILEURL)
 
 xulrunner-hack:
+	if [ -e tmp.deb ] ; then rm -rf tmp.deb; fi
 	mkdir tmp.deb
 	(cd tmp.deb && ar xv $(FENNEC_FILEPATH) && tar zxvf control.tar.gz)
 	make -f signdebs.mk download-xulrunner XULRUNNER_VERSION=`grep xulrunner tmp.deb/control | sed -e 's/.*xulrunner (>= \([^)]*\)).*/\1/'`
@@ -94,16 +101,14 @@ echo:
 	@echo -e $(INSTALL_CONTENTS) > "$@"
 
 sign:
-	$(SBOX_PATH) -p -d $(SBOX_WORKDIR) dpkg-scanpackages dists/$(MAEMO_VERSION)/$(REPO_SECTION)/binary-armel/ /dev/null | gzip -9c > $(WORKDIR)/dists/$(MAEMO_VERSION)/$(REPO_SECTION)/binary-armel/Packages.gz
+	$(SBOX_PATH) -p -d $(SBOX_WORKDIR) apt-ftparchive packages dists/$(MAEMO_VERSION)/$(REPO_SECTION)/binary-armel | gzip -9c > $(WORKDIR)/dists/$(MAEMO_VERSION)/$(REPO_SECTION)/binary-armel/Packages.gz
 	for i in dists/$(MAEMO_VERSION)/$(REPO_SECTION)/binary-armel dists/$(MAEMO_VERSION)/$(REPO_SECTION) dists/$(MAEMO_VERSION); do \
 	  rm -f $(WORKDIR)/$${i}/Release.gpg; \
 	  $(SBOX_PATH) -p -d $(SBOX_WORKDIR)/$${i} apt-ftparchive release . > $(WORKDIR)/$${i}/Release; \
 	  gpg -abs -o $(WORKDIR)/$${i}/Release.gpg $(WORKDIR)/$${i}/Release; \
 	done
 
-touch-repository:
-	@touch $(WORKDIR)
-
 upload:
+	ssh -i $(SSH_KEY) $(STAGE_USERNAME)@$(STAGE_SERVER) "mkdir -p $(STAGE_PATH)"
 	rsync -e "ssh -i $(SSH_KEY)" -azv $(RSYNC_ARGS) $(WORKDIR)/dists $(WORKDIR)/$(INSTALL_FILENAME) \
 	  $(STAGE_USERNAME)@$(STAGE_SERVER):$(STAGE_PATH)/.

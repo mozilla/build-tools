@@ -1,19 +1,18 @@
-import sys, shutil, urllib2, urllib, os
-from datetime import datetime, timedelta
+#!/usr/bin/python
+# vim:sts=2 sw=2
+import sys, shutil, urllib2, urllib, os, traceback, time
 
 clobber_suffix='.deleteme'
 
-def str_to_datetime(s):
-  return datetime.strptime(s, "%Y-%m-%d %H:%M:%S")
+def ts_to_str(ts):
+  if ts is None:
+    return None
+  return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(ts))
 
-def datetime_to_str(dt):
-  return dt.strftime("%Y-%m-%d %H:%M:%S")
-
-def write_file(dt, fn):
-  assert isinstance(dt, datetime)
-  dt = datetime_to_str(dt)
+def write_file(ts, fn):
+  assert isinstance(ts, int)
   f = open(fn, "w")
-  f.write(dt)
+  f.write(str(ts))
   f.close()
 
 def read_file(fn):
@@ -22,7 +21,7 @@ def read_file(fn):
 
   data = open(fn).read().strip()
   try:
-    return str_to_datetime(data)
+    return int(data)
   except ValueError:
     return None
 
@@ -89,88 +88,132 @@ def do_clobber(dir, dryrun=False, skip=None):
           # Prevent repeated moving.
           if f.endswith(clobber_suffix):
             rmdirRecursive(f)
-          else:              
+          else:
             shutil.move(f, clobber_path)
             rmdirRecursive(clobber_path)
   except:
     print "Couldn't clobber properly, bailing out."
     sys.exit(1)
 
-def getClobberDate(baseURL, branch, builder, slave):
-  url = "%s?%s" % (baseURL,
-      urllib.urlencode(dict(branch=branch, builder=builder, slave=slave)))
+def getClobberDates(clobberURL, branch, buildername, builddir, slave, master):
+  params = dict(branch=branch, buildername=buildername, builddir=builddir, slave=slave, master=master)
+  url = "%s?%s" % (clobberURL, urllib.urlencode(params))
   print "Checking clobber URL: %s" % url
   data = urllib2.urlopen(url).read().strip()
+
+  retval = {}
   try:
-    return str_to_datetime(data)
+    for line in data.split("\n"):
+      line = line.strip()
+      if not line:
+        continue
+      builddir, builder_time, who = line.split(":")
+      builder_time = int(builder_time)
+      retval[builddir] = (builder_time, who)
+    return retval
   except ValueError:
-    return None
+    print "Error parsing response from server"
+    print data
+    raise
 
 if __name__ == "__main__":
   from optparse import OptionParser
-  parser = OptionParser()
+  parser = OptionParser("%prog [options] clobberURL branch buildername builddir slave master")
   parser.add_option("-n", "--dry-run", dest="dryrun", action="store_true",
       default=False, help="don't actually delete anything")
   parser.add_option("-t", "--periodic", dest="period", type="float",
-      default=24*7, help="hours between periodic clobbers")
-  parser.add_option('-s', '--skip', help='do not delete this directory',
+      default=None, help="hours between periodic clobbers")
+  parser.add_option('-s', '--skip', help='do not delete this file/directory',
       action='append', dest='skip', default=['last-clobber'])
   parser.add_option('-d', '--dir', help='clobber this directory',
       dest='dir', default='.', type='string')
+  parser.add_option('-v', '--verbose', help='be more verbose',
+      dest='verbose', action='store_true', default=False)
 
   options, args = parser.parse_args()
-  periodicClobberTime = timedelta(hours = options.period)
+  if len(args) != 6:
+    parser.error("Incorrect number of arguments")
 
-  baseURL, branch, builder, slave = args
+  if options.period:
+    periodicClobberTime = options.period * 3600
+  else:
+    periodicClobberTime = None
+
+  clobberURL, branch, builder, my_builddir, slave, master = args
 
   try:
-    server_clobber_date = getClobberDate(baseURL, branch, builder, slave)
+    server_clobber_dates = getClobberDates(clobberURL, branch, builder, my_builddir, slave, master)
   except:
+    if options.verbose:
+      traceback.print_exc()
     print "Error contacting server"
     sys.exit(1)
 
-  our_clobber_date = read_file("last-clobber")
+  if options.verbose:
+    print "Server gave us", server_clobber_dates
 
-  clobber = False
+  now = int(time.time())
 
-  print "Our last clobber date: ", our_clobber_date
-  print "Server clobber date:   ", server_clobber_date
+  # Add ourself to the server_clobber_dates if it's not set
+  # This happens when this slave has never been clobbered
+  if my_builddir not in server_clobber_dates:
+    server_clobber_dates[my_builddir] = None, ""
 
-  # If we don't have a last clobber date, then this is probably a fresh build.
-  # We should only do a forced server clobber if we know when our last clobber
-  # was, and if the server date is more recent than that.
-  if server_clobber_date is not None and our_clobber_date is not None:
-    # If the server is giving us a clobber date, compare the server's idea of
-    # the clobber date to our last clobber date
-    if server_clobber_date > our_clobber_date:
-      # If the server's clobber date is greater than our last clobber date,
-      # then we should clobber.
-      clobber = True
-      # We should also update our clobber date to match the server's
-      our_clobber_date = server_clobber_date
-      print "Server is forcing a clobber"
+  root_dir = os.path.abspath(options.dir)
 
-  if not clobber:
-    # Next, check if more than the periodicClobberTime period has passed since
-    # our last clobber
-    if our_clobber_date is None:
-      # We've never been clobbered
-      # Set our last clobber time to now, so that we'll clobber
-      # properly after periodicClobberTime
-      our_clobber_date = datetime.utcnow()
+  for builddir, (server_clobber_date, who) in server_clobber_dates.items():
+    builder_dir = os.path.join(root_dir, builddir)
+    if not os.path.isdir(builder_dir):
+      print "%s doesn't exist, skipping" % builder_dir
+      continue
+    os.chdir(builder_dir)
+
+    our_clobber_date = read_file("last-clobber")
+
+    clobber = False
+
+    print "%s:Our last clobber date: " % builddir, ts_to_str(our_clobber_date)
+    print "%s:Server clobber date:   " % builddir, ts_to_str(server_clobber_date)
+
+    # If we don't have a last clobber date, then this is probably a fresh build.
+    # We should only do a forced server clobber if we know when our last clobber
+    # was, and if the server date is more recent than that.
+    if server_clobber_date is not None and our_clobber_date is not None:
+      # If the server is giving us a clobber date, compare the server's idea of
+      # the clobber date to our last clobber date
+      if server_clobber_date > our_clobber_date:
+        # If the server's clobber date is greater than our last clobber date,
+        # then we should clobber.
+        clobber = True
+        # We should also update our clobber date to match the server's
+        our_clobber_date = server_clobber_date
+        if who:
+          print "%s:Server is forcing a clobber, initiated by %s" % (builddir, who)
+        else:
+          print "%s:Server is forcing a clobber" % builddir
+
+    if not clobber:
+      # Disable periodic clobbers for builders that aren't my_builddir
+      if builddir != my_builddir:
+        continue
+
+      # Next, check if more than the periodicClobberTime period has passed since
+      # our last clobber
+      if our_clobber_date is None:
+        # We've never been clobbered
+        # Set our last clobber time to now, so that we'll clobber
+        # properly after periodicClobberTime
+        our_clobber_date = now
+        write_file(our_clobber_date, "last-clobber")
+      elif periodicClobberTime and now > our_clobber_date + periodicClobberTime:
+        # periodicClobberTime has passed since our last clobber
+        clobber = True
+        # Update our clobber date to now
+        our_clobber_date = now
+        print "%s:More than %s seconds have passed since our last clobber" % (builddir, periodicClobberTime)
+
+    if clobber:
+      # Finally, perform a clobber if we're supposed to
+      print "%s:Clobbering..." % builddir
+      do_clobber(builder_dir, options.dryrun, options.skip)
       write_file(our_clobber_date, "last-clobber")
-    elif datetime.utcnow() > our_clobber_date + periodicClobberTime:
-      # periodicClobberTime has passed since our last clobber
-      clobber = True
-      # Update our clobber date to now
-      our_clobber_date = datetime.utcnow()
-      print "More than %s have passed since our last clobber" % periodicClobberTime
-
-  if clobber:
-    # Finally, perform a clobber if we're supposed to
-    if os.path.exists(options.dir):
-      print "Clobbering..."
-      do_clobber(options.dir, options.dryrun, options.skip)
-    else:
-      print "Clobber failed because '%s' doesn't exist" % options.dir
-    write_file(our_clobber_date, "last-clobber")

@@ -7,7 +7,7 @@ import sys, os, os.path, shutil
 from optparse import OptionParser
 from time import mktime, strptime
 
-NIGHTLY_PATH = "/home/ftp/pub/%(product)s/nightly"
+NIGHTLY_PATH = "/home/ftp/pub/%(product)s/%(nightly_dir)s"
 TINDERBOX_BUILDS_PATH = "/home/ftp/pub/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
 # For staging
 #TINDERBOX_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
@@ -18,9 +18,9 @@ LONG_DATED_DIR = "%(year)s/%(month)s/%(year)s-%(month)s-%(day)s-%(hour)s-%(branc
 SHORT_DATED_DIR = "%(year)s-%(month)s-%(day)s-%(hour)s-%(branch)s"
 CANDIDATES_DIR = "%(version)s-candidates/build%(buildnumber)s"
 # For staging
-#CANDIDATES_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/nightly/%(version)s-candidates/build%(buildnumber)s"
+#CANDIDATES_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(version)s-candidates/build%(buildnumber)s"
 # For production
-CANDIDATES_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/nightly/%(version)s-candidates/build%(buildnumber)s"
+CANDIDATES_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(version)s-candidates/build%(buildnumber)s"
 
 def CopyFileToDir(original_file, source_dir, dest_dir, preserve_dirs=False):
     if not original_file.startswith(source_dir):
@@ -124,6 +124,7 @@ def ReleaseToCandidatesDir(options, upload_dir, files):
                                       'buildnumber': options.build_number}
     candidatesPath = os.path.join(NIGHTLY_PATH, candidatesDir)
     candidatesUrl = CANDIDATES_URL_PATH % {
+            'nightly_dir': options.nightly_dir,
             'version': options.version,
             'buildnumber': options.build_number,
             'product': options.product,
@@ -166,6 +167,9 @@ if __name__ == '__main__':
     parser.add_option("-v", "--version",
                       action="store", dest="version",
                       help="Set version number to build paths properly.")
+    parser.add_option("--nightly-dir", default="nightly",
+                      action="store", dest="nightly_dir",
+                      help="Set the base directory for nightlies (ie $product/$nightly_dir/), and the parent directory for release candidates (default 'nightly').")
     parser.add_option("-b", "--branch",
                       action="store", dest="branch",
                       help="Set branch name to build paths properly.")
@@ -180,13 +184,13 @@ if __name__ == '__main__':
                       help="Set tinderbox builds dir to build paths properly.")
     parser.add_option("-l", "--release-to-latest",
                       action="store_true", dest="release_to_latest",
-                      help="Copy files to $product/nightly/latest-$branch")
+                      help="Copy files to $product/$nightly_dir/latest-$branch")
     parser.add_option("-d", "--release-to-dated",
                       action="store_true", dest="release_to_dated",
-                      help="Copy files to $product/nightly/$datedir-$branch")
+                      help="Copy files to $product/$nightly_dir/$datedir-$branch")
     parser.add_option("-c", "--release-to-candidates-dir",
                       action="store_true", dest="release_to_candidates_dir",
-                      help="Copy files to $product/nightly/$version-candidates/build$build_number")
+                      help="Copy files to $product/$nightly_dir/$version-candidates/build$build_number")
     parser.add_option("-t", "--release-to-tinderbox-builds",
                       action="store_true", dest="release_to_tinderbox_builds",
                       help="Copy files to $product/tinderbox-builds/$tinderbox_builds_dir")
@@ -244,7 +248,8 @@ if __name__ == '__main__':
     if error:
         sys.exit(1)
     
-    NIGHTLY_PATH = NIGHTLY_PATH % {'product': options.product}
+    NIGHTLY_PATH = NIGHTLY_PATH % {'product': options.product,
+                                   'nightly_dir': options.nightly_dir}
     upload_dir = os.path.abspath(args[0])
     files = args[1:]
     if not os.path.isdir(upload_dir):
