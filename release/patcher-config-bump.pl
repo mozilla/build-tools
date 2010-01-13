@@ -235,6 +235,7 @@ sub BumpPatcherConfig {
     elsif ($product eq 'thunderbird') {
      $currentUpdateObj->{'details'} = 'http://www.mozillamessaging.com/%locale%/' .
                                         $product . '/' . $appVersion . '/releasenotes/';
+    }
     else {
       $currentUpdateObj->{'details'} = 'http://www.mozilla.com/%locale%/' .
                                         $product . '/' . $appVersion . '/releasenotes/';
