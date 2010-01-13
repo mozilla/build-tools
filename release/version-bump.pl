@@ -91,6 +91,8 @@ sub Bump {
     my $versionTxt = catfile($appName, 'config', 'version.*\.txt');
     my $milestoneTxt = catfile('config', 'milestone.txt');
     my $jsMilestoneTxt = catfile('js', 'src', 'config', 'milestone.txt');
+	my $winmoVersionTxt = 'winmo-version.txt';
+	my $defaultVersionTxt = 'default-version.txt';
     
     foreach my $fileName (@bumpFiles) {
         my $found = 0;
@@ -123,6 +125,9 @@ sub Bump {
              $appVersion);
         } elsif ($fileName =~ /$versionTxt/) {
             %searchReplace = ('^' . $VERSION_REGEXP . '$' => $appVersion);
+        } elsif ($fileName =~ $winmoVersionTxt or $fileName =~ $defaultVersionTxt) {
+            %searchReplace = ('^MOZ_APP_VERSION=' . $VERSION_REGEXP . '$' =>
+                              "MOZ_APP_VERSION=$appVersion");
         } elsif ($fileName eq $milestoneTxt || $fileName eq $jsMilestoneTxt) {
             %searchReplace = ('^' . $VERSION_REGEXP . '$' => $milestone);
         } else {
