@@ -391,10 +391,13 @@ Clobber all release builders on <select name="master">
       $rows[] = $r;
       $buildername = $r['buildername'];
       $branch = $r['branch'];
-      if (!array_key_exists($buildername, $rows_per_builder)) {
-        $rows_per_builder[$buildername] = 1;
+      if (!array_key_exists($branch, $rows_per_builder)) {
+        $rows_per_builder[$branch] = array();
+      }
+      if (!array_key_exists($buildername, $rows_per_builder[$branch])) {
+        $rows_per_builder[$branch][$buildername] = 1;
       } else {
-        $rows_per_builder[$buildername] += 1;
+        $rows_per_builder[$branch][$buildername] += 1;
       }
       if (!array_key_exists($branch, $rows_per_branch)) {
         $rows_per_branch[$branch] = 1;
@@ -426,7 +429,7 @@ Clobber all release builders on <select name="master">
         print htmlspecialchars($r['branch']) . "</td>\n";
       }
       if ($last_builder != $r['buildername']) {
-        $rowspan = $rows_per_builder[$r['buildername']];
+        $rowspan = $rows_per_builder[$r['branch']][$r['buildername']];
         $builder_id = b64_encode($r['buildername']);
         $classes = b64_encode($r['branch']);
         print "<td rowspan=\"$rowspan\"><input type=\"checkbox\" id=\"$builder_id\" class=\"$classes\" onchange=\"toggleall(this, &quot;$builder_id&quot;)\" />";
