@@ -10,12 +10,13 @@ SIGNDEBS_BASEDIR	?= sign-debs
 SBOX_WORKDIR	?= $(SIGNDEBS_BASEDIR)/$(BRANCH_NICK)_$(LOCALE)
 WORKDIR			?= /scratchbox/users/cltbld/home/cltbld/$(SBOX_WORKDIR)
 
-BASE_STAGE_PATH	?= /home/ftp/pub/mozilla.org/mobile/repos
-BASE_STAGE_URL	?= http://ftp.mozilla.org/pub/mozilla.org/mobile/repos
+STAGE_DIR		?= /pub/mozilla.org/mobile/repos
+BASE_STAGE_PATH	?= /home/ftp
+BASE_STAGE_URL	?= http://ftp.mozilla.org
 STAGE_USERNAME	?= ffxbld
 STAGE_SERVER	?= stage.mozilla.org
-STAGE_PATH		?= $(BASE_STAGE_PATH)/$(BRANCH_NICK)_$(LOCALE)
-STAGE_URL       ?= $(BASE_STAGE_URL)/$(BRANCH_NICK)_$(LOCALE)
+STAGE_PATH		?= $(BASE_STAGE_PATH)/$(STAGE_DIR)/$(BRANCH_NICK)_$(LOCALE)
+STAGE_URL       ?= $(BASE_STAGE_URL)/$(STAGE_DIR)/$(BRANCH_NICK)_$(LOCALE)
 SSH_KEY			?= $(HOME)/.ssh/ffxbld_dsa
 
 INSTALL_CONTENTS = "[install]\nrepo_deb_3 = deb $(STAGE_URL) $(MAEMO_VERSION) $(REPO_SECTION)\ncatalogues = fennec\npackage = fennec\n\n[fennec]\nname = Mozilla $(BRANCH_NICK) $(LOCALE) Catalog\nuri = $(STAGE_URL)\ndist = $(MAEMO_VERSION)\ncomponents = $(REPO_SECTION)"
@@ -60,7 +61,7 @@ download-repository:
 	  echo "No repository to download."
 
 clean-install-file:
-	rm -f $(WORKDIR)/*.install
+	rm -f $(WORKDIR)/$(INSTALL_FILENAME)
 
 clean-repository:
 	find $(WORKDIR)/dists/$(MAEMO_VERSION)/$(REPO_SECTION)/binary-armel/. -name \*.deb -exec rm {} \;
