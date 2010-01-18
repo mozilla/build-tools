@@ -6,6 +6,7 @@
 import sys, os, os.path, shutil
 from optparse import OptionParser
 from time import mktime, strptime
+from errno import EEXIST
 
 NIGHTLY_PATH = "/home/ftp/pub/%(product)s/%(nightly_dir)s"
 TINDERBOX_BUILDS_PATH = "/home/ftp/pub/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
@@ -35,7 +36,13 @@ def CopyFileToDir(original_file, source_dir, dest_dir, preserve_dirs=False):
     new_file = os.path.join(dest_dir, relative_path)
     full_dest_dir = os.path.dirname(new_file)
     if not os.path.isdir(full_dest_dir):
-        os.makedirs(full_dest_dir, 0755)
+        try:
+            os.makedirs(full_dest_dir, 0755)
+        except OSError, e:
+            if e.errno == EEXIST:
+                print "%s already exists, continuing anyways" % full_dest_dir
+            else:
+                raise
     if os.path.exists(new_file):
         os.unlink(new_file)
     shutil.copyfile(original_file, new_file)
