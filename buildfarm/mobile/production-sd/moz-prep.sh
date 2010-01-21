@@ -2,6 +2,7 @@
 FLASHER="./flasher-3.0"
 FIASCO="RX-44*.bin"
 IMAGE="empty.jffs2"
+USBPATTERN="Firmware"
 
 function draw_line {
   echo "====================================="
@@ -42,6 +43,14 @@ if [[ $EUID -ne 0 ]]; then
   error "This script must be run as root"
 fi
 
-flash_image '--flash-only nolo,kernel,initfs --fiasco' $FIASCO
-flash_image '--rootfs' $IMAGE
-set_root
+
+while [ true ] ; do
+  flash_image '--flash-only nolo,kernel,initfs --fiasco' $FIASCO
+  flash_image '--rootfs' $IMAGE
+  set_root
+  while lsusb | grep $USBPATTERN ; do
+    sleep 1
+    echo "UNPLUG DEVICE"
+  done
+done
+

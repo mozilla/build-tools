@@ -6,9 +6,9 @@ EXCLUDE_FILE=/flashing/exclude_list.txt
 
 if [ $# -eq 0 ] ; then
   echo Please specify devices from this list
-  devlist=`find /dev -name "sd?" -maxdepth 1`
+  devlist=`find /dev -maxdepth 1 -name sd?`
   for i in $devlist; do
-    grep -q "$i" exclude
+    grep -q "$i" $EXCLUDE_FILE
     if [ $? -ne 0 ] ; then
       echo $i
     fi
