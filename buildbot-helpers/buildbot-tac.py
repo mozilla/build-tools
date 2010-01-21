@@ -63,7 +63,7 @@ def get_default_options(slavename):
         footer = TALOS_FOOTER
         if '-try' in slavename:
             d['port'] = 9011
-        if 'linux' in slavename or 'ubuntu' in slavename:
+        if 'linux' in slavename or 'ubuntu' in slavename or 'fed' in slavename:
             basedir = '/home/cltbld/talos-slave'
         elif 'tiger' in slavename or 'leopard' in slavename:
             basedir = '/Users/cltbld/talos-slave'
