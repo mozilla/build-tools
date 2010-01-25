@@ -1,6 +1,6 @@
 #!/bin/bash
 # Useful for finding out which devices: find /dev | grep "/dev/sd.[0-9]"
-ROOTFSDIR='moz-ref-sd-v4'
+ROOTFSDIR='moz-ref-sd-v5'
 
 EXCLUDE_FILE=/flashing/exclude_list.txt
 

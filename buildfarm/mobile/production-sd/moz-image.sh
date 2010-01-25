@@ -35,8 +35,8 @@ function dual_partition {
   info "Partitioning $SDDEV"
   dd if=/dev/zero of=${SDDEV} bs=512 count=1 > /dev/null
   parted --script ${SDDEV} mktable msdos || error "failed creating partition table"
-  parted --script ${SDDEV} mkpart primary 0 3000 || error "failed to create root partition"
-  parted --script ${SDDEV} mkpart primary 3001 3800 || error "failed to create data partition"
+  parted --script ${SDDEV} mkpart primary 0 1800 || error "failed to create root partition"
+  parted --script ${SDDEV} mkpart primary 1801 3800 || error "failed to create data partition"
   sync
   sleep 2
   info "Formatting Drives"
@@ -66,7 +66,7 @@ function copy {
 function modify_image {
   info "Modifying Image"
   echo $UNITNAME > ${MOUNT}/etc/hostname
-  echo "Imaged from \"${ROOTFS}\" at `date`" > ${MOUNT}/builds/buildbot/info/admin
+  echo "Imaged from \"${ROOTFS}\" at `date`" > ${MOUNT}/tools/buildbot/info/admin
 
 }
 

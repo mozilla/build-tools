@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-### BEGING CONFIG
+### BEGIN CONFIG
 slavedir = '/builds/buildbot'
+slavedirSrc = '/tools/buildbot'
 standalone = '/builds/standalone.txt'
-logFile = '/builds/logs/buildbot-daemon.log'
+logFile = '/var/log/buildbot-daemon.log'
 dataDeviceFile = '/dev/mmcblk1p2'
 dataMountpoint = '/media/mmc2/'
 swapFile = '/media/mmc2/swapfile'
@@ -16,8 +17,8 @@ execPrefix = []
 ### END CONFIG
 
 import sys, os, time, logging, logging.handlers
-import subprocess, socket
-sys.path.append(slavedir)
+import subprocess, socket, shutil
+sys.path.append(slavedirSrc)
 import host
 
 n810 = socket.gethostname()
@@ -171,6 +172,8 @@ def setupFS():
     mkfs(dataDeviceFile)
     mountData(dataDeviceFile, dataMountpoint)
     swapon(swapFile)
+    log.info('Copying %s to %s' % (slavedirSrc, slavedir))
+    shutil.copytree(slavedirSrc, slavedir)
     
 def start():
     standaloneTest()
