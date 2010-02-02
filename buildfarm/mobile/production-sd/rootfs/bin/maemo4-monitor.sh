@@ -46,14 +46,6 @@ if [ $NUMPROCS -ne $EXPECTED_NUM_BUILDBOT_PROCS ] ; then
 	STATUS=`expr $STATUS + 1`
 fi
 
-# Plugged in?
-POWER=`cat /sys/power/sleep_while_idle`
-if [ $POWER -gt 0 ] ; then
-	MESSAGE="${MESSAGE}$HOSTNAME is unplugged.
-"
-	STATUS=`expr $STATUS + 1`
-fi
-
 # Has swap?
 TOTALSWAP=`free | grep Swap | sed -e 's/  */ /g' | cut -d' ' -f3`
 if [ $TOTALSWAP -ne 131196 ] ; then
