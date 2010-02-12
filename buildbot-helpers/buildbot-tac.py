@@ -47,7 +47,7 @@ def get_default_options(slavename):
     basedir = None
     buildmaster_host = None
     if 'moz2' in slavename or 'xserve' in slavename or 'try-' in slavename or \
-      slavename.startswith('win32') or slavename.startswith('w32'):
+      slavename.startswith('win32') or slavename.startswith('mw32'):
         if 'try-' in slavename:
             buildmaster_host = TRY_BUILDMASTER
             d['port'] = 9982
@@ -56,7 +56,7 @@ def get_default_options(slavename):
         if 'linux' in slavename or 'darwin9' in slavename or \
           'xserve' in slavename or 'mac' in slavename:
             basedir = '/builds/slave'
-        elif 'win32' in slavename or 'w32' in slavename:
+        elif 'win32' in slavename or 'mw32' in slavename:
             basedir = 'e:\\builds\\moz2_slave'
     elif 'talos' in slavename or '-try' in slavename:
         buildmaster_host = TALOS_BUILDMASTER
