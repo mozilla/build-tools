@@ -68,7 +68,8 @@ def get_default_options(slavename):
             d['usepty'] = 0
         if 'linux' in slavename or 'ubuntu' in slavename or 'fed' in slavename:
             basedir = '/home/cltbld/talos-slave'
-        elif 'tiger' in slavename or 'leopard' in slavename:
+        elif 'tiger' in slavename or 'leopard' in slavename or \
+          'snow' in slavename:
             basedir = '/Users/cltbld/talos-slave'
         elif 'xp' in slavename or 'w7' in slavename:
             basedir = 'C:\\talos-slave'
