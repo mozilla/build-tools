@@ -65,14 +65,15 @@ def get_default_options(slavename):
             d['port'] = 9011
         if 'r3' in slavename:
             d['port'] = 9012
-            d['usepty'] = 0
         if 'linux' in slavename or 'ubuntu' in slavename or 'fed' in slavename:
             basedir = '/home/cltbld/talos-slave'
         elif 'tiger' in slavename or 'leopard' in slavename or \
           'snow' in slavename:
             basedir = '/Users/cltbld/talos-slave'
+            d['usepty'] = 0
         elif 'xp' in slavename or 'w7' in slavename:
             basedir = 'C:\\talos-slave'
+            d['usepty'] = 0
     # quote_option will throw if defaults couldn't be found for either of these
     # These are processed separately because they should be unset if a default
     # wasn't found.
