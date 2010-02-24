@@ -27,14 +27,15 @@ sub ProcessArgs {
         "old-long-version=s", "version|v=s", "app-version=s", "long-version=s",
         "build-number|n=s", "aus-server-url|a=s", "staging-server|s=s",
         "verify-config|c=s", "old-candidates-dir|d=s", "linux-extension|e=s",
-        "shipped-locales|l=s", "pretty-candidates-dir", "help", "run-tests"
+        "shipped-locales|l=s", "pretty-candidates-dir", "major|m",
+        "help", "run-tests"
     );
 
     if ($config{'help'}) {
         print <<__USAGE__;
 Usage: update-verify-bump.pl [options]
 This script depends on the MozBuild::Util and Bootstrap::Util modules.
-Options:
+Options requiring arguments:
   --osname/-o             One of (linux, macosx, win32).
   --product/-p            The product name (eg. firefox, thunderbird, seamonkey, etc.).
   --brand/-r              The brand name (eg. Firefox, Thunderbird, SeaMonkey, etc.)
@@ -67,12 +68,15 @@ Options:
                           be bz2 if not passed.
   --shipped-locales/-l    The path and filename to the shipped-locales file
                           for this release.
+Options without arguments:
   --pretty-candidates-dir When passed, the "to" field in the verify config will
                           be formatted the "pretty" way by using the long
                           version number on mac and win32, and storing files
                           in a deep directory format rather than encoding all
                           of the information into the filename. This flag does
                           not take an argument.
+  --major/-m              Major update (MU) mode, which starts the file from
+                          scratch rather than appending
   --help                  This usage message. This flag takes no arguments.
   --run-tests             Run the (very basic) unit tests include with this
                           script. This flag takes no arguments.
@@ -135,6 +139,9 @@ __USAGE__
         if (! defined $config{'pretty-candidates-dir'}) {
             $config{'pretty-candidates-dir'} = 0;
         }
+        if (! defined $config{'major'}) {
+            $config{'major'} = 0;
+        }
     }
 }
 
@@ -158,6 +165,7 @@ sub BumpVerifyConfig {
     my $linuxExtension = $config{'linux-extension'};
     my $shippedLocales = $config{'shipped-locales'};
     my $prettyCandidatesDir = $config{'pretty-candidates-dir'};
+    my $majorMode = $config{'major'};
 
     # NOTE - channel is hardcoded to betatest
     my $channel = 'betatest';
@@ -260,12 +268,17 @@ sub BumpVerifyConfig {
 
     open(FILE, "> $configFile") or die ("Could not open file $configFile: $!");
     print FILE @data;
-    print FILE @strippedFile;
+    # write the data for the old releases unless we're doing a major update
+    if ( ! $majorMode ) {
+        print FILE @strippedFile;
+    }
     close(FILE) or die ("Could not close file $configFile: $!");
 }
 
 sub RunUnitTests {
+    # 3.0.x minor update test
     ExecuteTest(product => 'firefox',
+                brand => 'Firefox',
                 osname => 'linux',
                 platform => 'Linux_x86-gcc3',
                 version => '3.0.3',
@@ -282,13 +295,15 @@ sub RunUnitTests {
                 oldOldFromBuild => '/firefox/releases/3.0.1/linux-i686/%locale%/firefox-3.0.1.tar.bz2',
                 oldOldToBuild => '/firefox/nightly/3.0.2-candidates/build6/firefox-3.0.2.%locale%.linux-i686.tar.bz2',
                 ausServer => 'https://aus2.mozilla.org',
-                ftpServer => 'stage-old.mozilla.org/pub/mozilla.org',
-                stagingServer => 'stage-old.mozilla.org',
-                oldCandidatesDir => '/pub/mozilla.org/firefox/nightly/3.0.2-candidates/build6',
+                stagingServer => 'build.mozilla.org',
+                oldCandidatesDir => '/update-bump-unit-tests/pub/mozilla.org/firefox/nightly/3.0.2-candidates/build6',
                 prettyCandidatesDir => '0',
-                linuxExtension => 'bz2'
+                linuxExtension => 'bz2',
+                major => 0,
     );
+    # 3.1b minor update test (pretty names)
     ExecuteTest(product => 'firefox',
+                brand => 'Firefox',
                 osname => 'win32',
                 platform => 'WINNT_x86-msvc',
                 version => '3.1b2',
@@ -305,17 +320,43 @@ sub RunUnitTests {
                 oldOldFromBuild => '/firefox/releases/shiretoko/alpha2/win32/en-US/Shiretoko Alpha 2 Setup.exe',
                 oldOldToBuild => '/firefox/nightly/3.1b1-candidates/build2/win32/%locale%/Firefox 3.1 Beta 1 Setup.exe',
                 ausServer => 'https://aus2.mozilla.org',
-                ftpServer => 'stage-old.mozilla.org/pub/mozilla.org',
-                stagingServer => 'stage-old.mozilla.org',
-                oldCandidatesDir => '/pub/mozilla.org/firefox/nightly/3.1b1-candidates/build2',
+                stagingServer => 'build.mozilla.org',
+                oldCandidatesDir => '/update-bump-unit-tests/pub/mozilla.org/firefox/nightly/3.1b1-candidates/build2',
                 prettyCandidatesDir => '1',
-                linuxExtension => 'bz2'
+                linuxExtension => 'bz2',
+                major => 0,
+    );
+    # major update test
+    ExecuteTest(product => 'firefox',
+                brand => 'Firefox',
+                osname => 'win32',
+                platform => 'WINNT_x86-msvc',
+                version => '3.6b4',
+                longVersion => '3.6 Beta 4',
+                build => '1',
+                oldVersion => '3.5.5',
+                oldLongVersion => '3.5.5',
+                oldBuildid => '20091102152451',
+                oldFromBuild => '/firefox/releases/3.5.5/win32/%locale%/Firefox Setup 3.5.5.exe',
+                oldToBuild => '/firefox/nightly/3.6b4-candidates/build1/win32/%locale%/Firefox Setup 3.6 Beta 4.exe',
+                oldOldVersion => '',
+                oldOldLongVersion => '',
+                oldOldBuildid => '',
+                oldOldFromBuild => '',
+                oldOldToBuild => '',
+                ausServer => 'https://aus2.mozilla.org',
+                stagingServer => 'build.mozilla.org',
+                oldCandidatesDir => '/update-bump-unit-tests/pub/mozilla.org/firefox/nightly/3.5.5-candidates/build1',
+                prettyCandidatesDir => '1',
+                linuxExtension => 'bz2',
+                major => 1,
     );
 }
 
 sub ExecuteTest {
     my %args = @_;
     my $product = $args{'product'};
+    my $brand = $args{'brand'};
     my $osname = $args{'osname'};
     my $platform = $args{'platform'};
     my $version = $args{'version'};
@@ -332,19 +373,19 @@ sub ExecuteTest {
     my $oldOldFromBuild = $args{'oldOldFromBuild'};
     my $oldOldToBuild = $args{'oldOldToBuild'};
     my $ausServer = $args{'ausServer'};
-    my $ftpServer = $args{'ftpServer'};
     my $stagingServer = $args{'stagingServer'};
     my $oldCandidatesDir = $args{'oldCandidatesDir'};
     my $prettyCandidatesDir = $args{'prettyCandidatesDir'};
     my $linuxExtension = $args{'linuxExtension'};
+    my $majorMode = $args{'major'};
 
     my $workdir = tempdir(CLEANUP => 0);
-    my $bumpedConfig = catfile($workdir, 'moz19-firefox-linux-bumped.cfg');
-    my $referenceConfig = catfile($workdir, 'moz19-firefox-linux-ref.cfg');
+    my $bumpedConfig = catfile($workdir, 'bumped-update-verify.cfg');
+    my $referenceConfig = catfile($workdir, 'reference-update-verify.cfg');
     my $shippedLocales = catfile($workdir, 'shipped-locales');
-    my $diffFile = catfile($workdir, 'moz19-firefox-linux.diff');
+    my $diffFile = catfile($workdir, 'update-verify.diff');
 
-    print "Running test on: $product, $osname, version $version.....";
+    print "Running test on: $product, $osname, version $version, majorMode $majorMode.....";
 
     # Create shipped-locales
     open(SHIPPED_LOCALES, ">$shippedLocales");
@@ -365,14 +406,14 @@ sub ExecuteTest {
     # Create a verify config to bump
     my @oldOldRelease = (
         "release=\"$oldOldVersion\"",
-        "product=\"" . ucfirst($product) . "\"",
+        "product=\"$brand\"",
         "platform=\"$platform\"",
         "build_id=\"$oldOldBuildid\"",
         "locales=\"af en-US gu-IN ja uk\"",
         "channel=\"betatest\"",
         "from=\"$oldOldFromBuild\"",
         "aus_server=\"$ausServer\"",
-        "ftp_server=\"$ftpServer\"",
+        "ftp_server=\"$stagingServer/pub/mozilla.org\"",
         "to=\"$oldOldToBuild\""
     );
 
@@ -386,7 +427,7 @@ sub ExecuteTest {
     # So must we in the reference file.
     @oldOldRelease = (
         "release=\"$oldOldVersion\"",
-        "product=\"" . ucfirst($product) . "\"",
+        "product=\"$brand\"",
         "platform=\"$platform\"",
         "build_id=\"$oldOldBuildid\"",
         "locales=\"af en-US gu-IN ja uk\"",
@@ -398,30 +439,33 @@ sub ExecuteTest {
     # Now create an already bumped configuration to file
     my @oldRelease = (
         "release=\"$oldVersion\"",
-        "product=\"" . ucfirst($product) . "\"",
+        "product=\"$brand\"",
         "platform=\"$platform\"",
         "build_id=\"$oldBuildid\"",
         "locales=\"af en-US gu-IN ja uk\"",
         "channel=\"betatest\"",
         "from=\"$oldFromBuild\"",
         "aus_server=\"$ausServer\"",
-        "ftp_server=\"$ftpServer\"",
+        "ftp_server=\"$stagingServer/pub/mozilla.org\"",
         "to=\"$oldToBuild\""
     );
 
     open(CONFIG, ">$referenceConfig");
     print CONFIG "# $oldVersion $osname\n";
     print CONFIG join(' ', @oldRelease) . "\n";
-    print CONFIG "# $oldOldVersion $osname\n";
-    print CONFIG join(' ', @oldOldRelease); # without this newline diff
+    if ( ! $majorMode ) {
+        print CONFIG "# $oldOldVersion $osname\n";
+        print CONFIG join(' ', @oldOldRelease); # without this newline diff
                                                 # will think the files differ
                                                 # even when they do not
+    }
     close(CONFIG);
     
     # We need to build up the global config object before calling
     # BumpVerifyConfig
     $config{'osname'} = $osname;
     $config{'product'} = $product;
+    $config{'brand'} = $brand;
     $config{'old-version'} = $oldVersion;
     $config{'old-app-version'} = $oldVersion;
     $config{'old-long-version'} = $oldLongVersion;
@@ -436,6 +480,7 @@ sub ExecuteTest {
     $config{'shipped-locales'} = $shippedLocales;
     $config{'linux-extension'} = $linuxExtension;
     $config{'pretty-candidates-dir'} = $prettyCandidatesDir;
+    $config{'major'} = $majorMode;
 
     BumpVerifyConfig();
 

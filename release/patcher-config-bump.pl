@@ -37,7 +37,7 @@ sub ProcessArgs {
 
     if ($config{'help'}) {
         print <<__USAGE__;
-Usage: bump-patcher-config.pl [options]
+Usage: patcher-config-bump.pl [options]
 This script depends on the MozBuild::Util and Bootstrap::Util modules.
 Options: 
   -p The product name (eg. firefox, thunderbird, seamonkey, etc.)

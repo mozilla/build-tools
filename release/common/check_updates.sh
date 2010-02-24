@@ -60,6 +60,13 @@ check_updates () {
   diff -r source/$platform_dirname target/$platform_dirname  > results.diff
   diffErr=$?
   cat results.diff
+  grep ^Only results.diff | sed 's/^Only in \(.*\): \(.*\)/\1\/\2/' | \
+  while read to_test; do
+    if [ -d "$to_test" ]; then 
+      echo Contents of $to_test dir only in source or target
+      find "$to_test" -ls | grep -v "${to_test}$"
+    fi
+  done
   grep '^Binary files' results.diff > /dev/null
   grepErr=$?
   if [ $grepErr == 0 ]
