@@ -253,7 +253,9 @@ Scratchbox
  make install DESTDIR=cvs-root
  cd src
  tar jcf ../cvs.tar.bz2 cvs-root
- 
+Device
+ tar jxf cvs.tar.bz2
+ rsync -a cvs-root/usr/. /usr/.
 
 ===SSH Keys===
 Computer
@@ -360,9 +362,84 @@ Computer
  initialize 000 #if you were making n900-000
  reboot # when done, notice if things fail
  
+==Setting up RSYNC machine==
+TODO: This hasn't been set up yet.  Don't do it.
+RSync Machine
+ sudo mkdir n900-homes
+ sudo chown cltbld:cltbld /n900-homes
+ cd /n900-homes
+ mkdir moz-refimage-v3.2-home
+ ln -s moz-refimage-v3.2-home home
+The /n900-homes/home symlink must be kept up to date with the production version
+Imaging Machine
+ 
+ 
+=Flashing a Device=
+These steps are as simple as possible as that seems to be what is requested of the imaging steps.
 
-=TODO=
-*run 'stop bluetoothd' on startup	
+Imaging Computer
+ hg clone http://hg.mozilla.org/build/tools
+ ln -s tools/buildfarm/mobile/n900-imaging maemo5
+ cd maemo5
+ <OBTAIN flasher-3.5, and proprietary firmware images>
+ ls
+ # OUTPUT:
+ # add_prop.sh         notes
+ # flasher-3.5         proprietary_files.txt
+ # generate-rootfs.sh  rootfs
+ # grab-image.sh       RX-51_2009SE_1.2009.41-1.VANILLA_PR_EMMC_MR0_ARM.bin
+ # maemo5-flash.sh     RX-51_2009SE_2.2009.51-1_PR_COMBINED_MR0_ARM.bin
+ # mkfs.ubifs          ubinize
+ #There is a list of hases (use openssl sha1 <file> to verify)
+ <OBTAIN firmware image>
+ file moz-refimage-3.2.ubi
+ #OUTPUT:
+ # moz-refimage-v3.2.ubi: HIT archive data
+ sudo ./maemo5-flash.sh moz-refimage-v3.2.ubi
+
+Follow the onscreen instructions.  Wait for the screen to say "Suitable USB Device not found, wating." before you plug in the N900.
+*remove batter and unplug cable
+*replace battery
+*press and hold U key
+*while hold U down, insert USB cable
+**3 files will be flashed
+***complete nokia firmware image
+***our filesystem
+***complete nokia emmc image
+*Wait for message to UNPLUG N900
+*reseat battery
+*'''Move device to RF room'''
+*press and hold power button.  Notification light should go white
+*launch terminal
+*If the desktop of the device has lots of things (calidar, get started, google, OVI...) then you need to initialize the device
+**Launch terminal, shortcut on desktop of device
+**run <code>sudo i NNN</code> where NNN is the device number (e.g. 001,002...)
+*If you only see the desktop, clock and Terminal shortcut then you need to start this device over as it improperly flashed the emmc image.
+
+==Device Won't Flash==
+*Symptom: Device won't boot into flashing mode and the notification light is green.
+*Cause: The battery is too low
+*Solution 1: Charge up the battery by plugging in device to a wall charger and let it charge for 20minutes to an hour.
+*Solution 2: Use the development cradle while flashing.
+**Plug in power for cradle, serial cable is not needed
+**Turn cradle switch to off
+**place device on cradle, you will need to hold it down or put something on top to keep it on the cradle
+**follow the normal procedure, when it says that it is waiting for a device, turn the power switch on.
+*Symptom: Device boots normally and doesn't start flashing
+*Cause: the simple (and best case) cause is that you didn't plug in the device in the right order.  Worst case is that the bootloader is buggered.  To fix this, use the cradle with serial cable and cold flash device.  I am not covering how to do this here because you shouldn't be doing this unless you *really* know what you are doing.
+*Solution:
+**Follow these steps when plugging in device
+**reseat battery
+**Nokia logo will show up
+**wait for screen to go black and off
+**slide open keyboard
+**press and hold U key
+**wait for "Suitable USB Device not found, waiting" message
+**plug in USB cable
+**There will be a blue USB logo on the screen in the top right (looks like a pitchfork) if it is entering flashing mode properly
+**If this doesn't work, or the blue USB logo goes away, try again.
+***you will know that it didn't work if the screen goes black with three horizontally arranged dots in the center of the screen pulsate consecutively from left to right
+***If this happens every time then you need to cold flash
 
 ==Links==
 *DropBear Info: [http://wiki.flexion.org/DropbearSSHServer.html]
@@ -374,11 +451,8 @@ Computer
 ===tcpkill===
 Maybe we should investigate something like tcpkill before reboot to make sure that the device doesn't continue to fake-report to the buildbot master [http://www.cyberciti.biz/howto/question/linux/kill-tcp-connection-using-linux-netstat.php]
 
-==Files to Version==
-We want to store these files:
-*/etc/init.d/dropbear
-*/etc/init.d/no-power-saving
-*/etc/dropbear/*
+===Clone /dev/mtd<config>===
+One of the mtd devices has configuration items.  This may contain information about the clock and should maybe be cloned.  I will look at this some other time.
 
 ==Random==
 *There is no init by default.  We would need to install upstart-compat-sysv for that, but we are going to use upstart services
