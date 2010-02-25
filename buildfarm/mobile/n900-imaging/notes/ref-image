@@ -1,0 +1,387 @@
+=Creating a Maemo5 Ref Image=
+==Requirements==
+*32-bit Linux Computer (I used Fedora 12)
+*MicroUSB Cable
+*flasher-3.5 v2.5.2 
+**<code>SHA1(flasher-3.5)= 68a1c3d9d8e925e74b361a4ddf30f5ffbe9da4ba</code>
+*Main Firmware Image
+**<code>SHA1(RX-51_2009SE_2.2009.51-1_PR_COMBINED_MR0_ARM.bin)= 9f029310beb697757a543f1e1862bf87886b3ba3</code>
+*Vanilla EMMC Image
+**<code>SHA1(RX-51_2009SE_1.2009.41-1.VANILLA_PR_EMMC_MR0_ARM.bin)= a2a096742f43463d48fcbc677cd9cca755127f55</code>
+*Scratchbox and SDK for Maemo5
+**'''TODO'''Tar up my scratchbox+sdk and hash it 
+
+==Setting up Scratchbox==
+Download the scratchbox and sdk setup scripts:
+ http://repository.maemo.org/stable/5.0/maemo-scratchbox-install_5.0.sh
+ http://repository.maemo.org/stable/5.0/maemo-sdk-install_5.0.sh
+Then run:
+ mkdir scratchbox
+ SBDIR=$(pwd)/scratchbox
+ echo 0 | sudo tee /proc/sys/vm/vdso_enabled #MUST BE RUN on each boot or
+                 # be made permanent by echoing 'vm.vdso_enabled = 0'
+                 # to /etc/sysctl.conf and running sysctl -p as root
+ echo 0 | sudo tee /selinux/enforce
+ sudo sh maemo-scratchbox-install_5.0.sh -s $SBDIR -u $USER
+ #If on Fedora 12, sudo yum install dialog
+ sudo gpasswd -a $USER sbox
+ sh maemo-sdk-install_5.0.sh -s $SBDIR
+ #Accept License
+ #Select Option 4, Runtime+Dev+Dbg
+ #Select Continue
+ $SBDIR/login
+ sb-conf select FREMANTLE_ARMEL
+ exit
+ sudo ${SBDIR}/sbin/sbox_ctl start
+ #SB can be launched by 
+ ${SBDIR}/login
+ #set up bind mounts
+ mkdir $SBDIR/users/$USER/home/$USER/build build
+ sudo mount --bind $SBDIR/users/$USER/home/$USER/build build
+Install required  packages
+ fakeroot apt-get install python python-dev autoconf2.13 libidl-dev libpcre-dev
+ 
+==Set up Device==
+===Install Firmware===
+'''BIG FAT WARNING''': Make sure that you use the right hardware revision.  If you don't you will likely '''DESTROY YOUR N900'''. I am using <code>-h RX-51:2101</code> but that is only valid for my hardware revision.  Use <code>./flasher-3.5 --read-device-id</code> to figure out your version!
+ sudo ./flasher-3.5 -F RX-51_2009SE_2.2009.51-1_PR_COMBINED_MR0_ARM.bin -f -c -S usb -h RX-51:2101
+ sudo ./flasher-3.5 -F RX-51_2009SE_1.2009.41-1.VANILLA_PR_EMMC_MR0_ARM.bin -f
+ sudo ./flasher-3.5 --enable-rd-mode
+===First Boot Wizard===
+*Tap Language -> Select English(USA)
+*Tap Region -> Select English(USA) -> Select San Francisco, CA
+*Tap Time -> Set Time and use 24-hour mode -> Save
+*Tap Date -> Set Date -> Save
+*Tap Save
+===Clear Desktop===
+Tap somewhere on the desktop (water stream).  A gear will appear in the top right.  Tap on the gear, an X will appear on the 'Get Started' desktop item.  Click the X.  Move to each desktop and clear them out using a similar process (swipe the water image).  After all the desktops are clear, tap the water then tap the gear then the 'Desktop Menu' in the top left. Tap 'Manage Views'.  Tap the three right views so there is only one view with a check then tap 'Done'.  Tap 'Desktop Menu' again then tap 'Add shortcut'.  In the list of shortcuts, select "X Terminal'. Tap 'Done' in the top right.
+
+===Settings===
+*Click 2x3 matrix in top left corner
+*Select Settings
+**Profiles
+***Untick 'Vibrate' in general section
+***Set all tones to no volume
+***Set System Sounds to 'off'
+***Set Touch Screen Sounds to 'off'
+***Tap Save
+**Notification Light
+***Untick Missed Call and Text Message Received
+***Tick Device On
+***Tap Save
+**Display
+***untick touchscreen vibration
+***untick power saving mode
+**Location
+***In GPS Section untick 'Enable'
+***In Network Positioning untick 'Enable'
+***Tap 'Save'
+**Internet Connections
+***Tap Connections -> Tap Next
+***Rename Connection to 'MozillaBuild' -> Next
+***Scan For Available Networks -> No
+***SSID: Mozilla-Build, Tick Network is Hidden, Security Method: WPA-PSK -> Next
+***Pre-Shared Key: Enter the wpa passphrase -> Next
+***Tap Advanced
+****Other Tab: WiFi TX Power: 10mW, Power Saving: Off
+****Confirm power saving, tap save
+***Tap Finish, Tap Done
+***Search Interval: 5Min
+***Tap Save
+If the network doesn't connect automatically, tap the clock, tap internet connections then tap MozillaBuild
+*Open 'App. Manager'
+**Tap 'Application Manager' in title bar
+**Tap Application Catalogue
+**Tap 'maemo.org'
+**Tap Disable
+** Tap Save
+** Let it update then exit app manager
+
+==Install Packages==
+===Repository Based Packages===
+ Run:
+ sudo gainroot
+ echo "deb http://repository.maemo.org/extras/ fremantle free non-free >> /etc/apt/sources.list
+ echo "deb http://repository.maemo.org/extras-devel/ fremantle free non-free >> /etc/apt/sources.list
+ apt-get update
+ apt-get install dropbear rsync python bzip2 wget file xrestop
+ #Using dropbear instead of openssh, default root password is 'rootme'
+ #add public keys to /root/.ssh/authorized_keys and /home/user/.ssh/authorized_keys
+ ln -s /usr/lib/dropbearmulti /usr/bin/ssh #Otherwise you need to do dbclient for ssh
+ cat > /etc/event.d/dropbear << EOF
+ description "SSH Server"
+ author      "John Ford"
+ 
+ start on started wlancond
+ stop on starting shutdown
+ 
+ console none
+ 
+ exec /usr/sbin/dropbear -K 10 -b /etc/hostname -F -m
+ 
+ respawn
+ EOF
+
+===sudo===
+Add this line to /etc/sudoers after the last defaults line.  This is so that we can run any command as su without specifying a password
+ user ALL=(ALL) NOPASSWD: ALL
+
+===Tar===
+Scratchbox
+ wget http://ftp.gnu.org/gnu/tar/tar-1.22.tar.gz
+ tar zxf tar-1.22.tar.gz
+ ./configure --prefix=/usr/local
+ make -j4
+ mkdir tar-root
+ INSTDIR=`pwd`/tar-root
+ make install DESTDIR=$INSTDIR
+ strip tar-root/usr/local/bin/tar
+ scp tar-root/user/local/bin/tar root@n900-ref:
+Device
+ rm /bin/tar
+ cp ~/tar /bin
+
+===Mercurial===
+Scratchbox
+ /tools/maemo5/scratchbox/login
+ wget http://mercurial.selenic.com/release/mercurial-1.4.2.tar.gz
+ tar zxf mercurial-1.4.2.tar.gz
+ cd mercurial-1.4.2	
+ python2.5 setup.py build_ext #Only build C components
+ cd build
+ #Trick distutils into working with scratchbox compiled python modules on device
+ ln -s lib.linux-armv5tel-2.5/ lib.linux-armv7l-2.5
+ ln -s temp.linux-armv5tel-2.5/ temp.linux-armv7l-2.5
+ cd ../..
+ tar jcf hg-maemo-1.4.2.tar.bz2
+ scp hg-maemo-1.4.2.tar.bz2 root@<devip>:
+Device
+ bunzip2 hg-maemo-1.4.2.tar.bz2
+ tar xf hg-maemo-1.4.2.tar
+ cd mercurial-1.4.2
+ python setup.py install
+Now create a repository at the root of the filesystem.  This will be used to track changes to the configuration
+ cd /
+ hg init
+ hg add /etc/dropbear
+ hg add /etc/init.d/dropbear
+ hg add /etc/init.d/no-power-saving
+ hg add /etc/event.d/rcS*
+ hg serve -p 8000
+Clone onto the PC
+ hg clone http://<devip>:8000 rootfs
+Change the default push/pull location on the n900 to reflect where the master hg repository will be stored
+ echo "[paths]" > /.hg/hgrc
+ echo "default = http://jhford-wifi.mv.mozilla.com/n900-config" >> /.hg/hgrc
+
+===Twisted===
+Scratchbox
+ wget http://tmrc.mit.edu/mirror/twisted/Twisted/9.0/Twisted-9.0.0.tar.bz2
+ tar jxf Twisted-9.0.0.tar.bz2
+ cd Twisted-9.0.0
+ python2.5 setup.py build_ext
+ cd build
+ ln -s lib.linux-armv5tel-2.5 lib.linux-armv7l-2.5
+ ln -s temp.linux-armv5tel-2.5 temp.linux-armv7l-2.5
+ cd ../..
+ tar jcf twisted9.tar.bz2 Twisted-9.0.0
+ scp twisted9.tar.bz2 root@n900-ref:
+Device
+ tar jxf twisted9.tar.bz2
+ cd Twisted-9.0.0
+ python setup.py install
+
+===ZopeInterface===
+Scratchbox
+ wget http://www.zope.org/Products/ZopeInterface/3.3.0/zope.interface-3.3.0.tar.gz
+ tar zxf zope.interface-3.3.0.tar.gz
+ cd zope.interface-3.3.0
+ python2.5 setup.py build
+ cd build
+ ln -s lib.linux-armv5tel-2.5 lib.linux-armv7l-2.5
+ ln -s temp.linux-armv5tel-2.5 temp.linux-armv7l-2.5
+ cd ../..
+ tar jcf zope.tar.bz2 zope.interface-3.3.0
+ scp zope.tar.bz2 root@n900-ref:
+Device
+ tar jxf zope.tar.bz2
+ cd zope.interface-3.3.0
+ pythons setup.py install
+
+===Buildbot===
+Device
+ wget http://downloads.sourceforge.net/buildbot/buildbot-0.7.12.tar.gz
+ #wget http://hg.mozilla.org/build/buildbot/raw-file/bd20b289b0f0/buildbot/status/tinderbox.py
+ tar zxf buildbot-0.7.12.tar.gz
+ cd buildbot-0.7.12
+ python setup.py install
+
+===Nginx===
+Scratchbox
+ wget http://nginx.org/download/nginx-0.7.65.tar.gz
+ tar zxf nginx-0.7.65.tar.gz
+ cd nginx-0.7.65
+ ./configure --without-http-cache --prefix=/usr/nginx
+ make -j4
+ mkdir nginx-root
+ make install DESTDIR=nginx-root
+Computer
+ rsync -a nginx-root/usr/. root@n900-ref:/usr/.
+
+===xrestop===
+Scratchbox
+ wget http://projects.o-hand.com/sources/xrestop/xrestop-0.4.tar.gz
+ tar zxf xrestop-0.4.tar.gz
+ cd xrestop-0.4
+ ./configure --prefix=/usr
+ make -j4
+ make install DESTDIR=xrestop-root
+ tar jcf xrestop.tar.bz2 xrestop-root
+Computer
+ rsync -a xrestop-root/usr/. root@n900-ref:/usr/.
+There is no package available for the required libXRes so we are going to copy the scratchbox library over to the device.
+Scratchbox
+ scp /targets/FREMANTLE_ARMEL/usr/lib/libXRes.so* root@n900-ref:/usr/lib/
+
+===CVS===
+Scratchbox
+ http://ftp.gnu.org/non-gnu/cvs/source/stable/1.11.23/cvs-1.11.23.tar.bz2
+ tar jxf cvs-1.11.23.tar.bz2
+ cd cvs-1.11.23
+ ./configure --prefix=/usr
+ make -j4
+ make install DESTDIR=cvs-root
+ cd src
+ tar jcf ../cvs.tar.bz2 cvs-root
+ 
+
+===SSH Keys===
+Computer
+ scp jhford-mozilla.pub root@n900-ref: #jhford-mozilla.pub is a sample
+Device
+ cat jhford-mozilla.pub >> /root/.ssh/authorized_keys
+ cat jhford-mozilla.pub >> /home/user/.ssh/authorized_keys
+
+===PyYAML===
+Device
+ sudo gainroot
+ wget http://pyyaml.org/download/pyyaml/PyYAML-3.09.tar.gz
+ tar zxf PyYAML-3.09.tar.gz
+ cd PyYAML-3.09
+ python setup.py install
+
+===TP4===
+Computer
+ rsync -av tp4-source/. root@n900-ref:/home/user/tp4/.
+Symlinks needed are taken care of in initialize script
+===Maemkit===
+Device
+ cd /home/user/
+ hg clone http://hg.mozilla.org/qa/maemkit
+Symlinks needed are taken care of in initialize script
+
+===Disable update checking===
+*launch App. Manager
+*tap title bar ('Application manager \/')
+*tap Application Catalogs
+*tap each repository and tick disabled -> save
+*Comment out maemo.org repositories (use hash, #)
+
+==Custom Scripts==
+We use a number of special startup scripts:
+*[http://hg.mozilla.org/users/jford_mozilla.com/n900-work/file/4f9077a0c92e/scripts/bin/initialize bin/initialize]
+**on device:
+ ln -s /bin/initialize /bin/i
+*[http://hg.mozilla.org/users/jford_mozilla.com/n900-work/file/4f9077a0c92e/scripts/bin/reboot-user bin/reboot-user]
+*[http://hg.mozilla.org/users/jford_mozilla.com/n900-work/file/4f9077a0c92e/scripts/bin/start-buildbot bin/start-buildbot]
+*[http://hg.mozilla.org/users/jford_mozilla.com/n900-work/file/4f9077a0c92e/scripts/bin/start-mozilla bin/start-mozilla]
+*[http://hg.mozilla.org/users/jford_mozilla.com/n900-work/file/4f9077a0c92e/scripts/etc/mozconf etc/mozconf]
+The initialize and mozconf are they only files that need to be put on the device, the other files are generated by initialize and should be mirrored to the repository version of the files
+
+=Taking an Image=
+There are three devices which we are concerned with:
+*/dev/mmcblk0p1 - /home/user/MyDocs (to become /builds)
+*/dev/mmcblk0p2 - /home (to include /home/user/MyDocs)
+*ubi0:rootfs - root filesystem
+
+==Taking Image==
+Device
+ mount -t ubifs -o ro ubi0:rootfs /floppy
+Computer
+ mkdir moz-ref1
+ sudo rsync -a root@n900-ref:/floppy/. moz-ref1/.
+Device
+ mount /dev/mmcblk0p2 /floppy
+ mount /dev/mmcblk0p1 /floppy/user/MyDocs
+Computer
+ mkdir moz-ref1-home
+ sudo rsync -a root@n900-ref:/floppy/. moz-ref1-home/.
+ sudo mv home/user/.mozilla home/user/mozilla-profile
+==Generating Filesystem==
+ git clone http://git.infradead.org/mtd-utils.git
+ #commit a67747b7a314e685085b62e8239442ea54959dbc
+ cd ubi-utils
+ make -j4
+ cp ubinize ~/bin
+ cd ../mkfs.ubifs
+ make -j4
+ cp mkfs.ubifs ~/bin
+Either use <code>generate-rootfs.sh</code> or
+ cat > ubi.cfg << EOF
+ [rootfs]
+ mode=ubi
+ image=rootfs.ubifs
+ vol_id=0
+ vol_size=160MiB
+ vol_type=dynamic
+ vol_name=rootfs
+ vol_flags=autoresize
+ vol_alignment=1
+ EOF
+ mkfs.ubifs -m 2048 -e 129024 -c 2047 -r <ROOTFS> rootfs.ubifs
+ ubinize -o rootfs.ubi -p 128KiB -m 2048 -s 512 ubi.cfg
+and flash manually, or use maemo5-flash.sh
+ ./flasher-3.5 -f -r rootfs.ubi
+==Generate home-v*.tar.bz2==
+Computer
+ mkdir -p moz-refimage-v2-home/home
+ rsync -a root@n900-ref:/home/ moz-refimage-v2-home/home/.
+ cd moz-refimage-v2-home
+ tar jcfps home-v2.tar.bz2 home
+==Flashing==
+*Computer:
+ sudo ./maemo5-flasher.sh file.ubi
+*Wait until you see UNPLUG N900, unplug n900
+*pull battery
+*If device boots into first run wizard, pull battery again.  '''DO NOT RUN FIRST BOOT''' or you might break things
+*Move device to RF Room
+*Device:
+ sudo gainroot
+ initialize 000 #if you were making n900-000
+ reboot # when done, notice if things fail
+ 
+
+=TODO=
+*run 'stop bluetoothd' on startup	
+
+==Links==
+*DropBear Info: [http://wiki.flexion.org/DropbearSSHServer.html]
+*Power Saving Info: [https://gforge.ti.com/gf/project/omapkernel/wiki/?pagename=Power+Management]
+*More Power Management [http://elinux.org/OMAP_Power_Management]
+*Info on upstart [http://intr.overt.org/blog/?p=74]
+
+==Ideas==
+===tcpkill===
+Maybe we should investigate something like tcpkill before reboot to make sure that the device doesn't continue to fake-report to the buildbot master [http://www.cyberciti.biz/howto/question/linux/kill-tcp-connection-using-linux-netstat.php]
+
+==Files to Version==
+We want to store these files:
+*/etc/init.d/dropbear
+*/etc/init.d/no-power-saving
+*/etc/dropbear/*
+
+==Random==
+*There is no init by default.  We would need to install upstart-compat-sysv for that, but we are going to use upstart services
+*startup tasks are specified in /etc/event.d/rcS and /etc/event.d/rcS-late
+*If you relocate scratchbox, make sure you copy the /etc/resolv.conf from the new system to $SBDIR/etc/resolv.conf
+*http://talk.maemo.org/showthread.php?t=35554
