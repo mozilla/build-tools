@@ -10,7 +10,9 @@ from socket import gethostname
 KEY_FILE=path.join("c:\\", "program files", "opsi.org", "preloginloader",
                    "cfg", "locked.cfg")
 LOG_FILE=path.join("c:\\", "tmp", "key-generator.log")
-REF_PLATFORMS={'build': 'win2k3-ref-img', 'talos-xp': 'talos-r3-xp-ref',
+REF_PLATFORMS={'build': 'win2k3-ref-img',
+               'build-ix': 'win32-ix-ref',
+               'talos-xp': 'talos-r3-xp-ref',
                'talos-win7': 'talos-r3-w7-ref'}
 
 def generate_hash(str):
@@ -24,7 +26,11 @@ def get_ref_platform_key(hostname):
             return generate_hash(REF_PLATFORMS['talos-win7'])
         else:
             return None
-    return generate_hash(REF_PLATFORMS['build'])
+    else:
+        if 'ix' in hostname:
+            return generate_hash(REF_PLATFORMS['build-ix'])
+        else:
+            return generate_hash(REF_PLATFORMS['build'])
 
 def write_new_key(host, cp, keyfile):
     newKey = generate_hash(host)
