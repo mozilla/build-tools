@@ -1,0 +1,65 @@
+#!/bin/sh
+. /etc/mozconf
+
+booterror() {
+    error "$1"
+    while true ; do text2screen -x 1 -y 1 -s 4 -t "$1" ; done
+}
+
+printinfo() {
+    text2screen -c
+    text2screen -x 1 -y 1 -s 4 -t "$1"
+}
+
+printinfo "Running Mozilla Boot"
+
+#We have to be working with a configured device
+test -f $CONFIGED || booterror "device has not been configured"
+
+initctl stop bluetoothd || booterror "stop bt"
+
+#Disable annoying features
+echo 1 > /sys/devices/platform/gpio-switch/cam_shutter/disable
+echo 1 > /sys/devices/platform/gpio-switch/proximity/disable
+gconftool-2 --set /system/osso/dsm/display/enable_power_saving \
+    --type bool false || booterror "gconftool-2"
+gconftool-2 --set /system/osso/dsm/display/display_dim_timeout \
+    --type int 99999999 || booterror "gconftool-2"
+gconftool-2 --set /system/osso/dsm/display/display_blank_timeout \
+    --type int 99999999 || booterror "gconftool-2"
+gconftool-2 --set /system/osso/dsm/display/display_brightness \
+    --type int 1 || booterror "gconftool-2"
+
+generate_fstab || booterror "generate fstab"
+
+#We don't want the built in DNS cache
+initctl stop dnsmasq || booterror "stop dnsmasq"
+cat > /etc/resolv.conf <<EOF
+domain build.mozilla.org
+search build.mozilla.org
+nameserver $NS
+nameserver $NS2
+EOF
+
+rm -rf $MOZPROFILE_DIR || booterror "could not delete profile directory"
+#umount $BUILDDEV || umount -f /dev/mmcblk0p1 || booterror "umount $BUILDDEV"
+mkdir -p $BUILDDIR || booterror "mkdir -p $BUILDDIR"
+printinfo "making builds filesystem"
+mkfs.ext2 $BUILDDEV -L builds || booterror "mkfs.ext2 $BUILDDEV -L builds"
+mount -t ext2 $BUILDDEV $BUILDDIR -o defaults,noatime,errors=panic || \
+    booterror "mount $BUILDDEV $BUILDDIR"
+mount -t ext3 $HOMEDEV /home -o defaults,noatime,errors=panic || \
+    booterror "mount $HOMEDEV /home"
+printinfo "making swap partition"
+mkswap $SWAPDEV || booterror "mkswap $SWAPDEV"
+swapon $SWAPDEV || booterror "swapon $SWAPDEV"
+mkdir ${BUILDDIR}/profile || booterror "mkdir $BUILDDIR/profile"
+rm -rf $MOZPROFILE_DIR || booterror "removing old mozilla profile dir"
+ln -s ${BUILDDIR}/profile $MOZPROFILE_DIR || booterror "mkdir moz profile dir"
+rsync -a $MOZPROFILE_SRC/. $MOZPROFILE_DIR/. || booterror "rsync moz profdir"
+chown user:users $BUILDDIR || booterror "chown $BUILDDIR"
+chmod -R +rx $BUILDDIR
+sync || booterror "sync"
+sleep 2 
+printinfo "End of Mozilla Boot"
+sleep 2

@@ -1,7 +1,7 @@
 #!/bin/sh
 . /etc/mozconf
 
-echo > $HWLOG
+touch $HWLOG
 info "Starting to initialize $HOST"
 #It is annoying when the screen dims, even during initialization
 gconftool-2 --set /system/osso/dsm/display/display_dim_timeout \
@@ -49,7 +49,34 @@ ln -s /home/user /tools
 generate_fstab
 generate_pmconfig
 
+
+cat > /etc/event.d/buildbot <<EOF
+start on started dropbear
+stop on starting shutdown
+
+console none
+
+exec /bin/start-buildbot
+
+respawn
+EOF
+
+cat > /root/.ssh/authorized_keys <<EOF
+ssh-dss AAAAB3NzaC1kc3MAAACBAKF2RLI6znaFGSTLUWLOJoq3GYOPdfGgqiH3T4Vgg35W0WdbKGNfICt1ZTNYf1udQUmOIiGSwIkfXo6bySRdodyI9xKACOS/JEdxOa1utEJw8TgeBdjhZOIpim0NExuaHcbPp/bAaYah+a3pWariLItVzkl6+waJbGnwEpjfnN/TAAAAFQDUAS2QJUQjKWqnEVgKGBeQ/+uZPwAAAIBxZfrvFLqYnW125Ye42ataUMphcnjXcdBSfHMz8Hg7eH7Lzf/T9HdjkJvyI1aM2FcJDe/mpr0Bm+osDyk7+xehegZxIhBv4TtlBJsZsqGhLK+KRqGQC1z0lr/MCXj2zfRyFaq0nRxc0aAguqJUmtN7ULhCorRgyRm0VwHlGHDAWwAAAIBYmZyMRs8+nzQ6lLqS/+SuhjRJBoT7GVzZsK4oduhSeh+RViQT1f3DxWoZM5vMU7cgFY+niEd4HfryCJvMUQJQtspVwHFSotuyzUwZh39bFkuCbD7wKflVh7b/QEPYOkSnYz24HURdEqCxnnfVOvPLacTrDNv0pks4rguY1jzC7w== jhford@jhford-wifi.mv.mozilla.com
+ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA54bmAA9MVIkHwgRABpqFIQt26Cur2X1Sw8eDeGEYCLmNoOQI8ZAFZS73QHD7AcjJB+4rjzjc1IVUp+PXcBfsrv+6UTbgmRQAx1AcMd9SrKTZH72cO7aTvAjKAIhWTcCHwRSpHW8rpzHOqEpSsFnupoERQg1teG7rKrXK5h2isro8aFjkDnwZVxtpIXArEIlcZIOap4ZAbKNHOlUgNqgmMBMr2LtOvvG/GdHlVFne9gVfZWXQ7xi/N4LWZHt1u5gENzBh62pXwr5reTBM552qz4LKwuQknwdrbWXjgsei08F9JQulsMnJ0K+2W7IWB26MUydXHhqBNfs2Ylit7RQY8w== cltbld@staging-mobile-master.office.mozilla.org
+EOF
+
+mkdir -p /home/user/.ssh
+cp /root/.ssh/authorized_keys /home/user/.ssh/authorized_keys
+chown -R user:users /home/user/.ssh
+
+rsync -a /root-skel/. /. || fatal "rsync skeleton files"
+chmod +x /bin/start-buildbot || fatal "permissions start-buildbot"
+chmod +x /bin/verify-network || fatal "permissions verify-network"
+chmod +x /bin/reboot-user || fatal "permissions reboot-user"
+chmod +x /bin/start-mozilla || fatal "permissions start-mozilla"
 cat > /etc/event.d/rcS-late <<EOF
+
 description "late rcS actions"
 
 start on started xomap
@@ -95,150 +122,6 @@ end script
 normal exit 0
 EOF
 
-cat > /etc/event.d/buildbot <<EOF
-start on started dropbear
-stop on starting shutdown
-
-console none
-
-exec /bin/start-buildbot
-
-respawn
-EOF
-
-cat > /root/.ssh/authorized_keys <<EOF
-ssh-dss AAAAB3NzaC1kc3MAAACBAKF2RLI6znaFGSTLUWLOJoq3GYOPdfGgqiH3T4Vgg35W0WdbKGNfICt1ZTNYf1udQUmOIiGSwIkfXo6bySRdodyI9xKACOS/JEdxOa1utEJw8TgeBdjhZOIpim0NExuaHcbPp/bAaYah+a3pWariLItVzkl6+waJbGnwEpjfnN/TAAAAFQDUAS2QJUQjKWqnEVgKGBeQ/+uZPwAAAIBxZfrvFLqYnW125Ye42ataUMphcnjXcdBSfHMz8Hg7eH7Lzf/T9HdjkJvyI1aM2FcJDe/mpr0Bm+osDyk7+xehegZxIhBv4TtlBJsZsqGhLK+KRqGQC1z0lr/MCXj2zfRyFaq0nRxc0aAguqJUmtN7ULhCorRgyRm0VwHlGHDAWwAAAIBYmZyMRs8+nzQ6lLqS/+SuhjRJBoT7GVzZsK4oduhSeh+RViQT1f3DxWoZM5vMU7cgFY+niEd4HfryCJvMUQJQtspVwHFSotuyzUwZh39bFkuCbD7wKflVh7b/QEPYOkSnYz24HURdEqCxnnfVOvPLacTrDNv0pks4rguY1jzC7w== jhford@jhford-wifi.mv.mozilla.com
-ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA54bmAA9MVIkHwgRABpqFIQt26Cur2X1Sw8eDeGEYCLmNoOQI8ZAFZS73QHD7AcjJB+4rjzjc1IVUp+PXcBfsrv+6UTbgmRQAx1AcMd9SrKTZH72cO7aTvAjKAIhWTcCHwRSpHW8rpzHOqEpSsFnupoERQg1teG7rKrXK5h2isro8aFjkDnwZVxtpIXArEIlcZIOap4ZAbKNHOlUgNqgmMBMr2LtOvvG/GdHlVFne9gVfZWXQ7xi/N4LWZHt1u5gENzBh62pXwr5reTBM552qz4LKwuQknwdrbWXjgsei08F9JQulsMnJ0K+2W7IWB26MUydXHhqBNfs2Ylit7RQY8w== cltbld@staging-mobile-master.office.mozilla.org
-EOF
-
-mkdir -p /home/user/.ssh
-cp /root/.ssh/authorized_keys /home/user/.ssh/authorized_keys
-chown -R user:users /home/user/.ssh
-
-cat > /bin/reboot-user <<EOF
-#!/usr/bin/env python
-import os, time
-from optparse import OptionParser
-
-parser = OptionParser()
-parser.add_option("-s", "--slavedir", action="store", default="/builds/slave",
-                  help="path to slave directory", type="string",
-                  dest="slavedir")
-parser.add_option("-r", "--reboot", action="store", default="/sbin/reboot",
-                  help="path to reboot script. will be invoked with no args",
-                  type="string", dest="rebootcmd")
-parser.add_option("-b", "--buildbot", action="store", 
-                  default="/usr/bin/buildbot", help="path to buildbot script", 
-                  type="string", dest="buildbotcmd")
-(options, args) = parser.parse_args()
-
-if not os.path.exists(options.rebootcmd):
-    print "reboot command not found"
-    exit(1)
-if not os.path.exists(options.slavedir) or not os.path.exists(options.buildbotcmd):
-    print "slave directory not found"
-    #this is the simple case where buildbot isn't going to work 
-    os.execve(str(options.rebootcmd), [str(options.rebootcmd)],
-              {'PATH':'/sbin:/usr/sbin'})
-    #Application either ends here because of exec, or has failed to call 
-    #reboot
-    print "os.execv(%s) has failed!?!?!?!" % options.rebootcmd
-    import subprocess
-    subprocess.call([options.rebootcmd])
-
-#Normal program flow below:
-pid = os.fork()
-if pid == 0:
-    pid = os.fork()
-    os.setsid() #Create a new session
-    if pid == 0:
-        #second process
-        bbpid = os.fork()
-        if bbpid == 0:
-            print "stoping buildbot"
-            os.execv(str(options.buildbotcmd), [str(options.buildbotcmd),
-                                          "stop", str(options.slavedir)])
-        else:
-            print "rebooting"
-            os.execve(str(options.rebootcmd), [str(options.rebootcmd)],
-                     {'PATH':'/sbin/:/usr/sbin'})
-    else:
-        exit(0)
-else:
-    time.sleep(1000) #to make sure slave doesn't take new job
-    exit(0)
-
-EOF
-chmod +sx /bin/reboot-user
-ln -s /bin/reboot-user /bin/reboot
-
-cat > /bin/start-mozilla <<SMEOF
-#!/bin/sh
-. /etc/mozconf
-
-booterror() {
-    error "\$1"
-    while true ; do text2screen -x 1 -y 1 -s 4 -t "\$1" ; done
-}
-
-printinfo() {
-    text2screen -c
-    text2screen -x 1 -y 1 -s 4 -t "\$1"
-}
-
-printinfo "Running Mozilla Boot"
-
-#We have to be working with a configured device
-test -f \$CONFIGED || booterror "device has not been configured"
-
-initctl stop bluetoothd || booterror "stop bt"
-
-#Disable annoying features
-echo 1 > /sys/devices/platform/gpio-switch/cam_shutter/disable
-echo 1 > /sys/devices/platform/gpio-switch/proximity/disable
-gconftool-2 --set /system/osso/dsm/display/enable_power_saving \
-    --type bool false || booterror "gconftool-2"
-gconftool-2 --set /system/osso/dsm/display/display_dim_timeout \
-    --type int 99999999 || booterror "gconftool-2"
-gconftool-2 --set /system/osso/dsm/display/display_blank_timeout \
-    --type int 99999999 || booterror "gconftool-2"
-gconftool-2 --set /system/osso/dsm/display/display_brightness \
-    --type int 1 || booterror "gconftool-2"
-
-generate_fstab || booterror "generate fstab"
-
-#We don't want the built in DNS cache
-initctl stop dnsmasq || booterror "stop dnsmasq"
-cat > /etc/resolv.conf <<EOF
-domain build.mozilla.org
-nameserver \$NS
-nameserver \$NS2
-EOF
-
-rm -rf \$MOZPROFILE_DIR || booterror "could not delete profile directory"
-#umount \$BUILDDEV || umount -f /dev/mmcblk0p1 || booterror "umount \$BUILDDEV"
-mkdir -p \$BUILDDIR || booterror "mkdir -p \$BUILDDIR"
-printinfo "making builds filesystem"
-mkfs.ext2 \$BUILDDEV -L builds || booterror "mkfs.ext2 \$BUILDDEV -L builds"
-mount -t ext2 \$BUILDDEV \$BUILDDIR -o defaults,noatime,errors=panic || \
-    booterror "mount \$BUILDDEV \$BUILDDIR"
-mount -t ext3 \$HOMEDEV /home -o defaults,noatime,errors=panic || \
-    booterror "mount \$HOMEDEV /home"
-printinfo "making swap partition"
-mkswap \$SWAPDEV || booterror "mkswap \$SWAPDEV"
-swapon \$SWAPDEV || booterror "swapon \$SWAPDEV"
-mkdir \$BUILDDIR/profile || booterror "mkdir \$BUILDDIR/profile"
-rm -rf \$MOZPROFILE_DIR || booterror "removing old mozilla profile dir"
-ln -s \$BUILDDIR/profile \$MOZPROFILE_DIR || booterror "mkdir moz profile dir"
-rsync -a \$MOZPROFILE_SRC/. \$MOZPROFILE_DIR/. || booterror "rsync moz profdir"
-chown user:users $BUILDDIR || booterror "chown $BUILDDIR"
-chmod -R +rx $BUILDDIR
-sync || booterror "sync"
-sleep 2 #needed to make sure upstart doesn't kill it immediately
-printinfo "End of Mozilla Boot"
-sleep 2
-SMEOF
-chmod +x /bin/start-mozilla
 
 cat > $NGINXPREFIX/conf/nginx.conf <<EOF
 worker_processes  1;
@@ -265,19 +148,5 @@ http {
     }
 }
 EOF
-
-
-cat > /bin/start-buildbot <<EOF
-#!/bin/sh
-
-. /etc/mozconf
-
-\${NGINXPREFIX}/sbin/nginx -c \${NGINXPREFIX}/conf/nginx.conf
-
-su - user -c "buildbot create-slave --maxdelay=20 \$BBDIR \${BBHOST}:\${BBPORT} \$BBUSER \$BBPASS"
-su - user -c "ln -s /hwlog \$BBDIR/info/admin ; ln -s /configed \$BBDIR/info/host"
-su - user -c "buildbot start \$BBDIR"
-EOF
-chmod +x /bin/start-buildbot
 
 info "Initialized" | tee -a $CONFIGED

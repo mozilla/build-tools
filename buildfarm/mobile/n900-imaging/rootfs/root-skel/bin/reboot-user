@@ -1,0 +1,61 @@
+#!/usr/bin/env python
+import os, time
+from optparse import OptionParser
+
+parser = OptionParser()
+parser.add_option("-s", "--slavedir", action="store", 
+                  default="/builds/slave",
+                  help="path to slave directory", type="string",
+                  dest="slavedir")
+parser.add_option("-r", "--reboot", action="store", default="/sbin/reboot",
+                  help="path to reboot. will be invoked with no args",
+                  type="string", dest="rebootcmd")
+parser.add_option("-b", "--buildbot", action="store", 
+                  default="/usr/bin/buildbot", 
+                  help="path to buildbot script", 
+                  type="string", dest="buildbotcmd")
+(options, args) = parser.parse_args()
+
+if not os.path.exists(options.rebootcmd):
+    print "reboot command not found"
+    exit(1)
+if not os.path.exists(options.slavedir) or not os.path.exists(options.buildbotcmd):
+    print "slave directory not found"
+    #this is the simple case where buildbot isn't going to work 
+    os.execve(str(options.rebootcmd), [str(options.rebootcmd)],
+              {'PATH':'/sbin:/bin:/usr/sbin:/usr/bin'})
+    #Application either ends here because of exec, or has failed to call 
+    #reboot
+    print "os.execv(%s) has failed!?!?!?!" % options.rebootcmd
+    import subprocess
+    subprocess.call([options.rebootcmd])
+
+#Normal program flow below:
+pid = os.fork()
+if pid == 0:
+    pid = os.fork()
+    os.setsid() #Create a new session
+    if pid == 0:
+        #second process
+        bbpid = os.fork()
+        if bbpid == 0:
+            print "stoping buildbot"
+            os.execv(str(options.buildbotcmd), [str(options.buildbotcmd),
+                                          "stop", str(options.slavedir)])
+            #Application either ends here because of exec, 
+            #or has failed to call reboot
+            print "os.execv(%s) has failed!?!?!?!" % options.rebootcmd
+        else:
+            print "rebooting"
+            os.execve(str(options.rebootcmd), [str(options.rebootcmd)],
+                     {'PATH':'/sbin/:/bin:/usr/sbin:/usr/bin'})
+            #Application either ends here because of exec
+            #or has failed to call reboot
+            print "os.execv(%s) has failed!?!?!?!" % options.rebootcmd
+            import subprocess
+            subprocess.call([options.rebootcmd])
+    else:
+        exit(0)
+else:
+    time.sleep(1000) #to make sure slave doesn't take new job
+    exit(0)

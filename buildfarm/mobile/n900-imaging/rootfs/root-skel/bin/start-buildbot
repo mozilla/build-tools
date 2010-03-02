@@ -1,0 +1,24 @@
+#!/bin/sh
+
+. /etc/mozconf
+
+${NGINXPREFIX}/sbin/nginx -c ${NGINXPREFIX}/conf/nginx.conf
+
+i=0
+while true ; do
+  i=$(($i + 1))
+  ping -c 1 $BBHOST
+  if [[ $? -eq 0 ]] ; then
+    break
+  elif [[ i -gt $PINGMAX ]] ; then
+    reboot
+  fi
+done
+
+setsid /bin/verify-network $BBHOST $BBPORT $PINGMAX $PINGDELAY \
+    $PINGMAXREBT $HWLOG
+buildbot create-slave --maxdelay=20 $BBDIR ${BBHOST}:${BBPORT} \
+   $BBUSER $BBPASS
+cp $HWLOG $BBDIR/info/admin ; cp $CONFIGED ${BBDIR}/info/host
+buildbot start $BBDIR
+EOF
