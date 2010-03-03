@@ -166,6 +166,30 @@ def ntpd():
         log.error('Could not run ntpd')
         exit(1, "Error running ntpd")
 
+def setupPerformance():
+    log.info('Setting up performance')
+    f = open('/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor', 'w')
+    f.write('performance\n')
+    f.close()
+
+def disableScreenDimming():
+    log.info('Disabling screen dimming')
+    for args in [['/system/osso/dsm/display/enable_power_saving',
+                  '--type', 'bool', 'false'],
+                 ['/system/osso/dsm/display/display_dim_timeout',
+                  '--type', 'int', '99999999'],
+                 ['/system/osso/dsm/display/display_blank_timeout',
+                  '--type', 'int', '99999999'],
+                 ['/system/osso/dsm/display/display_brightness', '--type',
+                  'int', '1']
+                ]:
+        try:
+            subprocess.check_call(execPrefix + ['gconftool-2', '--set'] +
+                                  args)
+        except subprocess.CalledProcessError:
+            log.error('Could not set screen dimming prefs')
+            exit(1, "Error running gconftool-2")
+
 def setupFS():
     log.info('Setting up filesystem')
     swapoff('/media/mmc2/.swap')
@@ -187,6 +211,8 @@ def start():
         time.sleep(delay)
     ntpd()
     setupFS()
+    setupPerformance()
+    disableScreenDimming()
     try:
         subprocess.check_call(execPrefix + ["buildbot", "start", slavedir],
                    env=environment(ignoreVars=['CONSOLE']))
