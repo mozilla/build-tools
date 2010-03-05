@@ -10,18 +10,20 @@ from errno import EEXIST
 
 NIGHTLY_PATH = "/home/ftp/pub/%(product)s/%(nightly_dir)s"
 TINDERBOX_BUILDS_PATH = "/home/ftp/pub/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
-# For staging
-#TINDERBOX_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
-# For production
-TINDERBOX_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
-LATEST_DIR = "latest-%(branch)s"
 LONG_DATED_DIR = "%(year)s/%(month)s/%(year)s-%(month)s-%(day)s-%(hour)s-%(branch)s"
 SHORT_DATED_DIR = "%(year)s-%(month)s-%(day)s-%(hour)s-%(branch)s"
 CANDIDATES_DIR = "%(version)s-candidates/build%(buildnumber)s"
-# For staging
-#CANDIDATES_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(version)s-candidates/build%(buildnumber)s"
-# For production
+LATEST_DIR = "latest-%(branch)s"
+# Production configs that need to be commented out when doing staging.
+TINDERBOX_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
 CANDIDATES_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(version)s-candidates/build%(buildnumber)s"
+TRYSERVER_DIR = "/builds/tryserver/%(who)s-%(revision)s/%(builddir)s"
+TRYSERVER_URL_PATH = "http://build.mozilla.org/tryserver-builds/%(who)s-%(revision)s/%(builddir)s"
+# Staging configs start here.  Uncomment when working on staging
+#TINDERBOX_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
+#CANDIDATES_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(version)s-candidates/build%(buildnumber)s"
+#TRYSERVER_DIR = "/home/ftp/pub/tryserver-builds/%(who)s-%(revision)s/%(builddir)s"
+#TRYSERVER_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/tryserver-builds/%(who)s-%(revision)s/%(builddir)s"
 
 def CopyFileToDir(original_file, source_dir, dest_dir, preserve_dirs=False):
     if not original_file.startswith(source_dir):
@@ -161,7 +163,16 @@ def ReleaseToCandidatesDir(options, upload_dir, files):
         for d in dirs:
             os.chmod(os.path.join(root, d), 0755)
 
-
+def ReleaseToTryserverBuilds(options, upload_dir, files):
+    tryserverBuildsPath = TRYSERVER_DIR % {'who': options.who,
+                                           'revision': options.revision,
+                                           'builddir': options.builddir}
+    tryserverBuildsUrl = TRYSERVER_URL_PATH % {'who': options.who,
+                                               'revision': options.revision,
+                                               'builddir': options.builddir}
+    for f in files:
+        CopyFileToDir(f, upload_dir, tryserverBuildsPath)
+        sys.stderr.write("%s\n" % os.path.join(tryserverBuildsUrl, os.path.basename(f)))
 
 if __name__ == '__main__':
     releaseTo = []
@@ -186,6 +197,13 @@ if __name__ == '__main__':
     parser.add_option("-n", "--build-number",
                       action="store", dest="build_number",
                       help="Set buildid to build paths properly.")
+    parser.add_option("-r", "--revision",
+                      action="store", dest="revision")
+    parser.add_option("-w", "--who",
+                      action="store", dest="who")
+    parser.add_option("--builddir",
+                      action="store", dest="builddir",
+                      help="Subdir to arrange packaged unittest build paths properly.")
     parser.add_option("--tinderbox-builds-dir",
                       action="store", dest="tinderbox_builds_dir",
                       help="Set tinderbox builds dir to build paths properly.")
@@ -204,6 +222,9 @@ if __name__ == '__main__':
     parser.add_option("--release-to-tinderbox-dated-builds",
                       action="store_true", dest="release_to_dated_tinderbox_builds",
                       help="Copy files to $product/tinderbox-builds/$tinderbox_builds_dir/$timestamp")
+    parser.add_option("--release-to-tryserver-builds",
+                      action="store_true", dest="release_to_tryserver_builds",
+                      help="Copy files to tryserver-builds/$who-$revision")
     (options, args) = parser.parse_args()
     
     if len(args) < 2:
@@ -247,6 +268,17 @@ if __name__ == '__main__':
             error = True
         if not options.buildid:
             print "Error, you must supply the build id."
+            error = True
+    if options.release_to_tryserver_builds:
+        releaseTo.append(ReleaseToTryserverBuilds)
+        if not options.who:
+            print "Error, must supply who"
+            error = True
+        if not options.revision:
+            print "Error, you must supply the revision"
+            error = True
+        if not options.builddir:
+            print "Error, you must supply the builddir"
             error = True
     if len(releaseTo) == 0:
         print "Error, you must pass a --release-to option!"
