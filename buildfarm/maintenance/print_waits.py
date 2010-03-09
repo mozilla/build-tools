@@ -4,15 +4,20 @@ def format_hist(h, units=1):
     retval = []
     if not h:
         h[0] = 0
+    total = sum(h.values())
     keys = sorted(h.keys())
     min_key = min(keys)
     max_key = max(keys)
 
     for i in range(min_key, max_key+1):
         n = h.get(i, 0)
-        bar = "#" * n
+        if total > 0:
+            percentage = " %8.2f%%" % (n*100./total)
+        else:
+            percentage = ''
 
-        retval.append("%4i %s (%i)" % (i*units, bar, n))
+        retval.append("%3i: %8i%s"
+                       % (i*units, n, percentage))
     return "\n".join(retval)
 
 def scan_builder(builder, starttime, endtime, minutes_per_block, times, change_as_submittime=True):
@@ -70,6 +75,9 @@ if __name__ == "__main__":
     parser.add_option("-d", "--directory", dest="directory")
     parser.add_option("-s", "--start-time", dest="starttime", type="int")
     parser.add_option("-e", "--end-time", dest="endtime", type="int")
+    parser.add_option("-a", "--address", dest="addresses", action="append")
+    parser.add_option("-S", "--smtp", dest="smtp")
+    parser.add_option("-f", "--from", dest="sender")
 
     options, args = parser.parse_args()
 
@@ -79,17 +87,56 @@ if __name__ == "__main__":
     if options.directory:
         os.chdir(options.directory)
 
-    print "Wait time report for %s for jobs submitted since" % options.name, time.ctime(options.starttime)
-    print
+    text =[]
+    text.append("Wait time report for %s for jobs submitted since %s\n" 
+                % (options.name, time.ctime(options.starttime)))
 
+    hist = {}
     for platform, builders in options.builders.items():
-        hist = {}
+        hist[platform] = {}
         for builder in builders:
-            scan_builder(builder, options.starttime, options.endtime, options.minutes_per_block, hist, options.change_as_submittime)
+            scan_builder(builder, options.starttime, options.endtime,
+                         options.minutes_per_block, hist[platform], 
+                         options.change_as_submittime)
 
-        print platform
-        print format_hist(hist, options.minutes_per_block)
-        print
+    allhist = {}
+    for i in set([x for y in hist.keys() for x in hist[y]]):
+        allhist[i] = sum([p.get(i,0) for p in hist.values()])
+    total = sum(allhist.values())
+    text.append("Total Jobs: %i\n" % total)
+    text.append("Wait Times")
+    text.append(format_hist(allhist, options.minutes_per_block))
+    text.append("\nPlatform break down\n")
+    for platform, builders in options.builders.items():
+        text.append("%s: %i" % (platform, sum(hist[platform].values())))
+        text.append(format_hist(hist[platform], options.minutes_per_block))
+        text.append("\n")
 
-    print "The number on the left is how many minutes a build waited to start, rounded down"
-    print "The number of hashes indicates how many builds waited that long"
+    text.append("The number on the left is how many minutes a build waited to start, rounded down")
+
+    if not options.addresses:
+        print "\n".join(text)
+    else:
+        import smtplib
+        import sys
+        
+        zero_wait = 0
+        if total > 0:
+            zero_wait = allhist.get(0,0)*100./total
+
+        subject = "Wait: %i/%.2f%% (%s)" % (total, zero_wait, options.name)
+        server = options.smtp or 'localhost'
+        sender = options.sender or 'cltbld@build.mozilla.com'
+
+        headers = []
+        headers.append("Subject: %s" % subject)
+        headers.append("From: %s" % sender)
+        headers.append("To: %s" % (", ".join(options.addresses)))
+        message = "\n".join(headers) + "\n" + "\n".join(text)
+
+        try:
+            smtp = smtplib.SMTP(server)
+            smtp.sendmail(sender, options.addresses, message)
+        except SMTPException:
+            print "Error: unable to send email"
+            sys.exit(1)
