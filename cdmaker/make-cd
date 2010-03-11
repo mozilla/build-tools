@@ -170,7 +170,7 @@ foreach my $app (@$RELEASES) {
     foreach my $locale (@{$app->{locales}}) {
         foreach my $platform ('/linux-i686/', '/mac/', '/unimac/', '/win32/') {
             push(@includedLocales, "--include");
-            push(@includedLocales, join "", $platform, $locale, "/*"));
+            push(@includedLocales, join("", $platform, $locale, "/*"));
         }
     }
     
