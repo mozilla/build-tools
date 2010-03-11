@@ -2,6 +2,20 @@
 import os, time
 from optparse import OptionParser
 
+def correct_tmp_file():
+    try:
+    #Normal program flow below:
+        if os.path.exists("/tmp/shutdown"):
+            os.remove("/tmp/shutdown")
+        if not os.path.exists("/tmp/reboot"):
+            f = open("/tmp/reboot")
+            f.write("")
+            f.close()
+    except IOError, e:
+        pass #We don't want to jeopardize the reboot
+
+env = {'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'}
+
 parser = OptionParser()
 parser.add_option("-s", "--slavedir", action="store", 
                   default="/builds/slave",
@@ -22,15 +36,13 @@ if not os.path.exists(options.rebootcmd):
 if not os.path.exists(options.slavedir) or not os.path.exists(options.buildbotcmd):
     print "slave directory not found"
     #this is the simple case where buildbot isn't going to work 
-    os.execve(str(options.rebootcmd), [str(options.rebootcmd)],
-              {'PATH':'/sbin:/bin:/usr/sbin:/usr/bin'})
+    os.execve(str(options.rebootcmd), [str(options.rebootcmd)], env)
     #Application either ends here because of exec, or has failed to call 
     #reboot
     print "os.execv(%s) has failed!?!?!?!" % options.rebootcmd
     import subprocess
     subprocess.call([options.rebootcmd])
 
-#Normal program flow below:
 pid = os.fork()
 if pid == 0:
     pid = os.fork()
@@ -40,22 +52,36 @@ if pid == 0:
         bbpid = os.fork()
         if bbpid == 0:
             print "stoping buildbot"
-            os.execv(str(options.buildbotcmd), [str(options.buildbotcmd),
-                                          "stop", str(options.slavedir)])
+            os.execve(str(options.buildbotcmd), [str(options.buildbotcmd),
+                      "stop", str(options.slavedir)], env)
             #Application either ends here because of exec, 
             #or has failed to call reboot
             print "os.execv(%s) has failed!?!?!?!" % options.rebootcmd
+
         else:
             print "rebooting"
+            time.sleep(30)
+            correct_tmp_file()
             os.execve(str(options.rebootcmd), [str(options.rebootcmd)],
-                     {'PATH':'/sbin/:/bin:/usr/sbin:/usr/bin'})
+                      env)
             #Application either ends here because of exec
             #or has failed to call reboot
             print "os.execv(%s) has failed!?!?!?!" % options.rebootcmd
             import subprocess
+            correct_tmp_file()
+            print "trying subprocess.call instead of os.execve"
             subprocess.call([options.rebootcmd])
     else:
         exit(0)
 else:
-    time.sleep(1000) #to make sure slave doesn't take new job
-    exit(0)
+    for i in range(0,2000):
+        correct_tmp_file()
+        time.sleep(0.5) #0.5 is arbitrary but is to ensure we don't
+                        #steal *all* the cpu away from other tasks
+    print "TinderboxPrint: reboot failed"
+    for i in ["/sentinel", "/hwlog"]:
+        f=open(i, "a+")
+        f.write("%s PST ERROR: I failed to reboot" % \
+                    time.asctime(time.localtime()))
+        f.close()
+    exit(1)

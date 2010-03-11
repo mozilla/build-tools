@@ -3,12 +3,16 @@
 
 booterror() {
     error "$1"
-    while true ; do text2screen -x 1 -y 1 -s 4 -t "$1" ; done
+    text2screen -c
+    text2screen -x 1 -y 1 -s 1 -t "E: $1"
+    text2screen -x 1 -y 2 -s 1 -t "reboot 300s"
+    sleep 300
+    reboot
 }
 
 printinfo() {
     text2screen -c
-    text2screen -x 1 -y 1 -s 4 -t "$1"
+    text2screen -x 1 -y 1 -s 1 -t "$1"
 }
 
 printinfo "Running Mozilla Boot"

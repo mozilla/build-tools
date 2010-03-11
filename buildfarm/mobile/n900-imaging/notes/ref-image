@@ -1,7 +1,7 @@
 =Creating a Maemo5 Ref Image=
 ==Requirements==
 *32-bit Linux Computer (I used Fedora 12)
-*MicroUSB Cable
+*Micro USB Cable
 *flasher-3.5 v2.5.2 
 **<code>SHA1(flasher-3.5)= 68a1c3d9d8e925e74b361a4ddf30f5ffbe9da4ba</code>
 *Main Firmware Image
@@ -381,7 +381,7 @@ Imaging Computer
  hg clone http://hg.mozilla.org/build/tools
  ln -s tools/buildfarm/mobile/n900-imaging maemo5
  cd maemo5
- <OBTAIN flasher-3.5, and proprietary firmware images>
+ <OBTAIN flasher-3.5 and proprietary firmware images>
  ls
  # OUTPUT:
  # add_prop.sh         notes
@@ -390,7 +390,7 @@ Imaging Computer
  # grab-image.sh       RX-51_2009SE_1.2009.41-1.VANILLA_PR_EMMC_MR0_ARM.bin
  # maemo5-flash.sh     RX-51_2009SE_2.2009.51-1_PR_COMBINED_MR0_ARM.bin
  # mkfs.ubifs          ubinize
- #There is a list of hases (use openssl sha1 <file> to verify)
+ #There is a list of hashes (use openssl sha1 <file> to verify)
  <OBTAIN firmware image>
  file moz-refimage-3.2.ubi
  #OUTPUT:
@@ -414,7 +414,8 @@ Follow the onscreen instructions.  Wait for the screen to say "Suitable USB Devi
 *If the desktop of the device has lots of things (calidar, get started, google, OVI...) then you need to initialize the device
 **Launch terminal, shortcut on desktop of device
 **run <code>sudo i NNN</code> where NNN is the device number (e.g. 001,002...)
-*If you only see the desktop, clock and Terminal shortcut then you need to start this device over as it improperly flashed the emmc image.
+***If this fails, make sure you are in the RF room, launch sudo i NNN a second time.  If that fails restart the device ('sudo reboot') and try again.  If it still fails, reflash device
+*If you only see the desktop, clock and Terminal shortcut then you need to start this device over as it improperly flashed the emmc image
 
 ==Device Won't Flash==
 *Symptom: Device won't boot into flashing mode and the notification light is green.

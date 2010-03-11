@@ -23,6 +23,8 @@ else:
       ip = socket.gethostbyaddr(hostname)
     except socket.gaierror:
       failcount += 1
+    except socket.herror:
+      
     if ip:
       host = ip[2][0]
       break

@@ -23,10 +23,9 @@ info "hostname set to $(cat /etc/hostname)"
 #Prepare home partition
 sync
 sleep 5
-#umount /home/user/MyDocs 2>/dev/null
-umount $TEMP_MP 2>/dev/null
-umount $BUILDDEV 2>/dev/null || umount -f $BUILDDEV || \
-    fatal "umount -f $BUILDDEV"
+umount /home/user/MyDocs 2>/dev/null
+umount $TEMP_MP 2>/dev/null || error "umount $TEMP_MP"
+umount $BUILDDEV 2>/dev/null || error "umount -f $BUILDDEV"
 rm -rf $TEMP_MP
 mkdir $TEMP_MP || fatal "mkdir $TEMP_MP"
 info "making temporary filesystem"
@@ -37,8 +36,10 @@ wget $TARBALL_URL -O ${TEMP_MP}/home.tar.bz2 || fatal "downloading tarball"
 info "tarball sha1: $(sha1sum < $TEMP_MP/home.tar.bz2)"
 tar jxf ${TEMP_MP}/home.tar.bz2 -C $TEMP_MP 2> /dev/null || \
     fatal "failed tarball extraction"
-info "extracted tarball, starting rsync"
+info "extracted tarball"
 #Make sure it is in a clean state with --delete-after
+info "rsync starting"
+##rsync -a --delete-after ${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_DIR}/. /home/.
 rsync -a --delete-after ${TEMP_MP}/home/. /home/.
 info "rsync finished"
 umount $BUILDDEV || umount $TEMP_MP
@@ -48,7 +49,6 @@ ln -s /home/user /tools
 
 generate_fstab
 generate_pmconfig
-
 
 cat > /etc/event.d/buildbot <<EOF
 start on started dropbear
@@ -71,12 +71,12 @@ cp /root/.ssh/authorized_keys /home/user/.ssh/authorized_keys
 chown -R user:users /home/user/.ssh
 
 rsync -a /root-skel/. /. || fatal "rsync skeleton files"
-chmod +x /bin/start-buildbot || fatal "permissions start-buildbot"
-chmod +x /bin/verify-network || fatal "permissions verify-network"
-chmod +x /bin/reboot-user || fatal "permissions reboot-user"
-chmod +x /bin/start-mozilla || fatal "permissions start-mozilla"
-cat > /etc/event.d/rcS-late <<EOF
+chmod +x /bin/start-buildbot || fatal "+x permissions start-buildbot"
+chmod +x /bin/verify-network || fatal "+x permissions verify-network"
+chmod +x /bin/reboot-user || fatal "+x permissions reboot-user"
+chmod +x /bin/start-mozilla || fatal "+x permissions start-mozilla"
 
+cat > /etc/event.d/rcS-late <<EOF
 description "late rcS actions"
 
 start on started xomap
@@ -121,7 +121,6 @@ end script
 
 normal exit 0
 EOF
-
 
 cat > $NGINXPREFIX/conf/nginx.conf <<EOF
 worker_processes  1;

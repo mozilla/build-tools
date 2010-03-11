@@ -27,6 +27,7 @@ done
 
 echo "putting scripts into filesystem"
 rsync -av rootfs/. ${ROOT}/.
+echo "using $OUTPUT generated `date`" | tee ${ROOT}/image-ver
 
 cat > ubi.cfg <<EOF
 [rootfs]
