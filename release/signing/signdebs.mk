@@ -23,12 +23,11 @@ INSTALL_CONTENTS = "[install]\nrepo_deb_3 = deb $(STAGE_URL) $(MAEMO_VERSION) $(
 FENNEC_FILENAME	= $(notdir $(FENNEC_FILEURL))
 FENNEC_FILEPATH	= $(WORKDIR)/dists/$(MAEMO_VERSION)/$(REPO_SECTION)/binary-armel/$(FENNEC_FILENAME)
 
-TARGETS = echo setup download-repository clean-install-file
+TARGETS = echo setup
 
 ifndef RELEASE
 REPO_SECTION	:= extras
 INSTALL_FILENAME	= $(BRANCH_NICK)_$(LOCALE)_nightly.install
-TARGETS += clean-repository
 else
 REPO_SECTION	:= release
 INSTALL_FILENAME	= $(BRANCH_NICK)_$(LOCALE).install
@@ -43,21 +42,10 @@ TARGETS += sign upload
 all: $(TARGETS)
 
 setup:
+	rm -rf $(WORKDIR)/dists
 	mkdir -p $(WORKDIR)/dists/$(MAEMO_VERSION)/$(REPO_SECTION)/binary-armel
 
-download-repository:
-	ssh -i $(SSH_KEY) $(STAGE_USERNAME)@$(STAGE_SERVER) "test -d $(STAGE_PATH)/dists" && \
-	  rsync -azv -e 'ssh -i $(SSH_KEY)' $(RSYNC_ARGS) $(STAGE_USERNAME)@$(STAGE_SERVER):$(STAGE_PATH)/dists/. $(WORKDIR)/dists/. || \
-	  echo "No repository to download."
-
-clean-install-file:
-	rm -f $(WORKDIR)/$(INSTALL_FILENAME)
-
-clean-repository:
-	find $(WORKDIR)/dists/$(MAEMO_VERSION)/$(REPO_SECTION)/binary-armel/. -name \*.deb -exec rm {} \;
-
 download-fennec:
-	rm -rf $(FENNEC_FILEPATH)
 	wget -O $(FENNEC_FILEPATH) $(FENNEC_FILEURL)
 
 echo:
@@ -81,7 +69,8 @@ sign:
 	$(SBOX_PATH) -p -d $(SBOX_WORKDIR) apt-ftparchive packages dists/$(MAEMO_VERSION)/$(REPO_SECTION)/binary-armel | gzip -9c > $(WORKDIR)/dists/$(MAEMO_VERSION)/$(REPO_SECTION)/binary-armel/Packages.gz
 	for i in dists/$(MAEMO_VERSION)/$(REPO_SECTION)/binary-armel dists/$(MAEMO_VERSION)/$(REPO_SECTION) dists/$(MAEMO_VERSION); do \
 	  rm -f $(WORKDIR)/$${i}/Release.gpg; \
-	  $(SBOX_PATH) -p -d $(SBOX_WORKDIR)/$${i} apt-ftparchive release . > $(WORKDIR)/$${i}/Release; \
+	  $(SBOX_PATH) -p -d $(SBOX_WORKDIR)/$${i} apt-ftparchive release . > $(WORKDIR)/Release.tmp; \
+	  mv $(WORKDIR)/Release.tmp $(WORKDIR)/$${i}/Release; \
 	  gpg -abs -o $(WORKDIR)/$${i}/Release.gpg $(WORKDIR)/$${i}/Release; \
 	done
 
