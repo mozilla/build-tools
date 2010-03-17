@@ -277,8 +277,15 @@ sub BumpPatcherConfig {
      $pBetatestPath;
 
     if ($useBetaChannel) {
-      my $pBetaPath = BumpFilePath(
-        oldFilePath => $currentUpdateObj->{'partial'}->{'beta-url'});
+      my $pBetaPath;
+      if (defined($currentUpdateObj->{'partial'}->{'beta-url'})) {
+        $pBetaPath = BumpFilePath(
+          oldFilePath => $currentUpdateObj->{'partial'}->{'beta-url'});
+      } else {
+        # patcher-config-creator.pl ensures this exists
+        $pBetaPath = BumpFilePath(
+          oldFilePath => $currentUpdateObj->{'partial'}->{'betatest-url'});
+      }
       $partialUpdate->{'beta-url'} =
        'http://' . $ftpServer . '/pub/mozilla.org/' . $product. '/nightly/' . 
         $version . '-candidates/' . $buildStr . '/' . 
@@ -305,8 +312,15 @@ sub BumpPatcherConfig {
      $cBetatestPath;
 
     if ($useBetaChannel) {
-       my $cBetaPath = BumpFilePath(
-         oldFilePath => $currentUpdateObj->{'complete'}->{'beta-url'});
+       my $cBetaPath;
+       if (defined($currentUpdateObj->{'complete'}->{'beta-url'})) {
+         $cBetaPath = BumpFilePath(
+           oldFilePath => $currentUpdateObj->{'complete'}->{'beta-url'});
+       } else {
+         # patcher-config-creator.pl ensures this exists
+         $cBetaPath = BumpFilePath(
+           oldFilePath => $currentUpdateObj->{'complete'}->{'betatest-url'});
+       }
        $completeUpdate->{'beta-url'} = 
         'http://' . $ftpServer . '/pub/mozilla.org/' . $product. '/nightly/' .
         $version . '-candidates/' . $buildStr .  '/' . $cBetaPath;
