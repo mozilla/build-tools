@@ -42,7 +42,7 @@ TARGETS += sign upload
 all: $(TARGETS)
 
 setup:
-	rm -rf $(WORKDIR)/dists
+	rm -rf $(WORKDIR)/dists $(INSTALL_FILEPATH)
 	mkdir -p $(WORKDIR)/dists/$(MAEMO_VERSION)/$(REPO_SECTION)/binary-armel
 
 download-fennec:
