@@ -3,7 +3,7 @@
 # This script expects a directory as its first non-option argument,
 # followed by a list of filenames.
 
-import sys, os, os.path, shutil
+import sys, os, os.path, shutil, re
 from optparse import OptionParser
 from time import mktime, strptime
 from errno import EEXIST
@@ -24,6 +24,8 @@ TRYSERVER_URL_PATH = "http://build.mozilla.org/tryserver-builds/%(who)s-%(revisi
 #CANDIDATES_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(version)s-candidates/build%(buildnumber)s"
 #TRYSERVER_DIR = "/home/ftp/pub/tryserver-builds/%(who)s-%(revision)s/%(builddir)s"
 #TRYSERVER_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/tryserver-builds/%(who)s-%(revision)s/%(builddir)s"
+
+PARTIAL_MAR_RE = re.compile('\.partial\..*\.mar$')
 
 def CopyFileToDir(original_file, source_dir, dest_dir, preserve_dirs=False):
     if not original_file.startswith(source_dir):
@@ -101,6 +103,8 @@ def ReleaseToLatest(options, upload_dir, files):
 
     for f in files:
         if f.endswith('crashreporter-symbols.zip'):
+            continue
+        if PARTIAL_MAR_RE.search(f):
             continue
         CopyFileToDir(f, upload_dir, latestPath)
     os.utime(latestPath, None)
