@@ -18,9 +18,10 @@ $|++;
 # In order to avoid very messy logic for consumers we simply replace any
 # version number we find in those files.
 
-my $VERSION_REGEXP = '\d\.\d[\d\.]*' # A version number 
-                   . '((a|b)\d+)?'   # Might be an alpha or beta
-                   . '(pre)?';       # Might be pre
+my $VERSION_REGEXP = '\d\.\d[\d\.]*'   # A version number
+                   . '([a-zA-Z]+\d+)?' # Might be a project branch
+                   . '((a|b)\d+)?'     # Might be an alpha or beta
+                   . '(pre)?';         # Might be pre
 
 my %config;
 
@@ -91,8 +92,8 @@ sub Bump {
     my $versionTxt = catfile($appName, 'config', 'version.*\.txt');
     my $milestoneTxt = catfile('config', 'milestone.txt');
     my $jsMilestoneTxt = catfile('js', 'src', 'config', 'milestone.txt');
-	my $winmoVersionTxt = 'winmo-version.txt';
-	my $defaultVersionTxt = 'default-version.txt';
+    my $winmoVersionTxt = 'winmo-version.txt';
+    my $defaultVersionTxt = 'default-version.txt';
     
     foreach my $fileName (@bumpFiles) {
         my $found = 0;
