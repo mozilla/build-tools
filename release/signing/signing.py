@@ -60,10 +60,11 @@ def fileInfo(filepath, product):
     except:
         # Mozilla 1.9.1 and on style (aka 'long') paths
         # e.g. update/win32/en-US/firefox-3.5.1.complete.mar
+        #      win32/en-US/Firefox Setup 3.5.1.exe
         ret = {'pathstyle': 'long'}
         if filepath.endswith('.mar'):
             ret['format'] = 'mar'
-            m = re.search("update/(win32|linux-i686|mac)/([-a-zA-Z]+)/(%s)-(\w+\.\w+(?:\.\w+)?(?:-\w+\.\w+)?)\.(complete)\.mar" % product, filepath)
+            m = re.search("update/(win32|linux-i686|mac)/([-a-zA-Z]+)/(%s)-(\d+\.\d+(?:\.\d+)?(?:\w+\d+)?)\.(complete)\.mar" % product, filepath)
             if not m:
                 raise ValueError("Could not parse: %s" % filepath)
             ret['platform'] = m.group(1)
@@ -73,7 +74,7 @@ def fileInfo(filepath, product):
             ret['contents'] = m.group(5)
         elif filepath.endswith('.exe'):
             ret['format'] = 'exe'
-            m = re.search("(win32)/([-a-zA-Z]+)/((?i)%s) Setup ([\d\.]+(?:\ \w+\ \d+)?)\.exe" % product, filepath)
+            m = re.search("(win32)/([-a-zA-Z]+)/((?i)%s) Setup (\d+\.\d+(?:\.\d+)?(?:\w+\d+)?(?:\ \w+\ \d+)?)\.exe" % product, filepath)
             if not m:
                 raise ValueError("Could not parse: %s" % filepath)
             ret['platform'] = m.group(1)
