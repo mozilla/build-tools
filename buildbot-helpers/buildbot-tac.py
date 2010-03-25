@@ -53,8 +53,9 @@ def get_default_options(slavename):
             d['port'] = 9982
         else:
             buildmaster_host = BUILD_BUILDMASTER
-        if 'linux' in slavename or 'darwin9' in slavename or \
-          'xserve' in slavename or 'mac' in slavename:
+        if 'linux' in slavename or 'xserve' in slavename or \
+           'darwin9' in slavename or 'darwin10' in slavename or \
+           'mac' in slavename:
             basedir = '/builds/slave'
         elif 'win32' in slavename or 'mw32' in slavename:
             basedir = 'e:\\builds\\moz2_slave'
