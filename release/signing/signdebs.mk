@@ -5,6 +5,7 @@ SBOX_PATH		= /scratchbox/moz_scratchbox
 RSYNC_ARGS		?= --delete --progress --partial
 MAEMO_VERSION	?= chinook
 FENNEC_FILEURL	?= $(error FENNEC_FILEURL must be defined)
+EXTRA_DEBS		?=
 SIGNDEBS_BASEDIR	?= sign-debs
 SBOX_WORKDIR	?= $(SIGNDEBS_BASEDIR)/$(BRANCH_NICK)_$(LOCALE)
 WORKDIR			?= /scratchbox/users/cltbld/home/cltbld/$(SBOX_WORKDIR)
@@ -21,7 +22,8 @@ SSH_KEY			?= $(HOME)/.ssh/ffxbld_dsa
 INSTALL_CONTENTS = "[install]\nrepo_deb_3 = deb $(STAGE_URL) $(MAEMO_VERSION) $(REPO_SECTION)\ncatalogues = fennec\npackage = fennec\n\n[fennec]\nname = Mozilla $(BRANCH_NICK) $(LOCALE) Catalog\nuri = $(STAGE_URL)\ndist = $(MAEMO_VERSION)\ncomponents = $(REPO_SECTION)"
 
 FENNEC_FILENAME	= $(notdir $(FENNEC_FILEURL))
-FENNEC_FILEPATH	= $(WORKDIR)/dists/$(MAEMO_VERSION)/$(REPO_SECTION)/binary-armel/$(FENNEC_FILENAME)
+DEB_FILEDIR	= $(WORKDIR)/dists/$(MAEMO_VERSION)/$(REPO_SECTION)/binary-armel
+FENNEC_FILEPATH	= $(DEB_FILEDIR)/$(FENNEC_FILENAME)
 
 TARGETS = echo setup
 
@@ -34,8 +36,11 @@ INSTALL_FILENAME	= $(BRANCH_NICK)_$(LOCALE).install
 endif
 INSTALL_FILEPATH	= $(WORKDIR)/$(INSTALL_FILENAME)
 
-
 TARGETS += $(INSTALL_FILEPATH) download-fennec
+
+ifdef EXTRA_DEBS
+TARGETS += download-extra-debs
+endif
 
 TARGETS += sign upload
 
@@ -47,6 +52,9 @@ setup:
 
 download-fennec:
 	wget -O $(FENNEC_FILEPATH) $(FENNEC_FILEURL)
+
+download-extra-debs:
+	cd $(DEB_FILEDIR); for f in $(EXTRA_DEBS) ; do wget $$f; done
 
 echo:
 	@echo STAGE_USERNAME: $(STAGE_USERNAME)
@@ -61,6 +69,7 @@ echo:
 	@echo FENNEC_FILENAME: $(FENNEC_FILENAME)
 	@echo FENNEC_FILEPATH: $(FENNEC_FILEPATH)
 	@echo INSTALL_FILENAME: $(INSTALL_FILENAME)
+	@echo EXTRA_DEBS: $(EXTRA_DEBS)
 
 %.install:
 	@echo -e $(INSTALL_CONTENTS) > "$@"
