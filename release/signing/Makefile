@@ -114,7 +114,7 @@ download:
 	# Copy linux/mac builds over to the signed dir, because they don't need internal signing.
 	rsync -av --exclude '*unsigned*' unsigned-build$(BUILD)/ signed-build$(BUILD)/
 
-sign: sign-internal sign-installers checksum-files create-sigs
+sign: sign-internal sign-installers checksum-files create-sigs verify-sigs
 
 sign-internal:
 	blat -to $(EMAIL) \
@@ -136,7 +136,7 @@ sign-installers:
 	# Sign win32 installers.
 	cd $(WORKDIR)/signed-build$(BUILD)/win32 && ../../signing/sign-release $(KEYDIR)
 
-sign2: sign-files checksum-files create-sigs
+sign2: sign-files checksum-files create-sigs verify-sigs
 
 sign-files:
 	blat -to $(EMAIL) \
@@ -156,6 +156,17 @@ create-sigs:
 	     -subject "Running sign-files for $(PRODUCT) $(VERSION), waiting on passphrase" \
 		 -body "EOM"
 	cd $(WORKDIR)/signed-build$(BUILD) && ../signing/sign-files .
+
+verify-sigs:
+	if ./verify-gpg.py --verbose --key-file $(WORKDIR)/key-checkout/PUBLIC-KEY \
+		signed-build$(BUILD) > verify_gpg_build$(BUILD).log 2>&1; then \
+	    blat -to $(EMAIL) \
+		 -subject "GPG Signature verification succeeded" \
+		 -body "EOM"; \
+	else \
+	    blat verify_gpg_build$(BUILD).log -to $(EMAIL) \
+		 -subject "GPG Signature verification failed"; \
+	fi
 
 stage: create-contrib fix-permissions
 
