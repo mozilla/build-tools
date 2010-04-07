@@ -255,12 +255,19 @@ sub BumpVerifyConfig {
     }
 
     # add data for latest release
+    my $from = '/' . $product . '/releases/' . $oldVersion . '/' . $ftpOsname .
+        '/%locale%/' . $releaseFile;
+    if ( $majorMode ) {
+        my $candidatesDirStripped = $candidatesDir;
+        $candidatesDirStripped =~ s!/$!!; # Remove trailing slash
+        $candidatesDirStripped =~ s!^/.*?/$product/!/$product/!; # Remove FTP prefix
+        $from = $candidatesDirStripped . '/' . $ftpOsname . '/%locale%/' . $releaseFile;
+    }
     my @data = ("# $oldVersion $osname\n",
                 'release="' . $oldAppVersion . '" product="' . $brand . 
                 '" platform="' .$buildTarget . '" build_id="' . $buildID . 
                 '" locales="' . join(' ', sort(@locales)) . '" channel="' . 
-                $channel . '" from="/' . $product . '/releases/' . 
-                $oldVersion . '/' . $ftpOsname . '/%locale%/' . $releaseFile .
+                $channel . '" from="' . $from .
                 '" aus_server="' . $ausServerUrl . '" ftp_server="' .
                 $stagingServer . '/pub/mozilla.org" to="/' . 
                 $product . '/nightly/' .  $version .  '-candidates/build' . 
