@@ -12,6 +12,8 @@ use MozBuild::Util qw(GetBuildIDFromFTP);
 use Bootstrap::Util qw(GetBouncerPlatforms GetBouncerToPatcherPlatformMap
                        LoadLocaleManifest);
 
+use Release::Patcher::Config qw(GetProductDetails);
+
 $|++;
 
 # we disable this for bug 498273
@@ -32,7 +34,8 @@ sub ProcessArgs {
         "product|p=s", "brand|r=s", "version|v=s", "old-version|o=s",
         "app-version|a=s", "build-number|b=s", "patcher-config|c=s",
         "staging-server|t=s", "ftp-server|f=s", "bouncer-server|d=s",
-        "use-beta-channel|u", "shipped-locales|l=s", "help|h", "run-tests"
+        "use-beta-channel|u", "shipped-locales|l=s", "releasenotes-url|n=s",
+        "help|h", "run-tests"
     );
 
     if ($config{'help'}) {
@@ -62,6 +65,7 @@ Options:
      'beta' channel ones will point to FTP.
      Generally, Alphas and Betas do not pass this, final and point releases do.
   -l The path and filename to the shipped-locales file for this release.
+  -n Release notes URL.
   -h This usage message.
   --run-tests will run the (very basic) unit tests included with this script.
 __USAGE__
@@ -156,6 +160,7 @@ sub BumpPatcherConfig {
     my $bouncerServer = $config{'bouncer-server'};
     my $useBetaChannel = $config{'use-beta-channel'};
     my $configBumpDir = '.';
+    my $releaseNotesUrl = $config{'releasenotes-url'};
 
     my $prettyVersion = $version;
     $prettyVersion =~ s/a([0-9]+)$/ Alpha $1/;
@@ -228,18 +233,9 @@ sub BumpPatcherConfig {
         $currentUpdateObj->{'from'} = $oldVersion;
     }
 
-    if ($product eq 'seamonkey') {
-      $currentUpdateObj->{'details'} = 'http://www.seamonkey-project.org/releases/' .
-                                        $product . $appVersion . '/';
-    }
-    elsif ($product eq 'thunderbird') {
-     $currentUpdateObj->{'details'} = 'http://www.mozillamessaging.com/%locale%/' .
-                                        $product . '/' . $appVersion . '/releasenotes/';
-    }
-    else {
-      $currentUpdateObj->{'details'} = 'http://www.mozilla.com/%locale%/' .
-                                        $product . '/' . $appVersion . '/releasenotes/';
-    }
+    $currentUpdateObj->{'details'} = $releaseNotesUrl ||
+        GetProductDetails(product => $product, appVersion => $appVersion,
+                          updateType => 'minor');
 
     # we disable this for bug 498273, except for ensuring the block is empty
     #if ($useBetaChannel) {

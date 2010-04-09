@@ -39,7 +39,7 @@ sub ProcessArgs {
         "old-build-number=s", "patcher-config|c=s", "staging-server|t=s",
         "ftp-server|f=s", "bouncer-server|d=s", "use-beta-channel|u",
         "shipped-locales|l=s", "old-shipped-locales=s", "update-type=s",
-        "help|h", "run-tests"
+        "releasenotes-url|n=s", "help|h", "run-tests"
     );
 
     if ($config{'help'}) {
@@ -76,6 +76,7 @@ Options:
      'beta' channel ones will point to FTP.
      Generally, Alphas and Betas do not pass this, final and point releases do.
   --update-type The update type (minor, major). Defaults to minor.
+  -n Release notes URL.
   -h This usage message.
   --run-tests will run the (very basic) unit tests included with this script.
 __USAGE__
@@ -146,6 +147,7 @@ sub CreatePatcherConfig {
     my $oldShippedLocales = $config{'old-shipped-locales'};
     my $updateType = $config{'update-type'};
     my $configBumpDir = '.';
+    my $releaseNotesUrl = $config{'releasenotes-url'};
 
     my $prettyVersion = GetPrettyVersion(version => $version);
 
@@ -157,9 +159,8 @@ sub CreatePatcherConfig {
     }
     my @testChannels = ('betatest', 'releasetest');
 
-    my $details = GetProductDetails(product => $product,
-                                    appVersion => $appVersion,
-                                    updateType => $updateType);
+    my $details = $releaseNotesUrl || GetProductDetails(product => $product,
+        appVersion => $appVersion, updateType => $updateType);
 
     my $buildStr = 'build' . $build;
     my $oldBuildStr = 'build' . $oldBuild;
