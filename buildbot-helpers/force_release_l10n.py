@@ -41,6 +41,7 @@ class L10nForcer:
                 'locale': locale}
 
     def forceBuilds(self):
+        errors = []
         for platform,locales in self.toForce.iteritems():
             forcer = self.forcers[platform]
             for locale in sorted(locales):
@@ -59,9 +60,15 @@ class L10nForcer:
                                       branch=locale, properties=properties)
                     sleep(self.delay)
                 except:
+                    errors.append((platform,locale))
                     if self.loud:
                         "*** Error when forcing %s %s" % (platform, locale)
                     # Don't raise the exception, keep going
+        if self.loud:
+            if len(errors) > 0:
+                print "ERROR SUMMARY:"
+            for platform,locale in map(lambda x: (x[0], x[1]), errors):
+                print "  %s - %s" % (platform, locale)
 
 
 def getShippedLocales(shippedLocales):
