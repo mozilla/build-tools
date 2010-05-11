@@ -26,18 +26,31 @@ $RELEASE_BUILDERS = array(
   'win32_update_verify',
   'wince_update_verify',
 
-  'release-linux-unittest-mochitests',
-  'release-linux-unittest-everythingelse',
-  'release-win32-unittest-mochitests',
-  'release-win32-unittest-everythingelse',
-  'release-macosx-unittest-mochitests',
-  'release-macosx-unittest-everythingelse',
-
   'final_verification',
   'l10n_verification',
   'tag',
   'source',
   'updates',
+  'major_update',
+  'linux_major_update_verify',
+  'macosx_major_update_verify',
+  'win32_major_update_verify',
+
+  'linux_test mochitests',
+  'linux_test mochitest-other',
+  'linux_test reftest',
+  'linux_test crashtest',
+  'linux_test xpcshell',
+  'win32_test mochitests',
+  'win32_test mochitest-other',
+  'win32_test reftest',
+  'win32_test crashtest',
+  'win32_test xpcshell',
+  'macosx_test mochitests',
+  'macosx_test mochitest-other',
+  'macosx_test reftest',
+  'macosx_test crashtest',
+  'macosx_test xpcshell',
 );
 
 // TODO: Figure out if we can use LDAP to do this
