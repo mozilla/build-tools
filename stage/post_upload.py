@@ -17,8 +17,8 @@ LATEST_DIR = "latest-%(branch)s"
 # Production configs that need to be commented out when doing staging.
 TINDERBOX_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
 CANDIDATES_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(version)s-candidates/build%(buildnumber)s"
-TRYSERVER_DIR = "/builds/tryserver/%(who)s-%(revision)s/%(builddir)s"
-TRYSERVER_URL_PATH = "http://build.mozilla.org/tryserver-builds/%(who)s-%(revision)s/%(builddir)s"
+TRYSERVER_DIR = "/home/ftp/pub/%(product)s/tryserver-builds/%(who)s-%(revision)s/%(builddir)s"
+TRYSERVER_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/tryserver-builds/%(who)s-%(revision)s/%(builddir)s"
 # Staging configs start here.  Uncomment when working on staging
 #TINDERBOX_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
 #CANDIDATES_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(version)s-candidates/build%(buildnumber)s"
@@ -168,10 +168,12 @@ def ReleaseToCandidatesDir(options, upload_dir, files):
             os.chmod(os.path.join(root, d), 0755)
 
 def ReleaseToTryserverBuilds(options, upload_dir, files):
-    tryserverBuildsPath = TRYSERVER_DIR % {'who': options.who,
+    tryserverBuildsPath = TRYSERVER_DIR % {'product': options.product,
+                                           'who': options.who,
                                            'revision': options.revision,
                                            'builddir': options.builddir}
-    tryserverBuildsUrl = TRYSERVER_URL_PATH % {'who': options.who,
+    tryserverBuildsUrl = TRYSERVER_URL_PATH % {'product': options.product,
+                                               'who': options.who,
                                                'revision': options.revision,
                                                'builddir': options.builddir}
     for f in files:
