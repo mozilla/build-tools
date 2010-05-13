@@ -31,7 +31,8 @@ s.setServiceParent(application)
 """
 BUILD_BUILDMASTER = "staging-master.build.mozilla.org"
 TRY_BUILDMASTER   = "sm-staging-try-master.mozilla.org"
-TALOS_BUILDMASTER = "talos-master.mozilla.org"
+TALOS_BUILDMASTER = "talos-master02.build.mozilla.org"
+TALOS_TRY_BUILDMASTER = "talos-master02.build.mozilla.org"
 
 def quote_option(str, raw=False):
     str = re.sub("'", "\\'", str)
@@ -60,11 +61,12 @@ def get_default_options(slavename):
         elif 'win32' in slavename or 'mw32' in slavename:
             basedir = 'e:\\builds\\moz2_slave'
     elif 'talos' in slavename or '-try' in slavename:
-        buildmaster_host = TALOS_BUILDMASTER
         footer = TALOS_FOOTER
         if '-try' in slavename:
+            buildmaster_host = TALOS_TRY_BUILDMASTER
             d['port'] = 9011
         if 'r3' in slavename:
+            buildmaster_host = TALOS_BUILDMASTER
             d['port'] = 9012
         if 'linux' in slavename or 'ubuntu' in slavename or 'fed' in slavename:
             basedir = '/home/cltbld/talos-slave'
