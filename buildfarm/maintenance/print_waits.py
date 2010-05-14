@@ -31,6 +31,10 @@ def scan_builder(builder, starttime, endtime, minutes_per_block, times, change_a
             except:
                 continue
 
+            if 'rebuild' in b.reason:
+                # Skip rebuilds, they mess up the wait times
+                continue
+
             if change_as_submittime:
                 if len(b.changes) == 0:
                     continue
