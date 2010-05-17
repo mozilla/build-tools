@@ -22,8 +22,8 @@ TRYSERVER_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/tryse
 # Staging configs start here.  Uncomment when working on staging
 #TINDERBOX_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
 #CANDIDATES_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(version)s-candidates/build%(buildnumber)s"
-#TRYSERVER_DIR = "/home/ftp/pub/tryserver-builds/%(who)s-%(revision)s/%(builddir)s"
-#TRYSERVER_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/tryserver-builds/%(who)s-%(revision)s/%(builddir)s"
+#TRYSERVER_DIR = "/home/ftp/pub/%(product)s/tryserver-builds/%(who)s-%(revision)s/%(builddir)s"
+#TRYSERVER_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/tryserver-builds/%(who)s-%(revision)s/%(builddir)s"
 
 PARTIAL_MAR_RE = re.compile('\.partial\..*\.mar$')
 
