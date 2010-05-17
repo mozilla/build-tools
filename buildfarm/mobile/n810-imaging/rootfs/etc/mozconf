@@ -1,0 +1,53 @@
+#!/bin/sh
+
+SENTINEL=/sentinel
+HWLOG=/hwlog
+HOST=`sed s/[.].*// < /etc/hostname`
+NGINXPREFIX=/usr/nginx
+BBHOST="staging-mobile-master.build.mozilla.org"
+BBPORT="9020"
+BBUSER=$HOST
+BBPASS='m0b1l3'
+BUILDDIR=/builds
+BUILDDEV=/dev/mmcblk1p2
+BBDIR=$BUILDDIR/slave
+TALOSDIR=/builds/talos
+SWAPSIZE=128 #in MB
+CPUFREQ=330000
+NTPSERVER=ntp1.build.mozilla.org
+
+#Block buildbot, log failure and stop process
+fatal () {
+    echo "`date` FATAL: $1" | tee -a $SENTINEL $HWLOG
+    exit 1
+}
+
+#Block buildbot and log failure
+error () {
+    echo "`date` ERROR: $1" | tee -a $SENTINEL $HWLOG
+}
+
+#Log failure
+warn () {
+    echo "`date` WARN: $1" | tee -a $HWLOG
+}
+
+#Log Information
+info() {
+    echo "`date` INFO: $1" | tee -a $HWLOG
+}
+
+booterror() {
+    error "$1"
+    text2screen -c
+    text2screen -x 1 -y 1 -s 1 -t "E: $1"
+    text2screen -x 1 -y 2 -s 1 -t "reboot 300s"
+    sleep 300
+    reboot
+}
+
+printinfo() {
+    text2screen -c
+    text2screen -x 1 -y 1 -s 1 -t "$1"
+}
+

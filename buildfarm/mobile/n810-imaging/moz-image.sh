@@ -2,18 +2,23 @@
 ROOTFS=$1
 SDDEV=$2
 UNITNAME=$3
-RSYNC=./moz-rsync
+RSYNC=rsync2
 
 function info {
-  echo "INFO: $1"
+  echo "INFO($SDDEV): $1"
 }
 
 function warn {
-  echo "WARN: $1"
+  echo "WARN($SDDEV): $1"
 }
 
 function error {
-  echo "ERROR! $1"
+  echo "ERROR!($SDDEV): $1"
+  if [[ x"$MOUNT" != "x" ]] ; then
+    if [[ `mount | grep $MOUNT` ]] ; then
+      echo "This card is defective! Imaging attempted `date`" > ${MOUNT}/sentinel
+    fi
+  fi
   exit
 }
 
@@ -31,29 +36,19 @@ function warning {
   fi
 }
 
-function dual_partition {
+function partition {
   info "Partitioning $SDDEV"
-  dd if=/dev/zero of=${SDDEV} bs=512 count=1 > /dev/null
+  dd if=/dev/zero of=${SDDEV} bs=512 count=1 &> /dev/null || error "failed to reset partition table"
   parted --script ${SDDEV} mktable msdos || error "failed creating partition table"
   parted --script ${SDDEV} mkpart primary 0 1800 || error "failed to create root partition"
   parted --script ${SDDEV} mkpart primary 1801 3800 || error "failed to create data partition"
   sync
-  sleep 2
+  sleep 5
   info "Formatting Drives"
-  mkfs.ext2 ${SDDEV}1 -L $UNITNAME
-  mkfs.ext2 ${SDDEV}2 -L $UNITNAME
+  mkfs.ext2 -q ${SDDEV}1 -L root-fs || error 'failed to format rootfs'
+  mkfs.ext2 -q ${SDDEV}2 -L scratch || error 'failed to format scratch'
   sync
   sleep 2
-}
-function single_partition {
-  info "Partitioning $SDDEV"
-  dd if=/dev/zero of=${SDDEV} bs=512 count=1 > /dev/null
-  parted --script ${SDDEV} mktable msdos || error "failed creating partition table"
-  info "Formatting ${SDDEV}1"
-  parted --script ${SDDEV} mkpartfs primary ext2 0 3900 || error "failed to create data partition"
-  info "Syncing FS"
-  sync
-  sleep 1
 }
 
 function copy {
@@ -65,16 +60,23 @@ function copy {
 
 function modify_image {
   info "Modifying Image"
+  if [[ -d rootfs ]] ; then
+    info 'rsyncing rootfs dir into image'
+    $RSYNC -a rootfs/. ${MOUNT}/.
+  fi
   echo $UNITNAME > ${MOUNT}/etc/hostname
-  echo "Imaged from \"${ROOTFS}\" at `date`" > ${MOUNT}/tools/buildbot/info/admin
 
 }
 
 function eject {
   info "Unmounting"
   sync
-  umount ${SDDEV}1 || warn "could not umount rootfs partition ${SDDEV}1"
-  umount ${SDDEV}2 || warn "could not umount data partition ${SDDEV}2"
+  if [[ `mount | grep ${SDDEV}1` ]] ; then
+      umount ${SDDEV}1 || warn "could not umount root-fs/${SDDEV}1"
+  fi
+  if [[ `mount | grep ${SDDEV}2` ]] ; then
+      umount ${SDDEV}2 || warn "could not umount root-fs/${SDDEV}2"
+  fi
   rm -rf $MOUNT
 }
 
@@ -87,9 +89,11 @@ else
   warning
   MOUNT="`basename $SDDEV `-$$"
   eject
-  dual_partition
+  partition
   copy
   modify_image
   eject
+  sleep 2
+  rm -rf $MOUNT
   echo "All done on $SDDEV"
 fi

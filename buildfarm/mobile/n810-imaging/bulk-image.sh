@@ -1,22 +1,19 @@
 #!/bin/bash
 # Useful for finding out which devices: find /dev | grep "/dev/sd.[0-9]"
-ROOTFSDIR='moz-ref-sd-v5'
+ROOTFSDIR='moz-n810-v1'
 
-EXCLUDE_FILE=/flashing/exclude_list.txt
 
 if [ $# -eq 0 ] ; then
   echo Please specify devices from this list
-  devlist=`find /dev -maxdepth 1 -name sd?`
-  for i in $devlist; do
-    grep -q "$i" $EXCLUDE_FILE
-    if [ $? -ne 0 ] ; then
-      echo $i
-    fi
-  done
+  echo "WARNING: DO NOT SELECT A NON-SD CARD DRIVE LETTER" 
+  find /dev -maxdepth 1 -name sda -o -name sd? -print
 fi
 
 for i in "$@" ; do
-  BATCH='yes' ./moz-image.sh $ROOTFSDIR /dev/sd${i} maemo-n810-ref &
+  if [[ "$i" == "a" || "$i" == "A" ]] ; then
+    echo Ignoring /dev/sda
+  fi
+  BATCH='yes' ./moz-image.sh $ROOTFSDIR /dev/sd${i} maemo-n810-XX &
 done
 
 wait
