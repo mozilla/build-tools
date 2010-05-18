@@ -52,7 +52,7 @@ fi
 
 
 while [ true ] ; do
-  echo Plug MicroUSB cable into N810 
+  echo Plug MicroUSB cable, seat battery then plug in power cable  into N810 
   flash -i
   echo Resetting under way
   flash_image '--flash-only nolo,kernel,initfs --fiasco' $FIASCO
