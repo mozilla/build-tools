@@ -21,21 +21,28 @@ function error {
   exit
 }
 
+function flash {
+  ARGS=$@
+  $FLASHER $ARGS &> flasher.log 
+  RC=$?
+  if [ $RC == 3 ] ; then
+    cat flasher.log
+    error "Lost USB Connection while flashing $FILE"
+  elif [ $RC != 0 ] ; then
+    echo ; echo ; echo ================
+    error "There was an error trying to flash $FILE. RC=$?"
+  fi
+}  
+
 function flash_image {
   FLAG=$1
   FILE=$2
-  $FLASHER $FLAG $FILE --flash 
-  RC=$?
-  if [ $RC == 3 ] ; then
-    error "Lost USB Connection while flashing ${FILE}.  Dead battery?"
-  elif [ $RC != 0 ] ; then
-    error "There was an error trying to flash $FILE. RC=$?"
-  fi
+  flash $FLAG $FILE --flash
 }
 
 function set_root {
-  $FLASHER --enable-rd-mode
-  $FLASHER --set-root-device mmc
+  flash --enable-rd-mode
+  flash --set-root-device mmc
 }
 
 
@@ -45,12 +52,20 @@ fi
 
 
 while [ true ] ; do
+  echo Plug MicroUSB cable into N810 
+  flash -i
+  echo Resetting under way
   flash_image '--flash-only nolo,kernel,initfs --fiasco' $FIASCO
   flash_image '--rootfs' $IMAGE
   set_root
-  while lsusb | grep $USBPATTERN ; do
+  STATUS=0
+  echo -n "Unplug N810 from computer"
+  while [ $STATUS -ne 1 ] ; do 
+    lsusb | grep $USBPATTERN > /dev/null
+    STATUS=$?
+    echo -n '.'
     sleep 1
-    echo "UNPLUG DEVICE"
   done
+  echo Completed Successfully
 done
 
