@@ -125,10 +125,10 @@ if __name__ == '__main__':
         # hack time - right now it's assumed that the call will look like:
         # mozpass.py <apk name>
         # and we will build the parameters
-        args = ['jarsigner', '-keystore', '$android-keystore',
-                             '-storepass', '$android-storepass',
-                             '-keypass', '$android-keypass',
-                             args[0], '$android-alias']
+        args = ['jarsigner', '-keystore', '$android_keystore',
+                             '-storepass', '$android_storepass',
+                             '-keypass', '$android_keypass',
+                             args[0], '$android_alias']
 
         processCommand(args, cfg)
 
