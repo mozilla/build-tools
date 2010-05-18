@@ -1,20 +1,55 @@
 #!/bin/bash
 # Useful for finding out which devices: find /dev | grep "/dev/sd.[0-9]"
-ROOTFSDIR='moz-n810-v1'
+ROOTFSDIR='moz-n810-v2'
 
+clean_exit () {
+    for i in ${PIDS[@]} ; do
+        ps | cut -f1 -d ' ' | grep $i &> /dev/null
+        if [ $? -eq 0 ] ; then
+            kill $i
+        fi
+    done
+    echo "Success on 0 out of $COUNT devices"
+}
 
-if [ $# -eq 0 ] ; then
-  echo Please specify devices from this list
-  echo "WARNING: DO NOT SELECT A NON-SD CARD DRIVE LETTER" 
-  find /dev -maxdepth 1 -name sda -o -name sd? -print
-fi
+trap clean_exit SIGHUP SIGINT SIGTERM
 
-for i in "$@" ; do
-  if [[ "$i" == "a" || "$i" == "A" ]] ; then
-    echo Ignoring /dev/sda
-  fi
-  BATCH='yes' ./moz-image.sh $ROOTFSDIR /dev/sd${i} maemo-n810-XX &
+COUNT=0
+for i in `ls -l /dev/sd? | grep floppy | cut -f9 -d ' ' ` ; do
+  BATCH='yes' ./moz-image.sh $ROOTFSDIR $i maemo-n810-NNN &
+  DEVNODES[COUNT]=$i
+  PIDS[COUNT]=$!
+  COUNT=$(($COUNT + 1))
 done
 
-wait
-echo "BULK IMAGING COMPLETED"
+spin[0]='\'
+spin[1]='|'
+spin[2]='/'
+spin[3]='-'
+i=0
+while true ; do
+    if [ `jobs -r | wc -l` -gt 0 ] ; then
+        sleep 1
+        printf "\b%s" ${spin[i]}
+        i=$(((i + 1) % 4))
+    else
+        break
+    fi
+done
+
+SUCCESS=0
+for node in ${DEVNODES[@]} ; do
+    grep "Success on" debug-$(basename $node).log &> /dev/null
+    if [ $? -eq 0 ] ; then
+        SUCCESS=$(($SUCCESS + 1))
+        rm debug-$(basename $node).log
+    else
+        echo
+        echo "ERROR: Imaging failed. Relevant debug log debug-$(basename $node).log"
+    fi
+done
+
+echo "Success on $SUCCESS out of $COUNT devices"
+    
+echo
+echo "Done"

@@ -3,6 +3,7 @@ ROOTFS=$1
 SDDEV=$2
 UNITNAME=$3
 RSYNC=rsync2
+LOGFILE="debug-$(basename $SDDEV).log"
 
 function info {
   echo "INFO($SDDEV): $1"
@@ -17,12 +18,17 @@ function error {
   if [[ x"$MOUNT" != "x" ]] ; then
     if [[ `mount | grep $MOUNT` ]] ; then
       echo "This card is defective! Imaging attempted `date`" > ${MOUNT}/sentinel
+      echo "Copying imaging log to device"
+      if [[ -f $LOGFILE ]] ; then
+          cp $LOGFILE ${MOUNT}/imglog
+      fi
     fi
   fi
-  exit
+  eject
+  exit 1
 }
 
-function warning {
+function batchmode {
   if [ "x$BATCH" == "x" ] ; then
     warn "You are about to ERASE ${SDDEV}.  ARE YOU SURE? y/n"
       read a
@@ -32,7 +38,8 @@ function warning {
         echo "gonna do it"
       fi
   else
-    info "You are formating $SDDEV in batch mode"
+    info "Imaging in batch mode. Redirecting output to $LOGFILE"
+    exec &> $LOGFILE
   fi
 }
 
@@ -55,29 +62,31 @@ function copy {
   info "Copying data to card"
   mkdir $MOUNT || error "could not create $MOUNT directory"
   mount -t ext2 ${SDDEV}1 $MOUNT || error "could not mount $SDDEV on $MOUNT"
-  $RSYNC -a $ROOTFS/. $MOUNT/. || error "could not copy files to $MOUNT"
+  $RSYNC -a $ROOTFS/. $MOUNT/. &> /dev/null || error "could not copy files to $MOUNT"
 }
 
 function modify_image {
   info "Modifying Image"
   if [[ -d rootfs ]] ; then
     info 'rsyncing rootfs dir into image'
-    $RSYNC -a rootfs/. ${MOUNT}/.
+    $RSYNC -a rootfs/. ${MOUNT}/. &> /dev/null || error "could not copy mozilla scripts onto card"
+  else
+    info 'missing rootfs directory -- no mozilla scripts will be installed'
   fi
   echo $UNITNAME > ${MOUNT}/etc/hostname
-
 }
 
 function eject {
   info "Unmounting"
   sync
-  if [[ `mount | grep ${SDDEV}1` ]] ; then
-      umount ${SDDEV}1 || warn "could not umount root-fs/${SDDEV}1"
-  fi
-  if [[ `mount | grep ${SDDEV}2` ]] ; then
-      umount ${SDDEV}2 || warn "could not umount root-fs/${SDDEV}2"
-  fi
-  rm -rf $MOUNT
+  STATUS=0
+  while [ $STATUS -eq 0 ] ; do
+    for i in `mount | cut -f1 -d ' ' | grep $SDDEV` ; do
+      umount $i &> /dev/null || warn "could not umount $i"
+    done
+    mount | grep $SDDEV > /dev/null
+    STATUS=$?
+  done
 }
 
 if [[ $EUID -ne 0 ]]; then
@@ -86,8 +95,8 @@ fi
 if [[ "x$1" == "x" || "x$2" == "x" || "x$3" = "x" ]] ; then
   error "Usage: moz-image.sh <rootfsdir> <sd card dev> <unit name>"
 else
-  warning
   MOUNT="`basename $SDDEV `-$$"
+  batchmode
   eject
   partition
   copy
@@ -95,5 +104,6 @@ else
   eject
   sleep 2
   rm -rf $MOUNT
-  echo "All done on $SDDEV"
+  info "Success on $SDDEV"
+  exit 0
 fi

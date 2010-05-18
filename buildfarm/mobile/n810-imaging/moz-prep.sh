@@ -26,6 +26,8 @@ function flash {
   $FLASHER $ARGS &> flasher.log 
   RC=$?
   if [ $RC == 3 ] ; then
+    echo ; echo ; echo;
+    echo =============================
     cat flasher.log
     error "Lost USB Connection while flashing $FILE"
   elif [ $RC != 0 ] ; then
@@ -59,13 +61,14 @@ while [ true ] ; do
   flash_image '--rootfs' $IMAGE
   set_root
   STATUS=0
-  echo -n "Unplug N810 from computer"
+  echo "Completed Successfully"
+  echo -n "Unplug N810 from computer or press CTRL+C to quit"
   while [ $STATUS -ne 1 ] ; do 
     lsusb | grep $USBPATTERN > /dev/null
     STATUS=$?
     echo -n '.'
     sleep 1
   done
-  echo Completed Successfully
+  echo #for the new line
 done
 
