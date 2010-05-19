@@ -34,8 +34,6 @@ function find_card {
     readercount=$(echo $readers | wc -w)
     if [ $cardcount -gt 1 ] ; then
         error "You have too many sd cards in the computer"
-    elif [ $readercount -gt 1 ] ; then
-        error "You have an empty sd card reader in the computer"
     else
         info "Found $CARD"
         CARD=$cards

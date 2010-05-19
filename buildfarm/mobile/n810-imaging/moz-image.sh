@@ -69,6 +69,7 @@ function modify_image {
   info "Modifying Image"
   if [[ -d rootfs ]] ; then
     info 'rsyncing rootfs dir into image'
+    chmod -R +x rootfs || error "setting mozilla scripts permissions"
     $RSYNC -a rootfs/. ${MOUNT}/. &> /dev/null || error "could not copy mozilla scripts onto card"
     rm $MOUNT/sentinel || error "Could not remove sentinel"
   else
