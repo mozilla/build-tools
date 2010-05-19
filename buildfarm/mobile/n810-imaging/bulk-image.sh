@@ -35,6 +35,7 @@ while true ; do
     else
         break
     fi
+    printf "\b"
 done
 
 SUCCESS=0
@@ -49,7 +50,5 @@ for node in ${DEVNODES[@]} ; do
     fi
 done
 
-echo "Success on $SUCCESS out of $COUNT devices"
-    
-echo
+echo "Success on $SUCCESS of $COUNT devices"
 echo "Done"

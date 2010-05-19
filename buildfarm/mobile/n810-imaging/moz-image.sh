@@ -24,7 +24,6 @@ function error {
       fi
     fi
   fi
-  eject
   exit 1
 }
 
@@ -63,6 +62,7 @@ function copy {
   mkdir $MOUNT || error "could not create $MOUNT directory"
   mount -t ext2 ${SDDEV}1 $MOUNT || error "could not mount $SDDEV on $MOUNT"
   $RSYNC -a $ROOTFS/. $MOUNT/. &> /dev/null || error "could not copy files to $MOUNT"
+  date > $MOUNT/img-success || error "could not create moz-verify.sh signal file"
 }
 
 function modify_image {
@@ -70,6 +70,7 @@ function modify_image {
   if [[ -d rootfs ]] ; then
     info 'rsyncing rootfs dir into image'
     $RSYNC -a rootfs/. ${MOUNT}/. &> /dev/null || error "could not copy mozilla scripts onto card"
+    rm $MOUNT/sentinel || error "Could not remove sentinel"
   else
     info 'missing rootfs directory -- no mozilla scripts will be installed'
   fi
@@ -104,6 +105,8 @@ else
   eject
   sleep 2
   rm -rf $MOUNT
+  echo
   info "Success on $SDDEV"
+  rmdir $MOUNT || error "Mountpoint $MOUNT is not empty"
   exit 0
 fi
