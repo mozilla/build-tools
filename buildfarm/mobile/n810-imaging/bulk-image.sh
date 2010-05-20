@@ -19,7 +19,7 @@ clean_exit () {
 trap clean_exit SIGHUP SIGINT SIGTERM
 
 COUNT=0
-for i in `ls -l /dev/sd? | grep floppy | cut -f9 -d ' ' ` ; do
+for i in `ls -l /dev/sd? | grep floppy | sed 's/^.* //'` ; do
   BATCH='yes' ./moz-image.sh $ROOTFSDIR $i maemo-n810-NNN &
   DEVNODES[COUNT]=$i
   PIDS[COUNT]=$!
