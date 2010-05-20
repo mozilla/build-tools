@@ -54,7 +54,9 @@ fi
 
 
 while [ true ] ; do
-  echo Plug MicroUSB cable, seat battery then plug in power cable  into N810 
+  echo Lift kickstand to expose MicroUSB port.
+  echo Plug MicroUSB cable into N810, replace battery and back cover.
+  echo Plug in power cable into N810.
   flash -i
   echo Resetting under way
   flash_image '--flash-only nolo,kernel,initfs --fiasco' $FIASCO
@@ -62,7 +64,8 @@ while [ true ] ; do
   set_root
   STATUS=0
   echo "Completed Successfully"
-  echo -n "Unplug N810 from computer or press CTRL+C to quit"
+  echo -n "Unplug power and MicroUSB cables from N810"
+  echo "or press CTRL+C to quit"
   while [ $STATUS -ne 1 ] ; do 
     lsusb | grep $USBPATTERN > /dev/null
     STATUS=$?

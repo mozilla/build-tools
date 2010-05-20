@@ -1,6 +1,10 @@
 #!/bin/bash
 # Useful for finding out which devices: find /dev | grep "/dev/sd.[0-9]"
-ROOTFSDIR='moz-n810-v2'
+if [ x"$1" == "x" ] ; then
+    ROOTFSDIR='moz-n810-v2'
+else
+    ROOTFSDIR=$1
+fi
 
 clean_exit () {
     for i in ${PIDS[@]} ; do

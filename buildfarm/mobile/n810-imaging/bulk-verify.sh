@@ -7,37 +7,36 @@ while true ; do
     read
     sync
     echo Insert ONE MicroSD card reader with card
-    STATUS=1
-    while [ $STATUS -eq 1 ] ; do
-        ls -l /dev/sd?? | grep floppy &> /dev/null
-        STATUS=$?
-        sleep 1
-    done
     while true ; do 
         STATUS=1
         while [ $STATUS -ne 0 ] ; do
-            ls -l /dev/sd?? | grep floppy &> /dev/null
+            ls -l /dev/sd? | grep floppy &> /dev/null
             STATUS=$?
             sleep 1
         done
         HOSTNAME=""
         while [ x"$HOSTNAME" == "x" ] ; do
-            echo -n 'Type full hostname without domain (e.g. maemo-n810-000): '
+            echo -n 'Type full hostname without domain (e.g. maemo-n810-00): '
             read HOSTNAME 
         done
         ./moz-verify.sh $HOSTNAME &> verify-debug.log
         if [ $? -ne 0 ] ; then
             echo '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-            printf "\n\n\n\a\n\n\n THIS IS AN INVALID CARD"
+            printf "\n\n\n\a\n\n\n THIS IS AN INVALID CARD\n\n\n\a\n\n\n"
             echo '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
             cat verify-debug.log
+            echo Remove MicroSD card reader with card
         else
-            echo This is a valid card.  Insert this card into $HOSTNAME
+            echo ; echo ; echo
+            echo This is a valid card.
+            echo Remove MicroSD card reader with card
+            echo Insert this card into MicroSD to MiniSD adapter
+            echo Lift kickstand on N810 then insert MiniSD adapter
+            echo into device \'$HOSTNAME\'
         fi
-        echo Remove MicroSD card reader with card
         STATUS=0
         while [ $STATUS -eq 0 ] ; do
-            ls -l /dev/sd?? | grep floppy &> /dev/null
+            ls -l /dev/sd? | grep floppy &> /dev/null
             STATUS=$?
             sleep 1
         done
