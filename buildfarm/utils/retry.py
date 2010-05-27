@@ -6,7 +6,9 @@ Retries cmd and args with configurable timeouts and delays between retries.
 Return code is 0 if cmd succeeds, and is 1 if cmd fails after all the retries.
 """
 
-import time, subprocess, logging, os, sys
+import time, subprocess, logging, os, sys, re
+from tempfile import TemporaryFile
+from operator import xor
 log = logging.getLogger()
 
 if sys.platform.startswith('win'):
@@ -14,15 +16,33 @@ if sys.platform.startswith('win'):
 else:
     from unix_util import kill
 
-def run_with_timeout(cmd, timeout):
-    proc = subprocess.Popen(cmd)
+def search_output(f, regexp, fail_if_match):
+    f.seek(0)
+    res = re.search(regexp, f.read())
+    return xor(bool(res), fail_if_match)
+
+def run_with_timeout(cmd, timeout, stdout_regexp=None, stderr_regexp=None,
+                     fail_if_match=False):
+    stdout = TemporaryFile()
+    stderr = TemporaryFile()
+    proc = subprocess.Popen(cmd, stdout=stdout, stderr=stderr)
     start_time = time.time()
     log.info("Executing: %s", cmd)
     while True:
         rc = proc.poll()
         if rc is not None:
             log.debug("Process returned %s", rc)
-            return rc == 0
+            if rc == 0:
+                ret = True
+                if stdout_regexp and not \
+                   search_output(stdout, stdout_regexp, fail_if_match):
+                    ret = False
+                if stderr_regexp and not \
+                   search_output(stderr, stderr_regexp, fail_if_match):
+                    ret = False
+                return ret
+            else:
+                return False
 
         if start_time + timeout < time.time():
             log.warn("WARNING: Timeout (%i) exceeded, killing process %i", timeout,
@@ -34,7 +54,8 @@ def run_with_timeout(cmd, timeout):
         # Check again in a sec...
         time.sleep(0.25)
 
-def retry_command(cmd, retries, timeout, sleeptime):
+def retry_command(cmd, retries, timeout, sleeptime, stdout_regexp=None,
+                  stderr_regexp=None, fail_if_match=False):
     # Which iteration we're on
     i = 0
 
@@ -44,7 +65,8 @@ def retry_command(cmd, retries, timeout, sleeptime):
     while True:
         i += 1
 
-        rc = run_with_timeout(cmd, timeout)
+        rc = run_with_timeout(cmd, timeout, stdout_regexp, stderr_regexp,
+                              fail_if_match)
 
         if rc:
             break
@@ -75,6 +97,17 @@ if __name__ == "__main__":
     parser.add_option("-s", "--sleeptime", type="int", dest="sleeptime",
                       help="""sleep this many seconds between tries.
                       Defaults to 30""")
+    parser.add_option("--stdout-regexp", dest="stdout_regexp",
+                      help="""Fail if the expected regexp is not found in
+                      stdout""")
+    parser.add_option("--stderr-regexp", dest="stderr_regexp",
+                      help="""Fail if the expected regexp is not found in
+                      stderr""")
+    parser.add_option("--fail-if-match", dest="fail_if_match",
+                      action="store_true", default=False, help="""Reverse the
+                      meaning of stderr-regexp/stdout-regexp and fail if the
+                      expected regexp is NOT found in the output""")
+
 
     parser.set_defaults(
             retries=10,
@@ -96,7 +129,10 @@ if __name__ == "__main__":
     try:
         if not retry_command(args, retries=options.retries,
                              timeout=options.timeout,
-                             sleeptime=options.sleeptime):
+                             sleeptime=options.sleeptime,
+                             stdout_regexp=options.stdout_regexp,
+                             stderr_regexp=options.stderr_regexp,
+                             fail_if_match=options.fail_if_match):
             sys.exit(1)
     except KeyboardInterrupt:
         sys.exit(1)
