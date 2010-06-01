@@ -20,29 +20,11 @@ echo n900-$newhost > /etc/hostname || fatal "setting hostname file"
 hostname `cat /etc/hostname` || fatal "setting hostname"
 info "hostname set to $(cat /etc/hostname)"
 
-#Prepare home partition
-sync
-sleep 5
-umount /home/user/MyDocs 2>/dev/null
-umount $TEMP_MP 2>/dev/null || error "umount $TEMP_MP"
-umount $BUILDDEV 2>/dev/null || error "umount -f $BUILDDEV"
-rm -rf $TEMP_MP
-mkdir $TEMP_MP || fatal "mkdir $TEMP_MP"
-info "making temporary filesystem"
-mkfs.ext3 -q -L temporary $BUILDDEV || fatal "mkfs.ext3 $BUILDDEV (temp)"
-mount -t ext3 $BUILDDEV $TEMP_MP || fatal "mount $BUILDDEV /tmp/home"
-#Create home.tar.bz2 with |sudo tar jcfps|
-wget $TARBALL_URL -O ${TEMP_MP}/home.tar.bz2 || fatal "downloading tarball"
-info "tarball sha1: $(sha1sum < $TEMP_MP/home.tar.bz2)"
-tar jxf ${TEMP_MP}/home.tar.bz2 -C $TEMP_MP 2> /dev/null || \
-    fatal "failed tarball extraction"
-info "extracted tarball"
-#Make sure it is in a clean state with --delete-after
+ping -c 1 $RSYNC_HOST || fatal "$RSYNC_HOST is unreachable"
+
 info "rsync starting"
-##rsync -a --delete-after ${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_DIR}/. /home/.
-rsync -a --delete-after ${TEMP_MP}/home/. /home/.
+rsync --rsh "dbclient -i ${RSYNC_KEY} -y" -az --delete-after ${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_DIR}/. /home/. 
 info "rsync finished"
-umount $BUILDDEV || umount $TEMP_MP
 mkdir /builds
 chown user:users /builds
 ln -s /home/user /tools

@@ -22,6 +22,8 @@ ${NGINXPREFIX}/sbin/nginx -c ${NGINXPREFIX}/conf/nginx.conf
 
 rm /tmp/shutdown #this is not the power state you are looking for
 touch /tmp/reboot #I wonder if the jedi mind trick works on n900s?
+su - -c "/bin/uptime-check.py"
+su - -c "/bin/run-ntp.py"
 su - user -c "buildbot create-slave --maxdelay=20 $BBDIR ${BBHOST}:${BBPORT} \
    $BBUSER $BBPASS"
 cp $HWLOG $BBDIR/info/admin ; cp $CONFIGED ${BBDIR}/info/host

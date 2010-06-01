@@ -85,7 +85,7 @@ if [[ $EUID -ne 0 ]]; then
   error "This script must be run as root"
 fi
 if [[ "x$1" == "x" ]] ; then
-  error "Usage: moz-verify.sh <sd card dev> <unit name>"
+  error "Usage: moz-verify.sh <unit name>"
 else
   MOUNT='verify'
   find_card

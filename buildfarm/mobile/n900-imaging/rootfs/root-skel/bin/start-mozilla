@@ -4,8 +4,7 @@
 booterror() {
     error "$1"
     text2screen -c
-    text2screen -x 1 -y 1 -s 1 -t "E: $1"
-    text2screen -x 1 -y 2 -s 1 -t "reboot 300s"
+    text2screen -x 1 -y 1 -s 3 -t "E: $1"
     sleep 300
     reboot
 }

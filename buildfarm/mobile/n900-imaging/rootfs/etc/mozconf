@@ -11,10 +11,13 @@ MOZPROFILE_DIR=/home/user/.mozilla
 CONFIGED=/configed
 SENTINEL=/sentinel
 HWLOG=/hwlog
-NS="10.2.74.125"
+NS="10.250.48.7"
 NS2="10.2.74.127"
 SEARCH="build.mozilla.org"
-TARBALL_URL="http://johnford.info/n900/home-v2.1.tar.bz2"
+RSYNC_HOST=10.250.48.242
+RSYNC_USER=root
+RSYNC_KEY=/root/.ssh/n900
+RSYNC_DIR=/nokimg/home
 BBHOST="staging-mobile-master.build.mozilla.org"
 BBPORT="9020"
 BBUSER=$HOST
@@ -25,6 +28,8 @@ PINGMAXREBT=5
 PINGDELAY=60
 TALOSDIR=/builds/talos
 NGINXPREFIX=/usr/nginx
+NTPSERVER=ntp1.build.mozilla.org
+
 
 #Block buildbot, log failure and stop process
 fatal () {
