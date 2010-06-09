@@ -23,6 +23,7 @@ my $FORCE_FILES = ['freebl3.chk', 'softokn3.chk', 'nssdbm3.chk',
                    'Contents/MacOS/components/components.list'];
 
 my %config;
+my @DEFAULT_PLATFORMS = ('linux', 'macosx', 'win32');
 
 ProcessArgs();
 if (defined $config{'run-tests'}) {
@@ -38,8 +39,8 @@ sub ProcessArgs {
         "app-version|a=s", "old-app-version=s", "build-number|b=s",
         "old-build-number=s", "patcher-config|c=s", "staging-server|t=s",
         "ftp-server|f=s", "bouncer-server|d=s", "use-beta-channel|u",
-        "shipped-locales|l=s", "old-shipped-locales=s", "update-type=s",
-        "releasenotes-url|n=s", "help|h", "run-tests"
+        "platform=s@", "shipped-locales|l=s", "old-shipped-locales=s",
+        "update-type=s", "releasenotes-url|n=s", "help|h", "run-tests"
     );
 
     if ($config{'help'}) {
@@ -65,6 +66,8 @@ Options:
      stage.mozilla.org or stage-old.mozilla.org
   -d The hostname of the Bouncer server to serve release builds from.
      Typically is download.mozilla.org.
+  --platform The list of platforms (multiple). Default to:
+    --platform linux --platform macosx --platform win32
   -l The path and filename to the shipped-locales file for this release.
   --old-shipped-locales The path and filename to the shipped-locales file for
                         the previous release
@@ -127,6 +130,9 @@ __USAGE__
     if (! defined $config{'update-type'}) {
         $config{'update-type'} = 'minor';
     }
+    if (! defined $config{'platform'}) {
+        $config{'platform'} = @DEFAULT_PLATFORMS;
+    }
 }    
     
 sub CreatePatcherConfig {
@@ -146,6 +152,7 @@ sub CreatePatcherConfig {
     my $shippedLocales = $config{'shipped-locales'};
     my $oldShippedLocales = $config{'old-shipped-locales'};
     my $updateType = $config{'update-type'};
+    my $platforms = $config{'platform'};
     my $configBumpDir = '.';
     my $releaseNotesUrl = $config{'releasenotes-url'};
 
@@ -237,7 +244,8 @@ sub CreatePatcherConfig {
                                                  product => $product,
                                                  buildstr => $oldBuildStr,
                                                  stagingServer => $stagingServer,
-                                                 localeInfo => $oldLocaleInfo);
+                                                 localeInfo => $oldLocaleInfo,
+                                                 platforms => $platforms);
     
     $releaseObj->{$version} = GetReleaseBlock(version => $version,
                                               appVersion => $appVersion,
@@ -245,7 +253,8 @@ sub CreatePatcherConfig {
                                               product => $product,
                                               buildstr => $buildStr,
                                               stagingServer => $stagingServer,
-                                              localeInfo => $localeInfo);
+                                              localeInfo => $localeInfo,
+                                              platforms => $platforms);
 
 
     my $patcherConfigObj = new Config::General($rawConfig);

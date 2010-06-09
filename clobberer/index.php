@@ -10,48 +10,27 @@ http://hg.mozilla.org/build/buildbotcustom/file/default/process/factory.py
 
 $CLOBBERER_DB = 'db/clobberer.db';
 
+$PLATFORMS = array('linux', 'linux64', 'macosx', 'macosx64', 'win32', 'wince');
+
 $RELEASE_BUILDERS = array(
-  'linux_build',
-  'macosx_build',
-  'win32_build',
-  'wince_build',
-
-  'linux_repack',
-  'macosx_repack',
-  'win32_repack',
-  'wince_repack',
-
-  'linux_update_verify',
-  'macosx_update_verify',
-  'win32_update_verify',
-  'wince_update_verify',
-
   'final_verification',
   'l10n_verification',
   'tag',
   'source',
   'updates',
   'major_update',
-  'linux_major_update_verify',
-  'macosx_major_update_verify',
-  'win32_major_update_verify',
-
-  'linux_test mochitests',
-  'linux_test mochitest-other',
-  'linux_test reftest',
-  'linux_test crashtest',
-  'linux_test xpcshell',
-  'win32_test mochitests',
-  'win32_test mochitest-other',
-  'win32_test reftest',
-  'win32_test crashtest',
-  'win32_test xpcshell',
-  'macosx_test mochitests',
-  'macosx_test mochitest-other',
-  'macosx_test reftest',
-  'macosx_test crashtest',
-  'macosx_test xpcshell',
 );
+foreach ($PLATFORMS as $platform){
+  $RELEASE_BUILDERS[] = "${platform}_build";
+  $RELEASE_BUILDERS[] = "${platform}_repack";
+  $RELEASE_BUILDERS[] = "${platform}_update_verify";
+  $RELEASE_BUILDERS[] = "${platform}_major_update_verify";
+  $RELEASE_BUILDERS[] = "${platform}_test mochitests";
+  $RELEASE_BUILDERS[] = "${platform}_test mochitest-other";
+  $RELEASE_BUILDERS[] = "${platform}_test reftest";
+  $RELEASE_BUILDERS[] = "${platform}_test crashtest";
+  $RELEASE_BUILDERS[] = "${platform}_test xpcshell'";
+}
 
 // TODO: Figure out if we can use LDAP to do this
 $SPECIAL_PEOPLE = array(
@@ -64,7 +43,9 @@ $SPECIAL_PEOPLE = array(
   'jhford@mozilla.com',
   'joduinn@mozilla.com',
   'lsblakk@mozilla.com',
+  'mtylor@mozilla.com',
   'nthomas@mozilla.com',
+  'raliiev@mozilla.com',
 );
 
 $dbh = new PDO("sqlite:$CLOBBERER_DB");

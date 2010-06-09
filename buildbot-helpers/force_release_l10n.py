@@ -6,11 +6,12 @@ from urlparse import urljoin
 from time import sleep
 
 from buildbotcustom.l10n import ParseLocalesFile
+from buildbotcustom.common import getSupportedPlatforms
 
 from force_build import Forcer
 
 # TODO: Add wince here?
-ALL_PLATFORMS = ('linux', 'macosx', 'win32')
+ALL_PLATFORMS = filter(lambda x: x != 'wince', getSupportedPlatforms())
 
 class L10nForcer:
     ignoredLocales = ('en-US') # locales that are _always_ to be skipped

@@ -9,6 +9,7 @@ then
   echo "Syntax: $0 <release_dir>"
   exit 1
 fi
+shift
 
 # Chomp trailing slash (can interfere with cut below)
 release=`echo $release | sed -e 's|\/$||'`
@@ -19,7 +20,7 @@ if [ -d $release/mac/en-US ]; then
   newformat=1
 fi
 
-for platform in linux-i686 win32 mac
+for platform in $@
 do
   rm -rf source/*
   # unpack_build platform dir_name pkg_file

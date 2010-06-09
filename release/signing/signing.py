@@ -64,7 +64,7 @@ def fileInfo(filepath, product):
         ret = {'pathstyle': 'long'}
         if filepath.endswith('.mar'):
             ret['format'] = 'mar'
-            m = re.search("update/(win32|linux-i686|mac)/([-a-zA-Z]+)/(%s)-(\d+\.\d+(?:\.\d+)?(?:\w+\d+)?)\.(complete)\.mar" % product, filepath)
+            m = re.search("update/(win32|linux-i686|linux-x86_64|mac|mac64)/([-a-zA-Z]+)/(%s)-(\d+\.\d+(?:\.\d+)?(?:\w+\d+)?)\.(complete)\.mar" % product, filepath)
             if not m:
                 raise ValueError("Could not parse: %s" % filepath)
             ret['platform'] = m.group(1)

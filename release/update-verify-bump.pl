@@ -28,7 +28,7 @@ sub ProcessArgs {
         "build-number|n=s", "aus-server-url|a=s", "staging-server|s=s",
         "verify-config|c=s", "old-candidates-dir|d=s", "linux-extension|e=s",
         "shipped-locales|l=s", "pretty-candidates-dir", "major|m",
-        "help", "run-tests"
+        "binary-name=s", "old-binary-name=s", "help", "run-tests"
     );
 
     if ($config{'help'}) {
@@ -36,10 +36,16 @@ sub ProcessArgs {
 Usage: update-verify-bump.pl [options]
 This script depends on the MozBuild::Util and Bootstrap::Util modules.
 Options requiring arguments:
-  --osname/-o             One of (linux, macosx, win32).
+  --osname/-o             One of (linux, linux64, macosx, macosx64, win32).
   --product/-p            The product name (eg. firefox, thunderbird, seamonkey, etc.).
   --brand/-r              The brand name (eg. Firefox, Thunderbird, SeaMonkey, etc.)
                           If not specified, a first-letter-uppercased product name is assumed.
+  --binary-name           Optinal binary prefix (eg. Firefox,
+                          MozillaDeveloperPreview) for this version. Default value is set to
+                          the brand name.
+  --old-binary-name       Optional binary prefix (eg. Firefox,
+                          MozillaDeveloperPreview) for the previous version. Default value
+                          is set to the brand name.
   --old-version           The previous version of the product.
   --old-app-version       The previous 'app version of the product'.
                           If not passed, is assumed to be the same as
@@ -121,6 +127,12 @@ __USAGE__
         if (! defined $config{'brand'}) {
             $config{'brand'} = ucfirst($config{'product'});
         }
+        if (! defined $config{'binary-name'}) {
+            $config{'binary-name'} = $config{'brand'};
+        }
+        if (! defined $config{'old-binary-name'}) {
+            $config{'old-binary-name'} = $config{'brand'};
+        }
         if (! defined $config{'old-app-version'}) {
             $config{'old-app-version'} = $config{'old-version'};
         }
@@ -151,6 +163,8 @@ sub BumpVerifyConfig {
     my $osname = $config{'osname'};
     my $product = $config{'product'};
     my $brand = $config{'brand'};
+    my $binaryName = $config{'binary-name'};
+    my $oldBinaryName = $config{'old-binary-name'};
     my $oldVersion = $config{'old-version'};
     my $oldAppVersion = $config{'old-app-version'};
     my $oldLongVersion = $config{'old-long-version'};
@@ -184,35 +198,58 @@ sub BumpVerifyConfig {
         $buildTarget = 'Linux_x86-gcc3';
         $platform = 'linux';
         $ftpOsname = 'linux-i686';
-        $releaseFile = $product.'-'.$oldVersion.'.tar.'.$linuxExtension;
+        $releaseFile = lc($oldBinaryName).'-'.$oldVersion.'.tar.'.$linuxExtension;
         if ($prettyCandidatesDir) {
-            $nightlyFile = 'linux-i686/%locale%/'.$product.'-'.$version.
+            $nightlyFile = 'linux-i686/%locale%/'.lc($binaryName).'-'.$version.
              '.tar.'.$linuxExtension;
         } else {
-            $nightlyFile = $product.'-'.$appVersion.'.%locale%.linux-i686.tar.'.
+            $nightlyFile = lc($binaryName).'-'.$appVersion.'.%locale%.linux-i686.tar.'.
+             $linuxExtension;
+        }
+    } elsif ($osname eq 'linux64') {
+        $buildTarget = 'Linux_x86_64-gcc3';
+        $platform = 'linux64';
+        $ftpOsname = 'linux-x86_64';
+        $releaseFile = lc($oldBinaryName).'-'.$oldVersion.'.tar.'.$linuxExtension;
+        if ($prettyCandidatesDir) {
+            $nightlyFile = 'linux-x86_64/%locale%/'.lc($binaryName).'-'.$version.
+             '.tar.'.$linuxExtension;
+        } else {
+            $nightlyFile = lc($binaryName).'-'.$appVersion.'.%locale%.linux-x86_64.tar.'.
              $linuxExtension;
         }
     } elsif ($osname eq 'macosx') {
         $buildTarget = 'Darwin_Universal-gcc3';
         $platform = 'osx';
         $ftpOsname = 'mac';
-        $releaseFile = $brand.' '.$oldLongVersion.'.dmg';
+        $releaseFile = $oldBinaryName.' '.$oldLongVersion.'.dmg';
         if ($prettyCandidatesDir) {
-            $nightlyFile = 'mac/%locale%/'.$brand.' '.$longVersion.
+            $nightlyFile = 'mac/%locale%/'.$binaryName.' '.$longVersion.
              '.dmg';
         } else {
-            $nightlyFile = $product.'-'.$appVersion.'.%locale%.mac.dmg';
+            $nightlyFile = lc($binaryName).'-'.$appVersion.'.%locale%.mac.dmg';
+        }
+    } elsif ($osname eq 'macosx64') {
+        $buildTarget = 'Darwin_x86_64-gcc3';
+        $platform = 'osx64';
+        $ftpOsname = 'mac64';
+        $releaseFile = $oldBinaryName.' '.$oldLongVersion.'.dmg';
+        if ($prettyCandidatesDir) {
+            $nightlyFile = 'mac64/%locale%/'.$binaryName.' '.$longVersion.
+             '.dmg';
+        } else {
+            $nightlyFile = lc($binaryName).'-'.$appVersion.'.%locale%.mac64.dmg';
         }
     } elsif ($osname eq 'win32') {
         $buildTarget = 'WINNT_x86-msvc';
         $platform = 'win32';
         $ftpOsname = 'win32';
-        $releaseFile = $brand.' Setup '.$oldLongVersion.'.exe';
+        $releaseFile = $oldBinaryName.' Setup '.$oldLongVersion.'.exe';
         if ($prettyCandidatesDir) {
-            $nightlyFile = 'win32/%locale%/'.$brand. ' Setup '.
+            $nightlyFile = 'win32/%locale%/'.$binaryName. ' Setup '.
              $longVersion.'.exe';
         } else {
-            $nightlyFile = $product.'-'.$appVersion.
+            $nightlyFile = lc($binaryName).'-'.$appVersion.
              '.%locale%.win32.installer.exe';
         }
     } else {
@@ -286,6 +323,8 @@ sub RunUnitTests {
     # 3.0.x minor update test
     ExecuteTest(product => 'firefox',
                 brand => 'Firefox',
+                binaryName => 'Firefox',
+                oldBinaryName => 'Firefox',
                 osname => 'linux',
                 platform => 'Linux_x86-gcc3',
                 version => '3.0.3',
@@ -311,6 +350,8 @@ sub RunUnitTests {
     # 3.1b minor update test (pretty names)
     ExecuteTest(product => 'firefox',
                 brand => 'Firefox',
+                binaryName => 'Firefox',
+                oldBinaryName => 'Firefox',
                 osname => 'win32',
                 platform => 'WINNT_x86-msvc',
                 version => '3.1b2',
@@ -333,9 +374,37 @@ sub RunUnitTests {
                 linuxExtension => 'bz2',
                 major => 0,
     );
+    ExecuteTest(product => 'firefox',
+                brand => 'Firefox',
+                binaryName => 'Firefox',
+                oldBinaryName => 'MozillaDeveloperPreview',
+                osname => 'win32',
+                platform => 'WINNT_x86-msvc',
+                version => '3.6b1',
+                longVersion => '3.6 Beta 1',
+                build => '3',
+                oldVersion => '3.6a1',
+                oldLongVersion => '3.6 Alpha 1',
+                oldBuildid => '20090806165642',
+                oldFromBuild => '/firefox/releases/3.6a1/win32/%locale%/MozillaDeveloperPreview Setup 3.6 Alpha 1.exe',
+                oldToBuild => '/firefox/nightly/3.6b1-candidates/build3/win32/%locale%/Firefox Setup 3.6 Beta 1.exe',
+                oldOldVersion => '3.5.7',
+                oldOldLongVersion => '3.5.7',
+                oldOldBuildid => '20091221164558',
+                oldOldFromBuild => '/firefox/nightly/3.5.7-candidates/build1/win32/%locale%/Firefox Setup 3.5.7.exe',
+                oldOldToBuild => '/firefox/nightly/3.6a1-candidates/build1/win32/%locale%/MozillaDeveloperPreview Setup 3.6 Aplha 1.exe',
+                ausServer => 'https://aus2.mozilla.org',
+                stagingServer => 'build.mozilla.org',
+                oldCandidatesDir => '/update-bump-unit-tests/pub/mozilla.org/firefox/nightly/3.6a1-candidates/build1',
+                prettyCandidatesDir => '1',
+                linuxExtension => 'bz2',
+                major => 0,
+    );
     # major update test
     ExecuteTest(product => 'firefox',
                 brand => 'Firefox',
+                binaryName => 'Firefox',
+                oldBinaryName => 'Firefox',
                 osname => 'win32',
                 platform => 'WINNT_x86-msvc',
                 version => '3.6b4',
@@ -344,7 +413,7 @@ sub RunUnitTests {
                 oldVersion => '3.5.5',
                 oldLongVersion => '3.5.5',
                 oldBuildid => '20091102152451',
-                oldFromBuild => '/firefox/releases/3.5.5/win32/%locale%/Firefox Setup 3.5.5.exe',
+                oldFromBuild => '/firefox/nightly/3.5.5-candidates/build1/win32/%locale%/Firefox Setup 3.5.5.exe',
                 oldToBuild => '/firefox/nightly/3.6b4-candidates/build1/win32/%locale%/Firefox Setup 3.6 Beta 4.exe',
                 oldOldVersion => '',
                 oldOldLongVersion => '',
@@ -364,6 +433,8 @@ sub ExecuteTest {
     my %args = @_;
     my $product = $args{'product'};
     my $brand = $args{'brand'};
+    my $binaryName = $args{'binaryName'};
+    my $oldBinaryName = $args{'oldBinaryName'};
     my $osname = $args{'osname'};
     my $platform = $args{'platform'};
     my $version = $args{'version'};
@@ -473,6 +544,8 @@ sub ExecuteTest {
     $config{'osname'} = $osname;
     $config{'product'} = $product;
     $config{'brand'} = $brand;
+    $config{'binary-name'} = $binaryName;
+    $config{'old-binary-name'} = $oldBinaryName;
     $config{'old-version'} = $oldVersion;
     $config{'old-app-version'} = $oldVersion;
     $config{'old-long-version'} = $oldLongVersion;

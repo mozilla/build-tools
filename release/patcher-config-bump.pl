@@ -10,7 +10,7 @@ use Storable;
 use MozBuild::Util qw(GetBuildIDFromFTP);
 
 use Bootstrap::Util qw(GetBouncerPlatforms GetBouncerToPatcherPlatformMap
-                       LoadLocaleManifest);
+                       LoadLocaleManifest GetBuildbotToFTPPlatformMap);
 
 use Release::Patcher::Config qw(GetProductDetails);
 
@@ -20,6 +20,7 @@ $|++;
 # my $RELEASE_CANDIDATE_CHANNELS = ['betatest', 'DisableCompleteJump'];
 
 my %config;
+my @DEFAULT_PLATFORMS = ('linux', 'macosx', 'win32');
 
 ProcessArgs();
 if (defined $config{'run-tests'}) {
@@ -35,7 +36,7 @@ sub ProcessArgs {
         "app-version|a=s", "build-number|b=s", "patcher-config|c=s",
         "staging-server|t=s", "ftp-server|f=s", "bouncer-server|d=s",
         "use-beta-channel|u", "shipped-locales|l=s", "releasenotes-url|n=s",
-        "help|h", "run-tests"
+        "platform=s@", "marname=s", "oldmarname=s", "help|h", "run-tests"
     );
 
     if ($config{'help'}) {
@@ -66,6 +67,12 @@ Options:
      Generally, Alphas and Betas do not pass this, final and point releases do.
   -l The path and filename to the shipped-locales file for this release.
   -n Release notes URL.
+  --platform The list of platforms (multiple). Default to:
+    --platform linux --platform macosx --platform win32
+  --marname Optional MAR prefix (firefox, mozilladeveloperpreview) for this
+    release. Default value is set to the product name.
+  --oldmarname Optional MAR prefix (firefox, mozilladeveloperpreview) for the
+    previous release. Default value is set to --marname.
   -h This usage message.
   --run-tests will run the (very basic) unit tests included with this script.
 __USAGE__
@@ -109,13 +116,23 @@ __USAGE__
     if (! defined $config{'use-beta-channel'}) {
         $config{'use-beta-channel'} = 0;
     }
-
+    if (! defined $config{'platform'}) {
+        $config{'platform'} = @DEFAULT_PLATFORMS;
+    }
+    if (! defined $config{'marname'}) {
+        $config{'marname'} = $config{'product'};
+    }
+    if (! defined $config{'oldmarname'}) {
+        $config{'oldmarname'} = $config{'marname'};
+    }
 }    
 
 sub BumpFilePath {
     my %args = @_;
     my $oldFilePath = $args{'oldFilePath'};
     my $product = $config{'product'};
+    my $marName = $config{'marname'};
+    my $oldMarName = $config{'oldmarname'};
     my $version = $config{'version'};
     my $oldVersion = $config{'old-version'};
 
@@ -131,13 +148,13 @@ sub BumpFilePath {
     $newPath =~ s/.*\/build\d+\///;
     # We need to handle partials and complete MARs differently
     if ($newPath =~ m/\.partial\.mar$/) {
-        $newPath =~ s/$product-.+?-($escapedOldVersion|$escapedVersion)\.
-                     /$product-$oldVersion-$version./x
+        $newPath =~ s/$oldMarName-.+?-($escapedOldVersion|$escapedVersion)\.
+                     /$marName-$oldVersion-$version./x
                      or die("ASSERT: BumpFilePath() - Could not bump path: " .
                             "$oldFilePath");
     } elsif ($newPath =~ m/\.complete\.mar$/) {
-        $newPath =~ s/$product-($escapedOldVersion|$escapedVersion)\.
-                     /$product-$version./x
+        $newPath =~ s/$oldMarName-($escapedOldVersion|$escapedVersion)\.
+                     /$marName-$version./x
                      or die("ASSERT: BumpFilePath() - Could not bump path: " .
                             "$oldFilePath");
     } else {
@@ -161,6 +178,7 @@ sub BumpPatcherConfig {
     my $useBetaChannel = $config{'use-beta-channel'};
     my $configBumpDir = '.';
     my $releaseNotesUrl = $config{'releasenotes-url'};
+    my $platforms = $config{'platform'};
 
     my $prettyVersion = $version;
     $prettyVersion =~ s/a([0-9]+)$/ Alpha $1/;
@@ -332,30 +350,22 @@ sub BumpPatcherConfig {
     $releaseObj->{'version'} = $releaseObj->{'extension-version'} = $appVersion;
     $releaseObj->{'prettyVersion'} = $prettyVersion;
 
-    my $linBuildId;
-    my $winBuildId;
-    my $macBuildId;
-
     my $candidateDir = '/pub/mozilla.org/' . $product . '/nightly/' .
                        $version . '-candidates/build' . $build;
-    foreach my $os ('linux', 'macosx', 'win32') {
+
+    $releaseObj->{'platforms'} = {};
+    my %platformFTPMap = GetBuildbotToFTPPlatformMap();
+    foreach my $os (@$platforms){
         my $buildID = GetBuildIDFromFTP(os => $os,
                                         releaseDir => $candidateDir,
                                         stagingServer => $stagingServer);
-        if ($os eq 'linux') {
-            $linBuildId = "$buildID";
-        } elsif ($os eq 'macosx') {
-            $macBuildId = "$buildID";
-        } elsif ($os eq 'win32') {
-            $winBuildId = "$buildID";
+        if (exists($platformFTPMap{$os})){
+            my $ftp_platform = $platformFTPMap{$os};
+            $releaseObj->{'platforms'}->{$ftp_platform} = $buildID;
         } else {
             die("ASSERT: BumpPatcherConfig(): unknown OS $os");
         }
     }
-
-    $releaseObj->{'platforms'} = { 'linux-i686' => $linBuildId,
-                                   'win32' => $winBuildId,
-                                   'mac' => $macBuildId };
 
     $releaseObj->{'locales'} = join(' ', sort (keys(%{$localeInfo})));
 
@@ -609,6 +619,8 @@ sub RunUnitTests {
     # We need to build up the global config object before calling
     # BumpPatcherConfig
     $config{'product'} = $product;
+    $config{'marname'} = $product;
+    $config{'oldmarname'} = $product;
     $config{'brand'} = $brand;
     $config{'version'} = $version;
     $config{'old-version'} = $oldVersion;
@@ -620,6 +632,7 @@ sub RunUnitTests {
     $config{'bouncer-server'} = $bouncerServer;
     $config{'use-beta-channel'} = 1;
     $config{'shipped-locales'} = $shippedLocales;
+    $config{'platform'} = \@DEFAULT_PLATFORMS;
     BumpPatcherConfig();
 
     # Now, read the newly bumped patcher config file back in

@@ -3,7 +3,7 @@ package Release::Patcher::Config;
 use strict;
 
 use MozBuild::Util qw(GetBuildIDFromFTP);
-use Bootstrap::Util qw(GetBouncerToPatcherPlatformMap GetBouncerPlatforms);
+use Bootstrap::Util qw(GetBouncerToPatcherPlatformMap GetBouncerPlatforms GetBuildbotToFTPPlatformMap);
 
 use base qw(Exporter);
 our @EXPORT_OK = qw(GetProductDetails GetReleaseBlock BumpFilePath);
@@ -45,6 +45,7 @@ sub GetReleaseBlock {
     my $buildStr = $args{'buildstr'};
     my $stagingServer = $args{'stagingServer'};
     my $localeInfo = $args{'localeInfo'};
+    my $platforms = $args{'platforms'};
 
     my $releaseBlock = {};
     $releaseBlock->{'schema'} = '1';
@@ -52,27 +53,23 @@ sub GetReleaseBlock {
     $releaseBlock->{'extension-version'} = $appVersion;
     $releaseBlock->{'prettyVersion'} = $prettyVersion;
 
-    my ($linBuildId, $winBuildId, $macBuildId);
     my $candidateDir = '/pub/mozilla.org/' . $product . '/nightly/' .
       $version . '-candidates/' . $buildStr;
-    foreach my $os ('linux', 'macosx', 'win32') {
+
+    $releaseBlock->{'platforms'} = {};
+    my %platformFTPMap = GetBuildbotToFTPPlatformMap();
+    foreach my $os (@$platforms){
         my $buildID = GetBuildIDFromFTP(os => $os,
                                         releaseDir => $candidateDir,
                                         stagingServer => $stagingServer);
-        if ($os eq 'linux') {
-            $linBuildId = "$buildID";
-        } elsif ($os eq 'macosx') {
-            $macBuildId = "$buildID";
-        } elsif ($os eq 'win32') {
-            $winBuildId = "$buildID";
+        if (exists($platformFTPMap{$os})){
+            my $ftp_platform = $platformFTPMap{$os};
+            $releaseBlock->{'platforms'}->{$ftp_platform} = $buildID;
         } else {
             die("ASSERT: GetReleaseBlock(): unknown OS $os");
         }
     }
     
-    $releaseBlock->{'platforms'} = {'linux-i686' => $linBuildId,
-                                    'win32' => $winBuildId,
-                                    'mac' => $macBuildId};
     $releaseBlock->{'locales'} = join(' ', sort (keys(%{$localeInfo})));
     
     $releaseBlock->{'completemarurl'} = 'http://' . $stagingServer .

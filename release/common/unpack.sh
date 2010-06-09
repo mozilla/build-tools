@@ -18,7 +18,7 @@ unpack_build () {
     mkdir -p $dir_name
     pushd $dir_name > /dev/null
     case $unpack_platform in
-        mac|mac-ppc|Darwin_ppc-gcc|Darwin_Universal-gcc3)
+        mac|mac64|mac-ppc|Darwin_ppc-gcc|Darwin_Universal-gcc3|Darwin_x86_64-gcc3)
             # Thunderbird 2.0.0.x (and others) have a license file and build on
             # 10.4. For these, we need to use an expect script to mount them.
             osver=`uname -r | cut -f1 -d.`
@@ -64,7 +64,7 @@ unpack_build () {
               unzip -o ${locale}.xpi > /dev/null
             fi
             ;;
-        linux-i686|linux|Linux_x86-gcc|Linux_x86-gcc3)
+        linux-i686|linux-x86_64|linux|linux64|Linux_x86-gcc|Linux_x86-gcc3|Linux_x86_64-gcc3)
             if `echo $pkg_file | grep -q "tar.gz"`
             then
                 tar xfz ../"$pkg_file" > /dev/null
