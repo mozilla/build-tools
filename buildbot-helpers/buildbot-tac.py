@@ -60,7 +60,7 @@ def get_default_options(slavename):
             basedir = '/builds/slave'
         elif 'win32' in slavename or 'mw32' in slavename:
             basedir = 'e:\\builds\\moz2_slave'
-    elif 'talos' in slavename or '-try' in slavename:
+    elif 'talos' in slavename or '-try' in slavename or 'r3' in slavename:
         footer = TALOS_FOOTER
         if '-try' in slavename:
             buildmaster_host = TALOS_TRY_BUILDMASTER
