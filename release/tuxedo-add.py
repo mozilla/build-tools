@@ -53,10 +53,11 @@ class TuxedoEntrySubmitter(object):
     def __init__(self, config, productName, version, tuxedoServerUrl,
                  brandName=None, bouncerProductName=None, shippedLocales=None,
                  addMARs=True, oldVersion=None, username=None, password=None,
-                 verbose=True, dryRun=False, platforms=None):
+                 verbose=True, dryRun=False, platforms=None, milestone=None):
         self.config = config
         self.productName = productName
         self.version = version
+        self.milestone = milestone
         self.tuxedoServerUrl = tuxedoServerUrl
         self.brandName = brandName or productName.capitalize()
         self.bouncerProductName = bouncerProductName or productName.capitalize()
@@ -183,6 +184,7 @@ full_product_template = /%(product)s/releases/%(version)s/%(ftp_platform)s/%(loc
                              'brandName': self.brandName,
                              'bouncer_product': self.bouncerProductName,
                              'version': self.version,
+                             'milestone': self.milestone,
                              'prettyVersion': getPrettyVersion(self.version),
                              'old_version': self.oldVersion,
                              'ftp_platform': buildbot2ftp(platform),
@@ -218,6 +220,8 @@ def getOptions():
     parser.add_option("-v", "--version", dest="version",
                       required=True,
                       help="Product version")
+    parser.add_option("--milestone", dest="milestone",
+                      help="Product milestone")
     parser.add_option("-t", "--tuxedo-server-url", dest="tuxedoServerUrl",
                       required=True,
                       help="Bouncer/Tuxedo API URL")
@@ -276,6 +280,7 @@ def main():
     tuxedo = TuxedoEntrySubmitter(config=options.config,
                                   productName=options.productName,
                                   version=options.version,
+                                  milestone=options.milestone,
                                   tuxedoServerUrl=options.tuxedoServerUrl,
                                   brandName=options.brandName,
                                   bouncerProductName=options.bouncerProductName,
