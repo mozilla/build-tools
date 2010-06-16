@@ -1,9 +1,12 @@
 # buildbot -> bouncer platform mapping
-bouncer_platform_map = {'win32': 'win', 'macosx': 'osx', 'linux': 'linux'}
+bouncer_platform_map = {'win32': 'win', 'macosx': 'osx', 'linux': 'linux',
+                        'linux64': 'linux64', 'macosx64': 'osx64'}
 # buildbot -> ftp platform mapping
-ftp_platform_map = {'win32': 'win32', 'macosx': 'mac', 'linux': 'linux-i686'}
+ftp_platform_map = {'win32': 'win32', 'macosx': 'mac', 'linux': 'linux-i686',
+                    'linux64': 'linux-x86_64', 'macosx64': 'mac64'}
 # buildbot -> shipped-locales platform mapping
-sl_platform_map = {'win32': 'win32', 'macosx': 'osx', 'linux': 'linux'}
+sl_platform_map = {'win32': 'win32', 'macosx': 'osx', 'linux': 'linux',
+                   'linux64': 'linux64', 'macosx64': 'osx64'}
 
 def buildbot2bouncer(platform):
     return bouncer_platform_map.get(platform, platform)
