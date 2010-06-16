@@ -31,7 +31,12 @@ s.setServiceParent(application)
 """
 BUILD_BUILDMASTER = "staging-master.build.mozilla.org"
 TRY_BUILDMASTER   = "sm-staging-try-master.mozilla.org"
-TALOS_BUILDMASTER = "talos-master02.build.mozilla.org"
+TALOS_BUILDMASTERS = {
+    ("fed", "fed64", "leopard", "snow", "xp", "w7"):
+      "talos-master02.build.mozilla.org",
+    ("w764",):
+      "test-master01.build.mozilla.org"
+}
 TALOS_TRY_BUILDMASTER = "talos-master02.build.mozilla.org"
 
 def quote_option(str, raw=False):
@@ -65,8 +70,12 @@ def get_default_options(slavename):
         if '-try' in slavename:
             buildmaster_host = TALOS_TRY_BUILDMASTER
             d['port'] = 9011
-        if 'r3' in slavename:
-            buildmaster_host = TALOS_BUILDMASTER
+        else:
+            platform = re.match("t(alos)?-r3-(?P<platform>\w+)-\d+",
+                                slavename).groupdict()['platform']
+            for platform_list,host in TALOS_BUILDMASTERS.iteritems():
+                if platform in platform_list:
+                    buildmaster_host = host
             d['port'] = 9012
         if 'linux' in slavename or 'ubuntu' in slavename or 'fed' in slavename:
             basedir = '/home/cltbld/talos-slave'
