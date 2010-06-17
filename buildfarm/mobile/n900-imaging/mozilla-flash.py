@@ -208,7 +208,7 @@ def flash_image(config):
         responses.append(('%s -- %s' % (image.name, image.description), image))
 
     to_flash = choose('Which image would you like to flash?', responses)
-    return flash_n900(main=to_flash.mainfile.filename, emmc=to_flash.mainfile.filename)
+    return flash_n900(main=to_flash.mainfile.filename, emmc=to_flash.emmcfile.filename, rootfs=to_flash.ubifile.filename)
 
 def list_images(config):
     images=[]

@@ -117,19 +117,21 @@ def generate_ubifile(rootdir, output, rsync, mkfs, ubinize):
             '%s.ubifs' % output])
     assert rc == 0, 'Could not generate UBIFS image'
     assert os.name == 'posix', 'This script must be run on unix'
-    tmpfile = tempfile.NamedTemporaryFile()
+    fd, tmpfile_name = tempfile.mkstemp(prefix='ubi.cfg')
+    tmpfile = open(tmpfile_name, 'w+')
     print >>tmpfile, '[rootfs]'
     print >>tmpfile, 'mode=ubi'
     print >>tmpfile, 'image=%s.ubifs' % output
     print >>tmpfile, 'vol_id=0'
-    print >>tmpfile, 'vol_size=200MiB'
+    print >>tmpfile, 'vol_size=210MiB'
     print >>tmpfile, 'vol_type=dynamic'
     print >>tmpfile, 'vol_name=rootfs'
     print >>tmpfile, 'vol_flags=autoresize'
     print >>tmpfile, 'vol_alignment=1'
-    print 'Creating %s.ubi' % output
-    rc=cmd([ubinize, '-o', '%s.ubi' % output, '-p', '128KiB', '-m', '2048',
-            '-s', '512', tmpfile.name])
     tmpfile.close()
+    print 'Creating %s.ubi' % output
+    rc=cmd([ubinize, '-p', '128KiB', '-m', '2048',
+            '-s', '512', os.path.abspath(tmpfile_name), '-o', os.path.abspath('%s.ubi' % output)])
+    os.unlink(tmpfile_name)
     assert rc == 0, 'Could not create %s.ubi' % output
 
