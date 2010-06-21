@@ -1,0 +1,84 @@
+#!/bin/sh
+
+. /etc/mozconf
+
+if [[ $(whoami) != 'root' ]] ; then
+    echo "You must run this script as root"
+    exit 1
+fi
+
+if [[ "x$1" == "x" ]] ; then
+    error "you must specify a hostname to set in the format [0-9][0-9][0-9]"
+    exit 1
+fi
+
+#New hostname must be given as three digits that will be appended to 'n900-'
+hostname=`echo $1 | sed 's/[.].*//'`
+echo $hostname | egrep "^[0-9]{3}$" > /dev/null 2> /dev/null
+if [[ $? -ne 0 ]] ; then
+    error "Your hostname ($1) is invalid!"
+    exit 1
+else
+    echo "n900-$hostname" > /etc/hostname
+    if [[ $? -ne 0 ]] ; then
+        error "setting hostname"
+        exit 1
+    fi
+    hostname `cat /etc/hostname` > /dev/null 2> /dev/null
+    if [[ $? -ne 0 ]] ; then
+        error "setting hostname"
+        exit 1
+    fi
+
+fi
+
+if [[ -d /root/.ssh ]] ; then
+    cp -r /root/.ssh /home/user/
+    chown -R user:users /home/user/.ssh
+    chmod -R 700 /home/user/.ssh
+fi
+
+if [[ -f /etc/localtime ]] ; then
+    rm /etc/localtime
+fi
+ln -s /usr/share/zoneinfo/America/Los_Angeles /etc/localtime > /dev/null 2> /dev/null
+if [[ $? -ne 0 ]] ; then
+    error "setting timezone"
+    exit 1
+else
+    info "timezone set to America/Los_Angeles"
+fi
+
+#This is not ideal because we won't have the same hostkey, but at least
+#we can log into the device at all
+if [[ ! -f /etc/dropbear/dropbear_rsa_host_key ]] ; then
+    info "there was no rsa dropbear hostkey, generating one"
+    dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key > /dev/null 2> /dev/null
+    if [[ $? -ne 0 ]] ; then
+        error "generating rsa hostkey"
+        exit 1
+    fi
+fi
+if [[ ! -f /etc/dropbear/dropbear_dss_host_key ]] ; then
+    info "there was no dss dropbear hostkey, generating one"
+    dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key > /dev/null 2> /dev/null
+    if [[ $? -ne 0 ]] ; then
+        error "generating dss hostkey"
+        exit 1
+    fi
+fi
+
+#Still testing to see if this is valid
+if [[ -f /etc/wlan.xml ]] ; then
+    gconftool-2 --load /etc/wlan.xml || error "setting up wifi"
+fi
+
+rsync -a /root-skel/. /. > /dev/null 2> /dev/null
+if [[ $? -ne 0 ]] ; then
+    error "setting up root-skel files"
+    exit 1
+fi
+
+info "Initialised $(cat /etc/hostname)"
+date > $CONFIGED
+

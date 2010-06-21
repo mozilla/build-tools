@@ -1,0 +1,48 @@
+description "Buildbot Startup Script"
+author "John Ford"
+version "1.0"
+
+start on started xomap
+stop on starting shutdown
+
+pre-start script
+    . /etc/mozconf
+    gconftool-2 --set /system/osso/dsm/display/enable_power_saving \
+        --type bool false
+    gconftool-2 --set /system/osso/dsm/display/display_dim_timeout \
+        --type int 99999999
+    gconftool-2 --set /system/osso/dsm/display/display_blank_timeout \
+        --type int 99999999
+    gconftool-2 --set /system/osso/dsm/display/display_brightness \
+        --type int 1
+    echo 1 > /sys/devices/platform/gpio-switch/cam_launch/disable
+    echo 1 > /sys/devices/platform/gpio-switch/cam_shutter/disable
+    echo 1 > /sys/devices/platform/gpio-switch/kb_lock/disable
+    echo 1 > /sys/devices/platform/gpio-switch/proximity/disable
+
+    /bin/run-ntp.py
+    /bin/uptime-check.py
+
+    rm /tmp/shutdown || true
+    touch /tmp/reboot || true
+    umount $BUILDDEV || true
+    if [[ ! -f $BUILDDEV ]] ; then
+        dd if=/dev/zero of=$BUILDDEV bs=1024 count=$((1024*400)) || error "creating $BUILDDEV"
+    fi
+    #Should probably check for a valid sized file before using it
+    echo y | mkfs.ext2 $BUILDDEV || error "formatting $BUILDDEV"
+    mount -t ext2 $BUILDDEV $BUILDDIR || error "mounting $BUILDDEV"
+    chown -R user:users $BUILDDIR
+    killall nginx || true
+    /usr/nginx/sbin/nginx -c /usr/nginx/conf/nginx.conf || error "starting nginx"
+    su - user -c "buildbot create-slave --maxdelay=20 $BUILDDIR/slave ${BBHOST}:${BBPORT} $BBUSER $BBPASS"
+end script
+
+script
+    . /etc/mozconf
+    if [[ -f $SENTINEL ]] ; then
+        echo 'NOT STARTING BUILDBOT'
+    else
+        su - user -c "buildbot start $BUILDDIR/slave"
+    fi
+end script

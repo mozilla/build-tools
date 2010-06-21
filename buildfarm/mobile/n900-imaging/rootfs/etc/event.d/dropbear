@@ -1,0 +1,12 @@
+description "Dropbear SSH"
+author "John Ford"
+version 1.0
+
+start on startup
+stop on started shutdown
+
+console none
+
+exec /usr/sbin/dropbear -F -K 10 -I 3600
+
+respawn
