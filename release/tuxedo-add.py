@@ -76,7 +76,7 @@ class TuxedoEntrySubmitter(object):
         if self.shippedLocales:
             self.locales = getAllLocales(self.shippedLocales)
         else:
-            self.locales = ('en-US',)
+            self.locales = None
 
         self.bouncer_product_name = '%s-%s' % (self.bouncerProductName,
                                                self.version)
@@ -151,12 +151,14 @@ full_product_template = /%(product)s/releases/%(version)s/%(ftp_platform)s/%(loc
     def product_add(self, product):
         if self.verbose:
             print "Adding product: %s" % product
-            print "Locales: %s" % ", ".join(self.locales)
-        locales_post_data = ["languages=%s" % l for l in self.locales]
-        locales_post_data = "&".join(locales_post_data)
-        response = self.tuxedoRequest("product_add/",
-                                      "product=" + quote(product) + "&" +
-                                      locales_post_data)
+            if self.locales:
+                print "Locales: %s" % ", ".join(self.locales)
+        post_data = "product=" + quote(product)
+        if self.locales:
+            locales_post_data = ["languages=%s" % l for l in self.locales]
+            locales_post_data = "&".join(locales_post_data)
+            post_data += locales_post_data
+        response = self.tuxedoRequest("product_add/", post_data)
         if self.verbose:
             print "Server response:"
             print response
