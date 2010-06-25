@@ -77,6 +77,7 @@ jar.close()
 removedir(os.path.join(chrome_dir, 'content'))
 
 shutil.copy(os.path.join(pageloader_dir, 'tp-cmdline.js'), os.path.join(components_dir, 'tp-cmdline.js'))
+shutil.copy(os.path.join(pageloader_dir, 'tp-cmdline.manifest'), os.path.join(components_dir, 'tp-cmdline.manifest'))
 
 #get rid of the temporary directory
 removedir(tmp_dir)
