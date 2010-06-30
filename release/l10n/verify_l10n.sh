@@ -16,7 +16,7 @@ release=`echo $release | sed -e 's|\/$||'`
 
 # Are we using the new (releases) directory structure? Check using en-US.
 newformat=0
-if [ -d $release/mac/en-US ]; then
+if [ -d $release/*/en-US ]; then
   newformat=1
 fi
 
