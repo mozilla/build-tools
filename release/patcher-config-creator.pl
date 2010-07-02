@@ -131,7 +131,7 @@ __USAGE__
         $config{'update-type'} = 'minor';
     }
     if (! defined $config{'platform'}) {
-        $config{'platform'} = @DEFAULT_PLATFORMS;
+        $config{'platform'} = \@DEFAULT_PLATFORMS;
     }
 }    
     

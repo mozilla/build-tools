@@ -117,7 +117,7 @@ __USAGE__
         $config{'use-beta-channel'} = 0;
     }
     if (! defined $config{'platform'}) {
-        $config{'platform'} = @DEFAULT_PLATFORMS;
+        $config{'platform'} = \@DEFAULT_PLATFORMS;
     }
     if (! defined $config{'marname'}) {
         $config{'marname'} = $config{'product'};
