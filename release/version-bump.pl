@@ -88,7 +88,6 @@ sub Bump {
     my $milestone = $config{'milestone'};
     my @bumpFiles = @{$config{'bumpFiles'}};
     
-    my $moduleVer = catfile($appName, 'app', 'module.ver');
     my $versionTxt = catfile($appName, 'config', 'version.*\.txt');
     my $milestoneTxt = catfile('config', 'milestone.txt');
     my $jsMilestoneTxt = catfile('js', 'src', 'config', 'milestone.txt');
@@ -120,10 +119,6 @@ sub Bump {
               'LOCALES_CO_TAG       = ' . $releaseTag,
              '^LDAPCSDK_CO_TAG\s+=.*$' =>
               'LDAPCSDK_CO_TAG      = ' . $releaseTag);
-        } elsif ($fileName eq $moduleVer) {
-            %searchReplace = ('^WIN32_MODULE_PRODUCTVERSION_STRING=' .
-             $VERSION_REGEXP . '$' => 'WIN32_MODULE_PRODUCTVERSION_STRING=' .
-             $appVersion);
         } elsif ($fileName =~ /$versionTxt/) {
             %searchReplace = ('^' . $VERSION_REGEXP . '$' => $appVersion);
         } elsif ($fileName =~ $winmoVersionTxt or $fileName =~ $defaultVersionTxt) {
