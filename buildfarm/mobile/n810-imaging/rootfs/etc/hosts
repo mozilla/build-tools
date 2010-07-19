@@ -1,0 +1,10 @@
+# Do not remove the following line, or various programs
+# that require network functionality will fail.
+127.0.0.1               localhost.localdomain localhost
+::1             localhost6.localdomain6 localhost6
+10.250.48.136	staging-mobile-master staging-mobile-master.build.mozilla.org staging-mobile-master.mv.mozilla.com
+10.250.48.135	production-mobile-master production-mobile-master.build.mozilla.org production-mobile-master.mv.mozilla.com
+10.2.74.116		stage stage.mozilla.org surf.mozilla.org
+10.2.74.10		dm-ftp01.mozilla.org ftp.mozilla.org
+10.2.74.62		dm-graphs02.mozilla.org graphs.mozilla.org
+10.2.74.15		bm-buildgraph01.mozilla.org graphs-stage.mozilla.org
