@@ -20,8 +20,8 @@ STAGE_BASE_PATH = '/pub/firefox/tryserver-builds/%(email)s-%(changeset)s/tryserv
 if __name__ == "__main__":
     args = sys.argv[1:]
 
-    for master in TEST_MASTERS:
-        if len(args) > 0:
+    if len(args) == 1:
+        for master in TEST_MASTERS:
             email,changeset = args[0].split('-')
             ftp = FTP('ftp.mozilla.org')
             ftp.login()
@@ -47,5 +47,5 @@ if __name__ == "__main__":
                             os.system(sendchange)
                             print sendchange
             ftp.quit()
-        else:
-            "Not enough arguments, you need to specify a tryserver dir (ie: email-changeset)"
+    else:
+       print "Usage: python talos_sendchange.py email-changeset"
