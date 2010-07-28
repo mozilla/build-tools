@@ -157,7 +157,7 @@ full_product_template = /%(product)s/releases/%(version)s/%(ftp_platform)s/%(loc
         if self.locales:
             locales_post_data = ["languages=%s" % l for l in self.locales]
             locales_post_data = "&".join(locales_post_data)
-            post_data += locales_post_data
+            post_data += "&" + locales_post_data
         response = self.tuxedoRequest("product_add/", post_data)
         if self.verbose:
             print "Server response:"
