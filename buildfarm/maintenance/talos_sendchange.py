@@ -15,7 +15,7 @@ TEST_MASTERS = ['talos-master02.build.mozilla.org:9012',
                 'test-master01.build.mozilla.org:9012',
                 'test-master02.build.mozilla.org:9012']
 PLATFORMS = ['linux', 'linux64', 'macosx', 'macosx64', 'win32']
-STAGE_BASE_PATH = '/pub/firefox/mozilla.org/tryserver-builds/%(email)s-%(changeset)s/tryserver-%(platform)s/'
+STAGE_BASE_PATH = '/pub/mozilla.org/firefox/tryserver-builds/%(email)s-%(changeset)s/tryserver-%(platform)s/'
 
 if __name__ == "__main__":
     args = sys.argv[1:]
