@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
     if len(args) == 1:
         for master in TEST_MASTERS:
-            email,changeset = args[0].split('-')
+            email, dummy, changeset = args[0].rpartition('-')
             ftp = FTP('ftp.mozilla.org')
             ftp.login()
 
