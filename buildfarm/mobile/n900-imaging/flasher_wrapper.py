@@ -139,7 +139,7 @@ class Flasher:
         if cold_flash:
             assert serial and h_rev, 'coldflashing requires a hardware revision and serial device'
             args += ['-c', '-h', h_rev, '-S', serial]
-        print '"%s"' % fiasco_file
+        print 'Flashing: "%s"' % fiasco_file
         self.execute(args)
 
     def query_h_rev(self):
@@ -156,7 +156,7 @@ class Flasher:
     def rootfs_flash(self, rootfs_file):
         assert os.path.exists(rootfs_file), 'missing rootfs file'
         args=['--rootfs', rootfs_file, '-f']
-        print '"%"' % rootfs_file
+        print 'Flashing: "%s"' % rootfs_file
         self.execute(args)
 
     def set_rd(self):
@@ -265,9 +265,9 @@ def flash_n900(main, emmc, rootfs=None, cold_flash=False, debug=False):
         print '  2) plug in MicroUSB cable'
         print '  3) press and hold "u" on N900 keyboard'
         print '  4) insert battery'
-        print 'Waiting to remove N900s in the wrong mode', 
+        print 'Waiting to remove N900s in the wrong mode',
         unplug_device.block()
-        print 'Waiting for an N900 in the right mode', 
+        print 'Waiting for an N900 in the right mode',
         ready_to_flash.block()
         if cold_flash:
             h_rev = f.query_h_rev()
@@ -287,25 +287,16 @@ def flash_n900(main, emmc, rootfs=None, cold_flash=False, debug=False):
     except FlasherFailedException, ffe:
         print 'Flashing failed with the message: "%s"' % ffe.args[0]
         rv=False
-    except TypeError:
-        print 'A Type error occured.  Are you sure your filenames are strings, not instances?'
-        rv=False
-    except Exception, e:
-        print 'AN EXCEPTION OCCURED WHILE FLASHING'
-        print '='*80
-        print sys.exc_info()
-        print '='*80
-        print 'AN EXCEPTION OCCURED WHILE FLASHING'
-        rv=False
     except KeyboardInterrupt:
         print '\n\nFlashing cancelled'
-        rv=False
+        exit(1)
     return rv
 
 
 if __name__ == "__main__":
-    print flash_n900(main='RX-51_2009SE_10.2010.19-1.002_PR_COMBINED_002_ARM.bin',
-               emmc='RX-51_2009SE_10.2010.13-2.VANILLA_PR_EMMC_MR0_ARM.bin',
-               #rootfs='moz-n900-v1.ubi',
-               debug=True,
+    print flash_n900(
+        main='RX-51_2009SE_10.2010.19-1.002_PR_COMBINED_002_ARM.bin',
+        emmc='RX-51_2009SE_10.2010.13-2.VANILLA_PR_EMMC_MR0_ARM.bin',
+        rootfs='moz-n900-v1.6.ubi',
+        debug=False,
     )
