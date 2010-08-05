@@ -11,9 +11,7 @@ PLATFORMS to each of the TEST_MASTERS"""
 import sys, os
 from ftplib import FTP
 
-TEST_MASTERS = ['talos-master02.build.mozilla.org:9012',
-                'test-master01.build.mozilla.org:9012',
-                'test-master02.build.mozilla.org:9012']
+TEST_MASTERS = ['production-master01.build.mozilla.org:9009']
 PLATFORMS = ['linux', 'linux64', 'macosx', 'macosx64', 'win32']
 STAGE_BASE_PATH = '/pub/mozilla.org/firefox/tryserver-builds/%(email)s-%(changeset)s/tryserver-%(platform)s/'
 
@@ -36,7 +34,7 @@ if __name__ == "__main__":
                     for suffix in ('.tar.bz2', '.win32.zip', '.dmg'):
                         if f.split(' ')[-1].endswith(suffix):
                             sendchange = "buildbot sendchange --master %(master)s " \
-                                         "--branch tryserver-%(platform)s --revision %(changeset)s " \
+                                         "--branch tryserver-%(platform)s-talos --revision %(changeset)s " \
                                          "--user %(email)s http://stage.mozilla.org%(f)s" \
                                          % {'master': master,
                                             'platform': platform,
