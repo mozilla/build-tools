@@ -13,16 +13,16 @@ $CLOBBERER_DB = 'db/clobberer.db';
 $PLATFORMS = array('linux', 'linux64', 'macosx', 'macosx64', 'win32', 'wince');
 
 $RELEASE_BUILDERS = array(
-  'final_verification',
-  'l10n_verification',
   'tag',
   'source',
   'updates',
   'major_update',
+  'final_verification',
 );
 foreach ($PLATFORMS as $platform){
   $RELEASE_BUILDERS[] = "${platform}_build";
   $RELEASE_BUILDERS[] = "${platform}_repack";
+  $RELEASE_BUILDERS[] = "${platform}_l10n_verification";
   $RELEASE_BUILDERS[] = "${platform}_update_verify";
   $RELEASE_BUILDERS[] = "${platform}_major_update_verify";
   $RELEASE_BUILDERS[] = "${platform}_test mochitests";
@@ -34,7 +34,6 @@ foreach ($PLATFORMS as $platform){
 
 // TODO: Figure out if we can use LDAP to do this
 $SPECIAL_PEOPLE = array(
-  'anodelman@mozilla.com',
   'armenzg@mozilla.com',
   'asasaki@mozilla.com',
   'bhearsum@mozilla.com',
@@ -43,7 +42,7 @@ $SPECIAL_PEOPLE = array(
   'jhford@mozilla.com',
   'joduinn@mozilla.com',
   'lsblakk@mozilla.com',
-  'mtylor@mozilla.com',
+  'mtaylor@mozilla.com',
   'nthomas@mozilla.com',
   'raliiev@mozilla.com',
 );
