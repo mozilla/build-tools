@@ -30,7 +30,7 @@ s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
 s.setServiceParent(application)
 """
 BUILD_BUILDMASTER = "staging-master.build.mozilla.org"
-TRY_BUILDMASTER   = "sm-staging-try-master.mozilla.org"
+TRY_BUILDMASTER   = "production-master02.build.mozilla.org"
 TALOS_BUILDMASTERS = {
     ("xp", "w7"):
       "talos-master02.build.mozilla.org",
@@ -58,7 +58,7 @@ def get_default_options(slavename):
       slavename.startswith('win32') or slavename.startswith('mw32'):
         if 'try-' in slavename:
             buildmaster_host = TRY_BUILDMASTER
-            d['port'] = 9982
+            d['port'] = 9011
         else:
             buildmaster_host = BUILD_BUILDMASTER
         if 'linux' in slavename or 'xserve' in slavename or \
