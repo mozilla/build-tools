@@ -78,6 +78,10 @@ unpack_build () {
             ;;
     esac
 
+    for f in `find . -name '*.jar'`; do
+        unzip -o "$f" -d "$f.dir" > /dev/null
+    done
+
     popd > /dev/null
 
 }

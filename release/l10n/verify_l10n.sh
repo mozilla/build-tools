@@ -40,7 +40,7 @@ do
       # check for read-only files
       find "./target" -not -perm -u=w -exec echo "FAIL read-only file" {} \;
       mkdir -p $release/diffs
-      diff -r source target > $release/diffs/$platform.$l.diff
+      diff -Nr source target > $release/diffs/$platform.$l.diff
     done
  
   else 
@@ -61,7 +61,7 @@ do
       # check for read-only files
       find "./target" -not -perm -u=w -exec echo "FAIL read-only file" {} \;
       mkdir -p $release/diffs
-      diff -r source target > $release/diffs/$platform.$l.diff
+      diff -Nr source target > $release/diffs/$platform.$l.diff
   done
 
   fi
