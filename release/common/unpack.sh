@@ -57,6 +57,11 @@ unpack_build () {
                 cp -rp optional/*     bin/
                 rm -rf optional
               fi
+            elif [ -d core ]
+            then
+              mkdir bin/
+              cp -rp core/* bin/
+              rm -rf core
             else
               for file in *.xpi
               do
