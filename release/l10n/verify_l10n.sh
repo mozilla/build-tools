@@ -25,7 +25,7 @@ do
   rm -rf source/*
   # unpack_build platform dir_name pkg_file
   if [ $newformat -eq 1 ]; then
-    unpack_build $platform source $release/${platform}/en-US/*.* en-US
+    unpack_build $platform source $release/${platform}/en-US/*.* en-US 1
 
     # check for read-only files
     find "./source" -not -perm -u=w -exec echo "FAIL read-only file" {} \;
@@ -36,7 +36,7 @@ do
       # this cannot be named $locale, because unpack_build will overwrite it
       l=`echo $package | cut -d / -f3`
       rm -rf target/*
-      unpack_build $platform target "$package" $l
+      unpack_build $platform target "$package" $l 1
       # check for read-only files
       find "./target" -not -perm -u=w -exec echo "FAIL read-only file" {} \;
       mkdir -p $release/diffs
@@ -44,7 +44,7 @@ do
     done
  
   else 
-    unpack_build $platform source $release/*.en-US.${platform}.* en-US
+    unpack_build $platform source $release/*.en-US.${platform}.* en-US 1
 
     # check for read-only files
     find "./source" -not -perm -u=w -exec echo "FAIL read-only file" {} \;
@@ -57,7 +57,7 @@ do
       # this cannot be named $locale, because unpack_build will overwrite it
       l=`echo $package | sed -e "s/\.${platform}.*//" -e 's/.*\.//'`
       rm -rf target/*
-      unpack_build $platform target $release/$package $l
+      unpack_build $platform target $release/$package $l 1
       # check for read-only files
       find "./target" -not -perm -u=w -exec echo "FAIL read-only file" {} \;
       mkdir -p $release/diffs

@@ -11,6 +11,7 @@ unpack_build () {
     dir_name="$2"
     pkg_file="$3"
     locale=$4
+    unpack_jars=$5
 
     if [ ! -f "$pkg_file" ]; then
       return 1
@@ -78,9 +79,11 @@ unpack_build () {
             ;;
     esac
 
-    for f in `find . -name '*.jar'`; do
-        unzip -o "$f" -d "$f.dir" > /dev/null
-    done
+    if [ ! -z $unpack_jars ]; then
+        for f in `find . -name '*.jar'`; do
+            unzip -o "$f" -d "$f.dir" > /dev/null
+        done
+    fi
 
     popd > /dev/null
 
