@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from getpass import getpass
+from optparse import OptionParser
 import os, sys
 import subprocess
 
@@ -115,20 +117,63 @@ def processCommand(argList, cfg):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 1:
-        import doctest
-        doctest.testmod(verbose=True)
-    else:
+    parser = OptionParser(usage="usage: %prog -i [options]\n       %prog [options] apk_file")
+    parser.add_option("-i",
+                      action="store_true",
+                      dest="interactive",
+                      default=False,
+                      help="Interactive mode"
+                     )
+    parser.add_option("--keystore",
+                      action="store",
+                      dest="keystore",
+                      help="Specify the keystore in interactive mode"
+                     )
+    parser.add_option("--alias",
+                      action="store",
+                      dest="alias",
+                      help="Specify the key alias in interactive mode"
+                     )
+    parser.add_option("--apk",
+                      action="store",
+                      dest="apk",
+                      help="Specify the apk in interactive mode"
+                     )
+    parser.add_option("--test-only",
+                      action="store_true",
+                      dest="test_only",
+                      help="Only test, don't sign (noop)"
+                     )
+    (options, args) = parser.parse_args()
+
+# Uncomment to test
+#    if options.test_only:
+#        command = ['echo', 'jarsigner']
+#    else:
+#        command = ['jarsigner']
+    command = ['jarsigner']
+
+    if not options.interactive:
         cfg  = initConfig()
-        args = sys.argv[1:]
 
         # hack time - right now it's assumed that the call will look like:
         # mozpass.py <apk name>
         # and we will build the parameters
-        args = ['jarsigner', '-keystore', '$android_keystore',
-                             '-storepass', '$android_storepass',
-                             '-keypass', '$android_keypass',
-                             args[0], '$android_alias']
+        args = command + ['-keystore', '$android_keystore',
+                          '-storepass', '$android_storepass',
+                          '-keypass', '$android_keypass',
+                          args[0], '$android_alias']
 
         processCommand(args, cfg)
+    else:
+        if not options.keystore or not options.alias or not options.apk:
+            print("Interactive mode requires --keystore, --alias, and --apk!")
+            sys.exit(-1)
 
+        storepass = getpass("Store passphrase: ")
+        keypass = getpass("Key passphrase: ")
+
+        doCommand(command + ['-keystore', options.keystore,
+                             '-storepass', storepass,
+                             '-keypass', keypass,
+                             options.apk, options.alias])
