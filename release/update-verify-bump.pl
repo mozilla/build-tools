@@ -28,7 +28,8 @@ sub ProcessArgs {
         "build-number|n=s", "aus-server-url|a=s", "staging-server|s=s",
         "verify-config|c=s", "old-candidates-dir|d=s", "linux-extension|e=s",
         "shipped-locales|l=s", "pretty-candidates-dir", "major|m",
-        "binary-name=s", "old-binary-name=s", "help", "run-tests"
+        "binary-name=s", "old-binary-name=s", "--test-older-partials",
+        "help", "run-tests"
     );
 
     if ($config{'help'}) {
@@ -83,6 +84,12 @@ Options without arguments:
                           not take an argument.
   --major/-m              Major update (MU) mode, which starts the file from
                           scratch rather than appending
+  --test-older-partials   When passed, all old releases will be marked for
+                          partial update testing. When not passed, only
+                          oldVersion will be marked for partial update testing.
+                          In major update mode this controls whether or not
+                          oldVersion will make its partial update marked for
+                          testing or not.
   --help                  This usage message. This flag takes no arguments.
   --run-tests             Run the (very basic) unit tests include with this
                           script. This flag takes no arguments.
@@ -154,6 +161,9 @@ __USAGE__
         if (! defined $config{'major'}) {
             $config{'major'} = 0;
         }
+        if (! defined $config{'test-older-partials'}) {
+            $config{'test-older-partials'} = 0;
+        }
     }
 }
 
@@ -180,6 +190,7 @@ sub BumpVerifyConfig {
     my $shippedLocales = $config{'shipped-locales'};
     my $prettyCandidatesDir = $config{'pretty-candidates-dir'};
     my $majorMode = $config{'major'};
+    my $testOlderPartials = $config{'test-older-partials'};
 
     # NOTE - channel is hardcoded to betatest
     my $channel = 'betatest';
@@ -271,7 +282,13 @@ sub BumpVerifyConfig {
         # remove "from" and "to" vars from @origFile
         for(my $i=0; $i < scalar(@origFile); $i++) {
             my $line = $origFile[$i];
-            $line =~ s/from.*$//;
+            ###### BUG 514040
+            # If we're testing older partials (older than n-1) we need to keep
+            # the patch_types variable to override the default behaviour of
+            # update verify (which defaults to testing only the complete).
+            # If we're not testing old partials we need to drop it.
+            my $removeStr = $testOlderPartials ? 'from' : 'patch_types';
+            $line =~ s/$removeStr.*$//;
             $strippedFile[$i] = $line;
         }
     }
@@ -304,11 +321,22 @@ sub BumpVerifyConfig {
                 'release="' . $oldAppVersion . '" product="' . $brand . 
                 '" platform="' .$buildTarget . '" build_id="' . $buildID . 
                 '" locales="' . join(' ', sort(@locales)) . '" channel="' . 
-                $channel . '" from="' . $from .
+                $channel . '"');
+    # Bug 514040 changed the default behaviour of update verify to test only
+    # the complete MAR. This is a bit of an abuse of what testOlderPartials
+    # means, but we need a way to distinguish between major updates from
+    # branches which need a partial the same as the complete, and those that
+    # don't. (ASSUMPTION: ) The oldVersion for all minor releases recieves a
+    # partial, so we must override patch_types here whenever $majorMode is
+    # false.
+    if ( ! $majorMode || $testOlderPartials ) {
+        $data[1] .= ' patch_types="partial complete"'
+    }
+    $data[1] .= ' from="' . $from .
                 '" aus_server="' . $ausServerUrl . '" ftp_server="' .
                 $stagingServer . '/pub/mozilla.org" to="/' . 
                 $product . '/nightly/' .  $version .  '-candidates/build' . 
-                $build . '/' . $nightlyFile . '"' .  "\n");
+                $build . '/' . $nightlyFile . '"' . "\n";
 
     open(FILE, "> $configFile") or die ("Could not open file $configFile: $!");
     print FILE @data;
@@ -346,6 +374,7 @@ sub RunUnitTests {
                 prettyCandidatesDir => '0',
                 linuxExtension => 'bz2',
                 major => 0,
+                testOlderPartials => 1
     );
     # 3.1b minor update test (pretty names)
     ExecuteTest(product => 'firefox',
@@ -373,6 +402,7 @@ sub RunUnitTests {
                 prettyCandidatesDir => '1',
                 linuxExtension => 'bz2',
                 major => 0,
+                testOlderPartials => 1
     );
     ExecuteTest(product => 'firefox',
                 brand => 'Firefox',
@@ -399,6 +429,7 @@ sub RunUnitTests {
                 prettyCandidatesDir => '1',
                 linuxExtension => 'bz2',
                 major => 0,
+                testOlderPartials => 0
     );
     # major update test
     ExecuteTest(product => 'firefox',
@@ -426,6 +457,34 @@ sub RunUnitTests {
                 prettyCandidatesDir => '1',
                 linuxExtension => 'bz2',
                 major => 1,
+                testOlderPartials => 0
+    );
+    ExecuteTest(product => 'firefox',
+                brand => 'Firefox',
+                binaryName => 'Firefox',
+                oldBinaryName => 'Firefox',
+                osname => 'win32',
+                platform => 'WINNT_x86-msvc',
+                version => '3.6b4',
+                longVersion => '3.6 Beta 4',
+                build => '1',
+                oldVersion => '3.5.5',
+                oldLongVersion => '3.5.5',
+                oldBuildid => '20091102152451',
+                oldFromBuild => '/firefox/nightly/3.5.5-candidates/build1/win32/%locale%/Firefox Setup 3.5.5.exe',
+                oldToBuild => '/firefox/nightly/3.6b4-candidates/build1/win32/%locale%/Firefox Setup 3.6 Beta 4.exe',
+                oldOldVersion => '',
+                oldOldLongVersion => '',
+                oldOldBuildid => '',
+                oldOldFromBuild => '',
+                oldOldToBuild => '',
+                ausServer => 'https://aus2.mozilla.org',
+                stagingServer => 'build.mozilla.org',
+                oldCandidatesDir => '/update-bump-unit-tests/pub/mozilla.org/firefox/nightly/3.5.5-candidates/build1',
+                prettyCandidatesDir => '1',
+                linuxExtension => 'bz2',
+                major => 1,
+                testOlderPartials => 1
     );
 }
 
@@ -456,6 +515,7 @@ sub ExecuteTest {
     my $prettyCandidatesDir = $args{'prettyCandidatesDir'};
     my $linuxExtension = $args{'linuxExtension'};
     my $majorMode = $args{'major'};
+    my $testOlderPartials = $args{'testOlderPartials'};
 
     my $workdir = tempdir(CLEANUP => 0);
     my $bumpedConfig = catfile($workdir, 'bumped-update-verify.cfg');
@@ -463,7 +523,7 @@ sub ExecuteTest {
     my $shippedLocales = catfile($workdir, 'shipped-locales');
     my $diffFile = catfile($workdir, 'update-verify.diff');
 
-    print "Running test on: $product, $osname, version $version, majorMode $majorMode.....";
+    print "Running test on: $product, $osname, version $version, majorMode $majorMode, testOlderPartials: $testOlderPartials.....";
 
     # Create shipped-locales
     open(SHIPPED_LOCALES, ">$shippedLocales");
@@ -489,6 +549,7 @@ sub ExecuteTest {
         "build_id=\"$oldOldBuildid\"",
         "locales=\"af en-US gu-IN ja uk\"",
         "channel=\"betatest\"",
+        "patch_types=\"partial complete\"",
         "from=\"$oldOldFromBuild\"",
         "aus_server=\"$ausServer\"",
         "ftp_server=\"$stagingServer/pub/mozilla.org\"",
@@ -501,7 +562,8 @@ sub ExecuteTest {
     close(CONFIG);
 
     # Prepare the reference file...
-    # BumpVerifyConfig removes everything after 'from' for the previous release
+    # BumpVerifyConfig removes everything after 'from' or 'patch_types' for the
+    # for the previous release, depending on the options passed.
     # So must we in the reference file.
     @oldOldRelease = (
         "release=\"$oldOldVersion\"",
@@ -509,10 +571,14 @@ sub ExecuteTest {
         "platform=\"$platform\"",
         "build_id=\"$oldOldBuildid\"",
         "locales=\"af en-US gu-IN ja uk\"",
-        "channel=\"betatest\" " # this trailing space is intentional and
-                                # necessary because of how BumpVerifyConfig
-                                # strips the previous release
+        "channel=\"betatest\"",
     );
+    if ( $testOlderPartials ) {
+        push(@oldOldRelease, "patch_types=\"partial complete\" ");
+    }
+    else {
+        $oldOldRelease[-1] .= " ";
+    }
 
     # Now create an already bumped configuration to file
     my @oldRelease = (
@@ -521,7 +587,12 @@ sub ExecuteTest {
         "platform=\"$platform\"",
         "build_id=\"$oldBuildid\"",
         "locales=\"af en-US gu-IN ja uk\"",
-        "channel=\"betatest\"",
+        "channel=\"betatest\""
+    );
+    if ( ! $majorMode || $testOlderPartials ) {
+        push(@oldRelease, "patch_types=\"partial complete\"");
+    }
+    push(@oldRelease,
         "from=\"$oldFromBuild\"",
         "aus_server=\"$ausServer\"",
         "ftp_server=\"$stagingServer/pub/mozilla.org\"",
@@ -561,6 +632,7 @@ sub ExecuteTest {
     $config{'linux-extension'} = $linuxExtension;
     $config{'pretty-candidates-dir'} = $prettyCandidatesDir;
     $config{'major'} = $majorMode;
+    $config{'test-older-partials'} = $testOlderPartials;
 
     BumpVerifyConfig();
 

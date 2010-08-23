@@ -85,10 +85,11 @@ do
   channel=""
   from=""
   to=""
+  patch_types="complete"
   eval $entry
   for locale in $locales
   do
-    for patch_type in partial complete
+    for patch_type in $patch_types
     do
       if [ "$runmode" == "$MARS_ONLY" ] || [ "$runmode" == "$COMPLETE" ] ||
          [ "$runmode" == "$TEST_ONLY" ]
