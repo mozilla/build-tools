@@ -39,7 +39,7 @@ $SPECIAL_PEOPLE = array(
   'bhearsum@mozilla.com',
   'catlee@mozilla.com',
   'coop@mozilla.com',
-  'jhford@mozilla.com',
+  'jford@mozilla.com',
   'joduinn@mozilla.com',
   'lsblakk@mozilla.com',
   'mtaylor@mozilla.com',
