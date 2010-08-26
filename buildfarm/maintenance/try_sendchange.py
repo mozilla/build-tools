@@ -64,7 +64,7 @@ if __name__ == "__main__":
             tryserverDirPath = TRY_BASE_PATH % {'email': email, 
                                                   'changeset': changeset}
             dirlist = ftp.nlst(tryserverDirPath)
-            print dirlist
+
             for dir in dirlist:
               for platform in platforms:
                 for buildType in options.build:
