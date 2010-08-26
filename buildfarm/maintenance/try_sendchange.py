@@ -68,7 +68,9 @@ if __name__ == "__main__":
             for dir in dirlist:
               for platform in platforms:
                 for buildType in options.build:
-                  if platform in dir:
+                  if buildType == 'debug':
+                    platform = "%s-%s" % (platform, buildType)
+                  if dir.endswith(platform):
                     tryserverUrlPath = PLATFORM_BASE_PATH % {'email': email, 
                                                           'changeset': changeset, 
                                                           'platform': platform}
@@ -86,7 +88,7 @@ if __name__ == "__main__":
                             if f.endswith(suffix):
                                 path = f
 
-                    if options.talos and buildType == 'opt':
+                    if options.talos != 'none' and buildType == 'opt':
                         sendchange = "buildbot sendchange --master %(master)s " \
                                      "--branch tryserver-%(platform)s-talos --revision %(changeset)s " \
                                      "--comment \"try: --t %(talos)s\" " \
@@ -100,7 +102,6 @@ if __name__ == "__main__":
                         os.system(sendchange)
                         print "Sendchange for Talos: %s" % sendchange
                     if options.tests != 'none' and packagedTests:
-                        print options.tests
                         sendchange = "buildbot sendchange --master %(master)s " \
                                      "--branch tryserver-%(platform)s-%(buildType)s-unittest" \
                                      "--revision %(changeset)s " \
