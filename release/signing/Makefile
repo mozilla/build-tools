@@ -48,6 +48,8 @@ SEVENZIP        = $(WORKDIR)/7-Zip/7z.exe
 UPX_BIN         = $(WORKDIR)/upx/upx.exe
 CONCURRENCY    ?= 4
 KEYDIR         ?= d:/2009-keys
+FREE_SPACE_REQ ?= 10000000 # in KB
+BASEDIR       ?= ~/signing-work
 
 ifeq ($(PRODUCT),firefox)
 APP_NAME       ?= browser
@@ -56,9 +58,9 @@ APP_NAME        = $(error APP_NAME must be defined)
 endif
 
 ifdef USE_NEW
-all: setup download stubs sign2 stage verify fake-upload
+all: df setup download stubs sign2 stage verify fake-upload
 else
-all: setup download sign stage verify fake-upload
+all: df setup download sign stage verify fake-upload
 endif
 
 echo:
@@ -71,6 +73,18 @@ echo:
 	@echo BUILD: $(BUILD)
 	@echo TAG: $(TAG)
 	@echo REPO: $(REPO)
+
+df:
+	@AVAIL=$(shell df -k . | tail -n 1 | awk '{print $$4}'); \
+	if [ $$AVAIL -lt $(FREE_SPACE_REQ) ]; then \
+		echo "Not enough disk space available." ; \
+		echo "Required disk space: $(FREE_SPACE_REQ) KB ($$AVAIL KB available)"; \
+		echo "Run \"make cleanup\" explicitly to remove old binaries"; \
+		exit 1; \
+	fi
+
+cleanup:
+	./cleanup -s $(FREE_SPACE_REQ) -d $(BASEDIR)/
 
 setup:
 	# Pull/copy the required tools.
