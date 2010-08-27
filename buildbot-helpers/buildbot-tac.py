@@ -54,18 +54,11 @@ def get_default_options(slavename):
     footer = DEFAULT_FOOTER
     basedir = None
     buildmaster_host = None
-    if 'moz2' in slavename or 'xserve' in slavename or 'try-' in slavename or \
-      slavename.startswith('win32') or slavename.startswith('mw32'):
-        if 'try-' in slavename:
-            buildmaster_host = TRY_BUILDMASTER
-            d['port'] = 9011
-        else:
-            buildmaster_host = BUILD_BUILDMASTER
-        if 'linux' in slavename or 'xserve' in slavename or \
-           'darwin9' in slavename or 'darwin10' in slavename or \
-           'mac' in slavename:
+    if 'slave' in slavename:
+        buildmaster_host = BUILD_BUILDMASTER
+        if 'linux' in slavename or 'darwin' in slavename:
             basedir = '/builds/slave'
-        elif 'win32' in slavename or 'mw32' in slavename:
+        elif 'win' in slavename:
             basedir = 'e:\\builds\\moz2_slave'
     elif 'talos' in slavename or '-try' in slavename or 'r3' in slavename:
         footer = TALOS_FOOTER
