@@ -3,7 +3,7 @@
 """try_sendchange.py tryserverDir args
 
 example usage:
-    python try_sendchange.py anygregor@gmail.com-2708a2e2b5c0 --build o --p all --u all --t all
+    python try_sendchange.py lsblakk@mozilla.com-94624b46ec1b --build o --p all --u all --t none
 
 This script creates and sends sendchanges for each of the
 platforms/test/talos requested to each of the TEST_MASTERS"""
@@ -90,7 +90,8 @@ if __name__ == "__main__":
 
                     if options.talos != 'none' and buildType == 'opt':
                         sendchange = "buildbot sendchange --master %(master)s " \
-                                     "--branch tryserver-%(platform)s-talos --revision %(changeset)s " \
+                                     "--branch tryserver-%(platform)s-talos " \
+                                     "--revision %(changeset)s " \
                                      "--comment \"try: --t %(talos)s\" " \
                                      "--user %(email)s http://stage.mozilla.org%(path)s " \
                                      % {'master': master,
@@ -103,7 +104,7 @@ if __name__ == "__main__":
                         print "Sendchange for Talos: %s" % sendchange
                     if options.tests != 'none' and packagedTests:
                         sendchange = "buildbot sendchange --master %(master)s " \
-                                     "--branch tryserver-%(platform)s-%(buildType)s-unittest" \
+                                     "--branch tryserver-%(platform)s-%(buildType)s-unittest " \
                                      "--revision %(changeset)s " \
                                      "--comment \"try: --u %(tests)s\" " \
                                      "--user %(email)s http://stage.mozilla.org%(path)s " \
