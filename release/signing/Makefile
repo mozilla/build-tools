@@ -32,6 +32,7 @@
 # to upload the exe/dll signing log, which triggers the automation to continue.
 
 # Make sure necessary variables are defined / set defaults
+GPGPASS        := $(shell bash -c 'read -s -p "Enter PGP passphrase:" pass; echo $$pass')
 VERSION         = $(error VERSION must be defined)
 BUILD           = $(error BUILD must be defined)
 REPO            = $(error REPO must be defined)
@@ -58,9 +59,9 @@ APP_NAME        = $(error APP_NAME must be defined)
 endif
 
 ifdef USE_NEW
-all: df setup download stubs sign2 stage verify fake-upload
+all: df verify-gpg-passphrase setup verify-signcode-passphrase download stubs sign2 stage verify fake-upload
 else
-all: df setup download sign stage verify fake-upload
+all: df verify-gpg-passphrase setup verify-signcode-passphrase download sign stage verify fake-upload
 endif
 
 echo:
@@ -82,6 +83,45 @@ df:
 		echo "Run \"make cleanup\" explicitly to remove old binaries"; \
 		exit 1; \
 	fi
+
+verify-gpg-passphrase:
+	@f=`mktemp` \
+	&& (touch $$f \
+	&& gpg --no-use-agent --batch --passphrase "$(GPGPASS)" -sba $$f \
+	&& rm -f $$f $$f.asc \
+	&& blat -to $(EMAIL) \
+	    -subject "GPG passphrase verification for $(PRODUCT) $(VERSION) succeeded" \
+	    -body "EOM") \
+	|| \
+	(rm -f $$f $$f.asc \
+	&& blat -to $(EMAIL) \
+	    -subject "GPG passphrase verification for $(PRODUCT) $(VERSION) failed" \
+	    -body "EOM"; exit 1)
+
+verify-signcode-passphrase:
+	@d=`mktemp -d` \
+	&& mkdir -p $$d \
+	&& (cp signing/signcodepwd.exe $$d \
+	&& cd $$d \
+	&& signcode \
+	    -spc $(KEYDIR)/MozAuthenticode.spc \
+	    -v $(KEYDIR)/MozAuthenticode.pvk \
+	    -t http://timestamp.verisign.com/scripts/timestamp.dll \
+	    -i http://www.mozilla.com \
+	    -a sha1 \
+	    -tr 5 \
+	    -tw 60 \
+	    signcodepwd.exe \
+	&& chktrust /q signcodepwd.exe \
+	&& cd - && rm -rf "$$d" \
+	&& blat -to $(EMAIL) \
+	    -subject "signcode.exe password verification for $(PRODUCT) $(VERSION) succeeded" \
+	    -body "EOM") \
+	|| \
+	(cd -; rm -rf "$$d"; \
+	 blat -to $(EMAIL) \
+	    -subject "signcode.exe password verification for $(PRODUCT) $(VERSION) failed" \
+	    -body "EOM"; exit 1)
 
 cleanup:
 	./cleanup -s $(FREE_SPACE_REQ) -d $(BASEDIR)/
@@ -167,9 +207,9 @@ sign-files:
 create-sigs:
 	# Generate detached sigs.
 	blat -to $(EMAIL) \
-	     -subject "Running sign-files for $(PRODUCT) $(VERSION), waiting on passphrase" \
+	     -subject "Running sign-files for $(PRODUCT) $(VERSION)" \
 		 -body "EOM"
-	cd $(WORKDIR)/signed-build$(BUILD) && ../signing/sign-files .
+	@cd $(WORKDIR)/signed-build$(BUILD) && echo $(GPGPASS) | ../signing/sign-files .
 
 verify-sigs:
 	if ./verify-gpg.py --verbose --key-file $(WORKDIR)/key-checkout/PUBLIC-KEY \
