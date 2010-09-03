@@ -103,6 +103,9 @@ if __name__ == "__main__":
                         os.system(sendchange)
                         print "Sendchange for Talos: %s" % sendchange
                     if options.tests != 'none' and packagedTests:
+                        # take off the -debug in platform name if exists cause we tack
+                        # buildType on in the sendchange
+                        platform = platform.split('-')[0]
                         sendchange = "buildbot sendchange --master %(master)s " \
                                      "--branch tryserver-%(platform)s-%(buildType)s-unittest " \
                                      "--revision %(changeset)s " \
