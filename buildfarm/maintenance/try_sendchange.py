@@ -78,7 +78,7 @@ if __name__ == "__main__":
                     packagedTests = None
 
                     for f in filelist:
-                        match = re.search('tests', f)
+                        match = re.search('tests.zip', f)
                         if match:
                             packagedTests = f
 
