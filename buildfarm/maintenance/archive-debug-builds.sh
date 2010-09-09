@@ -10,7 +10,7 @@ do
   branch=$(echo $dir | cut -d '-' -f1,2)
   builddir="$BASE_PATH/$dir"
   cd $builddir
-  archivedir="$(ls -t | head -1)"
+  archivedir="$(ls -r | head -1)"
   if [ -n $archivedir ]; then
     if [ -d "$builddir/$archivedir" ]; then
       files="$(find $builddir/$archivedir/ -regex '.*\.\(dmg\|exe\|txt\|bz2\)')"
