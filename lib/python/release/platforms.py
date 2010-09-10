@@ -1,12 +1,26 @@
 # buildbot -> bouncer platform mapping
-bouncer_platform_map = {'win32': 'win', 'macosx': 'osx', 'linux': 'linux',
-                        'linux64': 'linux64', 'macosx64': 'osx64'}
+# TODO: make sure 'win64' is correct when Bouncer becomes aware of
+# 64-bit windows
+bouncer_platform_map = {'win32': 'win', 'win64': 'win64', 'macosx': 'osx',
+                        'linux': 'linux', 'linux64': 'linux64',
+                        'macosx64': 'osx64'}
 # buildbot -> ftp platform mapping
-ftp_platform_map = {'win32': 'win32', 'macosx': 'mac', 'linux': 'linux-i686',
-                    'linux64': 'linux-x86_64', 'macosx64': 'mac64'}
+ftp_platform_map = {'win32': 'win32', 'win64': 'win64', 'macosx': 'mac',
+                    'linux': 'linux-i686', 'linux64': 'linux-x86_64',
+                    'macosx64': 'mac64'}
 # buildbot -> shipped-locales platform mapping
-sl_platform_map = {'win32': 'win32', 'macosx': 'osx', 'linux': 'linux',
-                   'linux64': 'linux64', 'macosx64': 'osx64'}
+# TODO: make sure 'win64' is correct when shipped-locales becomes aware of it
+sl_platform_map = {'win32': 'win32', 'win64': 'win64', 'macosx': 'osx',
+                   'linux': 'linux', 'linux64': 'linux64', 'macosx64': 'osx64'}
+# buildbot -> update platform mapping
+update_platform_map = {
+    'linux': 'Linux_x86-gcc3',
+    'linux64': 'Linux_x86_64-gcc3',
+    'macosx': 'Darwin_Universal-gcc3',
+    'macosx64': 'Darwin_x86_64-gcc3',
+    'win32': 'WINNT_x86-msvc',
+    'win64': 'WINNT_x86_64-msvc',
+}
 
 def buildbot2bouncer(platform):
     return bouncer_platform_map.get(platform, platform)
@@ -23,13 +37,15 @@ def shippedlocales2buildbot(platform):
     except IndexError:
         return platform
 
+def buildbot2updatePlatform(platform):
+    return update_platform_map.get(platform, platform)
+
 def getPlatformLocales(shipped_locales, platforms):
     platform_locales = {}
     for platform in platforms:
         platform_locales[platform] = []
-    f = open(shipped_locales)
-    for line in open(shipped_locales).readlines():
-        entry = line.split()
+    for line in shipped_locales.splitlines():
+        entry = line.strip().split()
         locale = entry[0]
         if len(entry)>1:
             for platform in entry[1:]:
@@ -38,7 +54,6 @@ def getPlatformLocales(shipped_locales, platforms):
         else:
             for platform in platforms:
                 platform_locales[platform].append(locale)
-    f.close()
     return platform_locales
 
 def getAllLocales(shipped_locales):
@@ -54,3 +69,6 @@ def getAllLocales(shipped_locales):
 
 def getPlatforms():
     return bouncer_platform_map.keys()
+
+def getSupportedPlatforms():
+    return ('linux', 'linux64', 'win32', 'win64', 'wince', 'macosx', 'macosx64')
