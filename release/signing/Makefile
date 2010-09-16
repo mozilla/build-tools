@@ -124,7 +124,7 @@ verify-signcode-passphrase:
 	    -body "EOM"; exit 1)
 
 cleanup:
-	./cleanup -s $(FREE_SPACE_REQ) -d $(BASEDIR)/
+	./cleanup.sh -s $(FREE_SPACE_REQ) -d $(BASEDIR)/
 
 setup:
 	# Pull/copy the required tools.
