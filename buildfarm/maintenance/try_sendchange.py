@@ -21,20 +21,24 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Accepts command line variables for setting sendchange parameters')
 
-    parser.add_argument('--build',
+    parser.add_argument('--dry-run', '-n',
+                        action='store_true',
+                        dest='dry_run',
+                        help='outputs only the text of the sendchanges, without sending them')
+    parser.add_argument('--build', '-b',
                         default='do',
                         dest='build',
                         help='accepts the build types requested (default is debug & opt)')
-    parser.add_argument('--p',
+    parser.add_argument('--platforms', '-p',
                         default='all',
                         dest='platforms',
                         help='provide a list of desktop platforms, or specify none (default is all)')
-    parser.add_argument('--u',
+    parser.add_argument('--unittests', '-u',
                         default='none',
                         dest='tests',
                         help='provide a list of unit tests, or specify all (default is none)')
-    parser.add_argument('--t',
-                        default='all',
+    parser.add_argument('--talos', '-t',
+                        default='none',
                         dest='talos',
                         help='provide a list of talos tests, or specify all (default is all)')
 
@@ -55,8 +59,11 @@ if __name__ == "__main__":
         options.platforms = options.platforms.split(',')
         platforms = options.platforms
 
+    sendchanges = []
+
     if len(args) >= 1:
         for master in TEST_MASTERS:
+# grab the email-changeset from the unknown_args instead
             email, dummy, changeset = args[0].rpartition('-')
             ftp = FTP('ftp.mozilla.org')
             ftp.login()
@@ -64,7 +71,8 @@ if __name__ == "__main__":
             tryserverDirPath = TRY_BASE_PATH % {'email': email, 
                                                   'changeset': changeset}
             dirlist = ftp.nlst(tryserverDirPath)
-
+            if dirlist:
+              print "Scanning ftp...\n"
             for dir in dirlist:
               for platform in platforms:
                 for buildType in options.build:
@@ -81,12 +89,15 @@ if __name__ == "__main__":
                         match = re.search('tests.zip', f)
                         if match:
                             packagedTests = f
+                            print "Found test pkg for %s" % platform
 
                     for f in filelist:
                         for suffix in ('.tar.bz2', '.win32.zip', '.dmg'):
-                            #print "DEBUG: file = %s" % f
                             if f.endswith(suffix):
                                 path = f
+                                print "Found build for %s" % platform
+                                if options.talos != 'none' and buildType == 'debug':
+                                  print "No talos for debug builds...skipping."
 
                     if options.talos != 'none' and buildType == 'opt':
                         sendchange = "buildbot sendchange --master %(master)s " \
@@ -100,8 +111,11 @@ if __name__ == "__main__":
                                         'talos': options.talos,
                                         'email': email,
                                         'path': path}
-                        os.system(sendchange)
-                        print "Sendchange for Talos: %s" % sendchange
+                        if not options.dry_run:
+                          os.system(sendchange)
+                          print "Sent Talos: %s" % sendchange
+                        else:
+                          sendchanges.append(sendchange)
                     if options.tests != 'none' and packagedTests:
                         # take off the -debug in platform name if exists cause we tack
                         # buildType on in the sendchange
@@ -120,8 +134,16 @@ if __name__ == "__main__":
                                         'email': email,
                                         'path': path,
                                         'packagedTests': packagedTests}
-                        os.system(sendchange)
-                        print "Sendchange for Unittests: %s" % sendchange
+                        if not options.dry_run:
+                          os.system(sendchange)
+                          print "Sent Test: %s" % sendchange
+                        else:
+                          sendchanges.append(sendchange)
             ftp.quit()
+            if options.dry_run:
+                print "\nWhat will be sent:\n"
+                for s in sendchanges:
+                    print s
+
     else:
        print "Usage: python try_sendchange.py email-changeset [optional parameters]"
