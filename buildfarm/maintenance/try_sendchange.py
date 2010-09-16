@@ -73,6 +73,8 @@ if __name__ == "__main__":
             dirlist = ftp.nlst(tryserverDirPath)
             if dirlist:
               print "Scanning ftp...\n"
+            else:
+              print "Nothing (or no) FTP dir list, so nothing to work with here."
             for dir in dirlist:
               for platform in platforms:
                 for buildType in options.build:
@@ -140,7 +142,7 @@ if __name__ == "__main__":
                         else:
                           sendchanges.append(sendchange)
             ftp.quit()
-            if options.dry_run:
+            if options.dry_run and dirlist:
                 print "\nWhat will be sent:\n"
                 for s in sendchanges:
                     print s
