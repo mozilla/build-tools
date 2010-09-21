@@ -17,7 +17,7 @@ LATEST_DIR = "latest-%(branch)s"
 # Production configs that need to be commented out when doing staging.
 TINDERBOX_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
 CANDIDATES_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(version)s-candidates/build%(buildnumber)s"
-SHADOW_CENTRAL_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/pvt-builds/shadow-central-builds/%(tinderbox_builds_dir)s"
+SHADOW_CENTRAL_URL_PATH = "https://ftp.mozilla.org/pub/mozilla.org/%(product)s/pvt-builds/shadow-central-builds/%(tinderbox_builds_dir)s"
 SHADOW_CENTRAL_DIR = "/home/ftp/pub/%(product)s/pvt-builds/shadow-central-builds/%(tinderbox_builds_dir)s"
 TRYSERVER_DIR = "/home/ftp/pub/%(product)s/tryserver-builds/%(who)s-%(revision)s/%(builddir)s"
 TRYSERVER_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/tryserver-builds/%(who)s-%(revision)s/%(builddir)s"
