@@ -259,15 +259,15 @@ def flash_n900(main, emmc, rootfs=None, cold_flash=False, debug=False):
         f=Flasher(debug=debug)
         ready_to_flash=ReadyToFlashBlocker()
         unplug_device=UnplugDeviceBlocker()
-        print 'Plug in n900 in firmware update mode'
+        print 'Waiting for all N900s to be unplugged',
+        unplug_device.block()
+        print 'Please perform the following steps:'
         print '='*80
         print '  1) remove battery'
         print '  2) plug in MicroUSB cable'
-        print '  3) press and hold "u" on N900 keyboard'
-        print '  4) insert battery'
-        print 'Waiting to remove N900s in the wrong mode',
-        unplug_device.block()
-        print 'Waiting for an N900 in the right mode',
+        print '  3) press and hold "u" on N900 keyboard until the screen shows "Nokia"'
+        print '  4) release the "u" key'
+        print 'Waiting for a powered off N900 to be plugged in',
         ready_to_flash.block()
         if cold_flash:
             h_rev = f.query_h_rev()

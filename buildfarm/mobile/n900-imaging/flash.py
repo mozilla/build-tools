@@ -65,3 +65,5 @@ if __name__ == '__main__':
         rootfs=root_file,
         debug=options.debug,
     )
+    print "This script is done.  Please resume the imaging steps",
+    print " on the wiki"
