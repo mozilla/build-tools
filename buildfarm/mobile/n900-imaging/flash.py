@@ -42,15 +42,21 @@ if __name__ == '__main__':
     emmc_hash = 'a90cd06ef46e3a02d4feb33d4ec0ca190ab0ead4'
     root_file = 'moz-n900-v1.6.ubi'
     root_hash = '14e72cf94f5105e63c405267c68a0d2e5a4814c2'
+    print "Validating main image file"
     if not validate_file(main_file, main_hash):
-        print 'Invalid main file'
+        print '\nInvalid main file'
         exit(1)
+    print "Image OK"
+    print "Validating data image file"
     if not validate_file(emmc_file, emmc_hash):
-        print 'Invalid emmc file'
+        print '\nInvalid emmc file'
         exit(1)
+    print "Image OK"
+    print "Validating mozilla root filesystem"
     if not validate_file(root_file, root_hash):
-        print 'Invalid root file'
+        print '\nInvalid root file'
         exit(1)
+    print "Image OK"
 
 
     flash_n900(
