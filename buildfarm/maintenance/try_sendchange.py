@@ -40,7 +40,7 @@ if __name__ == "__main__":
     parser.add_argument('--talos', '-t',
                         default='none',
                         dest='talos',
-                        help='provide a list of talos tests, or specify all (default is all)')
+                        help='provide a list of talos tests, or specify all (default is none)')
 
     (options, unknown_args) = parser.parse_known_args(args)
 
