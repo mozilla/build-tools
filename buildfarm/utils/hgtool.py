@@ -60,6 +60,10 @@ if __name__ == '__main__':
     got_revision = mercurial(repo, dest, options.branch, options.revision)
 
     if options.tbox:
-        print "TinderboxPrint: revision: %s" % got_revision
+        if repo.startswith("http"):
+            url = "%s/rev/%s" % (repo, got_revision)
+            print "TinderboxPrint: <a href=\"%(url)s\">revision: %(got_revision)s</a>" % locals()
+        else:
+            print "TinderboxPrint: revision: %s" % got_revision
     else:
         print "Got revision %s" % got_revision
