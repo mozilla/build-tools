@@ -19,7 +19,7 @@ PLATFORM_BASE_PATH = '/pub/mozilla.org/firefox/tryserver-builds/%(email)s-%(chan
 if __name__ == "__main__":
     args = sys.argv[1:]
 
-    parser = argparse.ArgumentParser(description='Accepts command line variables for setting sendchange parameters')
+    parser = argparse.ArgumentParser(description='Accepts command line arguments for creating a test/talos tryserver sendchanges', usage='%(prog)s email-changeset [options]')
 
     parser.add_argument('--dry-run', '-n',
                         action='store_true',
@@ -60,11 +60,18 @@ if __name__ == "__main__":
         platforms = options.platforms
 
     sendchanges = []
+    email = None
 
-    if len(args) >= 1:
+    # locate an email-changeset in the command line request
+    for arg in unknown_args:
+            match = re.search('@', arg)
+            if match:
+                email, dummy, changeset = unknown_args[0].rpartition('-')
+                continue
+
+    if (email != None):
+        # now create sendchanges for each TEST_MASTER
         for master in TEST_MASTERS:
-# grab the email-changeset from the unknown_args instead
-            email, dummy, changeset = args[0].rpartition('-')
             ftp = FTP('ftp.mozilla.org')
             ftp.login()
 
@@ -148,4 +155,5 @@ if __name__ == "__main__":
                     print s
 
     else:
-       print "Usage: python try_sendchange.py email-changeset [optional parameters]"
+       print """Couldn't find an email address in the arguments list, please refer to --help\n
+                Usage: python try_sendchange.py email-changeset [options]"""
