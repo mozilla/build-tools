@@ -12,8 +12,11 @@ dm = devicemanager.DeviceManager(sys.argv[1])
 
 devRoot  = dm.getDeviceRoot()
 source   = sys.argv[2]
+workdir  = os.path.dirname(source)
 filename = os.path.basename(source)
 target   = os.path.join(devRoot, filename)
+inifile  = os.path.join(workdir, 'fennec', 'application.ini')
 
+dm.pushFile(inifile, '/data/data/org.mozilla.fennec/application.ini')
 dm.pushFile(source, target)
 dm.installApp(target)
