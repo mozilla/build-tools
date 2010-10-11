@@ -40,8 +40,8 @@ if __name__ == '__main__':
     main_hash = 'a4a22b3c92407c293ab197a8acb7480058d52a20'
     emmc_file = 'RX-51_2009SE_10.2010.13-2.VANILLA_PR_EMMC_MR0_ARM.bin'
     emmc_hash = 'a90cd06ef46e3a02d4feb33d4ec0ca190ab0ead4'
-    root_file = 'moz-n900-v1.6.ubi'
-    root_hash = '14e72cf94f5105e63c405267c68a0d2e5a4814c2'
+    root_file = 'moz-n900-v1.7.ubi'
+    root_hash = '73756f692e29fb2072e5086c09003f746ac21d1c'
     print "Validating main image file"
     if not validate_file(main_file, main_hash):
         print '\nInvalid main file'
