@@ -92,14 +92,15 @@ if __name__ == "__main__":
                                                           'changeset': changeset, 
                                                           'platform': platform}
                     filelist = ftp.nlst(tryserverUrlPath)
-                    packagedTests = None
 
+                    packagedTests = None
                     for f in filelist:
                         match = re.search('tests.zip', f)
                         if match:
                             packagedTests = f
                             print "Found test pkg for %s" % platform
 
+                    path = None
                     for f in filelist:
                         for suffix in ('.tar.bz2', '.win32.zip', '.dmg'):
                             if f.endswith(suffix):
@@ -108,7 +109,7 @@ if __name__ == "__main__":
                                 if options.talos != 'none' and buildType == 'debug':
                                   print "No talos for debug builds...skipping."
 
-                    if options.talos != 'none' and buildType == 'opt':
+                    if options.talos != 'none' and buildType == 'opt' and path:
                         sendchange = "buildbot sendchange --master %(master)s " \
                                      "--branch tryserver-%(platform)s-talos " \
                                      "--revision %(changeset)s " \
@@ -125,7 +126,7 @@ if __name__ == "__main__":
                           print "Sent Talos: %s" % sendchange
                         else:
                           sendchanges.append(sendchange)
-                    if options.tests != 'none' and packagedTests:
+                    if options.tests != 'none' and packagedTests and path:
                         # take off the -debug in platform name if exists cause we tack
                         # buildType on in the sendchange
                         platform = platform.split('-')[0]
