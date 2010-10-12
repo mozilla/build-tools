@@ -48,7 +48,7 @@ MAR             = $(WORKDIR)/mar.exe
 SEVENZIP        = $(WORKDIR)/7-Zip/7z.exe
 UPX_BIN         = $(WORKDIR)/upx/upx.exe
 CONCURRENCY    ?= 4
-KEYDIR         ?= d:/2009-keys
+KEYDIR         ?= d:/2010-keys
 FREE_SPACE_REQ ?= 10000000 # in KB
 BASEDIR       ?= ~/signing-work
 
