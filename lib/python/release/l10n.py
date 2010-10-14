@@ -6,7 +6,7 @@ def getShippedLocales(product, version, buildNumber, sourceRepo,
                       hg='http://hg.mozilla.org', verbose=False):
     tag = '%s_%s_BUILD%s' % (product.upper(), version.replace('.', '_'),
                              str(buildNumber))
-    file = '%s/raw-file/%s/mail/locales/shipped-locales' % \
+    file = '%s/raw-file/%s/browser/locales/shipped-locales' % \
       (sourceRepo, tag)
     url = urljoin(hg, file)
     try:
