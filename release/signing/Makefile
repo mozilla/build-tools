@@ -40,6 +40,7 @@ TAG            ?= FIREFOX_$(subst .,_,$(VERSION))_RELEASE
 HGROOT         ?= https://hg.mozilla.org/
 EMAIL          ?= release@mozilla.com
 STAGE_USERNAME ?= ffxbld
+STAGE_HOST     ?= stage.mozilla.org
 SSH_KEY        ?= $(HOME)/.ssh/ffxbld_dsa
 PRODUCT        ?= firefox
 BRAND_NAME     ?= $(PRODUCT)
@@ -49,6 +50,7 @@ SEVENZIP        = $(WORKDIR)/7-Zip/7z.exe
 UPX_BIN         = $(WORKDIR)/upx/upx.exe
 CONCURRENCY    ?= 4
 KEYDIR         ?= d:/2010-keys
+GPG_KEY        ?= $(WORKDIR)/key-checkout/PUBLIC-KEY
 FREE_SPACE_REQ ?= 10000000 # in KB
 BASEDIR       ?= ~/signing-work
 
@@ -163,7 +165,7 @@ stubs-hg:
 download:
 	# Download the builds.
 	rsync -av --exclude-from download-exclude.list -e "ssh -i $(SSH_KEY)" \
-	  $(STAGE_USERNAME)@stage.mozilla.org:/home/ftp/pub/$(PRODUCT)/nightly/$(VERSION)-candidates/build$(BUILD)/ \
+	  $(STAGE_USERNAME)@$(STAGE_HOST):/home/ftp/pub/$(PRODUCT)/nightly/$(VERSION)-candidates/build$(BUILD)/ \
 	  unsigned-build$(BUILD)
 	# Copy linux/mac builds over to the signed dir, because they don't need internal signing.
 	rsync -av --exclude '*unsigned*' unsigned-build$(BUILD)/ signed-build$(BUILD)/
@@ -212,7 +214,7 @@ create-sigs:
 	@cd $(WORKDIR)/signed-build$(BUILD) && echo $(GPGPASS) | ../signing/sign-files .
 
 verify-sigs:
-	if ./verify-gpg.py --verbose --key-file $(WORKDIR)/key-checkout/PUBLIC-KEY \
+	if ./verify-gpg.py --verbose --key-file $(GPG_KEY) \
 		signed-build$(BUILD) > verify_gpg_build$(BUILD).log 2>&1; then \
 	    blat -to $(EMAIL) \
 		 -subject "GPG Signature verification succeeded" \
@@ -227,7 +229,7 @@ stage: create-contrib fix-permissions
 create-contrib:
 	mkdir -m 2775 $(WORKDIR)/signed-build$(BUILD)/contrib
 	mkdir -m 2775 $(WORKDIR)/signed-build$(BUILD)/contrib-localized
-	cp $(WORKDIR)/key-checkout/PUBLIC-KEY $(WORKDIR)/signed-build$(BUILD)/KEY
+	cp $(GPG_KEY) $(WORKDIR)/signed-build$(BUILD)/KEY
 
 checksum-files:
 	$(WORKDIR)/stage/checksum-files $(WORKDIR)/signed-build$(BUILD)
@@ -293,7 +295,7 @@ verify-asc:
 
 fake-upload:
 	rsync -n -e "ssh -i $(SSH_KEY)" -av signed-build$(BUILD)/ \
-	  $(STAGE_USERNAME)@stage.mozilla.org:/home/ftp/pub/$(PRODUCT)/nightly/$(VERSION)-candidates/build$(BUILD)/ \
+	  $(STAGE_USERNAME)@$(STAGE_HOST):/home/ftp/pub/$(PRODUCT)/nightly/$(VERSION)-candidates/build$(BUILD)/ \
 	  | grep -v asc | grep -v exe | grep -v 'update/win32/.*/.*\.mar'
 	blat -to $(EMAIL) \
 	     -subject "Signing of $(PRODUCT) $(VERSION) done, ready for inspection"\
@@ -303,8 +305,8 @@ postsign: upload upload-log verify-signatures2
 
 upload:
 	rsync -e "ssh -i $(SSH_KEY)" -av signed-build$(BUILD)/ \
-	  $(STAGE_USERNAME)@stage.mozilla.org:/home/ftp/pub/$(PRODUCT)/nightly/$(VERSION)-candidates/build$(BUILD)/
+	  $(STAGE_USERNAME)@$(STAGE_HOST):/home/ftp/pub/$(PRODUCT)/nightly/$(VERSION)-candidates/build$(BUILD)/
 
 upload-log:
 	rsync -e "ssh -i $(SSH_KEY)" -av win32_signing_build${BUILD}.log \
-	  $(STAGE_USERNAME)@stage.mozilla.org:/home/ftp/pub/$(PRODUCT)/nightly/$(VERSION)-candidates/build$(BUILD)/
+	  $(STAGE_USERNAME)@$(STAGE_HOST):/home/ftp/pub/$(PRODUCT)/nightly/$(VERSION)-candidates/build$(BUILD)/
