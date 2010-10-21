@@ -269,6 +269,7 @@ def flash_n900(main, emmc, rootfs=None, cold_flash=False, debug=False):
         print '  4) release the "u" key'
         print 'Waiting for a powered off N900 to be plugged in',
         ready_to_flash.block()
+        f.set_rd()
         if cold_flash:
             h_rev = f.query_h_rev()
             assert not h_rev is None, 'Could not determine the hardware revision of device'
