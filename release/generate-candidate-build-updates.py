@@ -18,7 +18,7 @@ from release.l10n import getShippedLocales, getCommonLocales
 from release.platforms import buildbot2updatePlatform, getPlatformLocales, \
   getSupportedPlatforms
 
-REQUIRED_OPTIONS = ('brandName', 'product', 'version', 'oldVersion',
+REQUIRED_OPTIONS = ('brandName', 'product', 'appName', 'version', 'oldVersion',
                     'buildNumber', 'oldBuildNumber', 'platforms',
                     'oldBaseSnippetDir', 'sourceRepo', 'workdir', 'hg')
 DEFAULT_CHANNELS = ('beta', 'betatest')
@@ -38,9 +38,10 @@ def getSnippetDirname(oldBaseSnippetDir, channel):
         ausdir = 'aus2.%s' % channel
     return os.path.join(oldBaseSnippetDir, ausdir)
 
-def createSnippets(brandName, product, version, oldVersion, buildNumber,
-                   oldBuildNumber, platforms, channels, oldBaseSnippetDir,
-                   stageServer, hg, sourceRepo, generatePartials, verbose):
+def createSnippets(brandName, product, appName, version, oldVersion,
+                   buildNumber, oldBuildNumber, platforms, channels,
+                   oldBaseSnippetDir, stageServer, hg, sourceRepo,
+                   generatePartials, verbose):
     errs = []
     dirs = []
     snippets = ['complete.txt']
@@ -49,9 +50,10 @@ def createSnippets(brandName, product, version, oldVersion, buildNumber,
     previousCandidateIDs = findOldBuildIDs(product, version, buildNumber,
                                            platforms, server=stageServer,
                                            verbose=verbose)
-    oldShippedLocales = getShippedLocales(product, oldVersion, oldBuildNumber,
-                                          sourceRepo, hg, verbose)
-    shippedLocales = getShippedLocales(product, version, buildNumber,
+    oldShippedLocales = getShippedLocales(product, appName, oldVersion,
+                                          oldBuildNumber, sourceRepo, hg,
+                                          verbose)
+    shippedLocales = getShippedLocales(product, appName, version, buildNumber,
                                        sourceRepo, hg, verbose)
     for platform in previousCandidateIDs.keys():
         update_platform = buildbot2updatePlatform(platform)
@@ -120,6 +122,7 @@ def getOptions():
     parser = OptionParser()
     parser.add_option("-B", "--brand", dest="brandName", help="Brand Name")
     parser.add_option("-p", "--product", dest="product", help="Product Name")
+    parser.add_option("-a", "--app-name", dest="appName", help="App Name")
     parser.add_option("-v", "--version", dest="version", help="Product Version")
     parser.add_option("-o", "--old-version", dest="oldVersion",
                       help="Previous Product Version")
@@ -182,12 +185,13 @@ def main():
     os.chdir(options.workdir)
     try:
         return createSnippets(options.brandName, options.product,
-                              options.version, options.oldVersion,
-                              options.buildNumber, options.oldBuildNumber,
-                              options.platforms, options.channels,
-                              options.oldBaseSnippetDir, options.stageServer,
-                              options.hg, options.sourceRepo,
-                              options.generatePartials, options.verbose)
+                              options.appName, options.version,
+                              options.oldVersion, options.buildNumber,
+                              options.oldBuildNumber, options.platforms,
+                              options.channels, options.oldBaseSnippetDir,
+                              options.stageServer, options.hg,
+                              options.sourceRepo, options.generatePartials,
+                              options.verbose)
     finally:
         os.chdir(olddir)
 

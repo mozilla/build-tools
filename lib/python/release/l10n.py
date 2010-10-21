@@ -2,12 +2,12 @@ import sys
 from urllib2 import urlopen
 from urlparse import urljoin
 
-def getShippedLocales(product, version, buildNumber, sourceRepo,
+def getShippedLocales(product, appName, version, buildNumber, sourceRepo,
                       hg='http://hg.mozilla.org', verbose=False):
     tag = '%s_%s_BUILD%s' % (product.upper(), version.replace('.', '_'),
                              str(buildNumber))
-    file = '%s/raw-file/%s/browser/locales/shipped-locales' % \
-      (sourceRepo, tag)
+    file = '%s/raw-file/%s/%s/locales/shipped-locales' % \
+      (sourceRepo, tag, appName)
     url = urljoin(hg, file)
     try:
         sl = urlopen(url).read()
