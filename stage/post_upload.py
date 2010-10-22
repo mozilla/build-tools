@@ -85,6 +85,10 @@ def ReleaseToDated(options, upload_dir, files):
     longDatedPath = os.path.join(NIGHTLY_PATH, longDir)
     shortDatedPath = os.path.join(NIGHTLY_PATH, shortDir)
 
+    if options.builddir:
+        longDatedPath += "/%s" % options.builddir
+        shortDatedPath += "/%s" % options.builddir
+
     for f in files:
         if f.endswith('crashreporter-symbols.zip'):
             continue
@@ -102,6 +106,10 @@ def ReleaseToDated(options, upload_dir, files):
 def ReleaseToLatest(options, upload_dir, files):
     latestDir = LATEST_DIR % {'branch': options.branch}
     latestPath = os.path.join(NIGHTLY_PATH, latestDir)
+
+    if options.builddir:
+        latestDir += "/%s" % options.builddir
+        latestPath += "/%s" % options.builddir
 
     for f in files:
         if f.endswith('crashreporter-symbols.zip'):
@@ -122,6 +130,9 @@ def ReleaseToBuildDir(builds_dir, builds_url, options, upload_dir, files, dated)
         buildid = str(BuildIDToUnixTime(options.buildid))
         tinderboxBuildsPath = os.path.join(tinderboxBuildsPath, buildid)
         tinderboxUrl = os.path.join(tinderboxUrl, buildid)
+    if options.builddir:
+        tinderboxBuildsPath = os.path.join(tinderboxBuildsPath, options.builddir)
+        tinderboxUrl = os.path.join(tinderboxUrl, options.builddir)
 
     for f in files:
         # Reject MAR files. They don't belong here.
@@ -158,6 +169,10 @@ def ReleaseToCandidatesDir(options, upload_dir, files):
             url = os.path.join(candidatesUrl, 'unsigned')
         else:
             url = candidatesUrl
+        if options.builddir:
+            realCandidatesPath = os.path.join(realCandidatesPath, options.builddir)
+            url = os.path.join(url, options.builddir)
+
         CopyFileToDir(f, upload_dir, realCandidatesPath, preserve_dirs=True)
         # Output the URL to the candidate build
         if f.startswith(upload_dir):
