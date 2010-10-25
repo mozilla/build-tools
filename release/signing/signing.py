@@ -56,6 +56,7 @@ def fileInfo(filepath, product):
                 'contents': m.group(5),
                 'format': m.group(6),
                 'pathstyle': 'short',
+                'leading_path' : None,
                }
     except:
         # Mozilla 1.9.1 and on style (aka 'long') paths
@@ -72,15 +73,17 @@ def fileInfo(filepath, product):
             ret['product'] = m.group(3)
             ret['version'] = m.group(4)
             ret['contents'] = m.group(5)
+            ret['leading_path'] = None
         elif filepath.endswith('.exe'):
             ret['format'] = 'exe'
-            m = re.search("(win32)/([-a-zA-Z]+)/((?i)%s) Setup (\d+\.\d+(?:\.\d+)?(?:\w+\d+)?(?:\ \w+\ \d+)?)\.exe" % product, filepath)
+            m = re.search("(partner-repacks/\w+/|)(win32|mac|linux-i686)/([-a-zA-Z]+)/((?i)%s) Setup (\d+\.\d+(?:\.\d+)?(?:\w+\d+)?(?:\ \w+\ \d+)?)\.exe" % product, filepath)
             if not m:
                 raise ValueError("Could not parse: %s" % filepath)
-            ret['platform'] = m.group(1)
-            ret['locale'] = m.group(2)
-            ret['product'] = m.group(3).lower()
-            ret['version'] = m.group(4)
+            ret['leading_path'] = m.group(1)
+            ret['platform'] = m.group(2)
+            ret['locale'] = m.group(3)
+            ret['product'] = m.group(4).lower()
+            ret['version'] = m.group(5)
             ret['contents'] = 'installer'
         else:
             raise ValueError("Unknown filetype for %s" % filepath)

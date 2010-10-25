@@ -273,7 +273,8 @@ class Signer:
         def fileKey(f):
             info = fileInfo(f, product)
             locale = info['locale']
-            if locale == firstLocale:
+            leading_path = info['leading_path']
+            if locale == firstLocale and not leading_path:
                 localeVal = 0
             else:
                 localeVal = 1
@@ -281,7 +282,7 @@ class Signer:
                 exeVal = 0
             else:
                 exeVal = 1
-            return (localeVal, locale, exeVal, f)
+            return (localeVal, leading_path, locale, exeVal, f)
 
         files.sort(key=fileKey)
         nfiles = len(files)
