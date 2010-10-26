@@ -190,6 +190,45 @@ def ReleaseToCandidatesDir(options, upload_dir, files):
         for d in dirs:
             os.chmod(os.path.join(root, d), 0755)
 
+def ReleaseToMobileCandidatesDir(options, upload_dir, files):
+    candidatesDir = CANDIDATES_DIR % {'version': options.version,
+                                      'buildnumber': options.build_number}
+    candidatesPath = os.path.join(NIGHTLY_PATH, candidatesDir)
+    candidatesUrl = CANDIDATES_URL_PATH % {
+            'nightly_dir': options.nightly_dir,
+            'version': options.version,
+            'buildnumber': options.build_number,
+            'product': options.product,
+            }
+
+    for f in files:
+        realCandidatesPath = candidatesPath
+        if 'android' in options.builddir:
+            realCandidatesPath = os.path.join(realCandidatesPath, 'unsigned',
+                                              options.builddir)
+            url = os.path.join(candidatesUrl, 'unsigned',
+                               options.builddir)
+        else:
+            realCandidatesPath = os.path.join(realCandidatesPath,
+                                              options.builddir)
+            url = os.path.join(candidatesUrl, options.builddir)
+        CopyFileToDir(f, upload_dir, realCandidatesPath, preserve_dirs=True)
+        # Output the URL to the candidate build
+        if f.startswith(upload_dir):
+            relpath = f[len(upload_dir):].lstrip("/")
+        else:
+            relpath = f.lstrip("/")
+
+        sys.stderr.write("%s\n" % os.path.join(url, relpath))
+        # We always want release files chmod'ed this way so other users in
+        # the group cannot overwrite them.
+        os.chmod(f, 0644)
+
+    # Same thing for directories, but 0755
+    for root,dirs,files in os.walk(candidatesPath):
+        for d in dirs:
+            os.chmod(os.path.join(root, d), 0755)
+
 def ReleaseToTryserverBuilds(options, upload_dir, files):
     tryserverBuildsPath = TRYSERVER_DIR % {'product': options.product,
                                            'who': options.who,
@@ -245,6 +284,9 @@ if __name__ == '__main__':
     parser.add_option("-c", "--release-to-candidates-dir",
                       action="store_true", dest="release_to_candidates_dir",
                       help="Copy files to $product/$nightly_dir/$version-candidates/build$build_number")
+    parser.add_option("--release-to-mobile-candidates-dir",
+                      action="store_true", dest="release_to_mobile_candidates_dir",
+                      help="Copy mobile files to $product/$nightly_dir/$version-candidates/build$build_number/$platform")
     parser.add_option("-t", "--release-to-tinderbox-builds",
                       action="store_true", dest="release_to_tinderbox_builds",
                       help="Copy files to $product/tinderbox-builds/$tinderbox_builds_dir")
@@ -287,6 +329,17 @@ if __name__ == '__main__':
             error = True
         if not options.build_number:
             print "Error, you must supply the build number."
+            error = True
+    if options.release_to_mobile_candidates_dir:
+        releaseTo.append(ReleaseToMobileCandidatesDir)
+        if not options.version:
+            print "Error, you must supply the version number."
+            error = True
+        if not options.build_number:
+            print "Error, you must supply the build number."
+            error = True
+        if not options.builddir:
+            print "Error, you must supply a builddir."
             error = True
     if options.release_to_tinderbox_builds:
         releaseTo.append(ReleaseToTinderboxBuildsOverwrite)

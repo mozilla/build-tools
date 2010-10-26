@@ -93,6 +93,7 @@ sub Bump {
     my $jsMilestoneTxt = catfile('js', 'src', 'config', 'milestone.txt');
     my $winmoVersionTxt = 'winmo-version.txt';
     my $defaultVersionTxt = 'default-version.txt';
+    my $confVarsSh = 'confvars.sh';
     
     foreach my $fileName (@bumpFiles) {
         my $found = 0;
@@ -121,7 +122,9 @@ sub Bump {
               'LDAPCSDK_CO_TAG      = ' . $releaseTag);
         } elsif ($fileName =~ /$versionTxt/) {
             %searchReplace = ('^' . $VERSION_REGEXP . '$' => $appVersion);
-        } elsif ($fileName =~ $winmoVersionTxt or $fileName =~ $defaultVersionTxt) {
+        } elsif ($fileName =~ $winmoVersionTxt or
+                 $fileName =~ $defaultVersionTxt or
+                 $fileName =~ $confVarsSh) {
             %searchReplace = ('^MOZ_APP_VERSION=' . $VERSION_REGEXP . '$' =>
                               "MOZ_APP_VERSION=$appVersion");
         } elsif ($fileName eq $milestoneTxt || $fileName eq $jsMilestoneTxt) {
