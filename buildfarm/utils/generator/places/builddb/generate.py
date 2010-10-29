@@ -171,6 +171,9 @@ class DateForward(object):
         if DEBUG:
             print "Incrementing Items Annos"
         self.increment_items_annos()
+        if DEBUG:
+            print "VACUUM/REINDEX"
+        self.vacumm_and_reindex()
         
         last_time_run()
 
@@ -241,6 +244,20 @@ class DateForward(object):
         self.increment_query('moz_items_annos', 'dateadded')
         self.increment_query('moz_items_annos', 'lastmodified')
         self.increment_query('moz_items_annos', 'expiration')            
+
+    def vacuum_and_reindex(self):
+        try:
+            v_sql = "VACUUM;"
+            r_sql = "REINDEX;"
+
+            cursor = connection.cursor()
+            cursor.execute(v_sql)
+            cursor.execute(r_sql)
+            cursor.close()
+        except Exception, e:
+            print """************ ERROR *******************"""
+            print """***%s""" % e
+            raise
 
 def right_now():
     """
