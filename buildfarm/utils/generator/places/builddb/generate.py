@@ -173,7 +173,7 @@ class DateForward(object):
         self.increment_items_annos()
         if DEBUG:
             print "VACUUM/REINDEX"
-        self.vacumm_and_reindex()
+        self.vacuum_and_reindex()
         
         last_time_run()
 
