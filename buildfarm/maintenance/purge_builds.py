@@ -127,7 +127,7 @@ if __name__ == '__main__':
     from optparse import OptionParser
 
     parser = OptionParser(usage=__doc__)
-    parser.set_defaults(size=5, skip=[], dry_run=False, max_age=28)
+    parser.set_defaults(size=5, skip=[], dry_run=False, max_age=14)
 
     parser.add_option('-s', '--size',
             help='free space required (in GB, default 5)', dest='size',
