@@ -1,5 +1,6 @@
 #!/usr/bin/python
-"""%prog [-p|--props-file] [-r|--rev revision] [-b|--branch branch] repo [dest]
+"""%prog [-p|--props-file] [-r|--rev revision] [-b|--branch branch]
+         [-s|--shared-dir shared_dir] [--check-outgoing] repo [dest]
 
 Tool to do safe operations with hg.
 
@@ -9,16 +10,17 @@ revision/branch on commandline will override those in props-file"""
 import os, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../lib/python"))
 
-from util.hg import mercurial
+from util.hg import mercurial, share, out, remove_path
 
 if __name__ == '__main__':
     from optparse import OptionParser
-    import os, logging
+    import logging
 
     parser = OptionParser(__doc__)
     parser.set_defaults(
             revision=os.environ.get('HG_REV'),
             branch=os.environ.get('HG_BRANCH', 'default'),
+            outgoing=False,
             propsfile=os.environ.get('PROPERTIES_FILE'),
             tbox=bool(os.environ.get('PROPERTIES_FILE')),
             loglevel=logging.INFO,
@@ -31,6 +33,10 @@ if __name__ == '__main__':
         help="output TinderboxPrint messages")
     parser.add_option("--no-tbox", dest="tbox", action="store_false",
         help="don't output TinderboxPrint messages")
+    parser.add_option("-s", "--shared-dir", dest="shared_dir",
+        help="clone to a shared directory")
+    parser.add_option("--check-outgoing", dest="outgoing", action="store_true",
+        help="check for and clobber outgoing changesets")
 
     options, args = parser.parse_args()
 
@@ -57,7 +63,19 @@ if __name__ == '__main__':
         if options.branch is None:
             options.branch = js['sourcestamp']['branch']
 
-    got_revision = mercurial(repo, dest, options.branch, options.revision)
+    #look for and clobber outgoing changesets
+    if options.outgoing:
+        if out(dest, repo):
+            remove_path(dest)
+        if options.shared_dir and out(options.shared_dir, repo):
+            remove_path(options.shared_dir)
+
+    if options.shared_dir:
+        got_revision = mercurial(repo, options.shared_dir, options.branch, options.revision)
+        #after pulling/cloning to the shared dir, update the working dir
+        share(options.shared_dir, dest, options.branch, options.revision)
+    else:
+        got_revision = mercurial(repo, dest, options.branch, options.revision)
 
     if options.tbox:
         if repo.startswith("http"):

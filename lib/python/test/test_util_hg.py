@@ -4,8 +4,8 @@ import shutil
 import os
 import subprocess
 
-from util.hg import clone, pull, update, hg_ver, mercurial, _make_absolute
-from util.commands import run_cmd, get_output
+from util.hg import clone, pull, update, hg_ver, mercurial, _make_absolute, share
+from util.commands import run_cmd, get_output, remove_path
 
 def getRevisions(dest):
     retval = []
@@ -199,3 +199,30 @@ class TestHg(unittest.TestCase):
         self.assertEquals(getRevisions(self.wc), getRevisions(repo2))
         # Make sure our local file went away
         self.failUnless(not os.path.exists(os.path.join(self.wc, 'test.txt')))
+
+    def testShareRepo(self):
+        repo3 = os.path.join(self.tmpdir, 'repo3')
+        share(self.repodir, repo3)
+        # make sure shared history is identical
+        self.assertEquals(self.revisions, getRevisions(repo3))
+
+    def testShareClobber(self):
+        repo4 = os.path.join(self.tmpdir, 'repo4')
+        os.mkdir(repo4)
+        share(self.repodir, repo4)
+        # make sure that share() clobbered the empty dir and created the shared repo
+        self.assertEquals(self.revisions, getRevisions(repo4))
+
+    def testMercurialShareOutgoing(self):
+        # ensure that outgoing changesets in a shared clone affect the shared history
+        repo5 = os.path.join(self.tmpdir, 'repo5')
+        repo6 = os.path.join(self.tmpdir, 'repo6')
+        mercurial(self.repodir, repo5)
+        share(repo5, repo6)
+        open(os.path.join(repo6, 'test.txt'), 'w').write("hello!")
+        # modify the history of the new clone
+        run_cmd(['hg', 'add', 'test.txt'], cwd=repo6)
+        run_cmd(['hg', 'commit', '-m', 'adding changeset'], cwd=repo6)
+        self.assertNotEquals(self.revisions, getRevisions(repo6))
+        self.assertNotEquals(self.revisions, getRevisions(repo5))
+        self.assertEquals(getRevisions(repo5), getRevisions(repo6))

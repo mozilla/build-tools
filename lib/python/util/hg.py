@@ -81,7 +81,25 @@ def clone(repo, dest, branch=None, revision=None, update_dest=True):
     if update_dest:
         return update(dest, branch, revision)
 
-def pull(repo, dest, branch=None, revision=None, update_dest=True):
+def common_args(revision=None, branch=None, ssh_username=None, ssh_key=None):
+    """Fill in common hg arguments, encapsulating logic checks that depend on
+       mercurial versions and provided arguments"""
+    args = []
+    if ssh_username or ssh_key:
+        opt = ['-e', 'ssh']
+        if ssh_username:
+            opt[1] += ' -l %s' % ssh_username
+        if ssh_key:
+            opt[1] += ' -i %s' % ssh_key
+        args.extend(opt)
+    if revision:
+        args.extend(['-r', revision])
+    if branch:
+        if hg_ver() >= (1, 6, 0):
+            args.extend(['-b', branch])
+    return args
+
+def pull(repo, dest, update_dest=True, **kwargs):
     """Pulls changes from hg repo and places it in `dest`.
 
     If `revision` is set, only the specified revision and its ancestors will be
@@ -92,17 +110,31 @@ def pull(repo, dest, branch=None, revision=None, update_dest=True):
     # Convert repo to an absolute path if it's a local repository
     repo = _make_absolute(repo)
     cmd = ['hg', 'pull']
-    if revision is not None:
-        cmd.extend(['-r', revision])
-    elif branch:
-        # hg >= 1.6 supports -b branch for cloning
-        if hg_ver() >= (1, 6, 0):
-            cmd.extend(['-b', branch])
+    cmd.extend(common_args(**kwargs))
     cmd.append(repo)
     run_cmd(cmd, cwd=dest)
 
     if update_dest:
-        return update(dest, branch, revision)
+        branch = None
+        if 'branch' in kwargs and kwargs['branch']:
+            branch = kwargs['branch']
+        revision = None
+        if 'revision' in kwargs and kwargs['revision']:
+            revision = kwargs['revision']
+        return update(dest, branch=branch, revision=revision)
+
+def out(src, remote, **kwargs):
+    """Check for outgoing changesets present in a repo"""
+    cmd = ['hg', '-q', 'out', '--template', '{node}\n']
+    cmd.extend(common_args(**kwargs))
+    cmd.append(remote)
+    if os.path.exists(src):
+        try:
+            return get_output(cmd, cwd=src).rstrip().split("\n")
+        except subprocess.CalledProcessError as inst:
+            if inst.returncode == 1:
+                return None
+            raise
 
 def mercurial(repo, dest, branch=None, revision=None):
     """Makes sure that `dest` is has `revision` or `branch` checked out from
@@ -117,7 +149,7 @@ def mercurial(repo, dest, branch=None, revision=None):
         log.debug("%s exists, pulling", dest)
         try:
             # TODO: If revision is set, try updating before pulling?
-            return pull(repo, dest, branch, revision)
+            return pull(repo, dest, branch=branch, revision=revision)
         except subprocess.CalledProcessError:
             log.warning("Error pulling changes into %s from %s; clobbering", dest,
                     repo)
@@ -126,3 +158,25 @@ def mercurial(repo, dest, branch=None, revision=None):
 
     # If it doesn't exist, clone it!
     return clone(repo, dest, branch, revision)
+
+def share(source, dest, branch=None, revision=None):
+    """Uses the hg share extension to update a working dir from a shared repo
+    """
+    if os.path.exists(os.path.join(dest, ".hg", "sharedpath")):
+        log.debug("path exists, just going to update")
+        #attempt to update from the shared history. If this fails
+        try:
+            return update(dest, branch, revision)
+        except subprocess.CalledProcessError:
+            remove_path(dest)
+    log.debug("sharing hg repo to %s" % dest)
+    #fall back to creating a local clone if the share extension is unavailable
+    #or if share fails for any other reason
+    try:
+        cmd = ['hg', 'share', source, dest]
+        run_cmd(cmd)
+        return update(dest, branch, revision)
+    #if it fails for whatever reason, use mercurial() to force a local clone
+    except subprocess.CalledProcessError:
+        log.error("Failed to hg_share on hg version %s, attemping local clone" % hg_ver())
+        return mercurial(source, dest, branch, revision)
