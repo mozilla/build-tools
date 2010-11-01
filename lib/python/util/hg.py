@@ -131,7 +131,7 @@ def out(src, remote, **kwargs):
     if os.path.exists(src):
         try:
             return get_output(cmd, cwd=src).rstrip().split("\n")
-        except subprocess.CalledProcessError as inst:
+        except subprocess.CalledProcessError, inst:
             if inst.returncode == 1:
                 return None
             raise
@@ -178,5 +178,5 @@ def share(source, dest, branch=None, revision=None):
         return update(dest, branch, revision)
     #if it fails for whatever reason, use mercurial() to force a local clone
     except subprocess.CalledProcessError:
-        log.error("Failed to hg_share on hg version %s, attemping local clone" % hg_ver())
+        log.error("Failed to hg_share on hg version %s, attemping local clone" % (hg_ver(),))
         return mercurial(source, dest, branch, revision)
