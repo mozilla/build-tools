@@ -14,6 +14,14 @@ def _make_absolute(repo):
         repo = os.path.abspath(repo)
     return repo
 
+def make_hg_url(baseurl, branch, revision, filename=None):
+    """construct a valid hg url from a base hg url (hg.mozilla.org),
+    branch, revision and possible filename"""
+    if not filename:
+        return '/'.join([p.strip('/') for p in [baseurl, branch, 'rev', revision]])
+    else:
+        return '/'.join([p.strip('/') for p in [baseurl, branch, 'raw-file', revision, filename]])
+
 def get_revision(path):
     """Returns which revision directory `path` currently has checked out."""
     return get_output(['hg', 'parent', '--template', '{node|short}'], cwd=path)

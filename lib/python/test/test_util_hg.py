@@ -4,7 +4,7 @@ import shutil
 import os
 import subprocess
 
-from util.hg import clone, pull, update, hg_ver, mercurial, _make_absolute, share
+from util.hg import clone, pull, update, hg_ver, mercurial, _make_absolute, share, make_hg_url
 from util.commands import run_cmd, get_output, remove_path
 
 def getRevisions(dest):
@@ -199,6 +199,17 @@ class TestHg(unittest.TestCase):
         self.assertEquals(getRevisions(self.wc), getRevisions(repo2))
         # Make sure our local file went away
         self.failUnless(not os.path.exists(os.path.join(self.wc, 'test.txt')))
+
+    def testMakeHGUrl(self):
+        #construct an hg url specific to revision, branch and filename and try to pull it down
+        file_url = make_hg_url(
+                "http://hg.mozilla.org",
+                '//build/tools/',
+                'FIREFOX_3_6_12_RELEASE',
+                "/lib/python/util/hg.py"
+                )
+        expected_url = "http://hg.mozilla.org/build/tools/raw-file/FIREFOX_3_6_12_RELEASE/lib/python/util/hg.py"
+        self.assertEquals(file_url, expected_url)
 
     def testShareRepo(self):
         repo3 = os.path.join(self.tmpdir, 'repo3')
