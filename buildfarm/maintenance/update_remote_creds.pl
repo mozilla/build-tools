@@ -1,4 +1,4 @@
-#!/usr/bin/perl -Tw
+#!/usr/bin/perl -w
 # -*- cperl -*-
 #
 # ***** BEGIN LICENSE BLOCK *****
@@ -23,6 +23,7 @@
 #
 # Contributor(s):  Reed Loden <reed@mozilla.com>
 #                  Chris Cooper <ccooper@deadsquid.com>
+#                  Nick Thomas <nthomas@mozilla.com>
 #
 use strict;
 $|++;
@@ -45,7 +46,7 @@ use vars qw(
 	    $start_timestamp
            );
 
-$default_ssh_timeout = 3;
+$default_ssh_timeout = 5;
 $start_timestamp = UnixDate("now","%q");
 
 #########################################################################
@@ -124,16 +125,21 @@ sub updateMachineListFromWeb($$$) {
 
     if ($line =~ /xserve/i or
 	$line =~ /mac[^h]/i or
+	$line =~ /darwin/i or
 	$line =~ /tiger/i or
 	$line =~ /leopard/i or
+	$line =~ /snow/i or
 	$line =~ /osx/i) {
       $machine_list->{$line}->{'platform'} = 'mac';
       next;
     }
 
     if ($line =~ /win/i or
+	$line =~ /w32/ or
+	$line =~ /w64/ or
 	$line =~ /xp/i or
 	$line =~ /vista/i or
+	$line =~ /r3-w7/i or
 	$line =~ /2k3/i) {
       $machine_list->{$line}->{'platform'} = 'win32';
       next;
@@ -141,6 +147,7 @@ sub updateMachineListFromWeb($$$) {
 
     if ($line =~ /linux/i or
 	$line =~ /centos/i or
+	$line =~ /r3-fed/i or
 	$line =~ /ubuntu/i) {
       $machine_list->{$line}->{'platform'} = 'linux';
       next;
@@ -210,12 +217,11 @@ sub writeMachineListToDisk($) {
 
 
 #########################################################################
-sub updateRemotePasswordViaSSH($$$$$$) {
+sub updateRemotePasswordViaSSH($$$$$) {
   my $host = shift;
   my $username = shift;
   my $current_password = shift;
   my $new_password = shift;
-  my $authorized_keys_contents = shift;
   my $new_vnc_password = shift;
 
   my $platform = $machine_list->{$host}->{'platform'};
@@ -281,18 +287,18 @@ sub updateRemotePasswordViaSSH($$$$$$) {
 	  $new_password ne $current_password) {
 	$ssh->send("passwd");
 	if ($username ne 'root') {
-	  if (! $ssh->waitfor('password:\s*\z', $timeout)) {
+	  if (! $ssh->waitfor('[Pp]assword:\s*\z', $timeout)) {
 	    push @{$host_errors->{$host}}, "User $username: current password prompt not found after $timeout seconds";
 	    return 0;
 	  }
 	  $ssh->send($current_password);
 	}
-	if (! $ssh->waitfor('password:\s*\z', $timeout)) {
+	if (! $ssh->waitfor('[Pp]assword:\s*\z', $timeout)) {
 	  push @{$host_errors->{$host}}, "User $username: new password prompt not found after $timeout seconds";
 	  return 0;
 	}
 	$ssh->send($new_password);
-	if (! $ssh->waitfor('password:\s*\z', $timeout)) {
+	if (! $ssh->waitfor('[Pp]assword:\s*\z', $timeout)) {
 	  push @{$host_errors->{$host}}, "User $username: confirm password prompt not found after $timeout seconds";
 	  return 0;
 	}
@@ -320,7 +326,19 @@ sub updateRemotePasswordViaSSH($$$$$$) {
 	if ($platform eq "mac") {
 	  # On OS X (Darwin), use kickstart but require password for sudo
 	  if ($current_password) {
-	    $ssh->send("sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart -configure -activate -access -on -clientopts -setvnclegacy -vnclegacy yes -setvncpw -restart -agent -vncpw $new_vnc_password");
+	    # get Darwin version (eg 8.8.1, 9.2.0, 10.2.0)
+	    $ssh->send("uname -v");
+	    $remote_output = $ssh->peek($timeout);
+	    my $vnc_password;
+	    # use the xor'd password for Tiger, otherwise plain text
+	    if ($remote_output =~ /Darwin Kernel Version 8\./) {
+	      $vnc_password = $new_vnc_password;
+	    } else {
+	      $vnc_password = $new_password;
+	    }
+
+	    $remote_output = "";
+	    $ssh->send("sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart -configure -activate -access -on -clientopts -setvnclegacy -vnclegacy yes -setvncpw -vncpw $vnc_password -restart -agent");
 	    if (! $ssh->waitfor('Password:\s*\z', $timeout)) {
 	      push @{$host_errors->{$host}}, "User $username: VNC prompt 'Password' not found after $timeout seconds";
 	      return 0;
@@ -334,6 +352,20 @@ sub updateRemotePasswordViaSSH($$$$$$) {
 	      push @{$host_errors->{$host}}, "User $username: Never saw VNC command return succesfully.";
 	      return 0;
 	    }
+
+	    # write auto-logon password
+	    my $kcpassword = kcpassword_xor($new_password);
+	    $ssh->send("echo -e '$kcpassword' > ~/kcpassword");
+	    $ssh->send('sudo cp ~/kcpassword /etc/kcpassword');
+	    # sudo has cached our credentials, no password needed
+	    $ssh->send('rm -f ~/kcpassword');
+
+	    # blow away default keychain, so we don't get prompted that the
+	    # passwords for the user account and keychain differ on 10.6
+	    $ssh->send('rm -f ~/Library/Keychains/login.keychain');
+
+	    # need to flush the output to make things happen
+	    $remote_output = $ssh->peek(1);
 	  }
 	} elsif ($platform eq "linux") {
 	  # On Linux, use vncpasswd
@@ -360,14 +392,6 @@ sub updateRemotePasswordViaSSH($$$$$$) {
 	  # vncpasswd said: ".$ssh->before()
 	  print "VNC password changed for $username on $host.\n" if ($verbose);
 	}
-      }
-
-      # Update the ~/.ssh/authorized_keys file for the user
-      if ($authorized_keys_contents) {
-	$ssh->send("mkdir -m 700 ~/.ssh");
-	$ssh->send("echo \"$authorized_keys_contents\" > ~/.ssh/authorized_keys");
-	$ssh->send("chmod 600 ~/.ssh/authorized_keys");
-	print "authorized_keys file changed for $username on $host.\n" if ($verbose);
       }
 
       # If we had to amend the hostname to connect, make that change in the 
@@ -498,33 +522,6 @@ sub confirmSSHConnection($$$) {
 }
 
 #########################################################################
-sub getAuthorizedKeys(\%) {
-  my $username = shift;
-  my $authorized_keys_file = shift;
-
-  my $authorized_keys_contents;
-
-  if ($authorized_keys_file and 
-      $authorized_keys_file ne '' and 
-      -e $authorized_keys_file and
-      -r $authorized_keys_file) {
-    open(KEYFILE, $authorized_keys_file);
-    my @lines = <KEYFILE>;
-    close(KEYFILE);
-    $authorized_keys_contents = join('',@lines);
-  }
-  if (!$authorized_keys_contents) {
-    warn "No authorized keys data found for " .
-      $username. "\n";
-  } else {
-    print "Found authorized keys data for " .
-      $username . "\n" if ($verbose);
-  }
-
-  return $authorized_keys_contents;
-}
-
-#########################################################################
 sub writeHostErrorsToDisk($) {
   my $username = shift;
 
@@ -561,6 +558,27 @@ sub diffMachineLists($$) {
       -r $new_machine_list_file) {
     system("diff -up $machine_list_file $new_machine_list_file");
   }
+}
+
+#########################################################################
+# credit: http://www.brock-family.org/gavin/perl/kcpassword.html
+# and then convert to something we can push through a shell
+sub kcpassword_xor($) {
+  my $pass = shift;
+
+  ### The magic 11 bytes - these are just repeated 
+  # 0x7D 0x89 0x52 0x23 0xD2 0xBC 0xDD 0xEA 0xA3 0xB9 0x1F
+  my @key = qw( 125 137 82 35 210 188 221 234 163 185 31 );
+
+  my $key     = pack "C*", @key;
+  my $key_len = length $key;
+
+  for (my $n=0; $n<length($pass); $n+=$key_len) {
+    substr($pass,$n,$key_len) ^= $key;
+  }
+  # convert to string suitable for echo -e in a terminal
+  $pass =~ s/(.)/sprintf('\x%x',ord($1))/eg;
+  return $pass;
 }
 
 #########################################################################
@@ -611,7 +629,6 @@ my $dry_run = 0;
 my $username = "";
 my $current_password = "";
 my $new_password = "";
-my $authorized_keys_file;
 my $help;
 my $platform;
 
@@ -628,7 +645,6 @@ GetOptions(
            "username=s" => \$username,
 	   "current_password=s" => \$current_password,
 	   "new_password=s" => \$new_password,
-	   "authorized_keys_file=s" => \$authorized_keys_file,
 	   "machine_list_file=s" => \$machine_list_file,
 	   "help" => \$help,
 	   "platform=s" => \$platform,
@@ -722,12 +738,6 @@ if ($dry_run) {
   }
 
 } else {
-  my $authorized_keys_contents;
-  if ($authorized_keys_file) {
-    $authorized_keys_contents = &getAuthorizedKeys($username,
-						   $authorized_keys_file);
-  }
-
   my $new_vnc_password = $new_password;
   $new_vnc_password =~ s/^(.{8}).*/$1/;  
   # convert the password to an array
@@ -761,7 +771,6 @@ if ($dry_run) {
 					$username,
 					$current_password,
 					$new_password,
-					$authorized_keys_contents,
 					$vnc_password
 				       );
     next if ($rv);
