@@ -17,8 +17,8 @@ LATEST_DIR = "latest-%(branch)s"
 # Production configs that need to be commented out when doing staging.
 TINDERBOX_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
 CANDIDATES_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(version)s-candidates/build%(buildnumber)s"
-SHADOW_CENTRAL_URL_PATH = "https://ftp.mozilla.org/pub/mozilla.org/%(product)s/pvt-builds/shadow-central-builds/%(tinderbox_builds_dir)s"
-SHADOW_CENTRAL_DIR = "/home/ftp/pub/%(product)s/pvt-builds/shadow-central-builds/%(tinderbox_builds_dir)s"
+PVT_BUILD_URL_PATH = "https://dm-pvtbuild01.mozilla.org/%(product)s/%(tinderbox_builds_dir)s"
+PVT_BUILD_DIR = "/mnt/pvt_builds/%(product)s/%(tinderbox_builds_dir)s"
 TRYSERVER_DIR = "/home/ftp/pub/%(product)s/tryserver-builds/%(who)s-%(revision)s/%(builddir)s"
 TRYSERVER_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/tryserver-builds/%(who)s-%(revision)s/%(builddir)s"
 # Staging configs start here.  Uncomment when working on staging
@@ -26,6 +26,8 @@ TRYSERVER_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/tryse
 #CANDIDATES_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(version)s-candidates/build%(buildnumber)s"
 #TRYSERVER_DIR = "/home/ftp/pub/%(product)s/tryserver-builds/%(who)s-%(revision)s/%(builddir)s"
 #TRYSERVER_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/tryserver-builds/%(who)s-%(revision)s/%(builddir)s"
+#PVT_BUILD_URL_PATH = "https://dm-pvtbuild01.mozilla.org/staging/%(product)s/%(tinderbox_builds_dir)s"
+#PVT_BUILD_DIR = "/mnt/pvt_builds/staging/%(product)s/%(tinderbox_builds_dir)s"
 
 PARTIAL_MAR_RE = re.compile('\.partial\..*\.mar$')
 
@@ -146,7 +148,8 @@ def ReleaseToTinderboxBuilds(options, upload_dir, files, dated=True):
     ReleaseToBuildDir(TINDERBOX_BUILDS_PATH, TINDERBOX_URL_PATH, options, upload_dir, files, dated)
 
 def ReleaseToShadowCentralBuilds(options, upload_dir, files, dated=True):
-    ReleaseToBuildDir(SHADOW_CENTRAL_DIR, SHADOW_CENTRAL_URL_PATH, options, upload_dir, files, dated)
+    options.product = "shadow-central"
+    ReleaseToBuildDir(PVT_BUILD_DIR, PVT_BUILD_URL_PATH, options, upload_dir, files, dated)
         
 def ReleaseToTinderboxBuildsOverwrite(options, upload_dir, files):
     ReleaseToTinderboxBuilds(options, upload_dir, files, dated=False)
@@ -295,7 +298,7 @@ if __name__ == '__main__':
                       help="Copy files to $product/tinderbox-builds/$tinderbox_builds_dir/$timestamp")
     parser.add_option("--release-to-shadow-central-builds",
                       action="store_true", dest="release_to_shadow_central_builds",
-                      help="Copy files to $product/shadow-central-builds/$tinderbox_builds_dir/$timestamp")
+                      help="Copy files to shadow-central/$tinderbox_builds_dir/$timestamp")
     parser.add_option("--release-to-tryserver-builds",
                       action="store_true", dest="release_to_tryserver_builds",
                       help="Copy files to tryserver-builds/$who-$revision")
