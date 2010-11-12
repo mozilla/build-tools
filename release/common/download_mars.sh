@@ -53,6 +53,7 @@ download_mars () {
       fi
 
       cp update/$patch_type.mar update/update.mar
+      echo $actual_size > update/$patch_type.size
 
     done
 }

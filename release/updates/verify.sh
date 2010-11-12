@@ -142,6 +142,17 @@ do
         fi
       fi
     done
+    if [ -f update/partial.size ] && [ -f update/complete.size ]; then
+        partial_size=`cat update/partial.size`
+        complete_size=`cat update/complete.size`
+        if [ $partial_size -gt $complete_size ]; then
+            echo "FAIL: partial updates are larger than complete updates"
+        elif [ $partial_size -eq $complete_size ]; then
+            echo "WARN: partial updates are the same size as complete updates, this should only happen for major updates"
+        else
+            echo "SUCCESS: partial updates are smaller than complete updates, all is well in the universe"
+        fi
+    fi
   done
 done < $config_file
 
