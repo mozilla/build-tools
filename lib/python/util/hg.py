@@ -1,10 +1,15 @@
 """Functions for interacting with hg"""
 import os, re, subprocess
+from urlparse import urlsplit
 
 from util.commands import run_cmd, get_output, remove_path
 
 import logging
 log = logging.getLogger(__name__)
+
+class DefaultShareBase:
+    pass
+DefaultShareBase = DefaultShareBase()
 
 def _make_absolute(repo):
     if repo.startswith("file://"):
@@ -21,6 +26,13 @@ def make_hg_url(baseurl, branch, revision, filename=None):
         return '/'.join([p.strip('/') for p in [baseurl, branch, 'rev', revision]])
     else:
         return '/'.join([p.strip('/') for p in [baseurl, branch, 'raw-file', revision, filename]])
+
+def get_repo_path(repo):
+     repo = _make_absolute(repo)
+     if repo.startswith("/"):
+         return repo.lstrip("/")
+     else:
+         return urlsplit(repo).path.lstrip("/")
 
 def get_revision(path):
     """Returns which revision directory `path` currently has checked out."""
@@ -144,47 +156,53 @@ def out(src, remote, **kwargs):
                 return None
             raise
 
-def mercurial(repo, dest, branch=None, revision=None):
+def mercurial(repo, dest, branch=None, revision=None,
+              shareBase=DefaultShareBase):
     """Makes sure that `dest` is has `revision` or `branch` checked out from
     `repo`.
 
     Do what it takes to make that happen, including possibly clobbering
     dest."""
+    dest = os.path.abspath(dest)
+    if shareBase is DefaultShareBase:
+        shareBase = os.environ.get("HG_SHARE_BASE_DIR", None)
 
-    # If dest exists, try pulling first
-    log.debug("mercurial: %s %s", repo, dest)
+    # If the working directory already exists and isn't using share we update
+    # the working directory directly from the repo, ignoring the sharing
+    # settings
     if os.path.exists(dest):
-        log.debug("%s exists, pulling", dest)
+        if not os.path.exists(os.path.join(dest, ".hg", "sharedpath")):
+            try:
+                return pull(repo, dest, branch=branch, revision=revision)
+            except subprocess.CalledProcessError:
+                log.warning("Error pulling changes into %s from %s; clobbering", dest, repo)
+                log.debug("Exception:", exc_info=True)
+                remove_path(dest)
+
+    # If that fails for any reason, and sharing is requested, we'll try to
+    # update the shared repository, and then update the working directory from
+    # that.
+    if shareBase:
+        sharedRepo = os.path.join(shareBase, get_repo_path(repo))
         try:
-            # TODO: If revision is set, try updating before pulling?
-            return pull(repo, dest, branch=branch, revision=revision)
+            mercurial(repo, sharedRepo, branch=branch, revision=revision,
+                      shareBase=None)
+            if os.path.exists(dest):
+                return update(dest, branch=branch, revision=revision)
+            else:
+                return share(sharedRepo, dest, branch=branch, revision=revision)
         except subprocess.CalledProcessError:
-            log.warning("Error pulling changes into %s from %s; clobbering", dest,
-                    repo)
+            log.warning("Error updating %s from sharedRepo (%s): ", dest, sharedRepo)
             log.debug("Exception:", exc_info=True)
             remove_path(dest)
 
-    # If it doesn't exist, clone it!
+    if not os.path.exists(os.path.dirname(dest)):
+        os.makedirs(os.path.dirname(dest))
+    # Share isn't available or has failed, clone directly from the source
     return clone(repo, dest, branch, revision)
 
 def share(source, dest, branch=None, revision=None):
-    """Uses the hg share extension to update a working dir from a shared repo
-    """
-    if os.path.exists(os.path.join(dest, ".hg", "sharedpath")):
-        log.debug("path exists, just going to update")
-        #attempt to update from the shared history. If this fails
-        try:
-            return update(dest, branch, revision)
-        except subprocess.CalledProcessError:
-            remove_path(dest)
-    log.debug("sharing hg repo to %s" % dest)
-    #fall back to creating a local clone if the share extension is unavailable
-    #or if share fails for any other reason
-    try:
-        cmd = ['hg', 'share', source, dest]
-        run_cmd(cmd)
-        return update(dest, branch, revision)
-    #if it fails for whatever reason, use mercurial() to force a local clone
-    except subprocess.CalledProcessError:
-        log.error("Failed to hg_share on hg version %s, attemping local clone" % (hg_ver(),))
-        return mercurial(source, dest, branch, revision)
+    """Creates a new working directory in "dest" that shares history with
+       "source" using Mercurial's share extension"""
+    run_cmd(['hg', 'share', source, dest])
+    return update(dest, branch=branch, revision=revision)

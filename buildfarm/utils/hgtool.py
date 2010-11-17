@@ -24,6 +24,7 @@ if __name__ == '__main__':
             propsfile=os.environ.get('PROPERTIES_FILE'),
             tbox=bool(os.environ.get('PROPERTIES_FILE')),
             loglevel=logging.INFO,
+            shared_dir=os.environ.get('HG_SHARE_BASE_DIR')
             )
     parser.add_option("-r", "--rev", dest="revision", help="which revision to update to")
     parser.add_option("-b", "--branch", dest="branch", help="which branch to update to")
@@ -70,12 +71,8 @@ if __name__ == '__main__':
         if options.shared_dir and out(options.shared_dir, repo):
             remove_path(options.shared_dir)
 
-    if options.shared_dir:
-        got_revision = mercurial(repo, options.shared_dir, options.branch, options.revision)
-        #after pulling/cloning to the shared dir, update the working dir
-        share(options.shared_dir, dest, options.branch, options.revision)
-    else:
-        got_revision = mercurial(repo, dest, options.branch, options.revision)
+    got_revision = mercurial(repo, dest, options.branch, options.revision,
+                             shareBase=options.shared_dir)
 
     if options.tbox:
         if repo.startswith("http"):

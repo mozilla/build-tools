@@ -5,7 +5,7 @@ import os
 import subprocess
 
 from util.hg import clone, pull, update, hg_ver, mercurial, _make_absolute, share, make_hg_url
-from util.commands import run_cmd, get_output, remove_path
+from util.commands import run_cmd, get_output
 
 def getRevisions(dest):
     retval = []
@@ -147,6 +147,39 @@ class TestHg(unittest.TestCase):
         rev = mercurial(self.repodir, self.wc)
         self.assertEquals(rev, self.revisions[0])
 
+    def testMercurialWithNewShare(self):
+        shareBase = os.path.join(self.tmpdir, 'share')
+        sharerepo = os.path.join(shareBase, self.repodir.lstrip("/"))
+        os.mkdir(shareBase)
+        mercurial(self.repodir, self.wc, shareBase=shareBase)
+        self.assertEquals(getRevisions(self.repodir), getRevisions(self.wc))
+        self.assertEquals(getRevisions(self.repodir), getRevisions(sharerepo))
+
+    def testMercurialWithShareBaseInEnv(self):
+        shareBase = os.path.join(self.tmpdir, 'share')
+        sharerepo = os.path.join(shareBase, self.repodir.lstrip("/"))
+        os.mkdir(shareBase)
+        try:
+            os.environ['HG_SHARE_BASE_DIR'] = shareBase
+            mercurial(self.repodir, self.wc)
+            self.assertEquals(getRevisions(self.repodir), getRevisions(self.wc))
+            self.assertEquals(getRevisions(self.repodir), getRevisions(sharerepo))
+        finally:
+            del os.environ['HG_SHARE_BASE_DIR']
+
+    def testMercurialWithExistingShare(self):
+        shareBase = os.path.join(self.tmpdir, 'share')
+        sharerepo = os.path.join(shareBase, self.repodir.lstrip("/"))
+        os.mkdir(shareBase)
+        mercurial(self.repodir, sharerepo)
+        open(os.path.join(self.repodir, 'test.txt'), 'w').write('hello!')
+        run_cmd(['hg', 'add', 'test.txt'], cwd=self.repodir)
+        run_cmd(['hg', 'commit', '-m', 'adding changeset'], cwd=self.repodir)
+        mercurial(self.repodir, self.wc, shareBase=shareBase)
+        self.assertEquals(getRevisions(self.repodir), getRevisions(self.wc))
+        self.assertEquals(getRevisions(self.repodir), getRevisions(sharerepo))
+
+
     def testMercurialRelativeDir(self):
         os.chdir(os.path.dirname(self.repodir))
 
@@ -216,13 +249,6 @@ class TestHg(unittest.TestCase):
         share(self.repodir, repo3)
         # make sure shared history is identical
         self.assertEquals(self.revisions, getRevisions(repo3))
-
-    def testShareClobber(self):
-        repo4 = os.path.join(self.tmpdir, 'repo4')
-        os.mkdir(repo4)
-        share(self.repodir, repo4)
-        # make sure that share() clobbered the empty dir and created the shared repo
-        self.assertEquals(self.revisions, getRevisions(repo4))
 
     def testMercurialShareOutgoing(self):
         # ensure that outgoing changesets in a shared clone affect the shared history
