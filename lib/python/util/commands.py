@@ -5,19 +5,32 @@ import logging
 log = logging.getLogger(__name__)
 
 def log_cmd(cmd, **kwargs):
-    cwd = kwargs.get('cwd', os.getcwd())
+    # cwd is special in that we always want it printed, even if it's not
+    # explicitly chosen
+    if 'cwd' not in kwargs:
+        kwargs['cwd'] = os.getcwd()
     log.info("command: START")
     log.info("command: arg0: %s", cmd[0])
     log.info("command: args: ['%s']",
              "', '".join(cmd[1:]).encode('unicode_escape'))
-    log.info("command: workdir: %s", cwd)
+    for key,value in kwargs.iteritems():
+        log.info("command: %s: %s", key, str(value))
     log.info("command: output:")
+
+def merge_env(env):
+    new_env = os.environ.copy()
+    new_env.update(env)
+    return new_env
 
 def run_cmd(cmd, **kwargs):
     """Run cmd (a list of arguments).  Raise subprocess.CalledProcessError if
     the command exits with non-zero.  If the command returns successfully,
     return 0."""
     log_cmd(cmd, **kwargs)
+    # We update this after logging because we don't want all of the inherited
+    # env vars muddling up the output
+    if 'env' in kwargs:
+        kwargs['env'] = merge_env(kwargs['env'])
     try:
         return subprocess.check_call(cmd, **kwargs)
     finally:
@@ -36,6 +49,8 @@ def get_output(cmd, include_stderr=False, **kwargs):
         stderr = None
 
     log_cmd(cmd, **kwargs)
+    if 'env' in kwargs:
+        kwargs['env'] = merge_env(kwargs['env'])
     try:
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=stderr,
                 **kwargs)

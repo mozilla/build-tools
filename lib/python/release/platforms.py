@@ -7,7 +7,7 @@ bouncer_platform_map = {'win32': 'win', 'win64': 'win64', 'macosx': 'osx',
 # buildbot -> ftp platform mapping
 ftp_platform_map = {'win32': 'win32', 'win64': 'win64', 'macosx': 'mac',
                     'linux': 'linux-i686', 'linux64': 'linux-x86_64',
-                    'macosx64': 'mac64'}
+                    'macosx64': 'mac64', 'android': 'android-r7'}
 # buildbot -> shipped-locales platform mapping
 # TODO: make sure 'win64' is correct when shipped-locales becomes aware of it
 sl_platform_map = {'win32': 'win32', 'win64': 'win64', 'macosx': 'osx',

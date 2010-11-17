@@ -21,6 +21,8 @@ example:
 
 import os, shutil, re, sys
 
+DEFAULT_BASE_DIRS=["..", "/scratchbox/users/cltbld/home/cltbld/build"]
+
 clobber_suffix='.deleteme'
 
 if sys.platform == 'win32':
@@ -148,9 +150,13 @@ will be listed in the order in which they would be deleted.''')
             has an mtime older than this, it will be deleted, regardless of how
             much free space is required.  Set to 0 to disable.''')
 
-    options, args = parser.parse_args()
+    options, base_dirs = parser.parse_args()
 
-    if len(args) < 1:
+    if len(base_dirs) < 1:
+        for d in DEFAULT_BASE_DIRS:
+            if os.path.exists(d):
+                base_dirs.append(d)
+    if len(base_dirs) < 1:
         parser.error("Must specify one or more base_dirs")
         sys.exit(1)
 
@@ -160,8 +166,8 @@ will be listed in the order in which they would be deleted.''')
     else:
         cutoff_time = None
 
-    purge(args, options.size, options.skip, cutoff_time, options.dry_run)
-    after = freespace(args[0])/(1024*1024*1024.0)
+    purge(base_dirs, options.size, options.skip, cutoff_time, options.dry_run)
+    after = freespace(base_dirs[0])/(1024*1024*1024.0)
     if after < options.size:
         print "Error: unable to free %1.2f GB of space. " % options.size + \
               "Free space only %1.2f GB" % after

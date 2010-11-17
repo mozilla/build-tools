@@ -1,6 +1,4 @@
 """Helper functions to handle file operations"""
-import os
-
 import logging
 log = logging.getLogger(__name__)
 

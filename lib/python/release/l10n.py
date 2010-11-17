@@ -1,9 +1,14 @@
-import sys
 from urllib2 import urlopen
 from urlparse import urljoin
 
+from release.platforms import buildbot2ftp, getPlatformLocales
+from release.versions import getPrettyVersion
+
+import logging
+log = logging.getLogger(__name__)
+
 def getShippedLocales(product, appName, version, buildNumber, sourceRepo,
-                      hg='http://hg.mozilla.org', verbose=False):
+                      hg='http://hg.mozilla.org'):
     tag = '%s_%s_BUILD%s' % (product.upper(), version.replace('.', '_'),
                              str(buildNumber))
     file = '%s/raw-file/%s/%s/locales/shipped-locales' % \
@@ -12,8 +17,7 @@ def getShippedLocales(product, appName, version, buildNumber, sourceRepo,
     try:
         sl = urlopen(url).read()
     except:
-        if verbose:
-            print >>sys.stderr, "Failed to retrieve %s" % url
+        log.error("Failed to retrieve %s", url)
         raise
     return sl
 
@@ -42,3 +46,50 @@ def getL10nRepositories(file, l10nRepoPath, relbranch):
 
     return repositories
 
+
+def makeReleaseRepackUrls(productName, brandName, version, platform,
+                          locale='en-US'):
+    longVersion = getPrettyVersion(version)
+    platformDir = buildbot2ftp(platform)
+    builds = {}
+    if platform.startswith('linux'):
+        filename = '%s.tar.bz2' % productName
+        builds[filename] = '/'.join([p.strip('/') for p in [
+            platformDir, locale, '%s-%s.tar.bz2' % (productName, version)]])
+    elif platform.startswith('macosx'):
+        filename = '%s.dmg' % productName
+        builds[filename] = '/'.join([p.strip('/') for p in [
+            platformDir, locale, '%s %s.dmg' % (brandName, longVersion)]])
+    elif platform.startswith('win'):
+        filename = '%s.zip' % productName
+        instname = '%s.exe' % productName
+        builds[filename] = '/'.join([p.strip('/') for p in [
+            'unsigned', platformDir, locale,
+            '%s-%s.zip' % (productName, version)]])
+        builds[instname] = '/'.join([p.strip('/') for p in [
+            'unsigned', platformDir, locale,
+            '%s Setup %s.exe' % (brandName, longVersion)]])
+    else:
+        raise "Unsupported platform"
+    
+    return builds
+
+def getLocalesForChunk(productName, appName, version, buildNumber, sourceRepo,
+                       platform, chunks, thisChunk, hg='http://hg.mozilla.org'):
+    possibleLocales = getPlatformLocales(
+        getShippedLocales(productName, appName, version, buildNumber,
+                          sourceRepo, hg),
+        (platform,)
+    )[platform]
+    if 'en-US' in possibleLocales:
+        possibleLocales.remove('en-US')
+    nLocales = len(possibleLocales)
+    for c in range(1, chunks+1):
+        n = nLocales / chunks
+        # If the total number of locales isn't evenly divisible by the number
+        # of chunks we need to append one more onto some chunks
+        if c <= (nLocales % chunks):
+            n += 1
+        if c == thisChunk:
+            return possibleLocales[0:n]
+        del possibleLocales[0:n]
