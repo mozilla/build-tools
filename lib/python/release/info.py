@@ -1,4 +1,6 @@
+from datetime import datetime
 import sys
+from time import strftime
 from urllib2 import urlopen
 
 from release.paths import makeCandidatesDir
@@ -38,3 +40,19 @@ def findOldBuildIDs(product, version, buildNumber, platforms,
                 if verbose:
                     print >>sys.stderr, "Hit exception: %s" % e
     return ids
+
+def readReleaseConfig(configfile):
+    c = {}
+    execfile(configfile, c)
+    return c['releaseConfig']
+
+def getTags(baseTag, buildNumber, buildTag=True):
+    t = ['%s_RELEASE' % baseTag]
+    if buildTag:
+        t.append('%s_BUILD%d' % (baseTag, int(buildNumber)))
+    return t
+
+def generateRelbranchName(milestone, prefix='GECKO'):
+    return '%s%s_%s_RELBRANCH' % (
+      prefix, milestone.replace('.', ''),
+      datetime.now().strftime('%Y%m%d'))

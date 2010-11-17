@@ -11,6 +11,9 @@ class DefaultShareBase:
     pass
 DefaultShareBase = DefaultShareBase()
 
+class HgUtilError(Exception):
+    pass
+
 def _make_absolute(repo):
     if repo.startswith("file://"):
         path = repo[len("file://"):]
@@ -19,13 +22,20 @@ def _make_absolute(repo):
         repo = os.path.abspath(repo)
     return repo
 
-def make_hg_url(baseurl, branch, revision, filename=None):
+def make_hg_url(hgHost, repoPath, protocol='http', revision=None,
+                filename=None):
     """construct a valid hg url from a base hg url (hg.mozilla.org),
-    branch, revision and possible filename"""
+    repoPath, revision and possible filename"""
+    base = '%s://%s' % (protocol, hgHost)
+    repo = '/'.join(p.strip('/') for p in [base, repoPath])
     if not filename:
-        return '/'.join([p.strip('/') for p in [baseurl, branch, 'rev', revision]])
+        if not revision:
+            return repo
+        else:
+            return '/'.join([p.strip('/') for p in [repo, 'rev', revision]])
     else:
-        return '/'.join([p.strip('/') for p in [baseurl, branch, 'raw-file', revision, filename]])
+        assert revision
+        return '/'.join([p.strip('/') for p in [repo, 'raw-file', revision, filename]])
 
 def get_repo_path(repo):
      repo = _make_absolute(repo)
@@ -37,6 +47,9 @@ def get_repo_path(repo):
 def get_revision(path):
     """Returns which revision directory `path` currently has checked out."""
     return get_output(['hg', 'parent', '--template', '{node|short}'], cwd=path)
+
+def get_branch(path):
+    return get_output(['hg', 'branch'], cwd=path).strip()
 
 def hg_ver():
     """Returns the current version of hg, as a tuple of
@@ -156,6 +169,14 @@ def out(src, remote, **kwargs):
                 return None
             raise
 
+def push(src, remote, **kwargs):
+    cmd = ['hg', 'push']
+    cmd.extend(common_args(**kwargs))
+    if 'branch' in kwargs and kwargs['branch']:
+        cmd.append('--new-branch')
+    cmd.append(remote)
+    run_cmd(cmd, cwd=src)
+
 def mercurial(repo, dest, branch=None, revision=None,
               shareBase=DefaultShareBase):
     """Makes sure that `dest` is has `revision` or `branch` checked out from
@@ -200,6 +221,45 @@ def mercurial(repo, dest, branch=None, revision=None,
         os.makedirs(os.path.dirname(dest))
     # Share isn't available or has failed, clone directly from the source
     return clone(repo, dest, branch, revision)
+
+def apply_and_push(localrepo, remote, changer, max_attempts=10,
+                   ssh_username=None, ssh_key=None):
+    """This function calls `changer' to make changes to the repo, and tries
+       its hardest to get them to the origin repo. `changer' must be a
+       callable object that receives two arguments: the directory of the local
+       repository, and the attempt number"""
+    assert callable(changer)
+    branch = get_branch(localrepo)
+    changer(localrepo, 1)
+    for n in range(1, max_attempts+1):
+        tip = get_revision(localrepo)
+        new_revs = out(src=localrepo, remote=remote, revision=tip,
+                       branch=branch, ssh_username=ssh_username,
+                       ssh_key=ssh_key)
+        if not new_revs:
+            raise HgUtilError("No revs to push")
+        try:
+            push(src=localrepo, remote=remote, revision=tip, branch=branch,
+                 ssh_username=ssh_username, ssh_key=ssh_key)
+            return
+        except subprocess.CalledProcessError, e:
+            log.debug("Hit error when trying to push: %s" % str(e))
+            if n == max_attempts:
+                log.debug("Tried %d times, giving up" % max_attempts)
+                raise HgUtilError("Failed to push")
+            pull(remote, localrepo, update_dest=False,
+                 ssh_username=ssh_username, ssh_key=ssh_key)
+            # After we successfully rebase or strip away heads the push is
+            # is attempted again at the start of the loop
+            try:
+                run_cmd(['hg', 'rebase'], cwd=localrepo)
+            except subprocess.CalledProcessError, e:
+                log.debug("Failed to rebase: %s" % str(e))
+                update(localrepo, branch=branch)
+                new_revs.reverse()
+                for r in new_revs:
+                    run_cmd(['hg', 'strip', r], cwd=localrepo)  
+                changer(localrepo, n+1)
 
 def share(source, dest, branch=None, revision=None):
     """Creates a new working directory in "dest" that shares history with

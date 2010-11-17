@@ -19,3 +19,26 @@ def getShippedLocales(product, appName, version, buildNumber, sourceRepo,
 
 def getCommonLocales(a, b):
     return [locale for locale in a if locale in b]
+
+def getL10nRepositories(file, l10nRepoPath, relbranch):
+    """Reads in a list of locale names and revisions for their associated
+       repository from 'file'.
+    """
+    # urljoin() will strip the last part of l10nRepoPath it doesn't end with "/"
+    if not l10nRepoPath.endswith('/'):
+        l10nRepoPath = l10nRepoPath + '/'
+    repositories = {}
+    for localeLine in open(file).readlines():
+        locale, revision = localeLine.rstrip().split()
+        if revision == 'FIXME':
+            raise Exception('Found FIXME in %s for locale "%s"' % \
+                           (file, locale))
+        locale = urljoin(l10nRepoPath, locale)
+        repositories[locale] = {
+            'revision': revision,
+            'relbranchOverride': relbranch,
+            'bumpFiles': []
+        }
+
+    return repositories
+

@@ -45,10 +45,10 @@ def sendchange(branch, username, master):
     log.info("Executing: %s" % cmd)
     run_cmd(cmd)
 
-def verify_repo(branch, revision, hgurl):
+def verify_repo(branch, revision, hghost):
     """Poll the hgweb interface for a given branch and revision to
        make sure it exists"""
-    repo_url = make_hg_url(hgurl, branch, revision)
+    repo_url = make_hg_url(hghost, branch, revision=revision)
     log.info("Checking for existence of %s..." % repo_url)
     success = True
     try:
@@ -59,26 +59,26 @@ def verify_repo(branch, revision, hgurl):
         success = False
     return success
 
-def verify_build(branch, revision, hgurl, version, milestone):
+def verify_build(branch, revision, hghost, version, milestone):
     """Pull down the version.txt, milestone.txt and js/src/config/milestone.txt
        and make sure it matches the release configs"""
     version_url = make_hg_url(
-            hgurl,
+            hghost,
             branch,
-            revision,
-            'browser/config/version.txt'
+            revision=revision,
+            filename='browser/config/version.txt'
             )
     milestone_url = make_hg_url(
-            hgurl,
+            hghost,
             branch,
-            revision,
-            'config/milestone.txt'
+            revision=revision,
+            filename='config/milestone.txt'
             )
     js_milestone_url = make_hg_url(
-            hgurl,
+            hghost,
             branch,
-            revision,
-            'js/src/config/milestone.txt'
+            revision=revision,
+            filename='js/src/config/milestone.txt'
             )
     success = True
     try:
@@ -100,13 +100,13 @@ def verify_build(branch, revision, hgurl, version, milestone):
 
     return success
 
-def verify_configs(branch, revision, hgurl, configs_repo, staging, changesets):
+def verify_configs(branch, revision, hghost, configs_repo, staging, changesets):
     """Check the release_configs and l10n-changesets against tagged revisions"""
     if staging:
-        configs_url = make_hg_url(hgurl, configs_repo, revision, "mozilla/staging_release-firefox-%s.py" % branch)
+        configs_url = make_hg_url(hghost, configs_repo, revision=revision, filename="mozilla/staging_release-firefox-%s.py" % branch)
     else:
-        configs_url = make_hg_url(hgurl, configs_repo, revision, "mozilla/release-firefox-%s.py" % branch)
-    l10n_url = make_hg_url(hgurl, configs_repo, revision, "mozilla/%s" % changesets)
+        configs_url = make_hg_url(hghost, configs_repo, revision=revision, filename="mozilla/release-firefox-%s.py" % branch)
+    l10n_url = make_hg_url(hghost, configs_repo, revision=revision, filename="mozilla/%s" % changesets)
 
     success = True
     try:
@@ -199,7 +199,7 @@ if __name__ == '__main__':
         if not verify_configs(
                 options.branch,
                 "%s_BUILD%s" % (releaseConfig['baseTag'], options.buildNumber),
-                branchConfig['hgurl'],
+                branchConfig['hghost'],
                 GLOBAL_VARS['config_repo_path'],
                 options.staging,
                 releaseConfig['l10nRevisionFile'],
@@ -211,7 +211,7 @@ if __name__ == '__main__':
         if not verify_repo(
                 releaseConfig['sourceRepoPath'],
                 releaseConfig['sourceRepoRevision'],
-                branchConfig['hgurl']
+                branchConfig['hghost']
                 ):
             test_success = False
             log.error("Error verifying repos")
@@ -221,7 +221,7 @@ if __name__ == '__main__':
             if not verify_build(
                     releaseConfig['sourceRepoPath'],
                     releaseConfig['sourceRepoRevision'],
-                    branchConfig['hgurl'],
+                    branchConfig['hghost'],
                     releaseConfig['version'],
                     releaseConfig['milestone']
                     ):

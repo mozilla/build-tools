@@ -31,8 +31,7 @@ Bump();
 sub ProcessArgs {
     GetOptions(
         \%config,
-        "workdir|w=s", "release-tag|t=s", "app|a=s", "version|v=s",
-        "milestone|m=s", "help|h"
+        "workdir|w=s", "app|a=s", "version|v=s", "milestone|m=s", "help|h"
     );
 
     if ($config{'help'}) {
@@ -40,7 +39,6 @@ sub ProcessArgs {
         print "        list of files to bump\n";
         print "  -w The directory containing files to bump.\n";
         print "     Must be the root of a mozilla tree.\n";
-        print "  -t The current release tag (eg. FIREFOX_3_1a1_RELEASE).\n";
         print "  -a The app name (eg. browser, mail, etc.).\n";
         print "  -v The current version of the app (eg. 3.1a1, 3.0.1, etc.).\n";
         print "  -m The current milestone of the platform (eg, 1.8.1.1).\n";
@@ -55,10 +53,6 @@ sub ProcessArgs {
 
     if (! -e $config{'workdir'}) {
         print "workdir must exist.\n";
-        $error = 1;
-    }
-    if (! defined $config{'release-tag'}) {
-        print "release-tag must be defined.\n";
         $error = 1;
     }
     if (! defined $config{'app'}) {
@@ -82,7 +76,6 @@ sub ProcessArgs {
 
 sub Bump {
     my $workDir = $config{'workdir'};
-    my $releaseTag = $config{'release-tag'};
     my $appName = $config{'app'};
     my $appVersion = $config{'version'};
     my $milestone = $config{'milestone'};
@@ -106,21 +99,7 @@ sub Bump {
     
         # Order or searching for these values is not preserved, so make
         # sure that the order replacement happens does not matter.
-        if ($fileName eq 'client.mk') {
-            %searchReplace = (
-             # MOZ_CO_TAG is commented out on some branches, make sure to
-             # accommodate that
-             '^#?MOZ_CO_TAG\s+=.+$' =>
-              'MOZ_CO_TAG           = ' . $releaseTag,
-             '^NSPR_CO_TAG\s+=\s+\w*' =>
-              'NSPR_CO_TAG          = ' . $releaseTag,
-             '^NSS_CO_TAG\s+=\s+\w*' =>
-              'NSS_CO_TAG           = ' . $releaseTag,
-             '^LOCALES_CO_TAG\s+=.*$' =>
-              'LOCALES_CO_TAG       = ' . $releaseTag,
-             '^LDAPCSDK_CO_TAG\s+=.*$' =>
-              'LDAPCSDK_CO_TAG      = ' . $releaseTag);
-        } elsif ($fileName =~ /$versionTxt/) {
+        if ($fileName =~ /$versionTxt/) {
             %searchReplace = ('^' . $VERSION_REGEXP . '$' => $appVersion);
         } elsif ($fileName =~ $winmoVersionTxt or
                  $fileName =~ $defaultVersionTxt or

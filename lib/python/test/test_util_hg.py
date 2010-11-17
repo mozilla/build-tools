@@ -4,7 +4,8 @@ import shutil
 import os
 import subprocess
 
-from util.hg import clone, pull, update, hg_ver, mercurial, _make_absolute, share, make_hg_url
+from util.hg import clone, pull, update, hg_ver, mercurial, _make_absolute, \
+  share, push, apply_and_push, HgUtilError, make_hg_url, get_branch
 from util.commands import run_cmd, get_output
 
 def getRevisions(dest):
@@ -17,7 +18,7 @@ def getRevisions(dest):
     return retval
 
 class TestMakeAbsolute(unittest.TestCase):
-    def testAboslutePath(self):
+    def testAbsolutePath(self):
         self.assertEquals(_make_absolute("/foo/bar"), "/foo/bar")
 
     def testRelativePath(self):
@@ -46,6 +47,11 @@ class TestHg(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
         os.chdir(self.pwd)
+
+    def testGetBranch(self):
+        clone(self.repodir, self.wc)
+        b = get_branch(self.wc)
+        self.assertEquals(b, 'default')
 
     def testClone(self):
         rev = clone(self.repodir, self.wc, update_dest=False)
@@ -143,6 +149,22 @@ class TestHg(unittest.TestCase):
         # Try and pull in changes from the new repo
         self.assertRaises(subprocess.CalledProcessError, pull, repo2, self.wc, update_dest=False)
 
+    def testPush(self):
+        clone(self.repodir, self.wc, revision=self.revisions[-2])
+        push(src=self.repodir, remote=self.wc)
+        self.assertEquals(getRevisions(self.wc), self.revisions)
+
+    def testPushWithBranch(self):
+        clone(self.repodir, self.wc, revision=self.revisions[-1])
+        push(src=self.repodir, remote=self.wc, branch='branch2')
+        push(src=self.repodir, remote=self.wc, branch='default')
+        self.assertEquals(getRevisions(self.wc), self.revisions)
+
+    def testPushWithRevision(self):
+        clone(self.repodir, self.wc, revision=self.revisions[-2])
+        push(src=self.repodir, remote=self.wc, revision=self.revisions[-1])
+        self.assertEquals(getRevisions(self.wc), self.revisions[-2:])
+
     def testMercurial(self):
         rev = mercurial(self.repodir, self.wc)
         self.assertEquals(rev, self.revisions[0])
@@ -236,13 +258,39 @@ class TestHg(unittest.TestCase):
     def testMakeHGUrl(self):
         #construct an hg url specific to revision, branch and filename and try to pull it down
         file_url = make_hg_url(
-                "http://hg.mozilla.org",
+                "hg.mozilla.org",
                 '//build/tools/',
-                'FIREFOX_3_6_12_RELEASE',
-                "/lib/python/util/hg.py"
+                revision='FIREFOX_3_6_12_RELEASE',
+                filename="/lib/python/util/hg.py"
                 )
         expected_url = "http://hg.mozilla.org/build/tools/raw-file/FIREFOX_3_6_12_RELEASE/lib/python/util/hg.py"
         self.assertEquals(file_url, expected_url)
+
+    def testMakeHGUrlNoFilename(self):
+        file_url = make_hg_url(
+                "hg.mozilla.org",
+                "/build/tools",
+                revision="default"
+        )
+        expected_url = "http://hg.mozilla.org/build/tools/rev/default"
+        self.assertEquals(file_url, expected_url)
+
+    def testMakeHGUrlNoRevisionNoFilename(self):
+        repo_url = make_hg_url(
+                "hg.mozilla.org",
+                "/build/tools"
+        )
+        expected_url = "http://hg.mozilla.org/build/tools"
+        self.assertEquals(repo_url, expected_url)
+
+    def testMakeHGUrlDifferentProtocol(self):
+        repo_url = make_hg_url(
+                "hg.mozilla.org",
+                "/build/tools",
+                protocol='ssh'
+        )
+        expected_url = "ssh://hg.mozilla.org/build/tools"
+        self.assertEquals(repo_url, expected_url)
 
     def testShareRepo(self):
         repo3 = os.path.join(self.tmpdir, 'repo3')
@@ -263,3 +311,53 @@ class TestHg(unittest.TestCase):
         self.assertNotEquals(self.revisions, getRevisions(repo6))
         self.assertNotEquals(self.revisions, getRevisions(repo5))
         self.assertEquals(getRevisions(repo5), getRevisions(repo6))
+
+    def testApplyAndPush(self):
+        clone(self.repodir, self.wc)
+        def c(repo, attempt):
+            run_cmd(['hg', 'tag', '-f', 'TEST'], cwd=repo)
+        apply_and_push(self.wc, self.repodir, c)
+        self.assertEquals(getRevisions(self.wc), getRevisions(self.repodir))
+
+    def testApplyAndPushFail(self):
+        clone(self.repodir, self.wc)
+        def c(repo, attempt, remote):
+            run_cmd(['hg', 'tag', '-f', 'TEST'], cwd=repo)
+            run_cmd(['hg', 'tag', '-f', 'CONFLICTING_TAG'], cwd=remote)
+        self.assertRaises(HgUtilError, apply_and_push, self.wc, self.repodir,
+                          lambda r, a: c(r, a, self.repodir), max_attempts=2)
+
+    def testApplyAndPushWithRebase(self):
+        clone(self.repodir, self.wc)
+        def c(repo, attempt, remote):
+            run_cmd(['hg', 'tag', '-f', 'TEST'], cwd=repo)
+            if attempt == 1:
+                run_cmd(['hg', 'rm', 'hello.txt'], cwd=remote)
+                run_cmd(['hg', 'commit', '-m', 'test'], cwd=remote)
+        apply_and_push(self.wc, self.repodir,
+                       lambda r, a: c(r, a, self.repodir), max_attempts=2)
+        self.assertEquals(getRevisions(self.wc), getRevisions(self.repodir))
+
+    def testApplyAndPushRebaseFails(self):
+        clone(self.repodir, self.wc)
+        def c(repo, attempt, remote):
+            run_cmd(['hg', 'tag', '-f', 'TEST'], cwd=repo)
+            if attempt in (1,2):
+                run_cmd(['hg', 'tag', '-f', 'CONFLICTING_TAG'], cwd=remote)
+        apply_and_push(self.wc, self.repodir,
+                       lambda r, a: c(r, a, self.repodir), max_attempts=3)
+        self.assertEquals(getRevisions(self.wc), getRevisions(self.repodir))
+
+    def testApplyAndPushOnBranch(self):
+        clone(self.repodir, self.wc)
+        def c(repo, attempt):
+            run_cmd(['hg', 'branch', 'branch3'], cwd=repo)
+            run_cmd(['hg', 'tag', '-f', 'TEST'], cwd=repo)
+        apply_and_push(self.wc, self.repodir, c)
+        self.assertEquals(getRevisions(self.wc), getRevisions(self.repodir))
+
+    def testApplyAndPushWithNoChange(self):
+        clone(self.repodir, self.wc)
+        def c(r,a):
+            pass
+        self.assertRaises(HgUtilError, apply_and_push, self.wc, self.repodir, c)

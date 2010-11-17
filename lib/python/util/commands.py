@@ -4,15 +4,24 @@ import subprocess, os
 import logging
 log = logging.getLogger(__name__)
 
+def log_cmd(cmd, **kwargs):
+    cwd = kwargs.get('cwd', os.getcwd())
+    log.info("command: START")
+    log.info("command: arg0: %s", cmd[0])
+    log.info("command: args: ['%s']",
+             "', '".join(cmd[1:]).encode('unicode_escape'))
+    log.info("command: workdir: %s", cwd)
+    log.info("command: output:")
+
 def run_cmd(cmd, **kwargs):
     """Run cmd (a list of arguments).  Raise subprocess.CalledProcessError if
     the command exits with non-zero.  If the command returns successfully,
     return 0."""
-    if 'cwd' in kwargs and kwargs['cwd']:
-        log.info("%s in %s", " ".join(cmd), kwargs['cwd'])
-    else:
-        log.info(" ".join(cmd))
-    return subprocess.check_call(cmd, **kwargs)
+    log_cmd(cmd, **kwargs)
+    try:
+        return subprocess.check_call(cmd, **kwargs)
+    finally:
+        log.info("command: END\n")
 
 def get_output(cmd, include_stderr=False, **kwargs):
     """Run cmd (a list of arguments) and return the output.  If include_stderr
@@ -26,18 +35,19 @@ def get_output(cmd, include_stderr=False, **kwargs):
     else:
         stderr = None
 
-    if 'cwd' in kwargs and kwargs['cwd']:
-        log.info("%s in %s", " ".join(cmd), kwargs['cwd'])
-    else:
-        log.info(" ".join(cmd))
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=stderr,
-            **kwargs)
-    proc.wait()
-    if proc.returncode != 0:
-        raise subprocess.CalledProcessError(proc.returncode, cmd)
-    output = proc.stdout.read()
-    return output
-
+    log_cmd(cmd, **kwargs)
+    try:
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=stderr,
+                **kwargs)
+        proc.wait()
+        if proc.returncode != 0:
+            raise subprocess.CalledProcessError(proc.returncode, cmd)
+        output = proc.stdout.read()
+        log.info(output)
+        return output
+    finally:
+        log.info("command: END\n")
+        
 def remove_path(path):
     """This is a replacement for shutil.rmtree that works better under
     windows. Thanks to Bear at the OSAF for the code.
