@@ -134,9 +134,6 @@ def verify_configs(branch, revision, hghost, configs_repo, staging, changesets):
 def verify_options(cmd_options, config):
     """Check release_configs against command-line opts"""
     success = True
-    if cmd_options.branch != config['sourceRepoName']:
-        log.error("branch passed in does not match release_configs")
-        success = False
     if cmd_options.version != config['version']:
         log.error("version passed in does not match release_configs")
         success = False
