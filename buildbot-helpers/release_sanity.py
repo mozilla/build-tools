@@ -13,6 +13,7 @@ from optparse import OptionParser
 from util.commands import run_cmd
 from util.file import compare
 from util.hg import make_hg_url
+from release.info import readReleaseConfig
 import logging
 log = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ def reconfig():
     """reconfig the master in the cwd"""
     run_cmd(['make', 'reconfig'])
 
-def sendchange(branch, username, master):
+def sendchange(branch, revision, username, master):
     """Send the change to buildbot to kick off the release automation"""
     cmd = [
        'buildbot',
@@ -40,6 +41,8 @@ def sendchange(branch, username, master):
        master,
        '--branch',
        branch,
+       '--revision',
+       revision,
        'release_build'
        ]
     log.info("Executing: %s" % cmd)
@@ -141,7 +144,6 @@ def verify_options(cmd_options, config):
     return success
 
 if __name__ == '__main__':
-    from release_config import releaseConfig
     from localconfig import GLOBAL_VARS
     parser = OptionParser(__doc__)
     parser.set_defaults(
@@ -172,16 +174,20 @@ if __name__ == '__main__':
     options, args = parser.parse_args()
     if not options.dryrun and not args:
         parser.error("Need to provide a master to sendchange to, or -d for a dryrun")
+    elif not options.branch:
+        parser.error("Need to provide a branch to release")
 
     logging.basicConfig(level=options.loglevel,
             format="%(asctime)s : %(levelname)s : %(message)s")
 
+    if options.staging:
+        releaseConfig = readReleaseConfig("staging_release-firefox-%s.py" % options.branch)
+    else:
+        releaseConfig = readReleaseConfig("release-firefox-%s.py" % options.branch)
+
     if not options.version:
         log.warn("No version specified, using version in release_config, which may be out of date!")
         options.version = releaseConfig['version']
-    if not options.branch:
-        log.warn("No branch specified, using sourceRepoName in release_config, which may be out of date!")
-        options.branch = releaseConfig['sourceRepoName']
     if not options.buildNumber:
         log.warn("No buildNumber specified, using buildNumber in release_config, which may be out of date!")
         options.buildNumber = releaseConfig['buildNumber']
@@ -232,6 +238,7 @@ if __name__ == '__main__':
             reconfig()
             sendchange(
                     releaseConfig['sourceRepoPath'],
+                    "%s_RELEASE" % releaseConfig['baseTag'],
                     options.username,
                     args[0]
                     )
