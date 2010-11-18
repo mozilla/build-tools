@@ -30,7 +30,7 @@ def reconfig():
     """reconfig the master in the cwd"""
     run_cmd(['make', 'reconfig'])
 
-def sendchange(branch, revision, username, master):
+def sendchange(branch, revision, username, master, configfile):
     """Send the change to buildbot to kick off the release automation"""
     cmd = [
        'buildbot',
@@ -43,6 +43,8 @@ def sendchange(branch, revision, username, master):
        branch,
        '--revision',
        revision,
+       '-p',
+       'release_config:mozilla/%s' % configfile,
        'release_build'
        ]
     log.info("Executing: %s" % cmd)
@@ -181,9 +183,10 @@ if __name__ == '__main__':
             format="%(asctime)s : %(levelname)s : %(message)s")
 
     if options.staging:
-        releaseConfig = readReleaseConfig("staging_release-firefox-%s.py" % options.branch)
+        releaseConfigFile = "staging_release-firefox-%s.py" % options.branch
     else:
-        releaseConfig = readReleaseConfig("release-firefox-%s.py" % options.branch)
+        releaseConfigFile = "release-firefox-%s.py" % options.branch
+    releaseConfig = readReleaseConfig(releaseConfigFile)
 
     if not options.version:
         log.warn("No version specified, using version in release_config, which may be out of date!")
@@ -229,7 +232,7 @@ if __name__ == '__main__':
                     releaseConfig['sourceRepoRevision'],
                     branchConfig['hghost'],
                     releaseConfig['version'],
-                    releaseConfig['milestone']
+                    releaseConfig['milestone'],
                     ):
                 test_success = False
 
@@ -240,7 +243,8 @@ if __name__ == '__main__':
                     releaseConfig['sourceRepoPath'],
                     "%s_RELEASE" % releaseConfig['baseTag'],
                     options.username,
-                    args[0]
+                    args[0],
+                    releaseConfigFile,
                     )
         else:
             log.info("Tests Passed! Did not run reconfig/sendchange. Rerun without `-d`")
