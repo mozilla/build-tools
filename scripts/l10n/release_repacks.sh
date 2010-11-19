@@ -19,7 +19,7 @@ branchConfig=$2
 chunks=$3
 thisChunk=$4
 
-branch=$($JSONTOOL -k properties.branch $PROPERTIES_FILE)
+branch=$(basename $($JSONTOOL -k properties.branch $PROPERTIES_FILE))
 builder=$($JSONTOOL -k properties.buildername $PROPERTIES_FILE)
 builddir=$($JSONTOOL -k properties.builddir $PROPERTIES_FILE)
 slavename=$($JSONTOOL -k properties.slavename $PROPERTIES_FILE)
