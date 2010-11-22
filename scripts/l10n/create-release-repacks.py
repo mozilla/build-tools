@@ -163,7 +163,11 @@ if __name__ == "__main__":
     else:
         locales = options.locales
 
-    l10nRepoDir = path.split(releaseConfig["l10nRepoClonePath"])[-1]
+    try:
+        l10nRepoDir = path.split(releaseConfig["l10nRepoClonePath"])[-1]
+    except KeyError:
+        l10nRepoDir = path.split(releaseConfig["l10nRepoPath"])
+
     stageSshKey = path.join("~", ".ssh", branchConfig["stage_ssh_key"])
 
     createRepacks(
