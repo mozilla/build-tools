@@ -56,7 +56,7 @@ def fileInfo(filepath, product):
                 'contents': m.group(5),
                 'format': m.group(6),
                 'pathstyle': 'short',
-                'leading_path' : None,
+                'leading_path' : '',
                }
     except:
         # Mozilla 1.9.1 and on style (aka 'long') paths
@@ -73,7 +73,7 @@ def fileInfo(filepath, product):
             ret['product'] = m.group(3)
             ret['version'] = m.group(4)
             ret['contents'] = m.group(5)
-            ret['leading_path'] = None
+            ret['leading_path'] = ''
         elif filepath.endswith('.exe'):
             ret['format'] = 'exe'
             m = re.search("(partner-repacks/\w+/|)(win32|mac|linux-i686)/([-a-zA-Z]+)/((?i)%s) Setup (\d+\.\d+(?:\.\d+)?(?:\w+\d+)?(?:\ \w+\ \d+)?)\.exe" % product, filepath)
