@@ -108,16 +108,18 @@ def verify_build(branch, revision, hghost, version, milestone):
 def verify_configs(branch, revision, hghost, configs_repo, staging, changesets):
     """Check the release_configs and l10n-changesets against tagged revisions"""
     if staging:
-        configs_url = make_hg_url(hghost, configs_repo, revision=revision, filename="mozilla/staging_release-firefox-%s.py" % branch)
+        filename = "staging_release-firefox-%s.py" % branch
+        configs_url = make_hg_url(hghost, configs_repo, revision=revision, filename="mozilla/%s" % filename)
     else:
-        configs_url = make_hg_url(hghost, configs_repo, revision=revision, filename="mozilla/release-firefox-%s.py" % branch)
+        filename = "release-firefox-%s.py" % branch
+        configs_url = make_hg_url(hghost, configs_repo, revision=revision, filename="mozilla/%s" % filename)
     l10n_url = make_hg_url(hghost, configs_repo, revision=revision, filename="mozilla/%s" % changesets)
 
     success = True
     try:
         official_configs = urllib2.urlopen(configs_url)
-        log.info("Comparing tagged revision %s to on-disk release_config.py ..." % configs_url)
-        if not compare(official_configs, 'release_config.py'):
+        log.info("Comparing tagged revision %s to on-disk %s ..." % (configs_url, filename))
+        if not compare(official_configs, filename):
             log.error("local configs do not match tagged revisions in repo")
             success = False
         l10n_changesets = urllib2.urlopen(l10n_url)
