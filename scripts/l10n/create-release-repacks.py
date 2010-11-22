@@ -166,7 +166,7 @@ if __name__ == "__main__":
     try:
         l10nRepoDir = path.split(releaseConfig["l10nRepoClonePath"])[-1]
     except KeyError:
-        l10nRepoDir = path.split(releaseConfig["l10nRepoPath"])
+        l10nRepoDir = path.split(releaseConfig["l10nRepoPath"])[-1]
 
     stageSshKey = path.join("~", ".ssh", branchConfig["stage_ssh_key"])
 
