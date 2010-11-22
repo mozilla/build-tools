@@ -74,7 +74,7 @@ REQUIRED_BRANCH_CONFIG = ("stage_server", "stage_username", "stage_ssh_key",
                           "compare_locales_repo_path", "hghost")
 REQUIRED_RELEASE_CONFIG = ("sourceRepoPath", "l10nRepoPath", "appName",
                            "productName", "version", "buildNumber",
-                           "sourceRepoName", "l10nRepoClonePath")
+                           "sourceRepoName")
 
 def validate(options, args):
     err = False
