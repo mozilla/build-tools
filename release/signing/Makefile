@@ -192,7 +192,7 @@ sign-installers:
 	# Sign win32 installers.
 	cd $(WORKDIR)/signed-build$(BUILD)/win32 && ../../signing/sign-release $(KEYDIR)
 
-sign2: sign-files checksum-files create-sigs verify-sigs
+sign2: sign-files checksum-files create-sigs verify-sigs quick-verify
 
 sign-files:
 	blat -to $(EMAIL) \
@@ -302,6 +302,17 @@ fake-upload:
 	     -body "EOM"
 
 postsign: upload upload-log verify-signatures2
+
+quick-verify:
+	if ./verify-signature.py --product $(BRAND_NAME) unsigned-build$(BUILD) \
+        --quick-verify signed-build$(BUILD) > quick-verify-signatures-build${BUILD}.log 2>&1; then \
+	    blat -to $(EMAIL) \
+		 -subject "Quick Signature verification succeeded"\
+		 -body "EOM"; \
+	else \
+	    blat quick-verify-signatures-build${BUILD}.log -to $(EMAIL) \
+		 -subject "Quick Signature verification failed"; \
+	fi
 
 upload:
 	rsync -e "ssh -i $(SSH_KEY)" -av signed-build$(BUILD)/ \

@@ -90,6 +90,49 @@ def fileInfo(filepath, product):
 
         return ret
 
+def filterFiles(files, product):
+    """ Filter out files that we can't sign. Right now this means that
+    anything that isn't a win32 .exe or .mar file gets filtered out"""
+    for f in files[:]:
+        skip = False
+        try:
+            info = fileInfo(f, product)
+            if info['platform'] != 'win32':
+                skip = True
+            if info['contents'] not in ('complete', 'installer'):
+                skip = True
+        except ValueError:
+            skip = True
+
+        if skip:
+            files.remove(f)
+            if 'win32' in f:
+                if 'xpi' not in f:
+                    log.info("Skipping %s", f)
+
+    return files
+
+def sortFiles(files, product, firstLocale):
+    """sort files into a specific ordering using the key function defined
+    within"""
+    # Utility function for sorting files
+    # Makes sure that .mar files follow their corresponding .exe files
+    def fileKey(f):
+        info = fileInfo(f, product)
+        locale = info['locale']
+        leading_path = info['leading_path']
+        if locale == firstLocale and not leading_path:
+            localeVal = 0
+        else:
+            localeVal = 1
+        if info['format'] == 'exe':
+            exeVal = 0
+        else:
+            exeVal = 1
+        return (localeVal, leading_path, locale, exeVal, f)
+
+    return sorted(files, key=fileKey)
+
 def copyfile(src, dst, copymode=True):
     """Copy src to dst, preserving permissions and times if copymode is True"""
     shutil.copyfile(src, dst)
@@ -107,6 +150,16 @@ def sha1sum(f):
             break
         h.update(block)
     return h.hexdigest()
+
+def sums_are_equal(base_package, packages):
+    """ Check to make sure that the dictionaries of files:checksums are
+    exactly equal across a list of packages """
+    for signed_file in base_package.keys():
+        log.debug("comparing file %s", signed_file)
+        if not len([p for p in packages if p[signed_file] ==
+            packages[0][signed_file]]) == len(packages):
+            return False
+    return True
 
 def findfiles(root):
     """Return a list of all the files under `root`"""

@@ -249,42 +249,7 @@ class Signer:
         if len(files) == 1 and os.path.isdir(files[0]):
             files = findfiles(files[0])
 
-        # Filter out files that we can't sign
-        # Right now this means that anything that isn't a win32 .exe or .mar file gets filtered out
-        for f in files[:]:
-            skip = False
-            try:
-                info = fileInfo(f, product)
-                if info['platform'] != 'win32':
-                    skip = True
-                if info['contents'] not in ('complete', 'installer'):
-                    skip = True
-            except ValueError:
-                skip = True
-
-            if skip:
-                files.remove(f)
-                if 'win32' in f:
-                    if 'xpi' not in f:
-                        log.info("Skipping %s", f)
-
-        # Utility function for sorting files
-        # Makes sure that .mar files follow their corresponding .exe files
-        def fileKey(f):
-            info = fileInfo(f, product)
-            locale = info['locale']
-            leading_path = info['leading_path']
-            if locale == firstLocale and not leading_path:
-                localeVal = 0
-            else:
-                localeVal = 1
-            if info['format'] == 'exe':
-                exeVal = 0
-            else:
-                exeVal = 1
-            return (localeVal, leading_path, locale, exeVal, f)
-
-        files.sort(key=fileKey)
+        files = sortFiles(filterFiles(files, product), product, firstLocale)
         nfiles = len(files)
 
         # Split the files up into locales
