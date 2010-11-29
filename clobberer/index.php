@@ -19,6 +19,8 @@ $RELEASE_BUILDERS = array(
   'major_update',
   'final_verification',
 );
+$RELEASE_PREFIX = 'release-';
+
 foreach ($PLATFORMS as $platform){
   $RELEASE_BUILDERS[] = "${platform}_build";
   $RELEASE_BUILDERS[] = "${platform}_repack";
@@ -202,19 +204,46 @@ if ($_POST['form_submitted']) {
         } else {
           $branch = 'NULL';
         }
-        $builddir = $_POST['builddir'];
-        if ($builddir != '') {
-            $builders = array($builddir);
-        } else {
-            $builders = $RELEASE_BUILDERS;
-        }
+
         if ($v != '') {
           $master = e($v);
         } else {
           $master = 'NULL';
         }
+
+        $builddir = $_POST['builddir'];
+        if ($builddir != '') {
+            $builders = array($builddir);
+            // check for release-${branch}- version of this builddir
+            $releasedir = e("$RELEASE_PREFIX%$builddir%");
+            $q = "SELECT DISTINCT builddir FROM builds "
+                ."WHERE "
+                ."builddir LIKE $releasedir"
+                . (($branch != 'NULL') ? " AND branch == $branch" : "")
+                . (($master != 'NULL') ? " AND master == $master" : "");
+            $s = $dbh->query($q);
+            error_log("Executing query: $q");
+            while ($s && $r = $s->fetch(PDO::FETCH_ASSOC)) {
+                $builders[] = $r['builddir'];
+            }
+        } else {
+            $builders = $RELEASE_BUILDERS;
+            // grab all release-* versions of the release-builders
+            $q = "SELECT DISTINCT builddir FROM builds "
+                ."WHERE "
+                ."builddir like '". $RELEASE_PREFIX . "%'"
+                . (($branch != 'NULL') ? " AND branch == $branch" : "")
+                . (($master != 'NULL') ? " AND master == $master" : "");
+            $s = $dbh->query($q);
+            error_log("Executing query $q");
+            while ($s && $r = $s->fetch(PDO::FETCH_ASSOC)) {
+              $builders[] = $r['builddir'];
+            }
+        }
+
         foreach ($builders as $builddir) {
           $builddir = e($builddir);
+          error_log("inserting master: $master, branch: $branch, builddir: $builddir into clobberer.db");
           $q = "INSERT INTO clobber_times "
               ."(master, branch, builddir, slave, who, lastclobber) VALUES "
               ."($master, $branch, $builddir, NULL, $e_user, $now)";
@@ -307,7 +336,7 @@ function toggleall(node, klass)
 and/or <a href="https://wiki.mozilla.org/Clobbering_the_Tree">Clobbering the Tree</a>
 for more information about what this page is for, and how to use it.</p>
 <?php
-  if (in_array($_SERVER['REMOTE_USER'], $SPECIAL_PEOPLE)) {
+  if (isSpecial($_SERVER['REMOTE_USER'])) {
 ?>
 <h1>Release Clobbers</h1>
 <form method="POST">

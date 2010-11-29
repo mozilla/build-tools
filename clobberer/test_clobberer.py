@@ -26,6 +26,14 @@ def updateBuild(branch, buildername, builddir, slave, master):
     data = urllib.urlopen(url).read().strip()
     return data
 
+def setClobberPage(branch, builddir, slave, master, now):
+    """Schedules a clobber by sending a POST request to the server and
+       records the response"""
+    params = dict(branch=branch, builddir=builddir,
+            slave=slave, master=master, form_submitted=True)
+    data = urllib.urlopen(clobberURL, data=urllib.urlencode(params))
+    return data.read().strip()
+
 def setClobber(branch, builddir, slave, master, now):
     """Schedules a clobber by inserting data directly into the database."""
     db = sqlite3.connect(dbFile)
@@ -351,6 +359,17 @@ class TestClobber(TestCase):
         data = runClobberer('branch1', 'My Builder', 'mybuilder', 'slave01',
                 'master01')
         self.assert_('linux_build:Server is forcing' not in data, data)
+
+    def testReleaseClobberPrefixBuilder(self):
+        """Test that clobbers on release builders with the
+        release-* prefix work"""
+        now = int(time.time())
+        makeBuildDir('release-mozilla-central-linux_build', now-10)
+        updateBuild('branch2', 'release-mozilla-central-linux_build',
+                'release-mozilla-central-linux_build', 'slave01', 'master01')
+        time.sleep(1)
+        data = setClobberPage('branch2', 'linux_build', None, None, now)
+        self.assert_('release-mozilla-central-linux_build' in data, data)
 
 if __name__ == '__main__':
     import unittest
