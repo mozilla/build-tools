@@ -197,7 +197,7 @@ def ReleaseToCandidatesDir(options, upload_dir, files):
                 continue
             # Contrib dirs themselves must be group writable, and setgid
             if 'contrib' in d:
-                os.chmod(os.path.join(root, d), 2775)
+                os.chmod(os.path.join(root, d), 02775)
             else:
                 os.chmod(os.path.join(root, d), 0755)
 
