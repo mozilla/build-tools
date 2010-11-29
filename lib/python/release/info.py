@@ -1,6 +1,7 @@
 from datetime import datetime
 import os
 from os import path
+import re
 import shutil
 import sys
 from time import strftime
@@ -10,6 +11,10 @@ from release.paths import makeCandidatesDir
 
 import logging
 log = logging.getLogger(__name__)
+
+# If version has two parts with no trailing specifiers like "rc", we
+# consider it a "final" release for which we only create a _RELEASE tag.
+FINAL_RELEASE_REGEX = "^\d+\.\d+$"
 
 class ConfigError(Exception):
     pass
@@ -79,6 +84,10 @@ def readConfig(configfile, keys=[], required=[]):
     if err:
         raise ConfigError("Missing at least one item in config, see above")
     return c
+
+def isFinalRelease(version):
+    # "not not" is used to avoid returning a match object
+    return bool(re.match(FINAL_RELEASE_REGEX, version))
 
 def getTags(baseTag, buildNumber, buildTag=True):
     t = ['%s_RELEASE' % baseTag]

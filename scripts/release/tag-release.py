@@ -10,7 +10,8 @@ log = logging.getLogger(__name__)
 
 from util.commands import run_cmd
 from util.hg import clone, apply_and_push, update, get_revision, make_hg_url
-from release.info import readReleaseConfig, getTags, generateRelbranchName
+from release.info import readReleaseConfig, getTags, generateRelbranchName, \
+  isFinalRelease
 from release.l10n import getL10nRepositories
 
 HG="hg.mozilla.org"
@@ -122,7 +123,7 @@ if __name__ == '__main__':
     parser.set_defaults(
         attempts=os.environ.get('MAX_PUSH_ATTEMPTS', DEFAULT_MAX_PUSH_ATTEMPTS),
         buildbot_configs=os.environ.get('BUILDBOT_CONFIGS_REPO',
-                                        DEFAULT_BUILDBOT_CONFIGS_REPO)
+                                        DEFAULT_BUILDBOT_CONFIGS_REPO),
     )
     parser.add_option("-a", "--push-attempts", dest="attempts",
                       help="Number of attempts before giving up on pushing")
@@ -145,15 +146,21 @@ if __name__ == '__main__':
         if 'relbranchOverride' not in config or not config['relbranchOverride']:
             relbranch = generateRelbranchName(config['milestone'])
             isRelbranchGenerated = True
+    if isFinalRelease(config['version']):
+        buildTag = False
+        enUSBumpFiles = []
+    else:
+        buildTag = True
+        enUSBumpFiles = EN_US_BUMP_FILES
 
-    tags = getTags(config['baseTag'], config['buildNumber'])
+    tags = getTags(config['baseTag'], config['buildNumber'], buildTag=buildTag)
     l10nRepos = getL10nRepositories(path.join('buildbot-configs', configDir,
                                               config['l10nRevisionFile']),
                                      config['l10nRepoPath'],
                                      relbranch)
 
     tagRepo(config, config['sourceRepoPath'], config['sourceRepoName'],
-            config['sourceRepoRevision'], tags, EN_US_BUMP_FILES,
+            config['sourceRepoRevision'], tags, enUSBumpFiles,
             relbranch, isRelbranchGenerated, options.attempts)
     failed = []
     for l in sorted(l10nRepos):
