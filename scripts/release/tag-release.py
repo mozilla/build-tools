@@ -57,15 +57,16 @@ def tagRepo(config, repo, reponame, revision, tags, bumpFiles, relbranch,
 
     def bump_and_tag(repo, attempt, config, relbranch, isRelbranchGenerated,
                      revision, tags):
-        try:
-            update(reponame, revision=relbranch)
-        except:
-            if not isRelbranchGenerated:
-                log.error("Couldn't update to required relbranch '%s', fail",
-                          relbranch)
-                raise Exception("Tagging failed")
-            update(reponame, revision=revision)
-            run_cmd(['hg', 'branch', relbranch], cwd=reponame)
+        if relbranch:
+            try:
+                update(reponame, revision=relbranch)
+            except:
+                if not isRelbranchGenerated:
+                    log.error("Couldn't update to required relbranch '%s', fail",
+                              relbranch)
+                    raise Exception("Tagging failed")
+                update(reponame, revision=revision)
+                run_cmd(['hg', 'branch', relbranch], cwd=reponame)
 
         if config['buildNumber'] != 1 or len(bumpFiles) == 0:
             log.info("Not bumping anything. buildNumber is " + \
@@ -105,6 +106,10 @@ def validate(options, args):
         if 'relbranchOverride' not in config or not config['relbranchOverride']:
             err = True
             log.info("relbranchOverride must be provided when buildNumber > 1")
+    if 'otherReposToTag' in config:
+        if not callable(getattr(config['otherReposToTag'], 'iteritems')):
+            err = True
+            log.info("otherReposToTag exists in config but is not a dict")
     if err:
         sys.exit(1)
     return config
@@ -161,6 +166,13 @@ if __name__ == '__main__':
         # repos, even if some have errors
         except:
             failed.append(l)
+    if 'otherReposToTag' in config:
+        for repo, revision in config['otherReposToTag'].iteritems():
+            try:
+                tagRepo(config, repo, path.basename(repo),
+                        revision, tags, [], None, False, options.attempts)
+            except:
+                failed.append(repo)
     if len(failed) > 0:
         log.info("The following locales failed to tag:")
         for l in failed:
