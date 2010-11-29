@@ -188,10 +188,18 @@ def ReleaseToCandidatesDir(options, upload_dir, files):
         # the group cannot overwrite them.
         os.chmod(f, 0644)
 
-    # Same thing for directories, but 0755
+    # Same thing for directories, but 0755 for most, and 2775 for contrib
     for root,dirs,files in os.walk(candidatesPath):
         for d in dirs:
-            os.chmod(os.path.join(root, d), 0755)
+            # Subdirectories of contrib are ignored, because they are owned
+            # by someone else
+            if 'contrib' in root:
+                continue
+            # Contrib dirs themselves must be group writable, and setgid
+            if 'contrib' in d:
+                os.chmod(os.path.join(root, d), 2775)
+            else:
+                os.chmod(os.path.join(root, d), 0755)
 
 def ReleaseToMobileCandidatesDir(options, upload_dir, files):
     candidatesDir = CANDIDATES_DIR % {'version': options.version,
