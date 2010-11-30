@@ -96,7 +96,8 @@ function isSpecial($user)
 function canSee($builddir, $user)
 {
   global $RELEASE_BUILDERS;
-  if (!in_array($builddir, $RELEASE_BUILDERS)) {
+  global $RELEASE_PREFIX;
+  if (!in_array($builddir, $RELEASE_BUILDERS) && !strstr($builddir, $RELEASE_PREFIX)) {
     return true;
   }
 
