@@ -51,10 +51,9 @@ def createSnippets(brandName, product, appName, version, oldVersion,
                                            platforms, server=stageServer,
                                            verbose=verbose)
     oldShippedLocales = getShippedLocales(product, appName, oldVersion,
-                                          oldBuildNumber, sourceRepo, hg,
-                                          verbose)
+                                          oldBuildNumber, sourceRepo, hg)
     shippedLocales = getShippedLocales(product, appName, version, buildNumber,
-                                       sourceRepo, hg, verbose)
+                                       sourceRepo, hg)
     for platform in previousCandidateIDs.keys():
         update_platform = buildbot2updatePlatform(platform)
         oldVersionBuildID = getBuildID(platform, product, oldVersion,
