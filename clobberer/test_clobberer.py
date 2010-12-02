@@ -372,5 +372,13 @@ class TestClobber(TestCase):
         self.assert_('release-mozilla-central-linux_build' in data, data)
 
 if __name__ == '__main__':
-    import unittest
+    import unittest, sys
+    if len(sys.argv) == 3:
+        clobberURL = sys.argv[1]
+        dbFile = sys.argv[2]
+        del sys.argv[2]
+        del sys.argv[1]
+    elif len(sys.argv) > 1:
+        print "Usage: %s [clobberURL dbFile]" % sys.argv[0]
+        sys.exit(1)
     unittest.main()
