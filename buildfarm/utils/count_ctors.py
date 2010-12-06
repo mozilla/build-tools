@@ -4,9 +4,13 @@ def count_ctors(filename):
     proc = subprocess.Popen(['readelf', '-W', '-S', filename], stdout=subprocess.PIPE)
 
     for line in proc.stdout:
-        m = re.search("\.ctors\s+PROGBITS\s+[0-9a-f]+\s+[0-9a-f]+\s+([0-9a-f]+)", line)
-        if m:
-            return int(m.group(1), 16)
+        f = line.split()
+        if len(f) != 11:
+            continue
+        if f[1] == ".ctors" and f[2] == "PROGBITS":
+            return int(f[5], 16) / int(f[10]) - 2;
+        if f[1] == ".init_array" and f[2] == "PROGBITS":
+            return int(f[5], 16) / int(f[10]);
 
 if __name__ == '__main__':
     import sys
