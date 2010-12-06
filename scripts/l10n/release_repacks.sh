@@ -25,7 +25,7 @@ builddir=$($JSONTOOL -k properties.builddir $PROPERTIES_FILE)
 slavename=$($JSONTOOL -k properties.slavename $PROPERTIES_FILE)
 master=$($JSONTOOL -k properties.master $PROPERTIES_FILE)
 releaseConfig=$($JSONTOOL -k properties.release_config $PROPERTIES_FILE)
-releaseTag=$($JSONTOOL -k sourcestamp.revision $PROPERTIES_FILE)
+releaseTag=$($JSONTOOL -k properties.script_repo_revision $PROPERTIES_FILE)
 
 if [ -z "$BUILDBOT_CONFIGS" ]; then
     export BUILDBOT_CONFIGS="http://hg.mozilla.org/build/buildbot-configs"

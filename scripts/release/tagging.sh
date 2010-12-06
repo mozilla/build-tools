@@ -7,7 +7,7 @@ JSONTOOL="$PYTHON $SCRIPTS_DIR/buildfarm/utils/jsontool.py"
 workdir=`pwd`
 
 releaseConfig=$($JSONTOOL -k properties.release_config $PROPERTIES_FILE)
-releaseTag=$($JSONTOOL -k sourcestamp.revision $PROPERTIES_FILE)
+releaseTag=$($JSONTOOL -k properties.script_repo_revision $PROPERTIES_FILE)
 # Clobberer requires the short name of the branch
 branch=$(basename $($JSONTOOL -k properties.branch $PROPERTIES_FILE))
 builder=$($JSONTOOL -k properties.buildername $PROPERTIES_FILE)

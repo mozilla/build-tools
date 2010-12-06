@@ -41,10 +41,10 @@ def sendchange(branch, revision, username, master, configfile):
        master,
        '--branch',
        branch,
-       '--revision',
-       revision,
        '-p',
        'release_config:mozilla/%s' % configfile,
+       '-p',
+       'script_repo_revision:%s' % revision,
        'release_build'
        ]
     log.info("Executing: %s" % cmd)
