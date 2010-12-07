@@ -154,12 +154,14 @@ def sha1sum(f):
 def sums_are_equal(base_package, packages):
     """ Check to make sure that the dictionaries of files:checksums are
     exactly equal across a list of packages """
+    success = True
     for signed_file in base_package.keys():
         log.debug("comparing file %s", signed_file)
         if not len([p for p in packages if p[signed_file] ==
             packages[0][signed_file]]) == len(packages):
-            return False
-    return True
+            log.error("%s differs!", signed_file)
+            success = False
+    return success
 
 def findfiles(root):
     """Return a list of all the files under `root`"""
