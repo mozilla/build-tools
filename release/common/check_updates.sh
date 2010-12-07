@@ -4,6 +4,7 @@ check_updates () {
   source_package=$2
   target_package=$3
   locale=$4
+  use_old_updater=$5
 
   # cleanup
   rm -rf source/*
@@ -41,7 +42,11 @@ check_updates () {
   if [ -d source/$platform_dirname ]; then
     cd source/$platform_dirname;
     cp $updater ../../update
-    ../../update/updater ../../update 0
+    if [ "$use_old_updater" = "1" ]; then
+        ../../update/updater ../../update 0
+    else
+        ../../update/updater ../../update . 0
+    fi
     cd ../..
   else
     echo "FAIL: no dir in source/$platform_dirname"

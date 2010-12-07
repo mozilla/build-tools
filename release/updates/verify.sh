@@ -15,6 +15,7 @@ UPDATE_ONLY=1
 TEST_ONLY=2
 MARS_ONLY=3
 COMPLETE=4
+use_old_updater=0
 
 usage()
 {
@@ -23,6 +24,7 @@ usage()
   echo "    -t, --test-only        only test that MARs exist"
   echo "    -m, --mars-only        only test MARs"
   echo "    -c, --complete         complete upgrade test"
+  echo "    -o, --old-updater      use old updater syntax"
 }
 
 if [ -z "$*" ]
@@ -49,6 +51,10 @@ do
       ;;
     -c | --complete)
       runmode=$COMPLETE
+      shift
+      ;;
+    -o | --old-updater)
+      use_old_updater=1
       shift
       ;;
     *)
@@ -129,7 +135,7 @@ do
         fi
         source_file=`basename "$from_path"`
         target_file=`basename "$to_path"`
-        check_updates "$platform" "downloads/$source_file" "downloads/$target_file" $locale
+        check_updates "$platform" "downloads/$source_file" "downloads/$target_file" $locale $use_old_updater
         err=$?
         if [ "$err" == "0" ]; then
           continue
