@@ -100,7 +100,7 @@ if __name__ == '__main__':
     parser.add_option("-n", "--slavename", action="store", dest="slavename")
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose")
     parser.add_option(      "--no-start", action="store_true", dest="no_start")
-    parser.set_default(allocator_url=default_allocator_url)
+    parser.set_defaults(allocator_url=default_allocator_url)
 
     (options, args) = parser.parse_args()
 
