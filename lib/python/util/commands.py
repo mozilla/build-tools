@@ -36,6 +36,18 @@ def run_cmd(cmd, **kwargs):
     finally:
         log.info("command: END\n")
 
+def run_remote_cmd(cmd, server, username=None, sshKey=None, ssh='ssh',
+                   **kwargs):
+    cmd_prefix = [ssh]
+    if username:
+        cmd_prefix.extend(['-l', username])
+    if sshKey:
+        cmd_prefix.extend(['-i', sshKey])
+    cmd_prefix.append(server)
+    if isinstance(cmd, basestring):
+        cmd = [cmd]
+    run_cmd(cmd_prefix + cmd, **kwargs)
+
 def get_output(cmd, include_stderr=False, **kwargs):
     """Run cmd (a list of arguments) and return the output.  If include_stderr
     is set, stderr will be included in the output, otherwise it will be sent to
