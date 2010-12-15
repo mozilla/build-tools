@@ -42,6 +42,6 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
     compareLocales(compareLocalesRepo, locale, l10nRepoDir, localeSrcDir,
                    l10nIni, revision=revision, merge=merge)
     env["AB_CD"] = locale
-    env["LOCALE_MERGEDIR"] = "%s/merged" % localeSrcDir
+    env["LOCALE_MERGEDIR"] = path.join(os.getcwd(), localeSrcDir, "merged")
     run_cmd(["make", "installers-%s" % locale], cwd=localeSrcDir, env=env)
     run_cmd(["make", "l10n-upload-%s" % locale], cwd=localeSrcDir, env=env)
