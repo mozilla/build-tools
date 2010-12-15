@@ -1,9 +1,10 @@
-import os
+import os, sys
 from os import path
 import shutil
 
 from util.commands import run_cmd
 from util.hg import mercurial, update
+from util.paths import windows2msys
 
 import logging
 log = logging.getLogger(__name__)
@@ -43,5 +44,7 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
                    l10nIni, revision=revision, merge=merge)
     env["AB_CD"] = locale
     env["LOCALE_MERGEDIR"] = path.abspath(path.join(localeSrcDir, "merged"))
+    if sys.platform.startswith('win'):
+        env["LOCALE_MERGEDIR"] = windows2msys(env["LOCALE_MERGEDIR"])
     run_cmd(["make", "installers-%s" % locale], cwd=localeSrcDir, env=env)
     run_cmd(["make", "l10n-upload-%s" % locale], cwd=localeSrcDir, env=env)
