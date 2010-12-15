@@ -170,7 +170,9 @@ download:
 	# Copy linux/mac builds over to the signed dir, because they don't need internal signing.
 	rsync -av --exclude '*unsigned*' unsigned-build$(BUILD)/ signed-build$(BUILD)/
 	# Make sure we copy over partner repacks for linux/mac too.
-	rsync -av --exclude '*win32*' unsigned-build$(BUILD)/unsigned/partner-repacks/ signed-build$(BUILD)/partner-repacks
+	if [ -d unsigned-build$(BUILD)/unsigned/partner-repacks/ ]; then \
+	  rsync -av --exclude '*win32*' unsigned-build$(BUILD)/unsigned/partner-repacks/ signed-build$(BUILD)/partner-repacks; \
+	fi
 
 sign: sign-internal sign-installers checksum-files create-sigs verify-sigs
 
