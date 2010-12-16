@@ -2,6 +2,7 @@
 - *.partial.mar
 - *.asc
 - *.tests.tar.bz2
+- *.checksums
 - /contrib/
 - /contrib-localized/
 # Skip the root update directory
