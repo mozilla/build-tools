@@ -13,9 +13,13 @@ def compareLocales(repo, locale, l10nRepoDir, localeSrcDir, l10nIni,
                    revision="default", merge=True):
     mercurial(repo, "compare-locales")
     update("compare-locales", revision=revision)
+    mergeDir = path.join(localeSrcDir, "merged")
+    if path.exists(mergeDir):
+        log.info("Deleting %s" % mergeDir)
+        shutil.rmtree(mergeDir)
     run_cmd(["python", path.join("compare-locales", "scripts",
                                  "compare-locales"),
-             "-m", path.join(localeSrcDir, "merged"),
+             "-m", mergeDir),
              l10nIni,
              l10nRepoDir, locale],
              env={"PYTHONPATH": path.join("compare-locales", "lib")})
