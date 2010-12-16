@@ -19,7 +19,7 @@ def compareLocales(repo, locale, l10nRepoDir, localeSrcDir, l10nIni,
         shutil.rmtree(mergeDir)
     run_cmd(["python", path.join("compare-locales", "scripts",
                                  "compare-locales"),
-             "-m", mergeDir),
+             "-m", mergeDir,
              l10nIni,
              l10nRepoDir, locale],
              env={"PYTHONPATH": path.join("compare-locales", "lib")})
