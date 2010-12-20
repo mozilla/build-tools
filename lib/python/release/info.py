@@ -98,4 +98,4 @@ def getTags(baseTag, buildNumber, buildTag=True):
 def generateRelbranchName(milestone, prefix='GECKO'):
     return '%s%s_%s_RELBRANCH' % (
       prefix, milestone.replace('.', ''),
-      datetime.now().strftime('%Y%m%d'))
+      datetime.now().strftime('%Y%m%d%H'))
