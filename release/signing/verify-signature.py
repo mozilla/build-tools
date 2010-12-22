@@ -142,29 +142,63 @@ def setup_checksums(checksums, unsigned_file, product):
     # container
     return pkg_checksums
 
-def filter_quick(unsigned, first_locale, product):
+def random_locale(choices, product):
+    """ Select a random locale from a list of product packages """
+    return fileInfo(random.choice(choices), product)['locale']
+
+def random_partner(choices, locale, product):
+    """ Select a random partner name from a list of product packages """
+    return fileInfo(
+        random.choice(
+            [f for f in choices if locale == fileInfo(f, product)['locale']]
+        ),
+        product)['leading_path']
+
+def filter_unsigned(choices, product, locales, partners=None):
+    """ filter unsigned packages list by locale and partner names """
+    def filter_locales(f):
+        """ match the list of locales """
+        return [l for l in locales if l == fileInfo(f, product)['locale']]
+
+    def filter_partners(f):
+        """ match plain packages or ones matching the given partner names """
+        if partners:
+            return not fileInfo(f, product)['leading_path'] or \
+                [p for p in partners if p == fileInfo(f, product)['leading_path']]
+        else:
+            return not fileInfo(f, product)['leading_path']
+    return [f for f in choices if filter_locales(f) and filter_partners(f)]
+
+def get_valid_packages(choices, first_locale, product):
+    """ Get a list of packages that we can randomly select from without
+    collisions (first_locale), or missing items (locales with no partners """
+    valid_choices = [f for f in choices if first_locale not in f and
+        fileInfo(f, product)['leading_path']]
+    if valid_choices:
+        return valid_choices, False
+
+    log.info("No partner-repacks found, skipping...")
+    return [f for f in choices if first_locale not in f], True
+
+def filter_quick(unsigned_packages, first_locale, product):
     """ Trim down the list of files to verify to only the firstLocale (en-US
     by default), one l10n repack (locale selected at random), one
     partner-repack with firstLocale (selected at random) and one
     partner-repack with the random locale"""
     # Select a locale at random that is not the first_locale, and has at
     # least one available partner repack built
-    rand_locale = fileInfo(
-        random.choice([f for f in unsigned if first_locale not in f and
-            fileInfo(f, product)['leading_path']]),
-        product)['locale']
-    rand_first_partner = fileInfo(
-        random.choice([f for f in unsigned if first_locale in f]),
-        product)['leading_path']
-    rand_locale_partner = fileInfo(
-        random.choice([f for f in unsigned if rand_locale in f]),
-        product)['leading_path']
-    return [f for f in unsigned
-        if (first_locale == fileInfo(f, product)['locale'] or
-            rand_locale == fileInfo(f, product)['locale']) and
-            (not fileInfo(f, product)['leading_path'] or
-            fileInfo(f, product)['leading_path'] == rand_first_partner or
-            fileInfo(f, product)['leading_path'] == rand_locale_partner)]
+    valid_choices, skip_partners = get_valid_packages(unsigned_packages,
+        first_locale, product)
+
+    rand_locale = random_locale(valid_choices, product)
+
+    if skip_partners:
+        return filter_unsigned(unsigned_packages, product, (first_locale, rand_locale))
+
+    rand_first_partner = random_partner(unsigned_packages, first_locale, product)
+    rand_locale_partner = random_partner(valid_choices, rand_locale, product)
+    return filter_unsigned(unsigned_packages, product, [first_locale, rand_locale],
+        [rand_first_partner, rand_locale_partner])
 
 if __name__ == "__main__":
     import sys, os, logging
