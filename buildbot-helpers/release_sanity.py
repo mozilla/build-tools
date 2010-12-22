@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 """%prog [-d|--dryrun] [-u|--username `username`] [-b|--bypasscheck]
         [-V| --version `version`] [-B --branch `branchname`]
-        [-N|--build-number `buildnumber`] master:port
+        [-N|--build-number `buildnumber`]
+        [-c| --release-config `releaseConfigFile`] master:port
 
     Wrapper script to sanity-check a release. Default behaviour is to reconfig
     the master, check the branch and revision specific in the release_configs
@@ -105,14 +106,9 @@ def verify_build(branch, revision, hghost, version, milestone):
 
     return success
 
-def verify_configs(branch, revision, hghost, configs_repo, staging, changesets):
+def verify_configs(revision, hghost, configs_repo, changesets, filename):
     """Check the release_configs and l10n-changesets against tagged revisions"""
-    if staging:
-        filename = "staging_release-firefox-%s.py" % branch
-        configs_url = make_hg_url(hghost, configs_repo, revision=revision, filename="mozilla/%s" % filename)
-    else:
-        filename = "release-firefox-%s.py" % branch
-        configs_url = make_hg_url(hghost, configs_repo, revision=revision, filename="mozilla/%s" % filename)
+    configs_url = make_hg_url(hghost, configs_repo, revision=revision, filename="mozilla/%s" % filename)
     l10n_url = make_hg_url(hghost, configs_repo, revision=revision, filename="mozilla/%s" % changesets)
 
     success = True
@@ -142,6 +138,9 @@ def verify_options(cmd_options, config):
     if int(cmd_options.buildNumber) != int(config['buildNumber']):
         log.error("buildNumber passed in does not match release_configs")
         success = False
+    if cmd_options.branch != config['sourceRepoName']:
+        log.error("branch passed in does not match relese_configs")
+        success = False
     return success
 
 if __name__ == '__main__':
@@ -155,10 +154,8 @@ if __name__ == '__main__':
             version = None,
             buildNumber = None,
             branch = None,
-            staging = False,
+            releaseConfig = None,
             )
-    parser.add_option("-s", "--staging", dest="staging", action="store_true",
-            help="use staging configs")
     parser.add_option("-b", "--bypass-check", dest="check", action="store_false",
             help="don't bother verifying release repo's on this master")
     parser.add_option("-d", "--dryrun", dest="dryrun", action="store_true",
@@ -171,20 +168,21 @@ if __name__ == '__main__':
             help="buildNumber for this release, uses release_config otherwise")
     parser.add_option("-B", "--branch", dest="branch",
             help="branch name for this release, uses release_config otherwise")
+    parser.add_option("-c", "--release-config", dest="releaseConfig",
+            help="override the default release-config file")
 
     options, args = parser.parse_args()
     if not options.dryrun and not args:
         parser.error("Need to provide a master to sendchange to, or -d for a dryrun")
     elif not options.branch:
         parser.error("Need to provide a branch to release")
+    elif not options.releaseConfig:
+        parser.error("Need to provide a release config file")
 
     logging.basicConfig(level=options.loglevel,
             format="%(asctime)s : %(levelname)s : %(message)s")
 
-    if options.staging:
-        releaseConfigFile = "staging_release-firefox-%s.py" % options.branch
-    else:
-        releaseConfigFile = "release-firefox-%s.py" % options.branch
+    releaseConfigFile = options.releaseConfig
     releaseConfig = readReleaseConfig(releaseConfigFile)
 
     if not options.version:
@@ -205,12 +203,11 @@ if __name__ == '__main__':
 
         #verify that the release_configs on-disk match the tagged revisions in hg
         if not verify_configs(
-                options.branch,
                 "%s_BUILD%s" % (releaseConfig['baseTag'], options.buildNumber),
                 branchConfig['hghost'],
                 GLOBAL_VARS['config_repo_path'],
-                options.staging,
                 releaseConfig['l10nRevisionFile'],
+                releaseConfigFile,
                 ):
             test_success = False
             log.error("Error verifying configs")
