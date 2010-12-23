@@ -3,7 +3,7 @@
 # This script expects a directory as its first non-option argument,
 # followed by a list of filenames.
 
-import sys, os, os.path, shutil, re
+import sys, os, os.path, shutil, re, tempfile
 from optparse import OptionParser
 from time import mktime, strptime
 from errno import EEXIST
@@ -32,6 +32,9 @@ TRYSERVER_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/tryse
 PARTIAL_MAR_RE = re.compile('\.partial\..*\.mar$')
 
 def CopyFileToDir(original_file, source_dir, dest_dir, preserve_dirs=False):
+    """ Atomically copy original_file from source_dir into dest_dir,
+    overwriting old files and preserving directory hierarchy if preserve_dirs
+    is True """
     if not original_file.startswith(source_dir):
         print "%s is not in %s!" % (original_file, source_dir)
         return
@@ -53,7 +56,11 @@ def CopyFileToDir(original_file, source_dir, dest_dir, preserve_dirs=False):
                 raise
     if os.path.exists(new_file):
         os.unlink(new_file)
-    shutil.copyfile(original_file, new_file)
+    tmpdir = tempfile.mkdtemp(prefix=".~", dir=dest_dir)
+    tmp_path = os.path.join(tmpdir, os.path.basename(new_file))
+    shutil.copyfile(original_file, tmp_path)
+    os.rename(tmp_path, new_file)
+    os.rmdir(tmpdir)
 
 def BuildIDToDict(buildid):
     """Returns an dict with the year, month, day, hour, minute, and second
