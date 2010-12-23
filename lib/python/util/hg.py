@@ -177,7 +177,7 @@ def push(src, remote, **kwargs):
     cmd.append(remote)
     run_cmd(cmd, cwd=src)
 
-def mercurial(repo, dest, branch=None, revision=None,
+def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
               shareBase=DefaultShareBase):
     """Makes sure that `dest` is has `revision` or `branch` checked out from
     `repo`.
@@ -194,7 +194,7 @@ def mercurial(repo, dest, branch=None, revision=None,
     if os.path.exists(dest):
         if not os.path.exists(os.path.join(dest, ".hg", "sharedpath")):
             try:
-                return pull(repo, dest, branch=branch, revision=revision)
+                return pull(repo, dest, update_dest=update_dest, branch=branch, revision=revision)
             except subprocess.CalledProcessError:
                 log.warning("Error pulling changes into %s from %s; clobbering", dest, repo)
                 log.debug("Exception:", exc_info=True)
@@ -207,7 +207,7 @@ def mercurial(repo, dest, branch=None, revision=None,
         sharedRepo = os.path.join(shareBase, get_repo_path(repo))
         try:
             mercurial(repo, sharedRepo, branch=branch, revision=revision,
-                      shareBase=None)
+                update_dest=False, shareBase=None)
             if os.path.exists(dest):
                 return update(dest, branch=branch, revision=revision)
             else:
