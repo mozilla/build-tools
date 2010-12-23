@@ -76,7 +76,7 @@ def fileInfo(filepath, product):
             ret['leading_path'] = ''
         elif filepath.endswith('.exe'):
             ret['format'] = 'exe'
-            m = re.search("(partner-repacks/\w+/|)(win32|mac|linux-i686)/([-a-zA-Z]+)/((?i)%s) Setup (\d+\.\d+(?:\.\d+)?(?:\w+\d+)?(?:\ \w+\ \d+)?)\.exe" % product, filepath)
+            m = re.search("(partner-repacks/[-a-zA-Z0-9_]+/|)(win32|mac|linux-i686)/([-a-zA-Z]+)/((?i)%s) Setup (\d+\.\d+(?:\.\d+)?(?:\w+\d+)?(?:\ \w+\ \d+)?)\.exe" % product, filepath)
             if not m:
                 raise ValueError("Could not parse: %s" % filepath)
             ret['leading_path'] = m.group(1)
