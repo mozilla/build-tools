@@ -20,6 +20,7 @@ example:
 """
 
 import os, shutil, re, sys
+from fnmatch import fnmatch
 
 DEFAULT_BASE_DIRS=["..", "/scratchbox/users/cltbld/home/cltbld/build"]
 
@@ -90,7 +91,7 @@ def purge(base_dirs, gigs, ignore, max_age, dry_run=False):
     for base_dir in base_dirs:
         if os.path.exists(base_dir):
             for d in os.listdir(base_dir):
-                if d in ignore:
+                if any([fnmatch(d, pattern) for pattern in ignore]):
                     continue
                 p = os.path.join(base_dir, d)
                 if not os.path.isdir(p):
