@@ -10,12 +10,11 @@
 #    - If desired, create partial snippets
 
 from optparse import OptionParser
-import os, os.path, shutil, sys
-from time import strftime
+import os, os.path, sys
 
 from release.info import findOldBuildIDs, getBuildID
 from release.l10n import getShippedLocales, getCommonLocales
-from release.platforms import buildbot2updatePlatform, getPlatformLocales, \
+from release.platforms import buildbot2updatePlatforms, getPlatformLocales, \
   getSupportedPlatforms
 
 REQUIRED_OPTIONS = ('brandName', 'product', 'appName', 'version', 'oldVersion',
@@ -43,7 +42,6 @@ def createSnippets(brandName, product, appName, version, oldVersion,
                    oldBaseSnippetDir, stageServer, hg, sourceRepo,
                    generatePartials, verbose):
     errs = []
-    dirs = []
     snippets = ['complete.txt']
     if generatePartials:
         snippets.append('partial.txt')
@@ -55,7 +53,7 @@ def createSnippets(brandName, product, appName, version, oldVersion,
     shippedLocales = getShippedLocales(product, appName, version, buildNumber,
                                        sourceRepo, hg)
     for platform in previousCandidateIDs.keys():
-        update_platform = buildbot2updatePlatform(platform)
+        update_platforms = buildbot2updatePlatforms(platform)
         oldVersionBuildID = getBuildID(platform, product, oldVersion,
                                        oldBuildNumber,
                                        server=stageServer,
@@ -73,32 +71,33 @@ def createSnippets(brandName, product, appName, version, oldVersion,
                 continue
             for buildID in previousCandidateIDs[platform]:
                 for locale in commonLocales:
-                    try:
-                        oldFile = os.path.join(baseSnippetDir, brandName,
-                                               oldVersion, update_platform,
-                                               oldVersionBuildID, locale, chan,
-                                               'complete.txt')
-                        oldCompleteSnippet = open(oldFile).read()
-                    except Exception, e:
-                        errs.append("Error reading from %s\n%s" % \
-                          (oldFile, e))
-                    newDir = os.path.join(baseSnippetDir, brandName, version,
-                                          update_platform, buildID, locale,
-                                          chan)
-                    try:
-                        os.makedirs(newDir)
-                        if verbose:
-                            "Creating snippets for %s" % newDir
-                        for f in snippets:
-                            newFile = os.path.join(newDir, f)
+                    for update_platform in update_platforms:
+                        try:
+                            oldFile = os.path.join(baseSnippetDir, brandName,
+                                                   oldVersion, update_platform,
+                                                   oldVersionBuildID, locale,
+                                                   chan, 'complete.txt')
+                            oldCompleteSnippet = open(oldFile).read()
+                        except Exception, e:
+                            errs.append("Error reading from %s\n%s" % \
+                              (oldFile, e))
+                        newDir = os.path.join(baseSnippetDir, brandName,
+                                              version, update_platform, buildID,
+                                              locale, chan)
+                        try:
+                            os.makedirs(newDir)
                             if verbose:
-                                "  %s" % f
-                            writeSnippet(newFile, oldCompleteSnippet)
-                    except OSError, e:
-                        errs.append("Error creating %s\n%s" % (newDir, e))
-                    except Exception, e:
-                        errs.append("Hit error creating %s\n%s" % \
-                          (newFile, e))
+                                print "Creating snippets for %s" % newDir
+                            for f in snippets:
+                                newFile = os.path.join(newDir, f)
+                                if verbose:
+                                    print "  %s" % f
+                                writeSnippet(newFile, oldCompleteSnippet)
+                        except OSError, e:
+                            errs.append("Error creating %s\n%s" % (newDir, e))
+                        except Exception, e:
+                            errs.append("Hit error creating %s\n%s" % \
+                            (newFile, e))
 
                 for l in [l for l in platformLocales if l not in commonLocales]:
                     print "WARNING: %s not in oldVersion for %s, did not generate snippets for it" % (l, platform)

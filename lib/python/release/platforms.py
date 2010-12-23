@@ -14,12 +14,13 @@ sl_platform_map = {'win32': 'win32', 'win64': 'win64', 'macosx': 'osx',
                    'linux': 'linux', 'linux64': 'linux64', 'macosx64': 'osx64'}
 # buildbot -> update platform mapping
 update_platform_map = {
-    'linux': 'Linux_x86-gcc3',
-    'linux64': 'Linux_x86_64-gcc3',
-    'macosx': 'Darwin_Universal-gcc3',
-    'macosx64': 'Darwin_x86_64-gcc3',
-    'win32': 'WINNT_x86-msvc',
-    'win64': 'WINNT_x86_64-msvc',
+    'linux': ['Linux_x86-gcc3'],
+    'linux64': ['Linux_x86_64-gcc3'],
+    'macosx': ['Darwin_Universal-gcc3', 'Darwin_x86-gcc3-u-ppc-i386'],
+    'macosx64': ['Darwin_x86_64-gcc3', 'Darwin_x86-gcc3-u-i386-x86_64',
+                 'Darwin_x86_64-gcc3-u-i386-x86_64'],
+    'win32': ['WINNT_x86-msvc'],
+    'win64': ['WINNT_x86_64-msvc'],
 }
 
 def buildbot2bouncer(platform):
@@ -37,7 +38,7 @@ def shippedlocales2buildbot(platform):
     except IndexError:
         return platform
 
-def buildbot2updatePlatform(platform):
+def buildbot2updatePlatforms(platform):
     return update_platform_map.get(platform, platform)
 
 def getPlatformLocales(shipped_locales, platforms):

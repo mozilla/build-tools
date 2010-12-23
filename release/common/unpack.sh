@@ -19,7 +19,7 @@ unpack_build () {
     mkdir -p $dir_name
     pushd $dir_name > /dev/null
     case $unpack_platform in
-        mac|mac64|mac-ppc|Darwin_ppc-gcc|Darwin_Universal-gcc3|Darwin_x86_64-gcc3)
+        mac|mac64|mac-ppc|Darwin_ppc-gcc|Darwin_Universal-gcc3|Darwin_x86_64-gcc3|Darwin_x86-gcc3-u-ppc-i386|Darwin_x86-gcc3-u-i386-x86_64|Darwin_x86_64-gcc3-u-i386-x86_64)
             # Thunderbird 2.0.0.x (and others) have a license file and build on
             # 10.4. For these, we need to use an expect script to mount them.
             osver=`uname -r | cut -f1 -d.`
