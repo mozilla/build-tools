@@ -213,8 +213,11 @@ if __name__ == '__main__':
             log.error("Error verifying configs")
 
         #verify that the relBranch + revision in the release_configs exists in hg
+        sourceRepoPath = releaseConfig['sourceRepoPath']
+        if releaseConfig.get('sourceRepoClonePath'):
+            sourceRepoPath = releaseConfig['sourceRepoClonePath']
         if not verify_repo(
-                releaseConfig['sourceRepoPath'],
+                sourceRepoPath,
                 releaseConfig['sourceRepoRevision'],
                 branchConfig['hghost']
                 ):
