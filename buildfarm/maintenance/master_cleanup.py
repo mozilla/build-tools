@@ -36,7 +36,7 @@ def clean_dir(dirname, timestamp):
 
             # Don't clean out release builders
             if builder and builder.category and \
-                    builder.category.endswith('release'):
+                    builder.category.find('release') > -1:
                 continue
 
             for build in os.listdir(p):
