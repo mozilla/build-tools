@@ -11,7 +11,7 @@ ftp_platform_map = {'win32': 'win32', 'win64': 'win64', 'macosx': 'mac',
 # buildbot -> shipped-locales platform mapping
 # TODO: make sure 'win64' is correct when shipped-locales becomes aware of it
 sl_platform_map = {'win32': 'win32', 'win64': 'win64', 'macosx': 'osx',
-                   'linux': 'linux', 'linux64': 'linux64', 'macosx64': 'osx64'}
+                   'linux': 'linux', 'linux64': 'linux', 'macosx64': 'osx'}
 # buildbot -> update platform mapping
 update_platform_map = {
     'linux': ['Linux_x86-gcc3'],
@@ -33,10 +33,12 @@ def buildbot2shippedlocales(platform):
     return sl_platform_map.get(platform, platform)
 
 def shippedlocales2buildbot(platform):
+    matches = []
     try:
-        return [k for k, v in sl_platform_map.iteritems() if v == platform][0]
+        [matches.append(k) for k, v in sl_platform_map.iteritems() if v == platform][0]
+        return matches
     except IndexError:
-        return platform
+        return [platform]
 
 def buildbot2updatePlatforms(platform):
     return update_platform_map.get(platform, platform)
@@ -50,8 +52,9 @@ def getPlatformLocales(shipped_locales, platforms):
         locale = entry[0]
         if len(entry)>1:
             for platform in entry[1:]:
-                if shippedlocales2buildbot(platform) in platforms:
-                    platform_locales[shippedlocales2buildbot(platform)].append(locale)
+                for bb_platform in shippedlocales2buildbot(platform):
+                    if bb_platform in platforms:
+                        platform_locales[bb_platform].append(locale)
         else:
             for platform in platforms:
                 platform_locales[platform].append(locale)
