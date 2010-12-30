@@ -47,6 +47,12 @@ echo 'ac_add_options --disable-jemalloc' >> mozconfig
 echo 'CC=/tools/gcc-4.3.3/installed/bin/gcc' >> mozconfig
 echo 'CXX=/tools/gcc-4.3.3/installed/bin/g++' >> mozconfig
 
+if [ "`uname -m`" = "x86_64" ]; then
+    export LD_LIBRARY_PATH=/tools/gcc-4.3.3/installed/lib64
+else
+    export LD_LIBRARY_PATH=/tools/gcc-4.3.3/installed/lib
+fi
+
 make -f ../src/client.mk MOZCONFIG=$PWD/mozconfig configure || exit 2
 make -j4 || exit 2
 make package || exit 2
