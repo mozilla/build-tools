@@ -32,7 +32,7 @@
 # to upload the exe/dll signing log, which triggers the automation to continue.
 
 # Make sure necessary variables are defined / set defaults
-GPGPASS        := $(shell bash -c 'read -s -p "Enter PGP passphrase:" pass; echo $$pass')
+GPGPASS        := $(shell bash -c 'if [[ -z "${SKIP_PASS}" ]]; then read -s -p "Enter PGP passphrase:" pass; echo $$pass; fi')
 VERSION         = $(error VERSION must be defined)
 BUILD           = $(error BUILD must be defined)
 REPO            = $(error REPO must be defined)
@@ -53,6 +53,10 @@ KEYDIR         ?= d:/2010-keys
 GPG_KEY        ?= $(WORKDIR)/key-checkout/PUBLIC-KEY
 FREE_SPACE_REQ ?= 10000000 # in KB
 BASEDIR       ?= ~/signing-work
+PYTHONPATH     := $(WORKDIR)/lib/python:${PYTHONPATH}
+export PYTHONPATH
+CONFIG_REPO_PATH ?= build/buildbot-configs
+RELCONFIG       = $(error RELCONFIG must be defined)
 
 ifeq ($(PRODUCT),firefox)
 APP_NAME       ?= browser
@@ -61,10 +65,12 @@ APP_NAME        = $(error APP_NAME must be defined)
 endif
 
 ifdef USE_NEW
-all: df verify-gpg-passphrase setup verify-signcode-passphrase download stubs sign2 stage verify fake-upload
+all: df verify-gpg-passphrase setup verify-signcode-passphrase download verify-download stubs sign2 stage verify fake-upload
 else
-all: df verify-gpg-passphrase setup verify-signcode-passphrase download sign stage verify fake-upload
+all: df verify-gpg-passphrase setup verify-signcode-passphrase download verify-download sign stage verify fake-upload
 endif
+
+autosign: df verify-gpg-passphrase setup verify-signcode-passphrase download-loop verify-download stubs sign2 stage verify fake-upload
 
 echo:
 	 @echo EMAIL: $(EMAIL)
@@ -87,6 +93,10 @@ df:
 	fi
 
 verify-gpg-passphrase:
+ifndef GPGPASS
+	echo "GPG Passphrase must be defined for these targets"
+	exit 1
+endif
 	@f=`mktemp` \
 	&& (touch $$f \
 	&& gpg --no-use-agent --batch --passphrase "$(GPGPASS)" -sba $$f \
@@ -162,6 +172,17 @@ stubs-hg:
 	(cd checkouts/stubs/7z; wget -O 7zSD.sfx $(HGROOT)$(REPO)/raw-file/$(TAG)/other-licenses/7zstub/$(PRODUCT)/7zSD.sfx)
 	(cd checkouts/stubs/tagfile; wget -O app.tag $(HGROOT)$(REPO)/raw-file/$(TAG)/$(APP_NAME)/installer/windows/app.tag)
 
+verify-download:
+	python download_builds.py -V --product $(PRODUCT) -r $(CONFIG_REPO_PATH) \
+        --hgurl $(HGROOT) $(VERSION) \
+        unsigned-build$(BUILD)/ $(SSH_KEY) $(STAGE_USERNAME) \
+        $(STAGE_HOST) $(RELCONFIG)
+
+download-loop:
+	python download_builds.py --product $(PRODUCT) -r $(CONFIG_REPO_PATH) \
+        --hgurl $(HGROOT) $(VERSION) unsigned-build$(BUILD)/ $(SSH_KEY) \
+		$(STAGE_USERNAME) $(STAGE_HOST) $(RELCONFIG)
+
 download:
 	# Download the builds.
 	rsync -av --exclude-from download-exclude.list -e "ssh -i $(SSH_KEY)" \
@@ -211,6 +232,10 @@ sign-files:
 		 -body "EOM"
 
 create-sigs:
+ifndef GPGPASS
+	echo "GPG Passphrase must be defined for these targets"
+	exit 1
+endif
 	# Generate detached sigs.
 	blat -to $(EMAIL) \
 	     -subject "Running sign-files for $(PRODUCT) $(VERSION)" \
@@ -294,7 +319,7 @@ verify-asc: ASC_FILES=$(strip $(shell find $(WORKDIR)/signed-build$(BUILD)/ \
 verify-asc: TOTAL_FILES=$(strip $(shell find $(WORKDIR)/signed-build$(BUILD)/ \
                           -not -wholename '*update*' -not -name "*.xpi" -not -name "*.asc" \
                           -not -name "*.txt" -not -name "*.log" \
-                          -not -name KEY -type f | wc -l))
+                          -not -name KEY -not -name "partner_build*" -type f | wc -l))
 verify-asc:
 	@test $(TOTAL_FILES) -gt 0 || \
 	  (echo "No files in $(WORKDIR)/signed-build$(BUILD), bailing..." && exit 1)

@@ -1,5 +1,5 @@
 """Helper functions to handle file operations"""
-import logging
+import logging, os
 log = logging.getLogger(__name__)
 
 def compare(file1, file2):
@@ -14,3 +14,10 @@ def compare(file1, file2):
     file2_contents = file2.read()
     return file1_contents == file2_contents
 
+def directoryContains(directory, suffix):
+    """ Return true if the given directory contains the provided wildcard
+    suffix, similar to `ls foo/*bar` """
+    hit = any([f.endswith(suffix) for f in os.listdir(directory)])
+    if not hit:
+        log.error("Could not find *%s in %s" % (suffix, directory))
+    return hit

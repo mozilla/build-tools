@@ -1,6 +1,7 @@
 """
 Some automated tests for signing code
 """
+import subprocess
 from unittest import TestCase
 
 from signing import *
@@ -160,6 +161,47 @@ class TestFileParsing(TestCase):
         ]
         self.failUnless(not sums_are_equal(test_invalid_checksums[0], test_invalid_checksums))
         self.failUnless(sums_are_equal(test_valid_checksums[0], test_valid_checksums))
+
+    def testWin32DownloadRules(self):
+        """ Test that the rsync logic works as expected:
+              - No hidden files/dirs
+              - No previously signed binaries
+              - No partial mars
+              - No checksums
+              - No detached sigs
+        """
+        try:
+            os.makedirs("./test-download/update/win32")
+            os.makedirs("./test-download/win32")
+            os.makedirs("./test-download/unsigned/win32/.foo")
+            os.makedirs("./test-download/unsigned/win32/foo")
+            open("./test-download/unsigned/win32/.foo/hello.complete.mar", "w").write("Hello\n")
+            open("./test-download/unsigned/win32/foo/hello.complete.mar", "w").write("Hello\n")
+            open("./test-download/win32/hello.complete.mar", "w").write("Hello\n")
+            open("./test-download/unsigned/win32/hello.partial.mar", "w").write("Hello\n")
+            open("./test-download/unsigned/win32/hello.checksums", "w").write("Hello\n")
+            open("./test-download/unsigned/win32/hello.asc", "w").write("Hello\n")
+            subprocess.check_call([
+                'rsync',
+                '-av',
+                '--exclude-from',
+                'download-exclude.list',
+                './test-download/',
+                './test-dest/' ])
+            self.failUnless(not os.path.isdir("./test-dest/win32"))
+            self.failUnless(not os.path.isdir("./test-dest/update/win32"))
+            self.failUnless(not os.path.isdir("./test-dest/unsigned/win32/.foo/"))
+            self.failUnless(not os.path.exists("./test-dest/unsigned/win32/.foo/hello.complete.mar"))
+            self.failUnless(not os.path.exists("./test-dest/unsigned/win32/hello.partial.mar"))
+            self.failUnless(not os.path.exists("./test-dest/unsigned/win32/hello.checksums"))
+            self.failUnless(not os.path.exists("./test-dest/unsigned/win32/hello.asc"))
+            self.failUnless(os.path.exists("./test-dest/unsigned/win32/foo/hello.complete.mar"))
+        finally:
+            # clean up
+            if os.path.isdir("./test-download"):
+                shutil.rmtree("./test-download")
+            if os.path.isdir("./test-dest"):
+                shutil.rmtree("./test-dest")
 
 
 if __name__ == '__main__':

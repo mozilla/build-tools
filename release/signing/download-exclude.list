@@ -5,7 +5,8 @@
 - *.checksums
 - /contrib/
 - /contrib-localized/
-# Skip the root update directory
-- /update/
 # Skip previously signed windows builds
 - /win32/
+- /update/win32/
+# Exclude hidden files/directories
+- .*
