@@ -237,6 +237,11 @@ create-contrib:
 
 checksum-files:
 	$(WORKDIR)/stage/checksum-files $(WORKDIR)/signed-build$(BUILD)
+	# exclude partner repacks from SUMS files
+	grep -v "partner-repack" $(WORKDIR)/signed-build$(BUILD)/MD5SUMS > $(WORKDIR)/signed-build$(BUILD)/MD5SUMS.out \
+	&& mv $(WORKDIR)/signed-build$(BUILD)/MD5SUMS.out $(WORKDIR)/signed-build$(BUILD)/MD5SUMS
+	grep -v "partner-repack" $(WORKDIR)/signed-build$(BUILD)/SHA1SUMS > $(WORKDIR)/signed-build$(BUILD)/SHA1SUMS.out \
+	&& mv $(WORKDIR)/signed-build$(BUILD)/SHA1SUMS.out $(WORKDIR)/signed-build$(BUILD)/SHA1SUMS
 
 fix-permissions:
 	# Because these files will be owned by 'firefox' (which has users in it
