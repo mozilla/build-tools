@@ -22,7 +22,7 @@ if sys.platform in ('darwin', 'linux2'):
 elif sys.platform == "win32":
     # Windows
     def reboot():
-        os.system("shutdown -r")
+        os.system("shutdown -f -r -t 0")
 	# After starting the shutdown, we go to sleep since the system can
 	# take a few minutes to shut everything down and reboot
 	time.sleep(600)
