@@ -1,8 +1,9 @@
 from twisted.internet import defer
 from twisted.python import log
 from twisted.web import resource, server, error
+from slavealloc import exceptions
 
-class TacResource(resource.Resource):
+class TacSlaveResource(resource.Resource):
     "dynamically created resource for a particular slave's buildbot.tac"
     isLeaf = True
 
@@ -20,6 +21,15 @@ class TacResource(resource.Resource):
             request.setHeader('content-type', 'text/plain')
             request.write(buildbot_tac)
             request.finish()
+        d.addCallback(handle_success)
+
+        def handle_noalloc(f):
+            f.trap(exceptions.NoAllocationError)
+            request.setResponseCode(404)
+            request.setHeader('content-type', 'text/plain')
+            request.write('no allocation available')
+            request.finish()
+        d.addErrback(handle_noalloc)
 
         def handle_error(f):
             log.err(f, "while handling request for '%s'" % self.slave_name)
@@ -27,8 +37,7 @@ class TacResource(resource.Resource):
             request.setHeader('content-type', 'text/plain')
             request.write('error processing request: %s' % f.getErrorMessage())
             request.finish()
-
-        d.addCallbacks(handle_success, handle_error)
+        d.addErrback(handle_error)
 
         # render_GET does not know how to wait for a Deferred, so we return
         # NOT_DONE_YET which has a similar effect
@@ -41,7 +50,10 @@ class RootResource(resource.Resource):
     isLeaf = False
 
     def getChild(self, name, request):
-        return TacResource(name)
+        if name:
+            return TacResource(name)
+        else:
+            return error.NoResource()
 
 
 class AllocatorSite(server.Site):
