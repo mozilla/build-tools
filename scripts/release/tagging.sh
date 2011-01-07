@@ -11,7 +11,7 @@ releaseTag=$($JSONTOOL -k properties.script_repo_revision $PROPERTIES_FILE)
 # Clobberer requires the short name of the branch
 branch=$(basename $($JSONTOOL -k properties.branch $PROPERTIES_FILE))
 builder=$($JSONTOOL -k properties.buildername $PROPERTIES_FILE)
-builddir=$($JSONTOOL -k properties.builddir $PROPERTIES_FILE)
+slavebuilddir=$($JSONTOOL -k properties.slavebuilddir $PROPERTIES_FILE)
 slavename=$($JSONTOOL -k properties.slavename $PROPERTIES_FILE)
 master=$($JSONTOOL -k properties.master $PROPERTIES_FILE)
 
@@ -22,9 +22,9 @@ if [ -z "$CLOBBERER_URL" ]; then
     export CLOBBERER_URL="http://build.mozilla.org/clobberer"
 fi
 
-echo "Calling clobberer: $PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s build $CLOBBERER_URL $branch $builder $builddir $slavename $master"
+echo "Calling clobberer: $PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s build $CLOBBERER_URL $branch $builder $slavebuilddir $slavename $master"
 cd $SCRIPTS_DIR/../../..
-$PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s build $CLOBBERER_URL $branch $builder $builddir $slavename $master
+$PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s build $CLOBBERER_URL $branch $builder $slavebuilddir $slavename $master
 cd $workdir
 
 echo "Calling tag-release.py: $PYTHON tag-release.py -c $releaseConfig -b $BUILDBOT_CONFIGS -t $releaseTag"

@@ -21,7 +21,7 @@ thisChunk=$4
 
 branch=$(basename $($JSONTOOL -k properties.branch $PROPERTIES_FILE))
 builder=$($JSONTOOL -k properties.buildername $PROPERTIES_FILE)
-builddir=$($JSONTOOL -k properties.builddir $PROPERTIES_FILE)
+slavebuilddir=$($JSONTOOL -k properties.slavebuilddir $PROPERTIES_FILE)
 slavename=$($JSONTOOL -k properties.slavename $PROPERTIES_FILE)
 master=$($JSONTOOL -k properties.master $PROPERTIES_FILE)
 releaseConfig=$($JSONTOOL -k properties.release_config $PROPERTIES_FILE)
@@ -36,10 +36,10 @@ fi
 
 cd $SCRIPTS_DIR/../../..
 $PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s build $CLOBBERER_URL $branch \
-  $builder $builddir $slavename $master
+  $builder $slavebuilddir $slavename $master
 cd $SCRIPTS_DIR/../..
 $PYTHON $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
-  -s 6 -n info -n 'release-*' -n $builddir
+  -s 6 -n info -n 'release-*' -n $slavebuilddir
 cd $workdir
 
 $PYTHON $MY_DIR/create-release-repacks.py -c $branchConfig -r $releaseConfig \
