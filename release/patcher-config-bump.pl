@@ -10,7 +10,9 @@ use Storable;
 use MozBuild::Util qw(GetBuildIDFromFTP);
 
 use Bootstrap::Util qw(GetBouncerPlatforms GetBouncerToPatcherPlatformMap
-                       LoadLocaleManifest GetBuildbotToFTPPlatformMap);
+                       GetEqualPlatforms LoadLocaleManifest
+                       GetBuildbotToFTPPlatformMap
+                       GetFTPToBuildbotPlatformMap);
 
 use Release::Patcher::Config qw(GetProductDetails);
 
@@ -355,6 +357,7 @@ sub BumpPatcherConfig {
 
     $releaseObj->{'platforms'} = {};
     my %platformFTPMap = GetBuildbotToFTPPlatformMap();
+    my %FTPplatformMap = GetFTPToBuildbotPlatformMap();
     foreach my $os (@$platforms){
         my $buildID = GetBuildIDFromFTP(os => $os,
                                         releaseDir => $candidateDir,
@@ -413,7 +416,18 @@ sub BumpPatcherConfig {
       
         my @supportedPatcherPlatforms = ();
         foreach my $platform (@{$localeInfo->{$locale}}) {
-            push(@supportedPatcherPlatforms, $platformMap{$platform});
+            if (exists $FTPplatformMap{$platformMap{$platform}} &&
+                grep($FTPplatformMap{$platformMap{$platform}} eq $_, @{$platforms})){
+                    push(@supportedPatcherPlatforms, $platformMap{$platform});
+            }
+            # Get platforms not mentioned in shipped-locales
+            my $equal_platforms = GetEqualPlatforms($platform);
+            if ($equal_platforms){
+                foreach my $equal_platform (@{$equal_platforms}){
+                    push(@supportedPatcherPlatforms, $platformMap{$equal_platform})
+                        if grep($FTPplatformMap{$platformMap{$equal_platform}} eq $_, @{$platforms});
+                }
+            }
         }
 
         if (keys(%{$allPlatformsHash}) > 0) {

@@ -219,7 +219,7 @@ sub BumpVerifyConfig {
         }
     } elsif ($osname eq 'linux64') {
         $buildTarget = 'Linux_x86_64-gcc3';
-        $platform = 'linux64';
+        $platform = 'linux';
         $ftpOsname = 'linux-x86_64';
         $releaseFile = lc($oldBinaryName).'-'.$oldVersion.'.tar.'.$linuxExtension;
         if ($prettyCandidatesDir) {
@@ -242,7 +242,7 @@ sub BumpVerifyConfig {
         }
     } elsif ($osname eq 'macosx64') {
         $buildTarget = 'Darwin_x86_64-gcc3';
-        $platform = 'osx64';
+        $platform = 'osx';
         $ftpOsname = 'mac64';
         $releaseFile = $oldBinaryName.' '.$oldLongVersion.'.dmg';
         if ($prettyCandidatesDir) {
