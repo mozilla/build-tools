@@ -20,15 +20,14 @@ class ConfigError(Exception):
     pass
 
 def getBuildID(platform, product, version, buildNumber, nightlyDir='nightly',
-               server='stage.mozilla.org', verbose=False):
+               server='stage.mozilla.org'):
     infoTxt = makeCandidatesDir(product, version, buildNumber, nightlyDir,
                                 protocol='http', server=server) + \
               '%s_info.txt' % platform
     try:
         buildInfo = urlopen(infoTxt).read()
     except:
-        if verbose:
-            print >>sys.stderr, "Failed to retrieve %s" % infoTxt
+        log.error("Failed to retrieve %s" % infoTxt)
         raise
 
     for line in buildInfo.splitlines():
@@ -37,8 +36,7 @@ def getBuildID(platform, product, version, buildNumber, nightlyDir='nightly',
             return value
 
 def findOldBuildIDs(product, version, buildNumber, platforms,
-                    nightlyDir='nightly', server='stage.mozilla.org',
-                    verbose=False):
+                    nightlyDir='nightly', server='stage.mozilla.org'):
     ids = {}
     if buildNumber <= 1:
         return ids
@@ -48,11 +46,10 @@ def findOldBuildIDs(product, version, buildNumber, platforms,
                 ids[platform] = []
             try:
                 id = getBuildID(platform, product, version, n, nightlyDir,
-                                server, verbose)
+                                server)
                 ids[platform].append(id)
             except Exception, e:
-                if verbose:
-                    print >>sys.stderr, "Hit exception: %s" % e
+                log.error("Hit exception: %s" % e)
     return ids
 
 def readReleaseConfig(configfile, required=[]):

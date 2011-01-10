@@ -9,6 +9,7 @@
 #    - Create complete snippet
 #    - If desired, create partial snippets
 
+import logging
 from optparse import OptionParser
 import os, os.path, sys
 
@@ -16,6 +17,9 @@ from release.info import findOldBuildIDs, getBuildID
 from release.l10n import getShippedLocales, getCommonLocales
 from release.platforms import buildbot2updatePlatforms, getPlatformLocales, \
   getSupportedPlatforms
+
+logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
+log = logging.getLogger(__name__)
 
 REQUIRED_OPTIONS = ('brandName', 'product', 'appName', 'version', 'oldVersion',
                     'buildNumber', 'oldBuildNumber', 'platforms',
@@ -31,23 +35,29 @@ def getSnippetDirname(oldBaseSnippetDir, channel):
     elif channel.find('test') != -1:
         ausdir = 'aus2.test'
     elif channel == 'beta':
+        # ASSUMPTION: If aus2.beta doesn't exist we must be working on an
+        # alpha or beta release, in which case the snippets live in 'aus2'.
         ausdir = 'aus2.beta'
+        if not os.path.isdir(os.path.join(oldBaseSnippetDir, ausdir)):
+            ausdir = 'aus2'
     else:
         # Total guesswork
         ausdir = 'aus2.%s' % channel
-    return os.path.join(oldBaseSnippetDir, ausdir)
+    fulldir = os.path.join(oldBaseSnippetDir, ausdir)
+    if not os.path.isdir(fulldir):
+        raise Exception('Want to use %s as the snippet dir for %s but it doesn\'t exist.' % (ausdir, channel))
+    return fulldir
 
 def createSnippets(brandName, product, appName, version, oldVersion,
                    buildNumber, oldBuildNumber, platforms, channels,
                    oldBaseSnippetDir, stageServer, hg, sourceRepo,
-                   generatePartials, verbose):
+                   generatePartials):
     errs = []
     snippets = ['complete.txt']
     if generatePartials:
         snippets.append('partial.txt')
     previousCandidateIDs = findOldBuildIDs(product, version, buildNumber,
-                                           platforms, server=stageServer,
-                                           verbose=verbose)
+                                           platforms, server=stageServer)
     oldShippedLocales = getShippedLocales(product, appName, oldVersion,
                                           oldBuildNumber, sourceRepo, hg)
     shippedLocales = getShippedLocales(product, appName, version, buildNumber,
@@ -56,8 +66,7 @@ def createSnippets(brandName, product, appName, version, oldVersion,
         update_platforms = buildbot2updatePlatforms(platform)
         oldVersionBuildID = getBuildID(platform, product, oldVersion,
                                        oldBuildNumber,
-                                       server=stageServer,
-                                       verbose=verbose)
+                                       server=stageServer)
         oldPlatformLocales = getPlatformLocales(oldShippedLocales,
                                                 (platform,))[platform]
         platformLocales = getPlatformLocales(shippedLocales,
@@ -86,12 +95,10 @@ def createSnippets(brandName, product, appName, version, oldVersion,
                                               locale, chan)
                         try:
                             os.makedirs(newDir)
-                            if verbose:
-                                print "Creating snippets for %s" % newDir
+                            log.info("Creating snippets for %s" % newDir)
                             for f in snippets:
                                 newFile = os.path.join(newDir, f)
-                                if verbose:
-                                    print "  %s" % f
+                                log.info("  %s" % f)
                                 writeSnippet(newFile, oldCompleteSnippet)
                         except OSError, e:
                             errs.append("Error creating %s\n%s" % (newDir, e))
@@ -100,11 +107,10 @@ def createSnippets(brandName, product, appName, version, oldVersion,
                             (newFile, e))
 
                 for l in [l for l in platformLocales if l not in commonLocales]:
-                    print "WARNING: %s not in oldVersion for %s, did not generate snippets for it" % (l, platform)
+                    log.debug("WARNING: %s not in oldVersion for %s, did not generate snippets for it" % (l, platform))
 
-    if verbose:
-        for e in errs:
-            print >>sys.stderr, e
+    for e in errs:
+        log.error(e)
     return len(errs)
 
 def writeSnippet(snippet, contents):
@@ -165,7 +171,7 @@ def validateOptions(options, args):
     if options.buildNumber < 2:
         errs += "build number must be >= 2\n"
     if errs != "":
-        print >>sys.stderr, errs
+        log.error(errs)
         sys.exit(1)
 
 def adjustOptions(options, args):
@@ -174,6 +180,8 @@ def adjustOptions(options, args):
     options.oldBuildNumber = int(options.oldBuildNumber)
     options.platforms = options.platforms or DEFAULT_PLATFORMS
     options.channels = options.channels or DEFAULT_CHANNELS
+    if options.verbose:
+        log.setLevel(logging.DEBUG)
 
 def main():
     (options, args) = getOptions()
@@ -188,8 +196,7 @@ def main():
                               options.oldBuildNumber, options.platforms,
                               options.channels, options.oldBaseSnippetDir,
                               options.stageServer, options.hg,
-                              options.sourceRepo, options.generatePartials,
-                              options.verbose)
+                              options.sourceRepo, options.generatePartials)
     finally:
         os.chdir(olddir)
 
