@@ -1,6 +1,7 @@
 from urllib2 import urlopen
 from urlparse import urljoin
 
+from build.l10n import getLocalesForChunk
 from release.platforms import buildbot2ftp, getPlatformLocales
 from release.versions import getPrettyVersion
 
@@ -74,22 +75,12 @@ def makeReleaseRepackUrls(productName, brandName, version, platform,
     
     return builds
 
-def getLocalesForChunk(productName, appName, version, buildNumber, sourceRepo,
-                       platform, chunks, thisChunk, hg='http://hg.mozilla.org'):
+def getReleaseLocalesForChunk(productName, appName, version, buildNumber,
+                              sourceRepo, platform, chunks, thisChunk,
+                              hg='http://hg.mozilla.org'):
     possibleLocales = getPlatformLocales(
         getShippedLocales(productName, appName, version, buildNumber,
                           sourceRepo, hg),
         (platform,)
     )[platform]
-    if 'en-US' in possibleLocales:
-        possibleLocales.remove('en-US')
-    nLocales = len(possibleLocales)
-    for c in range(1, chunks+1):
-        n = nLocales / chunks
-        # If the total number of locales isn't evenly divisible by the number
-        # of chunks we need to append one more onto some chunks
-        if c <= (nLocales % chunks):
-            n += 1
-        if c == thisChunk:
-            return possibleLocales[0:n]
-        del possibleLocales[0:n]
+    return getLocalesForChunk(possibleLocales, chunks, thisChunk)

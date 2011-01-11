@@ -1,13 +1,29 @@
-import os, sys
+import os
 from os import path
 import shutil
+import sys
+from urllib2 import urlopen
+from urlparse import urljoin
 
+from release.platforms import getPlatformLocales
 from util.commands import run_cmd
 from util.hg import mercurial, update
 from util.paths import windows2msys
 
 import logging
 log = logging.getLogger(__name__)
+
+def getAllLocales(appName, sourceRepo, rev="default",
+                  hg="http://hg.mozilla.org"):
+    localeFile = "%s/raw-file/%s/%s/locales/all-locales" % \
+      (sourceRepo, rev, appName)
+    url = urljoin(hg, localeFile)
+    try:
+        sl = urlopen(url).read()
+    except:
+        log.error("Failed to retrieve %s", url)
+        raise
+    return sl
 
 def compareLocales(repo, locale, l10nRepoDir, localeSrcDir, l10nIni,
                    revision="default", merge=True):
@@ -24,13 +40,10 @@ def compareLocales(repo, locale, l10nRepoDir, localeSrcDir, l10nIni,
              l10nRepoDir, locale],
              env={"PYTHONPATH": path.join("compare-locales", "lib")})
 
-def l10nRepackPrep(sourceRepo, sourceRepoName, revision, objdir,
-                   mozconfigPath, l10nBaseRepoName, makeDirs, localeSrcDir,
-                   env):
+def l10nRepackPrep(sourceRepoName, objdir, mozconfigPath,
+                   l10nBaseRepoName, makeDirs, localeSrcDir, env):
     if not path.exists(l10nBaseRepoName):
         os.mkdir(l10nBaseRepoName)
-    mercurial(sourceRepo, sourceRepoName)
-    update(sourceRepoName, revision=revision)
     shutil.copy(mozconfigPath, path.join(sourceRepoName, ".mozconfig"))
     run_cmd(["make", "-f", "client.mk", "configure"], cwd=sourceRepoName,
             env=env)
@@ -51,4 +64,27 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
     if sys.platform.startswith('win'):
         env["LOCALE_MERGEDIR"] = windows2msys(env["LOCALE_MERGEDIR"])
     run_cmd(["make", "installers-%s" % locale], cwd=localeSrcDir, env=env)
-    run_cmd(["make", "l10n-upload-%s" % locale], cwd=localeSrcDir, env=env)
+    run_cmd(["make", "upload", "AB_CD=%s" % locale], cwd=localeSrcDir, env=env)
+
+def getLocalesForChunk(possibleLocales, chunks, thisChunk):
+    if 'en-US' in possibleLocales:
+        possibleLocales.remove('en-US')
+    possibleLocales = sorted(possibleLocales)
+    nLocales = len(possibleLocales)
+    for c in range(1, chunks+1):
+        n = nLocales / chunks
+        # If the total number of locales isn't evenly divisible by the number
+        # of chunks we need to append one more onto some chunks
+        if c <= (nLocales % chunks):
+            n += 1
+        if c == thisChunk:
+            return possibleLocales[0:n]
+        del possibleLocales[0:n]
+
+def getNightlyLocalesForChunk(appName, sourceRepo, platform, chunks, thisChunk,
+                              hg="http://hg.mozilla.org"):
+    possibleLocales = getPlatformLocales(
+        getAllLocales(appName, sourceRepo, hg=hg),
+        (platform,)
+    )[platform]
+    return getLocalesForChunk(possibleLocales, chunks, thisChunk)

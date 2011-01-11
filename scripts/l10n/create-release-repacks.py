@@ -12,7 +12,7 @@ import build.misc
 from build.upload import postUploadCmdPrefix
 from release.download import downloadReleaseBuilds
 from release.info import readReleaseConfig, readBranchConfig
-from release.l10n import getLocalesForChunk
+from release.l10n import getReleaseLocalesForChunk
 from util.hg import mercurial, update, make_hg_url
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
@@ -20,7 +20,6 @@ log = logging.getLogger(__name__)
 
 HG="hg.mozilla.org"
 DEFAULT_BUILDBOT_CONFIGS_REPO=make_hg_url(HG, "build/buildbot-configs")
-DEFAULT_BUILDBOTCUSTOM_REPO=make_hg_url(HG, "build/buildbotcustom")
 
 class RepackError(Exception):
     pass
@@ -51,8 +50,10 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
         )
     }
     build.misc.cleanupObjdir(sourceRepoName, objdir, appName)
-    l10nRepackPrep(sourceRepo, sourceRepoName, revision, objdir,
-                   mozconfigPath, l10nRepoDir, makeDirs, localeSrcDir, env)
+    mercurial(sourceRepo, sourceRepoName)
+    update(sourceRepoName, revision=revision)
+    l10nRepackPrep(sourceRepoName, objdir, mozconfigPath, l10nRepoDir, makeDirs,
+                   localeSrcDir, env)
     input_env = downloadReleaseBuilds(stageServer, product, brand, version,
                                       buildNumber, platform)
     env.update(input_env)
@@ -121,8 +122,6 @@ if __name__ == "__main__":
     parser.set_defaults(
         buildbotConfigs=os.environ.get("BUILDBOT_CONFIGS",
                                        DEFAULT_BUILDBOT_CONFIGS_REPO),
-        buildbotcustom=os.environ.get("BUILDBOTCUSTOM",
-                                      DEFAULT_BUILDBOTCUSTOM_REPO),
         locales=[],
         chunks=None,
         thisChunk=None,
@@ -131,7 +130,6 @@ if __name__ == "__main__":
     parser.add_option("-c", "--configfile", dest="configfile")
     parser.add_option("-r", "--release-config", dest="releaseConfig")
     parser.add_option("-b", "--buildbot-configs", dest="buildbotConfigs")
-    parser.add_option("-B", "--buildbotcustom", dest="buildbotcustom")
     parser.add_option("-t", "--release-tag", dest="releaseTag")
     parser.add_option("-p", "--platform", dest="platform")
     parser.add_option("-o", "--objdir", dest="objdir")
@@ -142,8 +140,6 @@ if __name__ == "__main__":
     options, args = parser.parse_args()
     mercurial(options.buildbotConfigs, "buildbot-configs")
     update("buildbot-configs", revision=options.releaseTag)
-    mercurial(options.buildbotcustom, "buildbotcustom")
-    update("buildbotcustom", revision=options.releaseTag)
     sys.path.append(os.getcwd())
     branchConfig, releaseConfig = validate(options, args)
 
@@ -155,7 +151,7 @@ if __name__ == "__main__":
                           releaseConfig["sourceRepoName"], "release",
                           "l10n-mozconfig")
     if options.chunks:
-        locales = getLocalesForChunk(
+        locales = getReleaseLocalesForChunk(
             releaseConfig["productName"], releaseConfig["appName"],
             releaseConfig["version"], int(releaseConfig["buildNumber"]),
             releaseConfig["sourceRepoPath"], options.platform,

@@ -4,7 +4,6 @@ from os import path
 import re
 import shutil
 import sys
-from time import strftime
 from urllib2 import urlopen
 
 from release.paths import makeCandidatesDir
