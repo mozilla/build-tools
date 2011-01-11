@@ -233,12 +233,12 @@ def apply_and_push(localrepo, remote, changer, max_attempts=10,
     changer(localrepo, 1)
     for n in range(1, max_attempts+1):
         tip = get_revision(localrepo)
-        new_revs = out(src=localrepo, remote=remote, revision=tip,
-                       branch=branch, ssh_username=ssh_username,
-                       ssh_key=ssh_key)
-        if not new_revs:
-            raise HgUtilError("No revs to push")
         try:
+            new_revs = out(src=localrepo, remote=remote, revision=tip,
+                           branch=branch, ssh_username=ssh_username,
+                           ssh_key=ssh_key)
+            if not new_revs:
+                raise HgUtilError("No revs to push")
             push(src=localrepo, remote=remote, revision=tip, branch=branch,
                  ssh_username=ssh_username, ssh_key=ssh_key)
             return
