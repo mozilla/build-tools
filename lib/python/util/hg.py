@@ -246,6 +246,8 @@ def apply_and_push(localrepo, remote, changer, max_attempts=10,
             log.debug("Hit error when trying to push: %s" % str(e))
             if n == max_attempts:
                 log.debug("Tried %d times, giving up" % max_attempts)
+                for r in reversed(new_revs):
+                    run_cmd(['hg', 'strip', r], cwd=localrepo)
                 raise HgUtilError("Failed to push")
             pull(remote, localrepo, update_dest=False,
                  ssh_username=ssh_username, ssh_key=ssh_key)
@@ -256,8 +258,7 @@ def apply_and_push(localrepo, remote, changer, max_attempts=10,
             except subprocess.CalledProcessError, e:
                 log.debug("Failed to rebase: %s" % str(e))
                 update(localrepo, branch=branch)
-                new_revs.reverse()
-                for r in new_revs:
+                for r in reversed(new_revs):
                     run_cmd(['hg', 'strip', r], cwd=localrepo)  
                 changer(localrepo, n+1)
 

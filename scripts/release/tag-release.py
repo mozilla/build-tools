@@ -9,7 +9,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
 log = logging.getLogger(__name__)
 
 from util.commands import run_cmd
-from util.hg import clone, apply_and_push, update, get_revision, make_hg_url
+from util.hg import mercurial, apply_and_push, update, get_revision, make_hg_url
 from release.info import readReleaseConfig, getTags, generateRelbranchName, \
   isFinalRelease
 from release.l10n import getL10nRepositories
@@ -54,7 +54,7 @@ def tag(repo, revision, tags, username):
 
 def tagRepo(config, repo, reponame, revision, tags, bumpFiles, relbranch,
             isRelbranchGenerated, pushAttempts):
-    clone(make_hg_url(HG, repo), reponame)
+    mercurial(make_hg_url(HG, repo), reponame)
 
     def bump_and_tag(repo, attempt, config, relbranch, isRelbranchGenerated,
                      revision, tags):
@@ -135,7 +135,7 @@ if __name__ == '__main__':
                       help="Release tag to update buildbot-configs to")
 
     options, args = parser.parse_args()
-    clone(options.buildbot_configs, 'buildbot-configs')
+    mercurial(options.buildbot_configs, 'buildbot-configs')
     update('buildbot-configs', revision=options.release_tag)
     config = validate(options, args)
     configDir = path.dirname(options.configfile)
