@@ -129,8 +129,9 @@ if __name__ == '__main__':
     import sys, time
     from optparse import OptionParser
 
+    cwd = os.path.basename(os.getcwd())
     parser = OptionParser(usage=__doc__)
-    parser.set_defaults(size=5, skip=[], dry_run=False, max_age=14)
+    parser.set_defaults(size=5, skip=[cwd], dry_run=False, max_age=14)
 
     parser.add_option('-s', '--size',
             help='free space required (in GB, default 5)', dest='size',
@@ -169,6 +170,13 @@ will be listed in the order in which they would be deleted.''')
 
     purge(base_dirs, options.size, options.skip, cutoff_time, options.dry_run)
     after = freespace(base_dirs[0])/(1024*1024*1024.0)
+
+    # Try to cleanup the current dir if we still need space and it will actually help.
+    if after < options.size:
+        # We skip the tools dir here because we've usually just cloned it.
+        purge(['.'], options.size, ['tools'], cutoff_time, options.dry_run)
+        after = freespace(base_dirs[0])/(1024*1024*1024.0)
+
     if after < options.size:
         print "Error: unable to free %1.2f GB of space. " % options.size + \
               "Free space only %1.2f GB" % after
