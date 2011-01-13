@@ -37,10 +37,10 @@ def make_buildbot_tac(allocation):
 
     info['gendate'] = time.ctime()
     info['genhost'] = socket.getfqdn()
-    info['buildmaster_host'] = allocation.master_row.fqdn
-    info['port'] = allocation.master_row.pb_port
+    info['buildmaster_host'] = allocation.master_fqdn
+    info['port'] = allocation.master_pb_port
     info['slavename'] = allocation.slavename
-    info['basedir'] = allocation.slave_row.basedir
+    info['basedir'] = allocation.slave_basedir
     info['passwd'] = allocation.slave_password
 
     return tac_template % info

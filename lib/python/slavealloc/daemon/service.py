@@ -30,7 +30,7 @@ class AllocatorService(service.Service):
         d = defer.succeed(None)
         def gettac(_):
             try:
-                allocation = allocate.get_allocation(slave_name)
+                allocation = allocate.Allocation(slave_name)
             except exceptions.NoAllocationError:
                 log.msg("rejecting slave '%s'" % slave_name)
                 raise
@@ -39,9 +39,9 @@ class AllocatorService(service.Service):
 
             allocation.commit()
             log.msg("allocated '%s' to '%s' (%s:%s)" % (slave_name,
-                    allocation.master_row.nickname,
-                    allocation.master_row.fqdn,
-                    allocation.master_row.pb_port))
+                    allocation.master_nickname,
+                    allocation.master_fqdn,
+                    allocation.master_pb_port))
 
             return tac
         d.addCallback(gettac)

@@ -23,7 +23,7 @@ def process_args(subparser, args):
 def main(args):
     for slave in args.slave:
         try:
-            allocation = allocate.get_allocation(slave)
+            allocation = allocate.Allocation(slave)
         except exceptions.NoAllocationError:
             print >>sys.stderr, "No buildbot.tac available (404 from slave allocator)"
             sys.exit(1)
@@ -34,6 +34,6 @@ def main(args):
         if not args.noop:
             allocation.commit()
         print >>sys.stderr, "Allocated '%s' to '%s' (%s:%s)" % (slave,
-                allocation.master_row.nickname,
-                allocation.master_row.fqdn,
-                allocation.master_row.pb_port)
+                allocation.master_nickname,
+                allocation.master_fqdn,
+                allocation.master_pb_port)
