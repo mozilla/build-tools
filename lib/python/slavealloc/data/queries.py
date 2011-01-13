@@ -30,7 +30,7 @@ denormalized_masters = sa.select([
         ))
 
 # this is one query, but it's easier to build it in pieces.  Use bind parameter
-# 'slavename' to specify the new slave.  There will be exactly one result row,
+# 'slaveid' to specify the new slave.  There will be exactly one result row,
 # unless there are no masters for this slave.  That result row is from the
 # masters table
 def best_master():
@@ -63,7 +63,7 @@ def best_master():
     nonzero_mastercounts = sa.select(
          [ model.masters.c.masterid, sa.func.count().label('slavecount') ],
          from_obj=peers_masters,
-         whereclause=(me.c.name == sa.bindparam('slavename')),
+         whereclause=(me.c.slaveid == sa.bindparam('slaveid')),
          group_by=[model.masters.c.masterid],
     ).alias('nonzero_mastercounts')
 
@@ -80,7 +80,7 @@ def best_master():
 
     best_master = sa.select([ model.masters ],
             from_obj=joined_masters,
-            whereclause=(model.slaves.c.name == sa.bindparam('slavename')),
+            whereclause=(model.slaves.c.slaveid == sa.bindparam('slaveid')),
             order_by=[numeric_slavecount,model.masters.c.masterid],
             limit=1)
     return best_master
