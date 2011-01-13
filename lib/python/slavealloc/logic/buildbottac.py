@@ -1,6 +1,8 @@
 import time
 import socket
 
+from slavealloc.data import model
+
 tac_template = """\
 # AUTOMATICALLY GENERATED - DO NOT MODIFY
 # generated: %(gendate)s on %(genhost)s
@@ -33,12 +35,18 @@ s.setServiceParent(application)
 def make_buildbot_tac(engine, slavename, allocation):
     info = dict()
 
+    # we'll need info on the slave itself, e.g., basedir
+    q = model.slaves.select(whereclause=(model.slaves.c.name == slavename))
+    q.bind = engine
+    slaverow = q.execute().fetchone()
+    print slaverow
+
     info['gendate'] = time.ctime()
     info['genhost'] = socket.getfqdn()
     info['buildmaster_host'] = allocation.fqdn
     info['port'] = allocation.pb_port
     info['slavename'] = slavename
-    info['basedir'] = 'TODO' # TODO!!
+    info['basedir'] = slaverow.basedir
     info['passwd'] = 'TODO' # TODO!!
 
     return tac_template % info

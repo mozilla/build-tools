@@ -60,6 +60,7 @@ slaves = sa.Table('slaves', metadata,
     sa.Column('trustid', sa.Integer, sa.ForeignKey('trustlevels.trustid')),
     sa.Column('envid', sa.Integer, sa.ForeignKey('environments.envid')),
     sa.Column('poolid', sa.Integer, sa.ForeignKey('pools.poolid')),
+    sa.Column('basedir', sa.Text, nullable=False),
     sa.Column('current_masterid', sa.Integer, sa.ForeignKey('masters.masterid')),
 )
 

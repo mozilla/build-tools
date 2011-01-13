@@ -72,5 +72,6 @@ def main(args):
              trustid=trustlevels[row['trustlevel']],
              envid=environments[row['environment']],
              poolid=pools[row['pool']],
+             basedir=row['basedir'],
              current_masterid=None)
         for row in slaves ])
