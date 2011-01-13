@@ -1,6 +1,6 @@
 import sys
 import csv
-from slavealloc.data import engine, model
+from slavealloc.data import model
 
 def setup_argparse(subparsers):
     subparser = subparsers.add_parser('dbinit', help='initialize a fresh database')
@@ -25,8 +25,6 @@ def process_args(subparser, args):
         subparser.error("--master-data, --slave-data, and --password-data are all required")
 
 def main(args):
-    eng = engine.create_engine(args)
-    model.metadata.bind = eng
     model.metadata.drop_all()
     model.metadata.create_all()
 

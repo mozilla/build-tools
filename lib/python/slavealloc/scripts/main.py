@@ -2,7 +2,7 @@ import sys
 import argparse
 import textwrap
 
-from slavealloc.data import engine
+from slavealloc.data import engine, model
 
 # subcommands
 from slavealloc.scripts import silos, dbinit, pools, gettac
@@ -25,15 +25,14 @@ def parse_options():
     if not args.module:
         parser.error("No subcommand specified")
 
+    # set up the SQLAlchemy binding of metadata to engine
+    eng = engine.create_engine(args)
+    model.metadata.bind = eng
+
     args.module.process_args(args.subparser, args)
 
     return args.module.main, args
 
 def main():
     func, args = parse_options()
-    try:
-        func(args)
-    except engine.NoDBError:
-        print >>sys.stderr, "No database specified (use --db)"
-        sys.exit(1)
-
+    func(args)

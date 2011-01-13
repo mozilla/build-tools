@@ -9,7 +9,6 @@ class Allocation(object):
     master_row = None # a row from the masters table
     slave_row = None # the slave's row
     slave_password = None # the slave's password
-    engine = None # the SQLAlchemy engine
 
     def commit(self):
         """
@@ -17,19 +16,17 @@ class Allocation(object):
         """
         q = model.slaves.update(whereclause=(model.slaves.c.slaveid == self.slaveid),
                             values=dict(current_masterid=self.master_row.masterid))
-        self.engine.execute(q)
+        q.execute()
 
-def get_allocation(eng, slavename):
+def get_allocation(slavename):
     """
     Return the C{masters} row for the master to which C{slavename}
     should be assigned.
     """
     allocation = Allocation()
     allocation.slavename = slavename
-    allocation.engine = eng
 
     q = model.slaves.select(whereclause=(model.slaves.c.name == slavename))
-    q.bind = eng
     allocation.slave_row = q.execute().fetchone()
     if not allocation.slave_row:
         raise exceptions.NoAllocationError
@@ -37,12 +34,10 @@ def get_allocation(eng, slavename):
     allocation.slaveid = allocation.slave_row.slaveid
 
     q = queries.slave_password
-    q.bind = eng
     allocation.slave_password = q.execute(slaveid=allocation.slaveid).scalar()
 
     # TODO: use slaveid, lose a join
     q = queries.best_master
-    q.bind = eng
     allocation.master_row = q.execute(slavename=slavename).fetchone()
     if not allocation.master_row:
         raise exceptions.NoAllocationError

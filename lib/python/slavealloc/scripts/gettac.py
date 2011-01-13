@@ -1,6 +1,5 @@
 import sys
 from slavealloc import exceptions
-from slavealloc.data import engine
 from slavealloc.logic import allocate, buildbottac
 
 def setup_argparse(subparsers):
@@ -22,11 +21,9 @@ def process_args(subparser, args):
         subparser.error("slave name must not contain '.'; give the unqualified hostname")
 
 def main(args):
-    eng = engine.create_engine(args)
-
     for slave in args.slave:
         try:
-            allocation = allocate.get_allocation(eng, slave)
+            allocation = allocate.get_allocation(slave)
         except exceptions.NoAllocationError:
             print >>sys.stderr, "No buildbot.tac available (404 from slave allocator)"
             sys.exit(1)

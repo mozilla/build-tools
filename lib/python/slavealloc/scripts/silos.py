@@ -2,7 +2,7 @@ import sys
 import csv
 import collections
 import sqlalchemy as sa
-from slavealloc.data import engine, model, queries
+from slavealloc.data import model, queries
 
 silo_keys = 'environment purpose distro bitlength datacenter trustlevel'.split()
 
@@ -38,11 +38,8 @@ def process_args(subparser, args):
 def main(args):
     silos = collections.defaultdict(lambda : 0)
 
-    eng = engine.create_engine(args)
-
     # get the denormalized slave data
     q = queries.denormalized_slaves
-    q.bind = eng
     slaves = [ r for r in q.execute() ]
 
     # count the slaves into silos, using a key composed of the desired

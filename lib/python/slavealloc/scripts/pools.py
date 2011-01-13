@@ -2,7 +2,7 @@ import sys
 import csv
 import collections
 import sqlalchemy as sa
-from slavealloc.data import engine, model, queries
+from slavealloc.data import model, queries
 
 pools_keys = 'pool nmasters nslaves masters'.split()
 
@@ -21,8 +21,6 @@ def process_args(subparser, args):
         subparser.error("unrecognized columns: %s" % (" ".join(list(unrecognized_columns)),))
 
 def main(args):
-    eng = engine.create_engine(args)
-
     pools = collections.defaultdict(lambda:
             dict(masters=[], nmasters=0, nslaves=0))
 
@@ -30,7 +28,6 @@ def main(args):
 
     if 'nmasters' in col_titles or 'masters' in col_titles:
         q = queries.denormalized_masters
-        q.bind = eng
         for master in q.execute():
             p = pools[master.pool]
             p['nmasters'] += 1
@@ -38,7 +35,6 @@ def main(args):
 
     if 'nslaves' in col_titles:
         q = queries.denormalized_slaves
-        q.bind = eng
         for slave in q.execute():
             p = pools[slave.pool]
             p['nslaves'] += 1
