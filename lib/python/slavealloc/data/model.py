@@ -47,6 +47,8 @@ pools = sa.Table('pools', metadata,
     sa.Column('name', sa.Text, nullable=False),
 )
 
+# slave passwords, based on pool
+
 slave_passwords = sa.Table('slave_passwords', metadata,
     # for most pools, all slaves have the same password, but for some pools,
     # different distros have different passwords.  Needless complexity FTW!
@@ -62,6 +64,8 @@ slave_passwords = sa.Table('slave_passwords', metadata,
 slaves = sa.Table('slaves', metadata,
     sa.Column('slaveid', sa.Integer, primary_key=True),
     sa.Column('name', sa.Text, nullable=False),
+
+    # silo
     sa.Column('distroid', sa.Integer, sa.ForeignKey('distros.distroid'), nullable=False),
     sa.Column('bitsid', sa.Integer, sa.ForeignKey('bitlengths.bitsid'), nullable=False),
     sa.Column('purposeid', sa.Integer, sa.ForeignKey('purposes.purposeid'), nullable=False),
@@ -69,7 +73,12 @@ slaves = sa.Table('slaves', metadata,
     sa.Column('trustid', sa.Integer, sa.ForeignKey('trustlevels.trustid'), nullable=False),
     sa.Column('envid', sa.Integer, sa.ForeignKey('environments.envid'), nullable=False),
     sa.Column('poolid', sa.Integer, sa.ForeignKey('pools.poolid'), nullable=False),
+
+    # config
     sa.Column('basedir', sa.Text, nullable=False),
+    sa.Column('locked_masterid', sa.Integer, sa.ForeignKey('masters.masterid')),
+
+    # state
     sa.Column('current_masterid', sa.Integer, sa.ForeignKey('masters.masterid')),
 )
 

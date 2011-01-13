@@ -36,9 +36,17 @@ def get_allocation(slavename):
     q = queries.slave_password
     allocation.slave_password = q.execute(slaveid=allocation.slaveid).scalar()
 
-    # TODO: use slaveid, lose a join
-    q = queries.best_master
-    allocation.master_row = q.execute(slavename=slavename).fetchone()
+    # if this slave has a locked_masterid, just get that row; otherwise, run
+    # the allocation algorithm
+    if allocation.slave_row.locked_masterid:
+        q = model.masters.select(whereclause=(
+            model.masters.c.masterid == allocation.slave_row.locked_masterid))
+        allocation.master_row = q.execute().fetchone()
+    else:
+        # TODO: use slaveid, lose a join
+        q = queries.best_master
+        allocation.master_row = q.execute(slavename=slavename).fetchone()
+
     if not allocation.master_row:
         raise exceptions.NoAllocationError
 
