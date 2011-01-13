@@ -14,11 +14,15 @@ def setup_argparse(subparsers):
             help="""csv of master data to import (columns: nickname, fqdn,
             http_port, pb_port, and pool)""")
 
+    subparser.add_argument('--password-data', dest='password_data',
+            help="""csv of password data to import (columns: pool, distro,
+            password); a distro of '*' is converted to NULL""")
+
     return subparser
 
 def process_args(subparser, args):
-    if not args.master_data or not args.slave_data:
-        subparser.error("--master-data and --slave-data are both required")
+    if not args.master_data or not args.slave_data or not args.password_data:
+        subparser.error("--master-data, --slave-data, and --password-data are all required")
 
 def main(args):
     eng = engine.create_engine(args)
@@ -31,6 +35,9 @@ def main(args):
 
     rdr = csv.DictReader(open(args.master_data))
     masters = list(rdr)
+
+    rdr = csv.DictReader(open(args.password_data))
+    passwords = list(rdr)
 
     def normalize(table, idcolumn, values):
         values = list(enumerate(list(set(values)))) # remove duplicates, add ids
@@ -52,6 +59,8 @@ def main(args):
     environments = normalize(model.environments, 'envid',
             [ r['environment'] for r in slaves ])
     pools = normalize(model.pools, 'poolid',
+            [ r['pool'] for r in passwords ] +
+            [ r['pool'] for r in slaves ] +
             [ r['pool'] for r in masters ])
 
     model.masters.insert().execute([
@@ -75,3 +84,14 @@ def main(args):
              basedir=row['basedir'],
              current_masterid=None)
         for row in slaves ])
+
+    # convert a distro of '*' to NULL
+    distros_or_null = distros.copy()
+    distros_or_null['*'] = None
+
+    model.slave_passwords.insert().execute([
+        dict(poolid=pools[row['pool']],
+             distroid=distros_or_null[row['distro']],
+             password=row['password'])
+        for row in passwords ])
+

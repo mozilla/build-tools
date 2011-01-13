@@ -85,3 +85,11 @@ def best_master():
             limit=1)
     return best_master
 best_master = best_master()
+
+slave_password = sa.select([ model.slave_passwords.c.password ],
+        from_obj=[ model.slaves, model.slave_passwords ],
+        whereclause=(
+            (model.slaves.c.slaveid == sa.bindparam('slaveid')) &
+            (model.slave_passwords.c.poolid == model.slaves.c.poolid) &
+            (   (model.slave_passwords.c.distroid == None) |
+                (model.slave_passwords.c.distroid == model.slaves.c.distroid))))

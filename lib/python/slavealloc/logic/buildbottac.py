@@ -32,21 +32,15 @@ s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
 s.setServiceParent(application)
 """
 
-def make_buildbot_tac(engine, slavename, allocation):
+def make_buildbot_tac(allocation):
     info = dict()
-
-    # we'll need info on the slave itself, e.g., basedir
-    q = model.slaves.select(whereclause=(model.slaves.c.name == slavename))
-    q.bind = engine
-    slaverow = q.execute().fetchone()
-    print slaverow
 
     info['gendate'] = time.ctime()
     info['genhost'] = socket.getfqdn()
-    info['buildmaster_host'] = allocation.fqdn
-    info['port'] = allocation.pb_port
-    info['slavename'] = slavename
-    info['basedir'] = slaverow.basedir
-    info['passwd'] = 'TODO' # TODO!!
+    info['buildmaster_host'] = allocation.master_row.fqdn
+    info['port'] = allocation.master_row.pb_port
+    info['slavename'] = allocation.slavename
+    info['basedir'] = allocation.slave_row.basedir
+    info['passwd'] = allocation.slave_password
 
     return tac_template % info

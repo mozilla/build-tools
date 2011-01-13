@@ -33,11 +33,13 @@ class AllocatorService(service.Service):
                 log.msg("rejecting slave '%s'" % slave_name)
                 raise
 
-            tac = buildbottac.make_buildbot_tac(self.engine, slave_name, allocation)
+            tac = buildbottac.make_buildbot_tac(allocation)
 
-            allocate.allocate(self.engine, slave_name, allocation)
+            allocation.commit()
             log.msg("allocated '%s' to '%s' (%s:%s)" % (slave_name,
-                    allocation.nickname, allocation.fqdn, allocation.pb_port))
+                    allocation.master_row.nickname,
+                    allocation.master_row.fqdn,
+                    allocation.master_row.pb_port))
 
             return tac
         d.addCallback(gettac)

@@ -32,9 +32,11 @@ def main(args):
             sys.exit(1)
 
         if not args.quiet:
-            print buildbottac.make_buildbot_tac(eng, slave, allocation)
+            print buildbottac.make_buildbot_tac(allocation)
 
         if not args.noop:
-            allocate.allocate(eng, slave, allocation)
+            allocation.commit()
         print >>sys.stderr, "Allocated '%s' to '%s' (%s:%s)" % (slave,
-                allocation.nickname, allocation.fqdn, allocation.pb_port)
+                allocation.master_row.nickname,
+                allocation.master_row.fqdn,
+                allocation.master_row.pb_port)

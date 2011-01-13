@@ -51,7 +51,7 @@ class RootResource(resource.Resource):
 
     def getChild(self, name, request):
         if name:
-            return TacResource(name)
+            return TacSlaveResource(name)
         else:
             return error.NoResource()
 
