@@ -33,7 +33,10 @@ def main(args):
 
         if not args.noop:
             allocation.commit()
-        print >>sys.stderr, "Allocated '%s' to '%s' (%s:%s)" % (slave,
+        if allocation.disabled:
+            print >>sys.stderr, "Slave '%s' is disabled; no allocation made" % slave
+        else:
+            print >>sys.stderr, "Allocated '%s' to '%s' (%s:%s)" % (slave,
                 allocation.master_nickname,
                 allocation.master_fqdn,
                 allocation.master_pb_port)

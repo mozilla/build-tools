@@ -38,7 +38,10 @@ class AllocatorService(service.Service):
             tac = buildbottac.make_buildbot_tac(allocation)
 
             allocation.commit()
-            log.msg("allocated '%s' to '%s' (%s:%s)" % (slave_name,
+            if allocation.disabled:
+                log.msg("slave '%s' is disabled; no allocation made" % slave_name)
+            else:
+                log.msg("allocated '%s' to '%s' (%s:%s)" % (slave_name,
                     allocation.master_nickname,
                     allocation.master_fqdn,
                     allocation.master_pb_port))

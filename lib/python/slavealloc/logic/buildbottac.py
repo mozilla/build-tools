@@ -32,11 +32,26 @@ s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
 s.setServiceParent(application)
 """
 
+tac_template_disabled = """\
+# AUTOMATICALLY GENERATED - DO NOT MODIFY
+# generated: %(gendate)s on %(genhost)s
+
+print "SLAVE DISABLED; NOT STARTING"
+
+import sys
+sys.exit(0)
+"""
+
 def make_buildbot_tac(allocation):
     info = dict()
 
     info['gendate'] = time.ctime()
     info['genhost'] = socket.getfqdn()
+
+    # short-circuit for disabled slaves
+    if allocation.disabled:
+        return tac_template_disabled % info
+
     info['buildmaster_host'] = allocation.master_fqdn
     info['port'] = allocation.master_pb_port
     info['slavename'] = allocation.slavename

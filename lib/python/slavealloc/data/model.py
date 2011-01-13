@@ -77,6 +77,7 @@ slaves = sa.Table('slaves', metadata,
     # config
     sa.Column('basedir', sa.Text, nullable=False),
     sa.Column('locked_masterid', sa.Integer, sa.ForeignKey('masters.masterid')),
+    sa.Column('disabled', sa.Boolean, nullable=False, default=False),
 
     # state
     sa.Column('current_masterid', sa.Integer, sa.ForeignKey('masters.masterid')),
