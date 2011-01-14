@@ -44,7 +44,7 @@ def get_product_uptake(tuxedoServerUrl, bouncerProductName, timeout=30,
         doc = xml.dom.minidom.parseString(page)
         uptake_values = []
 
-        for element in doc.getElementsByTagName('total'):
+        for element in doc.getElementsByTagName('available'):
             for node in element.childNodes:
                 if node.nodeType == xml.dom.minidom.Node.TEXT_NODE and \
                   node.data.isdigit():
