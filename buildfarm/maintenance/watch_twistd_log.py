@@ -53,6 +53,10 @@ def parse_time(line):
 
 
 class Scanner:
+    ignore_patterns = [
+            re.compile(re.escape("Failure: twisted.spread.pb.PBConnectionLost: [Failure instance: Traceback (failure with no frames): <class 'twisted.internet.error.ConnectionLost'>: Connection to the other side was lost in a non-clean fashion.")),
+            ]
+
     def __init__(self, lasttime=0):
         # Buffer of unhandled lines
         self.lasttime = lasttime
@@ -69,7 +73,12 @@ class Scanner:
             if current_exc is not None:
                 # Blank lines mean the end of the exception
                 if line.strip() == "":
-                    retval.append("".join(current_exc))
+                    current_exc = "".join(current_exc)
+                    for p in self.ignore_patterns:
+                        if p.search(current_exc):
+                            break
+                    else:
+                        retval.append(current_exc)
                     current_exc = None
                 else:
                     current_exc.append(line)
@@ -84,7 +93,12 @@ class Scanner:
 
         # Handle exceptions printed out at the end of the file
         if current_exc:
-            retval.append("".join(current_exc))
+            current_exc = "".join(current_exc)
+            for p in self.ignore_patterns:
+                if p.search(current_exc):
+                    break
+            else:
+                retval.append(current_exc)
 
         return retval
 
