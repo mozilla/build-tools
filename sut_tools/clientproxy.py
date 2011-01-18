@@ -8,6 +8,7 @@ import os, sys
 import time
 import atexit
 import socket
+import asyncore
 import logging
 import traceback
 import subprocess
@@ -15,14 +16,12 @@ import subprocess
 from signal import SIGTERM
 from optparse import OptionParser
 from Queue import Empty
-from multiprocessing import Process, Queue, current_process, freeze_support, get_logger, log_to_stderr
+from multiprocessing import Process, Queue, current_process, get_logger, log_to_stderr
 
 
 """clientproxy.py
 
 Manage a buildbot client/slave instance for each defined Android device.
-
-The list of slaves to manage is pulled from config.py's android device list.
 
     Parameters
         --bbpath   <path>       Parent directory where the Tegra buildslaves are located.
@@ -38,20 +37,19 @@ The list of slaves to manage is pulled from config.py's android device list.
 """
 
 
-log            = get_logger()
-options        = None
-daemon         = None
-slaveList      = {}
-monitors       = {}
-eventQueue     = Queue()
-monitorQueue   = Queue()
-sutDataPort    = 20700
-maxErrors      = 5
-lastRefresh    = None
+log             = get_logger()
+eventQueue      = Queue()
+options         = None
+slaveMgr        = None
 
-ourPID         = None
-ourPath        = os.getcwd()
-ourName        = os.path.splitext(os.path.basename(sys.argv[0]))[0]
+sutDataPort     = 20700
+sutDialbackPort = 20742
+maxErrors       = 5
+
+ourIP           = None
+ourPID          = None
+ourPath         = os.getcwd()
+ourName         = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 
 defaultOptions = {
                    'debug':   ('-d', '--debug',   False,    'Enable Debug', 'b'),
@@ -60,7 +58,6 @@ defaultOptions = {
                    'logpath': ('-l', '--logpath', ourPath,  'Path where log file is to be written'),
                    'pidpath': ('',   '--pidpath', ourPath,  'Path where the pid file is to be created'),
                    'echo':    ('-e', '--echo',    False,    'Enable echoing of log output to stderr', 'b'),
-                   'daemon':  ('',   '--daemon',  False,    'Behave as a daemon.  Requires one of the following commands: start, stop, restart', 'b'),
                  }
 
 
@@ -126,173 +123,10 @@ def loadOptions():
         log.setLevel(logging.DEBUG)
         log.info('debug level is on')
 
-    if options.daemon:
-        cmdFound = False
+    pidFile = os.path.join(ourPath, '%s.pid' % ourName)
+    ourPID = os.getpid()
+    file(pidFile,'w+').write("%s\n" % ourPID)
 
-        for s in args:
-            if s.lower() in ('start', 'stop', 'restart'):
-                cmdFound = True
-                daemon   = forkMe(os.path.join(ourPath, '%s.pid' % ourName))
-                if s == 'start':
-                    daemon.start()
-                elif s == 'stop':
-                    daemon.stop()
-                elif s == 'restart':
-                    daemon.restart()
-                break
-
-        if not cmdFound:
-            log.warning('Daemonize requested but no valid commands found - ignoring request')
-
-    if daemon is not None:
-        ourPID = daemon.ourPID
-    else:
-        ourPID = os.getpid()
-
-
-class forkMe:
-    """UNIX style daemonize using classic Stevens' method found in
-    "Advanced Programming in the UNIX Environment"
-    """
-    def __init__(self, pidfile, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
-        self.stdin   = stdin
-        self.stdout  = stdout
-        self.stderr  = stderr
-        self.pidfile = pidfile
-        self.ourPID  = None
-
-    def daemonize(self):
-        try:
-            if os.fork() > 0:
-                sys.exit(0)
-        except OSError:
-            log.error('unable to daemonize (pre-fork)')
-            sys.exit(1)
-
-        os.chdir("/")
-        os.setsid()
-        os.umask(0)
-
-        try:
-            if os.fork() > 0:
-                sys.exit(0)
-        except OSError, e:
-            log.error('unable to daemonize (detach fork)')
-            sys.exit(1)
-
-        sys.stdout.flush()
-        sys.stderr.flush()
-        si = file(self.stdin,  'r')
-        so = file(self.stdout, 'a+')
-        se = file(self.stderr, 'a+', 0)
-        os.dup2(si.fileno(), sys.stdin.fileno())
-        os.dup2(so.fileno(), sys.stdout.fileno())
-        os.dup2(se.fileno(), sys.stderr.fileno())
-
-        atexit.register(self.exitCleanup)
-        self.ourPID = os.getpid()
-
-        file(self.pidfile,'w+').write("%s\n" % self.ourPID)
-
-    def exitCleanup(self):
-        os.remove(self.pidfile)
-
-    def start(self):
-        pid = None
-        try:
-            pid = int(file(self.pidfile,'r').read().strip())
-        except IOError:
-            pid = None
-
-        if pid is not None:
-            log.info('PID file [%s] already present so we are assumed to be active.  Clear PID file if this is not the case' % self.pidfile)
-            sys.exit(1)
-
-        log.info('attempting to daemonize our process')
-        self.daemonize()
-        self.run()
-
-    def stop(self):
-        pid = None
-        try:
-            pid = int(file(self.pidfile,'r').read().strip())
-        except IOError:
-            pid = None
-
-        if not pid:
-            log.info('PID file [%s] not found. Shutting down.')
-            sys.exit()
-        else:
-            try:
-                while 1:
-                    os.kill(pid, SIGTERM)
-                    time.sleep(0.1)
-            except OSError:
-                log.info('PID %s terminated, shutting down'% pid)
-
-            if os.path.exists(self.pidfile):
-                os.remove(self.pidfile)
-
-        sys.exit()
-
-    def restart(self):
-        self.stop()
-        self.start()
-
-    def run(self):
-        pass
-
-
-def loadSlaves():
-    """Determine the list of Tegra slaves
-    The list of slaves to manage is determined by the entries in the
-    Tegra config file.
-    
-    For each slave initialize the state and insert a 'start' state
-    into the event queue.
-    """
-    global lastRefresh
-
-    log.info('Checking for changes in [%s]' % options.tegras)
-
-    newList = {}
-    if os.path.isfile(options.tegras):
-        for line in open(options.tegras, 'r').readlines():
-            if len(line) > 0 and line[0] not in ('#', ';'):
-                item = line[:-1].split()
-
-                if len(item) > 0:
-                    s  = item[0]
-                    ip = None
-
-                    if len(item) == 2:
-                        ip = item[1]
-
-                    if s not in slaveList:
-                        slaveList[s] = { 'state':  'idle',
-                                         'ip':     ip,
-                                         'tag':    s,
-                                         'port':   sutDataPort,
-                                         'errors': 0,
-                                       }
-                        log.info('%s added to pool' % s)
-                        eventQueue.put((s, 'start'))
-
-                    newList[s] = ip
-
-    keys = newList.keys()
-
-    for s in slaveList:
-        if s in keys:
-            if newList[s] != slaveList[s]['ip']:
-                log.info('%s found in device list, but with different IP: %s -> %s - restarting'% (s, slaveList[s]['ip'], newList[s]))
-                slaveList[s]['ip'] = newList[s]
-                eventQueue.put((s, 'stop'))
-        else:
-            log.info('%s not found in device list - removing' % s)
-            eventQueue.put((s, 'delete'))
-
-    lastRefresh = os.path.getmtime(options.tegras)
 
 def runCommand(cmd, env=None):
     """Execute the given command and logs stdout with stderr piped to stdout
@@ -309,7 +143,73 @@ def runCommand(cmd, env=None):
 
     return p
 
-def monitorSlave(slave, bbpath, parentPID):
+def getOurIP():
+    result = None
+
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(('mozilla.com', 80))
+        result = s.getsockname()[0]
+        s.close()
+    except:
+        dumpException('unable to determine our IP address')
+
+    return result
+
+class DialbackHandler(asyncore.dispatcher_with_send):
+    def __init__(self, sock, events):
+        asyncore.dispatcher_with_send.__init__(self, sock)
+
+        self.events = events
+
+    def handle_read(self):
+        data = self.recv(1024)
+        log.info('data: %s' % data)
+
+        if data.startswith('register '):
+            self.send('OK\n')
+            ip  = self.addr[0].strip()
+            self.events.put((ip, 'dialback'))
+
+class DialbackServer(asyncore.dispatcher):
+    def __init__(self, host, port, events):
+        asyncore.dispatcher.__init__(self)
+
+        self.events = events
+        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.set_reuse_addr()
+        log.info('Binding to %s port %d' % (host, port))
+        self.bind((host, port))
+        self.listen(5)
+
+    def handle_accept(self):
+        log.info('incoming request')
+        pair = self.accept()
+        if pair is not None:
+            sock, addr = pair
+            log.info('Connection from %s' % repr(addr))
+            handle = DialbackHandler(sock, self.events)
+
+def handleDialback(port, events):
+    """Dialback listener
+    The SUTAgent will 'ping' our address/port when it first starts.
+    
+    This DialbackHandler method will be called for an incoming Tegra's ping
+    when the listener is connected to by SUTAgent.
+    
+    NOTE: This code should only be run in it's own thread/process
+          as it will not return
+    """
+    log.info('listener starting')
+    dialback = DialbackServer('0.0.0.0', port, events)
+    while asyncore.socket_map:
+        try:
+            asyncore.loop(timeout=1, count=1)
+        except:
+            dumpException('error during dialback loop')
+            break
+
+def monitorSlave(slave, bbpath, slaveMgr, events):
     """Slave monitoring task/process
     Each active slave will have a monitoring process spawned.
     
@@ -325,182 +225,371 @@ def monitorSlave(slave, bbpath, parentPID):
     For any exception or error, just terminate the monitor process loop
     and let the event manager restart it.
     """
-    bbActive = False
-    hbActive = False
-    bbclient = os.path.join(bbpath, slave['tag'])
-    pidFile  = os.path.join(bbclient, 'twistd.pid')
-    bbEnv    = { 'PATH':     os.getenv('PATH'),
-                 'SUT_NAME': slave['tag'],
-                 'SUT_IP':   slave['ip'],
-               }
+    monitoring = True
+    bbActive   = False
+    hbActive   = False
+    hbFails    = 0
+    maxReq     = 4
+    infoReq    = maxReq
+    bbclient   = os.path.join(bbpath, slave['tag'])
+    pidFile    = os.path.join(bbclient, 'twistd.pid')
+    flagFile   = os.path.join(bbclient, 'proxy.flg')
+    bbEnv      = { 'PATH':     os.getenv('PATH'),
+                   'SUT_NAME': slave['tag'],
+                   'SUT_IP':   slave['ip'],
+                 }
 
     log.info('monitoring started: pid [%s]' % current_process().pid)
 
-    try:
-        hbSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        hbSocket.settimeout(float(120))
-        hbSocket.connect((slave['ip'], slave['port']))
-        connected = True
-    except:
-        dumpException('error connecting to data port')
-        connected = False
-
-    while connected:
-        if os.getppid() != parentPID:
-            log.error('parent process has gone away, shutting down monitoring')
-            break
-
+    while monitoring:
         try:
-            log.debug('listening for heartbeat')
-            data = hbSocket.recv(1024)
-            log.debug('socket data [%s]' % data[:-1])
+            hbSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            hbSocket.settimeout(float(120))
+            hbSocket.connect((slave['ip'], slave['port']))
+            connected = True
+        except:
+            log.error('Error connecting to data port')
+            connected = False
+            if bbActive:
+                hbFails += 1
+            time.sleep(10)
 
-            if 'hump thump' in data or 'trace' in data:
-                log.debug('heartbeat detected')
+        while connected:
+            hbFails = 0
+
+            try:
+                if infoReq == 0:
+                    log.debug('gathering debug data')
+                    hbSocket.send('info\n')
+                    infoReq = maxReq
+                infoReq -= 1
+
+                log.debug('listening for heartbeat')
+                data = hbSocket.recv(1024)
                 hbActive = True
-            elif 'ebooting ...' in data:
-                log.info('device is rebooting')
-                hbActive = False
-            else:
-                log.debug('heartbeat not found')
-                hbActive = False
 
-            if hbActive:
-                if bbActive:
-                    if not os.path.isfile(pidFile):
+                if len(data) > 1:
+                    log.debug('socket data [%s]' % data[:-1])
+
+                    if 'hump thump' in data or 'trace' in data:
+                        log.info('heartbeat detected')
+                    elif 'ebooting ...' in data:
+                        log.warning('device is rebooting')
+                        if not os.path.isfile(flagFile):
+                            hbActive = False
+                else:
+                    time.sleep(10)
+
+                if hbActive:
+                    if slaveMgr.checkReboot(slave['tag']):
+                        log.info('hbActive and reboot flag found')
+                        os.remove(flagFile)
+                        (slave['tag'], False)
+
+                    if bbActive and not os.path.isfile(pidFile):
                         bbActive = False
                         log.error('buildbot client pidfile not found')
+
+                    if not bbActive:
+                        bbProc = runCommand(['buildslave', 'start', bbclient], env=bbEnv)
+
+                        if bbProc is not None and bbProc.returncode >= 0:
+                            bbActive = True
+
+            except socket.timeout:
+                log.error('socket timeout while monitoring')
+                hbActive = False
+
+                if slaveMgr.checkReboot(slave['tag']):
+                    log.info('socket timeout but reboot flag present, looping')
                 else:
-                    bbProc = runCommand(['buildslave', 'start', bbclient], env=bbEnv)
+                    connected = False
+            except Exception as e:
+                dumpException('exception during monitoring')
+                hbActive = False
 
-                    if bbProc is not None and bbProc.returncode >= 0:
-                        bbActive = True
+                if slaveMgr.checkReboot(slave['tag']):
+                    log.info('socket exception but reboot flag present, looping')
+                else:
+                    connected = False
 
-        except socket.timeout:
-            log.error('socket timeout while monitoring')
-            connected = False
-        except Exception as e:
-            dumpException('exception during monitoring')
-            connected = False
+            log.debug('hbActive %s bbActive %s' % (hbActive, bbActive))
 
-        log.debug('hbActive %s bbActive %s' % (hbActive, bbActive))
+            if bbActive and not hbActive:
+                if os.path.isfile(flagFile) or slaveMgr.checkReboot(slave['tag']):
+                    log.info('proxy.flg found - looping monitor')
+                else:
+                    monitoring = False
+                    break
 
-        if not bbActive or not hbActive:
+        if connected:
+            hbSocket.close()
+        else:
+            if not os.path.isfile(flagFile):
+                log.error('heartbeat is not active - stopping monitor loop')
+                break
+
+        if hbFails > 10:
             break
 
-    if connected:
-        hbSocket.close()
-
     if bbActive:
-        log.info('stopping buildbot client in %s' % bbclient)
-        runCommand(['buildslave', 'stop', bbclient], env=bbEnv)
+        events.put((slave['tag'], 'stop'))
 
     log.info('monitoring stopped')
 
-def clearMonitor(tag):
-    if tag in monitors:
-        log.info('shutting down monitor for %s' % tag)
-        pidfile = os.path.join(options.bbpath, tag, 'twistd.pid')
 
-        if os.path.exists(pidfile):
-            try:
-                n   = 10
-                pid = int(file(pidfile,'r').read().strip())
+class SlaveManager(object):
+    def __init__(self):
+        self.monitors    = {}
+        self.slaveList   = {}
+        self.rebootList  = []
+        self.lastRefresh = None
+
+    def clearMonitor(self, tag):
+        if tag in self.monitors:
+            log.info('shutting down monitor for %s' % tag)
+
+            self.clearBuildSlave(tag)
+
+            self.monitors[tag].terminate()
+            self.monitors[tag].join()
+            del self.monitors[tag]
+
+            self.slaveList[tag]['state'] = 'unknown'
+
+    def clearBuildSlave(self, tag):
+        if tag in self.slaveList:
+            slave = self.slaveList[tag]
+
+            bbclient = os.path.join(options.bbpath, slave['tag'])
+            pidFile  = os.path.join(bbclient, 'twistd.pid')
+            bbEnv    = { 'PATH':     os.getenv('PATH'),
+                         'SUT_NAME': slave['tag'],
+                         'SUT_IP':   slave['ip'],
+                         'CP_IP':    ourIP,
+                       }
+
+            if tag in self.rebootList:
+                self.rebootList.remove(tag)
+
+            log.info('stopping buildbot in %s' % bbclient)
+            runCommand(['buildslave', 'stop', bbclient], env=bbEnv)
+
+            time.sleep(10)
+
+            if os.path.exists(pidFile):
                 try:
-                    while n > 0:
-                        os.kill(pid, SIGTERM)
-                        time.sleep(0.2)
-                        n -= 1
-                except OSError:
-                    log.info('%s buildbot slave terminated' % tag)
-            except IOError:
-                log.info('unable to read pidfile [%s] for %s' % (pidfile, tag))
+                    pid = file(pidFile,'r').read().strip()
 
-        monitors[tag].terminate()
-        monitors[tag].join()
-        del monitors[tag]
+                    log.warning('%s pidfile found.  sending SIGTERM to %s' % (tag, pid))
+                    runCommand(['kill', '-9', pid])
 
-def eventLoop():
+                    time.sleep(10)
+                except IOError:
+                    log.info('unable to read %s pidfile [%s]' % (tag, pidFile))
+        else:
+            log.warning('clearBuildSlave called with unknown tag [%s] - ignoring' % tag)
+
+    def findTag(self, ip):
+        result = None
+        for tag in self.slaveList:
+            log.debug('[%s][%s]' % (self.slaveList[tag]['ip'], ip))
+            if self.slaveList[tag]['ip'] == ip:
+                result = tag
+                break
+        return result
+
+    def markRebooted(self, tag):
+        if tag not in self.rebootList:
+            self.rebootList.append(tag)
+
+    def checkReboot(self, tag, newValue=None):
+        if newValue is not None:
+            if newValue:
+                if tag not in self.rebootList:
+                    self.rebootList.append(tag)
+            else:
+                if tag in self.rebootList:
+                    self.rebootList.remove(tag)
+        return tag in self.rebootList
+
+    def checkSlaves(self, events):
+        for tag in self.slaveList.keys():
+            if tag in self.monitors:
+                if self.monitors[tag] is None and self.slaveList[tag]['state'] != 'reset':
+                    log.error('monitor process for %s has died - restarting' % tag)
+                    self.slaveList[tag]['errors'] += 1
+                    self.slaveList[tag]['state']   = 'reset'
+                    events.put((tag, 'stop'))
+                else:
+                    if not self.monitors[tag].is_alive() and self.slaveList[tag]['state'] != 'reset':
+                        log.error('monitor process for %s is not alive - resetting. pid = %s' % (tag, self.monitors[tag].pid))
+                        self.slaveList[tag]['errors'] += 1
+                        self.slaveList[tag]['state']   = 'reset'
+                        events.put((tag, 'stop'))
+
+    def loadSlaves(self, events):
+        """Determine the list of Tegra slaves
+        The list of slaves to manage is determined by the entries in the
+        Tegra config file.
+
+        For each slave initialize the state and insert a 'start' state
+        into the event queue.
+
+        Tegra config file format:
+          <tag> <ip>
+        """
+        log.info('Checking for changes in [%s]' % options.tegras)
+
+        newList = {}
+        if os.path.isfile(options.tegras):
+            for line in open(options.tegras, 'r').readlines():
+                if len(line) > 0 and line[0] not in ('#', ';'):
+                    item = line[:-1].split()
+
+                    if len(item) > 0:
+                        s  = item[0]
+                        ip = None
+
+                        if len(item) == 2:
+                            ip = item[1]
+
+                        if s not in self.slaveList:
+                            self.slaveList[s] = { 'state':  'unknown',
+                                                  'ip':     ip,
+                                                  'tag':    s,
+                                                  'port':   sutDataPort,
+                                                  'errors': 0,
+                                                 }
+                            log.info('%s added to pool' % s)
+                            events.put((s, 'start'))
+
+                        newList[s] = ip
+
+        keys = newList.keys()
+
+        for s in self.slaveList:
+            if s in keys:
+                ip = self.slaveList[s]['ip']
+                if newList[s] != ip:
+                    log.info('%s found in device list, but with different IP: %s -> %s - restarting'% (s, ip, newList[s]))
+                    self.slaveList[s]['ip'] = newList[s]
+                    events.put((s, 'restart'))
+            else:
+                log.info('%s not found in device list - removing' % s)
+                events.put((s, 'delete'))
+
+        self.lastRefresh = os.path.getmtime(options.tegras)
+
+
+def eventLoop(events, slaveMgr):
     """Event Manager
-    basically it's a simple state machine that has the following
-    possible states: idle, reset, stop, start, error, remove
+    A state machine that has the following states:
+    
+      unknown, idle,
+      reset, stop, start,
+      reboot,
+      error, remove
     
     Ignore any Tegra proxy that has been in an error state for
     maxErrors tries.
     """
+    log.debug('starting eventLoop')
+
+    slaveMgr.loadSlaves(events)
+
     while True:
         try:
-            item = eventQueue.get(False)
+            item = events.get(False)
             if item is not None:
                 tag, newState = item
-                slave = slaveList[tag]
-                state = slave['state']
 
-                slave['state'] = newState
+                if tag in slaveMgr.slaveList:
+                    slave = slaveMgr.slaveList[tag]
+                    state = slave['state']
 
-                if slave['errors'] > maxErrors:
-                    slave['state'] = 'error'
-                    log.error('%s has been in an error state for %d attempts, skipping' % (tag, maxErrors))
-                    continue
+                    slave['state'] = newState
 
-                log.info('Changing state for %s: %s --> %s' % (tag, state, newState))
-                if newState == 'stop':
-                    clearMonitor(tag)
-                    # TODO add code to verify that any child PIDs are actually stopped
-                    eventQueue.put((tag, 'start'))
-
-                elif newState == 'start':
-                    if tag in monitors and monitors[tag] is not None:
-                        log.debug('%s has a monitor process, setting state to stop' % tag)
-                        eventQueue.put((tag, 'stop'))
+                    if slave['errors'] > maxErrors:
+                        slave['state'] = 'error'
+                        log.error('%s has been in an error state for %d attempts, skipping' % (tag, maxErrors))
                         continue
 
-                    if slave['ip'] is None:
-                        try:
-                            addrinfo    = socket.getaddrinfo(tag, slave['port'])
-                            slave['ip'] = addrinfo[4][0]
-                            log.info('IP for %s is %s' % (tag, slave['ip']))
-                        except:
-                            dumpException('error during IP lookup for %s' % tag)
+                    log.info('Changing state for %s: %s --> %s' % (tag, state, newState))
+                    if newState == 'stop':
+                        slaveMgr.clearMonitor(tag)
+
+                    elif newState == 'start':
+                        if tag in slaveMgr.monitors and slaveMgr.monitors[tag] is not None:
+                            log.info('%s has a monitor process, setting state to restart' % tag)
+                            events.put((tag, 'restart'))
                             continue
 
-                    slave['errors'] = 0
+                        if slave['ip'] is None:
+                            try:
+                                addrinfo    = socket.getaddrinfo(tag, slave['port'])
+                                slave['ip'] = addrinfo[4][0]
+                                log.info('IP for %s is %s' % (tag, slave['ip']))
+                            except:
+                                dumpException('error during IP lookup for %s' % tag)
+                                continue
 
-                    monitors[tag] = Process(name=tag, target=monitorSlave, args=(slave, options.bbpath, ourPID))
-                    monitors[tag].start()
+                        slave['errors'] = 0
 
-                    log.info('monitor process for %s created. pid %s errors %s' % (tag, monitors[tag].pid, slave['errors']))
-                elif newState == 'delete':
-                    clearMonitor(tag)
-                    del slaveList[tag]
-                    log.debug('%s removed from poll' % tag)
+                        slaveMgr.monitors[tag] = Process(name=tag, target=monitorSlave, args=(slave, options.bbpath, slaveMgr, events))
+                        slaveMgr.monitors[tag].start()
+
+                        log.info('monitor process for %s created. pid %s errors %s' % (tag, slaveMgr.monitors[tag].pid, slave['errors']))
+
+                    elif newState == 'restart':
+                        slaveMgr.clearMonitor(tag)
+                        events.put((tag, 'start'))
+                    elif newState == 'delete':
+                        slaveMgr.clearMonitor(tag)
+                        log.info('%s removed from poll' % tag)
+                else:
+                    if newState == 'dialback':
+                        ip  = tag
+                        tag = slaveMgr.findTag(ip)
+
+                        if tag is None:
+                            log.error('unknown IP %s pinged the dialback listener' % ip)
+                        else:
+                            log.info('dialback ping from %s' % tag)
+                            flagFile = os.path.join(options.bbpath, tag, 'proxy.flg')
+                            if os.path.isfile(flagFile):
+                                log.info('proxy.flg found - skipping restart because we are in installApp phase')
+                                slaveMgr.markRebooted(tag)
+                            else:
+                                log.info('setting monitor state to start')
+                                events.put((tag, 'start'))
 
         except Empty:
             time.sleep(5)
 
-            if os.path.getmtime(options.tegras) > lastRefresh:
-                loadSlaves()
+            if os.path.getmtime(options.tegras) > slaveMgr.lastRefresh:
+                slaveMgr.loadSlaves(events)
 
-            for tag in slaveList.keys():
-                if tag in monitors:
-                    if monitors[tag] is None and slaveList[tag]['state'] != 'reset':
-                        log.error('monitor process for %s has died - restarting' % tag)
-                        slaveList[tag]['errors'] += 1
-                        slaveList[tag]['state']   = 'reset'
-                        eventQueue.put((tag, 'stop'))
-                    else:
-                        if not monitors[tag].is_alive() and slaveList[tag]['state'] != 'reset':
-                            log.error('monitor process for %s is not alive - resetting. pid = %s' % (tag, monitors[tag].pid))
-                            slaveList[tag]['errors'] += 1
-                            slaveList[tag]['state']   = 'reset'
-                            eventQueue.put((tag, 'stop'))
+            slaveMgr.checkSlaves(events)
 
+    log.debug('leaving eventLoop')
 
 if __name__ == '__main__':
+    ourIP = getOurIP()
+
+    if ourIP is None:
+        log.error('our IP address is not defined, exiting')
+        sys.exit(1)
+
     loadOptions()
-    loadSlaves()
+    slaveMgr = SlaveManager()
+
     try:
-        eventLoop()
+        Process(name='dialback', target=handleDialback, args=(sutDialbackPort, eventQueue)).start()
+        Process(name='eventloop', target=eventLoop, args=(eventQueue, slaveMgr)).start()
+        # eventLoop(eventQueue)
+        while True:
+            time.sleep(0.5)
     finally:
-        for tag in slaveList.keys():
-            clearMonitor(tag)
+        for tag in slaveMgr.slaveList.keys():
+            slaveMgr.clearMonitor(tag)
