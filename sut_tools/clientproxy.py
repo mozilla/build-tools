@@ -228,8 +228,11 @@ def monitorSlave(slave, bbpath, slaveMgr, events):
     monitoring = True
     bbActive   = False
     hbActive   = False
+    hbRepeats  = 0
+    maxRepeats = 10
+    maxFails   = 50
     hbFails    = 0
-    maxReq     = 4
+    maxReq     = 9
     infoReq    = maxReq
     bbclient   = os.path.join(bbpath, slave['tag'])
     pidFile    = os.path.join(bbclient, 'twistd.pid')
@@ -248,10 +251,9 @@ def monitorSlave(slave, bbpath, slaveMgr, events):
             hbSocket.connect((slave['ip'], slave['port']))
             connected = True
         except:
-            log.error('Error connecting to data port')
+            log.error('Error connecting to data port (%s of %s)' % (hbFails, maxFails))
             connected = False
-            if bbActive:
-                hbFails += 1
+            hbFails  += 1
             time.sleep(10)
 
         while connected:
@@ -264,15 +266,18 @@ def monitorSlave(slave, bbpath, slaveMgr, events):
                     infoReq = maxReq
                 infoReq -= 1
 
-                log.debug('listening for heartbeat')
+                if hbRepeats == 0:
+                    log.debug('listening for heartbeat')
                 data = hbSocket.recv(1024)
                 hbActive = True
 
                 if len(data) > 1:
-                    log.debug('socket data [%s]' % data[:-1])
+                    if hbRepeats == 0:
+                        log.debug('socket data [%s]' % data[:-1])
 
                     if 'hump thump' in data or 'trace' in data:
-                        log.info('heartbeat detected')
+                        if hbRepeats == 0:
+                            log.info('heartbeat detected')
                     elif 'ebooting ...' in data:
                         log.warning('device is rebooting')
                         if not os.path.isfile(flagFile):
@@ -313,7 +318,8 @@ def monitorSlave(slave, bbpath, slaveMgr, events):
                 else:
                     connected = False
 
-            log.debug('hbActive %s bbActive %s' % (hbActive, bbActive))
+            if hbRepeats == 0:
+                log.debug('hbActive %s bbActive %s' % (hbActive, bbActive))
 
             if bbActive and not hbActive:
                 if os.path.isfile(flagFile) or slaveMgr.checkReboot(slave['tag']):
@@ -322,6 +328,13 @@ def monitorSlave(slave, bbpath, slaveMgr, events):
                     monitoring = False
                     break
 
+            if hbActive:
+                hbRepeats += 1
+                if hbRepeats > maxRepeats:
+                    hbRepeats = 0
+            else:
+                hbRepeats = 0
+
         if connected:
             hbSocket.close()
         else:
@@ -329,7 +342,7 @@ def monitorSlave(slave, bbpath, slaveMgr, events):
                 log.error('heartbeat is not active - stopping monitor loop')
                 break
 
-        if hbFails > 10:
+        if hbFails > maxFails:
             break
 
     if bbActive:
@@ -375,7 +388,7 @@ class SlaveManager(object):
             log.info('stopping buildbot in %s' % bbclient)
             runCommand(['buildslave', 'stop', bbclient], env=bbEnv)
 
-            time.sleep(10)
+            time.sleep(30)
 
             if os.path.exists(pidFile):
                 try:
@@ -384,7 +397,7 @@ class SlaveManager(object):
                     log.warning('%s pidfile found.  sending SIGTERM to %s' % (tag, pid))
                     runCommand(['kill', '-9', pid])
 
-                    time.sleep(10)
+                    time.sleep(30)
                 except IOError:
                     log.info('unable to read %s pidfile [%s]' % (tag, pidFile))
         else:
@@ -393,7 +406,7 @@ class SlaveManager(object):
     def findTag(self, ip):
         result = None
         for tag in self.slaveList:
-            log.debug('[%s][%s]' % (self.slaveList[tag]['ip'], ip))
+            log.debug('%s: %s [%s]' % (tag, self.slaveList[tag]['ip'], ip))
             if self.slaveList[tag]['ip'] == ip:
                 result = tag
                 break
@@ -454,7 +467,7 @@ class SlaveManager(object):
                         if len(item) == 2:
                             ip = item[1]
 
-                        if s not in self.slaveList:
+                        if s not in self.slaveList or self.slaveList[s]['state'] == 'unknown':
                             self.slaveList[s] = { 'state':  'unknown',
                                                   'ip':     ip,
                                                   'tag':    s,
@@ -512,16 +525,16 @@ def eventLoop(events, slaveMgr):
 
                     if slave['errors'] > maxErrors:
                         slave['state'] = 'error'
-                        log.error('%s has been in an error state for %d attempts, skipping' % (tag, maxErrors))
+                        log.error('%s: has been in an error state for %d attempts, skipping' % (tag, maxErrors))
                         continue
 
-                    log.info('Changing state for %s: %s --> %s' % (tag, state, newState))
+                    log.info('%s: Changing state %s --> %s' % (tag, state, newState))
                     if newState == 'stop':
                         slaveMgr.clearMonitor(tag)
 
                     elif newState == 'start':
                         if tag in slaveMgr.monitors and slaveMgr.monitors[tag] is not None:
-                            log.info('%s has a monitor process, setting state to restart' % tag)
+                            log.info('%s: has a monitor process, setting state to restart' % tag)
                             events.put((tag, 'restart'))
                             continue
 
@@ -529,9 +542,9 @@ def eventLoop(events, slaveMgr):
                             try:
                                 addrinfo    = socket.getaddrinfo(tag, slave['port'])
                                 slave['ip'] = addrinfo[4][0]
-                                log.info('IP for %s is %s' % (tag, slave['ip']))
+                                log.info('%s: IP is %s' % (tag, slave['ip']))
                             except:
-                                dumpException('error during IP lookup for %s' % tag)
+                                dumpException('%s: error during IP lookup' % tag)
                                 continue
 
                         slave['errors'] = 0
@@ -539,14 +552,14 @@ def eventLoop(events, slaveMgr):
                         slaveMgr.monitors[tag] = Process(name=tag, target=monitorSlave, args=(slave, options.bbpath, slaveMgr, events))
                         slaveMgr.monitors[tag].start()
 
-                        log.info('monitor process for %s created. pid %s errors %s' % (tag, slaveMgr.monitors[tag].pid, slave['errors']))
+                        log.info('%s: monitor process created. pid %s errors %s' % (tag, slaveMgr.monitors[tag].pid, slave['errors']))
 
                     elif newState == 'restart':
                         slaveMgr.clearMonitor(tag)
                         events.put((tag, 'start'))
                     elif newState == 'delete':
                         slaveMgr.clearMonitor(tag)
-                        log.info('%s removed from poll' % tag)
+                        log.info('%s: removed from poll' % tag)
                 else:
                     if newState == 'dialback':
                         ip  = tag
@@ -555,13 +568,13 @@ def eventLoop(events, slaveMgr):
                         if tag is None:
                             log.error('unknown IP %s pinged the dialback listener' % ip)
                         else:
-                            log.info('dialback ping from %s' % tag)
+                            log.info('%s: dialback ping from tegra' % tag)
                             flagFile = os.path.join(options.bbpath, tag, 'proxy.flg')
                             if os.path.isfile(flagFile):
-                                log.info('proxy.flg found - skipping restart because we are in installApp phase')
+                                log.info('%s: proxy.flg found - skipping restart because we are in installApp phase' % tag)
                                 slaveMgr.markRebooted(tag)
                             else:
-                                log.info('setting monitor state to start')
+                                log.info('%s: setting monitor state to start' % tag)
                                 events.put((tag, 'start'))
 
         except Empty:
