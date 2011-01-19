@@ -3,6 +3,7 @@
 import os, sys
 import time
 import random
+import socket
 import devicemanager
 
 
@@ -24,6 +25,20 @@ def calculatePort():
         n = random.randint(40000, 50000)
     return n
 
+def getOurIP():
+    try:
+        result = os.environ['CP_IP']
+    except:
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(('mozilla.com', 80))
+            result = s.getsockname()[0]
+            s.close()
+        except:
+            result = None
+            dumpException('unable to determine our IP address')
+
+    return result
 
 # Stop buffering!
 sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
@@ -35,7 +50,7 @@ if (len(sys.argv) <> 3):
 cwd       = os.getcwd()
 source    = sys.argv[2]
 flagFile  = os.path.join(cwd, '..', 'proxy.flg')
-proxyIP   = os.environ['CP_IP']
+proxyIP   = getOurIP()
 proxyPort = calculatePort()
 
 print "connecting to: %s" % sys.argv[1]

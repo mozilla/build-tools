@@ -2,6 +2,7 @@
 
 import os, sys
 import devicemanager
+import socket
 import random
 
 
@@ -13,12 +14,26 @@ def calculatePort():
         n = random.randint(40000, 50000)
     return n
 
+def getOurIP():
+    try:
+        result = os.environ['CP_IP']
+    except:
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(('mozilla.com', 80))
+            result = s.getsockname()[0]
+            s.close()
+        except:
+            result = None
+            dumpException('unable to determine our IP address')
+
+    return result
 
 if (len(sys.argv) <> 2):
   print "usage: reboot.py <ip address>"
   sys.exit(1)
 
-proxyIP   = os.environ['CP_IP']
+proxyIP   = getOurIP()
 proxyPort = calculatePort()
 
 print "connecting to: %s" % sys.argv[1]
