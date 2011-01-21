@@ -61,8 +61,8 @@ devRoot  = dm.getDeviceRoot()
 
 # checking for /mnt/sdcard/...
 print "devroot %s" % devRoot
-if devRoot == '/tests':
-    print "returned devRoot from devicemanager [%s] is not correct - exiting" % devRoot
+if devRoot is None or devRoot == '/tests':
+    print "Remote Device Error: devRoot from devicemanager [%s] is not correct - exiting" % devRoot
     sys.exit(1)
 
 workdir  = os.path.dirname(source)
@@ -71,23 +71,27 @@ target   = os.path.join(devRoot, filename)
 inifile  = os.path.join(workdir, 'fennec', 'application.ini')
 
 print "Installing %s" % target
-dm.pushFile(source, target)
+if dm.pushFile(source, target):
+    try:
+        setFlag()
+        print proxyIP, proxyPort
+        status = dm.updateApp(target, processName='org.mozilla.fennec', ipAddr=proxyIP, port=proxyPort)
+        if status is not None:
+            print "updateApp() call returned %s" % status
+            dm2 = devicemanager.DeviceManager(sys.argv[1])
+            dm2.debug = 3
+            print "devroot %s" % dm2.getDeviceRoot()
+            if not dm2.pushFile(inifile, '/data/data/org.mozilla.fennec/application.ini'):
+                print "Remote Device Error: unable to push %s" % inifile
+                clearFlag()
+                sys.exit(1)
+        else:
+            print "Remote Device Error: updateApp() call failed - exiting"
+            clearFlag()
+            sys.exit(1)
 
-try:
-    setFlag()
-    print proxyIP, proxyPort
-    if dm.updateApp(target, processName='org.mozilla.fennec', ipAddr=proxyIP, port=proxyPort):
-        dm2 = devicemanager.DeviceManager(sys.argv[1])
-        dm2.debug = 3
-        print "devroot %s" % dm2.getDeviceRoot()
-        dm2.pushFile(inifile, '/data/data/org.mozilla.fennec/application.ini')
-    else:
-        print "updateApp() call failed - exiting"
+    finally:
         clearFlag()
-        sys.exit(1)
-
-finally:
-    clearFlag()
 
 time.sleep(60)
 

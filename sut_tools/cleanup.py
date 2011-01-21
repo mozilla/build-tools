@@ -19,4 +19,13 @@ dm = devicemanager.DeviceManager(sys.argv[1])
 dm.debug = 5
 devRoot = dm.getDeviceRoot()
 
-dm.removeDir(devRoot)
+if devRoot is None or devRoot == '/tests':
+    print "Remote Device Error: devRoot from devicemanager [%s] is not correct" % devRoot
+    sys.exit(1)
+
+status = dm.removeDir(devRoot)
+
+print "removeDir() returned [%s]" % status
+if status is None:
+    print "Remote Device Error: all to removeDir() failed"
+    sys.exit(1)

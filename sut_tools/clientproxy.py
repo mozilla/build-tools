@@ -10,6 +10,7 @@ import atexit
 import socket
 import asyncore
 import logging
+import datetime
 import traceback
 import subprocess
 
@@ -52,12 +53,13 @@ ourPath         = os.getcwd()
 ourName         = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 
 defaultOptions = {
-                   'debug':   ('-d', '--debug',   False,    'Enable Debug', 'b'),
-                   'bbpath':  ('-p', '--bbpath',  ourPath,  'Path where the Tegra buildbot slave clients can be found'),
-                   'tegras':  ('-t', '--tegras',  os.path.join(ourPath, 'tegras.txt'),  'List of Tegra buildslaves to manage'),
-                   'logpath': ('-l', '--logpath', ourPath,  'Path where log file is to be written'),
-                   'pidpath': ('',   '--pidpath', ourPath,  'Path where the pid file is to be created'),
-                   'echo':    ('-e', '--echo',    False,    'Enable echoing of log output to stderr', 'b'),
+                   'debug':    ('-d', '--debug',    False,    'Enable Debug', 'b'),
+                   'bbpath':   ('-p', '--bbpath',   ourPath,  'Path where the Tegra buildbot slave clients can be found'),
+                   'tegras':   ('-t', '--tegras',   os.path.join(ourPath, 'tegras.txt'),  'List of Tegra buildslaves to manage'),
+                   'logpath':  ('-l', '--logpath',  ourPath,  'Path where log file is to be written'),
+                   'pidpath':  ('',   '--pidpath',  ourPath,  'Path where the pid file is to be created'),
+                   'echo':     ('-e', '--echo',     False,    'Enable echoing of log output to stderr', 'b'),
+                   'hangtime': ('',   '--hangtime', 1200,     'How long (in seconds) a slave can be idle'),
                  }
 
 
@@ -143,6 +145,31 @@ def runCommand(cmd, env=None):
 
     return p
 
+def getLastLine(filename):
+    result   = ''
+    fileTail = []
+
+    if os.path.isfile(filename):
+        p = subprocess.Popen(['tail', filename], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        try:
+            for item in p.stdout:
+                fileTail.append(item)
+            p.wait()
+        except KeyboardInterrupt:
+            p.kill()
+            p.wait()
+
+    if len(fileTail) > 0:
+        n = len(fileTail) - 1
+        while n >= 0:
+            s = fileTail[n].strip()
+            if len(s) > 0:
+                result = s
+                break
+            n -= 1
+
+    return result
+
 def getOurIP():
     result = None
 
@@ -209,6 +236,75 @@ def handleDialback(port, events):
             dumpException('error during dialback loop')
             break
 
+def checkSlave(slave, bbclient):
+    pidfile = os.path.join(bbclient, 'twistd.pid')
+
+    try:
+        pid = int(file(pidfile, 'r').read().strip())
+    except:
+        dumpException('unable to check slave - pidfile [%s] was not readable' % pidfile)
+        return False
+
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        dumpException('check to see if pid %s is active failed')
+        return False
+
+    logFile  = os.path.join(bbclient, 'twistd.log')
+    lastline = getLastLine(logFile)
+
+    if len(lastline) > 0:
+        logTS = datetime.datetime.strptime(lastline[:19], '%Y-%m-%d %H:%M:%S')
+        logTD = datetime.datetime.now() - logTS
+
+        if logTD.days > 0 or (logTD.days == 0 and logTD.seconds > slave['hangtime']):
+            log.error('%s: tail of %s shows last activity was %d days %d seconds ago - marking as hung slave' % 
+                      (slave['tag'], logFile, logTD.days, logTD.seconds))
+            return False
+        else:
+            log.debug('%s: last activity was %d days %d seconds ago' % 
+                      (slave['tag'], logTD.days, logTD.seconds))
+
+    return True
+
+def killPID(tag, piddfile, signal='15'):
+    try:
+        pid = file(pidFile,'r').read().strip()
+    except IOError:
+        log.info('unable to read %s pidfile [%s]' % (tag, pidFile))
+        return False
+
+    log.warning('%s pidfile found.  sending SIGTERM to %s' % (tag, pid))
+
+    runCommand(['kill', '-%s' % signal, pid])
+    time.sleep(90)
+
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        dumpException('check to see if pid %s is active failed')
+        return False
+
+    return True
+
+def stopSlave(slave, bbpath, events):
+    bbclient = os.path.join(bbpath, slave['tag'])
+    pidFile  = os.path.join(bbclient, 'twistd.pid')
+
+    log.info('stopping buildbot in %s' % bbclient)
+
+    runCommand(['buildslave', 'stop', bbclient])
+
+    time.sleep(90)
+
+    if os.path.exists(pidFile):
+        if not killPID(slave['tag'], pidFile):
+            if not killPID(slave['tag'], pidfile, signal='9'):
+                log.warning('%s: unable to stop buildslave' % slave['tag'])
+
+    events.put((slave['tag'], 'removed'))
+
 def monitorSlave(slave, bbpath, slaveMgr, events):
     """Slave monitoring task/process
     Each active slave will have a monitoring process spawned.
@@ -229,10 +325,10 @@ def monitorSlave(slave, bbpath, slaveMgr, events):
     bbActive   = False
     hbActive   = False
     hbRepeats  = 0
-    maxRepeats = 10
-    maxFails   = 50
-    hbFails    = 0
-    maxReq     = 9
+    maxRepeats = 10    # how many "normal" logs to skip
+    maxFails   = 200   # how many heartbeat errors to allow
+    hbFails    = 0     # current number of hearbeat fails
+    maxReq     = 9     # how sutAgent debug calls to skip
     infoReq    = maxReq
     bbclient   = os.path.join(bbpath, slave['tag'])
     pidFile    = os.path.join(bbclient, 'twistd.pid')
@@ -241,6 +337,8 @@ def monitorSlave(slave, bbpath, slaveMgr, events):
                    'SUT_NAME': slave['tag'],
                    'SUT_IP':   slave['ip'],
                  }
+
+    lastHangCheck = time.time()
 
     log.info('monitoring started: pid [%s]' % current_process().pid)
 
@@ -289,13 +387,19 @@ def monitorSlave(slave, bbpath, slaveMgr, events):
                     if slaveMgr.checkReboot(slave['tag']):
                         log.info('hbActive and reboot flag found')
                         os.remove(flagFile)
-                        (slave['tag'], False)
 
                     if bbActive and not os.path.isfile(pidFile):
                         bbActive = False
                         log.error('buildbot client pidfile not found')
 
-                    if not bbActive:
+                    if bbActive:
+                        n = time.time()
+                        if int(n - lastHangCheck) > 300:
+                            lastHangCheck = n
+                            if not checkSlave(slave, bbclient):
+                                monitoring = False
+                                break
+                    else:
                         bbProc = runCommand(['buildslave', 'start', bbclient], env=bbEnv)
 
                         if bbProc is not None and bbProc.returncode >= 0:
@@ -319,7 +423,7 @@ def monitorSlave(slave, bbpath, slaveMgr, events):
                     connected = False
 
             if hbRepeats == 0:
-                log.debug('hbActive %s bbActive %s' % (hbActive, bbActive))
+                log.debug('hbActive %s bbActive %s ' % (hbActive, bbActive))
 
             if bbActive and not hbActive:
                 if os.path.isfile(flagFile) or slaveMgr.checkReboot(slave['tag']):
@@ -360,9 +464,7 @@ class SlaveManager(object):
 
     def clearMonitor(self, tag):
         if tag in self.monitors:
-            log.info('shutting down monitor for %s' % tag)
-
-            self.clearBuildSlave(tag)
+            log.info('monitor process for %s cleared' % tag)
 
             self.monitors[tag].terminate()
             self.monitors[tag].join()
@@ -370,43 +472,12 @@ class SlaveManager(object):
 
             self.slaveList[tag]['state'] = 'unknown'
 
-    def clearBuildSlave(self, tag):
-        if tag in self.slaveList:
-            slave = self.slaveList[tag]
-
-            bbclient = os.path.join(options.bbpath, slave['tag'])
-            pidFile  = os.path.join(bbclient, 'twistd.pid')
-            bbEnv    = { 'PATH':     os.getenv('PATH'),
-                         'SUT_NAME': slave['tag'],
-                         'SUT_IP':   slave['ip'],
-                         'CP_IP':    ourIP,
-                       }
-
-            if tag in self.rebootList:
-                self.rebootList.remove(tag)
-
-            log.info('stopping buildbot in %s' % bbclient)
-            runCommand(['buildslave', 'stop', bbclient], env=bbEnv)
-
-            time.sleep(30)
-
-            if os.path.exists(pidFile):
-                try:
-                    pid = file(pidFile,'r').read().strip()
-
-                    log.warning('%s pidfile found.  sending SIGTERM to %s' % (tag, pid))
-                    runCommand(['kill', '-9', pid])
-
-                    time.sleep(30)
-                except IOError:
-                    log.info('unable to read %s pidfile [%s]' % (tag, pidFile))
-        else:
-            log.warning('clearBuildSlave called with unknown tag [%s] - ignoring' % tag)
+        if tag in self.rebootList:
+            self.rebootList.remove(tag)
 
     def findTag(self, ip):
         result = None
         for tag in self.slaveList:
-            log.debug('%s: %s [%s]' % (tag, self.slaveList[tag]['ip'], ip))
             if self.slaveList[tag]['ip'] == ip:
                 result = tag
                 break
@@ -468,11 +539,12 @@ class SlaveManager(object):
                             ip = item[1]
 
                         if s not in self.slaveList or self.slaveList[s]['state'] == 'unknown':
-                            self.slaveList[s] = { 'state':  'unknown',
-                                                  'ip':     ip,
-                                                  'tag':    s,
-                                                  'port':   sutDataPort,
-                                                  'errors': 0,
+                            self.slaveList[s] = { 'state':    'unknown',
+                                                  'ip':       ip,
+                                                  'tag':      s,
+                                                  'port':     sutDataPort,
+                                                  'errors':   0,
+                                                  'hangtime': options.hangtime,
                                                  }
                             log.info('%s added to pool' % s)
                             events.put((s, 'start'))
@@ -509,6 +581,8 @@ def eventLoop(events, slaveMgr):
     """
     log.debug('starting eventLoop')
 
+    stopMonitors = {}
+
     slaveMgr.loadSlaves(events)
 
     while True:
@@ -534,8 +608,7 @@ def eventLoop(events, slaveMgr):
 
                     elif newState == 'start':
                         if tag in slaveMgr.monitors and slaveMgr.monitors[tag] is not None:
-                            log.info('%s: has a monitor process, setting state to restart' % tag)
-                            events.put((tag, 'restart'))
+                            log.info('%s: has a monitor process, looping' % tag)
                             continue
 
                         if slave['ip'] is None:
@@ -552,13 +625,29 @@ def eventLoop(events, slaveMgr):
                         slaveMgr.monitors[tag] = Process(name=tag, target=monitorSlave, args=(slave, options.bbpath, slaveMgr, events))
                         slaveMgr.monitors[tag].start()
 
-                        log.info('%s: monitor process created. pid %s errors %s' % (tag, slaveMgr.monitors[tag].pid, slave['errors']))
+                        log.info('%s: monitor process created. pid %s' % (tag, slaveMgr.monitors[tag].pid))
 
                     elif newState == 'restart':
                         slaveMgr.clearMonitor(tag)
                         events.put((tag, 'start'))
+
                     elif newState == 'delete':
-                        slaveMgr.clearMonitor(tag)
+                        if tag in stopMonitors:
+                            log.error('%s: a prior attempt to stop slave found - shutting that one down')
+                            stopMonitors[tag].terminate()
+                            stopMonitors[tag].join()
+                            del stopMonitors[tag]
+
+                        stopMonitors[tag] = Process(name='%s stop' % tag, target=stopSlave, args=(slave, options.bbpath, events))
+                        stopMonitors[tag].start()
+
+                        log.info('%s: delete process created. pid %s' % (tag, stopMonitors[tag].pid))
+
+                    elif newState == 'removed':
+                        if tag in stopMonitors:
+                            stopMonitors[tag].terminate()
+                            stopMonitors[tag].join()
+                            del stopMonitors[tag]
                         log.info('%s: removed from poll' % tag)
                 else:
                     if newState == 'dialback':
@@ -584,6 +673,9 @@ def eventLoop(events, slaveMgr):
                 slaveMgr.loadSlaves(events)
 
             slaveMgr.checkSlaves(events)
+
+            if len(stopMonitors) > 0:
+                log.warning('stopMonitor has the following active: %s' % (','.join(stopMonitors.keys())))
 
     log.debug('leaving eventLoop')
 
