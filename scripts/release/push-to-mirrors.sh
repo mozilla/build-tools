@@ -37,7 +37,7 @@ $PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s build $CLOBBERER_URL $branch \
   $builder $builddir $slavename $master
 cd $SCRIPTS_DIR/../..
 $PYTHON $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
-  -s 0.3 -n info -n 'release-*' -n $builddir
+  -s 0.3 -n info -n 'rel-*' -n $builddir
 cd $workdir
 
 $PYTHON $MY_DIR/push-to-mirrors.py -c $branchConfig -r $releaseConfig \
