@@ -61,7 +61,7 @@ def checkStagePermissions(productName, version, buildNumber, stageServer,
     tests = ["find %s ! -user ffxbld ! -path '*/contrib*'",
               "find %s ! -group firefox ! -path '*/contrib*'",
               "find %s -type f ! -perm 644",
-              "find %s -mindepth 1 -type d ! -perm 755 ! -path '*/contrib*'",
+              "find %s -mindepth 1 -type d ! -perm 755 ! -path '*/contrib*' ! -path '*/partner-repacks*'",
               "find %s -maxdepth 1 -type d ! -perm 2775 -path '*/contrib*'",
             ]
     candidates_dir = makeCandidatesDir(productName, version, buildNumber)
