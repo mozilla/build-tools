@@ -169,11 +169,6 @@ class TestHg(unittest.TestCase):
         rev = mercurial(self.repodir, self.wc)
         self.assertEquals(rev, self.revisions[0])
 
-    def testPushNewBranchesNotAllowed(self):
-        clone(self.repodir, self.wc, revision=self.revisions[0])
-        self.assertRaises(Exception, push, self.repodir, self.wc,
-                          push_new_branches=False)
-
     def testMercurialWithNewShare(self):
         shareBase = os.path.join(self.tmpdir, 'share')
         sharerepo = os.path.join(shareBase, self.repodir.lstrip("/"))
@@ -242,8 +237,6 @@ class TestHg(unittest.TestCase):
         # Make sure our local file didn't go away
         self.failUnless(os.path.exists(os.path.join(self.wc, 'test.txt')))
 
-    # TODO: this test doesn't seem to be compatible with mercurial()'s
-    # share() usage, and fails when HG_SHARE_BASE_DIR is set
     def testMercurialChangeRepo(self):
         # Create a new repo
         repo2 = os.path.join(self.tmpdir, 'repo2')

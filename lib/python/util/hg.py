@@ -156,38 +156,23 @@ def pull(repo, dest, update_dest=True, **kwargs):
             revision = kwargs['revision']
         return update(dest, branch=branch, revision=revision)
 
-# Defines the places of attributes in the tuples returned by `out'
-REVISION, BRANCH = 0, 1
-
 def out(src, remote, **kwargs):
     """Check for outgoing changesets present in a repo"""
-    cmd = ['hg', '-q', 'out', '--template', '{node} {branches}\n']
+    cmd = ['hg', '-q', 'out', '--template', '{node}\n']
     cmd.extend(common_args(**kwargs))
     cmd.append(remote)
     if os.path.exists(src):
         try:
-            revs = []
-            for line in get_output(cmd, cwd=src).rstrip().split("\n"):
-                try:
-                    rev, branch = line.split()
-                # Mercurial displays no branch at all if the revision is on
-                # "default"
-                except ValueError:
-                    rev = line.rstrip()
-                    branch = "default"
-                revs.append((rev, branch))
-            return revs
+            return get_output(cmd, cwd=src).rstrip().split("\n")
         except subprocess.CalledProcessError, inst:
-            # In some situations, some versions of Mercurial return "1"
-            # if no changes are found, so we need to ignore this return code
             if inst.returncode == 1:
-                return []
+                return None
             raise
 
-def push(src, remote, push_new_branches=True, **kwargs):
+def push(src, remote, **kwargs):
     cmd = ['hg', 'push']
     cmd.extend(common_args(**kwargs))
-    if push_new_branches:
+    if 'branch' in kwargs and kwargs['branch']:
         cmd.append('--new-branch')
     cmd.append(remote)
     run_cmd(cmd, cwd=src)
@@ -242,27 +227,27 @@ def apply_and_push(localrepo, remote, changer, max_attempts=10,
     """This function calls `changer' to make changes to the repo, and tries
        its hardest to get them to the origin repo. `changer' must be a
        callable object that receives two arguments: the directory of the local
-       repository, and the attempt number. This function will push ALL
-       changesets missing from remote."""
+       repository, and the attempt number"""
     assert callable(changer)
     branch = get_branch(localrepo)
     changer(localrepo, 1)
     for n in range(1, max_attempts+1):
+        tip = get_revision(localrepo)
         try:
-            new_revs = out(src=localrepo, remote=remote,
-                           ssh_username=ssh_username,
+            new_revs = out(src=localrepo, remote=remote, revision=tip,
+                           branch=branch, ssh_username=ssh_username,
                            ssh_key=ssh_key)
-            if len(new_revs) < 1:
+            if not new_revs:
                 raise HgUtilError("No revs to push")
-            push(src=localrepo, remote=remote, ssh_username=ssh_username,
-                 ssh_key=ssh_key)
+            push(src=localrepo, remote=remote, revision=tip, branch=branch,
+                 ssh_username=ssh_username, ssh_key=ssh_key)
             return
         except subprocess.CalledProcessError, e:
             log.debug("Hit error when trying to push: %s" % str(e))
             if n == max_attempts:
                 log.debug("Tried %d times, giving up" % max_attempts)
                 for r in reversed(new_revs):
-                    run_cmd(['hg', 'strip', r[REVISION]], cwd=localrepo)
+                    run_cmd(['hg', 'strip', r], cwd=localrepo)
                 raise HgUtilError("Failed to push")
             pull(remote, localrepo, update_dest=False,
                  ssh_username=ssh_username, ssh_key=ssh_key)
@@ -274,7 +259,7 @@ def apply_and_push(localrepo, remote, changer, max_attempts=10,
                 log.debug("Failed to rebase: %s" % str(e))
                 update(localrepo, branch=branch)
                 for r in reversed(new_revs):
-                    run_cmd(['hg', 'strip', r[REVISION]], cwd=localrepo)  
+                    run_cmd(['hg', 'strip', r], cwd=localrepo)  
                 changer(localrepo, n+1)
 
 def share(source, dest, branch=None, revision=None):
