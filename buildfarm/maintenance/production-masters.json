@@ -1,0 +1,303 @@
+[
+  {
+    "basedir": "/builds/buildbot/builder_master1", 
+    "buildbot_version": "0.8.2",
+    "master_dir": "/builds/buildbot/builder_master1", 
+    "name": "pm01-bm", 
+    "roles": [
+      "build"
+    ], 
+    "hostname": "production-master01.build.mozilla.org", 
+    "bbconfigs_dir": "/builds/buildbot/configs", 
+    "db_name": "production-master01.build.mozilla.org:/builds/buildbot/builder_master1", 
+    "bbcustom_dir": "/tools/buildbotcustom/buildbotcustom",
+    "bbcustom_branch": "production-0.8",
+    "bbconfigs_branch": "production",
+    "http_port": 8010,
+    "pb_port": 9010,
+    "ssh_port": 1235,
+    "datacentre": "mpt"
+  }, 
+  {
+    "basedir": "/builds/buildbot/scheduler_master", 
+    "buildbot_version": "0.8.2",
+    "master_dir": "/builds/buildbot/scheduler_master", 
+    "name": "pm01-sm", 
+    "roles": [
+      "scheduler"
+    ], 
+    "hostname": "production-master01.build.mozilla.org", 
+    "bbconfigs_dir": "/builds/buildbot/configs", 
+    "db_name": "production-master01.build.mozilla.org:/builds/buildbot/scheduler_master", 
+    "bbcustom_dir": "/tools/buildbotcustom/buildbotcustom",
+    "bbcustom_branch": "production-0.8",
+    "bbconfigs_branch": "production",
+    "pb_port": 9009,
+    "ssh_port": 1234,
+    "datacentre": "mpt"
+  }, 
+  {
+    "basedir": "/builds/buildbot/tests-scheduler", 
+    "buildbot_version": "0.8.2",
+    "master_dir": "/builds/buildbot/tests-scheduler", 
+    "name": "pm02-sm", 
+    "roles": [
+      "scheduler"
+    ], 
+    "hostname": "production-master02.build.mozilla.org", 
+    "bbconfigs_dir": "/builds/buildbot/configs", 
+    "db_name": "production-master02.build.mozilla.org:/builds/buildbot/tests-scheduler", 
+    "bbcustom_dir": "/tools/buildbotcustom-0.8.0/buildbotcustom",
+    "bbcustom_branch": "production-0.8",
+    "bbconfigs_branch": "production",
+    "pb_port": 9008
+  }, 
+  {
+    "basedir": "/builds/buildbot/try-trunk-master", 
+    "buildbot_version": "0.8.2",
+    "master_dir": "/builds/buildbot/try-trunk-master", 
+    "name": "pm02-try", 
+    "roles": [
+      "try"
+    ], 
+    "hostname": "production-master02.build.mozilla.org", 
+    "bbconfigs_dir": "/builds/buildbot/configs", 
+    "db_name": "production-master02.build.mozilla.org:/builds/buildbot/try-trunk-master", 
+    "bbcustom_dir": "/tools/buildbotcustom-0.8.0/buildbotcustom",
+    "bbcustom_branch": "production-0.8",
+    "bbconfigs_branch": "production",
+    "http_port": 8011,
+    "pb_port": 9011,
+    "ssh_port": 1236,
+    "datacentre": "mpt"
+  }, 
+  {
+    "basedir": "/builds/buildbot/try-master1", 
+    "buildbot_version": "0.8.2",
+    "master_dir": "/builds/buildbot/try-master1", 
+    "name": "try-mtv", 
+    "roles": [
+      "try"
+    ], 
+    "hostname": "test-master02.build.mozilla.org", 
+    "bbconfigs_dir": "/builds/buildbot/try_master1/buildbot-configs", 
+    "db_name": "test-master02.build.mozilla.org:/builds/buildbot/try_master1/master", 
+    "bbcustom_dir": "/builds/buildbot/try_master1/buildbotcustom",
+    "bbcustom_branch": "production-0.8",
+    "bbconfigs_branch": "production",
+    "http_port": 8011,
+    "pb_port": 9011,
+    "ssh_port": 1235,
+    "datacentre": "mv"
+  }, 
+  {
+    "hostname": "buildbot-master1.build.scl1.mozilla.com", 
+    "master_dir": "/builds/buildbot/try_master2/master", 
+    "name": "bm01-try", 
+    "roles": [
+      "try"
+    ], 
+    "basedir": "/builds/buildbot/try_master2", 
+    "buildbot_version": "0.8.2",
+    "bbconfigs_dir": "/builds/buildbot/try_master2/buildbot-configs", 
+    "db_name": "buildbot-master1.build.scl1.mozilla.com:/builds/buildbot/try_master2/master", 
+    "bbcustom_dir": "/builds/buildbot/try_master2/buildbotcustom",
+    "bbcustom_branch": "production-0.8",
+    "bbconfigs_branch": "production",
+    "http_port": 8013,
+    "pb_port": 9013,
+    "ssh_port": 1237,
+    "datacentre": "scl"
+  }, 
+  {
+    "hostname": "buildbot-master2.build.scl1.mozilla.com", 
+    "master_dir": "/builds/buildbot/try_master3/master", 
+    "name": "bm02-try", 
+    "roles": [
+      "try"
+    ], 
+    "basedir": "/builds/buildbot/try_master3", 
+    "buildbot_version": "0.8.2",
+    "bbconfigs_dir": "/builds/buildbot/try_master3/buildbot-configs", 
+    "db_name": "buildbot-master1.build.scl1.mozilla.com:/builds/buildbot/try_master3/master", 
+    "bbcustom_dir": "/builds/buildbot/try_master3/buildbotcustom",
+    "bbcustom_branch": "production-0.8",
+    "bbconfigs_branch": "production",
+    "http_port": 8013,
+    "pb_port": 9013,
+    "ssh_port": 1237,
+    "datacentre": "scl"
+  }, 
+  {
+    "basedir": "/builds/buildbot/builder_master", 
+    "buildbot_version": "0.8.2",
+    "master_dir": "/builds/buildbot/builder_master", 
+    "name": "pm03-bm", 
+    "roles": [
+      "build"
+    ], 
+    "hostname": "production-master03.build.mozilla.org", 
+    "bbconfigs_dir": "/builds/buildbot/configs", 
+    "db_name": "production-master03.build.mozilla.org:/builds/buildbot/builder_master", 
+    "bbcustom_dir": "/tools/buildbotcustom/buildbotcustom",
+    "bbcustom_branch": "production-0.8",
+    "bbconfigs_branch": "production",
+    "http_port": 8010,
+    "pb_port": 9010,
+    "ssh_port": 1235,
+    "datacentre": "mpt"
+  }, 
+  {
+    "basedir": "/builds/buildbot/tests-master", 
+    "buildbot_version": "0.8.2",
+    "master_dir": "/builds/buildbot/tests-master", 
+    "name": "test-master01", 
+    "roles": [
+      "tests"
+    ], 
+    "hostname": "test-master01.build.mozilla.org", 
+    "bbconfigs_dir": "/builds/buildbot/configs", 
+    "db_name": "test-master01.build.mozilla.org:/builds/buildbot/tests-master", 
+    "bbcustom_dir": "/tools/buildbotcustom/buildbotcustom",
+    "bbcustom_branch": "production-0.8",
+    "bbconfigs_branch": "production",
+    "http_port": 8012,
+    "pb_port": 9012,
+    "ssh_port": 1235,
+    "datacentre": "mv"
+  }, 
+  {
+    "basedir": "/builds/buildbot/tests-master", 
+    "buildbot_version": "0.8.2",
+    "master_dir": "/builds/buildbot/tests-master", 
+    "name": "talos-master02", 
+    "roles": [
+      "tests"
+    ], 
+    "hostname": "talos-master02.build.mozilla.org", 
+    "bbconfigs_dir": "/builds/buildbot/configs", 
+    "db_name": "talos-master02.build.mozilla.org:/builds/buildbot/tests-master", 
+    "bbcustom_dir": "/tools/buildbotcustom/buildbotcustom",
+    "bbcustom_branch": "production-0.8",
+    "bbconfigs_branch": "production",
+    "http_port": 8012,
+    "pb_port": 9012,
+    "ssh_port": 1235,
+    "datacentre": "mv"
+  }, 
+  {
+    "hostname": "buildbot-master1.build.scl1.mozilla.com", 
+    "master_dir": "/builds/buildbot/build_master3/master", 
+    "name": "bm3", 
+    "roles": [
+      "build"
+    ], 
+    "basedir": "/builds/buildbot/build_master3", 
+    "buildbot_version": "0.8.2",
+    "bbconfigs_dir": "/builds/buildbot/build_master3/buildbot-configs", 
+    "db_name": "buildbot-master1.build.scl1.mozilla.com:/builds/buildbot/build_master3/master", 
+    "bbcustom_dir": "/builds/buildbot/build_master3/buildbotcustom",
+    "bbcustom_branch": "production-0.8",
+    "bbconfigs_branch": "production",
+    "http_port": 8010,
+    "pb_port": 9010,
+    "ssh_port": 1235,
+    "datacentre": "scl"
+  }, 
+  {
+    "hostname": "buildbot-master2.build.scl1.mozilla.com", 
+    "master_dir": "/builds/buildbot/build_master4/master", 
+    "name": "bm4", 
+    "roles": [
+      "build"
+    ], 
+    "basedir": "/builds/buildbot/build_master4", 
+    "buildbot_version": "0.8.2",
+    "bbconfigs_dir": "/builds/buildbot/build_master4/buildbot-configs", 
+    "db_name": "buildbot-master2.build.scl1.mozilla.com:/builds/buildbot/build_master4/master", 
+    "bbcustom_dir": "/builds/buildbot/build_master4/buildbotcustom",
+    "bbcustom_branch": "production-0.8",
+    "bbconfigs_branch": "production",
+    "http_port": 8010,
+    "pb_port": 9010,
+    "ssh_port": 1235,
+    "datacentre": "scl"
+  }, 
+  {
+    "hostname": "buildbot-master1.build.scl1.mozilla.com", 
+    "master_dir": "/builds/buildbot/tests_master3/master", 
+    "name": "tm3", 
+    "roles": [
+      "tests"
+    ], 
+    "basedir": "/builds/buildbot/tests_master3", 
+    "buildbot_version": "0.8.2",
+    "bbconfigs_dir": "/builds/buildbot/tests_master3/buildbot-configs", 
+    "db_name": "buildbot-master1.build.scl1.mozilla.com:/builds/buildbot/tests_master3/master", 
+    "bbcustom_dir": "/builds/buildbot/tests_master3/buildbotcustom",
+    "bbcustom_branch": "production-0.8",
+    "bbconfigs_branch": "production",
+    "http_port": 8011,
+    "pb_port": 9011,
+    "ssh_port": 1236,
+    "datacentre": "scl"
+  }, 
+  {
+    "hostname": "buildbot-master1.build.scl1.mozilla.com", 
+    "master_dir": "/builds/buildbot/tests_master4/master", 
+    "name": "tm4", 
+    "roles": [
+      "tests"
+    ], 
+    "basedir": "/builds/buildbot/tests_master4", 
+    "buildbot_version": "0.8.2",
+    "bbconfigs_dir": "/builds/buildbot/tests_master4/buildbot-configs", 
+    "db_name": "buildbot-master1.build.scl1.mozilla.com:/builds/buildbot/tests_master4/master", 
+    "bbcustom_dir": "/builds/buildbot/tests_master4/buildbotcustom",
+    "bbcustom_branch": "production-0.8",
+    "bbconfigs_branch": "production",
+    "http_port": 8012,
+    "pb_port": 9012,
+    "ssh_port": 1237,
+    "datacentre": "scl"
+  }, 
+  {
+    "hostname": "buildbot-master2.build.scl1.mozilla.com", 
+    "master_dir": "/builds/buildbot/tests_master5/master", 
+    "name": "tm5", 
+    "roles": [
+      "tests"
+    ], 
+    "basedir": "/builds/buildbot/tests_master5", 
+    "buildbot_version": "0.8.2",
+    "bbconfigs_dir": "/builds/buildbot/tests_master5/buildbot-configs", 
+    "db_name": "buildbot-master2.build.scl1.mozilla.com:/builds/buildbot/tests_master5/master", 
+    "bbcustom_dir": "/builds/buildbot/tests_master5/buildbotcustom",
+    "bbcustom_branch": "production-0.8",
+    "bbconfigs_branch": "production",
+    "http_port": 8011,
+    "pb_port": 9011,
+    "ssh_port": 1236,
+    "datacentre": "scl"
+  }, 
+  {
+    "hostname": "buildbot-master2.build.scl1.mozilla.com", 
+    "master_dir": "/builds/buildbot/tests_master6/master", 
+    "name": "tm6", 
+    "roles": [
+      "tests"
+    ], 
+    "basedir": "/builds/buildbot/tests_master6", 
+    "buildbot_version": "0.8.2",
+    "bbconfigs_dir": "/builds/buildbot/tests_master6/buildbot-configs", 
+    "db_name": "buildbot-master2.build.scl1.mozilla.com:/builds/buildbot/tests_master6/master", 
+    "bbcustom_dir": "/builds/buildbot/tests_master6/buildbotcustom",
+    "bbcustom_branch": "production-0.8",
+    "bbconfigs_branch": "production",
+    "http_port": 8012,
+    "pb_port": 9012,
+    "ssh_port": 1237,
+    "datacentre": "scl"
+  }
+]
+
