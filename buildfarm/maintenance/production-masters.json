@@ -79,9 +79,9 @@
     "roles": [
       "try"
     ], 
-    "hostname": "test-master02.build.mozilla.org", 
+    "hostname": "buildbot-master3.build.mozilla.org", 
     "bbconfigs_dir": "/builds/buildbot/try_master1/buildbot-configs", 
-    "db_name": "test-master02.build.mozilla.org:/builds/buildbot/try_master1/master", 
+    "db_name": "buildbot-master3.build.mozilla.org:/builds/buildbot/try_master1/master", 
     "bbcustom_dir": "/builds/buildbot/try_master1/buildbotcustom",
     "bbcustom_branch": "production-0.8",
     "bbconfigs_branch": "production",
