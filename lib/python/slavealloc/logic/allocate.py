@@ -47,7 +47,6 @@ class Allocation(object):
                 model.masters.c.masterid == slave_row.locked_masterid))
             master_row = q.execute().fetchone()
         else:
-            # TODO: use slaveid, lose a join
             q = queries.best_master
             master_row = q.execute(slaveid=self.slaveid).fetchone()
 

@@ -47,7 +47,7 @@ pools = sa.Table('pools', metadata,
     sa.Column('name', sa.Text, nullable=False),
 )
 
-# slave passwords, based on pool
+# slave passwords, based on pool and distro
 
 slave_passwords = sa.Table('slave_passwords', metadata,
     # for most pools, all slaves have the same password, but for some pools,
