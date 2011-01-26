@@ -2,6 +2,7 @@
 
 import logging
 from os import path
+from traceback import format_exc
 import sys
 
 sys.path.append(path.join(path.dirname(__file__), "../../lib/python"))
@@ -9,7 +10,9 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
 log = logging.getLogger(__name__)
 
 from util.commands import run_cmd
-from util.hg import mercurial, apply_and_push, update, get_revision, make_hg_url
+from util.hg import mercurial, apply_and_push, update, get_revision, \
+  make_hg_url, out, BRANCH, REVISION
+from build.versions import nextVersion
 from release.info import readReleaseConfig, getTags, generateRelbranchName, \
   isFinalRelease
 from release.l10n import getL10nRepositories
@@ -26,16 +29,15 @@ REQUIRED_CONFIG = ('version', 'appVersion', 'appName', 'productName',
                    'sourceRepoName', 'sourceRepoRevision', 'l10nRevisionFile')
 
 def getBumpCommitMessage(productName, version):
-    return 'Automated checkin: version bump remove "pre" from version number ' \
-           'for ' + productName + ' ' + version + \
-           ' release. CLOSED TREE a=release'
+    return 'Automated checkin: version bump for ' + productName + ' ' + \
+           version + ' release. CLOSED TREE a=release'
 
 def getTagCommitMessage(revision, tag):
     return "Added tag " +  tag + " for changeset " + revision + \
            ". CLOSED TREE a=release"
 
 def bump(repo, version, appVersion, appname, productName, milestone,
-         buildNumber, bumpFiles, username):
+         bumpFiles, username):
     cmd = ['perl', VERSION_BUMP_SCRIPT, '-w', repo, '-a', appname,
            '-v', appVersion, '-m', milestone]
     cmd.extend(bumpFiles)
@@ -53,39 +55,104 @@ def tag(repo, revision, tags, username):
         run_cmd(cmd, cwd=repo)
 
 def tagRepo(config, repo, reponame, revision, tags, bumpFiles, relbranch,
-            isRelbranchGenerated, pushAttempts):
-    mercurial(make_hg_url(HG, repo), reponame)
+            isRelbranchGenerated, pushAttempts, defaultBranch='default'):
+    remote = make_hg_url(HG, repo)
+    mercurial(remote, reponame)
 
     def bump_and_tag(repo, attempt, config, relbranch, isRelbranchGenerated,
-                     revision, tags):
-        if relbranch:
-            try:
-                update(reponame, revision=relbranch)
-            except:
-                if not isRelbranchGenerated:
-                    log.error("Couldn't update to required relbranch '%s', fail",
-                              relbranch)
-                    raise Exception("Tagging failed")
-                update(reponame, revision=revision)
-                run_cmd(['hg', 'branch', relbranch], cwd=reponame)
+                     revision, tags, defaultBranch):
+        relbranchChangesets = len(tags)
+        if config['buildNumber'] == 1 and len(bumpFiles) > 0:
+            shouldBump = True
+            relbranchChangesets += 1
+            defaultBranchChangesets = 1
+        else:
+            shouldBump = False
+            defaultBranchChangesets = 0
 
-        if config['buildNumber'] != 1 or len(bumpFiles) == 0:
+        try:
+            update(reponame, revision=relbranch)
+        except:
+            if not isRelbranchGenerated:
+                log.error("Couldn't update to required relbranch '%s', fail",
+                          relbranch)
+                raise Exception("Tagging failed")
+            update(reponame, revision=revision)
+            run_cmd(['hg', 'branch', relbranch], cwd=reponame)
+
+        if shouldBump:
+            # This is the bump of the version on the release branch
+            revision = bump(repo, config['version'], config['appVersion'],
+                            config['appName'], config['productName'],
+                            config['milestone'], bumpFiles,
+                            config['hgUsername'])
+        else:
             log.info("Not bumping anything. buildNumber is " + \
                      str(config['buildNumber']) + " bumpFiles is " + \
                      str(bumpFiles))
-        else:
-            revision = bump(repo, config['version'], config['appVersion'],
-                            config['appName'], config['productName'],
-                            config['milestone'], config['buildNumber'],
-                            bumpFiles, config['hgUsername'])
         tag(repo, revision, tags, config['hgUsername'])
+        if shouldBump:
+            # This is the bump of the version on the default branch
+            # We do it after the other one in order to get the tip of the
+            # repository back on default, thus avoiding confusion.
+            update(reponame, revision=defaultBranch)
+            bump(repo, config['version'], 
+                 nextVersion(config['appVersion'], pre=True), config['appName'],
+                 config['productName'],
+                 nextVersion(config['milestone'], pre=True), bumpFiles,
+                 config['hgUsername'])
+        # Validate that the repository is only different from the remote in
+        # ways we expect.
+        outgoingRevs = out(src=reponame, remote=remote,
+                           ssh_username=config['hgUsername'],
+                           ssh_key=config['hgSshKey'])
+        if len([r for r in outgoingRevs if r[BRANCH] == "default"]) != defaultBranchChangesets:
+            raise Exception("Incorrect number of revisions on 'default' branch")
+        if len([r for r in outgoingRevs if r[BRANCH] == relbranch]) != relbranchChangesets:
+            raise Exception("Incorrect number of revisions on %s" % relbranch)
+        if len(outgoingRevs) != (relbranchChangesets + defaultBranchChangesets):
+            raise Exception("Wrong number of outgoing revisions")
 
-    apply_and_push(reponame, make_hg_url(HG, repo, protocol='ssh'),
-                   lambda r, n: bump_and_tag(r, n, config, relbranch,
-                                             isRelbranchGenerated, revision,
-                                             tags),
-                   pushAttempts, ssh_username=config['hgUsername'],
-                   ssh_key=config['hgSshKey'])
+    try:
+        apply_and_push(reponame, make_hg_url(HG, repo, protocol='ssh'),
+                       lambda r, n: bump_and_tag(r, n, config, relbranch,
+                                                 isRelbranchGenerated, revision,
+                                                 tags, defaultBranch),
+                       pushAttempts, ssh_username=config['hgUsername'],
+                       ssh_key=config['hgSshKey'])
+    except:
+        outgoingRevs = out(src=reponame, remote=remote,
+                           ssh_username=config['hgUsername'],
+                           ssh_key=config['hgSshKey'])
+        for r in reversed(outgoingRevs):
+            run_cmd(['hg', 'strip', r[REVISION]], cwd=reponame)
+        raise
+
+def tagOtherRepo(config, repo, reponame, revision, pushAttempts):
+    remote = make_hg_url(HG, repo)
+    mercurial(remote, reponame)
+
+    def tagRepo(repo, attempt, config, revision, tags):
+        totalChangesets = len(tags)
+        tag(repo, revision, tags, config['hgUsername'])
+        outgoingRevs = out(src=reponame, remote=remote,
+                           ssh_username=config['hgUsername'],
+                           ssh_key=config['hgSshKey'])
+        if len(outgoingRevs) != totalChangesets:
+            raise Exception("Wrong number of outgoing revisions")
+    
+    try:
+        apply_and_push(reponame, make_hg_url(HG, repo, protocol='ssh'),
+                       lambda r, n: tagRepo(r, n, config, revision, tags),
+                       pushAttempts, ssh_username=config['hgUsername'],
+                       ssh_key=config['hgSshKey'])
+    except:
+        outgoingRevs = out(src=reponame, remote=remote,
+                           ssh_username=config['hgUsername'],
+                           ssh_key=config['hgSshKey'])
+        for r in reversed(outgoingRevs):
+            run_cmd(['hg', 'strip', r[REVISION]], cwd=reponame)
+        raise
 
 def validate(options, args):
     err = False
@@ -172,16 +239,17 @@ if __name__ == '__main__':
         # If en-US tags successfully we'll do our best to tag all of the l10n
         # repos, even if some have errors
         except:
-            failed.append(l)
+            failed.append((l, format_exc()))
     if 'otherReposToTag' in config:
         for repo, revision in config['otherReposToTag'].iteritems():
             try:
-                tagRepo(config, repo, path.basename(repo),
-                        revision, tags, [], None, False, options.attempts)
+                tagOtherRepo(config, repo, path.basename(repo), revision,
+                             options.attempts)
             except:
-                failed.append(repo)
+                failed.append((repo, format_exc()))
     if len(failed) > 0:
         log.info("The following locales failed to tag:")
-        for l in failed:
+        for l,e in failed:
             log.info("  %s" % l)
+            log.info("%s\n" % e)
         sys.exit(1)
