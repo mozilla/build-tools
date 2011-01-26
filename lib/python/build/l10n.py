@@ -63,6 +63,8 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
     env["LOCALE_MERGEDIR"] = path.abspath(path.join(localeSrcDir, "merged"))
     if sys.platform.startswith('win'):
         env["LOCALE_MERGEDIR"] = windows2msys(env["LOCALE_MERGEDIR"])
+    if sys.platform.startswith('darwin'):
+        env["MOZ_PKG_PLATFORM"] = "mac"
     run_cmd(["make", "installers-%s" % locale], cwd=localeSrcDir, env=env)
     run_cmd(["make", "upload", "AB_CD=%s" % locale], cwd=localeSrcDir, env=env)
 

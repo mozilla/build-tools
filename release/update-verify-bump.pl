@@ -243,13 +243,13 @@ sub BumpVerifyConfig {
     } elsif ($osname eq 'macosx64') {
         $buildTarget = 'Darwin_x86_64-gcc3';
         $platform = 'osx';
-        $ftpOsname = 'mac64';
+        $ftpOsname = 'mac';
         $releaseFile = $oldBinaryName.' '.$oldLongVersion.'.dmg';
         if ($prettyCandidatesDir) {
-            $nightlyFile = 'mac64/%locale%/'.$binaryName.' '.$longVersion.
+            $nightlyFile = 'mac/%locale%/'.$binaryName.' '.$longVersion.
              '.dmg';
         } else {
-            $nightlyFile = lc($binaryName).'-'.$appVersion.'.%locale%.mac64.dmg';
+            $nightlyFile = lc($binaryName).'-'.$appVersion.'.%locale%.mac.dmg';
         }
     } elsif ($osname eq 'win32') {
         $buildTarget = 'WINNT_x86-msvc';
