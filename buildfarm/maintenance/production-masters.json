@@ -72,9 +72,9 @@
     "datacentre": "mpt"
   }, 
   {
-    "basedir": "/builds/buildbot/try-master1", 
+    "basedir": "/builds/buildbot/try_master1", 
     "buildbot_version": "0.8.2",
-    "master_dir": "/builds/buildbot/try-master1", 
+    "master_dir": "/builds/buildbot/try_master1", 
     "name": "try-mtv", 
     "roles": [
       "try"
@@ -87,7 +87,7 @@
     "bbconfigs_branch": "production",
     "http_port": 8011,
     "pb_port": 9011,
-    "ssh_port": 1235,
+    "ssh_port": 1236,
     "datacentre": "mv"
   }, 
   {
