@@ -40,7 +40,7 @@ cd "./jetpack"
 wget -i "jetpack-location.txt" -O $JETPACK_TARBALL
 tar -xvf $JETPACK_TARBALL $UNTAR_ARGS
 # Find the sdk dir to run tests in
-SDK_DIR=$(ls . | grep 'jetpack-sdk*')
+SDK_DIR=$(ls . | grep 'addon-sdk*')
 if [ -d $SDK_DIR ]; then
   cd $SDK_DIR
   python bin/cfx testall -a firefox -b $APP_PATH
