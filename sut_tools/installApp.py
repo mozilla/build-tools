@@ -7,13 +7,13 @@ import socket
 import devicemanager
 
 
-def setFlag(contents=''):
+def setFlag(flagfile, contents=''):
     print flagFile
     h = open(flagFile, 'w+')
     h.write(contents)
     h.close()
 
-def clearFlag():
+def clearFlag(flagfile):
     if os.path.exists(flagFile):
         os.remove(flagFile)
 
@@ -50,6 +50,7 @@ if (len(sys.argv) <> 3):
 cwd       = os.getcwd()
 source    = sys.argv[2]
 flagFile  = os.path.join(cwd, '..', 'proxy.flg')
+errorFile = os.path.join(cwd, '..', 'error.flg')
 proxyIP   = getOurIP()
 proxyPort = calculatePort()
 
@@ -63,6 +64,8 @@ devRoot  = dm.getDeviceRoot()
 print "devroot %s" % devRoot
 if devRoot is None or devRoot == '/tests':
     print "Remote Device Error: devRoot from devicemanager [%s] is not correct - exiting" % devRoot
+    setFlag(errorFile)
+    time.sleep(30)
     sys.exit(1)
 
 workdir  = os.path.dirname(source)
@@ -73,7 +76,7 @@ inifile  = os.path.join(workdir, 'fennec', 'application.ini')
 print "Installing %s" % target
 if dm.pushFile(source, target):
     try:
-        setFlag()
+        setFlag(flagFile)
         print proxyIP, proxyPort
         status = dm.updateApp(target, processName='org.mozilla.fennec', ipAddr=proxyIP, port=proxyPort)
         if status is not None:
@@ -83,15 +86,19 @@ if dm.pushFile(source, target):
             print "devroot %s" % dm2.getDeviceRoot()
             if not dm2.pushFile(inifile, '/data/data/org.mozilla.fennec/application.ini'):
                 print "Remote Device Error: unable to push %s" % inifile
-                clearFlag()
+                setFlag(errorFile)
+                clearFlag(flagFile)
+                time.sleep(30)
                 sys.exit(1)
         else:
             print "Remote Device Error: updateApp() call failed - exiting"
-            clearFlag()
+            setFlag(errorFile)
+            clearFlag(flagFile)
+            time.sleep(30)
             sys.exit(1)
 
     finally:
-        clearFlag()
+        clearFlag(flagFile)
 
 time.sleep(60)
 

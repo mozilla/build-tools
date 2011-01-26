@@ -39,7 +39,8 @@ proxyPort = calculatePort()
 print "connecting to: %s" % sys.argv[1]
 dm = devicemanager.DeviceManager(sys.argv[1])
 
-status = dm.reboot(ipAddr=proxyIP, port=proxyPort)
+#status = dm.reboot(ipAddr=proxyIP, port=proxyPort)
+status = dm.reboot()
 
 if status is None:
     print "Remote Device Error: call for device reboot failed"
