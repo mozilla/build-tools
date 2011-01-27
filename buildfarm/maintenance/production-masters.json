@@ -131,7 +131,7 @@
     "basedir": "/builds/buildbot/try_master3", 
     "buildbot_version": "0.8.2",
     "bbconfigs_dir": "/builds/buildbot/try_master3/buildbot-configs", 
-    "db_name": "buildbot-master1.build.scl1.mozilla.com:/builds/buildbot/try_master3/master", 
+    "db_name": "buildbot-master2.build.scl1.mozilla.com:/builds/buildbot/try_master3/master", 
     "bbcustom_dir": "/builds/buildbot/try_master3/buildbotcustom",
     "bbcustom_branch": "production-0.8",
     "bbconfigs_branch": "production",
