@@ -19,7 +19,7 @@ $RELEASE_BUILDERS = array(
   'major_update',
   'final_verification',
 );
-$RELEASE_PREFIX = 'release-';
+$RELEASE_PREFIX = 'rel-';
 
 foreach ($PLATFORMS as $platform){
   $RELEASE_BUILDERS[] = "${platform}_build";
@@ -215,7 +215,7 @@ if ($_POST['form_submitted']) {
         $builddir = $_POST['builddir'];
         if ($builddir != '') {
             $builders = array($builddir);
-            // check for release-${branch}- version of this builddir
+            // check for prefixed version of this builddir
             $releasedir = e("$RELEASE_PREFIX%$builddir%");
             $q = "SELECT DISTINCT builddir FROM builds "
                 ."WHERE "
@@ -355,16 +355,7 @@ Clobber all release builders on <select name="master">
 <select name="branch">
 <option value="">Any release</option>
 <?php
-  $builders = "";
-  $first = true;
-  foreach ($RELEASE_BUILDERS as $b) {
-    if (!$first) {
-      $builders .= ",";
-    }
-    $first = false;
-    $builders .= e($b);
-  }
-  $releases = $dbh->query("SELECT DISTINCT branch FROM builds WHERE builddir IN ($builders)");
+  $releases = $dbh->query("SELECT DISTINCT branch FROM builds WHERE builddir LIKE '${RELEASE_PREFIX}%' AND branch != 'None'");
   while ($release = $releases->fetch(PDO::FETCH_ASSOC)) {
     $release = $release['branch'];
     $e_release = htmlspecialchars($release);
@@ -376,7 +367,6 @@ Clobber all release builders on <select name="master">
 <option value="">Any builder</option>
 <?php
   $builders = "";
-  $first = true;
   foreach ($RELEASE_BUILDERS as $b) {
     $e_b = htmlspecialchars($b);
     print "<option value=\"$e_b\">$b</option>\n";
@@ -398,7 +388,7 @@ Clobber all release builders on <select name="master">
  </thead>
  <tbody>
 <?php
-  $allbuilders = $dbh->query('SELECT DISTINCT id, branch, builddir, buildername, slave FROM builds ORDER BY branch ASC, buildername ASC');
+  $allbuilders = $dbh->query("SELECT DISTINCT id, branch, builddir, buildername, slave FROM builds WHERE builddir NOT LIKE '${RELEASE_PREFIX}%' ORDER BY branch ASC, buildername ASC");
   if ($allbuilders) {
     $last_branch = null;
     $last_builder = null;
