@@ -44,8 +44,8 @@ class TacSlaveResource(resource.Resource):
         return server.NOT_DONE_YET
 
 
-class RootResource(resource.Resource):
-    "root (/) resource for the HTTP service"
+class TacResource(resource.Resource):
+    "Parent resource for all TacSlaveResources"
     addSlash = True
     isLeaf = False
 
@@ -55,8 +55,5 @@ class RootResource(resource.Resource):
         else:
             return error.NoResource()
 
-
-class AllocatorSite(server.Site):
-    def __init__(self, allocator):
-        server.Site.__init__(self, RootResource())
-        self.allocator = allocator
+def makeRootResource():
+    return TacResource()
