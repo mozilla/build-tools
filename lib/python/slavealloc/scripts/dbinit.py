@@ -30,6 +30,8 @@ def main(args):
 
     rdr = csv.DictReader(open(args.slave_data))
     slaves = list(rdr)
+    # ignore mobile slaves for now
+    slaves = [ s for s in slaves if s['size'] == 'desktop' ]
 
     rdr = csv.DictReader(open(args.master_data))
     masters = list(rdr)
