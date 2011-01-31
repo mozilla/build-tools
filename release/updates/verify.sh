@@ -95,6 +95,7 @@ do
   eval $entry
   for locale in $locales
   do
+    rm -f update/partial.size update/complete.size
     for patch_type in $patch_types
     do
       if [ "$runmode" == "$MARS_ONLY" ] || [ "$runmode" == "$COMPLETE" ] ||
