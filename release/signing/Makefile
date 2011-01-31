@@ -256,8 +256,10 @@ verify-sigs:
 stage: create-contrib fix-permissions
 
 create-contrib:
-	mkdir -m 2775 $(WORKDIR)/signed-build$(BUILD)/contrib
-	mkdir -m 2775 $(WORKDIR)/signed-build$(BUILD)/contrib-localized
+	mkdir -p $(WORKDIR)/signed-build$(BUILD)/contrib
+	chmod 2775 $(WORKDIR)/signed-build$(BUILD)/contrib
+	mkdir -p $(WORKDIR)/signed-build$(BUILD)/contrib-localized
+	chmod 2775 $(WORKDIR)/signed-build$(BUILD)/contrib-localized
 	cp $(GPG_KEY) $(WORKDIR)/signed-build$(BUILD)/KEY
 
 checksum-files:
