@@ -30,7 +30,7 @@ if [ -f "$PROPERTIES_FILE" ]; then
     # Purging
     (cd ..;
     python $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
-        -s 4 -n info -n 'release-*' -n $builddir)
+        -s 4 -n info -n 'rel-*' -n $builddir)
 fi
 
 python $SCRIPTS_DIR/buildfarm/utils/hgtool.py --tbox $HG_REPO src || exit 2
@@ -57,7 +57,7 @@ make -f ../src/client.mk MOZCONFIG=$PWD/mozconfig configure || exit 2
 make -j4 || exit 2
 make package || exit 2
 
-debugger_args="--error-exitcode=1 --smc-check=all --gen-suppressions=all"
+debugger_args="--error-exitcode=1 --smc-check=all --gen-suppressions=all --leak-check=full"
 suppression_file=$HERE/${MACHTYPE}.sup
 if [ -f $suppression_file ]; then
     debugger_args="$debugger_args --suppressions=$suppression_file"
