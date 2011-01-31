@@ -97,7 +97,7 @@ function canSee($builddir, $user)
 {
   global $RELEASE_BUILDERS;
   global $RELEASE_PREFIX;
-  if (!in_array($builddir, $RELEASE_BUILDERS) && strpos($builddir, $RELEASE_PREFIX)!=0) {
+  if (!in_array($builddir, $RELEASE_BUILDERS) && strpos($builddir, $RELEASE_PREFIX)!==0) {
     return true;
   }
 
