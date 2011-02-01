@@ -1,7 +1,10 @@
 import sqlalchemy as sa
 from slavealloc.data import model
 
-denormalized_slaves = sa.select([
+def denormalized_slaves():
+    locked_masters = model.masters.alias('locked_masters')
+    current_masters = model.masters.alias('current_masters')
+    q = sa.select([
             model.slaves,
             model.distros.c.name.label('distro'),
             model.bitlengths.c.name.label('bitlength'),
@@ -10,6 +13,8 @@ denormalized_slaves = sa.select([
             model.trustlevels.c.name.label('trustlevel'),
             model.environments.c.name.label('environment'),
             model.pools.c.name.label('pool'),
+            locked_masters.c.nickname.label('locked_master'),
+            current_masters.c.nickname.label('current_master'),
         ], whereclause=(
             (model.distros.c.distroid == model.slaves.c.distroid) &
             (model.bitlengths.c.bitsid == model.slaves.c.bitsid) &
@@ -18,7 +23,18 @@ denormalized_slaves = sa.select([
             (model.trustlevels.c.trustid == model.slaves.c.trustid) &
             (model.environments.c.envid == model.slaves.c.envid) &
             (model.pools.c.poolid == model.slaves.c.poolid)
-        ))
+        ), from_obj=[
+            # note that the other tables will be joined automatically
+            model.slaves.outerjoin(
+                locked_masters, onclause=
+                    locked_masters.c.masterid == model.slaves.c.locked_masterid
+                ).outerjoin(
+                current_masters, onclause=
+                    current_masters.c.masterid == model.slaves.c.current_masterid
+                )
+        ])
+    return q
+denormalized_slaves = denormalized_slaves()
 
 denormalized_masters = sa.select([
             model.masters,
