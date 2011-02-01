@@ -2,7 +2,7 @@ import sqlalchemy as sa
 from slavealloc.data import model
 
 denormalized_slaves = sa.select([
-            model.slaves.c.name.label('name'),
+            model.slaves,
             model.distros.c.name.label('distro'),
             model.bitlengths.c.name.label('bitlength'),
             model.purposes.c.name.label('purpose'),
@@ -21,7 +21,7 @@ denormalized_slaves = sa.select([
         ))
 
 denormalized_masters = sa.select([
-            model.masters.c.nickname,
+            model.masters,
             model.datacenters.c.name.label('datacenter'),
             model.pools.c.name.label('pool'),
         ], whereclause=(
