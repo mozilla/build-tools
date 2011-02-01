@@ -10,29 +10,7 @@ http://hg.mozilla.org/build/buildbotcustom/file/default/process/factory.py
 
 $CLOBBERER_DB = 'db/clobberer.db';
 
-$PLATFORMS = array('linux', 'linux64', 'macosx', 'macosx64', 'win32', 'wince');
-
-$RELEASE_BUILDERS = array(
-  'tag',
-  'source',
-  'updates',
-  'major_update',
-  'final_verification',
-);
 $RELEASE_PREFIX = 'rel-';
-
-foreach ($PLATFORMS as $platform){
-  $RELEASE_BUILDERS[] = "${platform}_build";
-  $RELEASE_BUILDERS[] = "${platform}_repack";
-  $RELEASE_BUILDERS[] = "${platform}_l10n_verification";
-  $RELEASE_BUILDERS[] = "${platform}_update_verify";
-  $RELEASE_BUILDERS[] = "${platform}_major_update_verify";
-  $RELEASE_BUILDERS[] = "${platform}_test mochitests";
-  $RELEASE_BUILDERS[] = "${platform}_test mochitest-other";
-  $RELEASE_BUILDERS[] = "${platform}_test reftest";
-  $RELEASE_BUILDERS[] = "${platform}_test crashtest";
-  $RELEASE_BUILDERS[] = "${platform}_test xpcshell'";
-}
 
 // TODO: Figure out if we can use LDAP to do this
 $SPECIAL_PEOPLE = array(
@@ -95,9 +73,12 @@ function isSpecial($user)
 
 function canSee($builddir, $user)
 {
-  global $RELEASE_BUILDERS;
+  $builders = array();
+  foreach (getReleaseBuilders() as $builder) {
+    $builders[] = $builder['builddir'];
+  }
   global $RELEASE_PREFIX;
-  if (!in_array($builddir, $RELEASE_BUILDERS) && strpos($builddir, $RELEASE_PREFIX)!==0) {
+  if (!in_array($builddir, $builders) && strpos($builddir, $RELEASE_PREFIX)!==0) {
     return true;
   }
 
@@ -131,6 +112,23 @@ function getBuilders($slave)
     }
   }
   return $retval;
+}
+
+function getReleaseBuilders()
+{
+  global $dbh;
+  global $RELEASE_PREFIX;
+  $ret = array();
+  $rp = e("$RELEASE_PREFIX%");
+  $builders = $dbh->query("SELECT DISTINCT buildername, builddir FROM builds WHERE builddir LIKE $rp");
+  while ($builder = $builders->fetch(PDO::FETCH_ASSOC)) {
+    $r = array(
+      'buildername' => $builder['buildername'],
+      'builddir' => $builder['builddir']
+    );
+    $ret[] = $r;
+  }
+  return $ret;
 }
 
 function getMasters()
@@ -228,17 +226,9 @@ if ($_POST['form_submitted']) {
                 $builders[] = $r['builddir'];
             }
         } else {
-            $builders = $RELEASE_BUILDERS;
-            // grab all release-* versions of the release-builders
-            $q = "SELECT DISTINCT builddir FROM builds "
-                ."WHERE "
-                ."builddir like '". $RELEASE_PREFIX . "%'"
-                . (($branch != 'NULL') ? " AND branch == $branch" : "")
-                . (($master != 'NULL') ? " AND master == $master" : "");
-            $s = $dbh->query($q);
-            error_log("Executing query $q");
-            while ($s && $r = $s->fetch(PDO::FETCH_ASSOC)) {
-              $builders[] = $r['builddir'];
+            $builders = array();
+            foreach (getReleaseBuilders() as $builder) {
+              $builders[] = $builder['builddir'];
             }
         }
 
@@ -366,10 +356,10 @@ Clobber all release builders on <select name="master">
 <select name="builddir">
 <option value="">Any builder</option>
 <?php
-  $builders = "";
-  foreach ($RELEASE_BUILDERS as $b) {
-    $e_b = htmlspecialchars($b);
-    print "<option value=\"$e_b\">$b</option>\n";
+  foreach (getReleaseBuilders() as $builder) {
+    $builddir = htmlspecialchars($builder['builddir']);
+    $buildername = $builder['buildername'];
+    print "<option value=\"$builddir\">$buildername</option>\n";
   }
 ?>
 </select>

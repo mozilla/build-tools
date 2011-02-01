@@ -10,8 +10,8 @@ import shutil
 # For testing, update the values below to be suitable to your testing
 # environment
 ###
-clobberURL = "http://localhost/~catlee/index.php"
-dbFile = "/home/catlee/public_html/db/clobberer.db"
+clobberURL = "http://localhost/~bhearsum/clobberer/index.php"
+dbFile = "/home/bhearsum/public_html/clobberer/db/clobberer.db"
 testDir = 'test-dir'
 
 ###
@@ -359,17 +359,6 @@ class TestClobber(TestCase):
         data = runClobberer('branch1', 'My Builder', 'mybuilder', 'slave01',
                 'master01')
         self.assert_('linux_build:Server is forcing' not in data, data)
-
-    def testReleaseClobberPrefixBuilder(self):
-        """Test that clobbers on release builders with the
-        release-* prefix work"""
-        now = int(time.time())
-        makeBuildDir('release-mozilla-central-linux_build', now-10)
-        updateBuild('branch2', 'release-mozilla-central-linux_build',
-                'release-mozilla-central-linux_build', 'slave01', 'master01')
-        time.sleep(1)
-        data = setClobberPage('branch2', 'linux_build', None, None, now)
-        self.assert_('release-mozilla-central-linux_build' in data, data)
 
 if __name__ == '__main__':
     import unittest, sys

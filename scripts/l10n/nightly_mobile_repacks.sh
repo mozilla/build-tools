@@ -22,7 +22,7 @@ thisChunk=$5
 
 branch=$(basename $($JSONTOOL -k properties.branch $PROPERTIES_FILE))
 builder=$($JSONTOOL -k properties.buildername $PROPERTIES_FILE)
-builddir=$($JSONTOOL -k properties.builddir $PROPERTIES_FILE)
+slavebuilddir=$($JSONTOOL -k properties.slavebuilddir $PROPERTIES_FILE)
 slavename=$($JSONTOOL -k properties.slavename $PROPERTIES_FILE)
 master=$($JSONTOOL -k properties.master $PROPERTIES_FILE)
 
@@ -33,12 +33,12 @@ if [ -z "$CLOBBERER_URL" ]; then
     export CLOBBERER_URL="http://build.mozilla.org/clobberer"
 fi
 
-cd $SCRIPTS_DIR/../../..
-$PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s build $CLOBBERER_URL $branch \
-  "$builder" $builddir $slavename $master
+cd $SCRIPTS_DIR/../..
+$PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s scripts -s buildprops.json \
+  $CLOBBERER_URL $branch "$builder" $slavebuilddir $slavename $master
 cd $SCRIPTS_DIR/../..
 $PYTHON $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
-  -s 1 -n info -n 'release-*' -n $builddir
+  -s 1 -n info -n 'rel-*' -n $slavebuilddir
 cd $workdir
 
 $PYTHON $MY_DIR/nightly-mobile-repacks.py -c $branchConfig -B $branch \

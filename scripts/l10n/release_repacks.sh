@@ -34,9 +34,9 @@ if [ -z "$CLOBBERER_URL" ]; then
     export CLOBBERER_URL="http://build.mozilla.org/clobberer"
 fi
 
-cd $SCRIPTS_DIR/../../..
-$PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s build $CLOBBERER_URL $branch \
-  $builder $slavebuilddir $slavename $master
+cd $SCRIPTS_DIR/../..
+$PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s scripts -s buildprops.json \
+  $CLOBBERER_URL $branch $builder $slavebuilddir $slavename $master
 cd $SCRIPTS_DIR/../..
 $PYTHON $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
   -s 6 -n info -n 'release-*' -n $slavebuilddir
