@@ -4,6 +4,7 @@ import os, sys
 import devicemanager
 import socket
 import random
+import time
 
 
 def calculatePort():
@@ -39,9 +40,9 @@ proxyPort = calculatePort()
 print "connecting to: %s" % sys.argv[1]
 dm = devicemanager.DeviceManager(sys.argv[1])
 
-#status = dm.reboot(ipAddr=proxyIP, port=proxyPort)
-status = dm.reboot()
+status = dm.reboot(ipAddr=proxyIP, port=proxyPort)
+print status
 
-if status is None:
-    print "Remote Device Error: call for device reboot failed"
-    sys.exit(1)
+#if status is None or not status:
+#    print "Remote Device Error: call for device reboot failed"
+#    sys.exit(1)

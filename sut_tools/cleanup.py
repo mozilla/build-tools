@@ -34,11 +34,11 @@ if devRoot is None or devRoot == '/tests':
     time.sleep(30)
     sys.exit(1)
 
-status = dm.removeDir(devRoot)
-
-print "removeDir() returned [%s]" % status
-#if status is None:
-#    print "Remote Device Error: all to removeDir() failed"
-#    setFlag(errorFile)
-#    time.sleep(30)
-#    sys.exit(1)
+if dm.dirExists(devRoot):
+    status = dm.removeDir(devRoot)
+    print "removeDir() returned [%s]" % status
+    if status is None or not status:
+       print "Remote Device Error: all to removeDir() failed"
+       setFlag(errorFile)
+       time.sleep(30)
+       sys.exit(1)

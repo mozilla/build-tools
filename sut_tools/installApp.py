@@ -78,13 +78,26 @@ if dm.pushFile(source, target):
     try:
         setFlag(flagFile)
         print proxyIP, proxyPort
+        dm.getInfo('process')
+        dm.getInfo('memory')
+        dm.getInfo('uptime')
         status = dm.updateApp(target, processName='org.mozilla.fennec', ipAddr=proxyIP, port=proxyPort)
-        if status is not None:
+        if status is not None and status:
             print "updateApp() call returned %s" % status
             dm2 = devicemanager.DeviceManager(sys.argv[1])
             dm2.debug = 3
             print "devroot %s" % dm2.getDeviceRoot()
-            if not dm2.pushFile(inifile, '/data/data/org.mozilla.fennec/application.ini'):
+
+            if dm2.pushFile(inifile, '/data/data/org.mozilla.fennec/application.ini'):
+                dm2.getInfo('process')
+                dm2.getInfo('memory')
+                dm2.getInfo('uptime')
+                pid = dm2.processExist('org.mozilla.fennec')
+                print 'org.mozilla.fennec PID', pid
+                if pid is not None:
+                    dm2.killProcess('org.mozilla.fennec')
+                dm2.getInfo('process')
+            else:
                 print "Remote Device Error: unable to push %s" % inifile
                 setFlag(errorFile)
                 clearFlag(flagFile)
