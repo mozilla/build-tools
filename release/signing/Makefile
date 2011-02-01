@@ -70,7 +70,7 @@ else
 all: df verify-gpg-passphrase setup verify-signcode-passphrase download verify-download sign stage verify fake-upload
 endif
 
-autosign: df verify-gpg-passphrase setup verify-signcode-passphrase download-loop verify-download stubs sign2 stage verify fake-upload
+autosign: df verify-gpg-passphrase setup verify-signcode-passphrase download-loop verify-download stubs sign2 stage verify fake-upload postsign
 
 echo:
 	 @echo EMAIL: $(EMAIL)
