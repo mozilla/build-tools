@@ -23,14 +23,12 @@ if [ -f "$PROPERTIES_FILE" ]; then
         export CLOBBERER_URL="http://build.mozilla.org/clobberer"
     fi
 
-    (cd ..;
     python $SCRIPTS_DIR/clobberer/clobberer.py -s build $CLOBBERER_URL $branch \
-        $builder $builddir $slavename $master)
+        $builder $builddir $slavename $master
 
     # Purging
-    (cd ..;
     python $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
-        -s 4 -n info -n 'rel-*' -n $builddir)
+        -s 4 -n info -n 'rel-*' -n $builddir
 fi
 
 python $SCRIPTS_DIR/buildfarm/utils/hgtool.py --tbox $HG_REPO src || exit 2
