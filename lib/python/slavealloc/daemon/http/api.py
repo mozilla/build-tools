@@ -39,7 +39,9 @@ class Instance(resource.Resource):
 # concrete classes
 
 class SlaveResource(Instance):
-    pass
+    update_query = model.masters.update(
+            model.masters.c.masterid == sa.bindparam('id'))
+    update_keys = ('poolid',)
 
 class SlavesResource(Collection):
     instance_class = SlaveResource
