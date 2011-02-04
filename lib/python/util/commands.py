@@ -1,5 +1,6 @@
 """Functions for running commands"""
 import subprocess, os
+import time
 
 import logging
 log = logging.getLogger(__name__)
@@ -9,10 +10,15 @@ def log_cmd(cmd, **kwargs):
     # explicitly chosen
     if 'cwd' not in kwargs:
         kwargs['cwd'] = os.getcwd()
+    def escape(s):
+        s = s.encode('unicode_escape').encode('string_escape')
+        if ' ' in s:
+            # don't need to escape ', since string_escape already does that
+            return "'%s'" % s
+        else:
+            return s
     log.info("command: START")
-    log.info("command: arg0: %s", cmd[0])
-    log.info("command: args: ['%s']",
-             "', '".join(cmd[1:]).encode('unicode_escape'))
+    log.info("command: %s", " ".join(escape(s) for s in cmd))
     for key,value in kwargs.iteritems():
         log.info("command: %s: %s", key, str(value))
     log.info("command: output:")
@@ -32,9 +38,11 @@ def run_cmd(cmd, **kwargs):
     if 'env' in kwargs:
         kwargs['env'] = merge_env(kwargs['env'])
     try:
+        t = time.time()
         return subprocess.check_call(cmd, **kwargs)
     finally:
-        log.info("command: END\n")
+        elapsed = time.time() - t
+        log.info("command: END (%.2fs elapsed)\n", elapsed)
 
 def run_remote_cmd(cmd, server, username=None, sshKey=None, ssh='ssh',
                    **kwargs):
@@ -48,7 +56,7 @@ def run_remote_cmd(cmd, server, username=None, sshKey=None, ssh='ssh',
         cmd = [cmd]
     run_cmd(cmd_prefix + cmd, **kwargs)
 
-def get_output(cmd, include_stderr=False, **kwargs):
+def get_output(cmd, include_stderr=False, dont_log=False, **kwargs):
     """Run cmd (a list of arguments) and return the output.  If include_stderr
     is set, stderr will be included in the output, otherwise it will be sent to
     the caller's stderr stream.
@@ -64,17 +72,20 @@ def get_output(cmd, include_stderr=False, **kwargs):
     if 'env' in kwargs:
         kwargs['env'] = merge_env(kwargs['env'])
     try:
+        t = time.time()
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=stderr,
                 **kwargs)
         proc.wait()
         if proc.returncode != 0:
             raise subprocess.CalledProcessError(proc.returncode, cmd)
         output = proc.stdout.read()
-        log.info(output)
+        if not dont_log:
+            log.info(output)
         return output
     finally:
-        log.info("command: END\n")
-        
+        elapsed = time.time() - t
+        log.info("command: END (%.2f elapsed)\n", elapsed)
+
 def remove_path(path):
     """This is a replacement for shutil.rmtree that works better under
     windows. Thanks to Bear at the OSAF for the code.
