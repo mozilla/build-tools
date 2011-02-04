@@ -39,9 +39,9 @@ class Instance(resource.Resource):
 # concrete classes
 
 class SlaveResource(Instance):
-    update_query = model.masters.update(
-            model.masters.c.masterid == sa.bindparam('id'))
-    update_keys = ('poolid',)
+    update_query = model.slaves.update(
+            model.slaves.c.slaveid == sa.bindparam('id'))
+    update_keys = ('poolid', 'basedir')
 
 class SlavesResource(Collection):
     instance_class = SlaveResource
@@ -50,15 +50,17 @@ class SlavesResource(Collection):
 class MasterResource(Instance):
     update_query = model.masters.update(
             model.masters.c.masterid == sa.bindparam('id'))
-    update_keys = ('poolid',)
+    # TODO: lock some of these down so they are not editable via the
+    # interface
+    update_keys = ('nickname', 'fqdn', 'pb_port', 'http_port',
+                   'poolid', 'dcid')
 
 class MastersResource(Collection):
     instance_class = MasterResource
     query = queries.denormalized_masters
 
 class PoolResource(Instance):
-    def render_GET(self, request):
-        return 'i m a master'
+    pass
 
 class PoolsResource(Collection):
     instance_class = PoolResource

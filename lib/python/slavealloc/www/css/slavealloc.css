@@ -30,11 +30,11 @@ div.dashboard {
 
 /* table views */
 
-td.editing-row {
+td.edit-row {
     padding: 0px !important;
 }
 
-td.editing-row div {
+div.edit-row {
     background-color: #f1f1f1;
     border-bottom-left-radius: 10px;
     border-bottom-right-radius: 10px;
@@ -44,4 +44,11 @@ td.editing-row div {
     margin-right: 10px;
     margin-bottom: 5px;
     text-align: center;
+}
+
+div.edit-control {
+    margin: 0px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    padding: 0px;
 }
