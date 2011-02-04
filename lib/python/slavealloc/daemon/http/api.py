@@ -41,7 +41,10 @@ class Instance(resource.Resource):
 class SlaveResource(Instance):
     update_query = model.slaves.update(
             model.slaves.c.slaveid == sa.bindparam('id'))
-    update_keys = ('poolid', 'basedir')
+    # TODO: lock some of these down so they are not editable via the
+    # interface
+    update_keys = ('distroid', 'dcid', 'bitsid', 'purposeid', 'trustid',
+                   'envid', 'poolid', 'basedir', 'locked_masterid', 'disabled')
 
 class SlavesResource(Collection):
     instance_class = SlaveResource
@@ -59,6 +62,48 @@ class MastersResource(Collection):
     instance_class = MasterResource
     query = queries.denormalized_masters
 
+class DistroResource(Instance):
+    pass
+
+class DistrosResource(Collection):
+    instance_class = DistroResource
+    query = model.distros.select()
+
+class DatacenterResource(Instance):
+    pass
+
+class DatacentersResource(Collection):
+    instance_class = DatacenterResource
+    query = model.datacenters.select()
+
+class BitlengthResource(Instance):
+    pass
+
+class BitlengthsResource(Collection):
+    instance_class = BitlengthResource
+    query = model.bitlengths.select()
+
+class PurposeResource(Instance):
+    pass
+
+class PurposesResource(Collection):
+    instance_class = PurposeResource
+    query = model.purposes.select()
+
+class TrustlevelResource(Instance):
+    pass
+
+class TrustlevelsResource(Collection):
+    instance_class = TrustlevelResource
+    query = model.trustlevels.select()
+
+class EnvironmentResource(Instance):
+    pass
+
+class EnvironmentsResource(Collection):
+    instance_class = EnvironmentResource
+    query = model.environments.select()
+
 class PoolResource(Instance):
     pass
 
@@ -74,6 +119,12 @@ class ApiRoot(resource.Resource):
         resource.Resource.__init__(self)
         self.putChild('slaves', SlavesResource())
         self.putChild('masters', MastersResource())
+        self.putChild('distros', DistrosResource())
+        self.putChild('datacenters', DatacentersResource())
+        self.putChild('bitlengths', BitlengthsResource())
+        self.putChild('purposes', PurposesResource())
+        self.putChild('trustlevels', TrustlevelsResource())
+        self.putChild('environments', EnvironmentsResource())
         self.putChild('pools', PoolsResource())
 
 def makeRootResource():

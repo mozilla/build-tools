@@ -94,5 +94,3 @@ masters = sa.Table('masters', metadata,
     sa.Column('dcid', sa.Integer, sa.ForeignKey('datacenters.dcid'), nullable=False),
     sa.Column('poolid', sa.Integer, sa.ForeignKey('pools.poolid'), nullable=False),
 )
-
-# TODO: think about what kinds of indices are best: aggregate? individual?
