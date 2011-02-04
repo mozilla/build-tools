@@ -149,6 +149,42 @@ class TestHg(unittest.TestCase):
         # Try and pull in changes from the new repo
         self.assertRaises(subprocess.CalledProcessError, pull, repo2, self.wc, update_dest=False)
 
+    def testShareUnrelated(self):
+        # Create a new repo
+        repo2 = os.path.join(self.tmpdir, 'repo2')
+        run_cmd(['%s/init_hgrepo.sh' % os.path.dirname(__file__), repo2])
+
+        self.assertNotEqual(self.revisions, getRevisions(repo2))
+
+        shareBase = os.path.join(self.tmpdir, 'share')
+
+        # Clone the original repo
+        mercurial(self.repodir, self.wc, shareBase=shareBase)
+
+        # Clone the new repo
+        mercurial(repo2, self.wc, shareBase=shareBase)
+
+        self.assertEquals(getRevisions(self.wc), getRevisions(repo2))
+
+    def testShareReset(self):
+        shareBase = os.path.join(self.tmpdir, 'share')
+
+        # Clone the original repo
+        mercurial(self.repodir, self.wc, shareBase=shareBase)
+
+        old_revs = self.revisions[:]
+
+        # Reset the repo
+        run_cmd(['%s/init_hgrepo.sh' % os.path.dirname(__file__), self.repodir])
+
+        self.assertNotEqual(old_revs, getRevisions(self.repodir))
+
+        # Try and update our working copy
+        mercurial(self.repodir, self.wc, shareBase=shareBase)
+
+        self.assertEquals(getRevisions(self.repodir), getRevisions(self.wc))
+        self.assertNotEqual(old_revs, getRevisions(self.wc))
+
     def testPush(self):
         clone(self.repodir, self.wc, revision=self.revisions[-2])
         push(src=self.repodir, remote=self.wc)
@@ -246,21 +282,29 @@ class TestHg(unittest.TestCase):
     # share() usage, and fails when HG_SHARE_BASE_DIR is set
     def testMercurialChangeRepo(self):
         # Create a new repo
-        repo2 = os.path.join(self.tmpdir, 'repo2')
-        run_cmd(['%s/init_hgrepo.sh' % os.path.dirname(__file__), repo2])
+        old_env = os.environ.copy()
+        if 'HG_SHARE_BASE_DIR' in os.environ:
+            del os.environ['HG_SHARE_BASE_DIR']
 
-        self.assertNotEqual(self.revisions, getRevisions(repo2))
+        try:
+            repo2 = os.path.join(self.tmpdir, 'repo2')
+            run_cmd(['%s/init_hgrepo.sh' % os.path.dirname(__file__), repo2])
 
-        # Clone the original repo
-        mercurial(self.repodir, self.wc)
-        self.assertEquals(getRevisions(self.wc), self.revisions)
-        open(os.path.join(self.wc, 'test.txt'), 'w').write("hello!")
+            self.assertNotEqual(self.revisions, getRevisions(repo2))
 
-        # Clone the new one
-        mercurial(repo2, self.wc)
-        self.assertEquals(getRevisions(self.wc), getRevisions(repo2))
-        # Make sure our local file went away
-        self.failUnless(not os.path.exists(os.path.join(self.wc, 'test.txt')))
+            # Clone the original repo
+            mercurial(self.repodir, self.wc)
+            self.assertEquals(getRevisions(self.wc), self.revisions)
+            open(os.path.join(self.wc, 'test.txt'), 'w').write("hello!")
+
+            # Clone the new one
+            mercurial(repo2, self.wc)
+            self.assertEquals(getRevisions(self.wc), getRevisions(repo2))
+            # Make sure our local file went away
+            self.failUnless(not os.path.exists(os.path.join(self.wc, 'test.txt')))
+        finally:
+            os.environ.clear()
+            os.environ.update(old_env)
 
     def testMakeHGUrl(self):
         #construct an hg url specific to revision, branch and filename and try to pull it down
