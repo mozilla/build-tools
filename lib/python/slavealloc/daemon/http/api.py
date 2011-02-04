@@ -44,7 +44,7 @@ class SlaveResource(Instance):
     # TODO: lock some of these down so they are not editable via the
     # interface
     update_keys = ('distroid', 'dcid', 'bitsid', 'purposeid', 'trustid',
-                   'envid', 'poolid', 'basedir', 'locked_masterid', 'disabled')
+                   'envid', 'poolid', 'basedir', 'locked_masterid', 'enabled')
 
 class SlavesResource(Collection):
     instance_class = SlaveResource

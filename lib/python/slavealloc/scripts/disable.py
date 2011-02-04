@@ -5,7 +5,7 @@ from slavealloc.data import model
 def setup_argparse(subparsers):
     subparser = subparsers.add_parser('disable', help='disable a slave, preventing it from starting')
     subparser.add_argument('slave',
-            help="slave to (un)disable")
+            help="slave to disable (or enable with --enable)")
     subparser.add_argument('-e', '--enable', dest='enable',
             default=False, action='store_true',
             help="enable a disabled slave")
@@ -18,7 +18,7 @@ def process_args(subparser, args):
         subparser.error("slave name must not contain '.'; give the unqualified hostname")
 
 def main(args):
-    q = model.slaves.update(values=dict(disabled=not args.enable),
+    q = model.slaves.update(values=dict(enabled=args.enable),
             whereclause=(model.slaves.c.name == args.slave))
     if not q.execute().rowcount:
         print >>sys.stderr, "No slave found named '%s'." % args.slave

@@ -8,7 +8,7 @@ class Allocation(object):
     
     @ivar slavename: the slave name
     @ivar slaveid: its slaveid
-    @ivar disabled: true if this slave is disabled
+    @ivar enabled: true if this slave is enabled
     @ivar master_nickname: master's nickname
     @iver master_fqdn: master's hostname
     @ivar master_pb_port: master's slave pb_port
@@ -17,7 +17,7 @@ class Allocation(object):
     @ivar masterid: the assigned masterid
     """
 
-    slavename = slaveid = disabled = master_nickname = master_fqdn = None
+    slavename = slaveid = enabled = master_nickname = master_fqdn = None
     master_pb_port = slave_basedir = slave_password = masterid = None
 
     def __init__(self, slavename):
@@ -29,11 +29,11 @@ class Allocation(object):
         if not slave_row:
             raise exceptions.NoAllocationError
         self.slaveid = slave_row.slaveid
-        self.disabled = slave_row.disabled
+        self.enabled = slave_row.enabled
         self.slave_basedir = slave_row.basedir
 
-        # bail out early if this slave is disabled
-        if self.disabled:
+        # bail out early if this slave is enabled
+        if self.enabled:
             return
 
         # slave password
@@ -61,7 +61,7 @@ class Allocation(object):
         """
         Commit this allocation to the database
         """
-        # note that this will work correctly for disabled slaves
+        # note that this will work correctly for enabled slaves
         q = model.slaves.update(whereclause=(model.slaves.c.slaveid == self.slaveid),
                             values=dict(current_masterid=self.masterid))
         q.execute()

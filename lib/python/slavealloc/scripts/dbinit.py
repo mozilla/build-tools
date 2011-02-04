@@ -1,4 +1,3 @@
-import sys
 import csv
 from slavealloc.data import model
 
@@ -82,7 +81,9 @@ def main(args):
              envid=environments[row['environment']],
              poolid=pools[row['pool']],
              basedir=row['basedir'],
-             current_masterid=None)
+             enabled=True,
+             current_masterid=None,
+             locked_masterid=None)
         for row in slaves ])
 
     # convert a distro of '*' to NULL

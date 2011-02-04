@@ -49,7 +49,7 @@ def make_buildbot_tac(allocation):
     info['genhost'] = socket.getfqdn()
 
     # short-circuit for disabled slaves
-    if allocation.disabled:
+    if not allocation.enabled:
         return tac_template_disabled % info
 
     info['buildmaster_host'] = allocation.master_fqdn
