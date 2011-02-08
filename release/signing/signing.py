@@ -76,15 +76,27 @@ def fileInfo(filepath, product):
             ret['leading_path'] = ''
         elif filepath.endswith('.exe'):
             ret['format'] = 'exe'
-            m = re.search("(partner-repacks/[-a-zA-Z0-9_]+/|)(win32|mac|linux-i686)/([-a-zA-Z]+)/((?i)%s) Setup (\d+\.\d+(?:\.\d+)?(?:\w+\d+)?(?:\ \w+\ \d+)?)\.exe" % product, filepath)
-            if not m:
-                raise ValueError("Could not parse: %s" % filepath)
-            ret['leading_path'] = m.group(1)
-            ret['platform'] = m.group(2)
-            ret['locale'] = m.group(3)
-            ret['product'] = m.group(4).lower()
-            ret['version'] = m.group(5)
             ret['contents'] = 'installer'
+            # EUBallot builds use a different enough style of path than others
+            # that we can't catch them in the same regexp
+            if filepath.find('win32-EUBallot') != -1:
+                ret['platform'] = 'win32'
+                m = re.search("(win32-EUBallot/)([-a-zA-Z]+)/((?i)%s) Setup (\d+\.\d+(?:\.\d+)?(?:\w+\d+)?(?:\ \w+\ \d+)?)\.exe" % product, filepath)
+                if not m:
+                    raise ValueError("Could not parse: %s" % filepath)
+                ret['leading_path'] = m.group(1)
+                ret['locale'] = m.group(2)
+                ret['product'] = m.group(3).lower()
+                ret['version'] = m.group(4)
+            else:
+                m = re.search("(partner-repacks/[-a-zA-Z0-9_]+/|)(win32|mac|linux-i686)/([-a-zA-Z]+)/((?i)%s) Setup (\d+\.\d+(?:\.\d+)?(?:\w+\d+)?(?:\ \w+\ \d+)?)\.exe" % product, filepath)
+                if not m:
+                    raise ValueError("Could not parse: %s" % filepath)
+                ret['leading_path'] = m.group(1)
+                ret['platform'] = m.group(2)
+                ret['locale'] = m.group(3)
+                ret['product'] = m.group(4).lower()
+                ret['version'] = m.group(5)
         else:
             raise ValueError("Unknown filetype for %s" % filepath)
 
