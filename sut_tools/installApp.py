@@ -7,11 +7,14 @@ import socket
 import devicemanager
 
 
-def setFlag(flagfile, contents=''):
+def setFlag(flagfile, contents=None):
     print flagFile
-    h = open(flagFile, 'w+')
-    h.write(contents)
+    h = open(flagFile, 'a+')
+    if contents is not None:
+        print contents
+        h.write(contents)
     h.close()
+    time.sleep(30)
 
 def clearFlag(flagfile):
     if os.path.exists(flagFile):
@@ -63,9 +66,7 @@ devRoot  = dm.getDeviceRoot()
 # checking for /mnt/sdcard/...
 print "devroot %s" % devRoot
 if devRoot is None or devRoot == '/tests':
-    print "Remote Device Error: devRoot from devicemanager [%s] is not correct - exiting" % devRoot
-    setFlag(errorFile)
-    time.sleep(30)
+    setFlag(errorFile, "Remote Device Error: devRoot from devicemanager [%s] is not correct - exiting" % devRoot)
     sys.exit(1)
 
 workdir  = os.path.dirname(source)
@@ -98,20 +99,20 @@ if dm.pushFile(source, target):
                     dm2.killProcess('org.mozilla.fennec')
                 dm2.getInfo('process')
             else:
-                print "Remote Device Error: unable to push %s" % inifile
-                setFlag(errorFile)
                 clearFlag(flagFile)
-                time.sleep(30)
+                setFlag(errorFile, "Remote Device Error: unable to push %s" % inifile)
                 sys.exit(1)
         else:
-            print "Remote Device Error: updateApp() call failed - exiting"
-            setFlag(errorFile)
             clearFlag(flagFile)
-            time.sleep(30)
+            setFlag(errorFile, "Remote Device Error: updateApp() call failed - exiting")
             sys.exit(1)
 
     finally:
         clearFlag(flagFile)
+else:
+    clearFlag(flagFile)
+    setFlag(errorFile, "Remote Device Error: unable to push %s" % target)
+    sys.exit(1)
 
 time.sleep(60)
 

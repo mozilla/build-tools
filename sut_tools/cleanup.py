@@ -5,11 +5,14 @@ import time
 import devicemanager
 
 
-def setFlag(flagFile, contents=''):
+def setFlag(flagFile, contents=None):
     print flagFile
-    h = open(flagFile, 'w+')
-    h.write(contents)
+    h = open(flagFile, 'a+')
+    if contents is not None:
+        print contents
+        h.write(contents)
     h.close()
+    time.sleep(30)
 
 if (len(sys.argv) <> 2):
     print "usage: cleanup.py <ip address>"
@@ -29,16 +32,12 @@ dm.debug = 5
 devRoot = dm.getDeviceRoot()
 
 if devRoot is None or devRoot == '/tests':
-    print "Remote Device Error: devRoot from devicemanager [%s] is not correct" % devRoot
-    setFlag(errorFile)
-    time.sleep(30)
+    setFlag(errorFile, "Remote Device Error: devRoot from devicemanager [%s] is not correct" % devRoot)
     sys.exit(1)
 
 if dm.dirExists(devRoot):
     status = dm.removeDir(devRoot)
     print "removeDir() returned [%s]" % status
     if status is None or not status:
-       print "Remote Device Error: all to removeDir() failed"
-       setFlag(errorFile)
-       time.sleep(30)
+       setFlag(errorFile, "Remote Device Error: all to removeDir() failed")
        sys.exit(1)
