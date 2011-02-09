@@ -17,8 +17,8 @@ def setFlag(flagfile, contents=None):
     time.sleep(30)
 
 def clearFlag(flagfile):
-    if os.path.exists(flagFile):
-        os.remove(flagFile)
+    if os.path.exists(flagfile):
+        os.remove(flagfile)
 
 def calculatePort():
     s = os.environ['SUT_NAME']
