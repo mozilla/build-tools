@@ -104,13 +104,14 @@ def ReleaseToDated(options, upload_dir, files):
         CopyFileToDir(f, upload_dir, longDatedPath)
     os.utime(longDatedPath, None)
 
-    try:
-        cwd = os.getcwd()
-        os.chdir(NIGHTLY_PATH)
-        if not os.path.exists(shortDir):
-            os.symlink(longDir, shortDir)
-    finally:
-        os.chdir(cwd)
+    if not options.noshort:
+        try:
+            cwd = os.getcwd()
+            os.chdir(NIGHTLY_PATH)
+            if not os.path.exists(shortDir):
+                os.symlink(longDir, shortDir)
+        finally:
+            os.chdir(cwd)
 
 def ReleaseToLatest(options, upload_dir, files):
     latestDir = LATEST_DIR % {'branch': options.branch}
@@ -287,6 +288,9 @@ if __name__ == '__main__':
                       action="store", dest="revision")
     parser.add_option("-w", "--who",
                       action="store", dest="who")
+    parser.add_option("-S", "--no-shortdir",
+                      action="store_true", dest="noshort",
+                      help="Don't symlink the short dated directories.")
     parser.add_option("--builddir",
                       action="store", dest="builddir",
                       help="Subdir to arrange packaged unittest build paths properly.")
