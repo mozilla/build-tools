@@ -10,87 +10,144 @@ class TestFileParsing(TestCase):
     product = 'firefox'
     firstLocale = 'en-US'
 
-    def testFileInfo(self):
-        tests = [
-                ('foo/bar/firefox-3.0.12.en-US.win32.complete.mar',
+    def _doFileInfoTest(self, path, product, info):
+        self.assertEqual(fileInfo(path, product), info)
+
+    def testShortPathenUSMar(self):
+        self._doFileInfoTest(
+                'foo/bar/firefox-3.0.12.en-US.win32.complete.mar',
                  'firefox',
                  dict(product='firefox', version='3.0.12', locale='en-US',
                      platform='win32', contents='complete', format='mar',
-                     pathstyle='short', leading_path='')),
-                ('foo/bar/firefox-3.0.12.es.win32.complete.mar',
+                     pathstyle='short', leading_path=''))
+
+    def testShortPathLocaleMar(self):
+        self._doFileInfoTest(
+                'foo/bar/firefox-3.0.12.es.win32.complete.mar',
                  'firefox',
                  dict(product='firefox', version='3.0.12', locale='es',
                      platform='win32', contents='complete', format='mar',
-                     pathstyle='short', leading_path='')),
-                ('foo/bar/firefox-3.0.12.es.win32.installer.exe',
+                     pathstyle='short', leading_path=''))
+
+    def testShortPathLocaleExe(self):
+        self._doFileInfoTest(
+                'foo/bar/firefox-3.0.12.es.win32.installer.exe',
                  'firefox',
                  dict(product='firefox', version='3.0.12', locale='es',
                      platform='win32', contents='installer', format='exe',
-                     pathstyle='short', leading_path='')),
-                ('unsigned/update/win32/en-US/firefox-3.5rc3.complete.mar',
+                     pathstyle='short', leading_path=''))
+
+    def testLongPathenUSMarRC(self):
+        self._doFileInfoTest(
+                'unsigned/update/win32/en-US/firefox-3.5rc3.complete.mar',
                  'firefox',
                  dict(product='firefox', version='3.5rc3', locale='en-US',
                      platform='win32', contents='complete', format='mar',
-                     pathstyle='long', leading_path='')),
-                ('unsigned/update/win32/en-US/firefox-3.5.complete.mar',
+                     pathstyle='long', leading_path=''))
+
+    def testLongPathenUSMarFinal(self):
+        self._doFileInfoTest(
+                'unsigned/update/win32/en-US/firefox-3.5.complete.mar',
                  'firefox',
                  dict(product='firefox', version='3.5', locale='en-US',
                      platform='win32', contents='complete', format='mar',
-                     pathstyle='long', leading_path='')),
-                ('unsigned/update/win32/en-US/firefox-3.5.1.complete.mar',
+                     pathstyle='long', leading_path=''))
+
+    def testLongPathenUSMarPointRelease(self):
+        self._doFileInfoTest(
+                'unsigned/update/win32/en-US/firefox-3.5.1.complete.mar',
                  'firefox',
                  dict(product='firefox', version='3.5.1', locale='en-US',
                      platform='win32', contents='complete', format='mar',
-                     pathstyle='long', leading_path='')),
-                ('unsigned/update/win32/en-US/firefox-3.5.12.complete.mar',
+                     pathstyle='long', leading_path=''))
+
+    def testLongPathenUSMarPointRelease2(self):
+        self._doFileInfoTest(
+                'unsigned/update/win32/en-US/firefox-3.5.12.complete.mar',
                  'firefox',
                  dict(product='firefox', version='3.5.12', locale='en-US',
                      platform='win32', contents='complete', format='mar',
-                     pathstyle='long', leading_path='')),
-                ('unsigned/update/win32/en-US/firefox-3.6.3plugin2.complete.mar',
+                     pathstyle='long', leading_path=''))
+
+    def testLongPathenUSMarProjectBranch(self):
+        self._doFileInfoTest(
+                'unsigned/update/win32/en-US/firefox-3.6.3plugin2.complete.mar',
                  'firefox',
                  dict(product='firefox', version='3.6.3plugin2', locale='en-US',
                      platform='win32', contents='complete', format='mar',
-                     pathstyle='long', leading_path='')),
-                ('unsigned/update/win32/fr/firefox-3.5.1.complete.mar',
+                     pathstyle='long', leading_path=''))
+
+    def testLongPathLocaleMarPointRelease(self):
+        self._doFileInfoTest(
+                'unsigned/update/win32/fr/firefox-3.5.1.complete.mar',
                  'firefox',
                  dict(product='firefox', version='3.5.1', locale='fr',
                      platform='win32', contents='complete', format='mar',
-                     pathstyle='long', leading_path='')),
-                ('unsigned/win32/fr/Firefox Setup 3.5.1.exe',
+                     pathstyle='long', leading_path=''))
+
+    def testLongPathLocaleExePointRelease(self):
+        self._doFileInfoTest(
+                'unsigned/win32/fr/Firefox Setup 3.5.1.exe',
                  'firefox',
                  dict(product='firefox', version='3.5.1', locale='fr',
                      platform='win32', contents='installer', format='exe',
-                     pathstyle='long', leading_path='')),
-                ('unsigned/win32/en-US/Firefox Setup 3.5.12.exe',
+                     pathstyle='long', leading_path=''))
+
+    def testLongPathenUSExePointRelease(self):
+        self._doFileInfoTest(
+                'unsigned/win32/en-US/Firefox Setup 3.5.12.exe',
                  'firefox',
                  dict(product='firefox', version='3.5.12', locale='en-US',
                      platform='win32', contents='installer', format='exe',
-                     pathstyle='long', leading_path='')),
-                ('unsigned/win32/en-US/Firefox Setup 3.5.exe',
+                     pathstyle='long', leading_path=''))
+
+    def testLongPathenUSExeFinal(self):
+        self._doFileInfoTest(
+                'unsigned/win32/en-US/Firefox Setup 3.5.exe',
                  'firefox',
                  dict(product='firefox', version='3.5', locale='en-US',
                      platform='win32', contents='installer', format='exe',
-                     pathstyle='long', leading_path='')),
-                ('unsigned/win32/en-US/Firefox Setup 3.5 RC 3.exe',
+                     pathstyle='long', leading_path=''))
+
+    def testLongPathenUSExeRC(self):
+        self._doFileInfoTest(
+                'unsigned/win32/en-US/Firefox Setup 3.5 RC 3.exe',
                  'firefox',
                  dict(product='firefox', version='3.5 RC 3', locale='en-US',
                      platform='win32', contents='installer', format='exe',
-                     pathstyle='long', leading_path='')),
-                ('unsigned/win32/en-US/Firefox Setup 3.5 Beta 99.exe',
+                     pathstyle='long', leading_path=''))
+
+    def testLongPathenUSExeBeta(self):
+        self._doFileInfoTest(
+                'unsigned/win32/en-US/Firefox Setup 3.5 Beta 99.exe',
                  'firefox',
                  dict(product='firefox', version='3.5 Beta 99', locale='en-US',
                      platform='win32', contents='installer', format='exe',
-                     pathstyle='long', leading_path='')),
-                ('unsigned/win32/en-US/Firefox Setup 3.6.3plugin2.exe',
+                     pathstyle='long', leading_path=''))
+
+    def testLongPathenUSExeProjectBranch(self):
+        self._doFileInfoTest(
+                'unsigned/win32/en-US/Firefox Setup 3.6.3plugin2.exe',
                  'firefox',
                  dict(product='firefox', version='3.6.3plugin2', locale='en-US',
                      platform='win32', contents='installer', format='exe',
-                     pathstyle='long', leading_path='')),
-                ]
+                     pathstyle='long', leading_path=''))
 
-        for path, product, info in tests:
-            self.assertEqual(fileInfo(path, product), info)
+    def testLongPathEUBallotBuild(self):
+        self._doFileInfoTest(
+                'unsigned/win32-EUBallot/de/Firefox Setup 3.6.14.exe',
+                 'firefox',
+                 dict(product='firefox', version='3.6.14', locale='de',
+                      platform='win32', contents='installer', format='exe',
+                      pathstyle='long', leading_path='win32-EUBallot/'))
+
+    def testLongPathPartnerRepack(self):
+        self._doFileInfoTest(
+                'unsigned/partner-repacks/chinapack-win32/win32/zh-CN/Firefox Setup 3.6.14.exe',
+                 'firefox',
+                 dict(product='firefox', version='3.6.14', locale='zh-CN',
+                      platform='win32', contents='installer', format='exe',
+                      pathstyle='long', leading_path='partner-repacks/chinapack-win32/'))
 
     def testShouldSign(self):
         self.assert_(shouldSign('setup.exe'))
