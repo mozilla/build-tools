@@ -5,8 +5,8 @@ import textwrap
 from slavealloc.data import engine, model
 
 # subcommands
-from slavealloc.scripts import silos, dbinit, pools, gettac, lock, disable
-subcommands = [ silos, dbinit, pools, gettac, lock, disable ]
+from slavealloc.scripts import silos, dbinit, pools, gettac, lock, disable, dbdump
+subcommands = [ silos, dbinit, pools, gettac, lock, disable, dbdump ]
 
 def parse_options():
     parser = argparse.ArgumentParser(description="Runs slavealloc subcommands")
