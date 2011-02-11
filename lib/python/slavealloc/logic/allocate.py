@@ -32,8 +32,8 @@ class Allocation(object):
         self.enabled = slave_row.enabled
         self.slave_basedir = slave_row.basedir
 
-        # bail out early if this slave is enabled
-        if self.enabled:
+        # bail out early if this slave is not enabled
+        if not self.enabled:
             return
 
         # slave password
