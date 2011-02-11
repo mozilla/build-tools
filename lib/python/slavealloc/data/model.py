@@ -25,6 +25,11 @@ bitlengths = sa.Table('bitlengths', metadata,
     sa.Column('name', sa.Text, nullable=False),
 )
 
+speeds = sa.Table('speeds', metadata,
+    sa.Column('speedid', sa.Integer, primary_key=True),
+    sa.Column('name', sa.Text, nullable=False),
+)
+
 purposes = sa.Table('purposes', metadata,
     sa.Column('purposeid', sa.Integer, primary_key=True),
     sa.Column('name', sa.Text, nullable=False),
@@ -68,6 +73,7 @@ slaves = sa.Table('slaves', metadata,
     # silo
     sa.Column('distroid', sa.Integer, sa.ForeignKey('distros.distroid'), nullable=False),
     sa.Column('bitsid', sa.Integer, sa.ForeignKey('bitlengths.bitsid'), nullable=False),
+    sa.Column('speedid', sa.Integer, sa.ForeignKey('speeds.speedid'), nullable=False, default=0),
     sa.Column('purposeid', sa.Integer, sa.ForeignKey('purposes.purposeid'), nullable=False),
     sa.Column('dcid', sa.Integer, sa.ForeignKey('datacenters.dcid'), nullable=False),
     sa.Column('trustid', sa.Integer, sa.ForeignKey('trustlevels.trustid'), nullable=False),

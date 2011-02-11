@@ -8,6 +8,7 @@ def denormalized_slaves():
             model.slaves,
             model.distros.c.name.label('distro'),
             model.bitlengths.c.name.label('bitlength'),
+            model.speeds.c.name.label('speed'),
             model.purposes.c.name.label('purpose'),
             model.datacenters.c.name.label('datacenter'),
             model.trustlevels.c.name.label('trustlevel'),
@@ -18,6 +19,7 @@ def denormalized_slaves():
         ], whereclause=(
             (model.distros.c.distroid == model.slaves.c.distroid) &
             (model.bitlengths.c.bitsid == model.slaves.c.bitsid) &
+            (model.speeds.c.speedid == model.slaves.c.speedid) &
             (model.purposes.c.purposeid == model.slaves.c.purposeid) &
             (model.datacenters.c.dcid == model.slaves.c.dcid) &
             (model.trustlevels.c.trustid == model.slaves.c.trustid) &

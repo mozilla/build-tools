@@ -83,6 +83,13 @@ class BitlengthsResource(Collection):
     instance_class = BitlengthResource
     query = model.bitlengths.select()
 
+class SpeedResource(Instance):
+    pass
+
+class SpeedsResource(Collection):
+    instance_class = SpeedResource
+    query = model.speeds.select()
+
 class PurposeResource(Instance):
     pass
 
@@ -122,6 +129,7 @@ class ApiRoot(resource.Resource):
         self.putChild('distros', DistrosResource())
         self.putChild('datacenters', DatacentersResource())
         self.putChild('bitlengths', BitlengthsResource())
+        self.putChild('speeds', SpeedsResource())
         self.putChild('purposes', PurposesResource())
         self.putChild('trustlevels', TrustlevelsResource())
         self.putChild('environments', EnvironmentsResource())
