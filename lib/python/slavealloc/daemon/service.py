@@ -1,6 +1,6 @@
 from twisted.python import log
 from twisted.internet import defer
-from twisted.application import service, strports
+from twisted.application import service
 import sqlalchemy
 from slavealloc.logic import allocate, buildbottac
 from slavealloc.data import model
