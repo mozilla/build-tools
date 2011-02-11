@@ -90,5 +90,5 @@ NSPR_LIBS=$($OBJDIR/dist/bin/nspr-config --libs)
 ../../src/js/src/configure $CONFIGURE_ARGS --with-dist-dir=$OBJDIR/dist --prefix=$OBJDIR/dist --with-nspr-prefix=$OBJDIR/dist --with-nspr-cflags="$NSPR_CFLAGS" --with-nspr-libs="$NSPR_LIBS" || exit 2
 
 make || exit 2
-cp -a ../../src/build/unix/run-mozilla.sh $OBJDIR/dist/bin
+cp -p ../../src/build/unix/run-mozilla.sh $OBJDIR/dist/bin
 make check || exit 1

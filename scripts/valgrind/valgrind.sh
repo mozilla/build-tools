@@ -57,7 +57,7 @@ make -j4 || exit 2
 make package || exit 2
 
 debugger_args="--error-exitcode=1 --smc-check=all --gen-suppressions=all --leak-check=full"
-suppression_file=_valgrind/${MACHTYPE}.sup
+suppression_file=$PWD/_valgrind/${MACHTYPE}.sup
 if [ -f $suppression_file ]; then
     debugger_args="$debugger_args --suppressions=$suppression_file"
 fi
