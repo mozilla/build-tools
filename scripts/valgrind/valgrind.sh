@@ -2,7 +2,6 @@
 set -e
 SCRIPTS_DIR="$(readlink -f $(dirname $0)/../..)"
 
-HERE=$(dirname $(readlink -f $0))
 if [ -z "$HG_REPO" ]; then
     export HG_REPO="http://hg.mozilla.org/mozilla-central"
 fi
@@ -58,7 +57,7 @@ make -j4 || exit 2
 make package || exit 2
 
 debugger_args="--error-exitcode=1 --smc-check=all --gen-suppressions=all --leak-check=full"
-suppression_file=$HERE/${MACHTYPE}.sup
+suppression_file=_valgrind/${MACHTYPE}.sup
 if [ -f $suppression_file ]; then
     debugger_args="$debugger_args --suppressions=$suppression_file"
 fi
