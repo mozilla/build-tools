@@ -70,7 +70,7 @@ slaves = sa.Table('slaves', metadata,
     sa.Column('slaveid', sa.Integer, primary_key=True),
     sa.Column('name', sa.Text, nullable=False),
 
-    # silo
+    # silo (c.f. corresponding index below)
     sa.Column('distroid', sa.Integer, sa.ForeignKey('distros.distroid'), nullable=False),
     sa.Column('bitsid', sa.Integer, sa.ForeignKey('bitlengths.bitsid'), nullable=False),
     sa.Column('speedid', sa.Integer, sa.ForeignKey('speeds.speedid'), nullable=False, default=0),
@@ -78,6 +78,8 @@ slaves = sa.Table('slaves', metadata,
     sa.Column('dcid', sa.Integer, sa.ForeignKey('datacenters.dcid'), nullable=False),
     sa.Column('trustid', sa.Integer, sa.ForeignKey('trustlevels.trustid'), nullable=False),
     sa.Column('envid', sa.Integer, sa.ForeignKey('environments.envid'), nullable=False),
+
+    # pool
     sa.Column('poolid', sa.Integer, sa.ForeignKey('pools.poolid'), nullable=False),
 
     # config
@@ -100,3 +102,18 @@ masters = sa.Table('masters', metadata,
     sa.Column('dcid', sa.Integer, sa.ForeignKey('datacenters.dcid'), nullable=False),
     sa.Column('poolid', sa.Integer, sa.ForeignKey('pools.poolid'), nullable=False),
 )
+
+# indices
+
+sa.Index('slave_silo',
+        slaves.c.distroid,
+        slaves.c.bitsid,
+        slaves.c.speedid,
+        slaves.c.purposeid,
+        slaves.c.dcid,
+        slaves.c.trustid,
+        slaves.c.envid,
+        )
+
+sa.Index('slave_poolid',
+        slaves.c.poolid)
