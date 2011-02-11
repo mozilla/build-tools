@@ -1,0 +1,54 @@
+@import "/ui/css/smoothness/jquery-ui-1.8.9.custom.css";
+@import "/ui/css/demo_table_jui.css";
+
+/* overall layout */
+
+body {
+    margin: 0;
+}
+
+div#viewtabs {
+    border-bottom: solid 1px #DEDEDE;
+    text-align: center;
+    background: black;
+    padding: 4px;
+}
+
+div#viewcontent {
+    margin: 8px;
+}
+
+div.loading {
+    text-align: center;
+}
+
+/* dashboard */
+
+div.dashboard {
+    text-align: center;
+}
+
+/* table views */
+
+td.edit-row {
+    padding: 0px !important;
+}
+
+div.edit-row {
+    background-color: #f1f1f1;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    padding: 5px;
+    margin-top: 0px;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+div.edit-control {
+    margin: 0px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    padding: 0px;
+}

@@ -5,3 +5,6 @@ flasher-
 RX-44
 RX-51
 build/
+slavealloc.db
+.*.swp
+twistd.pid
