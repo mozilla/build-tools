@@ -1,8 +1,6 @@
 import time
 import socket
 
-from slavealloc.data import model
-
 tac_template = """\
 # AUTOMATICALLY GENERATED - DO NOT MODIFY
 # generated: %(gendate)s on %(genhost)s

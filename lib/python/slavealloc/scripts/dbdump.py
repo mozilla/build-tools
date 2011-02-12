@@ -1,10 +1,17 @@
 import cPickle
+import sqlalchemy as sa
 import sys
 from slavealloc.data import model
 
 def setup_argparse(subparsers):
     subparser = subparsers.add_parser('dbdump', help="""dump the slavealloc
-            database to a file suitable for use with dbinit""")
+            database to a file suitable for use with dbinit.  Note that this
+            does not use the API, but reads from the database directly.""")
+
+    subparser.add_argument('-D', '--db', dest='dburl',
+            default='sqlite:///slavealloc.db',
+            help="""SQLAlchemy database URL; defaults to slavealloc.db in the
+            current dir""")
 
     subparser.add_argument('dumpfile', nargs='?',
             help="""filename to dump to; default is standard output""")
@@ -24,6 +31,9 @@ def process_args(subparser, args):
 # key points to a list of rows in a format suitable for use with insert().
 
 def main(args):
+    eng = sa.create_engine(args.dburl)
+    model.metadata.bind = eng
+
     def dump_tbl(table):
         res = table.select().execute()
         return [ dict(row) for row in res ]
