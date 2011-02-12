@@ -1,18 +1,20 @@
 import sys
 import argparse
-import textwrap
-
-from slavealloc.data import engine, model
+from twisted.internet import defer, reactor
+from twisted.python import log
+from slavealloc import exceptions
 
 # subcommands
-from slavealloc.scripts import silos, dbinit, pools, gettac, lock, disable
-subcommands = [ silos, dbinit, pools, gettac, lock, disable ]
+from slavealloc.scripts import dbinit, gettac, lock, disable, dbdump
+subcommands = [ dbinit, gettac, lock, disable, dbdump ]
 
 def parse_options():
     parser = argparse.ArgumentParser(description="Runs slavealloc subcommands")
     parser.set_defaults(_module=None)
 
-    engine.add_data_arguments(parser)
+    parser.add_argument('-A', '--api', dest='apiurl',
+            default='http://slavealloc.build.mozilla.org/api',
+            help="""URL of the REST API to use for most subcommands""")
 
     subparsers = parser.add_subparsers(title='subcommands')
 
@@ -20,19 +22,43 @@ def parse_options():
         subparser = module.setup_argparse(subparsers)
         subparser.set_defaults(module=module, subparser=subparser)
 
+    # parse the args
     args = parser.parse_args()
 
+    # make sure we got a subcommand
     if not args.module:
         parser.error("No subcommand specified")
 
-    # set up the SQLAlchemy binding of metadata to engine
-    eng = engine.create_engine(args)
-    model.metadata.bind = eng
-
+    # let it process its own args
     args.module.process_args(args.subparser, args)
 
+    # and return the results
     return args.module.main, args
 
 def main():
+    errors = []
+
     func, args = parse_options()
-    func(args)
+
+    def do_command():
+        d = defer.maybeDeferred(func, args)
+
+        # catch command-line errors and don't show the traceback
+        def cmdline_error(f):
+            f.trap(exceptions.CmdlineError)
+            errors.append(str(f.value))
+        d.addErrback(cmdline_error)
+
+        # but catch everything else..
+        d.addErrback(log.err, "while executing subcommand")
+
+        # before unconditionally stopping the reactor
+        d.addBoth(lambda _ : reactor.stop())
+    reactor.callWhenRunning(do_command)
+    reactor.run()
+
+    # handle any errors after the reactor is done
+    if errors:
+        for error in errors:
+            print >>sys.stderr, error
+        sys.exit(1)

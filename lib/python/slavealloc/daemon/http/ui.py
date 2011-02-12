@@ -1,7 +1,5 @@
 import os
 from twisted.web import static
-from twisted.web import resource
-from slavealloc.daemon.ui import slaves
 
 def makeRootResource():
     # root corresponds to slavealloc/www

@@ -1,8 +1,6 @@
 import time
 import socket
 
-from slavealloc.data import model
-
 tac_template = """\
 # AUTOMATICALLY GENERATED - DO NOT MODIFY
 # generated: %(gendate)s on %(genhost)s
@@ -18,7 +16,7 @@ maxRotatedFiles = None
 basedir = %(basedir)r
 umask = 002
 slavename = %(slavename)r
-usepty = 1
+usepty = False
 rotateLength = 1000000
 port = %(port)r
 keepalive = None

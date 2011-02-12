@@ -1,6 +1,6 @@
 import sys
-from slavealloc import exceptions
-from slavealloc.data import model
+from twisted.internet import defer, reactor
+from slavealloc import client, exceptions
 
 def setup_argparse(subparsers):
     subparser = subparsers.add_parser('lock', help='lock a slave to a particular master')
@@ -21,31 +21,46 @@ def process_args(subparser, args):
     if not args.master and not args.unlock:
         subparser.error("master name is required to lock")
 
+@defer.inlineCallbacks
 def main(args):
-    if args.unlock:
-        q = model.slaves.update(values=dict(locked_masterid=None),
-                whereclause=(model.slaves.c.name == args.slave))
-        if not q.execute().rowcount:
-            print >>sys.stderr, "No slave found named '%s'." % args.slave
-            sys.exit(1)
-        else:
-            print >>sys.stderr, "Slave '%s' unlocked" % args.slave
-    else:
-        # find the masterid first
-        q = model.masters.select(
-                whereclause=(model.masters.c.nickname == args.master))
-        r = q.execute()
-        master_row = r.fetchone()
-        if not master_row:
-            print >>sys.stderr, "no master found with nickname '%s'." % args.master
-            sys.exit(1)
-        masterid = master_row.masterid
+    agent = client.RestAgent(reactor, args.apiurl)
 
-        q = model.slaves.update(values=dict(locked_masterid=masterid),
-                whereclause=(model.slaves.c.name == args.slave))
-        if not q.execute().rowcount:
-            print >>sys.stderr, "No slave found named '%s'." % args.slave
-            sys.exit(1)
-        else:
-            print >>sys.stderr, "Locked '%s' to '%s' (%s:%s)" % (args.slave,
-                master_row.nickname, master_row.fqdn, master_row.pb_port)
+    # first get the slaveid
+    path = 'slaves/%s?byname=1' % args.slave
+    slave = yield agent.restRequest('GET', path, {})
+    if not slave:
+        raise exceptions.CmdlineError(
+                "No slave found named '%s'." % args.slave)
+    assert slave['name'] == args.slave
+    slaveid = slave['slaveid']
+
+    if args.unlock:
+        if not slave['locked_masterid']:
+            raise exceptions.CmdlineError("Slave is not locked")
+
+        set_result = yield agent.restRequest('PUT',
+                    'slaves/%d' % slaveid,
+                    { 'locked_masterid' : None })
+        success = set_result.get('success')
+        if not success:
+            raise exceptions.CmdlineError("Operation failed on server.")
+
+        print >>sys.stderr, "Slave '%s' unlocked" % args.slave
+    else:
+        # get the masterid
+        path = 'masters/%s?byname=1' % args.master
+        master = yield agent.restRequest('GET', path, {})
+        if not master:
+            raise exceptions.CmdlineError(
+                    "No master found named '%s'." % args.master)
+        masterid = master['masterid']
+
+        set_result = yield agent.restRequest('PUT',
+                    'slaves/%d' % slaveid,
+                    { 'locked_masterid' : masterid })
+        success = set_result.get('success')
+        if not success:
+            raise exceptions.CmdlineError("Operation failed on server.")
+
+        print >>sys.stderr, "Locked '%s' to '%s' (%s:%s)" % (args.slave,
+            master['nickname'], master['fqdn'], master['pb_port'])

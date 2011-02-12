@@ -7,6 +7,18 @@ body {
     margin: 0;
 }
 
+div#error {
+    position: fixed;
+    right: 1em;
+    top: 1em;
+    width: 25%;
+    background: red;
+    border: thin white solid;
+    color: white;
+    text-align: center;
+    display: none;
+}
+
 div#viewtabs {
     border-bottom: solid 1px #DEDEDE;
     text-align: center;
@@ -22,10 +34,7 @@ div.loading {
     text-align: center;
 }
 
-/* dashboard */
-
 div.dashboard {
-    text-align: center;
 }
 
 /* table views */

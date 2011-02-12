@@ -21,6 +21,7 @@ setup(
         'sqlalchemy',
         'argparse',
         'twisted',
+        'simplejson',
     ],
 
     entry_points = {
