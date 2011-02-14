@@ -250,10 +250,11 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
         dest_sharedPath = os.path.join(dest, '.hg', 'sharedpath')
         if os.path.exists(dest_sharedPath):
             # Make sure that the sharedpath points to sharedRepo
-            dest_sharedPath_data = open(dest_sharedPath).read()
-            if dest_sharedPath_data != os.path.join(sharedRepo, '.hg'):
+            dest_sharedPath_data = os.path.normpath(open(dest_sharedPath).read())
+            norm_sharedRepo = os.path.normpath(os.path.join(sharedRepo, '.hg'))
+            if dest_sharedPath_data != norm_sharedRepo:
                 # Clobber!
-                log.info("We're currently shared from %s, but are being requested to pull from %s (%s); clobbering", dest_sharedPath_data, repo, sharedRepo)
+                log.info("We're currently shared from %s, but are being requested to pull from %s (%s); clobbering", dest_sharedPath_data, repo, norm_sharedRepo)
                 remove_path(dest)
 
         try:
