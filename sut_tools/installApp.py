@@ -12,7 +12,7 @@ def setFlag(flagfile, contents=None):
     h = open(flagfile, 'a+')
     if contents is not None:
         print contents
-        h.write(contents)
+        h.write('%s\n' % contents)
     h.close()
     time.sleep(30)
 
