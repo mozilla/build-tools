@@ -56,7 +56,7 @@ make -f ../src/client.mk MOZCONFIG=$PWD/mozconfig configure || exit 2
 make -j4 || exit 2
 make package || exit 2
 
-debugger_args="--error-exitcode=1 --smc-check=all --gen-suppressions=all --leak-check=full"
+debugger_args="--error-exitcode=1 --smc-check=all --gen-suppressions=all --leak-check=full --num-callers=50"
 suppression_file=$PWD/_valgrind/${MACHTYPE}.sup
 if [ -f $suppression_file ]; then
     debugger_args="$debugger_args --suppressions=$suppression_file"
