@@ -86,7 +86,12 @@ test -d js || mkdir js
 
 cd js
 NSPR_CFLAGS=$($OBJDIR/dist/bin/nspr-config --cflags)
-NSPR_LIBS=$($OBJDIR/dist/bin/nspr-config --libs)
+if [ "$OSTYPE" = "msys" ]; then
+    NSPR_LIBS="$OBJDIR/dist/lib/plds4.lib $OBJDIR/dist/lib/plc4.lib $OBJDIR/dist/lib/nspr4.lib"
+    export PATH="$OBJDIR/dist/lib:${PATH}"
+else
+    NSPR_LIBS=$($OBJDIR/dist/bin/nspr-config --libs)
+fi
 ../../src/js/src/configure $CONFIGURE_ARGS --with-dist-dir=$OBJDIR/dist --prefix=$OBJDIR/dist --with-nspr-prefix=$OBJDIR/dist --with-nspr-cflags="$NSPR_CFLAGS" --with-nspr-libs="$NSPR_LIBS" || exit 2
 
 make || exit 2
