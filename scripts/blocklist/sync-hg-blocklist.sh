@@ -1,19 +1,22 @@
 #!/bin/bash
 
+# 2011-02-17 - add product flag to make script usable for other apps (Callek)
 # 2010-09-10 - compare downloaded single files before cloning (ccooper)
 # 2008-06-27 - Copied from sync-blocklist (dtownsend)
 # 2008-07-14 - Use a permanent local clone (dtownsend)
 # 2008-07-24 - Fix hg username (dtownsend)
 
-USAGE="usage: $0 [-n] [-c] [-d] [-u hg_ssh_user] [-k hg_ssh_key] -b branch"
+USAGE="usage: $0 [-n] [-c] [-d] [-p product] [-u hg_ssh_user] [-k hg_ssh_key] -b branch"
 DRY_RUN=false
 BRANCH=""
 CLOSED_TREE=false
 DONTBUILD=false
 HG_SSH_USER='ffxbld'
 HG_SSH_KEY='~cltbld/.ssh/ffxbld_dsa'
+PRODUCT='firefox'
 while [ $# -gt 0 ]; do
     case "$1" in
+        -p) PRODUCT="$2"; shift;;
         -b) BRANCH="$2"; shift;;
         -n) DRY_RUN=true;;
         -c) CLOSED_TREE=true;;
@@ -33,10 +36,25 @@ if [ "$BRANCH" == "" ]; then
     exit 1
 fi
 
+case "$PRODUCT" in
+    firefox)
+        APP_DIR="browser";
+        APP_ID="%7Bec8030f7-c20a-464f-9b0e-13a3a9e97384%7D";
+        APP_NAME="Firefox";;
+    seamonkey)
+        APP_DIR="suite";
+        APP_ID="%7B92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a%7D";
+        APP_NAME="SeaMonkey";;
+    *)
+        echo >&2 "Invalid Product was passed to $0. Passed value was: $PRODUCT";
+        echo >&2 $USAGE;
+        exit 1;;
+esac
+
 HGHOST="hg.mozilla.org"
 HGREPO="http://${HGHOST}/${BRANCH}"
 HGPUSHREPO="ssh://${HGHOST}/${BRANCH}"
-BLOCKLIST_URL_HG="${HGREPO}/raw-file/default/browser/app/blocklist.xml"
+BLOCKLIST_URL_HG="${HGREPO}/raw-file/default/${APP_DIR}/app/blocklist.xml"
 REPODIR='blocklist'
 
 HG=hg
@@ -46,7 +64,7 @@ HOST=`/bin/hostname -s`
 
 compare_blocklists()
 {
-    VERSION_URL_HG="${HGREPO}/raw-file/default/browser/config/version.txt"
+    VERSION_URL_HG="${HGREPO}/raw-file/default/${APP_DIR}/config/version.txt"
     rm -f version.txt
     ${WGET} --no-check-certificate -O version.txt ${VERSION_URL_HG}
     WGET_STATUS=$?
@@ -57,9 +75,9 @@ compare_blocklists()
     VERSION=`cat version.txt | sed 's/[^.0-9]*$//'`
     if [ "$VERSION" == "" ]; then
         echo "ERROR Unable to parse version from version.txt"
-    fi     
+    fi
 
-    BLOCKLIST_URL_AMO="https://addons.mozilla.org/blocklist/3/%7Bec8030f7-c20a-464f-9b0e-13a3a9e97384%7D/${VERSION}/Firefox/20090105024647/blocklist-sync/en-US/nightly/blocklist-sync/default/default/"
+    BLOCKLIST_URL_AMO="https://addons.mozilla.org/blocklist/3/${APP_ID}/${VERSION}/${APP_NAME}/20090105024647/blocklist-sync/en-US/nightly/blocklist-sync/default/default/"
     rm -f blocklist_amo.xml
     ${WGET} --no-check-certificate -O blocklist_amo.xml ${BLOCKLIST_URL_AMO}
     WGET_STATUS=$?
