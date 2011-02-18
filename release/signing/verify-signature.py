@@ -65,6 +65,8 @@ Missing: %(removed_dirs)s""" % locals()
 
         info = fileInfo(signed, product)
 
+        chkfiles = []
+
         for f in unsigned_files:
             sf = os.path.join(signed_dir, f)
             uf = os.path.join(unsigned_dir, f)
@@ -98,12 +100,31 @@ Missing: %(removed_dirs)s""" % locals()
                     if sf_lines != uf_lines:
                         return False, "update.manifest differs"
                     log.debug("%s OK", b)
+                elif f.endswith(".chk"):
+                    chkfiles.append(sf)
                 elif sha1sum(sf) != sha1sum(uf):
                     return False, "sha1sum on %s differs" % f
                 else:
                     log.debug("%s OK", b)
 
+        # We need to wait for all the .chk and their dlls to be unpacked /
+        # uncompressed before checking them
+        for f in chkfiles:
+            d = os.path.dirname(f)
+            b = os.path.basename(f)
+            nullfd = open(os.devnull, "w")
+            cmd = ['chktest', b.replace(".chk", ".dll")]
+            log.debug("Checking chk file %s" % cmd)
+            if 0 != call(cmd, cwd=d, stdout=nullfd):
+                return False, "Bad chk file %s" % f
+            else:
+                log.debug("chk file OK")
+
         return True, "OK"
+    except:
+        import traceback
+        print traceback.format_exc()
+        raise
     finally:
         shutil.rmtree(unsigned_dir)
         shutil.rmtree(signed_dir)
@@ -211,6 +232,7 @@ if __name__ == "__main__":
             product="firefox",
             first_locale='en-US',
             quick=False,
+            loglevel=logging.INFO,
             )
     parser.add_option("", "--fake", dest="fake", action="store_true", help="Don't verify signatures, just compare file hashes")
     parser.add_option("", "--abort-on-fail", dest="abortOnFail", action="store_true", help="Stop processing after the first error")
@@ -219,8 +241,10 @@ if __name__ == "__main__":
         help="first locale to check")
     parser.add_option("", "--quick-verify", dest="quick", action="store_true",
         help="Verify only first locale and one random additional locale")
-
-    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    parser.add_option("-q", "--quiet", dest="loglevel", action="store_const",
+        const=logging.WARNING, help="be quiet")
+    parser.add_option("-v", "--verbose", dest="loglevel", action="store_const",
+        const=logging.DEBUG, help="be verbose")
 
     try:
         checkTools()
@@ -230,6 +254,8 @@ if __name__ == "__main__":
     options, args = parser.parse_args()
     if len(args) != 2:
         parser.error("Must specify two arguments: unsigned-dir, and signed-dir")
+
+    logging.basicConfig(level=options.loglevel, format="%(message)s")
 
     # Compare each signed .mar/.exe to the unsigned .mar/.exe
     unsigned_dir = args[0]

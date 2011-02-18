@@ -43,6 +43,22 @@ def signfile(filename, keydir, fake=False):
         log.exception(data)
         raise
 
+    # Regenerate any .chk files that are now invalid
+    if getChkFile(filename):
+        stdout = tempfile.TemporaryFile()
+        try:
+            command = ['shlibsign', '-v', '-i', basename]
+            check_call(command, cwd=dirname, stdout=stdout, stderr=STDOUT)
+            stdout.seek(0)
+            data = stdout.read()
+            if "signature: 40 bytes" not in data:
+                raise ValueError("shlibsign didn't generate signature")
+        except:
+            stdout.seek(0)
+            data = stdout.read()
+            log.exception(data)
+            raise
+
 def _signLocale(obj, dstdir, files, remember=None):
     # Helper function to sign one individual locale, and keep track of some
     # stats
@@ -103,7 +119,7 @@ class Signer:
         """Remember this file in our cache.
 
         `filename` will be copied into our cache identified by `hsh`
-        
+
         Usually `hsh` is the sha1sum of the unsigned file, and `filename`
         points to the signed file.
         """
@@ -166,6 +182,7 @@ class Signer:
                 h = sha1sum(f)
                 basename = os.path.basename(f)
                 nFiles += 1
+                chk = getChkFile(f)
 
                 # Look in the cache for another file with the same original hash
                 cachedFile = self.getFile(h, f)
@@ -179,6 +196,12 @@ class Signer:
                     # are mode 0666.  In the mar files, executables have mode
                     # 0777, so we want to preserve that.
                     copyfile(cachedFile, f, copymode=False)
+                    if chk:
+                        # If there's a .chk file for this file, copy that out of cache
+                        # It's an error if this file doesn't exist in cache
+                        cachedChk = self.getFile(h, chk)
+                        logs.append("Copying %s from %s" % (os.path.basename(cachedChk), cachedChk))
+                        copyfile(cachedChk, chk, copymode=False)
                 else:
                     # We need to sign this file
                     # If this file is compressed, check if we have a cached copy that
@@ -197,9 +220,20 @@ class Signer:
                             # See note above about not copying the file's mode
                             copyfile(cachedFile, f, copymode=False)
                             bzip2(f)
+                            if chk:
+                                # If there's a .chk file for this file, copy that out of cache
+                                # It's an error if this file doesn't exist in cache
+                                cachedChk = self.getFile(h2, chk)
+                                logs.append("Copying %s from %s" % (os.path.basename(cachedChk), cachedChk))
+                                copyfile(cachedChk, chk, copymode=False)
+                                bzip2(chk)
                             if remember:
                                 logs.append("Caching compressed %s as %s" % (f, h))
                                 self.rememberFile(h, f)
+                                # Remember any regenerated chk files
+                                if chk:
+                                    logs.append("Caching %s as %s" % (chk, h))
+                                    self.rememberFile(h, chk)
                             continue
 
                     nSigned += 1
@@ -207,9 +241,16 @@ class Signer:
                     signfile(f, self.keydir, self.fake)
                     if compressed:
                         bzip2(f)
+                        # If we have a chk file, compress that too
+                        if chk:
+                            bzip2(chk)
                     if remember:
                         logs.append("Caching %s as %s" % (f, h))
                         self.rememberFile(h, f)
+                        # Remember any regenerated chk files
+                        if chk:
+                            logs.append("Caching %s as %s" % (chk, h))
+                            self.rememberFile(h, chk)
 
             # Repack it
             logs.append("Packing %s" % dstfile)
@@ -325,6 +366,10 @@ class Signer:
                         # Cache the signed version
                         log.info("Caching %s as %s" % (f, h))
                         self.rememberFile(h, sf)
+                        chk = getChkFile(sf)
+                        if chk:
+                            log.info("Caching %s as %s" % (chk, h))
+                            self.rememberFile(h, chk)
                 finally:
                     shutil.rmtree(unsigned_dir)
                     shutil.rmtree(signed_dir)

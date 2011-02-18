@@ -11,8 +11,6 @@
 # You can pass the other variables listed below, too, if you want to use a
 # different stage server, ssh key or username, or sign a different product, etc.
 #
-# Set USE_NEW to 1 to use the new signing script (sign-release.py)
-#
 # You should receive mail a few times during this process:
 #  * Right before sign-release.pl starts
 #  * After sign-release.pl completes successfully
@@ -64,16 +62,12 @@ else
 APP_NAME        = $(error APP_NAME must be defined)
 endif
 
-ifdef USE_NEW
-all: df verify-gpg-passphrase setup verify-signcode-passphrase download verify-download stubs sign2 stage verify fake-upload
-else
-all: df verify-gpg-passphrase setup verify-signcode-passphrase download verify-download sign stage verify fake-upload
-endif
+all: df verify-gpg-passphrase setup stubs verify-signcode-passphrase download verify-download sign stage verify fake-upload
 
-autosign: df verify-gpg-passphrase setup verify-signcode-passphrase download-loop verify-download stubs sign2 stage verify fake-upload postsign
+autosign: df verify-gpg-passphrase setup stubs verify-signcode-passphrase download-loop verify-download sign stage verify fake-upload postsign
 
 echo:
-	 @echo EMAIL: $(EMAIL)
+	@echo EMAIL: $(EMAIL)
 	@echo STAGE_USERNAME: $(STAGE_USERNAME)
 	@echo SSH_KEY: $(SSH_KEY)
 	@echo WORKDIR: $(WORKDIR)
@@ -130,7 +124,7 @@ verify-signcode-passphrase:
 	    -subject "signcode.exe password verification for $(PRODUCT) $(VERSION) succeeded" \
 	    -body "EOM") \
 	|| \
-	(cd -; rm -rf "$$d"; \
+	(rm -rf "$$d"; \
 	 blat -to $(EMAIL) \
 	    -subject "signcode.exe password verification for $(PRODUCT) $(VERSION) failed" \
 	    -body "EOM"; exit 1)
@@ -193,29 +187,7 @@ download:
 	# Make sure we copy over linux/mac partner repacks (which are in unsigned, unfortunately)
 	rsync -av --exclude '*win32*' unsigned-build$(BUILD)/unsigned/ signed-build$(BUILD)/
 
-sign: sign-internal sign-installers checksum-files create-sigs verify-sigs
-
-sign-internal:
-	blat -to $(EMAIL) \
-	     -subject "sign-release.pl for $(PRODUCT) $(VERSION) starting" \
-		 -body "EOM"
-	# Sign the internals of the win32 builds.
-	MAR=$(MAR) SEVENZIP=$(SEVENZIP) UPX_BIN=$(UPX_BIN) \
-	  perl ./signing/sign-release.pl -M dir -a $(PRODUCT) --release $(TAG) \
-	  -d unsigned-build$(BUILD)/unsigned -o signed-build$(BUILD) \
-	  -R $(REPO) >> win32_signing_build$(BUILD).log 2>&1
-	# And copy over the info file and XPIs.
-	cp -pv ./unsigned-build$(BUILD)/unsigned/win32_info.txt ./signed-build$(BUILD)/ 
-	rsync -av ./unsigned-build$(BUILD)/unsigned/win32/xpi ./signed-build$(BUILD)/win32
-	blat -to $(EMAIL) \
-	     -subject "sign-release.pl for $(PRODUCT) $(VERSION) completed" \
-		 -body "EOM"
-
-sign-installers:
-	# Sign win32 installers.
-	cd $(WORKDIR)/signed-build$(BUILD)/win32 && ../../signing/sign-release $(KEYDIR)
-
-sign2: sign-files checksum-files create-sigs verify-sigs quick-verify
+sign: sign-files checksum-files create-sigs verify-sigs quick-verify
 
 sign-files:
 	blat -to $(EMAIL) \

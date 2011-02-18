@@ -331,14 +331,17 @@ def packfile(filename, srcdir):
 
 def shouldSign(filename):
     """Returns True if filename should be signed."""
-    # We don't sign these files here, since it would invalidate the
-    # .chk files
-    _dont_sign = ['freebl3.dll', 'softokn3.dll', 'nssdbm3.dll']
     ext = os.path.splitext(filename)[1]
+    return ext in ('.dll', '.exe')
+
+def getChkFile(filename):
+    _special_files = ['freebl3.dll', 'softokn3.dll', 'nssdbm3.dll']
     b = os.path.basename(filename)
-    if ext in ('.dll', '.exe') and b not in _dont_sign:
-        return True
-    return False
+    if b in _special_files:
+        d = os.path.dirname(filename)
+        f = os.path.splitext(b)[0] + '.chk'
+        return os.path.join(d, f)
+    return None
 
 def checkTools():
     """Returns True if all of the helper commands ($MAR, $SEVENZIP) are
