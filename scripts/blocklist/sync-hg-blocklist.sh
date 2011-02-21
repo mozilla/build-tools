@@ -131,7 +131,7 @@ update_blocklist_in_hg()
         return $UPDATE_STATUS
     fi
 
-    cp -f blocklist_amo.xml ${REPODIR}/browser/app/blocklist.xml
+    cp -f blocklist_amo.xml ${REPODIR}/${APP_DIR}/app/blocklist.xml
     COMMIT_MESSAGE="Automated blocklist update from host $HOST"
     if [ $DONTBUILD == true ]; then
         COMMIT_MESSAGE="${COMMIT_MESSAGE} (DONTBUILD)"
