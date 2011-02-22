@@ -15,7 +15,7 @@ JSONTOOL="$PYTHON $SCRIPTS_DIR/buildfarm/utils/jsontool.py"
 workdir=`pwd`
 
 branchConfig=$1
-action=$2 # check or push
+action=$2 # permissions, antivirus, or push
 
 branch=$(basename $($JSONTOOL -k properties.branch $PROPERTIES_FILE))
 builder=$($JSONTOOL -k properties.buildername $PROPERTIES_FILE)
@@ -23,7 +23,7 @@ slavebuilddir=$($JSONTOOL -k properties.slavebuilddir $PROPERTIES_FILE)
 slavename=$($JSONTOOL -k properties.slavename $PROPERTIES_FILE)
 master=$($JSONTOOL -k properties.master $PROPERTIES_FILE)
 releaseConfig=$($JSONTOOL -k properties.release_config $PROPERTIES_FILE)
-releaseTag=$($JSONTOOL -k sourcestamp.revision $PROPERTIES_FILE)
+releaseTag=$($JSONTOOL -k properties.script_repo_revision $PROPERTIES_FILE)
 
 if [ -z "$BUILDBOT_CONFIGS" ]; then
     export BUILDBOT_CONFIGS="http://hg.mozilla.org/build/buildbot-configs"

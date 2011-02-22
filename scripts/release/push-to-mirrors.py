@@ -144,19 +144,23 @@ if __name__ == '__main__':
     stageSshKey = path.join(os.path.expanduser("~"), ".ssh",
                             branchConfig["stage_ssh_key"])
 
-    if 'check' in args:
+    if 'permissions' in args:
         checkStagePermissions(stageServer=stageServer,
                               stageUsername=stageUsername,
                               stageSshKey=stageSshKey,
                               productName=productName,
                               version=version,
                               buildNumber=buildNumber)
+
+    if 'antivirus' in args:
         runAntivirusCheck(stageServer=stageServer,
                           stageUsername=stageUsername,
                           stageSshKey=stageSshKey,
                           productName=productName,
                           version=version,
                           buildNumber=buildNumber)
+
+    if 'permissions' in args or 'antivirus' in args:
         pushToMirrors(stageServer=stageServer,
                       stageUsername=stageUsername,
                       stageSshKey=stageSshKey,
