@@ -25,7 +25,7 @@ def getShippedLocales(product, appName, version, buildNumber, sourceRepo,
 def getCommonLocales(a, b):
     return [locale for locale in a if locale in b]
 
-def getL10nRepositories(file, l10nRepoPath, relbranch):
+def getL10nRepositories(file, l10nRepoPath, relbranch=None):
     """Reads in a list of locale names and revisions for their associated
        repository from 'file'.
     """

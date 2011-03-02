@@ -49,8 +49,9 @@ def validate(options, args):
 
     releaseConfig = readReleaseConfig(releaseConfigFile,
                                       required=REQUIRED_RELEASE_CONFIG)
+    sourceRepoName = releaseConfig['sourceRepositories'][options.sourceRepoKey]['name']
     branchConfig = readBranchConfig(branchConfigDir, branchConfigFile,
-                                    releaseConfig['sourceRepoName'],
+                                    sourceRepoName,
                                     required=REQUIRED_BRANCH_CONFIG)
     return branchConfig, releaseConfig
 
@@ -124,11 +125,13 @@ if __name__ == '__main__':
     parser.set_defaults(
         buildbotConfigs=os.environ.get("BUILDBOT_CONFIGS",
                                        DEFAULT_BUILDBOT_CONFIGS_REPO),
+        sourceRepoKey="mozilla",
     )
     parser.add_option("-c", "--configfile", dest="configfile")
     parser.add_option("-r", "--release-config", dest="releaseConfig")
     parser.add_option("-b", "--buildbot-configs", dest="buildbotConfigs")
     parser.add_option("-t", "--release-tag", dest="releaseTag")
+    parser.add_option("--source-repo-key", dest="sourceRepoKey")
 
     options, args = parser.parse_args()
     mercurial(options.buildbotConfigs, "buildbot-configs")

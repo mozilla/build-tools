@@ -23,3 +23,14 @@ class TestRunCmd(unittest.TestCase):
 
     def testBadOutput(self):
         self.assertRaises(subprocess.CalledProcessError, get_output, ['false'])
+
+    def testOutputAttachedToError(self):
+        """Older versions of CalledProcessError don't attach 'output' to
+           themselves. This test is to ensure that get_output always does."""
+        output = "nothing"
+        try:
+            get_output(['bash', '-c', 'echo hello && false'])
+        except subprocess.CalledProcessError, e:
+            self.assertEquals(e.output, 'hello\n')
+        else:
+            self.fail("get_output did not raise CalledProcessError")

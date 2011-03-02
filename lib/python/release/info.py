@@ -95,3 +95,10 @@ def generateRelbranchName(milestone, prefix='GECKO'):
     return '%s%s_%s_RELBRANCH' % (
       prefix, milestone.replace('.', ''),
       datetime.now().strftime('%Y%m%d%H'))
+
+def getRepoMatchingBranch(branch, sourceRepositories):
+    for sr in sourceRepositories.values():
+        if branch in sr['path']:
+            return sr
+    return None
+

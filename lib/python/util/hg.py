@@ -51,6 +51,12 @@ def get_revision(path):
 def get_branch(path):
     return get_output(['hg', 'branch'], cwd=path).strip()
 
+def get_branches(path):
+    branches = []
+    for line in get_output(['hg', 'branches', '-c'], cwd=path).splitlines():
+        branches.append(line.split()[0])
+    return branches
+
 def hg_ver():
     """Returns the current version of hg, as a tuple of
     (major, minor, build)"""

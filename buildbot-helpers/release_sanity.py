@@ -14,17 +14,14 @@ from optparse import OptionParser
 from util.commands import run_cmd
 from util.file import compare
 from util.hg import make_hg_url
-from release.info import readReleaseConfig
+from release.info import readReleaseConfig, getRepoMatchingBranch
 import logging
 log = logging.getLogger(__name__)
 
-def compareVersion(fileHandle, versionNumber):
+def findVersion(contents, versionNumber):
     """Given an open readable file-handle look for the occurrence
        of the version # in the file"""
-    log.info("looking for %s in %s" % (versionNumber, fileHandle.geturl()))
-    ret = re.search(re.compile(re.escape(versionNumber), re.DOTALL), fileHandle.read())
-    if ret:
-        log.info("Found a match!")
+    ret = re.search(re.compile(re.escape(versionNumber), re.DOTALL), contents)
     return ret
 
 def reconfig():
@@ -65,44 +62,22 @@ def verify_repo(branch, revision, hghost):
         success = False
     return success
 
-def verify_build(branch, revision, hghost, version, milestone):
-    """Pull down the version.txt, milestone.txt and js/src/config/milestone.txt
-       and make sure it matches the release configs"""
-    version_url = make_hg_url(
-            hghost,
-            branch,
-            revision=revision,
-            filename='browser/config/version.txt'
-            )
-    milestone_url = make_hg_url(
-            hghost,
-            branch,
-            revision=revision,
-            filename='config/milestone.txt'
-            )
-    js_milestone_url = make_hg_url(
-            hghost,
-            branch,
-            revision=revision,
-            filename='js/src/config/milestone.txt'
-            )
+def verify_build(sourceRepo, hghost):
+    """ Ensure that the bumpFiles match what the release config wants them to be"""
     success = True
-    try:
-        version_file = urllib2.urlopen(version_url)
-        if not compareVersion(version_file, version):
-            log.error("compare to milestone.txt/version.txt failed. Check again, or -b to bypass")
+    for filename, versions in sourceRepo['bumpFiles'].iteritems():
+        try:
+            url = make_hg_url(hghost, sourceRepo['path'],
+                              revision=sourceRepo['revision'],
+                              filename=filename)
+            found_version = urllib2.urlopen(url).read()
+            if not findVersion(found_version, versions['version']):
+                log.error("%s has incorrect version '%s' (expected '%s')" % \
+                  (filename, found_version, versions['version']))
+                success = False
+        except urllib2.HTTPError, inst:
+            log.error("cannot find %s. Check again, or -b to bypass" % inst.geturl())
             success = False
-        milestone_file = urllib2.urlopen(milestone_url)
-        if not compareVersion(milestone_file, milestone):
-            log.error("compare to version.txt failed. Check again, or -b to bypass")
-            success = False
-        js_milestone_file = urllib2.urlopen(js_milestone_url)
-        if not compareVersion(js_milestone_file, milestone):
-            log.error("compare to js/src/config/milestone.txt failed. Check again, or -b to bypass")
-            success = False
-    except urllib2.HTTPError, inst:
-        log.error("cannot find %s. Check again, or -b to bypass" % inst.geturl())
-        success = False
 
     return success
 
@@ -138,8 +113,8 @@ def verify_options(cmd_options, config):
     if int(cmd_options.buildNumber) != int(config['buildNumber']):
         log.error("buildNumber passed in does not match release_configs")
         success = False
-    if cmd_options.branch != config['sourceRepoName']:
-        log.error("branch passed in does not match relese_configs")
+    if not getRepoMatchingBranch(cmd_options.branch, config['sourceRepositories']):
+        log.error("branch passed in does not exist in release config")
         success = False
     return success
 
@@ -213,33 +188,25 @@ if __name__ == '__main__':
             log.error("Error verifying configs")
 
         #verify that the relBranch + revision in the release_configs exists in hg
-        sourceRepoPath = releaseConfig['sourceRepoPath']
-        if releaseConfig.get('sourceRepoClonePath'):
-            sourceRepoPath = releaseConfig['sourceRepoClonePath']
-        if not verify_repo(
-                sourceRepoPath,
-                releaseConfig['sourceRepoRevision'],
-                branchConfig['hghost']
-                ):
-            test_success = False
-            log.error("Error verifying repos")
+        for sr in releaseConfig['sourceRepositories'].values():
+            sourceRepoPath = sr.get('clonePath', sr['path'])
+            if not verify_repo(sourceRepoPath, sr['revision'],
+                               branchConfig['hghost']):
+                test_success = False
+                log.error("Error verifying repos")
 
         #if this is a respin, verify that the version/milestone files have been bumped
         if options.buildNumber > 1:
-            if not verify_build(
-                    releaseConfig['sourceRepoPath'],
-                    releaseConfig['sourceRepoRevision'],
-                    branchConfig['hghost'],
-                    releaseConfig['version'],
-                    releaseConfig['milestone'],
-                    ):
-                test_success = False
+            for sr in releaseConfig['sourceRepositories'].values():
+                if not verify_build(sr, branchConfig['hghost']):
+                    test_success = False
 
     if test_success:
         if not options.dryrun:
             reconfig()
+            sourceRepoPath = getRepoMatchingBranch(options.branch, releaseConfig['sourceRepositories'])['path']
             sendchange(
-                    releaseConfig['sourceRepoPath'],
+                    sourceRepoPath,
                     "%s_RELEASE" % releaseConfig['baseTag'],
                     options.username,
                     args[0],

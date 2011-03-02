@@ -72,16 +72,21 @@ def get_output(cmd, include_stderr=False, dont_log=False, **kwargs):
     if 'env' in kwargs:
         kwargs['env'] = merge_env(kwargs['env'])
     try:
+        output = ""
         t = time.time()
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=stderr,
                 **kwargs)
         proc.wait()
+        output = proc.stdout.read()
         if proc.returncode != 0:
             raise subprocess.CalledProcessError(proc.returncode, cmd)
-        output = proc.stdout.read()
         if not dont_log:
             log.info(output)
         return output
+    except subprocess.CalledProcessError, e:
+        # Make sure that output is set on the Exception
+        e.output = output
+        raise e
     finally:
         elapsed = time.time() - t
         log.info("command: END (%.2f elapsed)\n", elapsed)
