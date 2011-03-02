@@ -37,6 +37,7 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
     env = {
         "MOZ_OBJDIR": objdir,
         "MOZ_MAKE_COMPLETE_MAR": "1",
+        "MOZ_PKG_VERSION": version,
         "UPLOAD_HOST": stageServer,
         "UPLOAD_USER": stageUsername,
         "UPLOAD_SSH_KEY": stageSshKey,
