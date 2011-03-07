@@ -10,6 +10,7 @@
     expected values in the release_configs
 """
 import re, urllib2
+import os
 from optparse import OptionParser
 from util.commands import run_cmd
 from util.file import compare
@@ -18,6 +19,8 @@ from release.info import readReleaseConfig, getRepoMatchingBranch
 import logging
 log = logging.getLogger(__name__)
 
+RECONFIG_SCRIPT = os.path.join(os.path.dirname(__file__),
+                               "../buildfarm/maintenance/buildbot-wrangler.py")
 def findVersion(contents, versionNumber):
     """Given an open readable file-handle look for the occurrence
        of the version # in the file"""
@@ -26,7 +29,7 @@ def findVersion(contents, versionNumber):
 
 def reconfig():
     """reconfig the master in the cwd"""
-    run_cmd(['make', 'reconfig'])
+    run_cmd(['python', RECONFIG_SCRIPT, 'reconfig', os.getcwd()])
 
 def sendchange(branch, revision, username, master, configfile):
     """Send the change to buildbot to kick off the release automation"""
