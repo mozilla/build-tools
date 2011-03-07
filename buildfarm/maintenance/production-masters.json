@@ -248,7 +248,7 @@
     "datacentre": "scl"
   }, 
   {
-    "hostname": "buildbot-master5.build.scl1.mozilla.com", 
+    "hostname": "buildbot-master5.build.mozilla.org", 
     "master_dir": "/builds/buildbot/tests_master3/master", 
     "name": "tm3", 
     "roles": [
@@ -257,7 +257,7 @@
     "basedir": "/builds/buildbot/tests_master3", 
     "buildbot_version": "0.8.2",
     "bbconfigs_dir": "/builds/buildbot/tests_master3/buildbot-configs", 
-    "db_name": "buildbot-master5.build.scl1.mozilla.com:/builds/buildbot/tests_master3/master", 
+    "db_name": "buildbot-master5.build.mozilla.org:/builds/buildbot/tests_master3/master", 
     "bbcustom_dir": "/builds/buildbot/tests_master3/buildbotcustom",
     "bbcustom_branch": "production-0.8",
     "bbconfigs_branch": "production",
