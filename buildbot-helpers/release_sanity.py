@@ -142,7 +142,7 @@ if __name__ == '__main__':
             help="specify a specific username to attach to the sendchange (cltbld)")
     parser.add_option("-V", "--version", dest="version",
             help="firefox version string for release in format: x.x.x")
-    parser.add_option("-N", "--build-number", dest="buildNumber",
+    parser.add_option("-N", "--build-number", dest="buildNumber", type="int",
             help="buildNumber for this release, uses release_config otherwise")
     parser.add_option("-B", "--branch", dest="branch",
             help="branch name for this release, uses release_config otherwise")
