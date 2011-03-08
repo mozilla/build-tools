@@ -1,5 +1,5 @@
 --enable-threadsafe
 --enable-optimize
---disable-debug
+--enable-debug
 --enable-shark
 --enable-debug-symbols
