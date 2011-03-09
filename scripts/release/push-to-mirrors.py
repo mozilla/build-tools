@@ -33,6 +33,7 @@ DEFAULT_RSYNC_EXCLUDES = ['--exclude=*tests*',
                           '--exclude=*unsigned*',
                           '--exclude=*update-backup*',
                           '--exclude=*partner-repacks*',
+                          '--exclude=*.checksums',
                           ]
 
 def validate(options, args):
