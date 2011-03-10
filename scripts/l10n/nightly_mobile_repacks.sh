@@ -20,7 +20,8 @@ mobileBranch=$3
 chunks=$4
 thisChunk=$5
 
-branch=$(basename $($JSONTOOL -k properties.branch $PROPERTIES_FILE))
+branch=$($JSONTOOL -k properties.branch $PROPERTIES_FILE)
+branchName=$(basename $branch)
 builder=$($JSONTOOL -k properties.buildername $PROPERTIES_FILE)
 slavebuilddir=$($JSONTOOL -k properties.slavebuilddir $PROPERTIES_FILE)
 slavename=$($JSONTOOL -k properties.slavename $PROPERTIES_FILE)
@@ -35,7 +36,7 @@ fi
 
 cd $SCRIPTS_DIR/../..
 $PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s scripts -s buildprops.json \
-  $CLOBBERER_URL $branch "$builder" $slavebuilddir $slavename $master
+  $CLOBBERER_URL $branchName "$builder" $slavebuilddir $slavename $master
 cd $SCRIPTS_DIR/..
 $PYTHON $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
   -s 1 -n info -n 'rel-*' -n $slavebuilddir
