@@ -184,6 +184,10 @@ def checkTegra(tegra):
 
             if options.reset:
                 s += ' - resetting'
+                hbSocket.send('rebt\n')
+                # not interested in result
+                # taking advantage of the pause
+                d = hbSocket.recv(4096)
                 os.remove(errorFile)
     else:
         s += ' OFFLINE'
