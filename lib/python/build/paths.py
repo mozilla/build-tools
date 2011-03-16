@@ -10,3 +10,14 @@ def getLatestDir(product, branch, platform, nightlyDir="nightly",
         return protocol + "://" + server + dirpath
     else:
         return dirpath
+
+
+def getSnippetDir(brandName, version, buildNumber):
+    return '%s-%s-build%s' % (brandName, version, buildNumber)
+
+
+def getMUSnippetDir(brandName, oldVersion, oldBuildNumber, version,
+                    buildNumber):
+    return '%s-%s-build%s-%s-build%s-MU' % (brandName, oldVersion,
+                                            oldBuildNumber, version,
+                                            buildNumber)
