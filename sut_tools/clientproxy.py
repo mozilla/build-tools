@@ -140,25 +140,11 @@ def loadOptions():
 
 
 class Daemon(object):
-    def __init__(self, pidfile, user=None, group=None):
+    def __init__(self, pidfile):
         self.stdin   = '/dev/null'
         self.stdout  = '/dev/null'
         self.stderr  = '/dev/null'
         self.pidfile = pidfile
-        self.user    = user
-        self.group   = group
-
-    def openstreams(self):
-        si = open(self.stdin, "r")
-        os.dup2(si.fileno(), sys.stdin.fileno())
-
-        so = open(self.stdout, "a+")
-        se = open(self.stderr, "a+", 0)
-        os.dup2(so.fileno(), sys.stdout.fileno())
-        os.dup2(se.fileno(), sys.stderr.fileno())
-
-    def handlesighup(self, signum, frame):
-        self.openstreams()
 
     def handlesigterm(self, signum, frame):
         if self.pidfile is not None:
@@ -171,49 +157,42 @@ class Daemon(object):
                 pass
         sys.exit(0)
 
-    def switchuser(self, user, group):
-        if group is not None:
-            if isinstance(group, basestring):
-                group = grp.getgrnam(group).gr_gid
-            os.setegid(group)
-        if user is not None:
-            if isinstance(user, basestring):
-                user = pwd.getpwnam(user).pw_uid
-            os.seteuid(user)
-            if "HOME" in os.environ:
-                os.environ["HOME"] = pwd.getpwuid(user).pw_dir
-
     def start(self):
+        try:
+            pid = os.fork()
+            if pid > 0:
+                sys.exit(0)
+        except OSError, exc:
+            sys.stderr.write("%s: failed to fork from parent: (%d) %s\n" % (sys.argv[0], exc.errno, exc.strerror))
+            sys.exit(1)
+
+        os.chdir("/")
+        os.setsid()
+        os.umask(0)
+
+        try:
+            pid = os.fork()
+            if pid > 0:
+                sys.stdout.close()
+                sys.exit(0)
+        except OSError, exc:
+            sys.stderr.write("%s: failed to fork from parent #2: (%d) %s\n" % (sys.argv[0], exc.errno, exc.strerror))
+            sys.exit(1)
+
         sys.stdout.flush()
         sys.stderr.flush()
 
-        try:
-            pid = os.fork()
-            if pid > 0:
-                sys.stdout.close()
-                sys.exit(0)
-        except OSError, exc:
-            sys.exit("%s: failed to fork from parent: (%d) %s\n" % (sys.argv[0], exc.errno, exc.strerror))
+        si = open(self.stdin, "r")
+        so = open(self.stdout, "a+")
+        se = open(self.stderr, "a+", 0)
 
-        os.chdir("/")
-        os.umask(0)
-        os.setsid()
-
-        try:
-            pid = os.fork()
-            if pid > 0:
-                sys.stdout.close()
-                sys.exit(0)
-        except OSError, exc:
-            sys.exit("%s: failed to fork from parent #2: (%d) %s\n" % (sys.argv[0], exc.errno, exc.strerror))
-
-        self.switchuser(self.user, self.group)
-        self.openstreams()
+        os.dup2(si.fileno(), sys.stdin.fileno())
+        os.dup2(so.fileno(), sys.stdout.fileno())
+        os.dup2(se.fileno(), sys.stderr.fileno())
 
         if self.pidfile is not None:
             open(self.pidfile, "wb").write(str(os.getpid()))
 
-        signal.signal(signal.SIGHUP, self.handlesighup)
         signal.signal(signal.SIGTERM, self.handlesigterm)
 
     def stop(self):
@@ -506,7 +485,8 @@ def monitorTegra(events):
                 try:
                     data = hbSocket.recv(1024)
                 except:
-                    data = ''
+                    data      = ''
+                    connected = False
                     dumpException('hbSocket.recv()')
 
                 if len(data) > 1:
