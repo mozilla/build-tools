@@ -37,6 +37,9 @@ DEFAULT_RSYNC_EXCLUDES = ['--exclude=*tests*',
                           '--exclude=logs',
                           ]
 
+VIRUS_SCAN_CMD = ['extract_and_run_command.py', '-j4', 'clamdscan', '-m',
+                  '--no-summary', '--']
+
 def validate(options, args):
     if not options.configfile:
         log.info("Must pass --configfile")
@@ -86,7 +89,7 @@ def checkStagePermissions(productName, version, buildNumber, stageServer,
 def runAntivirusCheck(productName, version, buildNumber, stageServer,
                       stageUsername=None, stageSshKey=None):
     candidates_dir = makeCandidatesDir(productName, version, buildNumber)
-    cmd = ['clamdscan', '-m', '-v', candidates_dir]
+    cmd = VIRUS_SCAN_CMD + [candidates_dir]
     run_remote_cmd(cmd, server=stageServer, username=stageUsername,
                    sshKey=stageSshKey)
 
