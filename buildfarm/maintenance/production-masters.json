@@ -326,9 +326,9 @@
     "bbconfigs_branch": "production",
     "tools_dir": "/builds/buildbot/build_master5/tools",
     "tools_branch": "default",
-    "http_port": "8010",
-    "pb_port": "9010",
-    "ssh_port": "1235",
+    "http_port": 8010,
+    "pb_port": 9010,
+    "ssh_port": 1235,
     "datacentre": "scl"
   },
   {
@@ -347,9 +347,9 @@
     "bbconfigs_branch": "production",
     "tools_dir": "/builds/buildbot/tests_master7/tools",
     "tools_branch": "default",
-    "http_port": "8011",
-    "pb_port": "9011",
-    "ssh_port": "1236",
+    "http_port": 8011,
+    "pb_port": 9011,
+    "ssh_port": 1236,
     "datacentre": "scl"
   },
   {
@@ -368,9 +368,9 @@
     "bbconfigs_branch": "production",
     "tools_dir": "/builds/buildbot/try_master4/tools",
     "tools_branch": "default",
-    "http_port": "8012",
-    "pb_port": "9012",
-    "ssh_port": "1238",
+    "http_port": 8012,
+    "pb_port": 9012,
+    "ssh_port": 1238,
     "datacentre": "scl"
   },
   {
@@ -389,9 +389,9 @@
     "bbconfigs_branch": "production",
     "tools_dir": "/builds/buildbot/build_master6/tools",
     "tools_branch": "default",
-    "http_port": "8010",
-    "pb_port": "9010",
-    "ssh_port": "1235",
+    "http_port": 8010,
+    "pb_port": 9010,
+    "ssh_port": 1235,
     "datacentre": "scl"
   },
   {
@@ -431,9 +431,9 @@
     "bbconfigs_branch": "production",
     "tools_dir": "/builds/buildbot/try_master5/tools",
     "tools_branch": "default",
-    "http_port": "8012",
-    "pb_port": "9012",
-    "ssh_port": "1238",
+    "http_port": 8012,
+    "pb_port": 9012,
+    "ssh_port": 1238,
     "datacentre": "scl"
   },
   {
@@ -452,9 +452,9 @@
     "bbconfigs_branch": "production",
     "tools_dir": "/builds/buildbot/build_master7/tools",
     "tools_branch": "default",
-    "http_port": "8010",
-    "pb_port": "9010",
-    "ssh_port": "1235",
+    "http_port": 8010,
+    "pb_port": 9010,
+    "ssh_port": 1235,
     "datacentre": "scl"
   },
   {
@@ -473,9 +473,9 @@
     "bbconfigs_branch": "production",
     "tools_dir": "/builds/buildbot/tests_master8/tools",
     "tools_branch": "default",
-    "http_port": "8011",
-    "pb_port": "9011",
-    "ssh_port": "1236",
+    "http_port": 8011,
+    "pb_port": 9011,
+    "ssh_port": 1236,
     "datacentre": "scl"
   },
   {
@@ -494,9 +494,9 @@
     "bbconfigs_branch": "production",
     "tools_dir": "/builds/buildbot/try_master6/tools",
     "tools_branch": "default",
-    "http_port": "8012",
-    "pb_port": "9012",
-    "ssh_port": "1238",
+    "http_port": 8012,
+    "pb_port": 9012,
+    "ssh_port": 1238,
     "datacentre": "scl"
   }
 ]
