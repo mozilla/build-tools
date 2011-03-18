@@ -77,11 +77,11 @@ def fileInfo(filepath, product):
         elif filepath.endswith('.exe'):
             ret['format'] = 'exe'
             ret['contents'] = 'installer'
-            # EUBallot builds use a different enough style of path than others
+            # EUballot builds use a different enough style of path than others
             # that we can't catch them in the same regexp
-            if filepath.find('win32-EUBallot') != -1:
+            if filepath.find('win32-EUballot') != -1:
                 ret['platform'] = 'win32'
-                m = re.search("(win32-EUBallot/)([-a-zA-Z]+)/((?i)%s) Setup (\d+\.\d+(?:\.\d+)?(?:\w+\d+)?(?:\ \w+\ \d+)?)\.exe" % product, filepath)
+                m = re.search("(win32-EUballot/)([-a-zA-Z]+)/((?i)%s) Setup (\d+\.\d+(?:\.\d+)?(?:\w+\d+)?(?:\ \w+\ \d+)?)\.exe" % product, filepath)
                 if not m:
                     raise ValueError("Could not parse: %s" % filepath)
                 ret['leading_path'] = m.group(1)

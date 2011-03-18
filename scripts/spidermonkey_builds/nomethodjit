@@ -1,4 +1,4 @@
 --enable-threadsafe
 --enable-optimize
---disable-debug
+--enable-debug
 --disable-methodjit

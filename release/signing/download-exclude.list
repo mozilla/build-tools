@@ -10,3 +10,5 @@
 - /update/win32/
 # Exclude hidden files/directories
 - .*
+# Skip logs
+- /logs/

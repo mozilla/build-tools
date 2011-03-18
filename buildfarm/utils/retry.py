@@ -11,6 +11,10 @@ from tempfile import TemporaryFile
 from operator import xor
 log = logging.getLogger()
 
+sys.path.append(os.path.join(os.path.dirname(__file__), "../../lib/python"))
+
+from util.retry import retry
+
 if sys.platform.startswith('win'):
     from win32_util import kill, which
 else:
@@ -23,6 +27,11 @@ def read_file(f):
 def search_output(f, regexp, fail_if_match):
     res = re.search(regexp, read_file(f))
     return xor(bool(res), fail_if_match)
+
+class RunWithTimeoutException(Exception):
+    def __init__(self, rc, **kwargs):
+        Exception.__init__(self, **kwargs)
+        self.rc = rc
 
 def run_with_timeout(cmd, timeout, stdout_regexp=None, stderr_regexp=None,
                      fail_if_match=False, print_output=True):
@@ -39,54 +48,25 @@ def run_with_timeout(cmd, timeout, stdout_regexp=None, stderr_regexp=None,
                 print "Process stdio:\n%s" % read_file(stdout)
                 print "Process stderr:\n%s" % read_file(stderr)
             if rc == 0:
-                ret = True
                 if stdout_regexp and not \
                    search_output(stdout, stdout_regexp, fail_if_match):
-                    ret = False
+                    raise RunWithTimeoutException("%s found in stdout, failing" % fail_if_match, -1)
                 if stderr_regexp and not \
                    search_output(stderr, stderr_regexp, fail_if_match):
-                    ret = False
-                return ret
+                    raise RunWithTimeoutException("%s found in stderr, failing" % fail_if_match, -1)
+                return rc
             else:
-                return False
+                raise RunWithTimeoutException("command exited with non-zero return code %d, failing" % rc, rc)
 
         if start_time + timeout < time.time():
             log.warn("WARNING: Timeout (%i) exceeded, killing process %i",
                      timeout, proc.pid)
             rc = kill(proc.pid)
             log.debug("Process returned %s", rc)
-            return False
+            raise RunWithTimeoutException("Timeout (%i) exceeded" % timeout, rc)
 
         # Check again in a sec...
         time.sleep(0.25)
-
-def retry_command(cmd, retries, timeout, sleeptime, stdout_regexp=None,
-                  stderr_regexp=None, fail_if_match=False, print_output=True):
-    # Which iteration we're on
-    i = 0
-
-    # Current return code
-    rc = False
-
-    while True:
-        i += 1
-
-        rc = run_with_timeout(cmd, timeout, stdout_regexp, stderr_regexp,
-                              fail_if_match, print_output)
-
-        if rc:
-            break
-
-        if retries > 0 and i >= retries:
-            log.info("Number of retries exceeded maximum (%i), giving up.",
-                     retries)
-            break
-
-        if sleeptime:
-            log.info("Sleeping for %i.", sleeptime)
-            time.sleep(sleeptime)
-
-    return rc
 
 if __name__ == "__main__":
     from optparse import OptionParser
@@ -135,13 +115,18 @@ if __name__ == "__main__":
         args[0] = which(args[0])
 
     try:
-        if not retry_command(args, retries=options.retries,
-                             timeout=options.timeout,
-                             sleeptime=options.sleeptime,
-                             stdout_regexp=options.stdout_regexp,
-                             stderr_regexp=options.stderr_regexp,
-                             fail_if_match=options.fail_if_match,
-                             print_output=options.print_output):
-            sys.exit(1)
+        rc = retry(run_with_timeout, attempts=options.retries,
+                   sleeptime=options.sleeptime,
+                   args=(args, options.timeout, options.stdout_regexp,
+                         options.stderr_regexp, options.fail_if_match,
+                         options.print_output))
+        sys.exit(rc)
     except KeyboardInterrupt:
         sys.exit(1)
+    except Exception, e:
+        log.info("Unable to successfully run %s after %d attempts" % \
+          (args, options.retries))
+        # If we caught a RunWithTimeoutException we can exit with the same
+        # rc as the command. If something else was hit, just exit with 1
+        rc = getattr(e, 'rc', 1)
+        sys.exit(rc)

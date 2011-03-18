@@ -53,7 +53,8 @@ class TuxedoEntrySubmitter(object):
     def __init__(self, config, productName, version, tuxedoServerUrl,
                  brandName=None, bouncerProductName=None, shippedLocales=None,
                  addMARs=True, oldVersion=None, username=None, password=None,
-                 verbose=True, dryRun=False, platforms=None, milestone=None):
+                 verbose=True, dryRun=False, platforms=None, milestone=None,
+                 bouncerProductSuffix=None):
         self.config = config
         self.productName = productName
         self.version = version
@@ -80,6 +81,9 @@ class TuxedoEntrySubmitter(object):
 
         self.bouncer_product_name = '%s-%s' % (self.bouncerProductName,
                                                self.version)
+        if bouncerProductSuffix:
+            self.bouncer_product_name = '%s-%s' % (self.bouncer_product_name,
+                                                   bouncerProductSuffix)
         self.complete_mar_bouncer_product_name = '%s-%s-Complete' % \
             (self.bouncerProductName, self.version)
         self.partial_mar_bouncer_product_name = '%s-%s-Partial-%s' % \
@@ -231,6 +235,8 @@ def getOptions():
                       help="Brand name")
     parser.add_option("-b", "--bouncer-product-name", dest="bouncerProductName",
                       help="Bouncer product name")
+    parser.add_option("--bouncer-product-suffix", dest="bouncerProductSuffix",
+                      help="Bouncer product suffix")
     parser.add_option("-l", "--shipped-locales", dest="shippedLocales",
                       help="shipped-locales file location")
     parser.add_option("-m", "--add-mars", action="store_true",
@@ -294,6 +300,7 @@ def main():
                                   verbose=options.verbose,
                                   dryRun=options.dryRun,
                                   platforms=options.platforms,
+                                  bouncerProductSuffix=options.bouncerProductSuffix,
                                  )
     tuxedo.submit()
 

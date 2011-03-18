@@ -2,6 +2,7 @@ import base64
 import xml.dom.minidom
 from twisted.web.client import getPage
 from twisted.internet import defer
+from release.platforms import buildbot2bouncer
 
 PRODUCT_INSTALLER, PRODUCT_COMPLETE_MAR, PRODUCT_PARTIAL_MAR = range(3)
 
@@ -22,15 +23,18 @@ def generateBouncerProduct(bouncerProductName, version, oldVersion=None,
 
     return ret
 
-def getTuxedoUptakeUrl(tuxedoServerUrl, bouncerProductName):
-    return '%s/uptake/?product=%s' % (tuxedoServerUrl, bouncerProductName)
 
-def get_product_uptake(tuxedoServerUrl, bouncerProductName, timeout=30,
-                       username=None, password=None):
+def getTuxedoUptakeUrl(tuxedoServerUrl, bouncerProductName, os):
+    return '%s/uptake/?product=%s&os=%s' % (tuxedoServerUrl,
+                                            bouncerProductName, os)
+
+
+def get_product_uptake(tuxedoServerUrl, bouncerProductName, os,
+                       timeout=30, username=None, password=None):
     d = defer.succeed(None)
 
     def getTuxedoPage(_):
-        url = getTuxedoUptakeUrl(tuxedoServerUrl, bouncerProductName)
+        url = getTuxedoUptakeUrl(tuxedoServerUrl, bouncerProductName, os)
         if username and password:
             basicAuth = base64.encodestring('%s:%s' % (username, password))
             return getPage(url,
@@ -49,16 +53,19 @@ def get_product_uptake(tuxedoServerUrl, bouncerProductName, timeout=30,
                 if node.nodeType == xml.dom.minidom.Node.TEXT_NODE and \
                   node.data.isdigit():
                     uptake_values.append(int(node.data))
-
+        if not uptake_values:
+            uptake_values = [0]
         return min(uptake_values)
 
     d.addCallback(getTuxedoPage)
     d.addCallback(calculateUptake)
     return d
 
+
 def get_release_uptake(tuxedoServerUrl, bouncerProductName, version,
-                       oldVersion=None, checkMARs=True, username=None,
-                       password=None):
+                       platforms, oldVersion=None, checkMARs=True,
+                       username=None, password=None):
+    assert isinstance(platforms, (list, tuple))
     bouncerProduct = generateBouncerProduct(bouncerProductName, version)
     bouncerCompleteMARProduct = generateBouncerProduct(
         bouncerProductName,
@@ -69,21 +76,22 @@ def get_release_uptake(tuxedoServerUrl, bouncerProductName, version,
         oldVersion,
         productType=PRODUCT_PARTIAL_MAR)
     dl = []
-    dl.append(get_product_uptake(tuxedoServerUrl=tuxedoServerUrl,
-                                bouncerProductName=bouncerProduct,
-                                username=username,
-                                password=password))
 
-    if checkMARs:
-        dl.append(get_product_uptake(
-            tuxedoServerUrl=tuxedoServerUrl,
-            bouncerProductName=bouncerCompleteMARProduct, username=username,
-            password=password))
-        if oldVersion:
+    for os in [buildbot2bouncer(x) for x in platforms]:
+        dl.append(get_product_uptake(tuxedoServerUrl=tuxedoServerUrl,
+                            bouncerProductName=bouncerProduct,
+                            username=username, os=os,
+                            password=password))
+        if checkMARs:
             dl.append(get_product_uptake(
                 tuxedoServerUrl=tuxedoServerUrl,
-                bouncerProductName=bouncerPartialMARProduct, username=username,
-                password=password))
+                os=os, bouncerProductName=bouncerCompleteMARProduct,
+                username=username, password=password))
+            if oldVersion:
+                dl.append(get_product_uptake(
+                    tuxedoServerUrl=tuxedoServerUrl, os=os,
+                    bouncerProductName=bouncerPartialMARProduct,
+                    username=username, password=password))
 
     def get_min(res):
         return min([int(x[1]) for x in res])

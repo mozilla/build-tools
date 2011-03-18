@@ -33,7 +33,12 @@ DEFAULT_RSYNC_EXCLUDES = ['--exclude=*tests*',
                           '--exclude=*unsigned*',
                           '--exclude=*update-backup*',
                           '--exclude=*partner-repacks*',
+                          '--exclude=*.checksums',
+                          '--exclude=logs',
                           ]
+
+VIRUS_SCAN_CMD = ['extract_and_run_command.py', '-j4', 'clamdscan', '-m',
+                  '--no-summary', '--']
 
 def validate(options, args):
     if not options.configfile:
@@ -49,8 +54,9 @@ def validate(options, args):
 
     releaseConfig = readReleaseConfig(releaseConfigFile,
                                       required=REQUIRED_RELEASE_CONFIG)
+    sourceRepoName = releaseConfig['sourceRepositories'][options.sourceRepoKey]['name']
     branchConfig = readBranchConfig(branchConfigDir, branchConfigFile,
-                                    releaseConfig['sourceRepoName'],
+                                    sourceRepoName,
                                     required=REQUIRED_BRANCH_CONFIG)
     return branchConfig, releaseConfig
 
@@ -83,7 +89,7 @@ def checkStagePermissions(productName, version, buildNumber, stageServer,
 def runAntivirusCheck(productName, version, buildNumber, stageServer,
                       stageUsername=None, stageSshKey=None):
     candidates_dir = makeCandidatesDir(productName, version, buildNumber)
-    cmd = ['clamdscan', '-m', '-v', candidates_dir]
+    cmd = VIRUS_SCAN_CMD + [candidates_dir]
     run_remote_cmd(cmd, server=stageServer, username=stageUsername,
                    sshKey=stageSshKey)
 
@@ -124,11 +130,13 @@ if __name__ == '__main__':
     parser.set_defaults(
         buildbotConfigs=os.environ.get("BUILDBOT_CONFIGS",
                                        DEFAULT_BUILDBOT_CONFIGS_REPO),
+        sourceRepoKey="mozilla",
     )
     parser.add_option("-c", "--configfile", dest="configfile")
     parser.add_option("-r", "--release-config", dest="releaseConfig")
     parser.add_option("-b", "--buildbot-configs", dest="buildbotConfigs")
     parser.add_option("-t", "--release-tag", dest="releaseTag")
+    parser.add_option("--source-repo-key", dest="sourceRepoKey")
 
     options, args = parser.parse_args()
     mercurial(options.buildbotConfigs, "buildbot-configs")
@@ -144,19 +152,23 @@ if __name__ == '__main__':
     stageSshKey = path.join(os.path.expanduser("~"), ".ssh",
                             branchConfig["stage_ssh_key"])
 
-    if 'check' in args:
+    if 'permissions' in args:
         checkStagePermissions(stageServer=stageServer,
                               stageUsername=stageUsername,
                               stageSshKey=stageSshKey,
                               productName=productName,
                               version=version,
                               buildNumber=buildNumber)
+
+    if 'antivirus' in args:
         runAntivirusCheck(stageServer=stageServer,
                           stageUsername=stageUsername,
                           stageSshKey=stageSshKey,
                           productName=productName,
                           version=version,
                           buildNumber=buildNumber)
+
+    if 'permissions' in args or 'antivirus' in args:
         pushToMirrors(stageServer=stageServer,
                       stageUsername=stageUsername,
                       stageSshKey=stageSshKey,

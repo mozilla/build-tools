@@ -107,7 +107,7 @@ def validate(options, args):
 
     try:
         branchConfig = readBranchConfig(branchConfigDir, branchConfigFile,
-                                        options.branch,
+                                        path.basename(options.branch),
                                         required=REQUIRED_BRANCH_CONFIG)
     except:
         err = True

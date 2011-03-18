@@ -5,7 +5,8 @@ import os
 import subprocess
 
 from util.hg import clone, pull, update, hg_ver, mercurial, _make_absolute, \
-  share, push, apply_and_push, HgUtilError, make_hg_url, get_branch
+  share, push, apply_and_push, HgUtilError, make_hg_url, get_branch, \
+  get_branches
 from util.commands import run_cmd, get_output
 
 def getRevisions(dest):
@@ -52,6 +53,11 @@ class TestHg(unittest.TestCase):
         clone(self.repodir, self.wc)
         b = get_branch(self.wc)
         self.assertEquals(b, 'default')
+
+    def testGetBranches(self):
+        clone(self.repodir, self.wc)
+        branches = get_branches(self.wc)
+        self.assertEquals(sorted(branches), sorted(["branch2", "default"]))
 
     def testClone(self):
         rev = clone(self.repodir, self.wc, update_dest=False)

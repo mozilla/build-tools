@@ -107,6 +107,7 @@ def main():
         product="firefox",
         hgurl="http://hg.mozilla.org",
         repo_path="build/buildbot-configs",
+        source_repo_key="mozilla"
     )
     parser.add_option("-p", "--product", dest="product", help="product name")
     parser.add_option("-r", "--repo-path", dest="repo_path",
@@ -114,6 +115,8 @@ def main():
     parser.add_option("-l", "--hgurl", dest="hgurl", help="hg URL prefix")
     parser.add_option("-P", "--platform", dest="platform",
         help="platform being signed on")
+    parser.add_option("--source-repo-key", dest="source_repo_key",
+        help="Which sourceRepository entry to pull sourceRepoPath from")
     parser.add_option("-V", "--verify", dest="verify", action="store_true",
         help="Just verify that the deliverables are present")
     options, args = parser.parse_args()
@@ -151,7 +154,7 @@ def main():
             release_config['appName'],
             release_config['version'],
             release_config['buildNumber'],
-            release_config['sourceRepoPath'],
+            release_config['sourceRepositories'][options.source_repo_key]['path'],
             options.hgurl),
         allplatforms)
 
