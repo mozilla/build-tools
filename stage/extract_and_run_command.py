@@ -157,8 +157,11 @@ if __name__ == '__main__':
     # find_files is a generator, so work will begin prior to it finding
     # all of the files
     for arg in args:
-        for f in find_files(arg):
-            q.put(f)
+        if path.isfile(arg):
+            q.put(arg)
+        else:
+            for f in find_files(arg):
+                q.put(f)
     # Because the workers are started before we start populating the q
     # they can't use .empty() to determine whether or not their done.
     # We also can't use q.join() or j.task_done(), because we need to
