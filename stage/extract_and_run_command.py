@@ -56,7 +56,7 @@ def find_files(d):
     """yields all of the files in `d'"""
     for root, dirs, files in os.walk(d):
         for f in files:
-            yield path.join(root, f)
+            yield path.abspath(path.join(root, f))
 
 def rchmod(d, mode=0755):
     """chmods everything in `d' to `mode', including `d' itself"""
@@ -74,10 +74,13 @@ def maybe_extract(filename):
     ext = path.splitext(filename)[1]
     if ext not in EXTRACTORS.keys():
         return None
-    tempdir = tempfile.mkdtemp()
+    # Append the full filepath to the tempdir
+    tempdir_root = tempfile.mkdtemp()
+    tempdir = path.join(tempdir_root, filename.lstrip('/'))
+    os.makedirs(tempdir)
     EXTRACTORS[ext](filename, tempdir)
-    rchmod(tempdir)
-    return tempdir
+    rchmod(tempdir_root)
+    return tempdir_root
 
 def process(item, command):
     def format_time(t):
