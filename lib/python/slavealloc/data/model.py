@@ -13,36 +13,43 @@ metadata = sa.MetaData()
 distros = sa.Table('distros', metadata,
     sa.Column('distroid', sa.Integer, primary_key=True),
     sa.Column('name', sa.Text, nullable=False),
+    mysql_engine="InnoDB",
 )
 
 datacenters = sa.Table('datacenters', metadata,
     sa.Column('dcid', sa.Integer, primary_key=True),
     sa.Column('name', sa.Text, nullable=False),
+    mysql_engine="InnoDB",
 )
 
 bitlengths = sa.Table('bitlengths', metadata,
     sa.Column('bitsid', sa.Integer, primary_key=True),
     sa.Column('name', sa.Text, nullable=False),
+    mysql_engine="InnoDB",
 )
 
 speeds = sa.Table('speeds', metadata,
     sa.Column('speedid', sa.Integer, primary_key=True),
     sa.Column('name', sa.Text, nullable=False),
+    mysql_engine="InnoDB",
 )
 
 purposes = sa.Table('purposes', metadata,
     sa.Column('purposeid', sa.Integer, primary_key=True),
     sa.Column('name', sa.Text, nullable=False),
+    mysql_engine="InnoDB",
 )
 
 trustlevels = sa.Table('trustlevels', metadata,
     sa.Column('trustid', sa.Integer, primary_key=True),
     sa.Column('name', sa.Text, nullable=False),
+    mysql_engine="InnoDB",
 )
 
 environments = sa.Table('environments', metadata,
     sa.Column('envid', sa.Integer, primary_key=True),
     sa.Column('name', sa.Text, nullable=False),
+    mysql_engine="InnoDB",
 )
 
 # pools
@@ -50,6 +57,7 @@ environments = sa.Table('environments', metadata,
 pools = sa.Table('pools', metadata,
     sa.Column('poolid', sa.Integer, primary_key=True),
     sa.Column('name', sa.Text, nullable=False),
+    mysql_engine="InnoDB",
 )
 
 # slave passwords, based on pool and distro
@@ -62,6 +70,7 @@ slave_passwords = sa.Table('slave_passwords', metadata,
     sa.Column('poolid', sa.Integer, sa.ForeignKey('pools.poolid'), nullable=False),
     sa.Column('distroid', sa.Integer, sa.ForeignKey('distros.distroid')),
     sa.Column('password', sa.Text, nullable=False),
+    mysql_engine="InnoDB",
 )
 
 # all slaves
@@ -89,6 +98,7 @@ slaves = sa.Table('slaves', metadata,
 
     # state
     sa.Column('current_masterid', sa.Integer, sa.ForeignKey('masters.masterid')),
+    mysql_engine="InnoDB",
 )
 
 # masters
@@ -101,6 +111,7 @@ masters = sa.Table('masters', metadata,
     sa.Column('pb_port', sa.Integer, nullable=False),
     sa.Column('dcid', sa.Integer, sa.ForeignKey('datacenters.dcid'), nullable=False),
     sa.Column('poolid', sa.Integer, sa.ForeignKey('pools.poolid'), nullable=False),
+    mysql_engine="InnoDB",
 )
 
 # indices
