@@ -185,27 +185,6 @@
     "datacentre": "mv"
   }, 
   {
-    "basedir": "/builds/buildbot/tests-master", 
-    "buildbot_version": "0.8.2",
-    "master_dir": "/builds/buildbot/tests-master", 
-    "name": "talos-master02", 
-    "roles": [
-      "tests"
-    ], 
-    "hostname": "talos-master02.build.mozilla.org", 
-    "bbconfigs_dir": "/builds/buildbot/configs", 
-    "db_name": "talos-master02.build.mozilla.org:/builds/buildbot/tests-master", 
-    "bbcustom_dir": "/tools/buildbotcustom/buildbotcustom",
-    "bbcustom_branch": "production-0.8",
-    "bbconfigs_branch": "production",
-    "tools_dir": "/builds/buildbot/tests-master/tools",
-    "tools_branch": "default",
-    "http_port": 8012,
-    "pb_port": 9012,
-    "ssh_port": 1235,
-    "datacentre": "mv"
-  }, 
-  {
     "hostname": "buildbot-master1.build.scl1.mozilla.com", 
     "master_dir": "/builds/buildbot/build_master3/master", 
     "name": "bm3", 
