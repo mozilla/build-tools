@@ -1,6 +1,9 @@
 #!/usr/bin/python
 # Script for watching twistd.log and looking for exceptions, and mailing them
 # to an email address
+"""%prog [options] dir [dir...]
+
+Scans directories for exceptions in twistd.log files"""
 
 import os, re, time
 from smtplib import SMTP
@@ -55,6 +58,7 @@ def parse_time(line):
 class Scanner:
     ignore_patterns = [
             re.compile(re.escape("Failure: twisted.spread.pb.PBConnectionLost: [Failure instance: Traceback (failure with no frames): <class 'twisted.internet.error.ConnectionLost'>: Connection to the other side was lost in a non-clean fashion.")),
+            re.compile("schedulers/triggerable.py\", line \d+, in run.*d = self.parent.db.runInteraction\(self._run\).*exceptions.AttributeError: 'NoneType' object has no attribute 'db'", re.M + re.S),
             ]
 
     def __init__(self, lasttime=0):
