@@ -43,6 +43,37 @@ def getOurIP():
 
     return result
 
+def getResolution(dm):
+    parts = dm.getInfo('screen')['screen'][0].split()
+    width = int(parts[0].split(':')[1])
+    height = int(parts[1].split(':')[1])
+    return width, height
+
+def checkDeviceRoot():
+    dr = dm.getDeviceRoot()
+    # checking for /mnt/sdcard/...
+    print "devroot %s" % str(dr)
+    if not dr or dr == '/tests':
+        return None
+    return dr
+
+def waitForDevice(waitTime=60):
+    print "Waiting for tegra to come back..."
+    time.sleep(waitTime)
+    tegraIsBack = False
+    tries = 0
+    maxTries = 20
+    while tries <= maxTries:
+        tries += 1
+        print "Try %d" % tries
+        if checkDeviceRoot() is not None:
+            tegraIsBack = True
+            break
+        time.sleep(60)
+    if not tegraIsBack:
+        print("Remote Device Error: waiting for tegra timed out.")
+        sys.exit(1)
+
 # Stop buffering!
 sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
 
@@ -82,22 +113,27 @@ if dm.pushFile(source, target):
         dm.getInfo('process')
         dm.getInfo('memory')
         dm.getInfo('uptime')
+
+        width, height = getResolution(dm)
+        #adjust resolution down to allow fennec to install without memory issues
+        if (width >= 1050 or height >= 1050):
+            dm.adjustResolution(1024, 768, 'crt')
+            dm.reboot(proxyIP, proxyPort)
+            waitForDevice()
+
         status = dm.updateApp(target, processName='org.mozilla.fennec', ipAddr=proxyIP, port=proxyPort)
         if status is not None and status:
             print "updateApp() call returned %s" % status
-            dm2 = devicemanager.DeviceManager(sys.argv[1])
-            dm2.debug = 3
-            print "devroot %s" % dm2.getDeviceRoot()
 
-            if dm2.pushFile(inifile, '/data/data/org.mozilla.fennec/application.ini'):
-                dm2.getInfo('process')
-                dm2.getInfo('memory')
-                dm2.getInfo('uptime')
-                pid = dm2.processExist('org.mozilla.fennec')
+            if dm.pushFile(inifile, '/data/data/org.mozilla.fennec/application.ini'):
+                dm.getInfo('process')
+                dm.getInfo('memory')
+                dm.getInfo('uptime')
+                pid = dm.processExist('org.mozilla.fennec')
                 print 'org.mozilla.fennec PID', pid
                 if pid is not None:
-                    dm2.killProcess('org.mozilla.fennec')
-                dm2.getInfo('process')
+                    dm.killProcess('org.mozilla.fennec')
+                dm.getInfo('process')
             else:
                 clearFlag(proxyFile)
                 setFlag(errorFile, "Remote Device Error: unable to push %s" % inifile)
