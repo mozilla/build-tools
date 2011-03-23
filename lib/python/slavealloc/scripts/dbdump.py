@@ -1,7 +1,6 @@
 import cPickle
-import sqlalchemy as sa
 import sys
-from slavealloc.data import model
+from slavealloc.data import model, setup
 
 def setup_argparse(subparsers):
     subparser = subparsers.add_parser('dbdump', help="""dump the slavealloc
@@ -31,8 +30,7 @@ def process_args(subparser, args):
 # key points to a list of rows in a format suitable for use with insert().
 
 def main(args):
-    eng = sa.create_engine(args.dburl)
-    model.metadata.bind = eng
+    setup.setup(args.dburl)
 
     def dump_tbl(table):
         res = table.select().execute()

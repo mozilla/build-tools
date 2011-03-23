@@ -1,6 +1,5 @@
 import cPickle
-import sqlalchemy as sa
-from slavealloc.data import model
+from slavealloc.data import model, setup
 
 def setup_argparse(subparsers):
 
@@ -23,8 +22,7 @@ def process_args(subparser, args):
     pass
 
 def main(args):
-    eng = sa.create_engine(args.dburl)
-    model.metadata.bind = eng
+    setup.setup(args.dburl)
 
     model.metadata.drop_all()
     model.metadata.create_all()

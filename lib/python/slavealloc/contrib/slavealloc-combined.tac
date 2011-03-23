@@ -11,6 +11,8 @@ logfile = LogFile.fromFullPath("slavealloc.log", rotateLength=1024**2,
 application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
 
 allocator = Allocator(http_port='tcp:8012', db_url='sqlite:///slavealloc.db',
+    # if you're using MySQL, add something like
+    # db_kwargs=dict(pool_recycle=300),
     run_allocator=True,
     run_ui=True)
 allocator.setServiceParent(application)
