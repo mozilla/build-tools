@@ -5,8 +5,8 @@ from twisted.python import log
 from slavealloc import exceptions
 
 # subcommands
-from slavealloc.scripts import dbinit, gettac, lock, disable, dbdump
-subcommands = [ dbinit, gettac, lock, disable, dbdump ]
+from slavealloc.scripts import dbinit, gettac, lock, disable, dbdump, dbimport
+subcommands = [ dbinit, gettac, lock, disable, dbdump, dbimport ]
 
 def parse_options():
     parser = argparse.ArgumentParser(description="Runs slavealloc subcommands")
