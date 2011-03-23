@@ -9,3 +9,4 @@ slavealloc\.db
 \..*\.swp
 twistd\.pid
 .*\.egg-info
+dist/

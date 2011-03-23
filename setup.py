@@ -28,5 +28,8 @@ setup(
         'console_scripts': [
             'slavealloc = slavealloc.scripts.main:main'
         ],
-    }
+    },
+
+    # include files listed in MANIFEST.in
+    include_package_data = True,
 )
