@@ -54,6 +54,8 @@ Supported actions:
     masters = []
 
     for m in all_masters:
+        if not m['enabled']:
+            continue
         if m['name'] in options.hosts:
             masters.append(m)
         elif any(r in options.roles for r in m['roles']):
