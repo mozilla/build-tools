@@ -45,6 +45,7 @@ echo 'ac_add_options --with-ccache' >> mozconfig
 echo 'ac_add_options --disable-jemalloc' >> mozconfig
 echo 'CC=/tools/gcc-4.3.3/installed/bin/gcc' >> mozconfig
 echo 'CXX=/tools/gcc-4.3.3/installed/bin/g++' >> mozconfig
+echo 'export G_SLICE=always_malloc' >> mozconfig
 
 if [ "`uname -m`" = "x86_64" ]; then
     export LD_LIBRARY_PATH=/tools/gcc-4.3.3/installed/lib64
