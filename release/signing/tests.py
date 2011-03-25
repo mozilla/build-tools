@@ -151,7 +151,9 @@ class TestFileParsing(TestCase):
 
     def testShouldSign(self):
         self.assert_(shouldSign('setup.exe'))
+        self.assert_(shouldSign('freebl3.dll'))
         self.assert_(not shouldSign('application.ini'))
+        self.assert_(not shouldSign('D3DCompiler_42.dll'))
 
     def testConvertPath(self):
         tests = [
