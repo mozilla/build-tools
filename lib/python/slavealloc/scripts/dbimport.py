@@ -17,7 +17,7 @@ def setup_argparse(subparsers):
 
     subparser.add_argument('--slave-data', dest='slave_data',
             help="""csv of slave data to import (columns: name, basedir,
-            distro, bitlength, purpose, size, datacenter, trustlevel,
+            distro, bitlength, purpose, datacenter, trustlevel,
             speed, environment, pool)""")
 
     subparser.add_argument('--master-data', dest='master_data',
