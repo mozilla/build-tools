@@ -16,7 +16,7 @@ LOGFILE=$BASEDIR/slavealloc.log
 TACFILE=$BASEDIR/slavealloc.tac
 USER=slavealloc
 GROUP=slavealloc
-VIRTUALENV=/tools/slavealloc
+VIRTUALENV=/tools/slavealloc-staging
 
 start() {
     [ -x $VIRTUALENV/bin/twistd ] || exit 5
