@@ -31,7 +31,7 @@ sub GetProductDetails {
                $appVersion . $endOfUrl;
     }
     else {
-        return 'http://www.mozilla.com/%locale%/' . $product . '/' .
+        return 'https://www.mozilla.com/%locale%/' . $product . '/' .
                $appVersion . $endOfUrl;
     }
 }
