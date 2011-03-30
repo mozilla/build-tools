@@ -4,6 +4,7 @@ import os, sys
 import time
 import random
 import socket
+import datetime
 import devicemanager
 
 
@@ -48,6 +49,17 @@ def getResolution(dm):
     width = int(parts[0].split(':')[1])
     height = int(parts[1].split(':')[1])
     return width, height
+
+def getDeviceTimestamp(dm):
+    ts = int(dm.getCurrentTime()) # epoch time in milliseconds
+    dt = datetime.datetime.utcfromtimestamp(ts / 1000)
+    print 'Current device time is %s' % dt.strftime('%Y/%m/%d %H:%M:%S')
+    return dt
+
+def setDeviceTimestamp(dm):
+    s = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
+    print 'Setting device time to %s' % s 
+    dm.sendCMD(['settime %s' % s])
 
 def checkDeviceRoot():
     dr = dm.getDeviceRoot()
@@ -104,6 +116,10 @@ workdir  = os.path.dirname(source)
 filename = os.path.basename(source)
 target   = os.path.join(devRoot, filename)
 inifile  = os.path.join(workdir, 'fennec', 'application.ini')
+
+getDeviceTimestamp(dm)
+setDeviceTimestamp(dm)
+getDeviceTimestamp(dm)
 
 print "Installing %s" % target
 if dm.pushFile(source, target):
