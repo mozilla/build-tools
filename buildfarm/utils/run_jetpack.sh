@@ -73,7 +73,7 @@ tar -xvf $JETPACK_TARBALL $UNTAR_ARGS
 SDK_DIR=$(ls . | grep 'addon-sdk*')
 if [ -d $SDK_DIR ]; then
   cd $SDK_DIR
-  python bin/cfx testall --verbose -a firefox -b $APP_PATH
+  python bin/cfx --verbose testall -a firefox -b $APP_PATH
 else
   echo "SDK_DIR is either missing or invalid."
   exit 1
