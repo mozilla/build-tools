@@ -45,9 +45,7 @@ elif [ $# = 4 ]; then
   fi
   mkdir $JETPACK_DIR && cd $JETPACK_DIR
   # grab the tip of addon-sdk
-  #wget -O $JETPACK_TARBALL $2
-  #clint's tarball
-  wget -O $JETPACK_TARBALL "http://people.mozilla.org/~ctalbert/jetpack/tip.tar.bz2"
+  wget -O $JETPACK_TARBALL $2
   # get the platform's nightly from the ftp dir
   wget -r -l1 -nd -np -A$4 "ftp://"$3
 else
