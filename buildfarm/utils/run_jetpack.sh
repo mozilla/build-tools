@@ -12,7 +12,7 @@ JETPACK_DIR="jetpack-poller"
  # handling for each platform's executable path
 if [ "$1" == 'linux' -o "$1" == 'linux64' -o "$1" == 'fedora' -o "$1" == 'fedora64' ]; then
   APP_PATH=$BASE_PATH/$JETPACK_DIR/firefox/firefox
-  PREP_CMD='tar -xvf *'$4
+  PREP_CMD='tar -xjvf *'$4
 elif [ "$1" == 'macosx' -o "$1" == 'macosx64' -o "$1" == 'leopard' -o "$1" == 'snowleopard' ]; then
   PREP_CMD='../scripts/buildfarm/utils/installdmg.sh *'$4
 elif [ "$1" == 'win32' -o "$1" == 'win7' -o "$1" == 'win764' -o "$1" == 'w764' -o "$1" == 'xp' ]; then
