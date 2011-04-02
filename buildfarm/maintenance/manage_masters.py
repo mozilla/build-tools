@@ -2,14 +2,18 @@
 import master_fabric
 from fabric.api import env
 from fabric.context_managers import settings
+from Crypto.Random import atfork
 
 def run_action_on_master(action, master):
+    atfork()
     try:
         action_func = getattr(master_fabric, action)
         with settings(host_string=master['hostname']):
             action_func(master)
             return True
     except:
+        import traceback
+        print traceback.format_exc()
         return False
 
 if __name__ == '__main__':
