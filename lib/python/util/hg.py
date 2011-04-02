@@ -3,6 +3,7 @@ import os, re, subprocess
 from urlparse import urlsplit
 
 from util.commands import run_cmd, get_output, remove_path
+from util.retry import retry
 
 import logging
 log = logging.getLogger(__name__)
@@ -36,6 +37,9 @@ def make_hg_url(hgHost, repoPath, protocol='http', revision=None,
     else:
         assert revision
         return '/'.join([p.strip('/') for p in [repo, 'raw-file', revision, filename]])
+
+def get_repo_name(repo):
+    return repo.rstrip('/').split('/')[-1]
 
 def get_repo_path(repo):
      repo = _make_absolute(repo)
@@ -343,3 +347,10 @@ def share(source, dest, branch=None, revision=None):
        "source" using Mercurial's share extension"""
     run_cmd(['hg', 'share', '-U', source, dest])
     return update(dest, branch=branch, revision=revision)
+
+def cleanOutgoingRevs(reponame, remote, username, sshKey):
+    outgoingRevs = retry(out, kwargs=dict(src=reponame, remote=remote,
+                                          ssh_username=username,
+                                          ssh_key=sshKey))
+    for r in reversed(outgoingRevs):
+        run_cmd(['hg', 'strip', r[REVISION]], cwd=reponame)

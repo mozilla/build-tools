@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 from util.commands import run_cmd, get_output
 from util.hg import mercurial, apply_and_push, update, get_revision, \
-  make_hg_url, out, BRANCH, REVISION, get_branches
+  make_hg_url, out, BRANCH, REVISION, get_branches, cleanOutgoingRevs
 from util.retry import retry
 from build.versions import bumpFile
 from release.info import readReleaseConfig, getTags, generateRelbranchName, \
@@ -51,13 +51,6 @@ def tag(repo, revision, tags, username):
         cmd = ['hg', 'tag', '-u', username, '-r', revision,
                '-m', getTagCommitMessage(revision, tag), '-f', tag]
         run_cmd(cmd, cwd=repo)
-
-def cleanOutgoingRevs(reponame, remote, username, sshKey):
-    outgoingRevs = retry(out, kwargs=dict(src=reponame, remote=remote,
-                                          ssh_username=config['hgUsername'],
-                                          ssh_key=config['hgSshKey']))
-    for r in reversed(outgoingRevs):
-        run_cmd(['hg', 'strip', r[REVISION]], cwd=reponame)
 
 def tagRepo(config, repo, reponame, revision, tags, bumpFiles, relbranch,
             pushAttempts, defaultBranch='default'):
