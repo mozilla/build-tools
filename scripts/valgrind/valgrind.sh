@@ -43,6 +43,7 @@ echo '. $topsrcdir/browser/config/mozconfig' > mozconfig
 echo 'ac_add_options --enable-valgrind' >> mozconfig
 echo 'ac_add_options --with-ccache' >> mozconfig
 echo 'ac_add_options --disable-jemalloc' >> mozconfig
+echo 'ac_add_options --disable-elf-hack' >> mozconfig
 echo 'CC=/tools/gcc-4.3.3/installed/bin/gcc' >> mozconfig
 echo 'CXX=/tools/gcc-4.3.3/installed/bin/g++' >> mozconfig
 echo 'export G_SLICE=always_malloc' >> mozconfig
