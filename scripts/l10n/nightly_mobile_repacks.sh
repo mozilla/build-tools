@@ -42,6 +42,10 @@ $PYTHON $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
   -s 1 -n info -n 'rel-*' -n $slavebuilddir
 cd $workdir
 
+if [ -z "$mobileBranch" ]; then
+    mobileBranchArg=""
+else
+    mobileBranchArg="-m $mobileBranch"
 $PYTHON $MY_DIR/nightly-mobile-repacks.py -c $branchConfig -B $branch \
-  -m $mobileBranch -b $BUILDBOT_CONFIGS -p $platform \
+  $mobileBranchArg -b $BUILDBOT_CONFIGS -p $platform \
   --chunks $chunks --this-chunk $thisChunk

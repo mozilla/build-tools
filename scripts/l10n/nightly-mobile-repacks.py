@@ -49,7 +49,8 @@ def createRepacks(sourceRepo, mobileRepo, l10nRepoDir, l10nBaseRepo,
     }
     build.misc.cleanupObjdir(sourceRepoName, objdir, mobileDirName)
     mercurial(sourceRepo, sourceRepoName)
-    mercurial(mobileRepo, path.join(sourceRepoName, mobileDirName))
+    if mobileRepo:
+        mercurial(mobileRepo, path.join(sourceRepoName, mobileDirName))
     l10nRepackPrep(sourceRepoName, objdir, mozconfigPath,
                    l10nRepoDir, makeDirs, localeSrcDir, env)
     buildInfo = downloadNightlyBuild(localeSrcDir, env)
@@ -92,9 +93,9 @@ def validate(options, args):
         log.info("%s does not exist!" % branchConfigFile)
         sys.exit(1)
 
-    if not options.branch or not options.mobileBranch:
+    if not options.branch:
         err = True
-        log.error("branch and mobile-branch are required")
+        log.error("branch is required")
     if options.chunks or options.thisChunk:
         assert options.chunks and options.thisChunk, \
           "chunks and this-chunk are required when one is passed"
@@ -149,9 +150,14 @@ if __name__ == "__main__":
     mozconfig = path.join("buildbot-configs", "mozilla2",
                           platformConfig["mozconfig"], "l10n-mozconfig")
     if options.chunks:
-        locales = getNightlyLocalesForChunk("",
-            options.mobileBranch, options.platform,
-            options.chunks, options.thisChunk)
+        if options.mobileBranch:
+            locales = getNightlyLocalesForChunk("",
+                options.mobileBranch, options.platform,
+                options.chunks, options.thisChunk)
+        else:
+            locales = getNightlyLocalesForChunk("mobile",
+                options.branch, options.platform,
+                options.chunks, options.thisChunk)
     else:
         locales = options.locales
 
@@ -167,9 +173,12 @@ if __name__ == "__main__":
     except:
         merge = True
 
+    mobileRepo = None
+    if options.mobileBranch:
+        mobileRepo = make_hg_url(hg, options.mobileBranch)
     createRepacks(
         make_hg_url(hg, options.branch),
-        make_hg_url(hg, options.mobileBranch), l10nRepoDir,
+        mobileRepo, l10nRepoDir,
         make_hg_url(hg, branchConfig["l10n_repo_path"]), mozconfig,
         options.objdir, makeDirs, locales, ftpProduct,
         branchConfig["stage_server"], branchConfig["stage_username"],
