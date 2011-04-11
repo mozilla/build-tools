@@ -1,3 +1,4 @@
+import simplejson
 import csv
 import sqlalchemy as sa
 from slavealloc.data import model
@@ -24,6 +25,9 @@ def setup_argparse(subparsers):
             help="""csv of master data to import (columns: nickname, fqdn,
             http_port, pb_port, datacenter, and pool)""")
 
+    subparser.add_argument('--master-json', dest='master_json',
+            help="""JSON of master data to import, e.g., production-masters.json""")
+
     subparser.add_argument('--password-data', dest='password_data',
             help="""csv of password data to import (columns: pool, distro,
             password); a distro of '*' is converted to NULL""")
@@ -46,6 +50,8 @@ def main(args):
     if args.master_data:
         rdr = csv.DictReader(open(args.master_data))
         masters = list(rdr)
+    elif args.master_json:
+        masters = json2list(args.master_json)
 
     passwords = []
     if args.password_data:
@@ -99,7 +105,7 @@ def main(args):
         model.masters.insert().execute([
             dict(nickname=row['nickname'],
                 fqdn=row['fqdn'],
-                http_port=int(row['http_port']),
+                http_port=int(row['http_port']) if row['http_port'] else 0,
                 pb_port=int(row['pb_port']),
                 dcid=datacenters[row['datacenter']],
                 poolid=pools[row['pool']])
@@ -130,3 +136,39 @@ def main(args):
                 distroid=distros_or_null[row['distro']],
                 password=row['password'])
             for row in passwords ])
+
+def json2list(json_file):
+    # note that this embodies some releng-specific smarts at the moment
+
+    list_json = simplejson.load(open(json_file))
+
+    datacentre2datacenter = dict(
+        scl='scl1',
+        mv='mtv1',
+        mpt='sjc1',
+    )
+
+    rv = []
+    for master_json in list_json:
+        if not master_json['enabled']:
+            continue
+
+        # smarts #1: releng -> IT names for datacenters
+        datacenter=datacentre2datacenter[master_json['datacentre']]
+
+        # smarts #2: role/dc -> pool
+        pool = '%s-%s' % (master_json['roles'][0], datacenter)
+
+        # smarts #3: use unqualified hostname
+        fqdn = master_json['hostname'].replace('build.scl1.mozilla.com', 'build.mozilla.org')
+
+        master = dict(
+            nickname=master_json['name'],
+            fqdn=fqdn,
+            http_port=master_json.get('http_port', None),
+            pb_port=master_json['pb_port'],
+            datacenter=datacenter,
+            pool=pool)
+        rv.append(master)
+
+    return rv

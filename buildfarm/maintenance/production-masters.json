@@ -59,7 +59,8 @@
     "bbconfigs_branch": "production",
     "tools_dir": "/builds/buildbot/tests-scheduler/tools",
     "tools_branch": "default",
-    "pb_port": 9008
+    "pb_port": 9008,
+    "datacentre": "mpt"
   }, 
   {
     "basedir": "/builds/buildbot/try-trunk-master", 
