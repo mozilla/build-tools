@@ -110,7 +110,12 @@ masters = sa.Table('masters', metadata,
     sa.Column('http_port', sa.Integer, nullable=False),
     sa.Column('pb_port', sa.Integer, nullable=False),
     sa.Column('dcid', sa.Integer, sa.ForeignKey('datacenters.dcid'), nullable=False),
+
+    # pool
     sa.Column('poolid', sa.Integer, sa.ForeignKey('pools.poolid'), nullable=False),
+
+    # config
+    sa.Column('enabled', sa.Boolean, nullable=False, default=True),
     mysql_engine="InnoDB",
 )
 

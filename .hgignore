@@ -10,3 +10,4 @@ slavealloc\.db
 twistd\.pid
 .*\.egg-info
 dist/
+slavealloc.log

@@ -154,7 +154,7 @@ class MasterResource(Instance):
     id_column = model.masters.c.masterid
     name_column = model.masters.c.nickname
     update_keys = ('nickname', 'fqdn', 'pb_port', 'http_port', 'poolid',
-                   'dcid')
+                   'dcid', 'enabled')
 
 class MastersResource(Collection):
     instance_class = MasterResource
