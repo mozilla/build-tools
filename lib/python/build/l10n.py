@@ -9,6 +9,7 @@ from release.platforms import getPlatformLocales
 from util.commands import run_cmd
 from util.hg import mercurial, update
 from util.paths import windows2msys
+from util.retry import retry
 
 import logging
 log = logging.getLogger(__name__)
@@ -27,7 +28,7 @@ def getAllLocales(appName, sourceRepo, rev="default",
 
 def compareLocales(repo, locale, l10nRepoDir, localeSrcDir, l10nIni,
                    revision="default", merge=True):
-    mercurial(repo, "compare-locales")
+    retry(mercurial, args=(repo, "compare-locales"))
     update("compare-locales", revision=revision)
     mergeDir = path.join(localeSrcDir, "merged")
     if path.exists(mergeDir):
@@ -54,7 +55,7 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
                  l10nIni, compareLocalesRepo, env, merge=True):
     repo = "/".join([l10nBaseRepo, locale])
     localeDir = path.join(l10nRepoDir, locale)
-    mercurial(repo, localeDir)
+    retry(mercurial, args=(repo, localeDir))
     update(localeDir, revision=revision)
     
     compareLocales(compareLocalesRepo, locale, l10nRepoDir, localeSrcDir,
@@ -66,7 +67,8 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
     if sys.platform.startswith('darwin'):
         env["MOZ_PKG_PLATFORM"] = "mac"
     run_cmd(["make", "installers-%s" % locale], cwd=localeSrcDir, env=env)
-    run_cmd(["make", "upload", "AB_CD=%s" % locale], cwd=localeSrcDir, env=env)
+    retry(run_cmd, args=(["make", "upload", "AB_CD=%s" % locale],),
+          kwargs={'cwd': localeSrcDir, 'env': env})
 
 def getLocalesForChunk(possibleLocales, chunks, thisChunk):
     if 'en-US' in possibleLocales:

@@ -3,6 +3,7 @@
 import logging
 import os
 from os import path
+from traceback import format_exc
 import sys
 
 sys.path.append(path.join(path.dirname(__file__), "../../lib/python"))
@@ -14,6 +15,7 @@ from release.download import downloadReleaseBuilds
 from release.info import readReleaseConfig, readBranchConfig
 from release.l10n import getReleaseLocalesForChunk
 from util.hg import mercurial, update, make_hg_url
+from util.retry import retry
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
 log = logging.getLogger(__name__)
@@ -51,26 +53,29 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
         )
     }
     build.misc.cleanupObjdir(sourceRepoName, objdir, appName)
-    mercurial(sourceRepo, sourceRepoName)
+    retry(mercurial, args=(sourceRepo, sourceRepoName))
     update(sourceRepoName, revision=revision)
     l10nRepackPrep(sourceRepoName, objdir, mozconfigPath, l10nRepoDir, makeDirs,
                    localeSrcDir, env)
-    input_env = downloadReleaseBuilds(stageServer, product, brand, version,
-                                      buildNumber, platform)
+    input_env = retry(downloadReleaseBuilds,
+                      args=(stageServer, product, brand, version, buildNumber,
+                            platform))
     env.update(input_env)
 
-    err = False
+    failed = []
     for l in locales:
         try:
             repackLocale(l, l10nRepoDir, l10nBaseRepo, revision,
                          localeSrcDir, l10nIni, compareLocalesRepo, env, merge)
         except Exception, e:
-            err = True
-            log.error("Error creating locale '%s': %s", l, e)
-            pass
+            failed.append((l, format_exc()))
 
-    if err:
-        raise RepackError("At least one repack failed, see above")
+    if len(failed) > 0:
+        log.error("The following tracebacks were detected during repacks:")
+        for l,e in failed:
+            log.error("%s:" % l)
+            log.error("%s\n" % e)
+        raise Exception("Failed locales: %s" % " ".join([x for x,_ in failed]))
 
 REQUIRED_BRANCH_CONFIG = ("stage_server", "stage_username", "stage_ssh_key",
                           "compare_locales_repo_path", "hghost")
@@ -141,7 +146,7 @@ if __name__ == "__main__":
     parser.add_option("--this-chunk", dest="thisChunk", type="int")
 
     options, args = parser.parse_args()
-    mercurial(options.buildbotConfigs, "buildbot-configs")
+    retry(mercurial, args=(options.buildbotConfigs, "buildbot-configs"))
     update("buildbot-configs", revision=options.releaseTag)
     sys.path.append(os.getcwd())
     branchConfig, releaseConfig = validate(options, args)
@@ -154,11 +159,12 @@ if __name__ == "__main__":
     mozconfig = path.join("buildbot-configs", "mozilla2", options.platform,
                           sourceRepoInfo['name'], "release", "l10n-mozconfig")
     if options.chunks:
-        locales = getReleaseLocalesForChunk(
-            releaseConfig["productName"], releaseConfig["appName"],
-            releaseConfig["version"], int(releaseConfig["buildNumber"]),
-            sourceRepoInfo["path"], options.platform,
-            options.chunks, options.thisChunk)
+        locales = retry(getReleaseLocalesForChunk,
+            args=(releaseConfig["productName"], releaseConfig["appName"],
+                  releaseConfig["version"], int(releaseConfig["buildNumber"]),
+                  sourceRepoInfo["path"], options.platform,
+                  options.chunks, options.thisChunk)
+        )
     else:
         locales = options.locales
 
