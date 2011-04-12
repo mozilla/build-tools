@@ -21,9 +21,10 @@ from release.platforms import buildbot2updatePlatforms, getPlatformLocales, \
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
 log = logging.getLogger(__name__)
 
-REQUIRED_OPTIONS = ('brandName', 'product', 'appName', 'version', 'oldVersion',
-                    'buildNumber', 'oldBuildNumber', 'platforms',
-                    'oldBaseSnippetDir', 'sourceRepo', 'workdir', 'hg')
+REQUIRED_OPTIONS = ('brandName', 'product', 'appName', 'version', 'appVersion',
+                    'oldVersion', 'oldAppVersion', 'buildNumber',
+                    'oldBuildNumber', 'platforms', 'oldBaseSnippetDir',
+                    'sourceRepo', 'workdir', 'hg')
 DEFAULT_CHANNELS = ('beta', 'betatest')
 DEFAULT_PLATFORMS = getSupportedPlatforms()
 DEFAULT_STAGE_SERVER = 'stage.mozilla.org'
@@ -48,9 +49,9 @@ def getSnippetDirname(oldBaseSnippetDir, channel):
         raise Exception('Want to use %s as the snippet dir for %s but it doesn\'t exist.' % (ausdir, channel))
     return fulldir
 
-def createSnippets(brandName, product, appName, version, oldVersion,
-                   buildNumber, oldBuildNumber, platforms, channels,
-                   oldBaseSnippetDir, stageServer, hg, sourceRepo,
+def createSnippets(brandName, product, appName, version, appVersion, oldVersion,
+                   oldAppVersion, buildNumber, oldBuildNumber, platforms,
+                   channels, oldBaseSnippetDir, stageServer, hg, sourceRepo,
                    generatePartials):
     errs = []
     snippets = ['complete.txt']
@@ -83,16 +84,18 @@ def createSnippets(brandName, product, appName, version, oldVersion,
                     for update_platform in update_platforms:
                         try:
                             oldFile = os.path.join(baseSnippetDir, brandName,
-                                                   oldVersion, update_platform,
+                                                   oldAppVersion,
+                                                   update_platform,
                                                    oldVersionBuildID, locale,
                                                    chan, 'complete.txt')
                             oldCompleteSnippet = open(oldFile).read()
                         except Exception, e:
                             errs.append("Error reading from %s\n%s" % \
                               (oldFile, e))
+                            continue
                         newDir = os.path.join(baseSnippetDir, brandName,
-                                              version, update_platform, buildID,
-                                              locale, chan)
+                                              appVersion, update_platform,
+                                              buildID, locale, chan)
                         try:
                             os.makedirs(newDir)
                             log.info("Creating snippets for %s" % newDir)
@@ -128,8 +131,11 @@ def getOptions():
     parser.add_option("-p", "--product", dest="product", help="Product Name")
     parser.add_option("-a", "--app-name", dest="appName", help="App Name")
     parser.add_option("-v", "--version", dest="version", help="Product Version")
+    parser.add_option("-A", "--app-version", dest="appVersion", help="Product App Version")
     parser.add_option("-o", "--old-version", dest="oldVersion",
                       help="Previous Product Version")
+    parser.add_option("--old-app-version", dest="oldAppVersion",
+                      help="Previous Product App Version")
     parser.add_option("-b", "--build-number", dest="buildNumber",
                       help="Current Build of the Product Version")
     parser.add_option("", "--old-build-number", dest="oldBuildNumber",
@@ -192,7 +198,8 @@ def main():
     try:
         return createSnippets(options.brandName, options.product,
                               options.appName, options.version,
-                              options.oldVersion, options.buildNumber,
+                              options.appVersion, options.oldVersion,
+                              options.oldAppVersion, options.buildNumber,
                               options.oldBuildNumber, options.platforms,
                               options.channels, options.oldBaseSnippetDir,
                               options.stageServer, options.hg,
