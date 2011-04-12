@@ -72,7 +72,7 @@ if __name__ == "__main__":
     if (email != None):
         # now create sendchanges for each TEST_MASTER
         for master in TEST_MASTERS:
-            ftp = FTP('ftp.mozilla.org')
+            ftp = FTP('dm-ftp01.mozilla.org')
             ftp.login()
 
             tryserverDirPath = TRY_BASE_PATH % {'email': email, 
