@@ -98,7 +98,10 @@ def best_master():
 
     best_master = sa.select([ model.masters ],
             from_obj=joined_masters,
-            whereclause=(model.slaves.c.slaveid == sa.bindparam('slaveid')),
+            whereclause=(
+                (model.slaves.c.slaveid == sa.bindparam('slaveid')) &
+                (model.masters.c.enabled)
+                ),
             order_by=[numeric_slavecount,model.masters.c.masterid],
             limit=1)
     return best_master
