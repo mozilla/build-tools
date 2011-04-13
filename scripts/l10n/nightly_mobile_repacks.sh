@@ -46,6 +46,7 @@ if [ -z "$mobileBranch" ]; then
     mobileBranchArg=""
 else
     mobileBranchArg="-m $mobileBranch"
+fi
 $PYTHON $MY_DIR/nightly-mobile-repacks.py -c $branchConfig -B $branch \
   $mobileBranchArg -b $BUILDBOT_CONFIGS -p $platform \
   --chunks $chunks --this-chunk $thisChunk
