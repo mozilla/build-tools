@@ -27,7 +27,7 @@ sub GetProductDetails {
                $appVersion . $endOfUrl;
     }
     elsif ($product eq 'thunderbird') {
-        return 'http://www.mozillamessaging.com/%locale%/' . $product . '/' .
+        return 'https://www.mozillamessaging.com/%locale%/' . $product . '/' .
                $appVersion . $endOfUrl;
     }
     else {
