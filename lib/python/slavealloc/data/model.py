@@ -12,43 +12,43 @@ metadata = sa.MetaData()
 
 distros = sa.Table('distros', metadata,
     sa.Column('distroid', sa.Integer, primary_key=True),
-    sa.Column('name', sa.Text, nullable=False),
+    sa.Column('name', sa.String(128), nullable=False, unique=True),
     mysql_engine="InnoDB",
 )
 
 datacenters = sa.Table('datacenters', metadata,
     sa.Column('dcid', sa.Integer, primary_key=True),
-    sa.Column('name', sa.Text, nullable=False),
+    sa.Column('name', sa.String(128), nullable=False, unique=True),
     mysql_engine="InnoDB",
 )
 
 bitlengths = sa.Table('bitlengths', metadata,
     sa.Column('bitsid', sa.Integer, primary_key=True),
-    sa.Column('name', sa.Text, nullable=False),
+    sa.Column('name', sa.String(128), nullable=False, unique=True),
     mysql_engine="InnoDB",
 )
 
 speeds = sa.Table('speeds', metadata,
     sa.Column('speedid', sa.Integer, primary_key=True),
-    sa.Column('name', sa.Text, nullable=False),
+    sa.Column('name', sa.String(128), nullable=False, unique=True),
     mysql_engine="InnoDB",
 )
 
 purposes = sa.Table('purposes', metadata,
     sa.Column('purposeid', sa.Integer, primary_key=True),
-    sa.Column('name', sa.Text, nullable=False),
+    sa.Column('name', sa.String(128), nullable=False, unique=True),
     mysql_engine="InnoDB",
 )
 
 trustlevels = sa.Table('trustlevels', metadata,
     sa.Column('trustid', sa.Integer, primary_key=True),
-    sa.Column('name', sa.Text, nullable=False),
+    sa.Column('name', sa.String(128), nullable=False, unique=True),
     mysql_engine="InnoDB",
 )
 
 environments = sa.Table('environments', metadata,
     sa.Column('envid', sa.Integer, primary_key=True),
-    sa.Column('name', sa.Text, nullable=False),
+    sa.Column('name', sa.String(128), nullable=False, unique=True),
     mysql_engine="InnoDB",
 )
 
@@ -56,7 +56,7 @@ environments = sa.Table('environments', metadata,
 
 pools = sa.Table('pools', metadata,
     sa.Column('poolid', sa.Integer, primary_key=True),
-    sa.Column('name', sa.Text, nullable=False),
+    sa.Column('name', sa.String(128), nullable=False, unique=True),
     mysql_engine="InnoDB",
 )
 
@@ -77,7 +77,7 @@ slave_passwords = sa.Table('slave_passwords', metadata,
 
 slaves = sa.Table('slaves', metadata,
     sa.Column('slaveid', sa.Integer, primary_key=True),
-    sa.Column('name', sa.Text, nullable=False),
+    sa.Column('name', sa.String(128), nullable=False, unique=True),
 
     # silo (c.f. corresponding index below)
     sa.Column('distroid', sa.Integer, sa.ForeignKey('distros.distroid'), nullable=False),
@@ -105,9 +105,9 @@ slaves = sa.Table('slaves', metadata,
 
 masters = sa.Table('masters', metadata,
     sa.Column('masterid', sa.Integer, primary_key=True),
-    sa.Column('nickname', sa.Text, nullable=False),
+    sa.Column('nickname', sa.String(128), nullable=False, unique=True),
     sa.Column('fqdn', sa.Text, nullable=False),
-    sa.Column('http_port', sa.Integer, nullable=False),
+    sa.Column('http_port', sa.Integer, nullable=False), # 0 for no HTTP port
     sa.Column('pb_port', sa.Integer, nullable=False),
     sa.Column('dcid', sa.Integer, sa.ForeignKey('datacenters.dcid'), nullable=False),
 
