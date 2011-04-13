@@ -157,7 +157,7 @@ def json2list(json_file):
         datacenter=datacentre2datacenter[master_json['datacentre']]
 
         # smarts #2: role/dc -> pool
-        pool = '%s-%s' % (master_json['roles'][0], datacenter)
+        pool = '%s-%s' % (master_json['role'], datacenter)
 
         # smarts #3: use unqualified hostname
         fqdn = master_json['hostname'].replace('build.scl1.mozilla.com', 'build.mozilla.org')

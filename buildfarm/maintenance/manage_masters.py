@@ -62,7 +62,7 @@ Supported actions:
             continue
         if m['name'] in options.hosts:
             masters.append(m)
-        elif any(r in options.roles for r in m['roles']):
+        elif m['role'] in options.roles:
             masters.append(m)
         elif 'all' in options.hosts or 'all' in options.roles:
             masters.append(m)
