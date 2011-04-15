@@ -7,12 +7,12 @@
 import os, sys
 import time
 import socket
+import signal
 import logging
-import traceback
-import subprocess
+import datetime
 
-from multiprocessing import Process, get_logger, log_to_stderr
-from optparse import OptionParser
+# from multiprocessing import get_logger, log_to_stderr
+from sut_lib import checkSlaveAlive, checkSlaveActive, getIPAddress, dumpException, loadOptions, getLastLine, killPID
 
 
 log            = logging.getLogger()
@@ -22,135 +22,22 @@ defaultOptions = {
                    'bbpath': ('-p', '--bbpath', '/builds', 'Path where the Tegra buildbot slave clients can be found'),
                    'tegra':  ('-t', '--tegra',  None,      'Tegra to check, if not given all Tegras will be checked'),
                    'reset':  ('-r', '--reset',  False,     'Reset error.flg if Tegra active', 'b'),
+                   'master': ('-m', '--master', 'sp',      'master type to check "p" for production or "s" for staging'),
                  }
 
 
-def dumpException(msg):
-    """Gather information on the current exception stack and log it
-    """
-    t, v, tb = sys.exc_info()
-    log.debug(msg)
-    for s in traceback.format_exception(t, v, tb):
-        if '\n' in s:
-            for t in s.split('\n'):
-                log.debug(t)
-        else:
-            log.debug(s[:-1])
-    log.debug('Traceback End')
+def checkTegra(master, tegra):
+    tegraIP   = getIPAddress(tegra)
+    tegraPath = os.path.join(options.bbpath, tegra)
+    errorFile = os.path.join(tegraPath, 'error.flg')
+    proxyFile = os.path.join(tegraPath, 'proxy.flg')
 
-def runCommand(cmd, env=None, logEcho=True):
-    """Execute the given command.
-    Sends to the logger all stdout and stderr output.
-    """
-    o = []
-    p = subprocess.Popen(cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-
-    try:
-        for item in p.stdout:
-            o.append(item[:-1])
-            if logEcho:
-                log.debug(item[:-1])
-        p.wait()
-    except KeyboardInterrupt:
-        p.kill()
-        p.wait()
-
-    return p, o
-
-def killPID(pidFile, signal='2'):
-    """Attempt to kill a process.
-    First try to give the pid SIGTERM and if not succesful
-    then use SIGKILL.
-    """
-    try:
-        pid = file(pidFile,'r').read().strip()
-    except IOError:
-        log.info('unable to read pidfile [%s]' % pidFile)
-        return False
-
-    log.warning('pidfile found - sending kill -%s to %s' % (signal, pid))
-
-    runCommand(['kill', '-%s' % signal, pid])
-
-    n = 0
-    while n < 10:
-        try:
-            os.kill(int(pid), 0)
-            break
-        except OSError:
-            n += 1
-        time.sleep(5)
-
-    log.debug('pid check: %d' % n)
-    if n > 9:
-        log.error('check to see if pid %s is active failed')
-        return False
-    else:
-        return True
-
-def loadOptions():
-    """Parse command line parameters and populate the options object.
-    Optionally daemonize our parent process.
-    """
-    global options
-
-    parser = OptionParser()
-
-    for key in defaultOptions:
-        items = defaultOptions[key]
-
-        if len(items) == 4:
-            (shortCmd, longCmd, defaultValue, helpText) = items
-            optionType = 's'
-        else:
-            (shortCmd, longCmd, defaultValue, helpText, optionType) = items
-
-        if optionType == 'b':
-            parser.add_option(shortCmd, longCmd, dest=key, action='store_true', default=defaultValue, help=helpText)
-        else:
-            parser.add_option(shortCmd, longCmd, dest=key, default=defaultValue, help=helpText)
-
-    (options, args) = parser.parse_args()
-    options.args    = args
-
-    options.bbpath = os.path.abspath(options.bbpath)
-
-    echoHandler   = logging.StreamHandler()
-    echoFormatter = logging.Formatter('%(message)s')  # not the normal one
-
-    echoHandler.setFormatter(echoFormatter)
-
-    log.addHandler(echoHandler)
-
-    if options.debug:
-        log.setLevel(logging.DEBUG)
-        log.info('debug level is on')
-    else:
-        log.setLevel(logging.INFO)
-
-def getTegraIP(tegra):
-    """Parse the output of nslookup to determine what is the
-    IP address for the tegra ID that is to be monitored.
-    """
-    ipAddress = None
-    f         = False
-    p, o      = runCommand(['nslookup', tegra])
-    for s in o:
-        if '**' in s:
-            break
-        if f:
-            if s.startswith('Address:'):
-                ipAddress = s.split()[1]
-        else:
-            if s.startswith('Name:'):
-                f = True
-
-    return ipAddress
-
-def checkTegra(tegra):
-    tegraIP   = getTegraIP(tegra)
-    errorFile = os.path.join(options.bbpath, tegra, 'error.flg')
-    proxyFile = os.path.join(options.bbpath, tegra, 'proxy.flg')
+    status = { 'active':    False,
+               'error.flg': False,
+               'proxy.flg': False,
+               'tegra':     tegra,
+               'rebooted':  False,
+             }
 
     log.debug('%s: %s' % (tegra, tegraIP))
 
@@ -168,40 +55,119 @@ def checkTegra(tegra):
         log.debug('socket data length %d' % len(d))
         log.debug(d)
 
-        if len(d) > 0:
-            result = True
+        status['active'] = True
+
+        hbSocket.close()
     except:
+        status['active'] = False
         dumpException('socket')
-        result = False
 
-    s = tegra
-
-    if result:
-        s += ' active'
-
-        if os.path.isfile(errorFile):
-            s += ' error.flg found'
-
-            if options.reset:
-                s += ' - resetting'
-                hbSocket.send('rebt\n')
-                # not interested in result
-                # taking advantage of the pause
-                d = hbSocket.recv(4096)
-                os.remove(errorFile)
+    if status['active']:
+        s = 'online'
     else:
-        s += ' OFFLINE'
-        if os.path.isfile(errorFile):
-            s += ' error.flg found'
-        elif os.path.isfile(proxyFile):
-            s += ' proxy.flg found (maybe rebooting?)'
+        s = 'OFFLINE'
 
-    log.info(s)
+    status['error.flg'] = os.path.isfile(errorFile)
+    status['proxy.flg'] = os.path.isfile(proxyFile)
+
+    if status['error.flg']:
+        s += ' error.flg'
+        status['error'] = getLastLine(errorFile)
+    if status['proxy.flg']:
+        s += ' rebooting'
+
+    s = '%20s :: ' % s
+
+    status['slave'] = checkSlaveAlive(tegraPath)
+
+    if status['slave']:
+        s += 'active'
+    else:
+        s += 'INACTIVE'
+
+    logTD = checkSlaveActive(tegraPath)
+    if logTD is not None:
+        s += ' last was %d days %d seconds ago' % (logTD.days, logTD.seconds)
+        if logTD.days > 0 or (logTD.days == 0 and logTD.seconds > 3600):
+            s += ' (hung slave)'
+
+    if status['error.flg']:
+        s += ' :: %s' % status['error']
+
+    log.info('%s %s %s' % (status['tegra'], master, s))
+
+    if options.reset:
+        s = ''
+        if os.path.isfile(errorFile):
+            s += ' clearing error.flg;'
+            os.remove(errorFile)
+
+            try:
+                hbSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                hbSocket.settimeout(float(120))
+                hbSocket.connect((tegraIP, 20700))
+                hbSocket.send('rebt\n')
+                hbSocket.close()
+                status['rebooted'] = True
+            except:
+                dumpException('socket')
+
+        if status['rebooted']:
+            s += ' rebooting tegra;'
+
+        if status['slave']:
+            pidFile = os.path.join(tegraPath, 'twistd.pid')
+            try:
+                pid = int(open(pidFile).read())
+                if not killPID(pid, includeChildren=True):
+                    killPID(pid, signal=signal.SIGKILL, includeChildren=True)
+                if not checkSlaveAlive(tegraPath):
+                    s += ' buildslave stopped;'
+                else:
+                    s += ' tried to stop buildslave;'
+            except ValueError:
+                s += ' unable to read twistd.pid;'
+
+        if len(s) > 0:
+            log.info('%s: %s' % (status['tegra'], s[:-1]))
+
+    return status
+
+def findMaster(tegra):
+    result  = 's'
+    tacFile = os.path.join(options.bbpath, tegra, 'buildbot.tac')
+
+    if os.path.isfile(tacFile):
+        lines = open(tacFile).readlines()
+        for line in lines:
+            if line.startswith('buildmaster_host = '):
+                if 'foopy' not in line:
+                    result = 'p'
+                    break
+
+    return result
+
+def initLogs(options):
+    echoHandler   = logging.StreamHandler()
+    echoFormatter = logging.Formatter('%(asctime)s %(message)s')  # not the normal one
+
+    echoHandler.setFormatter(echoFormatter)
+    log.addHandler(echoHandler)
+
+    if options.debug:
+        log.setLevel(logging.DEBUG)
+        log.info('debug level is on')
+    else:
+        log.setLevel(logging.INFO)
 
 if __name__ == '__main__':
-    loadOptions()
+    options = loadOptions(defaultOptions)
+    initLogs(options)
 
-    tegras = []
+    tegras         = []
+    options.bbpath = os.path.abspath(options.bbpath)
+    options.master = options.master.lower()
+
     if options.tegra is None:
         for f in os.listdir(options.bbpath):
             if os.path.isdir(os.path.join(options.bbpath, f)) and 'tegra-' in f.lower():
@@ -210,5 +176,7 @@ if __name__ == '__main__':
         tegras.append(options.tegra)
 
     for tegra in tegras:
-        Process(name='check', target=checkTegra, args=(tegra,)).start()
+        m = findMaster(tegra)
+        if m in options.master:
+            status = checkTegra(m, tegra)
 

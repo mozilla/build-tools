@@ -7,84 +7,10 @@ import socket
 import datetime
 import devicemanager
 
+from sut_lib import getOurIP, calculatePort, clearFlag, setFlag, checkDeviceRoot, \
+                    getDeviceTimestamp, setDeviceTimestamp, \
+                    getResolution, waitForDevice
 
-def setFlag(flagfile, contents=None):
-    print flagfile
-    h = open(flagfile, 'a+')
-    if contents is not None:
-        print contents
-        h.write('%s\n' % contents)
-    h.close()
-    time.sleep(30)
-
-def clearFlag(flagfile):
-    if os.path.exists(flagfile):
-        os.remove(flagfile)
-
-def calculatePort():
-    s = os.environ['SUT_NAME']
-    try:
-        n = 50000 + int(s.split('-')[1])
-    except:
-        n = random.randint(40000, 50000)
-    return n
-
-def getOurIP():
-    try:
-        result = os.environ['CP_IP']
-    except:
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            s.connect(('mozilla.com', 80))
-            result = s.getsockname()[0]
-            s.close()
-        except:
-            result = None
-            dumpException('unable to determine our IP address')
-
-    return result
-
-def getResolution(dm):
-    parts = dm.getInfo('screen')['screen'][0].split()
-    width = int(parts[0].split(':')[1])
-    height = int(parts[1].split(':')[1])
-    return width, height
-
-def getDeviceTimestamp(dm):
-    ts = int(dm.getCurrentTime()) # epoch time in milliseconds
-    dt = datetime.datetime.utcfromtimestamp(ts / 1000)
-    print 'Current device time is %s' % dt.strftime('%Y/%m/%d %H:%M:%S')
-    return dt
-
-def setDeviceTimestamp(dm):
-    s = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
-    print 'Setting device time to %s' % s 
-    dm.sendCMD(['settime %s' % s])
-
-def checkDeviceRoot():
-    dr = dm.getDeviceRoot()
-    # checking for /mnt/sdcard/...
-    print "devroot %s" % str(dr)
-    if not dr or dr == '/tests':
-        return None
-    return dr
-
-def waitForDevice(waitTime=60):
-    print "Waiting for tegra to come back..."
-    time.sleep(waitTime)
-    tegraIsBack = False
-    tries = 0
-    maxTries = 20
-    while tries <= maxTries:
-        tries += 1
-        print "Try %d" % tries
-        if checkDeviceRoot() is not None:
-            tegraIsBack = True
-            break
-        time.sleep(60)
-    if not tegraIsBack:
-        print("Remote Device Error: waiting for tegra timed out.")
-        sys.exit(1)
 
 # Stop buffering!
 sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
@@ -104,10 +30,8 @@ print "connecting to: %s" % sys.argv[1]
 dm = devicemanager.DeviceManager(sys.argv[1])
 # Moar data!
 dm.debug = 3
-devRoot  = dm.getDeviceRoot()
+devRoot  = checkDeviceRoot(dm)
 
-# checking for /mnt/sdcard/...
-print "devroot %s" % devRoot
 if devRoot is None or devRoot == '/tests':
     setFlag(errorFile, "Remote Device Error: devRoot from devicemanager [%s] is not correct - exiting" % devRoot)
     sys.exit(1)
@@ -135,7 +59,7 @@ if dm.pushFile(source, target):
         if (width >= 1050 or height >= 1050):
             dm.adjustResolution(1024, 768, 'crt')
             dm.reboot(proxyIP, proxyPort)
-            waitForDevice()
+            waitForDevice(dm)
 
         status = dm.updateApp(target, processName='org.mozilla.fennec', ipAddr=proxyIP, port=proxyPort)
         if status is not None and status:

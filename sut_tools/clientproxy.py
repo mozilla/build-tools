@@ -16,10 +16,13 @@ import datetime
 import traceback
 import subprocess
 
-from signal import SIGTERM
 from optparse import OptionParser
 from Queue import Empty
+from logging.handlers import RotatingFileHandler
 from multiprocessing import Process, Queue, current_process, get_logger, log_to_stderr
+
+from sut_lib import checkSlaveAlive, checkSlaveActive, stopSlave, getOurIP, getIPAddress, \
+                    dumpException, runCommand, loadOptions, getLastLine
 
 
 """clientproxy.py
@@ -53,7 +56,7 @@ ourName         = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 
 
 defaultOptions = {
-                   'debug':      ('-d', '--debug',      True,     'Enable Debug', 'b'),
+                   'debug':      ('-d', '--debug',      False,    'Enable Debug', 'b'),
                    'background': ('-b', '--background', False,    'daemonize ourselves', 'b'),
                    'bbpath':     ('-p', '--bbpath',     ourPath,  'Path where the Tegra buildbot slave clients can be found'),
                    'tegra':      ('-t', '--tegra',      None,     'Tegra to manage, if not given it will be figured out from environment'),
@@ -64,47 +67,8 @@ defaultOptions = {
                  }
 
 
-def dumpException(msg):
-    """Gather information on the current exception stack and log it
-    """
-    t, v, tb = sys.exc_info()
-    log.error(msg)
-    for s in traceback.format_exception(t, v, tb):
-        if '\n' in s:
-            for t in s.split('\n'):
-                log.error(t)
-        else:
-            log.error(s[:-1])
-    log.error('Traceback End')
-
-def loadOptions():
-    """Parse command line parameters and populate the options object.
-    Optionally daemonize our parent process.
-    """
-    global options, sutDialbackPort
-
-    parser = OptionParser()
-
-    for key in defaultOptions:
-        items = defaultOptions[key]
-
-        if len(items) == 4:
-            (shortCmd, longCmd, defaultValue, helpText) = items
-            optionType = 's'
-        else:
-            (shortCmd, longCmd, defaultValue, helpText, optionType) = items
-
-        if optionType == 'b':
-            parser.add_option(shortCmd, longCmd, dest=key, action='store_true', default=defaultValue, help=helpText)
-        else:
-            parser.add_option(shortCmd, longCmd, dest=key, default=defaultValue, help=helpText)
-
-    (options, args) = parser.parse_args()
-    options.args    = args
-
-    options.bbpath = os.path.abspath(options.bbpath)
-
-    fileHandler   = logging.FileHandler(os.path.join(options.logpath, '%s.log' % ourName))
+def initLogs(options):
+    fileHandler   = RotatingFileHandler(os.path.join(options.logpath, '%s.log' % ourName), maxBytes=1000000, backupCount=99)
     fileFormatter = logging.Formatter('%(asctime)s %(levelname)-7s %(processName)s: %(message)s')
 
     fileHandler.setFormatter(fileFormatter)
@@ -124,20 +88,8 @@ def loadOptions():
     if options.debug:
         log.setLevel(logging.DEBUG)
         log.info('debug level is on')
-
-    if options.tegra is None:
-        if 'tegra-' in ourPath.lower():
-            options.tegra = os.path.basename(os.path.split(ourPath)[-1])
-
-    if options.tegraIP is None:
-        options.tegraIP = getTegraIP()
-
-    try:
-        n = int(options.tegra.split('-')[1])
-    except:
-        n = 0
-    sutDialbackPort += n
-
+    else:
+        log.setLevel(logging.INFO)
 
 class Daemon(object):
     def __init__(self, pidfile):
@@ -209,88 +161,6 @@ class Daemon(object):
             sys.exit("mangled pidfile %s: %r" % (self.pidfile, data))
         os.kill(pid, signal.SIGTERM)
 
-
-def runCommand(cmd, env=None, logEcho=True):
-    """Execute the given command.
-    Sends to the logger all stdout and stderr output.
-    """
-    o = []
-    p = subprocess.Popen(cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-
-    try:
-        for item in p.stdout:
-            o.append(item[:-1])
-            if logEcho:
-                log.info(item[:-1])
-        p.wait()
-    except KeyboardInterrupt:
-        p.kill()
-        p.wait()
-
-    return p, o
-
-def getLastLine(filename):
-    """Run the tail command against the given file and return
-    the last non-empty line.
-    """
-    result   = ''
-    fileTail = []
-
-    if os.path.isfile(filename):
-        p = subprocess.Popen(['tail', filename], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        try:
-            for item in p.stdout:
-                fileTail.append(item)
-            p.wait()
-        except KeyboardInterrupt:
-            p.kill()
-            p.wait()
-
-    if len(fileTail) > 0:
-        n = len(fileTail) - 1
-        while n >= 0:
-            s = fileTail[n].strip()
-            if len(s) > 0:
-                result = s
-                break
-            n -= 1
-
-    return result
-
-def getOurIP():
-    """Open a socket against a known server to discover our IP address
-    """
-    result = None
-
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(('bm-foopy.build.mozilla.org', 80))
-        result = s.getsockname()[0]
-        s.close()
-    except:
-        dumpException('unable to determine our IP address')
-
-    return result
-
-def getTegraIP():
-    """Parse the output of nslookup to determine what is the
-    IP address for the tegra ID that is to be monitored.
-    """
-    ipAddress = None
-    f         = False
-    p, o      = runCommand(['nslookup', options.tegra])
-    for s in o:
-        if '**' in s:
-            break
-        if f:
-            if s.startswith('Address:'):
-                ipAddress = s.split()[1]
-        else:
-            if s.startswith('Name:'):
-                f = True
-
-    return ipAddress
-
 class DialbackHandler(asyncore.dispatcher_with_send):
     def __init__(self, sock, events):
         asyncore.dispatcher_with_send.__init__(self, sock)
@@ -343,88 +213,6 @@ def handleDialback(port, events):
             dumpException('error during dialback loop')
             break
 
-def checkSlave(bbClient, hangtime):
-    """Check if the buildslave process is alive.
-    If it is alive, then also check to determine what was the
-    date/time of the last line of it's log output.
-    
-    Return False if it's not alive or if that last output was more
-    than 0 days and the given hangtime seconds.
-    """
-    pidfile = os.path.join(bbClient, 'twistd.pid')
-
-    try:
-        pid = int(file(pidfile, 'r').read().strip())
-    except:
-        dumpException('unable to check slave - pidfile [%s] was not readable' % pidfile)
-        return False
-
-    try:
-        os.kill(pid, 0)
-    except OSError:
-        dumpException('check to see if pid %s is active failed')
-        return False
-
-    logFile  = os.path.join(bbClient, 'twistd.log')
-    lastline = getLastLine(logFile)
-
-    if len(lastline) > 0:
-        logTS = datetime.datetime.strptime(lastline[:19], '%Y-%m-%d %H:%M:%S')
-        logTD = datetime.datetime.now() - logTS
-
-        if logTD.days > 0 or (logTD.days == 0 and logTD.seconds > hangtime):
-            log.error('tail of %s shows last activity was %d days %d seconds ago - marking as hung slave' % 
-                      (logFile, logTD.days, logTD.seconds))
-            return False
-        else:
-            log.debug('last activity was %d days %d seconds ago' % (logTD.days, logTD.seconds))
-
-    return True
-
-def killPID(pid, signal='2'):
-    """Attempt to kill a process.
-    First try to give the pid SIGTERM and if not succesful
-    then use SIGKILL.
-    """
-    log.info('calling kill for pid %s with signal %s' % (pid, signal))
-
-    runCommand(['kill', '-%s' % signal, pid])
-
-    n = 0
-    while n < 10:
-        try:
-            os.kill(int(pid), 0)
-            break
-        except OSError:
-            n += 1
-        time.sleep(20)
-
-    log.debug('pid check: %d' % n)
-    if n > 9:
-        log.error('check to see if pid %s is active failed')
-        return False
-    else:
-        return True
-
-def stopSlave(pidFile):
-    """Try to terminate the buildslave
-    """
-    log.info('stopping buildbot')
-
-    if os.path.exists(pidFile):
-        log.debug('pidfile %s found' % pidFile)
-        pid = file(pidFile,'r').read().strip()
-        try:
-            os.kill(int(pid), 0)
-            log.debug('process found for pid %s, attempting to kill' % pid)
-            if not killPID(pid):
-                if not killPID(pid, signal='9'):
-                    log.warning('unable to stop buildslave')
-        except OSError:
-            log.info('no process found for pid %s, removing pidfile' % pid)
-            os.remove(pidFile)
-    return os.path.exists(pidFile)
-
 def sendReboot(ip, port):
     log.warning('sending rebt to tegra')
     try:
@@ -436,93 +224,7 @@ def sendReboot(ip, port):
     except:
         log.debug('Error sending reboot')
 
-def monitorTegra(events):
-    """Monitor the assigned Tegra.
-    Endless loop that monitors the Tegra by trying to establish
-    and read from the sutAgentAndroid's heartbeat port.
-    
-    If activity is found on the heartbeat port then send the 'active' event.
-    """
-    flagFile  = os.path.join(options.bbpath, 'proxy.flg')
-    hbSocket  = None
-    connected = False
-    maxFails  = 75
-    maxReq    = 9     # how sutAgent debug calls to skip
-    infoReq   = maxReq
-    logSpam   = 0
-    hbFails   = 0
-    sleepTime = 5
-
-    log.info('%s: monitoring started' % options.tegra)
-
-    while True:
-        time.sleep(sleepTime)
-        if not connected:
-            try:
-                hbSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                hbSocket.settimeout(float(120))
-                hbSocket.connect((options.tegraIP, sutDataPort))
-                connected = True
-            except:
-                connected = False
-                hbFails  += 1
-                log.debug('Error connecting to data port')
-
-        if logSpam == 0:
-            log.debug('connected %s hbFails: %d infoReq %d' % (connected, hbFails, infoReq))
-
-        if connected:
-            infoReq -= 1
-            if infoReq == 0:
-                infoReq = maxReq
-                try:
-                    hbSocket.send('info\n')
-                except:
-                    connected = False
-                    hbFails  += 1
-
-            if connected:
-                try:
-                    data = hbSocket.recv(1024)
-                except:
-                    data      = ''
-                    connected = False
-                    dumpException('hbSocket.recv()')
-
-                if len(data) > 1:
-                    log.debug('socket data [%s]' % data[:-1])
-
-                    if 'ebooting ...' in data:
-                        log.warning('device is rebooting')
-                        events.put(('reboot',))
-                    else:
-                        sleepTime = 5
-                        log.info('heartbeat detected')
-                        events.put(('active',))
-                else:
-                    hbFails += 1
-
-        if hbFails > maxFails:
-            if os.path.isfile(flagFile):
-                log.warning('install flag found, resetting error count')
-            else:
-                events.put(('offline',))
-            if connected:
-                hbSocket.close()
-                connected = False
-            hbFails    = 0
-            sleepTime += 5
-            if sleepTime > 60:
-                sleepTime = 60
-
-        if logSpam == 0:
-            logSpam = 5
-        else:
-            logSpam -= 1
-
-    log.info('%s: monitoring stopped' % options.tegra)
-
-def monitorEvents():
+def monitorEvents(options, events):
     """This is the main state machine for the Tegra monitor.
 
     Respond to the events sent via queue and also monitor the
@@ -539,6 +241,12 @@ def monitorEvents():
     event         = None
     bbActive      = False
     tegraActive   = False
+    connected     = False
+    nChatty       = 0
+    maxChatty     = 10
+    hbFails       = 0
+    maxFails      = 50
+    sleepFails    = 5
     softCount     = 0    # how many times tegraActive is True
                          # but errorFlag is set
     softCountMax  = 5    # how many active events to wait bdfore
@@ -553,21 +261,70 @@ def monitorEvents():
     log.info('monitoring started (process pid %s)' % current_process().pid)
 
     while True:
+        if not connected:
+            try:
+                hbSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                hbSocket.settimeout(float(120))
+                hbSocket.connect((options.tegraIP, sutDataPort))
+                connected = True
+            except:
+                connected = False
+                hbFails  += 1
+                log.info('Error connecting to data port - sleeping for %d seconds' % sleepFails)
+                time.sleep(sleepFails)
+
         try:
-            event = eventQueue.get(False)
+            event = events.get(False)
         except Empty:
             event = None
-            time.sleep(15)
 
-        if event is not None:
+        if event is None:
+            if connected:
+                try:
+                    hbData = hbSocket.recv(4096)
+                except:
+                    hbData    = ''
+                    connected = False
+                    dumpException('hbSocket.recv()')
+
+                if len(hbData) > 1:
+                    log.debug('socket data [%s]' % hbData[:-1])
+
+                    if 'ebooting ...' in hbData:
+                        log.warning('device is rebooting')
+                        events.put(('reboot',))
+                        if os.path.isfile(flagFile):
+                            time.sleep(5)
+                        hbSocket.close()
+                        connected = False
+                    else:
+                        log.info('heartbeat detected')
+                        events.put(('active',))
+                        hbFails = 0
+                else:
+                    hbFails += 1
+        else:
             state = event[0]
-            log.debug('event %s' % state)
+            s     = 'event %s hbFails %d / %d' % (state, hbFails, maxFails)
+            nChatty += 1
+            if nChatty > maxChatty:
+                log.info(s)
+            else:
+                log.debug(s)
+            if nChatty > maxChatty:
+                nChatty = 0
 
             if state == 'reboot':
                 tegraActive = False
                 if not os.path.isfile(flagFile):
                     log.warning('Tegra rebooting, stopping buildslave')
-                    eventQueue.put(('stop',))
+                    events.put(('stop',))
+            elif state == 'stop' or state == 'offline':
+                stopSlave(pidFile)
+                bbActive = False
+                if connected and state == 'offline':
+                    hbSocket.close()
+                    connected = False
             elif state == 'active' or state == 'dialback':
                 tegraActive = True
                 if not bbActive:
@@ -578,57 +335,89 @@ def monitorEvents():
                             softCount = 0
                             if softResets < softResetMax:
                                 softResets += 1
-                                log.info('removing error flag to see if tegra comes back')
+                                log.warning('removing error flag to see if tegra comes back')
                                 os.remove(errorFile)
                             else:
                                 hardResets += 1
-                                log.info('hard reset reboot check [%d/%d]' % (hardResets, hardResetsMax))
+                                log.warning('hard reset reboot check [%d/%d]' % (hardResets, hardResetsMax))
                                 if hardResets < hardResetsMax:
                                     sendReboot(options.tegraIP, sutDataPort)
+                                else:
+                                    events.put(('offline',))
                     else:
-                        eventQueue.put(('start',))
-            elif state == 'stop' or state == 'offline':
-                stopSlave(pidFile)
-                bbActive = False
+                        events.put(('start',))
             elif state == 'start':
                 if tegraActive and not bbActive:
                     log.debug('starting buildslave in %s' % options.bbpath)
-                    bbProc, foo = runCommand(['twistd', '--no_save',
-                                                        '--rundir=%s' % options.bbpath,
-                                                        '--pidfile=%s' % pidFile,
-                                                        '--python=%s' % os.path.join(options.bbpath, 'buildbot.tac')], env=bbEnv)
-                    bbActive = False
-                    if bbProc is not None:
-                        log.info('buildslave start returned %d' % bbProc.returncode)
-                        if bbProc.returncode == 0 or bbProc.returncode == 1:
-                            bbActive = True
+                    bbProc, _ = runCommand(['twistd', '--no_save',
+                                                      '--rundir=%s' % options.bbpath,
+                                                      '--pidfile=%s' % pidFile,
+                                                      '--python=%s' % os.path.join(options.bbpath, 'buildbot.tac')], 
+                                           env=bbEnv)
+                    log.info('buildslave start returned %s' % bbProc.returncode)
+                    if bbProc.returncode == 0 or bbProc.returncode == 1:
+                        # pause to give twistd a chance to generate the pidfile
+                        # before the code that follows goes off killing it because
+                        # it thinks that it didn't start properly
+                        # OMGRACECONDITIONWTF
+                        nTries = 0
+                        while nTries < 20:
+                            nTries += 1
+                            if os.path.isfile(pidFile):
+                                log.debug('pidfile found, setting bbActive to True')
+                                bbActive = True
+                                break
+                            else:
+                                time.sleep(5)
             elif state == 'dialback':
                 softCount  = 0
                 softResets = 0
             elif state == 'terminate':
                 break
 
+        if hbFails > maxFails:
+            hbFails     = 0
+            sleepFails += 5
+            if sleepFails > 300:
+                sleepFails = 300
+            if os.path.isfile(flagFile):
+                log.debug('install flag found, resetting error count')
+            else:
+                events.put(('offline',))
+            if connected:
+                hbSocket.close()
+                connected = False
+
         log.debug('bbActive %s tegraActive %s' % (bbActive, tegraActive))
 
         if os.path.isfile(errorFile):
             if bbActive:
                 log.error('errorFile detected - sending stop request')
-                eventQueue.put(('stop',))
+                events.put(('stop',))
 
         if bbActive:
             if os.path.isfile(pidFile):
                 n = time.time()
-                if int(n - lastHangCheck) > 300:
-                    lastHangCheck = n
-                    if not checkSlave(options.bbpath, options.hangtime):
-                        eventQueue.put(('offline',))
+                if not checkSlaveAlive(options.bbpath):
+                    log.warning('buildslave should be active but pid is not alive')
+                    if int(n - lastHangCheck) > 300:
+                        lastHangCheck = n
+                        logTD = checkSlaveActive(options.bbpath)
+                        if logTD.days > 0 or (logTD.days == 0 and logTD.seconds > options.hangtime):
+                            log.error('last activity was %d days %d seconds ago - marking as hung slave' % 
+                                      (logTD.days, logTD.seconds))
+                            events.put(('offline',))
             else:
-                log.error('buildbot should be active but pidfile not found, marking as offline')
-                eventQueue.put(('offline',))
+                log.warning('buildslave should be active but pidfile not found, marking as offline')
+                events.put(('offline',))
         else:
             if os.path.isfile(pidFile):
-                log.error('buildbot should NOT be active but pidfile found, killing buildbot')
-                eventQueue.put(('stop',))
+                if checkSlaveAlive(options.bbpath):
+                    log.error('buildslave should NOT be active but pidfile found, killing buildbot')
+                    events.put(('stop',))
+                else:
+                    log.warning('buildslave not active but pidfile found, removing pidfile')
+                    os.remove(pidFile)
 
     if bbActive:
         stopSlave(pidFile)
@@ -636,6 +425,7 @@ def monitorEvents():
     log.info('monitor stopped')
 
 def handleSigTERM(signum, frame):
+    db.close()
     if pidFile is not None:
         try:
             eventQueue.put(('terminate',))
@@ -646,7 +436,8 @@ def handleSigTERM(signum, frame):
             pass
     sys.exit(0)
 
-
+def shutdownDialback():
+    db.close()
 
 if __name__ == '__main__':
     ourIP = getOurIP()
@@ -655,30 +446,41 @@ if __name__ == '__main__':
         log.error('our IP address is not defined, exiting')
         sys.exit(1)
 
-    loadOptions()
+    options = loadOptions(defaultOptions)
+    initLogs(options)
+
+    options.bbpath = os.path.abspath(options.bbpath)
+    if options.tegra is None:
+        if 'tegra-' in ourPath.lower():
+            options.tegra = os.path.basename(os.path.split(ourPath)[-1])
+
+    if options.tegra is None:
+        log.error('Tegra has not been specified, exiting')
+        sys.exit(1)
+
+    if options.tegraIP is None:
+        options.tegraIP = getIPAddress(options.tegra)
+
+    try:
+        n = int(options.tegra.split('-')[1])
+    except:
+        n = 0
+    sutDialbackPort += n
 
     p = os.getpid()
     log.info('%s: ourIP %s tegra %s tegraIP %s bbpath %s' % (p, ourIP, options.tegra, options.tegraIP, options.bbpath))
 
     pidFile = os.path.join(ourPath, '%s.pid' % ourName)
 
-    signal.signal(signal.SIGTERM, handleSigTERM)
-
     if options.background and not 'stop' in options.args:
         daemon = Daemon(pidFile)
         daemon.start()
 
-    db = Process(name='dialback',    target=handleDialback, args=(sutDialbackPort, eventQueue))
-    mt = Process(name=options.tegra, target=monitorTegra,   args=(eventQueue,))
+    db = Process(name='dialback', target=handleDialback, args=(sutDialbackPort, eventQueue))
+
+    signal.signal(signal.SIGTERM, handleSigTERM)
+    atexit.register(shutdownDialback, db)
 
     db.start()
-    mt.start()
-
-    monitorEvents()
-
-    # killPID(db.pid)
-    # killPID(mt.pid)
-    # 
-    # db.join()
-    # mt.join()
+    monitorEvents(options, eventQueue)
 
