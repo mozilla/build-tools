@@ -12,34 +12,41 @@ import logging
 import datetime
 
 # from multiprocessing import get_logger, log_to_stderr
-from sut_lib import checkSlaveAlive, checkSlaveActive, getIPAddress, dumpException, loadOptions, getLastLine, killPID
+from sut_lib import checkSlaveAlive, checkSlaveActive, getIPAddress, dumpException, loadOptions, \
+                    checkCPAlive, checkCPActive, getLastLine, stopProcess
 
 
 log            = logging.getLogger()
 options        = None
+exportHandle   = None
 defaultOptions = {
                    'debug':  ('-d', '--debug',  False,     'Enable Debug', 'b'),
                    'bbpath': ('-p', '--bbpath', '/builds', 'Path where the Tegra buildbot slave clients can be found'),
                    'tegra':  ('-t', '--tegra',  None,      'Tegra to check, if not given all Tegras will be checked'),
                    'reset':  ('-r', '--reset',  False,     'Reset error.flg if Tegra active', 'b'),
                    'master': ('-m', '--master', 'sp',      'master type to check "p" for production or "s" for staging'),
+                   'export': ('-e', '--export', False,     'export summary stats (disabled if -t present)', 'b'),
                  }
 
 
 def checkTegra(master, tegra):
-    tegraIP   = getIPAddress(tegra)
-    tegraPath = os.path.join(options.bbpath, tegra)
-    errorFile = os.path.join(tegraPath, 'error.flg')
-    proxyFile = os.path.join(tegraPath, 'proxy.flg')
+    tegraIP    = getIPAddress(tegra)
+    tegraPath  = os.path.join(options.bbpath, tegra)
+    exportFile = os.path.join(tegraPath, '%s_status.log' % tegra)
+    errorFile  = os.path.join(tegraPath, 'error.flg')
+    proxyFile  = os.path.join(tegraPath, 'proxy.flg')
 
     status = { 'active':    False,
-               'error.flg': False,
-               'proxy.flg': False,
+               'cp':        False,
+               'bs':        False,
                'tegra':     tegra,
-               'rebooted':  False,
+               'msg':       '',
              }
 
     log.debug('%s: %s' % (tegra, tegraIP))
+
+    errorFlag = os.path.isfile(errorFile)
+    proxyFlag = os.path.isfile(proxyFile)
 
     try:
         hbSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -63,75 +70,61 @@ def checkTegra(master, tegra):
         dumpException('socket')
 
     if status['active']:
-        s = 'online'
+        sTegra = 'online'
     else:
-        s = 'OFFLINE'
+        sTegra = 'OFFLINE'
 
-    status['error.flg'] = os.path.isfile(errorFile)
-    status['proxy.flg'] = os.path.isfile(proxyFile)
-
-    if status['error.flg']:
-        s += ' error.flg'
-        status['error'] = getLastLine(errorFile)
-    if status['proxy.flg']:
-        s += ' rebooting'
-
-    s = '%20s :: ' % s
-
-    status['slave'] = checkSlaveAlive(tegraPath)
-
-    if status['slave']:
-        s += 'active'
+    if checkCPAlive(tegraPath):
+        logTD = checkCPActive(tegraPath)
+        if logTD is not None and logTD.days > 0 or (logTD.days == 0 and logTD.seconds > 300):
+            status['cp']   = 'INACTIVE'
+            status['msg'] += 'CP %dd %ds;' % (logTD.days, logTD.seconds)
+        else:
+            status['cp'] = 'active'
     else:
-        s += 'INACTIVE'
+        status['cp'] = 'OFFLINE'
 
-    logTD = checkSlaveActive(tegraPath)
-    if logTD is not None:
-        s += ' last was %d days %d seconds ago' % (logTD.days, logTD.seconds)
-        if logTD.days > 0 or (logTD.days == 0 and logTD.seconds > 3600):
-            s += ' (hung slave)'
+    if checkSlaveAlive(tegraPath):
+        logTD = checkSlaveActive(tegraPath)
+        if logTD is not None and logTD.days > 0 or (logTD.days == 0 and logTD.seconds > 3600):
+            status['bs']   = 'INACTIVE'
+            status['msg'] += 'BS %dd %ds;' % (logTD.days, logTD.seconds)
+        else:
+            status['bs'] = 'active'
+    else:
+        status['bs'] = 'OFFLINE'
 
-    if status['error.flg']:
-        s += ' :: %s' % status['error']
+    if errorFlag:
+        status['msg'] += 'error.flg [%s] ' % getLastLine(errorFile)
+    if proxyFlag:
+        status['msg'] += 'REBOOTING '
 
-    log.info('%s %s %s' % (status['tegra'], master, s))
+    s = '%s %s %8s %8s %8s :: %s' % (status['tegra'], master, sTegra, status['cp'], status['bs'], status['msg'])
+    log.info(s)
+    open(exportFile, 'a+').write('%s %s\n' % (time.strftime('%Y-%m-%d %H:%M:%S'), s))
+    if options.export:
+        hSummary.write('%s\n' % s)
 
     if options.reset:
-        s = ''
-        if os.path.isfile(errorFile):
-            s += ' clearing error.flg;'
+        stopProcess(os.path.join(tegraPath, 'twistd.pid'), 'buildslave')
+
+        try:
+            hbSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            hbSocket.settimeout(float(120))
+            hbSocket.connect((tegraIP, 20700))
+            hbSocket.send('rebt\n')
+            hbSocket.close()
+            log.info('rebooting tegra')
+        except:
+            dumpException('socket')
+
+        if errorFlag:
+            log.info('clearing error.flg')
             os.remove(errorFile)
+        if proxyFlag:
+            log.info('clearing proxy.flg')
+            os.remove(proxyFile)
 
-            try:
-                hbSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                hbSocket.settimeout(float(120))
-                hbSocket.connect((tegraIP, 20700))
-                hbSocket.send('rebt\n')
-                hbSocket.close()
-                status['rebooted'] = True
-            except:
-                dumpException('socket')
-
-        if status['rebooted']:
-            s += ' rebooting tegra;'
-
-        if status['slave']:
-            pidFile = os.path.join(tegraPath, 'twistd.pid')
-            try:
-                pid = int(open(pidFile).read())
-                if not killPID(pid, includeChildren=True):
-                    killPID(pid, signal=signal.SIGKILL, includeChildren=True)
-                if not checkSlaveAlive(tegraPath):
-                    s += ' buildslave stopped;'
-                else:
-                    s += ' tried to stop buildslave;'
-            except ValueError:
-                s += ' unable to read twistd.pid;'
-
-        if len(s) > 0:
-            log.info('%s: %s' % (status['tegra'], s[:-1]))
-
-    return status
 
 def findMaster(tegra):
     result  = 's'
@@ -173,10 +166,21 @@ if __name__ == '__main__':
             if os.path.isdir(os.path.join(options.bbpath, f)) and 'tegra-' in f.lower():
                 tegras.append(f)
     else:
+        options.export = False
         tegras.append(options.tegra)
 
+    f = True
     for tegra in tegras:
         m = findMaster(tegra)
         if m in options.master:
-            status = checkTegra(m, tegra)
+            if f:
+                if options.export:
+                    hSummary = open(os.path.join(options.bbpath, 'tegra_status.txt'), 'w+')
+                log.info('%9s %s %8s %8s %8s :: %s' % ('Tegra ID', 'M', 'Tegra', 'CP', 'Slave', 'Msg'))
+                f = False
+
+            checkTegra(m, tegra)
+
+    if options.export and hSummary is not None:
+        hSummary.close()
 

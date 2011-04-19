@@ -7,16 +7,32 @@
 import os, sys
 import socket
 import signal
+import logging
 
-from sut_lib import loadOptions, getIPAddress, killPID, checkSlaveAlive
+from sut_lib import loadOptions, getIPAddress, stopProcess, checkSlaveAlive, dumpException
 
 
 options        = None
+log            = logging.getLogger()
 defaultOptions = {
+                   'debug':  ('-d', '--debug',  False,     'Enable debug output', 'b'),
                    'bbpath': ('-p', '--bbpath', '/builds', 'Path where the Tegra buildbot slave clients can be found'),
                    'tegra':  ('-t', '--tegra',  None,      'Tegra to check, if not given all Tegras will be checked'),
                  }
 
+
+def initLogs(options):
+  echoHandler   = logging.StreamHandler()
+  echoFormatter = logging.Formatter('%(asctime)s %(message)s')  # not the normal one
+
+  echoHandler.setFormatter(echoFormatter)
+  log.addHandler(echoHandler)
+
+  if options.debug:
+     log.setLevel(logging.DEBUG)
+     log.info('debug level is on')
+  else:
+     log.setLevel(logging.INFO)
 
 def stopTegra(tegra):
     tegraIP   = getIPAddress(tegra)
@@ -24,43 +40,22 @@ def stopTegra(tegra):
     errorFile = os.path.join(tegraPath, 'error.flg')
     proxyFile = os.path.join(tegraPath, 'proxy.flg')
 
-    print('%s: %s - stopping all processes' % (tegra, tegraIP))
+    log.info('%s: %s - stopping all processes' % (tegra, tegraIP))
 
-    pidFile = os.path.join(tegraPath, 'clientproxy.pid')
-    if os.path.isfile(pidFile):
-        try:
-            pid = int(open(pidFile).read())
-            if not killPID(pid, includeChildren=True):
-                killPID(pid, signal=signal.SIGKILL, includeChildren=True)
-            try:
-                os.kill(pid, 0)
-                print('  clientproxy stopped')
-            except:
-                print('  **** tried to stop clientproxy')
-        except ValueError:
-            print('  unable to read %s' % pidFile)
+    stopProcess(os.path.join(tegraPath, 'clientproxy.pid'), 'clientproxy')
+    stopProcess(os.path.join(tegraPath, 'twistd.pid'), 'buildslave')
 
-    pidFile = os.path.join(tegraPath, 'twistd.pid')
-    if os.path.isfile(pidFile):
-        try:
-            pid = int(open(pidFile).read())
-            if not killPID(pid, includeChildren=True):
-                killPID(pid, signal=signal.SIGKILL, includeChildren=True)
-            try:
-                os.kill(pid, 0)
-                print('  buildslave stopped')
-            except:
-                print('  **** tried to stop buildslave')
-        except ValueError:
-            print('  unable to read %s' % pidFile)
+    log.debug('  clearing flag files')
 
     if os.path.isfile(errorFile):
-        print('  error.flg cleared')
+        log.info('  error.flg cleared')
         os.remove(errorFile)
 
     if os.path.isfile(proxyFile):
-        print('  proxy.flg cleared')
+        log.info('  proxy.flg cleared')
         os.remove(proxyFile)
+
+    log.debug('  sending rebt to tegra')
 
     try:
         hbSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -69,16 +64,17 @@ def stopTegra(tegra):
         hbSocket.send('rebt\n')
         hbSocket.close()
     except:
-        print('  tegra socket error')
+        log.error('  tegra socket error')
 
 
 if __name__ == '__main__':
     options = loadOptions(defaultOptions)
+    initLogs(options)
 
     options.bbpath = os.path.abspath(options.bbpath)
 
     if options.tegra is None:
-        print('you must specify a single Tegra')
+        log.error('you must specify a single Tegra')
         sys.exit(2)
 
     stopTegra(options.tegra)

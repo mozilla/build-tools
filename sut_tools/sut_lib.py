@@ -94,7 +94,7 @@ def getChildPIDs(pid):
     #pid   ppid  pgid
     #18456     1 18455 /opt/local/Libra   ??  S      0:00.88 /opt/local/Library/Frameworks/Python.framework/Versions/2.6/Resources/Python.app/Contents/MacOS/Python /opt/local/Library/Frameworks/Python.framework/Versions/2.6/bin/twistd$
     #18575 18456 18455 /opt/local/Libra   ??  S      0:00.52 /opt/local/Library/Frameworks/Python.framework/Versions/2.6/Resources/Python.app/Contents/MacOS/Python ../../sut_tools/installApp.py 10.250.49.8 ../talos-data/fennec-4.1a1pr$
-    p, lines = runCommand(['ps', '-U', 'cltbld', '-O', 'ppid,gpid,command'])
+    p, lines = runCommand(['ps', '-U', 'cltbld', '-O', 'ppid,pgid,command'])
     pids = []
     for line in lines:
         item = line.split()
@@ -155,33 +155,43 @@ def getLastLine(filename):
         n = len(fileTail) - 1
         while n >= 0:
             s = fileTail[n].strip()
-            if len(s) > 0:
+            if len(s) > 4 and len(s[:4].strip()) > 0:
                 result = s
                 break
             n -= 1
 
     return result
 
+def stopProcess(pidFile, label):
+    log.debug('looking for %s' % pidFile)
+    if os.path.isfile(pidFile):
+        try:
+            pid = int(open(pidFile, 'r').read().strip())
+            log.debug('first attempt to kill %s' % pid)
+            if not killPID(pid, includeChildren=True):
+                log.debug('second attempt to kill %s' % pid)
+                killPID(pid, signal=signal.SIGKILL, includeChildren=True)
+            try:
+                log.debug('verifying %s is gone' % label)
+                try:
+                    os.kill(pid, 0)
+                except OSError:
+                    log.info('%s stopped' % label)
+                    os.remove(pidFile)
+            except:
+                dumpException('verify step of stopProcess')
+                log.error('%s: pid %s not found' % label)
+        except ValueError:
+            log.error('unable to read %s' % pidFile)
+
 def stopSlave(pidFile):
     """Try to terminate the buildslave
     """
-    log.info('stopping buildbot [%s]' % pidFile)
-    if os.path.exists(pidFile):
-        pid = int(file(pidFile,'r').read().strip())
-        try:
-            os.kill(pid, 0)
-            if not killPID(pid):
-                if not killPID(pid, signal=signal.SIGKILL):
-                    log.warning('unable to stop buildslave')
-        except OSError:
-            log.info('no process found for pid %s, removing pidfile' % pid)
-            os.remove(pidFile)
+    stopProcess(pidFile, 'buildslave')
     return os.path.exists(pidFile)
 
 def checkSlaveAlive(bbClient):
     """Check if the buildslave process is alive.
-    If it is alive, then also check to determine what was the
-    date/time of the last line of it's log output.
     """
     pidFile = os.path.join(bbClient, 'twistd.pid')
     log.debug('checking if slave is alive [%s]' % pidFile)
@@ -198,7 +208,39 @@ def checkSlaveAlive(bbClient):
     return False
 
 def checkSlaveActive(bbClient):
+    """Check to determine what was the date/time
+    of the last line of it's log output.
+    """
     logFile  = os.path.join(bbClient, 'twistd.log')
+    lastline = getLastLine(logFile)
+    if len(lastline) > 0:
+        logTS  = datetime.datetime.strptime(lastline[:19], '%Y-%m-%d %H:%M:%S')
+        logTD  = datetime.datetime.now() - logTS
+        return logTD
+    return None
+
+def checkCPAlive(bbClient):
+    """Check if the clientproxy process is alive.
+    """
+    pidFile = os.path.join(bbClient, 'clientproxy.pid')
+    log.debug('checking if clientproxy is alive [%s]' % pidFile)
+    if os.path.isfile(pidFile):
+        try:
+            pid = int(file(pidFile, 'r').read().strip())
+            try:
+                os.kill(pid, 0)
+                return True
+            except OSError:
+                dumpException('check to see if pid %s is active failed' % pid)
+        except:
+            dumpException('unable to check clientproxy - pidfile [%s] was not readable' % pidFile)
+    return False
+
+def checkCPActive(bbClient):
+    """Check to determine what was the date/time
+    of the last line of it's log output.
+    """
+    logFile  = os.path.join(bbClient, 'clientproxy.log')
     lastline = getLastLine(logFile)
     if len(lastline) > 0:
         logTS  = datetime.datetime.strptime(lastline[:19], '%Y-%m-%d %H:%M:%S')
