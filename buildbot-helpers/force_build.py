@@ -28,7 +28,7 @@ class Forcer:
             args['revision'] = revision
         i = 1
         for key,value in properties.iteritems():
-            p = "prop%d" % i
+            p = "property%d" % i
             args['%sname' % p] = key
             args['%svalue' % p] = value
             i += 1
