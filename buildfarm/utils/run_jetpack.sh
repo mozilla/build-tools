@@ -54,6 +54,14 @@ else
   exit 1
 fi
 
+if [ $# = 4 ]; then
+  # jetpack poller runs need to
+  # prepare (unzip, install, untar) the executable
+  if [ "$POLLER_CMD" ]; then
+    $POLLER_CMD
+  fi
+fi
+
 # Make sure we have an app to run the test suite against
 # Mac builds require getting the $APP_PATH after installing the dmg (for jetpack-poller)
 if [ "$1" == 'macosx' -o "$1" == 'macosx64' -o "$1" == 'leopard' -o "$1" == 'snowleopard' ]; then
@@ -63,13 +71,7 @@ if [ ! -e "$APP_PATH" ]; then
   echo "The location \"$APP_PATH\" does not exist"
   exit 1
 fi
-if [ $# = 4 ]; then
-  # jetpack poller runs need to
-  # prepare (unzip, install, untar) the executable
-  if [ "$POLLER_CMD" ]; then
-    $POLLER_CMD
-  fi
-fi
+
 # Run it!
 tar -xvf $JETPACK_TARBALL $UNTAR_ARGS
 # Find the sdk dir to run tests in
