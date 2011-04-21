@@ -107,6 +107,26 @@ def verify_configs(revision, hghost, configs_repo, changesets, filename):
         success = False
     return success
 
+def verify_l10n_changesets(hgHost, l10n_changesets):
+    """Checks for the existance of all l10n changesets"""
+    success = True
+    for line in open(l10n_changesets, 'r'):
+        locale, revision = line.split()
+        localePath = '%(repoPath)s/%(locale)s/file/%(revision)s' % {
+            'repoPath': releaseConfig['l10nRepoPath'].strip('/'),
+            'locale': locale,
+            'revision': revision,
+        }
+        locale_url = make_hg_url(hgHost, localePath, protocol='https')
+        log.info("Checking for existence l10n changeset %s %s in repo %s ..." 
+            % (locale, revision, locale_url))
+        try:
+            urllib2.urlopen(locale_url)
+        except urllib2.HTTPError:
+            log.error("cannot find l10n locale %s in repo %s" % (locale, locale_url))
+            success = False
+    return success
+
 def verify_options(cmd_options, config):
     """Check release_configs against command-line opts"""
     success = True
@@ -189,6 +209,13 @@ if __name__ == '__main__':
                 ):
             test_success = False
             log.error("Error verifying configs")
+
+        #verify that l10n changesets exist
+        if not verify_l10n_changesets(
+                branchConfig['hghost'],
+                releaseConfig['l10nRevisionFile']):
+            test_success = False
+            log.error("Error verifying l10n changesets")
 
         #verify that the relBranch + revision in the release_configs exists in hg
         for sr in releaseConfig['sourceRepositories'].values():
