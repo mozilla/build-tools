@@ -180,7 +180,7 @@ def stopProcess(pidFile, label):
                     os.remove(pidFile)
             except:
                 dumpException('verify step of stopProcess')
-                log.error('%s: pid %s not found' % label)
+                log.error('%s: pid %s not found' % (label, pid))
         except ValueError:
             log.error('unable to read %s' % pidFile)
 

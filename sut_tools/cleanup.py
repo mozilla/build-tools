@@ -4,15 +4,16 @@ import os, sys
 import time
 import devicemanager
 
-from sut_lib import clearFlag, setFlag, checkDeviceRoot
+from sut_lib import clearFlag, setFlag, checkDeviceRoot, stopProcess
 
 if (len(sys.argv) <> 2):
     print "usage: cleanup.py <ip address>"
     sys.exit(1)
 
 cwd       = os.getcwd()
-flagFile  = os.path.join(cwd, '..', 'proxy.flg')
-errorFile = os.path.join(cwd, '..', 'error.flg')
+pidDir    = os.path.join(cwd, '..')
+flagFile  = os.path.join(pidDir, 'proxy.flg')
+errorFile = os.path.join(pidDir, 'error.flg')
 
 if os.path.exists(flagFile):
     print "Warning proxy.flg found during cleanup"
@@ -34,3 +35,14 @@ if dm.dirExists(devRoot):
     if status is None or not status:
        setFlag(errorFile, "Remote Device Error: call to removeDir() returned [%s]" % status)
        sys.exit(1)
+
+for f in ('runtestsremote', 'remotereftest'):
+    pidFile = os.path.join(pidDir, '%s.pid' % f)
+    print "checking for previous test processes ... %s" % pidFile
+    if os.path.exists(pidFile):
+        print "pidfile from prior test run found, trying to kill"
+        stopProcess(pidFile, f)
+        if os.path.exists(pidFile):
+            setFlag(errorFile, "Remote Device Error: process from previous test run present [%s]" % f)
+            sys.exit(2)
+
