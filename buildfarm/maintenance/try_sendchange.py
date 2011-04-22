@@ -88,8 +88,8 @@ if __name__ == "__main__":
                     platform = "%s-%s" % (platform, buildType)
                   if dir.endswith(platform):
                     tryUrlPath = PLATFORM_BASE_PATH % {'email': email, 
-                                                                                'changeset': changeset, 
-                                                                                'platform': platform}
+                                                    'changeset': changeset, 
+                                                    'platform': platform}
                     filelist = ftp.nlst(tryUrlPath)
 
                     packagedTests = None
