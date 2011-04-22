@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Created by Lukas Blakk on 2010-08-25
-"""try_sendchange.py tryserverDir args
+"""try_sendchange.py tryDir args
 
 example usage:
     python try_sendchange.py lsblakk@mozilla.com-94624b46ec1b --build o --p all --u all --t none
@@ -13,13 +13,13 @@ from ftplib import FTP
 
 TEST_MASTERS = ['production-master01.build.mozilla.org:9009']
 PLATFORMS = ['linux', 'linux64', 'macosx', 'macosx64', 'win32']
-TRY_BASE_PATH = '/pub/mozilla.org/firefox/tryserver-builds/%(email)s-%(changeset)s/'
-PLATFORM_BASE_PATH = '/pub/mozilla.org/firefox/tryserver-builds/%(email)s-%(changeset)s/tryserver-%(platform)s/'
+TRY_BASE_PATH = '/pub/mozilla.org/firefox/try-builds/%(email)s-%(changeset)s/'
+PLATFORM_BASE_PATH = '/pub/mozilla.org/firefox/try-builds/%(email)s-%(changeset)s/try-%(platform)s/'
 
 if __name__ == "__main__":
     args = sys.argv[1:]
 
-    parser = argparse.ArgumentParser(description='Accepts command line arguments for creating a test/talos tryserver sendchanges', usage='%(prog)s email-changeset [options]')
+    parser = argparse.ArgumentParser(description='Accepts command line arguments for creating a test/talos try sendchanges', usage='%(prog)s email-changeset [options]')
 
     parser.add_argument('--dry-run', '-n',
                         action='store_true',
@@ -75,9 +75,8 @@ if __name__ == "__main__":
             ftp = FTP('dm-ftp01.mozilla.org')
             ftp.login()
 
-            tryserverDirPath = TRY_BASE_PATH % {'email': email, 
-                                                  'changeset': changeset}
-            dirlist = ftp.nlst(tryserverDirPath)
+            tryDirPath = TRY_BASE_PATH % {'email': email, 'changeset': changeset}
+            dirlist = ftp.nlst(tryDirPath)
             if dirlist:
               print "Scanning ftp...\n"
             else:
@@ -88,10 +87,10 @@ if __name__ == "__main__":
                   if buildType == 'debug':
                     platform = "%s-%s" % (platform, buildType)
                   if dir.endswith(platform):
-                    tryserverUrlPath = PLATFORM_BASE_PATH % {'email': email, 
-                                                          'changeset': changeset, 
-                                                          'platform': platform}
-                    filelist = ftp.nlst(tryserverUrlPath)
+                    tryUrlPath = PLATFORM_BASE_PATH % {'email': email, 
+                                                                                'changeset': changeset, 
+                                                                                'platform': platform}
+                    filelist = ftp.nlst(tryUrlPath)
 
                     packagedTests = None
                     for f in filelist:
@@ -111,7 +110,7 @@ if __name__ == "__main__":
 
                     if options.talos != 'none' and buildType == 'opt' and path:
                         sendchange = "buildbot sendchange --master %(master)s " \
-                                     "--branch tryserver-%(platform)s-talos " \
+                                     "--branch try-%(platform)s-talos " \
                                      "--revision %(changeset)s " \
                                      "--comment \"try: --t %(talos)s\" " \
                                      "--user %(email)s http://stage.mozilla.org%(path)s " \
@@ -131,7 +130,7 @@ if __name__ == "__main__":
                         # buildType on in the sendchange
                         platform = platform.split('-')[0]
                         sendchange = "buildbot sendchange --master %(master)s " \
-                                     "--branch tryserver-%(platform)s-%(buildType)s-unittest " \
+                                     "--branch try-%(platform)s-%(buildType)s-unittest " \
                                      "--revision %(changeset)s " \
                                      "--comment \"try: --u %(tests)s\" " \
                                      "--user %(email)s http://stage.mozilla.org%(path)s " \
