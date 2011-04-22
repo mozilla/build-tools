@@ -49,7 +49,8 @@ def recreate_repos(repoSetupConfig):
         if repoSetupConfig['reposToClone'][repo].get('overrides'):
             tags = bump_configs(
                 hgHost, hgUserName, hgSshKey, repo, repoPath,
-                repoSetupConfig['reposToClone'][repo]['overrides'])
+                repoSetupConfig['reposToClone'][repo]['overrides'],
+                repoSetupConfig['reposToClone'][repo].get('nobump_overrides', []))
             allTags.extend(tags)
     log.info('Tagging using %s' % ' '. join(allTags))
 
@@ -79,19 +80,27 @@ def clone_repo(server, username, sshKey, repo):
                         server, username, sshKey))
 
 
-def bump_configs(server, username, sshKey, repo, repoPath, configsToBump):
+def bump_configs(server, username, sshKey, repo, repoPath, configsToBump,
+                 configsToOverride):
     reponame = get_repo_name(repo)
     repo_url = make_hg_url(server, '%s/%s' % (repoPath, reponame))
     pushRepo = make_hg_url(server, '%s/%s' % (repoPath, reponame),
                                protocol='ssh')
     retry(mercurial, args=(repo_url, reponame))
 
-    def bump(repo, configsToBump):
+    def bump(repo, configsToBump, configsToOverride):
+        """Process dynamic (version, buildNumber, etc.) variables in
+        configsToBump, then append overrides files to both configsToBump and
+        configsToOverride."""
+        # First pass. Bump variables in configsToBump.
         configs = ['%s/%s' % (repo, x) for x in configsToBump.keys()]
         cmd = ['python', BUMP_SCRIPT, '--bump-version', '--revision=tip']
         cmd.extend(configs)
         run_cmd(cmd)
-        for config, overrides in configsToBump.iteritems():
+        # Second pass. Append override files to configsToBump and
+        # configsToOverride.
+        for config, overrides in \
+            configsToBump.items() + configsToOverride.items():
             newContent = cat([path.join(repo, config)] +
                           [path.join(repo, x) for x in overrides])
             fh = open(path.join(repo, config), 'wb')
@@ -101,7 +110,7 @@ def bump_configs(server, username, sshKey, repo, repoPath, configsToBump):
                 cwd=repo)
 
     def bump_wrapper(r, n):
-        bump(r, configsToBump)
+        bump(r, configsToBump, configsToOverride)
 
     def cleanup_wrapper():
         cleanOutgoingRevs(reponame, pushRepo, username, sshKey)

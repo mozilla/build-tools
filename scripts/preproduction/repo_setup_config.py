@@ -20,6 +20,11 @@ repoSetupConfig['reposToClone'] = {
                 'mozilla/preproduction_release_overrides-2.0.py',
              ],
         },
+        'nobump_overrides': {
+            'mozilla/preproduction_config.py': [
+                'mozilla/preproduction_config_overrides.py',
+            ],
+        },
         'doTag': True,
     },
     'build/tools': {
