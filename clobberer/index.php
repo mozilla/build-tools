@@ -258,7 +258,7 @@ if ($_POST['form_submitted']) {
         if (canSee($builddir, $user)) {
             $dbh->exec("INSERT INTO clobber_times "
                 ."(master, branch, builddir, slave, who, lastclobber) VALUES "
-                ."(NULL, $branch, $builddir, $slave, $e_user, $now)") or die(print_r($$dbh->errorInfo(), TRUE));
+                ."(NULL, $branch, $builddir, $slave, $e_user, $now)") or die(print_r($dbh->errorInfo(), TRUE));
         }
       }
     }
@@ -267,6 +267,8 @@ if ($_POST['form_submitted']) {
   // This prevents accidentally resubmitting the form if the user reloads the 
   // page
   header("Location: " . $_SERVER['REQUEST_URI']);
+  print("Done.");
+  exit(0);
 }
 
 $buildername = urldecode($_GET['buildername']);
@@ -420,7 +422,7 @@ Clobber all release builders on <select name="master">
       }
       return strnatcmp($r1['slave'], $r2['slave']);
     }
-    usort($rows, sort_func);
+    usort($rows, 'sort_func');
     // Second pass we output the HTML
     foreach ($rows as $r) {
       print "<tr>";
