@@ -20,14 +20,14 @@ LONG_DATED_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/%(ni
 CANDIDATES_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(version)s-candidates/build%(buildnumber)s"
 PVT_BUILD_URL_PATH = "https://dm-pvtbuild01.mozilla.org/%(product)s/%(tinderbox_builds_dir)s"
 PVT_BUILD_DIR = "/mnt/pvt_builds/%(product)s/%(tinderbox_builds_dir)s"
-TRYSERVER_DIR = "/home/ftp/pub/%(product)s/tryserver-builds/%(who)s-%(revision)s/%(builddir)s"
-TRYSERVER_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/tryserver-builds/%(who)s-%(revision)s/%(builddir)s"
+TRY_DIR = "/home/ftp/pub/%(product)s/try-builds/%(who)s-%(revision)s/%(builddir)s"
+TRY_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/try-builds/%(who)s-%(revision)s/%(builddir)s"
 # Staging configs start here.  Uncomment when working on staging
 #TINDERBOX_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
 #LONG_DATED_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(year)s/%(month)s/%(year)s-%(month)s-%(day)s-%(hour)s-%(branch)s"
 #CANDIDATES_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(version)s-candidates/build%(buildnumber)s"
-#TRYSERVER_DIR = "/home/ftp/pub/%(product)s/tryserver-builds/%(who)s-%(revision)s/%(builddir)s"
-#TRYSERVER_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/tryserver-builds/%(who)s-%(revision)s/%(builddir)s"
+#TRY_DIR = "/home/ftp/pub/%(product)s/try-builds/%(who)s-%(revision)s/%(builddir)s"
+#TRY_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/try-builds/%(who)s-%(revision)s/%(builddir)s"
 #PVT_BUILD_URL_PATH = "https://dm-pvtbuild01.mozilla.org/staging/%(product)s/%(tinderbox_builds_dir)s"
 #PVT_BUILD_DIR = "/mnt/pvt_builds/staging/%(product)s/%(tinderbox_builds_dir)s"
 
@@ -254,18 +254,18 @@ def ReleaseToMobileCandidatesDir(options, upload_dir, files):
         for d in dirs:
             os.chmod(os.path.join(root, d), 0755)
 
-def ReleaseToTryserverBuilds(options, upload_dir, files):
-    tryserverBuildsPath = TRYSERVER_DIR % {'product': options.product,
+def ReleaseToTryBuilds(options, upload_dir, files):
+    tryBuildsPath = TRY_DIR % {'product': options.product,
                                            'who': options.who,
                                            'revision': options.revision,
                                            'builddir': options.builddir}
-    tryserverBuildsUrl = TRYSERVER_URL_PATH % {'product': options.product,
+    tryBuildsUrl = TRY_URL_PATH % {'product': options.product,
                                                'who': options.who,
                                                'revision': options.revision,
                                                'builddir': options.builddir}
     for f in files:
-        CopyFileToDir(f, upload_dir, tryserverBuildsPath)
-        sys.stderr.write("%s\n" % os.path.join(tryserverBuildsUrl, os.path.basename(f)))
+        CopyFileToDir(f, upload_dir, tryBuildsPath)
+        sys.stderr.write("%s\n" % os.path.join(tryBuildsUrl, os.path.basename(f)))
 
 if __name__ == '__main__':
     releaseTo = []
@@ -324,9 +324,9 @@ if __name__ == '__main__':
     parser.add_option("--release-to-shadow-central-builds",
                       action="store_true", dest="release_to_shadow_central_builds",
                       help="Copy files to shadow-central/$tinderbox_builds_dir/$timestamp")
-    parser.add_option("--release-to-tryserver-builds",
-                      action="store_true", dest="release_to_tryserver_builds",
-                      help="Copy files to tryserver-builds/$who-$revision")
+    parser.add_option("--release-to-try-builds",
+                      action="store_true", dest="release_to_try_builds",
+                      help="Copy files to try-builds/$who-$revision")
     (options, args) = parser.parse_args()
     
     if len(args) < 2:
@@ -390,8 +390,8 @@ if __name__ == '__main__':
         if not options.buildid:
             print "Error, you must supply the build id."
             error = True
-    if options.release_to_tryserver_builds:
-        releaseTo.append(ReleaseToTryserverBuilds)
+    if options.release_to_try_builds:
+        releaseTo.append(ReleaseToTryBuilds)
         if not options.who:
             print "Error, must supply who"
             error = True
