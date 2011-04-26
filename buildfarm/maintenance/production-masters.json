@@ -278,7 +278,7 @@
   },
   {
     "hostname": "buildbot-master04.build.scl1.mozilla.com",
-    "enabled": false,
+    "enabled": true,
     "master_dir": "/builds/buildbot/build1/master",
     "name": "bm04-build1",
     "role": "build",
@@ -298,7 +298,7 @@
   },
   {
     "hostname": "buildbot-master04.build.scl1.mozilla.com",
-    "enabled": false,
+    "enabled": true,
     "master_dir": "/builds/buildbot/tests1/master",
     "name": "bm04-tests1",
     "role": "tests",
@@ -318,7 +318,7 @@
   },
   {
     "hostname": "buildbot-master04.build.scl1.mozilla.com",
-    "enabled": false,
+    "enabled": true,
     "master_dir": "/builds/buildbot/try1/master",
     "name": "bm04-try1",
     "role": "try",
@@ -398,7 +398,7 @@
   },
   {
     "hostname": "buildbot-master06.build.scl1.mozilla.com",
-    "enabled": false,
+    "enabled": true,
     "master_dir": "/builds/buildbot/build1/master",
     "name": "bm06-build1",
     "role": "build",
@@ -418,7 +418,7 @@
   },
   {
     "hostname": "buildbot-master06.build.scl1.mozilla.com",
-    "enabled": false,
+    "enabled": true,
     "master_dir": "/builds/buildbot/tests1/master",
     "name": "bm06-tests1",
     "role": "tests",
@@ -438,7 +438,7 @@
   },
   {
     "hostname": "buildbot-master06.build.scl1.mozilla.com",
-    "enabled": false,
+    "enabled": true,
     "master_dir": "/builds/buildbot/try1/master",
     "name": "bm06-try1",
     "role": "try",
