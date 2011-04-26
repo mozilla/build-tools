@@ -22,7 +22,7 @@ class Watcher:
         self.started = False
 
         self.fp = open(fname)
-        self.fp.seek(0, os.SEEK_END)
+        self.fp.seek(0, 2) # SEEK_END
         self.current_inode = os.fstat(self.fp.fileno()).st_ino
 
 
