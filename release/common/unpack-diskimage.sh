@@ -79,8 +79,17 @@ while [ "$(echo $MOUNTPOINT/*)" == "$MOUNTPOINT/*" ]; do
     i=$(expr $i + 1)
 done
 # Now we can copy everything out of the $MOUNTPOINT directory into the target directory
-rsync -av $MOUNTPOINT/* $MOUNTPOINT/.DS_Store $MOUNTPOINT/.background $MOUNTPOINT/.VolumeIcon.icns $TARGETPATH/. > $LOGFILE
-hdiutil detach $MOUNTPOINT
+rsync -av $MOUNTPOINT/* $MOUNTPOINT/.DS_Store $MOUNTPOINT/.background $MOUNTPOINT/.VolumeIcon.icns $TARGETPATH/ > $LOGFILE
+# sometimes hdiutil fails with "Resource busy"
+hdiutil detach $MOUNTPOINT || { sleep  10; \
+    if [ -d $MOUNTPOINT ]; then hdiutil detach $MOUNTPOINT -force; fi; }
+i=0
+while [ "$(echo $MOUNTPOINT/*)" != "$MOUNTPOINT/*" ]; do
+    if [ $i -gt $TIMEOUT ]; then
+        echo "Cannot umount, exiting"
+        exit 1
+    fi
+    sleep 1
+    i=$(expr $i + 1)
+done
 rm -rdf $MOUNTPOINT
-# Sleep for a bit to let messages from diskimage-helper go away
-sleep 5
