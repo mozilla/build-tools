@@ -32,4 +32,6 @@ repoSetupConfig['reposToClone'] = {
     },
     'build/buildbotcustom': {},
     'build/buildbot': {},
+    'build/compare-locales': {},
+    'build/partner-repacks': {},
 }
