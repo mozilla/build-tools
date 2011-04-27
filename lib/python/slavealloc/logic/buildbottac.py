@@ -6,8 +6,6 @@ tac_template = """\
 # generated: %(gendate)s on %(genhost)s
 from twisted.application import service
 from buildbot.slave.bot import BuildSlave
-from twisted.python.logfile import LogFile
-from twisted.python.log import ILogObserver, FileLogObserver
 
 maxdelay = 300
 buildmaster_host = %(buildmaster_host)r
@@ -22,9 +20,14 @@ port = %(port)r
 keepalive = None
 
 application = service.Application('buildslave')
-logfile = LogFile.fromFullPath("twistd.log", rotateLength=rotateLength,
+try:
+    from twisted.python.logfile import LogFile
+    from twisted.python.log import ILogObserver, FileLogObserver
+    logfile = LogFile.fromFullPath("twistd.log", rotateLength=rotateLength,
                              maxRotatedFiles=maxRotatedFiles)
-application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
+    application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
+except ImportError:
+    pass # old Twisted install - mostly on geriatric slaves
 s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
                keepalive, usepty, umask=umask, maxdelay=maxdelay)
 s.setServiceParent(application)
