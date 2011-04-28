@@ -17,7 +17,7 @@
     "http_port": 8010,
     "pb_port": 9010,
     "ssh_port": 1235,
-    "datacentre": "mpt"
+    "datacentre": "sjc1"
   }, 
   {
     "basedir": "/builds/buildbot/scheduler_master", 
@@ -36,7 +36,7 @@
     "tools_branch": "default",
     "pb_port": 9009,
     "ssh_port": 1234,
-    "datacentre": "mpt"
+    "datacentre": "sjc1"
   }, 
   {
     "basedir": "/builds/buildbot/tests-scheduler", 
@@ -54,7 +54,7 @@
     "tools_dir": "/builds/buildbot/tests-scheduler/tools",
     "tools_branch": "default",
     "pb_port": 9008,
-    "datacentre": "mpt"
+    "datacentre": "sjc1"
   }, 
   {
     "basedir": "/builds/buildbot/try-trunk-master", 
@@ -74,7 +74,7 @@
     "http_port": 8011,
     "pb_port": 9011,
     "ssh_port": 1236,
-    "datacentre": "mpt"
+    "datacentre": "sjc1"
   }, 
   {
     "basedir": "/builds/buildbot/try_master1", 
@@ -94,7 +94,7 @@
     "http_port": 8011,
     "pb_port": 9011,
     "ssh_port": 1236,
-    "datacentre": "mv"
+    "datacentre": "mtv1"
   }, 
   {
     "hostname": "buildbot-master1.build.scl1.mozilla.com", 
@@ -114,7 +114,7 @@
     "http_port": 8013,
     "pb_port": 9013,
     "ssh_port": 1237,
-    "datacentre": "scl"
+    "datacentre": "scl1"
   }, 
   {
     "hostname": "buildbot-master2.build.scl1.mozilla.com", 
@@ -134,7 +134,7 @@
     "http_port": 8013,
     "pb_port": 9013,
     "ssh_port": 1237,
-    "datacentre": "scl"
+    "datacentre": "scl1"
   }, 
   {
     "basedir": "/builds/buildbot/builder_master", 
@@ -154,7 +154,7 @@
     "http_port": 8010,
     "pb_port": 9010,
     "ssh_port": 1235,
-    "datacentre": "mpt"
+    "datacentre": "sjc1"
   }, 
   {
     "basedir": "/builds/buildbot/tests-master", 
@@ -174,7 +174,7 @@
     "http_port": 8012,
     "pb_port": 9012,
     "ssh_port": 1235,
-    "datacentre": "mv"
+    "datacentre": "mtv1"
   }, 
   {
     "hostname": "buildbot-master1.build.scl1.mozilla.com", 
@@ -194,7 +194,7 @@
     "http_port": 8010,
     "pb_port": 9010,
     "ssh_port": 1235,
-    "datacentre": "scl"
+    "datacentre": "scl1"
   }, 
   {
     "hostname": "buildbot-master2.build.scl1.mozilla.com", 
@@ -214,7 +214,7 @@
     "http_port": 8010,
     "pb_port": 9010,
     "ssh_port": 1235,
-    "datacentre": "scl"
+    "datacentre": "scl1"
   }, 
   {
     "hostname": "buildbot-master1.build.scl1.mozilla.com", 
@@ -234,7 +234,7 @@
     "http_port": 8012,
     "pb_port": 9012,
     "ssh_port": 1237,
-    "datacentre": "scl"
+    "datacentre": "scl1"
   }, 
   {
     "hostname": "buildbot-master2.build.scl1.mozilla.com", 
@@ -254,7 +254,7 @@
     "http_port": 8011,
     "pb_port": 9011,
     "ssh_port": 1236,
-    "datacentre": "scl"
+    "datacentre": "scl1"
   }, 
   {
     "hostname": "buildbot-master2.build.scl1.mozilla.com", 
@@ -274,7 +274,7 @@
     "http_port": 8012,
     "pb_port": 9012,
     "ssh_port": 1237,
-    "datacentre": "scl"
+    "datacentre": "scl1"
   },
   {
     "hostname": "buildbot-master04.build.scl1.mozilla.com",
@@ -294,7 +294,7 @@
     "http_port": 8001,
     "pb_port": 9001,
     "ssh_port": 7001,
-    "datacentre": "scl"
+    "datacentre": "scl1"
   },
   {
     "hostname": "buildbot-master04.build.scl1.mozilla.com",
@@ -314,7 +314,7 @@
     "http_port": 8201,
     "pb_port": 9201,
     "ssh_port": 7201,
-    "datacentre": "scl"
+    "datacentre": "scl1"
   },
   {
     "hostname": "buildbot-master04.build.scl1.mozilla.com",
@@ -334,7 +334,7 @@
     "http_port": 8101,
     "pb_port": 9101,
     "ssh_port": 7101,
-    "datacentre": "scl"
+    "datacentre": "scl1"
   },
   {
     "hostname": "buildbot-master5.build.mozilla.org",
@@ -354,7 +354,7 @@
     "http_port": 8010,
     "pb_port": 9010,
     "ssh_port": 1235,
-    "datacentre": "scl"
+    "datacentre": "scl1"
   },
   {
     "hostname": "buildbot-master5.build.mozilla.org", 
@@ -374,7 +374,7 @@
     "http_port": 8011,
     "pb_port": 9011,
     "ssh_port": 1236,
-    "datacentre": "scl"
+    "datacentre": "scl1"
   }, 
   {
     "hostname": "buildbot-master5.build.scl1.mozilla.com",
@@ -394,7 +394,7 @@
     "http_port": 8012,
     "pb_port": 9012,
     "ssh_port": 1238,
-    "datacentre": "scl"
+    "datacentre": "scl1"
   },
   {
     "hostname": "buildbot-master06.build.scl1.mozilla.com",
@@ -414,7 +414,7 @@
     "http_port": 8001,
     "pb_port": 9001,
     "ssh_port": 7001,
-    "datacentre": "scl"
+    "datacentre": "scl1"
   },
   {
     "hostname": "buildbot-master06.build.scl1.mozilla.com",
@@ -434,7 +434,7 @@
     "http_port": 8201,
     "pb_port": 9201,
     "ssh_port": 7201,
-    "datacentre": "scl"
+    "datacentre": "scl1"
   },
   {
     "hostname": "buildbot-master06.build.scl1.mozilla.com",
@@ -454,7 +454,7 @@
     "http_port": 8101,
     "pb_port": 9101,
     "ssh_port": 7101,
-    "datacentre": "scl"
+    "datacentre": "scl1"
   }
 ]
 
