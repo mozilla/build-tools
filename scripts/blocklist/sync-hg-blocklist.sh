@@ -14,6 +14,7 @@ DONTBUILD=false
 HG_SSH_USER='ffxbld'
 HG_SSH_KEY='~cltbld/.ssh/ffxbld_dsa'
 PRODUCT='firefox'
+
 while [ $# -gt 0 ]; do
     case "$1" in
         -p) PRODUCT="$2"; shift;;
@@ -77,7 +78,7 @@ compare_blocklists()
         echo "ERROR Unable to parse version from version.txt"
     fi
 
-    BLOCKLIST_URL_AMO="https://addons.mozilla.org/blocklist/3/${APP_ID}/${VERSION}/${APP_NAME}/20090105024647/blocklist-sync/en-US/nightly/blocklist-sync/default/default/"
+    BLOCKLIST_URL_AMO="https://addons-next.allizom.org/blocklist/3/${APP_ID}/${VERSION}/${APP_NAME}/20090105024647/blocklist-sync/en-US/nightly/blocklist-sync/default/default/"
     rm -f blocklist_amo.xml
     ${WGET} --no-check-certificate -O blocklist_amo.xml ${BLOCKLIST_URL_AMO}
     WGET_STATUS=$?
@@ -92,6 +93,20 @@ compare_blocklists()
     if [ $WGET_STATUS != 0 ]; then
         echo "ERROR wget exited with a non-zero exit code: $WGET_STATUS"
         return $WGET_STATUS
+    fi
+
+    # The downloaded files should have a valid xml header if they were 
+    # retrieved properly, and some random HTML garbage if not.
+    XML_HEADER='<?xml version="1.0"?>'
+    AMO_HEADER=`head -n1 blocklist_amo.xml`
+    HG_HEADER=`head -n1 blocklist_hg.xml`
+    if [ "$XML_HEADER" != "$AMO_HEADER" ]; then
+	echo "AMO blocklist does not appear to be an XML file. wget error?"
+	exit 1
+    fi 
+    if [ "$XML_HEADER" != "$HG_HEADER" ]; then
+	echo "HG blocklist does not appear to be an XML file. wget error?"
+        exit 1
     fi
 
     ${DIFF} blocklist_hg.xml blocklist_amo.xml >/dev/null 2>&1
