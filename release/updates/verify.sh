@@ -16,6 +16,8 @@ TEST_ONLY=2
 MARS_ONLY=3
 COMPLETE=4
 use_old_updater=0
+forced_channel=
+force="?force=1"
 
 usage()
 {
@@ -25,6 +27,8 @@ usage()
   echo "    -m, --mars-only        only test MARs"
   echo "    -c, --complete         complete upgrade test"
   echo "    -o, --old-updater      use old updater syntax"
+  echo "    -f, --channel          override channel"
+  echo "    -n, --no-force         don't append force=1"
 }
 
 if [ -z "$*" ]
@@ -55,6 +59,15 @@ do
       ;;
     -o | --old-updater)
       use_old_updater=1
+      shift
+      ;;
+    -f | --channel)
+      forced_channel=$2
+      shift
+      shift
+      ;;
+    -n | --no-force )
+      force=
       shift
       ;;
     *)
@@ -93,6 +106,9 @@ do
   to=""
   patch_types="complete"
   eval $entry
+  if [ "x$forced_channel" != "x" ]; then
+    channel=$forced_channel
+  fi
   for locale in $locales
   do
     rm -f update/partial.size update/complete.size
@@ -103,10 +119,10 @@ do
       then
         if [ "$runmode" == "$TEST_ONLY" ]
         then
-          download_mars "${aus_server}/update/1/$product/$release/$build_id/$platform/$locale/$channel/update.xml?force=1" $patch_type 1
+          download_mars "${aus_server}/update/1/$product/$release/$build_id/$platform/$locale/$channel/update.xml$force" $patch_type 1
           err=$?
         else
-          download_mars "${aus_server}/update/1/$product/$release/$build_id/$platform/$locale/$channel/update.xml?force=1" $patch_type
+          download_mars "${aus_server}/update/1/$product/$release/$build_id/$platform/$locale/$channel/update.xml$force" $patch_type
           err=$?
         fi
         if [ "$err" != "0" ]; then
@@ -117,7 +133,7 @@ do
         update_path="$product/$release/$build_id/$platform/$locale/$channel"
         mkdir -p updates/$update_path/complete
         mkdir -p updates/$update_path/partial
-        wget --no-check-certificate -q -O $patch_type updates/$update_path/$patch_type/update.xml "${aus_server}/update/1/$update_path/update.xml?force=1"
+        wget --no-check-certificate -q -O $patch_type updates/$update_path/$patch_type/update.xml "${aus_server}/update/1/$update_path/update.xml$force"
 
       fi
       if [ "$runmode" == "$COMPLETE" ]
