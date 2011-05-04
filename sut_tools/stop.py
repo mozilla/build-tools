@@ -42,6 +42,9 @@ def stopTegra(tegra):
 
     log.info('%s: %s - stopping all processes' % (tegra, tegraIP))
 
+    stopProcess(os.path.join(tegraPath, 'remotereftest.pid'), 'remotereftest')
+    stopProcess(os.path.join(tegraPath, 'runtestsremote.pid'), 'runtestsremote')
+    stopProcess(os.path.join(tegraPath, 'remotereftest.pid.xpcshell.pid'), 'xpcshell')
     stopProcess(os.path.join(tegraPath, 'clientproxy.pid'), 'clientproxy')
     stopProcess(os.path.join(tegraPath, 'twistd.pid'), 'buildslave')
 

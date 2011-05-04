@@ -36,7 +36,7 @@ if dm.dirExists(devRoot):
        setFlag(errorFile, "Remote Device Error: call to removeDir() returned [%s]" % status)
        sys.exit(1)
 
-for f in ('runtestsremote', 'remotereftest'):
+for f in ('runtestsremote', 'remotereftest', 'remotereftest.pid.xpcshell'):
     pidFile = os.path.join(pidDir, '%s.pid' % f)
     print "checking for previous test processes ... %s" % pidFile
     if os.path.exists(pidFile):
