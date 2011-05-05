@@ -163,13 +163,13 @@ def getLastLine(filename):
     return result
 
 def stopProcess(pidFile, label):
-    log.debug('looking for %s' % pidFile)
+    log.debug('%s: looking for %s' % (label, pidFile))
     if os.path.isfile(pidFile):
         try:
             pid = int(open(pidFile, 'r').read().strip())
-            log.debug('first attempt to kill %s' % pid)
+            log.debug('%s: first attempt to kill %s' % (label, pid))
             if not killPID(pid, includeChildren=True):
-                log.debug('second attempt to kill %s' % pid)
+                log.debug('%s: second attempt to kill %s' % (label, pid))
                 killPID(pid, signal=signal.SIGKILL, includeChildren=True)
             try:
                 log.debug('verifying %s is gone' % label)
@@ -182,7 +182,7 @@ def stopProcess(pidFile, label):
                 dumpException('verify step of stopProcess')
                 log.error('%s: pid %s not found' % (label, pid))
         except ValueError:
-            log.error('unable to read %s' % pidFile)
+            log.error('%s: unable to read %s' % (label, pidFile))
 
 def stopSlave(pidFile):
     """Try to terminate the buildslave
