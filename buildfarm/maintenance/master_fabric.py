@@ -42,11 +42,13 @@ def show_revisions(master):
                                         bbconfigs_rev, tools_rev)
 
 def reconfig(master):
+    print "starting reconfig of %(hostname)s:%(basedir)s" % master
     with show('running'):
         with cd(master['basedir']):
             put('buildbot-wrangler.py', '%s/buildbot-wrangler.py' % master['basedir'])
             run('rm -f *.pyc')
             run('python buildbot-wrangler.py reconfig %s' % master['master_dir'])
+    print "finished reconfig of %(hostname)s:%(basedir)s" % master
 
 def restart(master):
     with show('running'):
