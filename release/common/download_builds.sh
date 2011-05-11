@@ -1,3 +1,8 @@
+pushd `dirname $0` &>/dev/null
+MY_DIR=$(pwd)
+popd &>/dev/null
+retry="$MY_DIR/../../buildfarm/utils/retry.py -s 1 -r 3"
+
 download_builds() {
   # cleanup
   mkdir -p downloads/
@@ -19,7 +24,7 @@ download_builds() {
     #PARAMS="--user=user --password=pass"
     cd downloads 
     if [ -f "$source_file" ]; then rm "$source_file"; fi
-    wget --no-check-certificate -nv $PARAMS "$url" 2>&1
+    $retry wget --no-check-certificate -nv $PARAMS "$url" 2>&1
     status=$?
     if [ $status != 0 ]; then
       echo "FAIL: Could not download source $source_file from $url"

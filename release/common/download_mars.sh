@@ -1,10 +1,15 @@
+pushd `dirname $0` &>/dev/null
+MY_DIR=$(pwd)
+popd &>/dev/null
+retry="$MY_DIR/../../buildfarm/utils/retry.py -s 1 -r 3"
+
 download_mars () {
     update_url="$1"
     only="$2"
     test_only="$3"
 
     echo "Using  $update_url"
-    wget --no-check-certificate -q -O update.xml $update_url
+    $retry wget --no-check-certificate -q -O update.xml $update_url
 
     mkdir -p update/
     if [ -z $only ]; then
@@ -29,7 +34,7 @@ download_mars () {
         curl -k -s -I -L $URL
         return
       else
-        wget --no-check-certificate -nv -O update/$patch_type.mar $URL 2>&1 
+        $retry wget --no-check-certificate -nv -O update/$patch_type.mar $URL 2>&1 
       fi
       if [ "$?" != 0 ]; then
         echo "Could not download $patch_type!"

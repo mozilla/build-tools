@@ -9,6 +9,11 @@
 ftp_server="http://stage.mozilla.org/pub/mozilla.org"
 aus_server="https://aus2.mozilla.org"
 
+pushd `dirname $0` &>/dev/null
+MY_DIR=$(pwd)
+popd &>/dev/null
+retry="$MY_DIR/../../buildfarm/utils/retry.py -s 1 -r 3"
+
 runmode=0
 config_file="updates.cfg"
 UPDATE_ONLY=1
@@ -117,7 +122,7 @@ do
         update_path="$product/$release/$build_id/$platform/$locale/$channel"
         mkdir -p updates/$update_path/complete
         mkdir -p updates/$update_path/partial
-        wget --no-check-certificate -q -O $patch_type updates/$update_path/$patch_type/update.xml "${aus_server}/update/1/$update_path/update.xml?force=1"
+        $retry wget --no-check-certificate -q -O $patch_type updates/$update_path/$patch_type/update.xml "${aus_server}/update/1/$update_path/update.xml?force=1"
 
       fi
       if [ "$runmode" == "$COMPLETE" ]

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """retry.py [options] cmd [arg arg1 ...]
 
 Retries cmd and args with configurable timeouts and delays between retries.
