@@ -126,12 +126,21 @@ def purge(base_dirs, gigs, ignore, max_age, dry_run=False):
                 print >>sys.stderr, "Couldn't purge %s properly. Skipping." % d
 
 if __name__ == '__main__':
-    import sys, time
+    import time
     from optparse import OptionParser
+    from ConfigParser import ConfigParser, NoOptionError
+
+    max_age = 14
+    config = ConfigParser()
+    config.read(os.path.expanduser('~/.purge_builds.cfg'))
+    try:
+        max_age = config.getint('DEFAULT', 'max_age')
+    except NoOptionError, ValueError:
+        pass
 
     cwd = os.path.basename(os.getcwd())
     parser = OptionParser(usage=__doc__)
-    parser.set_defaults(size=5, skip=[cwd], dry_run=False, max_age=14)
+    parser.set_defaults(size=5, skip=[cwd], dry_run=False, max_age=max_age)
 
     parser.add_option('-s', '--size',
             help='free space required (in GB, default 5)', dest='size',
