@@ -135,7 +135,7 @@ if __name__ == '__main__':
     config.read(os.path.expanduser('~/.purge_builds.cfg'))
     try:
         max_age = config.getint('DEFAULT', 'max_age')
-    except NoOptionError, ValueError:
+    except (NoOptionError, ValueError):
         pass
 
     cwd = os.path.basename(os.getcwd())
