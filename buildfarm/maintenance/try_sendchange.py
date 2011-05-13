@@ -12,7 +12,7 @@ import sys, os, argparse, re
 from ftplib import FTP
 
 TEST_MASTERS = ['production-master01.build.mozilla.org:9009']
-PLATFORMS = ['linux', 'linux64', 'macosx', 'macosx64', 'win32']
+PLATFORMS = ['linux', 'linux64', 'macosx', 'macosx64', 'win32', 'android-r7']
 TRY_BASE_PATH = '/pub/mozilla.org/firefox/try-builds/%(email)s-%(changeset)s/'
 PLATFORM_BASE_PATH = '/pub/mozilla.org/firefox/try-builds/%(email)s-%(changeset)s/try-%(platform)s/'
 
@@ -101,7 +101,7 @@ if __name__ == "__main__":
 
                     path = None
                     for f in filelist:
-                        for suffix in ('.tar.bz2', '.win32.zip', '.dmg'):
+                        for suffix in ('.tar.bz2', '.win32.zip', '.dmg', '.eabi-arm.apk'):
                             if f.endswith(suffix):
                                 path = f
                                 print "Found build for %s" % platform
