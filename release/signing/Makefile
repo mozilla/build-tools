@@ -300,7 +300,7 @@ verify-asc:
 	@echo "Correct number of .asc files are present"
 
 fake-upload:
-	rsync -n -e "ssh -i $(SSH_KEY)" -avO signed-build$(BUILD)/ \
+	rsync -n -e "ssh -i $(SSH_KEY)" -avO $(WORKDIR)/signed-build$(BUILD)/ \
 	  $(STAGE_USERNAME)@$(STAGE_HOST):/home/ftp/pub/$(PRODUCT)/nightly/$(VERSION)-candidates/build$(BUILD)/ \
 	  | grep -v asc | grep -v exe | grep -v 'update/win32/.*/.*\.mar'
 	blat -to $(EMAIL) \
@@ -321,9 +321,9 @@ quick-verify:
 	fi
 
 upload:
-	rsync -e "ssh -i $(SSH_KEY)" -avO signed-build$(BUILD)/ \
+	rsync -e "ssh -i $(SSH_KEY)" -avO $(WORKDIR)/signed-build$(BUILD)/ \
 	  $(STAGE_USERNAME)@$(STAGE_HOST):/home/ftp/pub/$(PRODUCT)/nightly/$(VERSION)-candidates/build$(BUILD)/
 
 upload-log:
-	rsync -e "ssh -i $(SSH_KEY)" -av win32_signing_build${BUILD}.log \
+	rsync -e "ssh -i $(SSH_KEY)" -av $(WORKDIR)/win32_signing_build${BUILD}.log \
 	  $(STAGE_USERNAME)@$(STAGE_HOST):/home/ftp/pub/$(PRODUCT)/nightly/$(VERSION)-candidates/build$(BUILD)/
