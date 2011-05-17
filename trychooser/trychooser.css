@@ -1,0 +1,30 @@
+body {
+    margin: 0 auto;
+    width: 70%;
+    background: url(background.jpg) no-repeat;
+}
+
+.indent1 {
+    margin-left: 3em;
+}
+
+ul {
+    list-style: none;
+}
+
+.result_value {
+  background: lightgray;
+  border-style: inset;
+}
+
+.desktop_note {
+    margin-left: 3em;
+}
+
+.inline-list ul, .inline-list li {
+    display: inline;
+}
+
+label {
+    cursor: pointer;
+}
