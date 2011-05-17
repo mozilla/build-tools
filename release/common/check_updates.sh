@@ -25,14 +25,17 @@ check_updates () {
       Darwin_ppc-gcc | Darwin_Universal-gcc3 | Darwin_x86_64-gcc3 | Darwin_x86-gcc3-u-ppc-i386 | Darwin_x86-gcc3-u-i386-x86_64 | Darwin_x86_64-gcc3-u-i386-x86_64) 
           platform_dirname="*.app"
           updater="Contents/MacOS/updater.app/Contents/MacOS/updater"
+          binary_file_pattern='^Binary files'
           ;;
       WINNT_x86-msvc) 
           platform_dirname="bin"
           updater="updater.exe"
+          binary_file_pattern='^Files.*and.*differ$'
           ;;
       Linux_x86-gcc | Linux_x86-gcc3 | Linux_x86_64-gcc3) 
           platform_dirname=`echo $product | tr '[A-Z]' '[a-z]'`
           updater="updater"
+          binary_file_pattern='^Binary files'
           ;;
   esac
 
@@ -72,7 +75,7 @@ check_updates () {
       find "$to_test" -ls | grep -v "${to_test}$"
     fi
   done
-  grep '^Binary files' results.diff > /dev/null
+  grep "$binary_file_pattern" results.diff > /dev/null
   grepErr=$?
   if [ $grepErr == 0 ]
   then
