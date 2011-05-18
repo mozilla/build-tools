@@ -127,6 +127,37 @@ def verify_l10n_changesets(hgHost, l10n_changesets):
             success = False
     return success
 
+def verify_l10n_dashboard(l10n_changesets):
+    """Checks the l10n-changesets against the l10n dashboard"""
+    success = True
+    dash_url = 'https://l10n-stage-sj.mozilla.org/shipping/l10n-changesets?ms=fx%(version)s' % {
+        'version': releaseConfig['version'],
+    }
+    log.info("Comparing l10n changesets on dashboard %s to on-disk %s ..." 
+        % (dash_url, l10n_changesets))
+    try:
+        dash_changesets = {}
+        for line in urllib2.urlopen(dash_url):
+            locale, revision = line.split()
+            dash_changesets[locale] = revision
+        for line in open(l10n_changesets, 'r'):
+            locale, revision = line.split()
+            dash_revision = dash_changesets.pop(locale, None)
+            if not dash_revision:
+                log.error("\tlocale %s missing on dashboard" % locale)
+                success = False
+            elif revision != dash_revision:
+                log.error("\tlocale %s revisions not matching: %s (config) vs. %s (dashboard)" 
+                    % (locale, revision, dash_revision))
+                success = False
+        for locale in dash_changesets:
+            log.error("\tlocale %s missing in config" % locale)
+            success = False
+    except urllib2.HTTPError:
+        log.error("cannot find l10n dashboard at %s" % dash_url)
+        success = False
+    return success
+
 def verify_options(cmd_options, config):
     """Check release_configs against command-line opts"""
     success = True
@@ -216,6 +247,11 @@ if __name__ == '__main__':
                 releaseConfig['l10nRevisionFile']):
             test_success = False
             log.error("Error verifying l10n changesets")
+
+        #verify that l10n changesets match the dashboard
+        if not verify_l10n_dashboard(releaseConfig['l10nRevisionFile']):
+            test_success = False
+            log.error("Error verifying l10n dashboard changesets")
 
         #verify that the relBranch + revision in the release_configs exists in hg
         for sr in releaseConfig['sourceRepositories'].values():
