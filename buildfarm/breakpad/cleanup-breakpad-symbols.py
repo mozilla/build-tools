@@ -108,15 +108,20 @@ allfiles = {}
 buildfiles = {}
 print "[1/4] Reading symbol index files..."
 # get symbol index files, there's one per build
-for f in [x for x in os.listdir(symbolPath)
-          if (os.path.isfile(os.path.join(symbolPath, x)) and
-              x.endswith("-symbols.txt"))]:
+for f in os.listdir(symbolPath):
+    if not (os.path.isfile(os.path.join(symbolPath, f)) and
+            f.endswith("-symbols.txt")):
+        continue
     # increment reference count of all symbol files listed in the index
     # and also keep a list of files from that index
     buildfiles[f] = addFiles(os.path.join(symbolPath,f), allfiles)
-    parts = f.split("-")
+    # drop -symbols.txt
+    parts = f.split("-")[:-1]
     (product, version, osName, buildId) = parts[:4]
-    if not version.endswith("pre"): # skip release builds for now
+    # skip release builds for now
+    # nightly build versions end with "pre" (older branches)
+    # or "a1" (new mozilla-central) or "a2" (aurora)
+    if not (version.endswith("pre") or version.endswith("a1") or version.endswith("a2")):
         continue
     # extract branch
     m = versionRE.match(version)
@@ -126,8 +131,8 @@ for f in [x for x in os.listdir(symbolPath)
         branch = version
     # group into bins by product-branch-os[-featurebranch]
     identifier = "%s-%s-%s" % (product, branch, osName)
-    if len(parts) > 5: # extra buildid, probably
-        identifier += "-" + parts[4]
+    if len(parts) > 4: # extra buildid, probably
+        identifier += "-" + "-".join(parts[4:])
     adddefault(builds, identifier, [])
     builds[identifier].append(f)
 
