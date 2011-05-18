@@ -50,7 +50,7 @@ def getL10nRepositories(file, l10nRepoPath, relbranch=None):
 
 def makeReleaseRepackUrls(productName, brandName, version, platform,
                           locale='en-US'):
-    longVersion = getPrettyVersion(version)
+    longVersion = version
     platformDir = buildbot2ftp(platform)
     builds = {}
     if platform.startswith('linux'):
