@@ -49,6 +49,10 @@ class StopWatcher(Watcher):
                         # the shutdown
                         continue
 
+                # Print out "Waiting for n build(s) to finish"
+                if "Waiting for" in line:
+                    print >> sys.stderr, line.rstrip()
+
                 # Print out everything until the next blank line
                 if in_error:
                     if not line.strip():

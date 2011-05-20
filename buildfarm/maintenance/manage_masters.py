@@ -13,6 +13,7 @@ def run_action_on_master(action, master):
             return True
     except:
         import traceback
+        print "Failed to run", action, "on", master['name']
         print traceback.format_exc()
         return False
 
@@ -35,11 +36,15 @@ Supported actions:
             hosts=[],
             roles=[],
             concurrency=1,
+            show_list=False,
+            all_masters=False,
             )
     parser.add_option("-f", "--master-file", dest="master_file", help="list/url of masters")
     parser.add_option("-H", "--host", dest="hosts", action="append")
     parser.add_option("-R", "--role", dest="roles", action="append")
     parser.add_option("-j", dest="concurrency", type="int")
+    parser.add_option("-l", dest="show_list", action="store_true", help="list hosts")
+    parser.add_option("--all", dest="all_masters", action="store_true", help="work on all masters, not just enabled ones")
 
     options, actions = parser.parse_args()
 
@@ -49,7 +54,7 @@ Supported actions:
     if not options.master_file:
         parser.error("master-file is required")
 
-    if not actions:
+    if not actions and not options.show_list:
         parser.error("at least one action is required")
 
     # Load master data
@@ -58,7 +63,7 @@ Supported actions:
     masters = []
 
     for m in all_masters:
-        if not m['enabled']:
+        if not m['enabled'] and not options.all_masters:
             continue
         if m['name'] in options.hosts:
             masters.append(m)
@@ -66,6 +71,17 @@ Supported actions:
             masters.append(m)
         elif 'all' in options.hosts or 'all' in options.roles:
             masters.append(m)
+
+    if options.show_list:
+        if len(masters) == 0:
+            masters = [m for m in all_masters if m['enabled'] or options.all_masters]
+
+        fmt = "%(role)-9s %(name)-14s %(hostname)s:%(basedir)s"
+        print fmt % dict(role='role', name='name', hostname='hostname',
+                basedir='basedir')
+        for m in masters:
+            print fmt % m
+        sys.exit(0)
 
     if len(masters) == 0:
         parser.error("You need to specify a master via -H and/or -R")
