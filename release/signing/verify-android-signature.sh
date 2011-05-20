@@ -3,7 +3,8 @@
 function usage {
     echo "usage: $0 --apk=file.apk --tools-dir=dir [-n|-r]"
     echo -e "Required Parameters:"
-    echo -e "\t   --apk=file.apk: the apk file to verify"
+    echo -e "\t   --apk=path: the apk file to verify"
+    echo -e "\t     Will be downloaded if argument is a url (preceded by http:// for ex)."
     echo -e "\t   --tools-dir=dir: path to the tools directory\n"
     echo -e "\t   --nightly | -n: nightly package"
     echo -e "\tor --release | -r: release package"
@@ -17,6 +18,10 @@ for i in $@; do
     case $i in
     --apk=*)
         APKPATH=${i#*=}
+        if [[ $APKPATH =~ "://" ]]; then
+            curl -s $APKPATH > package.apk 
+            APKPATH="./package.apk"
+        fi
         if [ ! -f $APKPATH ]; then
             echo "ERROR: $APKPATH not a valid file." >&2
             exit 1
