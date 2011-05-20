@@ -19,6 +19,7 @@ def new_master(hostname, type_, instance=1):
     return {
         "hostname": hostname,
         "enabled": False,
+        "environment": "production",
         "master_dir": "/builds/buildbot/%s/master" % localname,
         "name": "%s-%s" % (host_abbrev, localname),
         "role": type_,
