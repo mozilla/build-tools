@@ -15,8 +15,8 @@ from sut_lib import getOurIP, calculatePort, clearFlag, setFlag, checkDeviceRoot
 # Stop buffering!
 sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
 
-if (len(sys.argv) <> 3):
-  print "usage: installApp.py <ip address> <localfilename>"
+if (len(sys.argv) < 3):
+  print "usage: installApp.py <ip address> <localfilename> [<processName>]"
   sys.exit(1)
 
 cwd       = os.getcwd()
@@ -25,6 +25,11 @@ proxyFile = os.path.join(cwd, '..', 'proxy.flg')
 errorFile = os.path.join(cwd, '..', 'error.flg')
 proxyIP   = getOurIP()
 proxyPort = calculatePort()
+
+if len(sys.argv) > 3:
+    processName = sys.argv[3]
+else:
+    processName = 'org.mozilla.fennec'
 
 print "connecting to: %s" % sys.argv[1]
 dm = devicemanager.DeviceManager(sys.argv[1])
@@ -61,18 +66,19 @@ if dm.pushFile(source, target):
             dm.reboot(proxyIP, proxyPort)
             waitForDevice(dm)
 
-        status = dm.updateApp(target, processName='org.mozilla.fennec', ipAddr=proxyIP, port=proxyPort)
-        if status is not None and status:
-            print "updateApp() call returned %s" % status
-
-            if dm.pushFile(inifile, '/data/data/org.mozilla.fennec/application.ini'):
+        #status = dm.updateApp(target, processName=processName, ipAddr=proxyIP, port=proxyPort)
+        #if status is not None and status:
+        #    print "updateApp() call returned %s" % status
+        status = dm.installApp(target)
+        if status is None:
+            if dm.pushFile(inifile, '/data/data/%s/application.ini' % processName):
                 dm.getInfo('process')
                 dm.getInfo('memory')
                 dm.getInfo('uptime')
-                pid = dm.processExist('org.mozilla.fennec')
-                print 'org.mozilla.fennec PID', pid
+                pid = dm.processExist(processName)
+                print '%s PID %s' % (processName, pid)
                 if pid is not None:
-                    dm.killProcess('org.mozilla.fennec')
+                    dm.killProcess(processName)
                 dm.getInfo('process')
             else:
                 clearFlag(proxyFile)

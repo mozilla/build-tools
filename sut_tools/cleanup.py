@@ -4,7 +4,7 @@ import os, sys
 import time
 import devicemanager
 
-from sut_lib import clearFlag, setFlag, checkDeviceRoot, stopProcess
+from sut_lib import clearFlag, setFlag, checkDeviceRoot, stopProcess, waitForDevice
 
 if (len(sys.argv) <> 2):
     print "usage: cleanup.py <ip address>"
@@ -14,6 +14,12 @@ cwd       = os.getcwd()
 pidDir    = os.path.join(cwd, '..')
 flagFile  = os.path.join(pidDir, 'proxy.flg')
 errorFile = os.path.join(pidDir, 'error.flg')
+
+processNames = [ 'org.mozilla.fennec', 
+                 'org.mozilla.fennec_aurora',
+                 'org.mozilla.firefox',
+                 'org.mozilla.firefox_beta',
+               ]
 
 if os.path.exists(flagFile):
     print "Warning proxy.flg found during cleanup"
@@ -46,3 +52,7 @@ for f in ('runtestsremote', 'remotereftest', 'remotereftest.pid.xpcshell'):
             setFlag(errorFile, "Remote Device Error: process from previous test run present [%s]" % f)
             sys.exit(2)
 
+for p in processNames:
+    if dm.dirExists('/data/data/%s' % p):
+        print dm.uninstallAppAndReboot(p)
+        waitForDevice(dm)
