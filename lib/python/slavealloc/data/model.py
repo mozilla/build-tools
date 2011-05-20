@@ -95,6 +95,7 @@ slaves = sa.Table('slaves', metadata,
     sa.Column('basedir', sa.Text, nullable=False),
     sa.Column('locked_masterid', sa.Integer, sa.ForeignKey('masters.masterid')),
     sa.Column('enabled', sa.Boolean, nullable=False, default=True),
+    sa.Column('notes', sa.Text),
 
     # state
     sa.Column('current_masterid', sa.Integer, sa.ForeignKey('masters.masterid')),
@@ -116,6 +117,7 @@ masters = sa.Table('masters', metadata,
 
     # config
     sa.Column('enabled', sa.Boolean, nullable=False, default=True),
+    sa.Column('notes', sa.Text),
     mysql_engine="InnoDB",
 )
 

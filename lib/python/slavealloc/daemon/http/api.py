@@ -142,7 +142,8 @@ class SlaveResource(Instance):
     id_column = model.slaves.c.slaveid
     name_column = model.slaves.c.name
     update_keys = ('distroid', 'dcid', 'bitsid', 'purposeid', 'trustid',
-                   'envid', 'poolid', 'basedir', 'locked_masterid', 'enabled')
+                   'envid', 'poolid', 'basedir', 'locked_masterid', 'notes',
+                   'enabled')
 
 class SlavesResource(Collection):
     instance_class = SlaveResource
@@ -154,7 +155,7 @@ class MasterResource(Instance):
     id_column = model.masters.c.masterid
     name_column = model.masters.c.nickname
     update_keys = ('nickname', 'fqdn', 'pb_port', 'http_port', 'poolid',
-                   'dcid', 'enabled')
+                   'dcid', 'notes', 'enabled')
 
 class MastersResource(Collection):
     instance_class = MasterResource
