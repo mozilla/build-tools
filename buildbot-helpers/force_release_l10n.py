@@ -10,8 +10,7 @@ from buildbotcustom.common import getSupportedPlatforms
 
 from force_build import Forcer
 
-# TODO: Add wince here?
-ALL_PLATFORMS = filter(lambda x: x != 'wince', getSupportedPlatforms())
+ALL_PLATFORMS = getSupportedPlatforms()
 
 class L10nForcer:
     ignoredLocales = ('en-US') # locales that are _always_ to be skipped

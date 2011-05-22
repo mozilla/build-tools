@@ -76,4 +76,4 @@ def getPlatforms():
     return bouncer_platform_map.keys()
 
 def getSupportedPlatforms():
-    return ('linux', 'linux64', 'win32', 'win64', 'wince', 'macosx', 'macosx64')
+    return ('linux', 'linux64', 'win32', 'win64', 'macosx', 'macosx64')

@@ -84,7 +84,6 @@ sub Bump {
     my $versionTxt = catfile($appName, 'config', 'version.*\.txt');
     my $milestoneTxt = catfile('config', 'milestone.txt');
     my $jsMilestoneTxt = catfile('js', 'src', 'config', 'milestone.txt');
-    my $winmoVersionTxt = 'winmo-version.txt';
     my $defaultVersionTxt = 'default-version.txt';
     my $confVarsSh = 'confvars.sh';
     
@@ -101,8 +100,7 @@ sub Bump {
         # sure that the order replacement happens does not matter.
         if ($fileName =~ /$versionTxt/) {
             %searchReplace = ('^' . $VERSION_REGEXP . '$' => $appVersion);
-        } elsif ($fileName =~ $winmoVersionTxt or
-                 $fileName =~ $defaultVersionTxt or
+        } elsif ($fileName =~ $defaultVersionTxt or
                  $fileName =~ $confVarsSh) {
             %searchReplace = ('^MOZ_APP_VERSION=' . $VERSION_REGEXP . '$' =>
                               "MOZ_APP_VERSION=$appVersion");
