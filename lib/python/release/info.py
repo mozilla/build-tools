@@ -82,7 +82,6 @@ def readConfig(configfile, keys=[], required=[]):
     return c
 
 def isFinalRelease(version):
-    # "not not" is used to avoid returning a match object
     return bool(re.match(FINAL_RELEASE_REGEX, version))
 
 def getTags(baseTag, buildNumber, buildTag=True):
@@ -90,6 +89,9 @@ def getTags(baseTag, buildNumber, buildTag=True):
     if buildTag:
         t.append('%s_BUILD%d' % (baseTag, int(buildNumber)))
     return t
+
+def getRuntimeTag(tag):
+    return "%s_RUNTIME" % tag
 
 def generateRelbranchName(milestone, prefix='GECKO'):
     return '%s%s_%s_RELBRANCH' % (
