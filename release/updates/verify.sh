@@ -8,6 +8,7 @@
 
 ftp_server="http://stage.mozilla.org/pub/mozilla.org"
 aus_server="https://aus2.mozilla.org"
+to=""
 
 pushd `dirname $0` &>/dev/null
 MY_DIR=$(pwd)
@@ -95,7 +96,6 @@ do
   locales=""
   channel=""
   from=""
-  to=""
   patch_types="complete"
   eval $entry
   for locale in $locales

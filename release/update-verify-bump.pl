@@ -286,17 +286,25 @@ sub BumpVerifyConfig {
             splice(@origFile, 0, 2);
             @strippedFile = @origFile;
     } else {
-        # remove "from" and "to" vars from @origFile
-        for(my $i=0; $i < scalar(@origFile); $i++) {
-            my $line = $origFile[$i];
-            ###### BUG 514040
-            # If we're testing older partials (older than n-1) we need to keep
-            # the patch_types variable to override the default behaviour of
-            # update verify (which defaults to testing only the complete).
-            # If we're not testing old partials we need to drop it.
-            my $removeStr = $testOlderPartials ? 'from' : 'patch_types';
-            $line =~ s/$removeStr.*$//;
-            $strippedFile[$i] = $line;
+        # convert existing full check to a full check for top N locales,
+        # and quick check for everything else
+        strippedFile[0] = $origFile[0] . ' - full check'
+        $line = $origFile[1];
+        # non-greedy match, swap out the locale list
+        $line =~ s/locales=".*?"/locales="de en-US ru"/;
+        $line =~ s/aus_server.*$//;
+        strippedFile[1] = $line;
+
+        strippedFile[2] = $origFile[0] . ' - quick check'
+        $line = $origFile[1];
+        # remove the locales we're already doing a full check on
+        $line =~ s/locales=".*?(de|en\-US|ru).*?"//;
+        $line =~ s/aus_server.*$//;
+        strippedFile[4] = $line;
+        
+        # all the old release lines, assume they're OK
+        for(my $i=2; $i < scalar(@origFile); $i++) {
+            $strippedFile[$i+2] = $origFile[$i];
         }
     }
 
