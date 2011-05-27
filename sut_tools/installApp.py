@@ -71,6 +71,14 @@ if dm.pushFile(source, target):
         #    print "updateApp() call returned %s" % status
         status = dm.installApp(target)
         if status is None:
+            print '-'*42
+            print 'installApp() done - gathering debug info'
+            dm.getInfo('process')
+            dm.getInfo('memory')
+            dm.getInfo('uptime')
+            print dm.sendCMD(['exec su -c "logcat -d -v time *:W"'])
+            print '-'*42
+            print 'pushing ini file to device'
             if dm.pushFile(inifile, '/data/data/%s/application.ini' % processName):
                 dm.getInfo('process')
                 dm.getInfo('memory')
@@ -80,9 +88,11 @@ if dm.pushFile(source, target):
                 if pid is not None:
                     dm.killProcess(processName)
                 dm.getInfo('process')
+                print dm.sendCMD(['exec su -c "logcat -d -v time *:W"'])
             else:
                 clearFlag(proxyFile)
-                setFlag(errorFile, "Remote Device Error: unable to push %s" % inifile)
+                print "ERROR: unable to push %s" % inifile
+                print dm.sendCMD(['exec su -c "logcat -d -v time *:W"'])
                 sys.exit(1)
         else:
             clearFlag(proxyFile)

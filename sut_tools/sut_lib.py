@@ -54,6 +54,25 @@ def runCommand(cmd, env=None, logEcho=True):
 
     return p, o
 
+def pingTegra(tegra):
+    # bash-3.2$ ping -c 2 -o tegra-056
+    # PING tegra-056.build.mtv1.mozilla.com (10.250.49.43): 56 data bytes
+    # 64 bytes from 10.250.49.43: icmp_seq=0 ttl=64 time=1.119 ms
+    # 
+    # --- tegra-056.build.mtv1.mozilla.com ping statistics ---
+    # 1 packets transmitted, 1 packets received, 0.0% packet loss
+    # round-trip min/avg/max/stddev = 1.119/1.119/1.119/0.000 ms
+
+    out    = []
+    result = False
+    p, o = runCommand(['ping', '-c 5', '-o', tegra], logEcho=False)
+    for s in o:
+        out.append(s)
+        if '1 packets transmitted, 1 packets received' in s:
+            result = True
+            break
+    return result, out
+
 def getOurIP(hostname='bm-remote.build.mozilla.org'):
     """Open a socket against a known server to discover our IP address
     """
@@ -107,17 +126,26 @@ def getChildPIDs(pid):
                 pass
     return pids
 
-def killPID(pid, signal=signal.SIGTERM, includeChildren=False):
+def killPID(pid, sig=signal.SIGTERM, includeChildren=False):
     """Attempt to kill a process.
     After sending signal, confirm if process is 
     """
-    log.info('calling kill for pid %s with signal %s' % (pid, signal))
+    log.info('calling kill for pid %s with signal %s' % (pid, sig))
     if includeChildren:
         childList = getChildPIDs(pid)
         for childPID in childList:
-            killPID(childPID, signal, True)
+            killPID(childPID, sig, True)
+            try:
+                os.kill(childPID, 0)
+                # exception raised if pid NOT found
+                # so we know at this point it resisted
+                # normal killPID() call
+                killPID(childPID, signal.SIGKILL, True)
+            except OSError:
+                log.debug('%s not found' % childPID)
+
     try:
-        os.kill(pid, signal)
+        os.kill(pid, sig)
         n = 0
         while n < 30:
             n += 1
@@ -131,6 +159,7 @@ def killPID(pid, signal=signal.SIGTERM, includeChildren=False):
     except OSError:
         # if pid doesn't exist, then it worked ;)
         return True
+
 
 def getLastLine(filename):
     """Run the tail command against the given file and return
@@ -170,7 +199,7 @@ def stopProcess(pidFile, label):
             log.debug('%s: first attempt to kill %s' % (label, pid))
             if not killPID(pid, includeChildren=True):
                 log.debug('%s: second attempt to kill %s' % (label, pid))
-                killPID(pid, signal=signal.SIGKILL, includeChildren=True)
+                killPID(pid, sig=signal.SIGKILL, includeChildren=True)
             try:
                 log.debug('verifying %s is gone' % label)
                 try:

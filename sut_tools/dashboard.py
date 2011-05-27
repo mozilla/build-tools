@@ -15,14 +15,24 @@ foopies   = ['foopy01', 'foopy02', 'foopy03', 'foopy04']
 masters   = { 'production': "http://test-master01.build.mozilla.org:8012",
               'staging':    "http://bm-foopy.build.mozilla.org:8012",
             }
-pdus =      { "1": ( "057", "061", "065", "069", "073", "077", "081", "085",
-                     "089", "093", "058", "062", "066", "070", "074", "078",
-                     "082", "086", "090",
+pdus =      { "1": ( "033", "034", "037", "038", "041", "042", "045", 
+                     "046", "049", "050", "053", "054", "057", "058", 
+                     "061", "062", "065", "066", "069", "070", "073", 
+                     "074", "077", "078", "081", "082", "085", "086", 
+                     "089", "090", "093", 
                    ),
-              "2": ( "055", "059", "063", "067", "071", "075", "079",
-                     "083", "087", "091", "056", "060", "064", "068",
-                     "072", "076", "080", "084", "088", "092",
-                   )
+              "2": ( "035", "036", "039", "040", "043", "044", "047",
+                     "048", "051", "052", "055", "056", "059", "060",
+                     "063", "064", "067", "068", "071", "072", "075",
+                     "076", "079", "080", "083", "084", "087", "088",
+                     "091", "092", 
+                   ),
+              "3": ( "001", "002", "003", "004", "005", "006", "007",
+                     "008", "009", "010", "011", "012", "013", "014",
+                     "015", "016", "017", "018", "019", "020", "021",
+                     "022", "023", "024", "025", "026", "027", "028",
+                     "029", "030", "031", "032", 
+                   ),
             }
 
 pageHeader = """<html>
@@ -51,28 +61,28 @@ productionHeader = """<div class="production">
   <h2><a href="http://test-master01.build.mozilla.org:8012/buildslaves?no_builders=1">Production</a></h2>
   <p><small>
   <table>
-    <colgroup span="3" align="center"></colgroup>
-    <colgroup align="left"></colgroup>
-    <tr><th rowspan="2">ID</th>
-        <th colspan="3">Status</th>
-        <th colspan="2"></th></tr>
-    <tr><th>Tegra</th>
+    <tr><th></th>
+        <th colspan="3">Status</th></tr>
+    <tr><th>ID</th>
+        <th>Tegra</th>
         <th>CP</th>
         <th>BS</th>
         <th>Msg</th>
+        <th>Online %%</th>
+        <th>Active %%</th>
         <th>Foopy</th>
-        <th>PDU</th>
-        <th>Log</th></tr>
+        <th>PDU</th></tr>
 """
 productionEntry = """  <tr>
     <td><a href="%(staging)s/buildslaves/%(tegra)s">%(tegra)s</a></td>
-    <td>%(sTegra)s</td>
-    <td>%(sClientproxy)s</td>
-    <td>%(sSlave)s</td>
+    <td align="center">%(sTegra)s</td>
+    <td align="center">%(sClientproxy)s</td>
+    <td align="center">%(sSlave)s</td>
     <td>%(msg)s</td>
+    <td align="right"><a href="%(tegra)s_status.log" title="%(percOnlineHover)s">%(percOnline)s</a></td>
+    <td align="right"><a href="%(tegra)s_status.log" title="%(percActiveHover)s">%(percActive)s</a></td>
     <td><a href="%(foopyLink)s">%(foopy)s</a></td>
-    <td><a href="%(pdu)s">PDU %(pduID)s</a></td>
-    <td><a href="%(tegra)s_status.log">%(tegra)s_status.log</a></tr>
+    <td><a href="%(pdu)s">PDU %(pduID)s</a></td></tr>
 """
 productionFooter = """  </table>
 </div>
@@ -80,28 +90,27 @@ productionFooter = """  </table>
 stagingHeader = """<div class="staging">
 <h2><a href="http://bm-foopy.build.mozilla.org:8012/buildslaves?no_builders=1">staging</a></h2>
 <table>
-  <colgroup span="3" align="center"></colgroup>
-  <colgroup align="left"></colgroup>
-  <tr><th rowspan="2">ID</th>
-      <th colspan="3">Status</th>
-      <th colspan="3"></th></tr>
-  <tr><th>Tegra</th>
+  <tr><th></th>
+      <th colspan="3">Status</th></tr>
+  <tr><th>ID</th>
       <th>CP</th>
       <th>BS</th>
       <th>Msg</th>
+      <th>Online %%</th>
+      <th>Active %%</th>
       <th>Foopy</th>
-      <th>PDU</th>
-      <th>Log</th></tr>
+      <th>PDU</th></tr>
 """
 stagingEntry = """  <tr>
     <td><a href="%(production)s/buildslaves/%(tegra)s">%(tegra)s</a></td>
-    <td>%(sTegra)s</td>
-    <td>%(sClientproxy)s</td>
-    <td>%(sSlave)s</td>
+    <td align="center">%(sTegra)s</td>
+    <td align="center">%(sClientproxy)s</td>
+    <td align="center">%(sSlave)s</td>
     <td>%(msg)s</td>
+    <td align="right"><a href="%(tegra)s_status.log" title="%(percOnlineHover)s">%(percOnline)s</a></td>
+    <td align="right"><a href="%(tegra)s_status.log" title="%(percActiveHover)s">%(percActive)s</a></td>
     <td><a href="%(foopyLink)s">%(foopy)s</a></td>
-    <td><a href="%(pdu)s">PDU %(pduID)s</a></td>
-    <td><a href="%(tegra)s_status.log">%(tegra)s_status.log</a></tr>
+    <td><a href="%(pdu)s">PDU %(pduID)s</a></td></tr>
 """
 stagingFooter = """</table>
 </div>
@@ -121,9 +130,9 @@ oStaging    = ''
 dStart = None
 dEnd   = None
 
-nProduction = { 'total':  0,
-                'online': 0,
-                'active': 0,
+nProduction = { 'total':   0,
+                'online':  0,
+                'active':  0,
               }
 nStaging =    { 'total':  0,
                 'online': 0,
@@ -144,6 +153,17 @@ for foopy in foopies:
         #     "sTegra": "online",
         #     "sSlave": "OFFLINE"
         # },
+        nOnline = 0
+        nActive = 0
+        nTotal  = 0.0
+        for line in open(os.path.join(htmlDir, '%s_status.log' % tegra['tegra'])).readlines():
+            #2011-04-21 11:33:41 tegra-090 p  OFFLINE   active  OFFLINE :: error.flg [Remote Device Error: updateApp() call failed - exiting] 
+            nTotal += 1
+            l = line.split()
+            if l[4] == 'online':
+                nOnline += 1
+            if l[6] == 'active':
+                nActive += 1
 
         dItem = datetime.datetime.strptime('%s%s' % (tegra['date'], tegra['time']), '%Y-%m-%d%H:%M:%S')
 
@@ -158,6 +178,17 @@ for foopy in foopies:
         tegra['pdu']        = 'http://pdu%s.build.mozilla.org/' % tegra['pduID']
         tegra['foopy']      = tegra['hostname'].split('.')[0]
         tegra['foopyLink']  = '%s:/builds/%s' % (tegra['hostname'], tegra['tegra'])
+
+        if nTotal > 0:
+            tegra['percOnline']      = '%2.2f' % ((nOnline / nTotal) * 100)
+            tegra['percOnlineHover'] = '%d Online for %d items' % (nOnline, nTotal)
+            tegra['percActive']      = '%2.2f' % ((nActive / nTotal) * 100)
+            tegra['percActiveHover'] = '%d Active for %d items' % (nActive, nTotal)
+        else:
+            tegra['percOnline']      = 'n/a',
+            tegra['percOnlineHover'] = 'no data',
+            tegra['percActive']      = 'n/a',
+            tegra['percActiveHover'] = 'no data',
 
         if tegra['master'] == 'p':
             oProduction += productionEntry % tegra
@@ -188,6 +219,7 @@ d = { 'dStart':           dStart,
       'production':       masters['production'],
       'staging':          masters['staging'],
     }
+
 
 h = open(os.path.join(htmlDir, htmlIndex), 'w+')
 h.write(pageHeader % d)

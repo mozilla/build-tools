@@ -14,7 +14,7 @@ import datetime
 
 # from multiprocessing import get_logger, log_to_stderr
 from sut_lib import checkSlaveAlive, checkSlaveActive, getIPAddress, dumpException, loadOptions, \
-                    checkCPAlive, checkCPActive, getLastLine, stopProcess, runCommand
+                    checkCPAlive, checkCPActive, getLastLine, stopProcess, runCommand, pingTegra
 
 
 log            = logging.getLogger()
@@ -63,32 +63,43 @@ def checkTegra(master, tegra):
 
     errorFlag = os.path.isfile(errorFile)
     proxyFlag = os.path.isfile(proxyFile)
+    sutFound  = False
 
-    try:
-        hbSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        hbSocket.settimeout(float(120))
-        hbSocket.connect((tegraIP, 20700))
+    fPing, lPing = pingTegra(tegra)
+    if fPing:
+        try:
+            hbSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            hbSocket.settimeout(float(120))
+            hbSocket.connect((tegraIP, 20700))
 
-        time.sleep(2)
+            sutFound = True
 
-        hbSocket.send('info\n')
+            time.sleep(2)
 
-        d = hbSocket.recv(4096)
+            hbSocket.send('info\n')
 
-        log.debug('socket data length %d' % len(d))
-        log.debug(d)
+            d = hbSocket.recv(4096)
 
-        status['active'] = True
+            log.debug('socket data length %d' % len(d))
+            log.debug(d)
 
-        hbSocket.close()
-    except:
-        status['active'] = False
-        dumpException('socket')
+            status['active'] = True
 
-    if status['active']:
-        sTegra = 'online'
+            hbSocket.close()
+        except:
+            status['active'] = False
+            dumpException('socket')
+
+        if status['active']:
+            sTegra = 'online'
+        else:
+            sTegra = 'INACTIVE'
+        if not sutFound:
+            status['msg'] += 'SUTAgent not present;'
     else:
-        sTegra = 'OFFLINE'
+        sTegra           = 'OFFLINE'
+        status['active'] = False
+        status['msg']   += '%s %s;' % (lPing[0], lPing[1])
 
     if checkCPAlive(tegraPath):
         logTD = checkCPActive(tegraPath)
@@ -128,13 +139,13 @@ def checkTegra(master, tegra):
     if proxyFlag:
         status['msg'] += 'REBOOTING '
 
-    s  = '%s %s %8s %8s %8s :: %s' % (status['tegra'], master, sTegra, status['cp'], status['bs'], status['msg'])
+    s  = '%s %s %9s %8s %8s :: %s' % (status['tegra'], master, sTegra, status['cp'], status['bs'], status['msg'])
     ts = time.strftime('%Y-%m-%d %H:%M:%S')
     log.info(s)
     open(exportFile, 'a+').write('%s %s\n' % (ts, s))
     summary(status['tegra'], master, sTegra, status['cp'], status['bs'], status['msg'], ts)
 
-    if options.reset:
+    if errorFlag and options.reset:
         stopProcess(os.path.join(tegraPath, 'twistd.pid'), 'buildslave')
 
         try:

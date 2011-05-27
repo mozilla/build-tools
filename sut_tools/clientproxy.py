@@ -252,7 +252,7 @@ def monitorEvents(options, events):
     softCountMax  = 5    # how many active events to wait bdfore
                          # triggering a soft reset
     softResets    = 0
-    softResetMax  = 3    # how many soft resets do we try before
+    softResetMax  = 5    # how many soft resets do we try before
                          # waiting for a hard reset
     hardResets    = 0
     hardResetsMax = 3
@@ -372,6 +372,7 @@ def monitorEvents(options, events):
             elif state == 'dialback':
                 softCount  = 0
                 softResets = 0
+                hardResets = 0
             elif state == 'terminate':
                 break
 
