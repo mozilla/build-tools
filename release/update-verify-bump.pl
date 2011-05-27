@@ -288,23 +288,38 @@ sub BumpVerifyConfig {
     } else {
         # convert existing full check to a full check for top N locales,
         # and quick check for everything else
-        strippedFile[0] = $origFile[0] . ' - full check'
-        $line = $origFile[1];
-        # non-greedy match, swap out the locale list
-        $line =~ s/locales=".*?"/locales="de en-US ru"/;
+        my $versionComment = $origFile[0];
+        # Get rid of the newline because we'll be appending some text
+        chomp($versionComment);
+        my $line = $origFile[1];
+        # Get rid of all locales except de, en-US, ru (if they exist) because
+        # we can't afford to do full checks on everything.
+        $line =~ s/locales="(.*?)( ?de ?)(.*?)( ?en-US ?)(.*?)( ?ru ?)(.*?)"/locales="$2$4$6"/;
+        # Remove any extra whitespace
+        $line =~ s/\s{2,}/ /g;
+        $line =~ s/locales="\s*/locales="/;
+        $line =~ s/(locales=".*?)\s*"/$1"/;
+        # Quick checks don't need this or anything after this.
         $line =~ s/aus_server.*$//;
-        strippedFile[1] = $line;
+        push(@strippedFile, ($versionComment . " - full check\n"));
+        push(@strippedFile, ($line));
 
-        strippedFile[2] = $origFile[0] . ' - quick check'
         $line = $origFile[1];
         # remove the locales we're already doing a full check on
-        $line =~ s/locales=".*?(de|en\-US|ru).*?"//;
-        $line =~ s/aus_server.*$//;
-        strippedFile[4] = $line;
+        foreach my $l (("de", "en-US", "ru")) {
+            $line =~ s/(locales=".*?)$l ?(.*?")/$1$2/;
+        }
+        $line =~ s/from.*$//;
+        # We may not have any locales left here, so don't add anything if
+        # there's no locales to test!
+        if ($line !~ m/locales="\s*"/) {
+            push(@strippedFile, ($versionComment . " - quick check\n"));
+            push(@strippedFile, ($line));
+        }
         
         # all the old release lines, assume they're OK
         for(my $i=2; $i < scalar(@origFile); $i++) {
-            $strippedFile[$i+2] = $origFile[$i];
+            push(@strippedFile, ($origFile[$i]));
         }
     }
 
