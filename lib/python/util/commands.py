@@ -50,7 +50,7 @@ def run_remote_cmd(cmd, server, username=None, sshKey=None, ssh='ssh',
     if username:
         cmd_prefix.extend(['-l', username])
     if sshKey:
-        cmd_prefix.extend(['-i', sshKey])
+        cmd_prefix.extend(['-i', os.path.expanduser(sshKey)])
     cmd_prefix.append(server)
     if isinstance(cmd, basestring):
         cmd = [cmd]
