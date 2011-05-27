@@ -248,7 +248,7 @@ sub BumpVerifyConfig {
             $nightlyFile = lc($binaryName).'-'.$appVersion.'.%locale%.mac.dmg';
         }
     } elsif ($osname eq 'macosx64') {
-        $buildTarget = 'Darwin_x86_64-gcc3';
+        $buildTarget = 'Darwin_x86_64-gcc3-u-i386-x86_64';
         $platform = 'osx';
         $ftpOsname = 'mac';
         $releaseFile = $oldBinaryName.' '.$oldLongVersion.'.dmg';
