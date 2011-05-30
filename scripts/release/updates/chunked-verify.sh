@@ -15,7 +15,7 @@ JSONTOOL="$PYTHON $SCRIPTS_DIR/buildfarm/utils/jsontool.py"
 workdir=`pwd`
 
 platform=$1
-updateVerifyConfig=$2
+configDict=$2
 chunks=$3
 thisChunk=$4
 releaseConfig=$($JSONTOOL -k properties.release_config $PROPERTIES_FILE)
@@ -26,4 +26,5 @@ if [ -z "$BUILDBOT_CONFIGS" ]; then
 fi
 
 $PYTHON $MY_DIR/chunked-verify.py -t $releaseTag -r $releaseConfig \
-  -b $BUILDBOT_CONFIGS -p $platform --chunks $chunks --this-chunk $thisChunk
+  -b $BUILDBOT_CONFIGS -p $platform --chunks $chunks --this-chunk $thisChunk \
+  --config-dict $2

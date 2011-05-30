@@ -19,7 +19,6 @@ HG="hg.mozilla.org"
 DEFAULT_BUILDBOT_CONFIGS_REPO=make_hg_url(HG, "build/buildbot-configs")
 UPDATE_VERIFY_COMMAND = ["bash", "verify.sh", "-c"]
 UPDATE_VERIFY_DIR = path.join(path.dirname(__file__), "../../../release/updates")
-REQUIRED_RELEASE_CONFIG = ("verifyConfigs",)
 
 def validate(options, args):
     assert options.chunks and options.thisChunk, \
@@ -27,7 +26,12 @@ def validate(options, args):
 
     releaseConfigFile = path.join("buildbot-configs", options.releaseConfig)
     releaseConfig = readReleaseConfig(releaseConfigFile,
-                                      required=REQUIRED_RELEASE_CONFIG)
+                                      required=(options.configDict,))
+    assert options.platform in releaseConfig[options.configDict], \
+      "%s doesn't exist in %s" % (options.platform, options.configDict)
+    uvConfig = path.join(UPDATE_VERIFY_DIR,
+                         releaseConfig[options.configDict][options.platform])
+    assert path.isfile(uvConfig), "Update verify config must exist!"
     return releaseConfig
 
 if __name__ == "__main__":
@@ -37,9 +41,11 @@ if __name__ == "__main__":
     parser.set_defaults(
         buildbotConfigs=os.environ.get("BUILDBOT_CONFIGS",
                                        DEFAULT_BUILDBOT_CONFIGS_REPO),
+        configDict="verifyConfigs",
         chunks=None,
         thisChunk=None,
     )
+    parser.add_option("--config-dict", dest="configDict")
     parser.add_option("-t", "--release-tag", dest="releaseTag")
     parser.add_option("-r", "--release-config", dest="releaseConfig")
     parser.add_option("-b", "--buildbot-configs", dest="buildbotConfigs")
@@ -51,12 +57,13 @@ if __name__ == "__main__":
     mercurial(options.buildbotConfigs, "buildbot-configs")
     update("buildbot-configs", revision=options.releaseTag)
     releaseConfig = validate(options, args)
+    verifyConfigFile = releaseConfig[options.configDict][options.platform]
 
     fd, configFile = mkstemp()
     fh = os.fdopen(fd, "w")
     try:
         verifyConfig = UpdateVerifyConfig()
-        verifyConfig.read(path.join(UPDATE_VERIFY_DIR, releaseConfig["verifyConfigs"][options.platform]))
+        verifyConfig.read(path.join(UPDATE_VERIFY_DIR, verifyConfigFile))
         myVerifyConfig = verifyConfig.getChunk(options.chunks, options.thisChunk)
         myVerifyConfig.write(fh)
         fh.close()
