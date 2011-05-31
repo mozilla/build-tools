@@ -332,7 +332,10 @@ def packfile(filename, srcdir):
 def shouldSign(filename):
     """Returns True if filename should be signed."""
     # These should already be signed by Microsoft.
-    _dont_sign = ['D3DCompiler_42.dll', 'd3dx9_42.dll']
+    _dont_sign = [
+            'D3DCompiler_42.dll', 'd3dx9_42.dll',
+            'D3DCompiler_43.dll', 'd3dx9_43.dll',
+            ]
     ext = os.path.splitext(filename)[1]
     b = os.path.basename(filename)
     if ext in ('.dll', '.exe') and b not in _dont_sign:
