@@ -19,6 +19,10 @@ repoSetupConfig['reposToClone'] = {
                 'mozilla/preproduction_release_overrides.py',
                 'mozilla/preproduction_release_overrides-2.0.py',
              ],
+            'mozilla/release-firefox-mozilla-beta.py': [
+                'mozilla/preproduction_release_overrides.py',
+                'mozilla/preproduction_release_overrides-beta.py',
+             ],
         },
         'nobump_overrides': {
             'mozilla/preproduction_config.py': [
