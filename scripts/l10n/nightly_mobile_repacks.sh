@@ -15,8 +15,8 @@ JSONTOOL="$PYTHON $SCRIPTS_DIR/buildfarm/utils/jsontool.py"
 workdir=`pwd`
 
 platform=$1
-branchConfig=$2
-mobileBranch=$3
+stage_platform=$2
+branchConfig=$3
 chunks=$4
 thisChunk=$5
 
@@ -42,11 +42,6 @@ $PYTHON $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
   -s 1 -n info -n 'rel-*' -n $slavebuilddir
 cd $workdir
 
-if [ -z "$mobileBranch" ]; then
-    mobileBranchArg=""
-else
-    mobileBranchArg="-m $mobileBranch"
-fi
 $PYTHON $MY_DIR/nightly-mobile-repacks.py -c $branchConfig -B $branch \
-  $mobileBranchArg -b $BUILDBOT_CONFIGS -p $platform \
+  -b $BUILDBOT_CONFIGS -p $platform -s $stage_platform \
   --chunks $chunks --this-chunk $thisChunk

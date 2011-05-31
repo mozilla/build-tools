@@ -25,10 +25,10 @@ DEFAULT_BUILDBOT_CONFIGS_REPO=make_hg_url(HG, "build/buildbot-configs")
 class RepackError(Exception):
     pass
 
-def createRepacks(sourceRepo, mobileRepo, l10nRepoDir, l10nBaseRepo,
+def createRepacks(sourceRepo,l10nRepoDir, l10nBaseRepo,
                   mozconfigPath, objdir, makeDirs, locales, ftpProduct,
                   stageServer, stageUsername, stageSshKey, compareLocalesRepo,
-                  merge, platform):
+                  merge, platform, stage_platform):
     sourceRepoName = path.split(sourceRepo)[-1]
     mobileDirName = "mobile"
     localeSrcDir = path.join(sourceRepoName, objdir, mobileDirName, "locales")
@@ -43,24 +43,20 @@ def createRepacks(sourceRepo, mobileRepo, l10nRepoDir, l10nBaseRepo,
         "UPLOAD_SSH_KEY": stageSshKey,
         "UPLOAD_TO_TEMP": "1",
         "EN_US_BINARY_URL": getLatestDir(
-            ftpProduct, sourceRepoName, platform, protocol="http",
+            ftpProduct, sourceRepoName, stage_platform, protocol="http",
             server=stageServer
         )
     }
     build.misc.cleanupObjdir(sourceRepoName, objdir, mobileDirName)
     mercurial(sourceRepo, sourceRepoName)
-    if mobileRepo:
-        mercurial(mobileRepo, path.join(sourceRepoName, mobileDirName))
     l10nRepackPrep(sourceRepoName, objdir, mozconfigPath,
                    l10nRepoDir, makeDirs, localeSrcDir, env)
     buildInfo = downloadNightlyBuild(localeSrcDir, env)
     run_cmd(["hg", "update", "-r", buildInfo["gecko_revision"]],
             cwd=sourceRepoName)
-    run_cmd(["hg", "update", "-r", buildInfo["fennec_revision"]],
-            cwd=path.join(sourceRepoName, mobileDirName))
     env["POST_UPLOAD_CMD"] = postUploadCmdPrefix(
         to_latest=True,
-        branch="%s-%s-l10n" % (sourceRepoName, platform),
+        branch="%s-%s-l10n" % (sourceRepoName, stage_platform),
         product=ftpProduct
     )
 
@@ -133,9 +129,10 @@ if __name__ == "__main__":
     )
     parser.add_option("-c", "--configfile", dest="configfile")
     parser.add_option("-B", "--branch", dest="branch")
-    parser.add_option("-m", "--mobile-branch", dest="mobileBranch")
     parser.add_option("-b", "--buildbot-configs", dest="buildbotConfigs")
     parser.add_option("-p", "--platform", dest="platform")
+    parser.add_option("-s", "--stage-platform", dest="stage_platform",
+                      default=None)
     parser.add_option("-o", "--objdir", dest="objdir")
     parser.add_option("-l", "--locale", dest="locales", action="append")
     parser.add_option("--chunks", dest="chunks", type="int")
@@ -145,21 +142,17 @@ if __name__ == "__main__":
     mercurial(options.buildbotConfigs, "buildbot-configs")
     update("buildbot-configs", revision="default")
     branchConfig = validate(options, args)
-    platformConfig = branchConfig["mobile_platforms"][options.platform]
+
+    if options.chunks:
+        platformConfig = branchConfig["platforms"][options.platform]
+        locales = getNightlyLocalesForChunk("mobile",
+            options.branch, options.platform,
+            options.chunks, options.thisChunk)
+    else:
+        locales = options.locales
 
     mozconfig = path.join("buildbot-configs", "mozilla2",
                           platformConfig["mozconfig"], "l10n-mozconfig")
-    if options.chunks:
-        if options.mobileBranch:
-            locales = getNightlyLocalesForChunk("",
-                options.mobileBranch, options.platform,
-                options.chunks, options.thisChunk)
-        else:
-            locales = getNightlyLocalesForChunk("mobile",
-                options.branch, options.platform,
-                options.chunks, options.thisChunk)
-    else:
-        locales = options.locales
 
     ftpProduct = "mobile"
     l10nRepoDir = path.split(branchConfig["l10n_repo_path"])[-1]
@@ -173,15 +166,16 @@ if __name__ == "__main__":
     except:
         merge = True
 
-    mobileRepo = None
-    if options.mobileBranch:
-        mobileRepo = make_hg_url(hg, options.mobileBranch)
+    if options.stage_platform:
+        stage_platform = options.stage_platform
+    else:
+        stage_platform = options.platform
+
     createRepacks(
-        make_hg_url(hg, options.branch),
-        mobileRepo, l10nRepoDir,
+        make_hg_url(hg, options.branch), l10nRepoDir,
         make_hg_url(hg, branchConfig["l10n_repo_path"]), mozconfig,
         options.objdir, makeDirs, locales, ftpProduct,
         branchConfig["stage_server"], branchConfig["stage_username"],
         stageSshKey,
         make_hg_url(hg, branchConfig["compare_locales_repo_path"]), merge,
-        options.platform)
+        options.platform, stage_platform)
