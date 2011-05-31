@@ -66,6 +66,19 @@ if __name__ == '__main__':
                 executables.append(filename.split(" ")[-1])
         # Only grab the most recent build (in case there's more than one in the dir)
         exe = sorted(executables, reverse=True)[0]
+        info_file = exe.replace(options.ext, "%s.txt" % options.ext.split('.')[0])
+        # Now get the branch revision
+        for filename in filenames:
+            if info_file in filename:
+                info = filename.split(" ")[-1]
+                urllib.urlretrieve("%s/%s" % (options.ftp_url, info), info)
+                f = open(info, 'r')
+                for line in f.readlines():
+                    if "hg.mozilla.org" in line:
+                        branch_rev = line.split('/')[-1].strip()
+                        branch = line.split('/')[-3].strip()
+                        print "TinderboxPrint: <a href=\"http://hg.mozilla.org/%(branch)s/rev/%(branch_rev)s\">%(branch)s-rev:%(branch_rev)s</a>\n" % locals()
+                f.close()
         print "EXE_URL: %s/%s" % (options.ftp_url, exe)
         urllib.urlretrieve("%s/%s" % (options.ftp_url, exe), exe)
     else:
@@ -102,6 +115,8 @@ if __name__ == '__main__':
     dirs = os.listdir('.')
     for dir in dirs:
         if 'addon-sdk' in dir:
+            sdk_rev = dir.split('-')[2]
+            print "TinderboxPrint: <a href=\"http://hg.mozilla.org/projects/addon-sdk/rev/%(sdk_rev)s\">sdk-rev:%(sdk_rev)s</a>\n" % locals()
             sdkdir = os.path.abspath(dir)
             print "SDKDIR: %s" % sdkdir
         if options.platform in ('macosx', 'macosx64', 'leopard', 'snowleopard'):
