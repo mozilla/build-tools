@@ -299,17 +299,24 @@ sub BumpVerifyConfig {
         $line =~ s/\s{2,}/ /g;
         $line =~ s/locales="\s*/locales="/;
         $line =~ s/(locales=".*?)\s*"/$1"/;
-        # Quick checks don't need this or anything after this.
-        $line =~ s/aus_server.*$//;
+        # Full checks don't need this or anything after this.
+        $line =~ s/ aus_server.*$//;
+        # Also be sure to remove patch_types if we're not testing older partials
+        if (! $testOlderPartials ) {
+            $line =~ s/ patch_types=".*?"//;
+        }
         push(@strippedFile, ($versionComment . " - full check\n"));
-        push(@strippedFile, ($line));
+        push(@strippedFile, ($line . "\n"));
 
         $line = $origFile[1];
         # remove the locales we're already doing a full check on
         foreach my $l (("de", "en-US", "ru")) {
             $line =~ s/(locales=".*?)$l ?(.*?")/$1$2/;
         }
-        $line =~ s/from.*$//;
+        $line =~ s/ from.*$//;
+        if (! $testOlderPartials ) {
+            $line =~ s/ patch_types=".*?"//;
+        }
         # We may not have any locales left here, so don't add anything if
         # there's no locales to test!
         if ($line !~ m/locales="\s*"/) {
@@ -577,7 +584,7 @@ sub ExecuteTest {
         "product=\"$brand\"",
         "platform=\"$platform\"",
         "build_id=\"$oldOldBuildid\"",
-        "locales=\"af en-US gu-IN ja uk\"",
+        "locales=\"af de en-US gu-IN ja ru uk\"",
         "channel=\"betatest\"",
         "patch_types=\"partial complete\"",
         "from=\"$oldOldFromBuild\"",
@@ -595,20 +602,30 @@ sub ExecuteTest {
     # BumpVerifyConfig removes everything after 'from' or 'patch_types' for the
     # for the previous release, depending on the options passed.
     # So must we in the reference file.
-    @oldOldRelease = (
+    my @oldOldReleaseQuickCheck = (
         "release=\"$oldOldVersion\"",
         "product=\"$brand\"",
         "platform=\"$platform\"",
         "build_id=\"$oldOldBuildid\"",
-        "locales=\"af en-US gu-IN ja uk\"",
+        "locales=\"af gu-IN ja uk\"",
+        "channel=\"betatest\"",
+    );
+    my @oldOldReleaseFullCheck = (
+        "release=\"$oldOldVersion\"",
+        "product=\"$brand\"",
+        "platform=\"$platform\"",
+        "build_id=\"$oldOldBuildid\"",
+        "locales=\"de en-US ru\"",
         "channel=\"betatest\"",
     );
     if ( $testOlderPartials ) {
-        push(@oldOldRelease, "patch_types=\"partial complete\" ");
+        push(@oldOldReleaseQuickCheck, "patch_types=\"partial complete\"");
+        push(@oldOldReleaseFullCheck, "patch_types=\"partial complete\"");
     }
     else {
-        $oldOldRelease[-1] .= " ";
+        $oldOldReleaseQuickCheck[-1] .= "";
     }
+    push(@oldOldReleaseFullCheck, "from=\"$oldOldFromBuild\"");
 
     # Now create an already bumped configuration to file
     my @oldRelease = (
@@ -633,10 +650,10 @@ sub ExecuteTest {
     print CONFIG "# $oldVersion $osname\n";
     print CONFIG join(' ', @oldRelease) . "\n";
     if ( ! $majorMode ) {
-        print CONFIG "# $oldOldVersion $osname\n";
-        print CONFIG join(' ', @oldOldRelease); # without this newline diff
-                                                # will think the files differ
-                                                # even when they do not
+        print CONFIG "# $oldOldVersion $osname - full check\n";
+        print CONFIG join(' ', @oldOldReleaseFullCheck) . "\n";
+        print CONFIG "# $oldOldVersion $osname - quick check\n";
+        print CONFIG join(' ', @oldOldReleaseQuickCheck);
     }
     close(CONFIG);
     
