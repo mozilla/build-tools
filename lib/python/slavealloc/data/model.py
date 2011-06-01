@@ -101,7 +101,7 @@ slaves = sa.Table('slaves', metadata,
     # config
     sa.Column('basedir', sa.Text, nullable=False),
     sa.Column('locked_masterid', sa.Integer, sa.ForeignKey('masters.masterid')),
-    sa.Column('custom_tplid', sa.Integer, nullable=True),
+    sa.Column('custom_tplid', sa.Integer, sa.ForeignKey('tac_templates.tplid')),
     sa.Column('enabled', sa.Boolean, nullable=False, default=True),
     sa.Column('notes', sa.Text),
 
