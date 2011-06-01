@@ -35,7 +35,7 @@ def load_data(args):
     dumpdict = cPickle.load(open(args.dumpfile))
     for tbl in model.metadata.sorted_tables:
         tname = tbl.name
-        if not dumpdict[tname]:
+        if tname not in dumpdict or not dumpdict[tname]:
             continue
         tbl = model.metadata.tables[tname]
         tbl.insert().execute(dumpdict[tname])

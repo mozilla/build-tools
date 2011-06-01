@@ -143,7 +143,7 @@ class SlaveResource(Instance):
     name_column = model.slaves.c.name
     update_keys = ('distroid', 'dcid', 'bitsid', 'purposeid', 'trustid',
                    'envid', 'poolid', 'basedir', 'locked_masterid', 'notes',
-                   'enabled')
+                   'enabled', 'custom_tplid')
 
 class SlavesResource(Collection):
     instance_class = SlaveResource
@@ -160,6 +160,16 @@ class MasterResource(Instance):
 class MastersResource(Collection):
     instance_class = MasterResource
     query = queries.denormalized_masters
+
+# TAC templates
+class TACTemplateResource(Instance):
+    table = model.tac_templates
+    id_column = model.tac_templates.c.tplid
+    name_column = model.tac_templates.c.name
+    update_keys = () # view only via API
+
+class TACTemplatesResource(Collection):
+    instance_class = TACTemplateResource
 
 # simple
 def simple_table_resource(tbl, id_column_name, name_column_name='name'):
@@ -235,6 +245,7 @@ class ApiRoot(resource.Resource):
         self.addTable('trustlevels', TrustlevelsResource)
         self.addTable('environments', EnvironmentsResource)
         self.addTable('pools', PoolsResource)
+        self.addTable('tac_templates', TACTemplatesResource)
         self.addTable('gettac', BuildbotTacRootResource)
 
     def addTable(self, name, coll_class):

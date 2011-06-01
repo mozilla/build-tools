@@ -1,3 +1,4 @@
+import sqlalchemy
 from slavealloc import exceptions
 from slavealloc.data import queries, model
 
@@ -23,8 +24,16 @@ class Allocation(object):
     def __init__(self, slavename):
         self.slavename = slavename
 
-        # slave info
-        q = model.slaves.select(whereclause=(model.slaves.c.name == slavename))
+        # slave info, including template
+        q = sqlalchemy.select(
+                [ model.slaves, model.tac_templates.c.template ],
+                whereclause=(model.slaves.c.name == slavename),
+                from_obj = [
+                    model.slaves.outerjoin(
+                        model.tac_templates,
+                        onclause=(
+                            model.slaves.c.custom_tplid == model.tac_templates.c.tplid))])
+                    
         slave_row = q.execute().fetchone()
         if not slave_row:
             raise exceptions.NoAllocationError
@@ -56,6 +65,9 @@ class Allocation(object):
         self.master_fqdn = master_row.fqdn
         self.master_pb_port = master_row.pb_port
         self.masterid = master_row.masterid
+
+        # get the desired template (or None for default)
+        self.template = slave_row.template
 
     def commit(self):
         """

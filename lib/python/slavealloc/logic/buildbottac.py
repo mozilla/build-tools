@@ -1,9 +1,20 @@
 import time
 import socket
 
-tac_template = """\
+template_header = """\
 # AUTOMATICALLY GENERATED - DO NOT MODIFY
 # generated: %(gendate)s on %(genhost)s
+
+"""
+
+tac_template_disabled = template_header + """\
+print "SLAVE DISABLED; NOT STARTING"
+
+import sys
+sys.exit(0)
+"""
+
+default_template = """\
 from twisted.application import service
 from buildbot.slave.bot import BuildSlave
 
@@ -33,16 +44,6 @@ s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
 s.setServiceParent(application)
 """
 
-tac_template_disabled = """\
-# AUTOMATICALLY GENERATED - DO NOT MODIFY
-# generated: %(gendate)s on %(genhost)s
-
-print "SLAVE DISABLED; NOT STARTING"
-
-import sys
-sys.exit(0)
-"""
-
 def make_buildbot_tac(allocation):
     info = dict()
 
@@ -58,5 +59,6 @@ def make_buildbot_tac(allocation):
     info['slavename'] = allocation.slavename
     info['basedir'] = allocation.slave_basedir
     info['passwd'] = allocation.slave_password
+    template = template_header + (allocation.template or default_template)
 
-    return tac_template % info
+    return unicode(template % info).encode('utf8')

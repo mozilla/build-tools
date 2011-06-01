@@ -52,6 +52,13 @@ environments = sa.Table('environments', metadata,
     mysql_engine="InnoDB",
 )
 
+tac_templates = sa.Table('tac_templates', metadata,
+    sa.Column('tplid', sa.Integer, primary_key=True),
+    sa.Column('name', sa.String(128), nullable=False, unique=True),
+    sa.Column('template', sa.Text, nullable=False),
+    mysql_engine="InnoDB",
+)
+
 # pools
 
 pools = sa.Table('pools', metadata,
@@ -94,6 +101,7 @@ slaves = sa.Table('slaves', metadata,
     # config
     sa.Column('basedir', sa.Text, nullable=False),
     sa.Column('locked_masterid', sa.Integer, sa.ForeignKey('masters.masterid')),
+    sa.Column('custom_tplid', sa.Integer, nullable=True),
     sa.Column('enabled', sa.Boolean, nullable=False, default=True),
     sa.Column('notes', sa.Text),
 
