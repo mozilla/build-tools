@@ -124,11 +124,16 @@ for f in os.listdir(symbolPath):
     if not (version.endswith("pre") or version.endswith("a1") or version.endswith("a2")):
         continue
     # extract branch
-    m = versionRE.match(version)
-    if m:
-        branch = m.group(0)
+    if version.endswith("a1"):
+        branch = "nightly"
+    elif version.endswith("a2"):
+        branch = "aurora"
     else:
-        branch = version
+        m = versionRE.match(version)
+        if m:
+            branch = m.group(0)
+        else:
+            branch = version
     # group into bins by product-branch-os[-featurebranch]
     identifier = "%s-%s-%s" % (product, branch, osName)
     if len(parts) > 4: # extra buildid, probably
