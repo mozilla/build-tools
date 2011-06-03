@@ -16,6 +16,7 @@ from util.commands import run_cmd
 from util.file import compare
 from util.hg import make_hg_url
 from release.info import readReleaseConfig, getRepoMatchingBranch
+from release.versions import getL10nDashboardVersion
 import logging
 log = logging.getLogger(__name__)
 
@@ -130,8 +131,9 @@ def verify_l10n_changesets(hgHost, l10n_changesets):
 def verify_l10n_dashboard(l10n_changesets):
     """Checks the l10n-changesets against the l10n dashboard"""
     success = True
-    dash_url = 'https://l10n-stage-sj.mozilla.org/shipping/l10n-changesets?ms=fx%(version)s' % {
-        'version': releaseConfig['version'],
+    dash_url = 'https://l10n-stage-sj.mozilla.org/shipping/l10n-changesets?ms=%(version)s' % {
+        'version': getL10nDashboardVersion(releaseConfig['version'],
+                                           releaseConfig['productName']),
     }
     log.info("Comparing l10n changesets on dashboard %s to on-disk %s ..." 
         % (dash_url, l10n_changesets))
