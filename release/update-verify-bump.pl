@@ -292,6 +292,7 @@ sub BumpVerifyConfig {
         # Get rid of the newline because we'll be appending some text
         chomp($versionComment);
         my $line = $origFile[1];
+        chomp($line);
         # Get rid of all locales except de, en-US, ru (if they exist) because
         # we can't afford to do full checks on everything.
         $line =~ s/locales="(.*?)( ?de ?)(.*?)( ?en-US ?)(.*?)( ?ru ?)(.*?)"/locales="$2$4$6"/;
@@ -309,6 +310,7 @@ sub BumpVerifyConfig {
         push(@strippedFile, ($line . "\n"));
 
         $line = $origFile[1];
+        chomp($line);
         # remove the locales we're already doing a full check on
         foreach my $l (("de", "en-US", "ru")) {
             $line =~ s/(locales=".*?)$l ?(.*?")/$1$2/;
@@ -321,7 +323,7 @@ sub BumpVerifyConfig {
         # there's no locales to test!
         if ($line !~ m/locales="\s*"/) {
             push(@strippedFile, ($versionComment . " - quick check\n"));
-            push(@strippedFile, ($line));
+            push(@strippedFile, ($line . "\n"));
         }
         
         # all the old release lines, assume they're OK
@@ -653,7 +655,7 @@ sub ExecuteTest {
         print CONFIG "# $oldOldVersion $osname - full check\n";
         print CONFIG join(' ', @oldOldReleaseFullCheck) . "\n";
         print CONFIG "# $oldOldVersion $osname - quick check\n";
-        print CONFIG join(' ', @oldOldReleaseQuickCheck);
+        print CONFIG join(' ', @oldOldReleaseQuickCheck) . "\n";
     }
     close(CONFIG);
     
