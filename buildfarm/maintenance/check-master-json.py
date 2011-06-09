@@ -31,7 +31,7 @@ def check_master(master):
             'bbcustom_branch', 'bbconfigs_branch', 'tools_dir',
             'tools_branch', 'datacentre', 'buildbot_bin', 'buildbot_branch',
             'buildbot_python', 'buildbot_setup', 'environment')
-    opt_keys = ('http_port', 'ssh_port', 'pb_port', 'buildbot_version')
+    opt_keys = ('http_port', 'ssh_port', 'pb_port', 'buildbot_version', 'limit_platforms')
     int_keys = ('http_port', 'ssh_port', 'pb_port')
 
     for k in required_keys:
