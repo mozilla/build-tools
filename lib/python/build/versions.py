@@ -14,8 +14,8 @@ ANY_VERSION_REGEX =\
     '(pre)?')            # Might be a 'pre' (nightly) version
 
 BUMP_FILES = {
-    '^.*(version.*\.txt|milestone.txt)$': '^%(version)s$',
-    '^(default-version.txt|confvars.sh)$': '^MOZ_APP_VERSION=%(version)s$'
+    '^.*(version.*\.txt|milestone\.txt)$': '^%(version)s$',
+    '^.*(default-version\.txt|confvars\.sh)$': '^MOZ_APP_VERSION=%(version)s$'
 }
 
 def bumpFile(filename, contents, version):
