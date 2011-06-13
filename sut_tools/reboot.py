@@ -22,6 +22,11 @@ dm = devicemanager.DeviceManager(sys.argv[1])
 
 setFlag(proxyFile)
 try:
+    dm.getInfo('process')
+    print dm.sendCMD(['exec su -c "logcat -d -v time *:W"'])
+
+    print 'calling dm.reboot()'
+
     status = dm.reboot(ipAddr=proxyIP, port=proxyPort)
     print status
 finally:
