@@ -15,8 +15,7 @@ from util.hg import mercurial, apply_and_push, update, get_revision, \
   make_hg_url, out, BRANCH, REVISION, get_branches, cleanOutgoingRevs
 from util.retry import retry
 from build.versions import bumpFile
-from release.info import readReleaseConfig, getTags, generateRelbranchName, \
-  isFinalRelease
+from release.info import readReleaseConfig, getTags, generateRelbranchName
 from release.l10n import getL10nRepositories
 
 HG="hg.mozilla.org"
@@ -207,16 +206,11 @@ if __name__ == '__main__':
     config = validate(options, args)
     configDir = path.dirname(options.configfile)
     
-    if isFinalRelease(config['version']):
-        buildTag = False
-    else:
-        buildTag = True
-
     # We generate this upfront to ensure that it's consistent throughout all
     # repositories that use it. However, in cases where a relbranch is provided
     # for all repositories, it will not be used
     generatedRelbranch = generateRelbranchName(config['milestone'])
-    tags = getTags(config['baseTag'], config['buildNumber'], buildTag=buildTag)
+    tags = getTags(config['baseTag'], config['buildNumber'])
     l10nRepos = getL10nRepositories(path.join('buildbot-configs', configDir,
                                               config['l10nRevisionFile']),
                                     config['l10nRepoPath'])
