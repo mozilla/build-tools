@@ -1,6 +1,10 @@
 # buildbot -> bouncer platform mapping
 # TODO: make sure 'win64' is correct when Bouncer becomes aware of
 # 64-bit windows
+try:
+    import simplejson as json
+except:
+    import json
 bouncer_platform_map = {'win32': 'win', 'win64': 'win64', 'macosx': 'osx',
                         'linux': 'linux', 'linux64': 'linux64',
                         'macosx64': 'osx', 'win32-EUballot': 'win'}
@@ -59,6 +63,20 @@ def getPlatformLocales(shipped_locales, platforms):
         else:
             for platform in platforms:
                 platform_locales[platform].append(locale)
+    return platform_locales
+
+def getPlatformLocalesFromJson(json_file, platforms):
+    platform_locales = {}
+    for platform in platforms:
+        platform_locales[platform] = []
+    fh = open(json_file)
+    json_contents = json.load(fh)
+    fh.close()
+    for locale in json_contents.keys():
+        for platform in json_contents[locale]["platforms"]:
+            if platform not in platform_locales:
+                platform_locales[platform] = []
+            platform_locales[platform].append(locale)
     return platform_locales
 
 def getAllLocales(shipped_locales):

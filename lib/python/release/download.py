@@ -27,10 +27,15 @@ def getInstallerExt(platform):
     return installer_ext_map[platform]
 
 def downloadReleaseBuilds(stageServer, productName, brandName, version,
-                          buildNumber, platform):
-    candidatesDir = makeCandidatesDir(productName, version, buildNumber,
-                                      protocol='http', server=stageServer)
-    files = makeReleaseRepackUrls(productName, brandName, version, platform)
+                          buildNumber, platform, appVersion=None,
+                          candidatesDir=None):
+    if appVersion is None:
+        appVersion = version
+    if candidatesDir is None:
+        candidatesDir = makeCandidatesDir(productName, version, buildNumber,
+                                          protocol='http', server=stageServer)
+    files = makeReleaseRepackUrls(productName, brandName, version, appVersion,
+                                  platform)
 
     env = {}
     for file,remoteFile in files.iteritems():
