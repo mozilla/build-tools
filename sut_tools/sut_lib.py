@@ -12,6 +12,7 @@ import signal
 import logging
 import traceback
 import subprocess
+import sentrypdu
 
 from optparse import OptionParser
 # from multiprocessing import get_logger, log_to_stderr
@@ -19,6 +20,9 @@ from optparse import OptionParser
 
 log = logging.getLogger()
 
+
+# all PDUs that might own a tegra
+pdus = [ 'pdu%d.build.mozilla.org' % n for n in range(1,4) ]
 
 def dumpException(msg):
     """Gather information on the current exception stack and log it
@@ -342,6 +346,61 @@ def waitForDevice(dm, waitTime=60):
     if not tegraIsBack:
         print("Remote Device Error: waiting for tegra timed out.")
         sys.exit(1)
+
+def find_pdu(tegra, force_search=False):
+    """
+    Search for the PDU containing the given tegra.  If this information is
+    cached in the current directory and force_search is not set, the cached
+    value will be returned; otherwise, it will search all of the known PDUs
+    (see the top of this file) for the named PDU, and cache the result.
+    """
+    # first see if we know where this tegra lives
+    pdufile = '%s.pdu' % tegra
+    tegra_pdu = None
+    if not force_search and os.path.exists(pdufile):
+        try:
+            tegra_pdu = open(pdufile).read().strip()
+        except IOError:
+            pass
+
+    if tegra_pdu:
+        return tegra_pdu
+
+    # otherwise, scan the PDUs to find it
+    for pdu in pdus:
+        if sentrypdu.SentryPDU(pdu).status(tegra):
+            tegra_pdu = pdu
+            break
+
+    if not tegra_pdu:
+        raise KeyError("Cannot find PDU for tegra '%s'" % tegra)
+
+    open(pdufile, "w").write(tegra_pdu)
+
+    return tegra_pdu
+
+def reboot_tegra(tegra):
+    """
+    Try to reboot the given tegra, returning True if successful.
+
+    This uses a local filesystem cache (see find_pdu) to remember which PDU the
+    tegra is on.  It uses teh PDUs' own notion of which tegra is on which port,
+    and in the absence of any location information will search all available
+    PDUs for the given tegra.
+
+    This handles tegras moving between PDUs by re-trying with force_search=True.
+    """
+    pdu = find_pdu(tegra)
+    if sentrypdu.SentryPDU(pdu).reboot(tegra):
+        return True
+
+    # let's try again, forcing a search this time
+    pdu2 = find_pdu(tegra, force_search=True)
+    if pdu == pdu2:
+        # hm, same PDU - something else is wrong
+        return False
+
+    return sentrypdu.SentryPDU(pdu2).reboot(tegra)
 
 def loadOptions(defaults=None):
     """Parse command line parameters and populate the options object.
