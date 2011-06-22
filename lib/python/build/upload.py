@@ -47,7 +47,7 @@ def postUploadCmdPrefix(upload_dir=None,
     if to_tinderbox_builds:
         cmd.append('--release-to-tinderbox-builds')
     if to_try:
-        cmd.append('--release-to-tryserver-builds')
+        cmd.append('--release-to-try-builds')
     if to_latest:
         cmd.append("--release-to-latest")
     if to_dated:
