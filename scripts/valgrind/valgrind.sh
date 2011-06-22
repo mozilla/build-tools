@@ -66,4 +66,5 @@ if [ -f $suppression_file ]; then
 fi
 
 export OBJDIR=.
+export JARLOG_DIR=./jarlog/en-US
 python _profile/pgo/profileserver.py --debugger=valgrind --debugger-args="$debugger_args" || exit 1
