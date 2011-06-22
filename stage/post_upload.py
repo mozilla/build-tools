@@ -10,13 +10,13 @@ from errno import EEXIST
 
 NIGHTLY_PATH = "/home/ftp/pub/%(product)s/%(nightly_dir)s"
 TINDERBOX_BUILDS_PATH = "/home/ftp/pub/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
-LONG_DATED_DIR = "%(year)s/%(month)s/%(year)s-%(month)s-%(day)s-%(hour)s-%(branch)s"
-SHORT_DATED_DIR = "%(year)s-%(month)s-%(day)s-%(hour)s-%(branch)s"
+LONG_DATED_DIR = "%(year)s/%(month)s/%(year)s-%(month)s-%(day)s-%(hour)s-%(minute)s-%(second)s-%(branch)s"
+SHORT_DATED_DIR = "%(year)s-%(month)s-%(day)s-%(hour)s-%(minute)s-%(second)s-%(branch)s"
 CANDIDATES_DIR = "%(version)s-candidates/build%(buildnumber)s"
 LATEST_DIR = "latest-%(branch)s"
 # Production configs that need to be commented out when doing staging.
 TINDERBOX_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
-LONG_DATED_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(year)s/%(month)s/%(year)s-%(month)s-%(day)s-%(hour)s-%(branch)s"
+LONG_DATED_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(year)s/%(month)s/%(year)s-%(month)s-%(day)s-%(hour)s-%(minute)s-%(second)s-%(branch)s"
 CANDIDATES_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(version)s-candidates/build%(buildnumber)s"
 PVT_BUILD_URL_PATH = "https://dm-pvtbuild01.mozilla.org/%(product)s/%(tinderbox_builds_dir)s"
 PVT_BUILD_DIR = "/mnt/pvt_builds/%(product)s/%(tinderbox_builds_dir)s"
@@ -24,7 +24,7 @@ TRY_DIR = "/home/ftp/pub/%(product)s/try-builds/%(who)s-%(revision)s/%(builddir)
 TRY_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/try-builds/%(who)s-%(revision)s/%(builddir)s"
 # Staging configs start here.  Uncomment when working on staging
 #TINDERBOX_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
-#LONG_DATED_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(year)s/%(month)s/%(year)s-%(month)s-%(day)s-%(hour)s-%(branch)s"
+#LONG_DATED_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(year)s/%(month)s/%(year)s-%(month)s-%(day)s-%(hour)s-%(minute)s-%(second)s-%(branch)s"
 #CANDIDATES_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(version)s-candidates/build%(buildnumber)s"
 #TRY_DIR = "/home/ftp/pub/%(product)s/try-builds/%(who)s-%(revision)s/%(builddir)s"
 #TRY_URL_PATH = "http://staging-stage.build.mozilla.org/pub/mozilla.org/%(product)s/try-builds/%(who)s-%(revision)s/%(builddir)s"
