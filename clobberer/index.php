@@ -8,7 +8,7 @@ every build.
 http://hg.mozilla.org/build/buildbotcustom/file/default/process/factory.py
 */
 
-$CLOBBERER_DB = 'db/clobberer.db';
+include("clobberer_creds.php");
 
 $RELEASE_PREFIX = 'rel-';
 
@@ -27,41 +27,13 @@ $SPECIAL_PEOPLE = array(
   'raliiev@mozilla.com',
 );
 
-$dbh = new PDO("sqlite:$CLOBBERER_DB");
+$dbh = new PDO($CLOBBERER_DSN, $CLOBBERER_USERNAME,
+        $CLOBBERER_PASSWORD, $CLOBBERER_PDO_OPTIONS);
 if (!$dbh) {
   header('HTTP/1.0 500 Internal Server Error');
   print("<h1>Error: couldn't connect</h1>");
   print($error);
   exit(0);
-}
-
-$q = $dbh->query('SELECT count(*) FROM sqlite_master WHERE NAME="clobber_times"');
-$exists = $q->fetch(PDO::FETCH_NUM);
-if (!$exists or !$exists[0]) {
-  $res = $dbh->exec('CREATE TABLE builds ('
-                   .'id INTEGER PRIMARY KEY AUTOINCREMENT,'
-                   .'master VARCHAR(100),'
-                   .'branch VARCHAR(50),'
-                   .'buildername VARCHAR(100),'
-                   .'builddir VARCHAR(100),'
-                   .'slave VARCHAR(30),'
-                   .'last_build_time INTEGER)');
-  if ($res === FALSE) {
-    die(print_r($dbh->errorInfo(), TRUE));
-  }
-
-  $res = $dbh->exec('CREATE TABLE clobber_times ('
-                   .'id INTEGER PRIMARY KEY AUTOINCREMENT,'
-                   .'master VARCHAR(100),'
-                   .'branch VARCHAR(50),'
-                   .'builddir VARCHAR(100),'
-                   .'slave VARCHAR(30),'
-                   .'lastclobber INTEGER,'
-                   .'who VARCHAR(50))');
-  if ($res === FALSE) {
-    die(print_r($dbh->errorInfo(), TRUE));
-  }
-  chmod($CLOBBERER_DB, 0660);
 }
 
 function isSpecial($user)

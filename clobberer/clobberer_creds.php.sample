@@ -1,0 +1,8 @@
+<?php
+$CLOBBERER_DSN = "sqlite:db/clobberer.db";
+$CLOBBERER_USERNAME = null;
+$CLOBBERER_PASSWORD = null;
+
+// for MySQL, use array(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true)
+$CLOBBERER_PDO_OPTIONS = array();
+?>
