@@ -44,11 +44,14 @@ s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
 s.setServiceParent(application)
 """
 
+# get this value once and keep it - getfqdn() can be a *very* expensive call
+genhost = socket.getfqdn()
+
 def make_buildbot_tac(allocation):
     info = dict()
 
     info['gendate'] = time.ctime()
-    info['genhost'] = socket.getfqdn()
+    info['genhost'] = genhost
 
     # short-circuit for disabled slaves
     if not allocation.enabled:
