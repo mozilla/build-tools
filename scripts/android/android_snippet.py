@@ -123,8 +123,11 @@ def generateCompleteSnippet(apk_filename, buildid, version, hash_type,
     month = buildid[4:6]
     day = buildid[6:8]
     hour = buildid[8:10]
-    dateddir = '%s/%s/%s-%s-%s-%s' % (year, month, year, month,
-                                         day, hour)
+    minute = buildid[10:12]
+    second = buildid[12:14]
+    dateddir = '%s/%s/%s-%s-%s-%s-%s-%s' % (year, month,
+                                            year, month, day, 
+                                            hour, minute, second)
 
     # Could probably implement this more cleanly
     print >>output_file, 'version=1'
