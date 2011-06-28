@@ -46,6 +46,10 @@ case "$PRODUCT" in
         APP_DIR="suite";
         APP_ID="%7B92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a%7D";
         APP_NAME="SeaMonkey";;
+    thunderbird)
+        APP_DIR="mail";
+        APP_ID="%7B3550f703-e582-4d05-9a08-453d09bdfdc6%7D";
+        APP_NAME="Thunderbird";;
     *)
         echo >&2 "Invalid Product was passed to $0. Passed value was: $PRODUCT";
         echo >&2 $USAGE;
