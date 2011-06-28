@@ -57,7 +57,15 @@ def CopyFileToDir(original_file, source_dir, dest_dir, preserve_dirs=False):
             else:
                 raise
     if os.path.exists(new_file):
-        os.unlink(new_file)
+        try:
+            os.unlink(new_file)
+        except OSError, e:
+            # If the file gets deleted by another instance of post_upload
+            # because there was a name collision this improves the situation
+            # as to not abort the process but continue with the next file
+            print "Warning: The file %s has already been unlinked by " + \
+                  "another instance of post_upload.py" % new_file
+            return 
     tmpdir = tempfile.mkdtemp(prefix=".~", dir=dest_dir)
     tmp_path = os.path.join(tmpdir, os.path.basename(new_file))
     shutil.copyfile(original_file, tmp_path)
@@ -106,8 +114,14 @@ def ReleaseToDated(options, upload_dir, files):
     for f in files:
         if f.endswith('crashreporter-symbols.zip'):
             continue
-        CopyFileToDir(f, upload_dir, longDatedPath)
-        sys.stderr.write("%s\n" % os.path.join(url, os.path.basename(f)))
+        if options.branch.endswith('l10n') and f.endswith('.xpi'):
+            CopyFileToDir(f, upload_dir, longDatedPath, preserve_dirs=True)
+            filePath = f.replace(upload_dir, "").lstrip("/")
+            filePath = os.path.dirname(filePath)
+            sys.stderr.write("%s\n" % os.path.join(url, filePath, os.path.basename(f)))
+        else:
+            CopyFileToDir(f, upload_dir, longDatedPath)
+            sys.stderr.write("%s\n" % os.path.join(url, os.path.basename(f)))
     os.utime(longDatedPath, None)
 
     if not options.noshort:
@@ -132,7 +146,10 @@ def ReleaseToLatest(options, upload_dir, files):
             continue
         if PARTIAL_MAR_RE.search(f):
             continue
-        CopyFileToDir(f, upload_dir, latestPath)
+        if options.branch.endswith('l10n') and f.endswith('.xpi'):
+            CopyFileToDir(f, upload_dir, latestPath, preserve_dirs=True)
+        else:
+            CopyFileToDir(f, upload_dir, latestPath)
     os.utime(latestPath, None)
 
 def ReleaseToBuildDir(builds_dir, builds_url, options, upload_dir, files, dated):
@@ -154,8 +171,14 @@ def ReleaseToBuildDir(builds_dir, builds_url, options, upload_dir, files, dated)
         # Reject MAR files. They don't belong here.
         if f.endswith('.mar'):
             continue
-        CopyFileToDir(f, upload_dir, tinderboxBuildsPath)
-        sys.stderr.write("%s\n" % os.path.join(tinderboxUrl, os.path.basename(f)))
+        if options.tinderbox_builds_dir.endswith('l10n') and f.endswith('.xpi'):
+            CopyFileToDir(f, upload_dir, tinderboxBuildsPath, preserve_dirs=True)
+            filePath = f.replace(upload_dir, "").lstrip("/")
+            filePath = os.path.dirname(filePath)
+            sys.stderr.write("%s\n" % os.path.join(tinderboxUrl, filePath, os.path.basename(f)))
+        else:
+            CopyFileToDir(f, upload_dir, tinderboxBuildsPath)
+            sys.stderr.write("%s\n" % os.path.join(tinderboxUrl, os.path.basename(f)))
     os.utime(tinderboxBuildsPath, None)
 
 def ReleaseToTinderboxBuilds(options, upload_dir, files, dated=True):
