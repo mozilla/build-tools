@@ -125,7 +125,7 @@ function updateBuildTime($master, $branch, $buildername, $builddir, $slave)
   $now = time();
 
   $rows = $dbh->exec("UPDATE builds SET last_build_time = $now WHERE master=$master AND "
-      ."branch=$branch AND buildername=$buildername AND slave=$slave");
+      ."branch=$branch AND builddir=$builddir AND slave=$slave");
   if ($rows == 0) {
       $dbh->exec("INSERT INTO builds "
           ."(master, branch, buildername, builddir, slave, last_build_time) VALUES "
