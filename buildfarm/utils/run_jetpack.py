@@ -4,7 +4,7 @@
 Script to pull down the latest jetpack sdk tarball, unpack it, and run its tests against the 
 executable of whatever valid platform is passed.
 """
-import os, sys, urllib, shutil
+import os, sys, urllib, shutil, re
 from optparse import OptionParser
 
 SDK_TARBALL="addonsdk.tar.bz2"
@@ -58,12 +58,14 @@ if __name__ == '__main__':
         basepath = os.getcwd()
         sdk_url = options.tarball_url
         # Download the build from the ftp_url provided
+        pat = re.compile('firefox.*%s' % options.ext)
         urls = urllib.urlopen("%s" % options.ftp_url)
         filenames = urls.read().splitlines()
         executables = []
         for filename in filenames:
-            if options.ext in filename:
-                executables.append(filename.split(" ")[-1])
+            f = filename.split(" ")[-1]
+            if pat.match(f):
+                executables.append(f)
         # Only grab the most recent build (in case there's more than one in the dir)
         exe = sorted(executables, reverse=True)[0]
         info_file = exe.replace(options.ext, "%s.txt" % options.ext.split('.')[0])
