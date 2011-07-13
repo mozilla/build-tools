@@ -9,7 +9,7 @@ import devicemanager
 
 from sut_lib import getOurIP, calculatePort, clearFlag, setFlag, checkDeviceRoot, \
                     getDeviceTimestamp, setDeviceTimestamp, \
-                    getResolution, waitForDevice
+                    getResolution, waitForDevice, runCommand
 
 
 # Stop buffering!
@@ -41,10 +41,11 @@ if devRoot is None or devRoot == '/tests':
     setFlag(errorFile, "Remote Device Error: devRoot from devicemanager [%s] is not correct - exiting" % devRoot)
     sys.exit(1)
 
-workdir  = os.path.dirname(source)
-filename = os.path.basename(source)
-target   = os.path.join(devRoot, filename)
-inifile  = os.path.join(workdir, 'fennec', 'application.ini')
+workdir      = os.path.dirname(source)
+filename     = os.path.basename(source)
+target       = os.path.join(devRoot, filename)
+inifile      = os.path.join(workdir, 'fennec', 'application.ini')
+remoteappini = os.path.join(workdir, 'talos', 'remoteapp.ini')
 
 getDeviceTimestamp(dm)
 setDeviceTimestamp(dm)
@@ -63,12 +64,19 @@ if dm.pushFile(source, target):
         #adjust resolution down to allow fennec to install without memory issues
         if (width >= 1050 or height >= 1050):
             dm.adjustResolution(1024, 768, 'crt')
+            print 'calling reboot'
             dm.reboot(proxyIP, proxyPort)
             waitForDevice(dm)
 
-        #status = dm.updateApp(target, processName=processName, ipAddr=proxyIP, port=proxyPort)
-        #if status is not None and status:
-        #    print "updateApp() call returned %s" % status
+            width, height = getResolution(dm)
+            if width != 1024 and height != 768:
+                clearFlag(proxyFile)
+                setFlag(errorFile, "Remote Device Error: Resolution change failed.  Should be %d/%d but is %d/%d" % (1024,768,width,height))
+                sys.exit(1)
+
+        print 'copying %s to %s' % (inifile, remoteappini)
+        runCommand(['cp', inifile, remoteappini])
+
         status = dm.installApp(target)
         if status is None:
             print '-'*42
@@ -77,23 +85,6 @@ if dm.pushFile(source, target):
             dm.getInfo('memory')
             dm.getInfo('uptime')
             print dm.sendCMD(['exec su -c "logcat -d -v time *:W"'])
-            print '-'*42
-            print 'pushing ini file to device'
-            if dm.pushFile(inifile, '/data/data/%s/application.ini' % processName):
-                dm.getInfo('process')
-                dm.getInfo('memory')
-                dm.getInfo('uptime')
-                pid = dm.processExist(processName)
-                print '%s PID %s' % (processName, pid)
-                if pid is not None:
-                    dm.killProcess(processName)
-                dm.getInfo('process')
-                print dm.sendCMD(['exec su -c "logcat -d -v time *:W"'])
-            else:
-                clearFlag(proxyFile)
-                print "ERROR: unable to push %s" % inifile
-                print dm.sendCMD(['exec su -c "logcat -d -v time *:W"'])
-                sys.exit(1)
         else:
             clearFlag(proxyFile)
             setFlag(errorFile, "Remote Device Error: updateApp() call failed - exiting")
