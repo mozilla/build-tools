@@ -11,7 +11,7 @@ do
   builddir="$BASE_PATH/$dir"
   DATE_DIR=$(date +%Y-%m-%d-$branch-debug)
   cd $builddir
-  archivedir="$(ls -r | head -1)"
+  archivedir="$(find . -maxdepth 1 -type d -mtime -1 -name '1?????????' | sort -n | tail -1 | cut -c3-)"
   if [[ -n $archivedir && -d "$builddir/$archivedir" ]]; then
     files="$(find $builddir/$archivedir/ -regex '.*\.\(dmg\|exe\|txt\|bz2\)')"
     if [ -n "$files" ]; then
