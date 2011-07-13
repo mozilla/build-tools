@@ -12,8 +12,7 @@ from release.info import readReleaseConfig
 
 def bumpReleaseconfig(releaseConfigFile, options):
     processVars = ['buildNumber', ]
-    build1BumpVars = ['version', 'milestone', 'baseTag', 'nextAppVersion',
-                      'nextMilestone']
+    build1BumpVars = ['version', 'baseTag', 'nextAppVersion', 'nextMilestone']
     build1ProcessVars = ['oldVersion', 'oldBuildNumber', 'oldBaseTag']
 
     oldReleaseConfig = readReleaseConfig(releaseConfigFile)
