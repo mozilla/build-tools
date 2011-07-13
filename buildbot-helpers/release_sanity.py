@@ -2,7 +2,8 @@
 """%prog [-d|--dryrun] [-u|--username `username`] [-b|--bypasscheck]
         [-V| --version `version`] [-B --branch `branchname`]
         [-N|--build-number `buildnumber`]
-        [-c| --release-config `releaseConfigFile`] master:port
+        [-c| --release-config `releaseConfigFile`]
+        -p|--products firefox,fennec master:port
 
     Wrapper script to sanity-check a release. Default behaviour is to reconfig
     the master, check the branch and revision specific in the release_configs
@@ -32,7 +33,7 @@ def reconfig():
     """reconfig the master in the cwd"""
     run_cmd(['python', RECONFIG_SCRIPT, 'reconfig', os.getcwd()])
 
-def sendchange(branch, revision, username, master, configfile):
+def sendchange(branch, revision, username, master, products):
     """Send the change to buildbot to kick off the release automation"""
     cmd = [
        'buildbot',
@@ -44,7 +45,7 @@ def sendchange(branch, revision, username, master, configfile):
        '--branch',
        branch,
        '-p',
-       'release_config:mozilla/%s' % configfile,
+       'products:%s' % products,
        '-p',
        'script_repo_revision:%s' % revision,
        'release_build'
@@ -178,14 +179,15 @@ if __name__ == '__main__':
     from localconfig import GLOBAL_VARS
     parser = OptionParser(__doc__)
     parser.set_defaults(
-            check = True,
-            dryrun = False,
-            username = "cltbld",
-            loglevel = logging.INFO,
-            version = None,
-            buildNumber = None,
-            branch = None,
-            releaseConfig = None,
+            check=True,
+            dryrun=False,
+            username="cltbld",
+            loglevel=logging.INFO,
+            version=None,
+            buildNumber=None,
+            branch=None,
+            releaseConfig=None,
+            products=None,
             )
     parser.add_option("-b", "--bypass-check", dest="check", action="store_false",
             help="don't bother verifying release repo's on this master")
@@ -201,8 +203,12 @@ if __name__ == '__main__':
             help="branch name for this release, uses release_config otherwise")
     parser.add_option("-c", "--release-config", dest="releaseConfig",
             help="override the default release-config file")
+    parser.add_option("-p", "--products", dest="products",
+            help="coma separated list of products")
 
     options, args = parser.parse_args()
+    if not options.products:
+        parser.error("Need to provide a list of products, e.g. -p firefox,fennec")
     if not options.dryrun and not args:
         parser.error("Need to provide a master to sendchange to, or -d for a dryrun")
     elif not options.branch:
@@ -278,7 +284,7 @@ if __name__ == '__main__':
                     "%s_RELEASE" % releaseConfig['baseTag'],
                     options.username,
                     args[0],
-                    releaseConfigFile,
+                    options.products,
                     )
         else:
             log.info("Tests Passed! Did not run reconfig/sendchange. Rerun without `-d`")

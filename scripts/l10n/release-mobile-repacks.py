@@ -59,8 +59,7 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                                       nightlyDir=nightlyDir)
     input_env = retry(downloadReleaseBuilds,
                       args=(stageServer, ftpProduct, brand, version,
-                            buildNumber, stage_platform, appVersion,
-                            fullCandidatesDir))
+                            buildNumber, stage_platform, fullCandidatesDir))
     env.update(input_env)
     print "env pre-locale: %s" % str(env)
 
@@ -177,10 +176,9 @@ if __name__ == "__main__":
     else:
         locales = options.locales
 
-    try:
-        l10nRepoDir = path.split(releaseConfig["l10nRepoClonePath"])[-1]
-    except KeyError:
-        l10nRepoDir = path.split(releaseConfig["l10nRepoPath"])[-1]
+    l10nRepoDir = path.split(
+        releaseConfig.get("l10nRepoClonePath", releaseConfig["l10nRepoPath"])
+            )[-1]
 
     stageSshKey = path.join("~", ".ssh", branchConfig["stage_ssh_key"])
 

@@ -210,6 +210,9 @@ if __name__ == '__main__':
     # repositories that use it. However, in cases where a relbranch is provided
     # for all repositories, it will not be used
     generatedRelbranch = generateRelbranchName(config['milestone'])
+    if config.get('relbranchPrefix'):
+        generatedRelbranch = generateRelbranchName(
+            config['milestone'], prefix=config['relbranchPrefix'])
     tags = getTags(config['baseTag'], config['buildNumber'])
     l10nRepos = getL10nRepositories(path.join('buildbot-configs', configDir,
                                               config['l10nRevisionFile']),

@@ -27,30 +27,26 @@ def getInstallerExt(platform):
     return installer_ext_map[platform]
 
 def downloadReleaseBuilds(stageServer, productName, brandName, version,
-                          buildNumber, platform, appVersion=None,
-                          candidatesDir=None):
-    if appVersion is None:
-        appVersion = version
+                          buildNumber, platform, candidatesDir=None):
     if candidatesDir is None:
         candidatesDir = makeCandidatesDir(productName, version, buildNumber,
                                           protocol='http', server=stageServer)
-    files = makeReleaseRepackUrls(productName, brandName, version, appVersion,
-                                  platform)
+    files = makeReleaseRepackUrls(productName, brandName, version, platform)
 
     env = {}
-    for file,remoteFile in files.iteritems():
+    for fileName, remoteFile in files.iteritems():
         url = '/'.join([p.strip('/') for p in [candidatesDir,
                                                urllib.quote(remoteFile)]])
-        log.info("Downloading %s to %s", url, file)
-        urlretrieve(url, file)
-        if file.endswith('exe'):
+        log.info("Downloading %s to %s", url, fileName)
+        urlretrieve(url, fileName)
+        if fileName.endswith('exe'):
             env['WIN32_INSTALLER_IN'] = windows2msys(path.join(os.getcwd(),
-                                                     file))
+                                                     fileName))
         else:
             if platform.startswith('win'):
-                env['ZIP_IN'] = windows2msys(path.join(os.getcwd(), file))
+                env['ZIP_IN'] = windows2msys(path.join(os.getcwd(), fileName))
             else:
-                env['ZIP_IN'] = path.join(os.getcwd(), file)
+                env['ZIP_IN'] = path.join(os.getcwd(), fileName)
 
     return env
 
