@@ -156,9 +156,11 @@ sub CreatePatcherConfig {
     my $configBumpDir = '.';
     my $releaseNotesUrl = $config{'releasenotes-url'};
 
-    my $prettyVersion = GetPrettyVersion(version => $version);
+    my $prettyVersion = GetPrettyVersion(version => $version,
+                                         product => $product);
 
-    my $oldPrettyVersion = GetPrettyVersion(version => $oldVersion);
+    my $oldPrettyVersion = GetPrettyVersion(version => $oldVersion,
+                                            product => $product);
 
     my @channels = ('beta');
     if ($useBetaChannel) {

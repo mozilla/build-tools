@@ -7,14 +7,10 @@ use File::Temp qw(tempdir);
 use Getopt::Long;
 use Storable;
 
-use MozBuild::Util qw(GetBuildIDFromFTP);
+use Bootstrap::Util qw(LoadLocaleManifest);
 
-use Bootstrap::Util qw(GetBouncerPlatforms GetBouncerToPatcherPlatformMap
-                       GetEqualPlatforms LoadLocaleManifest
-                       GetBuildbotToFTPPlatformMap
-                       GetFTPToBuildbotPlatformMap);
-
-use Release::Patcher::Config qw(GetProductDetails);
+use Release::Patcher::Config qw(GetProductDetails GetReleaseBlock BumpFilePath);
+use Release::Versions qw(GetPrettyVersion);
 
 $|++;
 
@@ -129,43 +125,6 @@ __USAGE__
     }
 }    
 
-sub BumpFilePath {
-    my %args = @_;
-    my $oldFilePath = $args{'oldFilePath'};
-    my $product = $config{'product'};
-    my $marName = $config{'marname'};
-    my $oldMarName = $config{'oldmarname'};
-    my $version = $config{'version'};
-    my $oldVersion = $config{'old-version'};
-
-    # we need an escaped copy of oldVersion so we can accurately match
-    # filenames
-    my $escapedOldVersion = $oldVersion;
-    $escapedOldVersion =~ s/\./\\./g;
-    my $escapedVersion = $version;
-    $escapedVersion =~ s/\./\\./g;
-
-    # strip out everything up to and including 'buildN/'
-    my $newPath = $oldFilePath;
-    $newPath =~ s/.*\/build\d+\///;
-    # We need to handle partials and complete MARs differently
-    if ($newPath =~ m/\.partial\.mar$/) {
-        $newPath =~ s/($oldMarName|$marName)-.+?-($escapedOldVersion|$escapedVersion)\.
-                     /$marName-$oldVersion-$version./x
-                     or die("ASSERT: BumpFilePath() - Could not bump path: " .
-                            "$oldFilePath");
-    } elsif ($newPath =~ m/\.complete\.mar$/) {
-        $newPath =~ s/($oldMarName|$marName)-($escapedOldVersion|$escapedVersion)\.
-                     /$marName-$version./x
-                     or die("ASSERT: BumpFilePath() - Could not bump path: " .
-                            "$oldFilePath");
-    } else {
-        die("ASSERT: BumpFilePath() - Unknown file type for '$oldFilePath'");
-    }
-
-    return $newPath;
-}
-
 sub BumpPatcherConfig {
     my $product = $config{'product'};
     my $brand = $config{'brand'};
@@ -182,14 +141,8 @@ sub BumpPatcherConfig {
     my $releaseNotesUrl = $config{'releasenotes-url'};
     my $platforms = $config{'platform'};
 
-    my $prettyVersion = $version;
-    $prettyVersion =~ s/a([0-9]+)$/ Alpha $1/;
-    if ($product eq 'firefox' && $version ge '5') {
-       $prettyVersion =~ s/b([0-9]+)$/ Beta/;
-    } else {
-       $prettyVersion =~ s/b([0-9]+)$/ Beta $1/;
-    }
-    $prettyVersion =~ s/rc([0-9]+)$/ RC $1/;
+    my $prettyVersion = GetPrettyVersion(version => $version,
+                                         product => $product);
 
     my $localeInfo = {};
     if (not LoadLocaleManifest(localeHashRef => $localeInfo,
@@ -285,12 +238,24 @@ sub BumpPatcherConfig {
                              '&os=%bouncer-platform%&lang=%locale%';
 
     my $pPath = BumpFilePath(
-      oldFilePath => $currentUpdateObj->{'partial'}->{'path'});
+      oldFilePath => $currentUpdateObj->{'partial'}->{'path'},
+      product => $product,
+      marName => $config{'marname'},
+      oldMarName => $config{'oldmarname'},
+      version => $version,
+      oldVersion => $oldVersion
+    );
     $partialUpdate->{'path'} = catfile($product, 'nightly', $version .
                                '-candidates', $buildStr, $pPath);
 
     my $pBetatestPath = BumpFilePath(
-      oldFilePath => $currentUpdateObj->{'partial'}->{'betatest-url'});
+      oldFilePath => $currentUpdateObj->{'partial'}->{'betatest-url'},
+      product => $product,
+      marName => $config{'marname'},
+      oldMarName => $config{'oldmarname'},
+      version => $version,
+      oldVersion => $oldVersion
+    );
     $partialUpdate->{'betatest-url'} =
      'http://' . $stagingServer. '/pub/mozilla.org/' . $product . 
      '/nightly/' .  $version . '-candidates/' . $buildStr . '/' .
@@ -300,11 +265,23 @@ sub BumpPatcherConfig {
       my $pBetaPath;
       if (defined($currentUpdateObj->{'partial'}->{'beta-url'})) {
         $pBetaPath = BumpFilePath(
-          oldFilePath => $currentUpdateObj->{'partial'}->{'beta-url'});
+          oldFilePath => $currentUpdateObj->{'partial'}->{'beta-url'},
+          product => $product,
+          marName => $config{'marname'},
+          oldMarName => $config{'oldmarname'},
+          version => $version,
+          oldVersion => $oldVersion
+        );
       } else {
         # patcher-config-creator.pl ensures this exists
         $pBetaPath = BumpFilePath(
-          oldFilePath => $currentUpdateObj->{'partial'}->{'betatest-url'});
+          oldFilePath => $currentUpdateObj->{'partial'}->{'betatest-url'},
+          product => $product,
+          marName => $config{'marname'},
+          oldMarName => $config{'oldmarname'},
+          version => $version,
+          oldVersion => $oldVersion
+        );
       }
       $partialUpdate->{'beta-url'} =
        'http://' . $ftpServer . '/pub/mozilla.org/' . $product. '/nightly/' . 
@@ -320,12 +297,24 @@ sub BumpPatcherConfig {
      '-complete&os=%bouncer-platform%&lang=%locale%';
 
     my $cPath = BumpFilePath(
-      oldFilePath => $currentUpdateObj->{'complete'}->{'path'});
+      oldFilePath => $currentUpdateObj->{'complete'}->{'path'},
+      product => $product,
+      marName => $config{'marname'},
+      oldMarName => $config{'oldmarname'},
+      version => $version,
+      oldVersion => $oldVersion
+    );
     $completeUpdate->{'path'} = catfile($product, 'nightly', $version . 
      '-candidates', $buildStr, $cPath);
 
     my $cBetatestPath = BumpFilePath(
-      oldFilePath => $currentUpdateObj->{'complete'}->{'betatest-url'});
+      oldFilePath => $currentUpdateObj->{'complete'}->{'betatest-url'},
+      product => $product,
+      marName => $config{'marname'},
+      oldMarName => $config{'oldmarname'},
+      version => $version,
+      oldVersion => $oldVersion
+    );
     $completeUpdate->{'betatest-url'} = 
      'http://' . $stagingServer . '/pub/mozilla.org/' . $product . 
      '/nightly/' .  $version . '-candidates/' . $buildStr . '/' .
@@ -335,11 +324,23 @@ sub BumpPatcherConfig {
        my $cBetaPath;
        if (defined($currentUpdateObj->{'complete'}->{'beta-url'})) {
          $cBetaPath = BumpFilePath(
-           oldFilePath => $currentUpdateObj->{'complete'}->{'beta-url'});
+           oldFilePath => $currentUpdateObj->{'complete'}->{'beta-url'},
+           product => $product,
+           marName => $config{'marname'},
+           oldMarName => $config{'oldmarname'},
+           version => $version,
+           oldVersion => $oldVersion
+         );
        } else {
          # patcher-config-creator.pl ensures this exists
          $cBetaPath = BumpFilePath(
-           oldFilePath => $currentUpdateObj->{'complete'}->{'betatest-url'});
+           oldFilePath => $currentUpdateObj->{'complete'}->{'betatest-url'},
+           product => $product,
+           marName => $config{'marname'},
+           oldMarName => $config{'oldmarname'},
+           version => $version,
+           oldVersion => $oldVersion
+         );
        }
        $completeUpdate->{'beta-url'} = 
         'http://' . $ftpServer . '/pub/mozilla.org/' . $product. '/nightly/' .
@@ -349,96 +350,16 @@ sub BumpPatcherConfig {
 
     # Now, add the new <release> stanza for the release we're working on
 
-    my $releaseObj;
-    $appObj->{'release'}->{$version} = $releaseObj = {};
-
-    $releaseObj->{'schema'} = '1';
-    $releaseObj->{'version'} = $releaseObj->{'extension-version'} = $appVersion;
-    $releaseObj->{'prettyVersion'} = $prettyVersion;
-
-    my $candidateDir = '/pub/mozilla.org/' . $product . '/nightly/' .
-                       $version . '-candidates/build' . $build;
-
-    $releaseObj->{'platforms'} = {};
-    my %platformFTPMap = GetBuildbotToFTPPlatformMap();
-    my %FTPplatformMap = GetFTPToBuildbotPlatformMap();
-    foreach my $os (@$platforms){
-        my $buildID = GetBuildIDFromFTP(os => $os,
-                                        releaseDir => $candidateDir,
-                                        stagingServer => $stagingServer);
-        if (exists($platformFTPMap{$os})){
-            my $ftp_platform = $platformFTPMap{$os};
-            $releaseObj->{'platforms'}->{$ftp_platform} = $buildID;
-        } else {
-            die("ASSERT: BumpPatcherConfig(): unknown OS $os");
-        }
-    }
-
-    $releaseObj->{'locales'} = join(' ', sort (keys(%{$localeInfo})));
-
-    my $oldCompleteMarPath =
-      $appObj->{'release'}->{$oldVersion}->{'completemarurl'};
-    my $completeMarPath = BumpFilePath(oldFilePath => $oldCompleteMarPath);
-    $releaseObj->{'completemarurl'} = 
-     'http://' . $stagingServer . '/pub/mozilla.org/' . $product. 
-     '/nightly/' .  $version . '-candidates/' . $buildStr . '/' .
-     $completeMarPath;
-
-    # Compute locale exceptions; 
-    # $localeInfo is hash ref of locales -> array of platforms the locale
-    # is for.
-    #
-    # To calculate the exceptions to this rule, create a hash with 
-    # all known platforms in it. It's a hash so we can easily delete() keys
-    # out of it. Then, we iterate through all the platforms we should build
-    # this locale for, and delete them from the list of all known locales.
-    #
-    # If we should build it for all the loclaes, then this hash should be
-    # empty after this process. If it's not, those are the platforms we would
-    # __NOT__ build this locale for. But, that doesn't matter; what we're 
-    # interested in is that it is such a locale, so we can create a list of
-    # platforms we *do* build it for; such information is in the original
-    # localeInfo hash, so this is a lot of work to make sure that we do
-    # the right thing here.
-
-    $releaseObj->{'exceptions'} = {};
-
-    my %platformMap = GetBouncerToPatcherPlatformMap();
-    foreach my $locale (keys(%{$localeInfo})) {
-        my $allPlatformsHash = {};
-        foreach my $platform (GetBouncerPlatforms()) {
-            $allPlatformsHash->{$platform} = 1;
-        }
-
-        foreach my $localeSupportedPlatform (@{$localeInfo->{$locale}}) {
-            die 'ASSERT: BumpPatcherConfig(): platform in locale, but not in' .
-             ' all locales? Invalid platform?' if 
-             (!exists($allPlatformsHash->{$localeSupportedPlatform}));
-
-            delete $allPlatformsHash->{$localeSupportedPlatform};
-        }
-      
-        my @supportedPatcherPlatforms = ();
-        foreach my $platform (@{$localeInfo->{$locale}}) {
-            if (exists $FTPplatformMap{$platformMap{$platform}} &&
-                grep($FTPplatformMap{$platformMap{$platform}} eq $_, @{$platforms})){
-                    push(@supportedPatcherPlatforms, $platformMap{$platform});
-            }
-            # Get platforms not mentioned in shipped-locales
-            my $equal_platforms = GetEqualPlatforms($platform);
-            if ($equal_platforms){
-                foreach my $equal_platform (@{$equal_platforms}){
-                    push(@supportedPatcherPlatforms, $platformMap{$equal_platform})
-                        if grep($FTPplatformMap{$platformMap{$equal_platform}} eq $_, @{$platforms});
-                }
-            }
-        }
-
-        if (keys(%{$allPlatformsHash}) > 0) {
-            $releaseObj->{'exceptions'}->{$locale} =
-             join(', ', sort(@supportedPatcherPlatforms));
-        }
-    }
+    $appObj->{'release'}->{$version} = GetReleaseBlock(
+        version => $version,
+        appVersion => $appVersion,
+        prettyVersion => $prettyVersion,
+        product => $product,
+        buildstr => $buildStr,
+        stagingServer => $stagingServer,
+        localeInfo => $localeInfo,
+        platforms => $platforms
+    );
 
     $patcherConfigObj->save_file($patcherConfig);
 }

@@ -3,7 +3,7 @@ package Release::Patcher::Config;
 use strict;
 
 use MozBuild::Util qw(GetBuildIDFromFTP);
-use Bootstrap::Util qw(GetBouncerToPatcherPlatformMap GetBouncerPlatforms GetBuildbotToFTPPlatformMap);
+use Bootstrap::Util qw(GetBouncerToPatcherPlatformMap GetBouncerPlatforms GetBuildbotToFTPPlatformMap GetFTPToBuildbotPlatformMap GetEqualPlatforms);
 
 use base qw(Exporter);
 our @EXPORT_OK = qw(GetProductDetails GetReleaseBlock BumpFilePath);
@@ -80,6 +80,7 @@ sub GetReleaseBlock {
     $releaseBlock->{'exceptions'} = {};
 
     my %platformMap = GetBouncerToPatcherPlatformMap();
+    my %FTPplatformMap = GetFTPToBuildbotPlatformMap();
     foreach my $locale (keys(%{$localeInfo})) {
         my $allPlatformsHash = {};
         foreach my $platform (GetBouncerPlatforms()) {
@@ -96,9 +97,19 @@ sub GetReleaseBlock {
 
         my @supportedPatcherPlatforms = ();
         foreach my $platform (@{$localeInfo->{$locale}}) {
-            push(@supportedPatcherPlatforms, $platformMap{$platform});
+            if (exists $FTPplatformMap{$platformMap{$platform}} &&
+                grep($FTPplatformMap{$platformMap{$platform}} eq $_, @{$platforms})){
+                    push(@supportedPatcherPlatforms, $platformMap{$platform});
+            }
+            # Get platforms not mentioned in shipped-locales
+            my $equal_platforms = GetEqualPlatforms($platform);
+            if ($equal_platforms){
+                foreach my $equal_platform (@{$equal_platforms}){
+                    push(@supportedPatcherPlatforms, $platformMap{$equal_platform})
+                        if grep($FTPplatformMap{$platformMap{$equal_platform}} eq $_, @{$platforms});
+                }
+            }
         }
-
         if (keys(%{$allPlatformsHash}) > 0) {
             $releaseBlock->{'exceptions'}->{$locale} =
              join(', ', sort(@supportedPatcherPlatforms));
@@ -112,8 +123,10 @@ sub BumpFilePath {
     my %args = @_;
     my $oldFilePath = $args{'oldFilePath'};
     my $product = $args{'product'};
+    my $marName = $args{'marName'};
+    my $oldMarName = $args{'oldMarName'};
     my $version = $args{'version'};
-    my $oldVersion = $args{'old-version'};
+    my $oldVersion = $args{'oldVersion'};
 
     # we need an escaped copy of oldVersion so we can accurately match
     # filenames
@@ -127,13 +140,13 @@ sub BumpFilePath {
     $newPath =~ s/.*\/build\d+\///;
     # We need to handle partials and complete MARs differently
     if ($newPath =~ m/\.partial\.mar$/) {
-        $newPath =~ s/$product-.+?-($escapedOldVersion|$escapedVersion)\.
-                     /$product-$oldVersion-$version./x
+        $newPath =~ s/($oldMarName|$marName)-.+?-($escapedOldVersion|$escapedVersion)\.
+                     /$marName-$oldVersion-$version./x
                      or die("ASSERT: BumpFilePath() - Could not bump path: " .
                             "$oldFilePath");
     } elsif ($newPath =~ m/\.complete\.mar$/) {
-        $newPath =~ s/$product-($escapedOldVersion|$escapedVersion)\.
-                     /$product-$version./x
+        $newPath =~ s/($oldMarName|$marName)-($escapedOldVersion|$escapedVersion)\.
+                     /$marName-$version./x
                      or die("ASSERT: BumpFilePath() - Could not bump path: " .
                             "$oldFilePath");
     } else {
