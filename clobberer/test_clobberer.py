@@ -44,6 +44,8 @@ def createDb():
     for cr in creates:
         db.execute(cr)
     db.commit()
+    db.close()
+    os.chmod(dbFile, 0666)
 
 def setupCreds():
     creds_file = os.path.join(os.path.dirname(os.path.dirname(dbFile)),
@@ -63,6 +65,7 @@ def setupCreds():
         $CLOBBERER_PDO_OPTIONS = array();
         ?>
         """ % dbFile))
+    os.chmod(creds_file, 0644)
 
 def updateBuild(branch, buildername, builddir, slave, master):
     """Send an update to the server to indicate that a slave is doing a build.
