@@ -1,7 +1,7 @@
 $(document).ready(function() {
-    $('#try-options').hide();
+    //$('#try-options').hide();
 
-//    $('#do_everything').attr('checked', 1); // Why do I need this??
+    //$('#do_everything').attr('checked', 1); // reset on page refresh
 
     // Toplevel toggle: do everything, or choose the specifics?
     $('#do_everything').change(function() {
@@ -99,7 +99,7 @@ function setresult() {
     var value;
     if ($('#do_everything').attr('checked')) {
         label = 'Do Everything';
-        value = 'try: -a ';
+        value = 'try: -b do -p all -u all -t all';
     } else {
         label = 'Other';
         value = 'try: ';
@@ -109,6 +109,12 @@ function setresult() {
             var arg = '-' + $(this).attr('try-section') + ' ';
             arg += $(this).find(':checked').attr('value');
             args.push(arg);
+        });
+
+        $('.option-email').each(function() {
+            var arg = $(this).find(':checked').attr('value');
+            if (arg != 'on')
+                args.push(arg);
         });
 
         $('.option-group').each(function() {
@@ -133,7 +139,7 @@ function setresult() {
             }
             args.push(arg);
         });
-        value = 'try: ' + args.join(' ') + ' ';
+        value = 'try: ' + args.join(' ');
     }
 
     $('.result_label').text(label);

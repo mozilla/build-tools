@@ -1,7 +1,7 @@
 body {
     margin: 0 auto;
-    width: 70%;
-    background: url(background.jpg) no-repeat;
+    width: 90%;
+    background: url(../build/background.jpg) no-repeat;
 }
 
 .indent1 {
@@ -13,8 +13,8 @@ ul {
 }
 
 .result_value {
-  background: lightgray;
-  border-style: inset;
+    background: lightgray;
+    border-style: inset;
 }
 
 .desktop_note {
@@ -27,4 +27,27 @@ ul {
 
 label {
     cursor: pointer;
+}
+#wrapper {
+    margin: 0 auto;
+    width: 1200px;
+}
+#col1 {
+    float:left;
+    width:300px;
+}
+#col2 {
+    float:left;
+    width:300px;
+}
+#col3 {
+    float:left;
+    width:300px;
+}
+#results {
+    clear: both;
+}
+
+h4 {
+    background: lightgray;
 }
