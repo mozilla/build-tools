@@ -6,20 +6,18 @@
 
 import os, sys
 import time
-import datetime
 import socket
 import signal
 import logging
+import datetime
 import traceback
 import subprocess
-import sentrypdu
 
 from optparse import OptionParser
-# from multiprocessing import get_logger, log_to_stderr
+import sentrypdu
 
 
 log = logging.getLogger()
-
 
 # all PDUs that might own a tegra
 pdus = [ 'pdu%d.build.mozilla.org' % n for n in range(1,4) ]
@@ -69,7 +67,7 @@ def pingTegra(tegra):
 
     out    = []
     result = False
-    p, o = runCommand(['ping', '-c 5', '-o', tegra], logEcho=False)
+    p, o = runCommand(['/sbin/ping', '-c 5', '-o', tegra], logEcho=False)
     for s in o:
         out.append(s)
         if '1 packets transmitted, 1 packets received' in s:
@@ -306,10 +304,15 @@ def calculatePort():
     return n
 
 def getResolution(dm):
-    parts  = dm.getInfo('screen')['screen'][0].split()
-    width  = int(parts[0].split(':')[1])
-    height = int(parts[1].split(':')[1])
-    return width, height
+    s = dm.getInfo('screen')['screen'][0]
+
+    if 'X:' in s and 'Y:' in s:
+        parts  = s.split()
+        width  = int(parts[0].split(':')[1])
+        height = int(parts[1].split(':')[1])
+        return width, height
+    else:
+        return 0, 0
 
 def getDeviceTimestamp(dm):
     ts = int(dm.getCurrentTime()) # epoch time in milliseconds

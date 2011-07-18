@@ -14,7 +14,8 @@ import datetime
 
 # from multiprocessing import get_logger, log_to_stderr
 from sut_lib import checkSlaveAlive, checkSlaveActive, getIPAddress, dumpException, loadOptions, \
-                    checkCPAlive, checkCPActive, getLastLine, stopProcess, runCommand, pingTegra
+                    checkCPAlive, checkCPActive, getLastLine, stopProcess, runCommand, pingTegra, \
+                    reboot_tegra
 
 
 log            = logging.getLogger()
@@ -25,6 +26,7 @@ defaultOptions = {
                    'bbpath': ('-p', '--bbpath', '/builds', 'Path where the Tegra buildbot slave clients can be found'),
                    'tegra':  ('-t', '--tegra',  None,      'Tegra to check, if not given all Tegras will be checked'),
                    'reset':  ('-r', '--reset',  False,     'Reset error.flg if Tegra active', 'b'),
+                   'reboot': ('-c', '--cycle',  False,     'Power cycle the Tegra', 'b'),
                    'master': ('-m', '--master', 'sp',      'master type to check "p" for production or "s" for staging'),
                    'export': ('-e', '--export', True,      'export summary stats (disabled if -t present)', 'b'),
                  }
@@ -148,15 +150,16 @@ def checkTegra(master, tegra):
     if errorFlag and options.reset:
         stopProcess(os.path.join(tegraPath, 'twistd.pid'), 'buildslave')
 
-        try:
-            hbSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            hbSocket.settimeout(float(120))
-            hbSocket.connect((tegraIP, 20700))
-            hbSocket.send('rebt\n')
-            hbSocket.close()
-            log.info('rebooting tegra')
-        except:
-            dumpException('socket')
+        if not options.reboot:
+            try:
+                hbSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                hbSocket.settimeout(float(120))
+                hbSocket.connect((tegraIP, 20700))
+                hbSocket.send('rebt\n')
+                hbSocket.close()
+                log.info('rebooting tegra')
+            except:
+                dumpException('socket')
 
         if errorFlag:
             log.info('clearing error.flg')
@@ -164,6 +167,13 @@ def checkTegra(master, tegra):
         if proxyFlag:
             log.info('clearing proxy.flg')
             os.remove(proxyFile)
+
+    if options.reboot:
+        if status['active']:
+            log.warning('power cycling tegra but it is already active')
+        else:
+            log.info('power cycling tegra')
+        reboot_tegra(tegra)
 
 
 def findMaster(tegra):
