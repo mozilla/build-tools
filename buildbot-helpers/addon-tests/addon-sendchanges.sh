@@ -1,10 +1,10 @@
 #!/bin/bash
 #forces sendchanges to test mozilla-central builds for all platforms
 # usage 
-# sendchange -p [9008, 9010,9012,9013] -r -a [addon file] -m [master]
+# sendchange -p <port> -r -a <addon file> -m <master>
 # author: Alice Nodelman <anodelman@mozilla.com>
 if [ $# -eq 0 ] ; then
-  echo "Usage: $0 -p [9008,9010,9012,9013] -r -a [addon file] -m [master]"
+  echo "Usage: $0 -p <port> -r -a <addon file> -m <master>"
   exit 1
 fi
 RELEASE_TEST=false
@@ -19,11 +19,6 @@ while [ $# -gt 0 ] ; do
     *) shift 1 ;;
   esac
 done
-if [[($PORT -ne 9008) && ($PORT -ne 9010) && ($PORT -ne 9012) && ($PORT -ne 9013)]] ; then
-  echo "Error - please specify a buildbot master port number to push sendchanges to (9008, 9010, 9012 or 9013)"
-  echo "Bad port number: $PORT"
-  exit 1
-fi
 
 #collect info 
 BUILDURL="http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-central/"
