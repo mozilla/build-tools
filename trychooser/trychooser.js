@@ -139,7 +139,12 @@ function setresult() {
             }
             args.push(arg);
         });
+
         value = 'try: ' + args.join(' ');
+    }
+    
+    if ($('#post_to_bugzilla').attr('checked')) {
+        value = value + ' --post-to-bugzilla Bug ' + document.getElementById("bugnumber").value;
     }
 
     $('.result_label').text(label);

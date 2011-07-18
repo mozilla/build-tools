@@ -55,7 +55,7 @@
         <h4>Email Settings</h4>
         <label><input type="radio" name="email" checked>Default</input></label><br />
         <label><input type="radio" name="email" value="-n">No Email</input></label>
-        <label><input type="radio" name="email" value="-e">All Email</input></label>
+        <label><input type="radio" name="email" value="-e">All Email</input></label><br />
         <em>(default is email to only send on non-success)</em>
         </span>
         
@@ -77,7 +77,7 @@
         <li><label><input type="checkbox" value="mozmill-all">mozmill-all</input></label></li>
         <li><label><input type="checkbox" value="opengl">opengl</input></label></li><br />
         <span class='option-subgroup'>
-        <li><label><input type="checkbox" class="subgroup-all-selector" value="mochitests">mochitests (all)</input></label></li><br />
+        <li><label><input type="checkbox" class="subgroup-all-selector" value="mochitests">mochitests (all)</input></label></li>
         <ul>OR
         <li><label><input type="checkbox" value="mochitest-1">mochitest-1</input></label></li>
         <li><label><input type="checkbox" value="mochitest-2">mochitest-2</input></label></li>
@@ -89,6 +89,14 @@
         </span>
         </ul>
         </span>
+
+        <h4>Experimental Features</h4>
+        <p>Auto-comment to bug on completion (<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=434998#c20">example</a>)
+        <em>Still a work in progress, comment in <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=430942">bug 430942</a> with issues</em>
+        </p>
+        <label>Bug Number: <input id="bugnumber" type="textbox" name="bugnumber" size=8></input></label>
+        <label><input id="post_to_bugzilla" type="checkbox" name="post_to_bugzilla" UNCHECKED>Add to Syntax</input></label><br />
+
     </div> <!-- col2 div -->
     <div id="col3">
         <h4>Talos Suites</h4>
