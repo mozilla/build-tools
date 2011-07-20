@@ -93,6 +93,9 @@ def getTags(baseTag, buildNumber, buildTag=True):
 def getRuntimeTag(tag):
     return "%s_RUNTIME" % tag
 
+def getReleaseTag(tag):
+    return "%s_RELEASE" % tag
+
 def generateRelbranchName(milestone, prefix='GECKO'):
     return '%s%s_%s_RELBRANCH' % (
       prefix, milestone.replace('.', ''),
