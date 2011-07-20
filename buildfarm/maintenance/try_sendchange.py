@@ -101,7 +101,7 @@ if __name__ == "__main__":
 
                     path = None
                     for f in filelist:
-                        for suffix in ('.tar.bz2', '.win32.zip', '.dmg', '.eabi-arm.apk'):
+                        for suffix in ('.tar.bz2', '.win32.zip', '.dmg', 'arm.apk'):
                             if f.endswith(suffix):
                                 path = f
                                 print "Found build for %s" % platform
