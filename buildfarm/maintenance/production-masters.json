@@ -744,7 +744,7 @@
     "buildbot_version": "0.8.2",
     "datacentre": "scl1",
     "db_name": "buildbot-master2.build.scl1.mozilla.com:/builds/buildbot/tests_master6/master",
-    "enabled": false,
+    "enabled": true,
     "environment": "production",
     "hostname": "buildbot-master2.build.scl1.mozilla.com",
     "http_port": 8012,
