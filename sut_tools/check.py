@@ -53,19 +53,19 @@ def checkTegra(master, tegra):
     exportFile = os.path.join(tegraPath, '%s_status.log' % tegra)
     errorFile  = os.path.join(tegraPath, 'error.flg')
     proxyFile  = os.path.join(tegraPath, 'proxy.flg')
+    errorFlag  = os.path.isfile(errorFile)
+    proxyFlag  = os.path.isfile(proxyFile)
+    sTegra     = 'OFFLINE'
+    sutFound   = False
 
-    status = { 'active':    False,
-               'cp':        False,
-               'bs':        False,
-               'tegra':     tegra,
-               'msg':       '',
+    status = { 'tegra':  tegra,
+               'active': False,
+               'cp':     'OFFLINE',
+               'bs':     'OFFLINE',
+               'msg':    '',
              }
 
     log.debug('%s: %s' % (tegra, tegraIP))
-
-    errorFlag = os.path.isfile(errorFile)
-    proxyFlag = os.path.isfile(proxyFile)
-    sutFound  = False
 
     fPing, lPing = pingTegra(tegra)
     if fPing:
@@ -96,12 +96,11 @@ def checkTegra(master, tegra):
             sTegra = 'online'
         else:
             sTegra = 'INACTIVE'
+
         if not sutFound:
             status['msg'] += 'SUTAgent not present;'
     else:
-        sTegra           = 'OFFLINE'
-        status['active'] = False
-        status['msg']   += '%s %s;' % (lPing[0], lPing[1])
+        status['msg'] += '%s %s;' % (lPing[0], lPing[1])
 
     if checkCPAlive(tegraPath):
         logTD = checkCPActive(tegraPath)
@@ -111,7 +110,6 @@ def checkTegra(master, tegra):
         else:
             status['cp'] = 'active'
     else:
-        status['cp'] = 'OFFLINE'
         if os.path.isfile(os.path.join(tegraPath, 'clientproxy.pid')):
             status['msg'] += 'clientproxy.pid found;'
 
@@ -123,7 +121,6 @@ def checkTegra(master, tegra):
         else:
             status['bs'] = 'active'
     else:
-        status['bs'] = 'OFFLINE'
         # scan thru tegra-### dir and see if any buildbot.tac.bug#### files exist
         # but ignore buildbot.tac file itself (except to note that it is missing)
         files = os.listdir(tegraPath)
@@ -169,12 +166,13 @@ def checkTegra(master, tegra):
             os.remove(proxyFile)
 
     if options.reboot:
-        if status['active']:
-            log.warning('power cycling tegra but it is already active')
-        else:
+        if not sutFound and status['bs'] != 'active':
             log.info('power cycling tegra')
-        reboot_tegra(tegra)
-
+            reboot_tegra(tegra)
+        else:
+            if sTegra == 'OFFLINE' and status['bs'] != 'active':
+                log.info('power cycling tegra')
+                reboot_tegra(tegra)
 
 def findMaster(tegra):
     result  = 's'
