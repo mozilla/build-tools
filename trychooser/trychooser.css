@@ -1,6 +1,6 @@
 body {
     margin: 0 auto;
-    width: 90%;
+    width: 100%;
     background: url(../build/background.jpg) no-repeat;
 }
 
@@ -34,15 +34,18 @@ label {
 }
 #col1 {
     float:left;
-    width:300px;
+    width:350px;
+    padding: 5px;
 }
 #col2 {
     float:left;
-    width:300px;
+    width:350px;
+    padding: 5px;
 }
 #col3 {
     float:left;
-    width:300px;
+    width:350px;
+    padding: 5px;
 }
 #results {
     clear: both;
