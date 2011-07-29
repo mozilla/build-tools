@@ -93,7 +93,7 @@ if __name__ == '__main__':
         poller_cmd = 'tar -xjvf *%s' % options.ext
     elif options.platform in ('macosx', 'macosx64', 'leopard', 'snowleopard'):
         poller_cmd = '../scripts/buildfarm/utils/installdmg.sh *%s' % options.ext
-    elif options.platform in ('win32', 'win7', 'win764', 'w764', 'xp'):
+    elif options.platform in ('win32', 'win7', 'win64', 'win764', 'w764', 'xp'):
         app_path = "%s/firefox/firefox.exe" % basepath
         # The --exclude=*.app is here to avoid extracting a symlink on win32 that is only
         # relevant to OS X. It would be nice if we could just tell tar to ignore symlinks...
