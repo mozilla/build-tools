@@ -66,12 +66,12 @@ if [ "$OSTYPE" = "linux-gnu" ]; then
     UNAME_M=$(uname -m)
     MAKEFLAGS=-j4
     if [ "$UNAME_M" != "arm" ]; then
-        export CC=/tools/gcc-4.5/installed/bin/gcc
-        export CXX=/tools/gcc-4.5/installed/bin/g++
+        export CC=/tools/gcc-4.5/bin/gcc
+        export CXX=/tools/gcc-4.5/bin/g++
         if [ "$UNAME_M" = "x86_64" ]; then
-            export LD_LIBRARY_PATH=/tools/gcc-4.5/installed/lib64
+            export LD_LIBRARY_PATH=/tools/gcc-4.5/lib64
         else
-            export LD_LIBRARY_PATH=/tools/gcc-4.5/installed/lib
+            export LD_LIBRARY_PATH=/tools/gcc-4.5/lib
         fi
     fi
 fi
