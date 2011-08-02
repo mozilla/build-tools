@@ -19,6 +19,7 @@ from util.hg import make_hg_url
 from release.info import readReleaseConfig, getRepoMatchingBranch
 from release.versions import getL10nDashboardVersion
 import logging
+from subprocess import CalledProcessError
 log = logging.getLogger(__name__)
 
 RECONFIG_SCRIPT = os.path.join(os.path.dirname(__file__),
@@ -32,6 +33,14 @@ def findVersion(contents, versionNumber):
 def reconfig():
     """reconfig the master in the cwd"""
     run_cmd(['python', RECONFIG_SCRIPT, 'reconfig', os.getcwd()])
+
+def check_buildbot():
+    """check if buildbot command works"""
+    try:
+        run_cmd(['buildbot', '--version'])
+    except CalledProcessError:
+        print "FAIL: buildbot command doesn't work"
+        raise
 
 def sendchange(branch, revision, username, master, products):
     """Send the change to buildbot to kick off the release automation"""
@@ -275,6 +284,7 @@ if __name__ == '__main__':
                 if not verify_build(sr, branchConfig['hghost']):
                     test_success = False
 
+    check_buildbot()
     if test_success:
         if not options.dryrun:
             reconfig()

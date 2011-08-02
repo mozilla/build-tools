@@ -12,6 +12,7 @@ import logging
 import datetime
 import traceback
 import subprocess
+import random
 
 from optparse import OptionParser
 import sentrypdu
