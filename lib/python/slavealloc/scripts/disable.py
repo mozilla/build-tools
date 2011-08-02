@@ -6,9 +6,11 @@ def setup_argparse(subparsers):
     subparser = subparsers.add_parser('disable', help='disable a slave, preventing it from starting')
     subparser.add_argument('slave',
             help="slave to disable (or enable with --enable)")
+    subparser.add_argument('-m', '--message',
+            dest='message', help="new slave notes")
     subparser.add_argument('-e', '--enable', dest='enable',
             default=False, action='store_true',
-            help="enable a disabled slave")
+            help="enable a disabled slave (deprecated)")
     return subparser
 
 def process_args(subparser, args):
@@ -21,29 +23,43 @@ def bool_to_word(bool):
     return {True : 'enabled', False : 'disabled'}[bool]
 
 @defer.inlineCallbacks
-def main(args):
+def set_enabled(args, slavename, enabled, message):
+    """
+    Set the enabled status for a slave, and optionally (if C{message} is not
+    None) the notes as well.
+    """
     agent = client.RestAgent(reactor, args.apiurl)
 
     # first get the slaveid
-    path = 'slaves/%s?byname=1' % args.slave
+    path = 'slaves/%s?byname=1' % slavename
     slave = yield agent.restRequest('GET', path, {})
     if not slave:
         raise exceptions.CmdlineError(
-                "No slave found named '%s'." % args.slave)
-    assert slave['name'] == args.slave
+                "No slave found named '%s'." % slavename)
+    assert slave['name'] == slavename
     slaveid = slave['slaveid']
+    if slave['notes']:
+        print >>sys.stderr, "previous slave notes: '%s'" % slave['notes']
 
     # then set its state, if not already set
-    if ((args.enable and not slave['enabled']) or 
-        (not args.enable and slave['enabled'])):
+    if ((enabled and not slave['enabled']) or 
+        (not enabled and slave['enabled'])):
+        to_set = { 'enabled' : enabled }
+        if message is not None:
+            to_set['notes'] = message
         set_result = yield agent.restRequest('PUT',
-                    'slaves/%d' % slaveid,
-                    { 'enabled' : args.enable })
+                    'slaves/%d' % slaveid, to_set)
         success = set_result.get('success')
         if not success:
             raise exceptions.CmdlineError("Operation failed on server.")
         print >>sys.stderr, "%s %s" % (
-                args.slave, bool_to_word(args.enable))
+                slavename, bool_to_word(enabled))
     else:
         print >>sys.stderr, "%s is already %s" % (
-                args.slave, bool_to_word(args.enable))
+                slavename, bool_to_word(enabled))
+
+def main(args):
+    if args.enable:
+        print >>sys.stderr, ("NOTE: 'slavealloc enable SLAVENAME' is available; " 
+                             "'slavealloc disable -e' is deprecated")
+    return set_enabled(args, args.slave, args.enable, args.message)
