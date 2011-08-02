@@ -108,7 +108,8 @@ def main(args):
                 http_port=int(row['http_port']) if row['http_port'] else 0,
                 pb_port=int(row['pb_port']),
                 dcid=datacenters[row['datacenter']],
-                poolid=pools[row['pool']])
+                poolid=pools[row['pool']],
+                enabled=False)
             for row in masters ])
 
     if slaves:
