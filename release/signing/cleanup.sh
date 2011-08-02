@@ -3,7 +3,7 @@
 set -e
 
 DIR=~/signing-work
-TARGET_FREE_SPACE=10000000
+TARGET_FREE_SPACE=20000000
 
 function get_df(){
     df -k $1 |tail -n 1 | awk '{print $4}'
