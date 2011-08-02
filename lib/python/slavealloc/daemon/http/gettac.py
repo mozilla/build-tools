@@ -9,7 +9,8 @@ class TacSlaveResource(resource.Resource):
 
     def __init__(self, slave_name):
         resource.Resource.__init__(self)
-        self.slave_name = slave_name
+        # lowercase the slave name, since some windows systems use the uppercase
+        self.slave_name = slave_name.lower()
 
     def render_GET(self, request):
         allocator = request.site.allocator
