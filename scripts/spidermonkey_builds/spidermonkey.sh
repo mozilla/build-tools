@@ -8,7 +8,7 @@ popd > /dev/null
 SPIDERDIR=$SCRIPTS_DIR/scripts/spidermonkey_builds
 
 if [ -z "$HG_REPO" ]; then
-    export HG_REPO="http://hg.mozilla.org/tracemonkey"
+    export HG_REPO="http://hg.mozilla.org/integration/mozilla-inbound"
 fi
 
 VARIANT=$1
