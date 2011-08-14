@@ -12,6 +12,10 @@
 """
 import re, urllib2
 import os
+try:
+    import simplejson as json
+except ImportError:
+    import json
 from optparse import OptionParser
 from util.commands import run_cmd
 from util.file import compare
@@ -118,11 +122,26 @@ def verify_configs(revision, hghost, configs_repo, changesets, filename):
         success = False
     return success
 
+def query_locale_revisions(l10n_changesets):
+    locales = {}
+    if l10n_changesets.endswith('.json'):
+        fh = open(l10n_changesets, 'r')
+        locales_json = json.load(fh)
+        fh.close()
+        for locale in locales_json.keys():
+            locales[locale] = locales_json[locale]["revision"]
+    else:
+        for line in open(l10n_changesets, 'r'):
+            locale, revision = line.split()
+            locales[locale] = revision
+    return locales
+
 def verify_l10n_changesets(hgHost, l10n_changesets):
     """Checks for the existance of all l10n changesets"""
     success = True
-    for line in open(l10n_changesets, 'r'):
-        locale, revision = line.split()
+    locales = query_locale_revisions(l10n_changesets)
+    for locale in locales.keys():
+        revision = locales[locale]
         localePath = '%(repoPath)s/%(locale)s/file/%(revision)s' % {
             'repoPath': releaseConfig['l10nRepoPath'].strip('/'),
             'locale': locale,
@@ -141,6 +160,7 @@ def verify_l10n_changesets(hgHost, l10n_changesets):
 def verify_l10n_dashboard(l10n_changesets):
     """Checks the l10n-changesets against the l10n dashboard"""
     success = True
+    locales = query_locale_revisions(l10n_changesets)
     dash_url = 'https://l10n-stage-sj.mozilla.org/shipping/l10n-changesets?ms=%(version)s' % {
         'version': getL10nDashboardVersion(releaseConfig['version'],
                                            releaseConfig['productName']),
@@ -152,8 +172,8 @@ def verify_l10n_dashboard(l10n_changesets):
         for line in urllib2.urlopen(dash_url):
             locale, revision = line.split()
             dash_changesets[locale] = revision
-        for line in open(l10n_changesets, 'r'):
-            locale, revision = line.split()
+        for locale in locales:
+            revision = locales[locale]
             dash_revision = dash_changesets.pop(locale, None)
             if not dash_revision:
                 log.error("\tlocale %s missing on dashboard" % locale)
@@ -173,10 +193,10 @@ def verify_l10n_dashboard(l10n_changesets):
 def verify_options(cmd_options, config):
     """Check release_configs against command-line opts"""
     success = True
-    if cmd_options.version != config['version']:
+    if cmd_options.version and cmd_options.version != config['version']:
         log.error("version passed in does not match release_configs")
         success = False
-    if int(cmd_options.buildNumber) != int(config['buildNumber']):
+    if cmd_options.buildNumber and int(cmd_options.buildNumber) != int(config['buildNumber']):
         log.error("buildNumber passed in does not match release_configs")
         success = False
     if not getRepoMatchingBranch(cmd_options.branch, config['sourceRepositories']):
@@ -195,7 +215,6 @@ if __name__ == '__main__':
             version=None,
             buildNumber=None,
             branch=None,
-            releaseConfig=None,
             products=None,
             )
     parser.add_option("-b", "--bypass-check", dest="check", action="store_false",
@@ -210,8 +229,9 @@ if __name__ == '__main__':
             help="buildNumber for this release, uses release_config otherwise")
     parser.add_option("-B", "--branch", dest="branch",
             help="branch name for this release, uses release_config otherwise")
-    parser.add_option("-c", "--release-config", dest="releaseConfig",
-            help="override the default release-config file")
+    parser.add_option("-c", "--release-config", dest="releaseConfigFiles",
+            action="append",
+            help="specify the release-config files (the first is primary)")
     parser.add_option("-p", "--products", dest="products",
             help="coma separated list of products")
 
@@ -222,67 +242,66 @@ if __name__ == '__main__':
         parser.error("Need to provide a master to sendchange to, or -d for a dryrun")
     elif not options.branch:
         parser.error("Need to provide a branch to release")
-    elif not options.releaseConfig:
+    elif not options.releaseConfigFiles:
         parser.error("Need to provide a release config file")
 
     logging.basicConfig(level=options.loglevel,
             format="%(asctime)s : %(levelname)s : %(message)s")
 
-    releaseConfigFile = options.releaseConfig
-    releaseConfig = readReleaseConfig(releaseConfigFile)
-
-    if not options.version:
-        log.warn("No version specified, using version in release_config, which may be out of date!")
-        options.version = releaseConfig['version']
-    if not options.buildNumber:
-        log.warn("No buildNumber specified, using buildNumber in release_config, which may be out of date!")
-        options.buildNumber = releaseConfig['buildNumber']
-
+    releaseConfig = None
     test_success = True
-    if options.check:
-        from config import BRANCHES
-        branchConfig = BRANCHES[options.branch]
-        #Match command line options to defaults in release_configs
-        if not verify_options(options, releaseConfig):
-            test_success = False
-            log.error("Error verifying command-line options, attempting checking repo")
+    buildNumber = options.buildNumber
+    for releaseConfigFile in list(reversed(options.releaseConfigFiles)):
+        releaseConfig = readReleaseConfig(releaseConfigFile)
 
-        #verify that the release_configs on-disk match the tagged revisions in hg
-        if not verify_configs(
-                "%s_BUILD%s" % (releaseConfig['baseTag'], options.buildNumber),
-                branchConfig['hghost'],
-                GLOBAL_VARS['config_repo_path'],
-                releaseConfig['l10nRevisionFile'],
-                releaseConfigFile,
-                ):
-            test_success = False
-            log.error("Error verifying configs")
+        if not options.buildNumber:
+            log.warn("No buildNumber specified, using buildNumber in release_config, which may be out of date!")
+            options.buildNumber = releaseConfig['buildNumber']
 
-        #verify that l10n changesets exist
-        if not verify_l10n_changesets(
-                branchConfig['hghost'],
-                releaseConfig['l10nRevisionFile']):
-            test_success = False
-            log.error("Error verifying l10n changesets")
-
-        #verify that l10n changesets match the dashboard
-        if not verify_l10n_dashboard(releaseConfig['l10nRevisionFile']):
-            test_success = False
-            log.error("Error verifying l10n dashboard changesets")
-
-        #verify that the relBranch + revision in the release_configs exists in hg
-        for sr in releaseConfig['sourceRepositories'].values():
-            sourceRepoPath = sr.get('clonePath', sr['path'])
-            if not verify_repo(sourceRepoPath, sr['revision'],
-                               branchConfig['hghost']):
+        if options.check:
+            from config import BRANCHES
+            branchConfig = BRANCHES[options.branch]
+            #Match command line options to defaults in release_configs
+            if not verify_options(options, releaseConfig):
                 test_success = False
-                log.error("Error verifying repos")
+                log.error("Error verifying command-line options, attempting checking repo")
 
-        #if this is a respin, verify that the version/milestone files have been bumped
-        if options.buildNumber > 1:
+            #verify that the release_configs on-disk match the tagged revisions in hg
+            if not verify_configs(
+                    "%s_BUILD%s" % (releaseConfig['baseTag'], buildNumber),
+                    branchConfig['hghost'],
+                    GLOBAL_VARS['config_repo_path'],
+                    releaseConfig['l10nRevisionFile'],
+                    releaseConfigFile,
+                    ):
+                test_success = False
+                log.error("Error verifying configs")
+
+            #verify that l10n changesets exist
+            if not verify_l10n_changesets(
+                    branchConfig['hghost'],
+                    releaseConfig['l10nRevisionFile']):
+                test_success = False
+                log.error("Error verifying l10n changesets")
+
+            #verify that l10n changesets match the dashboard
+            if not verify_l10n_dashboard(releaseConfig['l10nRevisionFile']):
+                test_success = False
+                log.error("Error verifying l10n dashboard changesets")
+
+            #verify that the relBranch + revision in the release_configs exists in hg
             for sr in releaseConfig['sourceRepositories'].values():
-                if not verify_build(sr, branchConfig['hghost']):
+                sourceRepoPath = sr.get('clonePath', sr['path'])
+                if not verify_repo(sourceRepoPath, sr['revision'],
+                                   branchConfig['hghost']):
                     test_success = False
+                    log.error("Error verifying repos")
+
+            #if this is a respin, verify that the version/milestone files have been bumped
+            if buildNumber > 1:
+                for sr in releaseConfig['sourceRepositories'].values():
+                    if not verify_build(sr, branchConfig['hghost']):
+                        test_success = False
 
     check_buildbot()
     if test_success:

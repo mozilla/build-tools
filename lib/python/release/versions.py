@@ -11,6 +11,8 @@ def getPrettyVersion(version):
 def getL10nDashboardVersion(version, product):
     if product == 'firefox':
         ret = 'fx'
+    elif product == 'fennec':
+        ret = 'fennec'
     elif product == 'thunderbird':
         ret = 'tb'
     elif product == 'seamonkey':
