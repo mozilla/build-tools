@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 import master_fabric
 from fabric.api import env
 from fabric.context_managers import settings
