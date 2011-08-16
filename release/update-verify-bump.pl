@@ -29,7 +29,7 @@ sub ProcessArgs {
         "verify-config|c=s", "old-candidates-dir|d=s", "linux-extension|e=s",
         "shipped-locales|l=s", "pretty-candidates-dir", "major|m",
         "binary-name=s", "old-binary-name=s", "--test-older-partials",
-        "help", "run-tests"
+        "old-shipped-locales=s", "help", "run-tests"
     );
 
     if ($config{'help'}) {
@@ -75,6 +75,8 @@ Options requiring arguments:
                           be bz2 if not passed.
   --shipped-locales/-l    The path and filename to the shipped-locales file
                           for this release.
+  --old-shipped-locales   The path and filename to the old-shipped-locales file
+                          for this release.
 Options without arguments:
   --pretty-candidates-dir When passed, the "to" field in the verify config will
                           be formatted the "pretty" way by using the long
@@ -118,6 +120,11 @@ __USAGE__
         if (! defined $config{'shipped-locales'} or
                  ! -e $config{'shipped-locales'}) {
             print "shipped locales file must exist.\n";
+            $error = 1;
+        }
+        if (! defined $config{'old-shipped-locales'} or
+                 ! -e $config{'old-shipped-locales'}) {
+            print "old shipped locales file must exist.\n";
             $error = 1;
         }
         if (defined $config{'pretty-candidates-dir'} and
@@ -188,6 +195,7 @@ sub BumpVerifyConfig {
     my $candidatesDir = $config{'old-candidates-dir'};
     my $linuxExtension = $config{'linux-extension'};
     my $shippedLocales = $config{'shipped-locales'};
+    my $oldShippedLocales = $config{'old-shipped-locales'};
     my $prettyCandidatesDir = $config{'pretty-candidates-dir'};
     my $majorMode = $config{'major'};
     my $testOlderPartials = $config{'test-older-partials'};
@@ -338,10 +346,18 @@ sub BumpVerifyConfig {
         die "Could not load locale manifest";
     }
 
+    my $oldLocaleManifest = {};
+    if (not LoadLocaleManifest(localeHashRef => $oldLocaleManifest,
+                               manifest => $oldShippedLocales)) {
+        die "Could not load old locale manifest";
+    }
+
     my @locales = ();
     foreach my $locale (keys(%{$localeManifest})) {
         foreach my $allowedPlatform (@{$localeManifest->{$locale}}) {
-            if ($allowedPlatform eq $platform) {
+            if ($allowedPlatform eq $platform &&
+                exists $oldLocaleManifest->{$locale} &&
+                grep($platform eq $_, @{$oldLocaleManifest->{$locale}})){
                 push(@locales, $locale);
             }
         }
