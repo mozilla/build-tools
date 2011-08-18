@@ -43,6 +43,16 @@ if dm.dirExists(devRoot):
        setFlag(errorFile, "Remote Device Error: call to removeDir() returned [%s]" % status)
        sys.exit(1)
 
+if dm.fileExists('/system/etc/hosts'):
+    print "removing /system/etc/hosts file"
+    dm.sendCMD(['exec mount -o remount,rw -t yaffs2 /dev/block/mtdblock3 /system'])
+    dm.sendCMD(['exec rm /system/etc/hosts'])
+    if dm.fileExists('/system/etc/hosts'):
+        setFlag(errorFile, "failed to remove /system/etc/hosts")
+        sys.exit(1)
+    else:
+        print "successfully removed hosts file, we can test!!!"
+
 for f in ('runtestsremote', 'remotereftest', 'remotereftest.pid.xpcshell'):
     pidFile = os.path.join(pidDir, '%s.pid' % f)
     print "checking for previous test processes ... %s" % pidFile
