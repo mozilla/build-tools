@@ -3,6 +3,7 @@
 - *.asc
 - *.tests.tar.bz2
 - *.checksums
+- jsshell*
 - /contrib/
 - /contrib-localized/
 # Skip previously signed windows builds

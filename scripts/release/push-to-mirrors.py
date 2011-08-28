@@ -35,6 +35,7 @@ DEFAULT_RSYNC_EXCLUDES = ['--exclude=*tests*',
                           '--exclude=*partner-repacks*',
                           '--exclude=*.checksums',
                           '--exclude=logs',
+                          '--exclude=jsshell*',
                           ]
 
 VIRUS_SCAN_CMD = ['extract_and_run_command.py', '-j4', 'clamdscan', '-m',
