@@ -16,7 +16,7 @@ sys.exit(0)
 
 default_template = """\
 from twisted.application import service
-from buildbot.slave.bot import BuildSlave
+from buildslave.bot import BuildSlave
 
 maxdelay = 300
 buildmaster_host = %(buildmaster_host)r
@@ -42,6 +42,15 @@ except ImportError:
 s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
                keepalive, usepty, umask=umask, maxdelay=maxdelay)
 s.setServiceParent(application)
+
+# enable idleizer
+from buildslave import idleizer
+idlz = idleizer.Idleizer(s,
+        # 7 hours' idle time before a reboot
+        max_idle_time=3600*7,
+        # 1 hour disconnected from a master before a reboot
+        max_disconnected_time=3600*1)
+idlz.setServiceParent(application)
 """
 
 # get this value once and keep it - getfqdn() can be a *very* expensive call
