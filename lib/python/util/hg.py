@@ -327,7 +327,7 @@ def apply_and_push(localrepo, remote, changer, max_attempts=10,
             if n == max_attempts:
                 log.debug("Tried %d times, giving up" % max_attempts)
                 for r in reversed(new_revs):
-                    run_cmd(['hg', 'strip', r[REVISION]], cwd=localrepo)
+                    run_cmd(['hg', 'strip', '-n', r[REVISION]], cwd=localrepo)
                 raise HgUtilError("Failed to push")
             pull(remote, localrepo, update_dest=False,
                  ssh_username=ssh_username, ssh_key=ssh_key)
@@ -339,7 +339,7 @@ def apply_and_push(localrepo, remote, changer, max_attempts=10,
                 log.debug("Failed to rebase: %s" % str(e))
                 update(localrepo, branch=branch)
                 for r in reversed(new_revs):
-                    run_cmd(['hg', 'strip', r[REVISION]], cwd=localrepo)
+                    run_cmd(['hg', 'strip', '-n', r[REVISION]], cwd=localrepo)
                 changer(localrepo, n+1)
 
 def share(source, dest, branch=None, revision=None):
@@ -353,4 +353,4 @@ def cleanOutgoingRevs(reponame, remote, username, sshKey):
                                           ssh_username=username,
                                           ssh_key=sshKey))
     for r in reversed(outgoingRevs):
-        run_cmd(['hg', 'strip', r[REVISION]], cwd=reponame)
+        run_cmd(['hg', 'strip', '-n', r[REVISION]], cwd=reponame)
