@@ -23,7 +23,7 @@ from optparse import OptionParser
 nightliesPerBin = 30
 # maximum age permitted for a set of symbols, in days.
 # used to clean up old feature branches, for example
-maxNightlyAge = timedelta(180)
+maxNightlyAge = timedelta(90)
 # end options
 
 # RE to get the version number without alpha/beta designation
@@ -106,7 +106,7 @@ def deletefile(f):
 builds = {}
 allfiles = {}
 buildfiles = {}
-print "[1/4] Reading symbol index files..."
+print >>sys.stderr, "[1/4] Reading symbol index files..."
 # get symbol index files, there's one per build
 for f in os.listdir(symbolPath):
     if not (os.path.isfile(os.path.join(symbolPath, f)) and
@@ -141,7 +141,7 @@ for f in os.listdir(symbolPath):
     adddefault(builds, identifier, [])
     builds[identifier].append(f)
 
-print "[2/4] Looking for symbols to delete..."
+print >>sys.stderr, "[2/4] Looking for symbols to delete..."
 oldestdate = datetime.now() - maxNightlyAge
 for bin in builds:
     builds[bin].sort(sortByBuildID)
@@ -157,13 +157,13 @@ for bin in builds:
             markDeleteSymbols(buildfiles[f], allfiles)
             deletefile(os.path.join(symbolPath,f))
 
-print "[3/4] Deleting symbols..."
+print >>sys.stderr, "[3/4] Deleting symbols..."
 # now delete all files marked for deletion
 for a, refcnt in allfiles.iteritems():
     if refcnt == 0:
         deletefile(os.path.join(symbolPath,atoms[a]))
 
-print "[4/4] Pruning empty directories..."
+print >>sys.stderr, "[4/4] Pruning empty directories..."
 sys.exit(0)
 # now delete empty directories.
 for root, dirs, files in os.walk(symbolPath, topdown=False):
@@ -174,4 +174,4 @@ for root, dirs, files in os.walk(symbolPath, topdown=False):
                 print "rm -rf ", fullpath
             else:
                 os.rmdir(fullpath)
-print "Done!"
+print >>sys.stderr, "Done!"
