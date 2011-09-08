@@ -59,6 +59,10 @@ class Scanner:
     ignore_patterns = [
             re.compile(re.escape("Failure: twisted.spread.pb.PBConnectionLost: [Failure instance: Traceback (failure with no frames): <class 'twisted.internet.error.ConnectionLost'>: Connection to the other side was lost in a non-clean fashion.")),
             re.compile("schedulers/triggerable.py\", line \d+, in run.*d = self.parent.db.runInteraction\(self._run\).*exceptions.AttributeError: 'NoneType' object has no attribute 'db'", re.M + re.S),
+            # Ignore errors caused by older buildbot versions on the masters.
+            re.compile(re.escape("exceptions.AttributeError: BuildSlave instance has no attribute 'perspective_shutdown'")),
+            # Ignore users cancelling try runs
+            re.compile(re.escape("Failure: exceptions.RuntimeError")),
             ]
 
     def __init__(self, lasttime=0):
