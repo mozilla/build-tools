@@ -6,7 +6,7 @@ import subprocess
 
 from util.hg import clone, pull, update, hg_ver, mercurial, _make_absolute, \
   share, push, apply_and_push, HgUtilError, make_hg_url, get_branch, \
-  get_branches
+  get_branches, path
 from util.commands import run_cmd, get_output
 
 def getRevisions(dest):
@@ -418,3 +418,30 @@ class TestHg(unittest.TestCase):
         def c(r,a):
             pass
         self.assertRaises(HgUtilError, apply_and_push, self.wc, self.repodir, c)
+
+    def testPath(self):
+        clone(self.repodir, self.wc)
+        p = path(self.wc)
+        self.assertEquals(p, self.repodir)
+
+    def testBustedHgrc(self):
+        # Test that we can recover from hgrc being lost
+        shareBase = os.path.join(self.tmpdir, 'share')
+        sharerepo = os.path.join(shareBase, self.repodir.lstrip("/"))
+        os.mkdir(shareBase)
+        mercurial(self.repodir, self.wc, shareBase=shareBase)
+
+        # Delete .hg/hgrc
+        for d in sharerepo, self.wc:
+            f = os.path.join(d, '.hg', 'hgrc')
+            os.unlink(f)
+
+        # path is busted now
+        p = path(self.wc)
+        self.assertEquals(p, None)
+
+        # cloning again should fix this up
+        mercurial(self.repodir, self.wc, shareBase=shareBase)
+
+        p = path(self.wc)
+        self.assertEquals(p, self.repodir)

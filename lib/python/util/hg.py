@@ -258,6 +258,18 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
     if shareBase:
         sharedRepo = os.path.join(shareBase, get_repo_path(repo))
         dest_sharedPath = os.path.join(dest, '.hg', 'sharedpath')
+
+        if os.path.exists(sharedRepo):
+            hgpath = path(sharedRepo, "default")
+
+            # Make sure that our default path is correct
+            if hgpath != _make_absolute(repo):
+                log.info("hg path isn't correct (%s should be %s); clobbering", hgpath, _make_absolute(repo))
+                # we need to clobber both the shared checkout and the dest,
+                # since hgrc needs to be in both places
+                remove_path(sharedRepo)
+                remove_path(dest)
+
         if os.path.exists(dest_sharedPath):
             # Make sure that the sharedpath points to sharedRepo
             dest_sharedPath_data = os.path.normpath(open(dest_sharedPath).read())
@@ -266,6 +278,7 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
                 # Clobber!
                 log.info("We're currently shared from %s, but are being requested to pull from %s (%s); clobbering", dest_sharedPath_data, repo, norm_sharedRepo)
                 remove_path(dest)
+
 
         try:
             log.info("Updating shared repo")
@@ -354,3 +367,10 @@ def cleanOutgoingRevs(reponame, remote, username, sshKey):
                                           ssh_key=sshKey))
     for r in reversed(outgoingRevs):
         run_cmd(['hg', 'strip', '-n', r[REVISION]], cwd=reponame)
+
+def path(src, name='default'):
+    """Returns the remote path associated with "name" """
+    try:
+        return get_output(['hg', 'path', name], cwd=src).strip()
+    except subprocess.CalledProcessError:
+        return None
