@@ -224,8 +224,12 @@ class QueueDir(object):
             return
 
         dst_name = os.path.join(self.new_dir, "%s.%i" % (core_item_id, count))
-        os.rename(os.path.join(self.cur_dir, item_id), dst_name)
-        os.utime(dst_name, None)
+        try:
+            os.rename(os.path.join(self.cur_dir, item_id), dst_name)
+            os.utime(dst_name, None)
+        except OSError:
+            # Somebody else got to it first
+            pass
 
     def murder(self, item_id):
         """
