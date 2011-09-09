@@ -6,10 +6,35 @@ executable of whatever valid platform is passed.
 """
 import os, sys, urllib, shutil, re
 from optparse import OptionParser
-
+sys.path.append('scripts/sut_tools')
+from sut_lib import runCommand
 SDK_TARBALL="addonsdk.tar.bz2"
 POLLER_DIR="addonsdk-poller"
 SDK_DIR="jetpack"
+
+def emphasizeFailureText(text):
+    return '<em class="testfail">%s</em>' % text
+
+def summarizeJetpackTestLog(name, log):
+    infoRe = re.compile(r"(\d+) of (\d+) tests passed")
+    successCount = 0
+    failCount = 0
+    totalCount = 0
+    summary=""
+    for line in log:
+        m = infoRe.match(line)
+        if m:
+            successCount += int(m.group(1))
+            totalCount += int(m.group(2))
+    failCount = int(totalCount - successCount)
+    # Handle failCount.
+    failCountStr = str(failCount)
+    if failCount > 0:
+        failCountStr = emphasizeFailureText(failCountStr)
+    # Format the counts
+    summary = "%d/%d" % (totalCount, failCount)
+    # Return the summary.
+    return "TinderboxPrint:%s<br />%s\n" % (name, summary)
 
 if __name__ == '__main__':
     is_poller = False
@@ -133,7 +158,12 @@ if __name__ == '__main__':
     # Run it!
     if sdkdir:
         os.chdir(sdkdir)
-        os.system('python bin/cfx --verbose testall -a firefox -b %s' % app_path)
+        args = ['python', 'bin/cfx', '--verbose', 'testall', '-a', 'firefox', '-b', app_path]
+        process, output = runCommand(args)
+        print '\n'.join(output)
+        if is_poller:
+            print summarizeJetpackTestLog("Jetpack",output)
+        sys.exit(process.returncode)
     else:
         print "SDK_DIR is either missing or invalid."
         sys.exit(1)
