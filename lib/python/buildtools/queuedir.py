@@ -51,9 +51,9 @@ class QueueDir(object):
     def setup(self):
         for d in (self.tmp_dir, self.new_dir, self.cur_dir, self.log_dir, self.dead_dir):
             if not os.path.exists(d):
-                os.makedirs(d, 0700)
+                os.makedirs(d, 0755)
             else:
-                os.chmod(d, 0700)
+                os.chmod(d, 0755)
 
         self.cleanup()
 
