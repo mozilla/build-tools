@@ -37,7 +37,7 @@ class TestRetry(unittest.TestCase):
 
     def testRetrySucceed(self):
         # Will raise if anything goes wrong
-        retry(_succeedOnSecondAttempt, attempts=2)
+        retry(_succeedOnSecondAttempt, attempts=2, sleeptime=0)
     
     def testRetryFailWithoutCatching(self):
         self.assertRaises(Exception, retry, _alwaysFail, exceptions=())
@@ -46,11 +46,12 @@ class TestRetry(unittest.TestCase):
         self.assertRaises(Exception, retry, _alwaysFail)
 
     def testRetrySelectiveExceptionSucceed(self):
-        retry(_raiseCustomException, attempts=2, retry_exceptions=(NewError,))
+        retry(_raiseCustomException, attempts=2, sleeptime=0,
+              retry_exceptions=(NewError,))
 
     def testRetrySelectiveExceptionFail(self):
         self.assertRaises(NewError, retry, _raiseCustomException, attempts=2,
-                          retry_exceptions=(OtherError,))
+                          sleeptime=0, retry_exceptions=(OtherError,))
 
     # TODO: figure out a way to test that the sleep actually happened
     def testRetryWithSleep(self):
@@ -69,5 +70,5 @@ class TestRetry(unittest.TestCase):
 
     def testRetryCleanupIsCalled(self):
         cleanup = mock.Mock()
-        retry(_succeedOnSecondAttempt, cleanup=cleanup)
+        retry(_succeedOnSecondAttempt, cleanup=cleanup, sleeptime=0)
         self.assertEquals(cleanup.call_count, 1)

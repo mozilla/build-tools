@@ -3,7 +3,7 @@ import time
 import logging
 log = logging.getLogger(__name__)
 
-def retry(action, attempts=5, sleeptime=0, retry_exceptions=(Exception,),
+def retry(action, attempts=5, sleeptime=60, retry_exceptions=(Exception,),
           cleanup=None, args=(), kwargs={}):
     """Call `action' a maximum of `attempts' times until it succeeds,
         defaulting to 5. `sleeptime' is the number of seconds to wait
