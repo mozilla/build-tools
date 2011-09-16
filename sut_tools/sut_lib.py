@@ -324,7 +324,12 @@ def getDeviceTimestamp(dm):
 def setDeviceTimestamp(dm):
     s = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
     print("Setting device time to %s" % s)
-    dm.sendCMD(['settime %s' % s])
+    try:
+        dm.sendCMD(['settime %s' % s])
+        return True
+    except devicemanager.DMError, e:
+        print "Exception while setting device time: %s" % str(e)
+        return False
 
 def checkDeviceRoot(dm):
     dr = dm.getDeviceRoot()

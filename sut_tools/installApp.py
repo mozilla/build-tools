@@ -84,7 +84,12 @@ if dm.pushFile(source, target):
             dm.getInfo('process')
             dm.getInfo('memory')
             dm.getInfo('uptime')
-            print dm.sendCMD(['exec su -c "logcat -d -v time *:W"'])
+            try:
+                print dm.sendCMD(['exec su -c "logcat -d -v time *:W"'])
+            except devicemanager.DMError, e:
+                print "Exception hit while trying to run logcat: %s" % str(e)
+                setFlag(errorFile, "Remote Device Error: can't run logcat")
+                sys.exit(1)
         else:
             clearFlag(proxyFile)
             setFlag(errorFile, "Remote Device Error: updateApp() call failed - exiting")

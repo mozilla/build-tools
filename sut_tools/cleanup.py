@@ -45,8 +45,13 @@ if dm.dirExists(devRoot):
 
 if dm.fileExists('/system/etc/hosts'):
     print "removing /system/etc/hosts file"
-    dm.sendCMD(['exec mount -o remount,rw -t yaffs2 /dev/block/mtdblock3 /system'])
-    dm.sendCMD(['exec rm /system/etc/hosts'])
+    try:
+        dm.sendCMD(['exec mount -o remount,rw -t yaffs2 /dev/block/mtdblock3 /system'])
+        dm.sendCMD(['exec rm /system/etc/hosts'])
+    except devicemanager.DMError, e:
+        print "Exception hit while trying to remove /system/etc/hosts: %s" % str(e)
+        setFlag(errorFile, "failed to remove /system/etc/hosts")
+        sys.exit(1)
     if dm.fileExists('/system/etc/hosts'):
         setFlag(errorFile, "failed to remove /system/etc/hosts")
         sys.exit(1)
