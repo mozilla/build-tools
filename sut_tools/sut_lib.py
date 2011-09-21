@@ -36,6 +36,7 @@ def dumpException(msg):
             log.debug(s[:-1])
     log.debug('Traceback End')
 
+# copied runCommand to tools/buildfarm/utils/run_jetpack.py
 def runCommand(cmd, env=None, logEcho=True):
     """Execute the given command.
     Sends to the logger all stdout and stderr output.
