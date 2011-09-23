@@ -21,28 +21,36 @@ def calculateLastActive(d, t, dt):
 htmlDir   = '/var/www/tegras'
 htmlIndex = 'index.html'
 foopies   = [ 'foopy05', 'foopy06', 'foopy07', 'foopy08',
-              'foopy09', 'foopy10', 'foopy11',
+              'foopy09', 'foopy10', 'foopy11', 'foopy12',
+              'foopy13', 'foopy14', 'foopy15', 'foopy16',
+              'foopy17',
             ]
 masters   = { 'production': "http://test-master01.build.mozilla.org:8012",
-              'staging':    "http://bm-foopy.build.mozilla.org:8012",
+              'staging':    "http://dev-master01.build.scl1.mozilla.com:8160",
             }
-pdus =      { "1": ( "033", "034", "037", "038", "041", "042", "045", 
-                     "046", "049", "050", "053", "054", "057", "058", 
-                     "061", "062", "065", "066", "069", "070", "073", 
-                     "074", "077", "078", "081", "082", "085", "086", 
-                     "089", "090", "093", 
+pdus =      { "1": ( "033", "034", "037", "038", "041", "042", "045",
+                     "046", "049", "050", "053", "054", "057", "058",
+                     "061", "062", "065", "066", "069", "070", "073",
+                     "074", "077", "078", "081", "082", "085", "086",
+                     "089", "090", "093",
                    ),
               "2": ( "035", "036", "039", "040", "043", "044", "047",
                      "048", "051", "052", "055", "056", "059", "060",
                      "063", "064", "067", "068", "071", "072", "075",
                      "076", "079", "080", "083", "084", "087", "088",
-                     "091", "092", 
+                     "091", "092",
                    ),
               "3": ( "001", "002", "003", "004", "005", "006", "007",
                      "008", "009", "010", "011", "012", "013", "014",
                      "015", "016", "017", "018", "019", "020", "021",
                      "022", "023", "024", "025", "026", "027", "028",
-                     "029", "030", "031", "032", 
+                     "029", "030", "031", "032",
+                   ),
+              "4": ( "094", "095", "096", "097", "098", "099", "100",
+                     "101", "102", "103", "104", "105", "106", "107",
+                     "108", "109", "110", "111", "112", "113", "114",
+                     "115", "116", "117", "118", "119", "120", "121",
+                     "122", "123",
                    ),
             }
 
@@ -99,6 +107,9 @@ pageHeader = """<html>
     <tr><th>Total</th><td>%(productionTotal)d</td><td>%(stagingTotal)d</td></tr>
   </table>
   <p><small>Total # of tegras being tracked: %(totalTotal)d</small></p>
+  <table>
+    %(stalled)s
+  </table>
 </div>
 """
 pageFooter = """<div class="footer">
@@ -209,9 +220,29 @@ nStaging =    { 'total':   0,
                 'offline': 0,
                 'active':  0,
               }
+events   = {}
 
 for foopy in foopies:
     tegras = json.load(open(os.path.join(htmlDir, 'tegra_status-%s.txt' % foopy)))
+
+    for line in open(os.path.join(htmlDir, 'tegra_events-%s.log' % foopy)).readlines():
+        # 20110915142854,tegra-023,stalled
+        l  = line.split(',')
+        d  = datetime.datetime.strptime(l[0], '%Y%m%d%H%M%S')
+        dt = dToday - d
+        if dt.days < percDays:
+            event = l[2].strip().lower()
+            tegra = l[1]
+            ts    = l[0][:8]
+
+            if event == 'stalled':
+                if ts not in events:
+                    events[ts] = {}
+
+                if tegra not in events[ts]:
+                    events[ts][tegra] = 0
+
+                events[ts][tegra] += 1
 
     for tegra in tegras:
         # {
@@ -231,69 +262,76 @@ for foopy in foopies:
         active     = []
         lastActive = ''
 
-        for line in open(os.path.join(htmlDir, '%s_status.log' % tegra['tegra'])).readlines():
-            #2011-04-21 11:33:41 tegra-090 p  OFFLINE   active  OFFLINE :: error.flg [Remote Device Error: updateApp() call failed - exiting] 
-            n += 1
-            l  = line.split()
-            d  = datetime.datetime.strptime('%s %s' % (l[0], l[1]), '%Y-%m-%d %H:%M:%S')
-            dt = dToday - d
-            if dt.days < percDays:
-                nTotal += 1
-                if l[4] == 'online':
-                    nOnline += 1
-                if l[6] == 'active':
-                    nActive += 1
-                    active.append('A')
+        if 'tegra' in tegra:
+            logName = os.path.join(htmlDir, '%s_status.log' % tegra['tegra'])
+            if os.path.exists(logName):
+                for line in open(logName).readlines():
+                    #2011-04-21 11:33:41 tegra-090 p  OFFLINE   active  OFFLINE :: error.flg [Remote Device Error: updateApp() call failed - exiting] 
+                    n += 1
+                    l  = line.split()
+                    d  = datetime.datetime.strptime('%s %s' % (l[0], l[1]), '%Y-%m-%d %H:%M:%S')
+                    dt = dToday - d
+                    if dt.days < percDays:
+                        nTotal += 1
+                        if l[4] == 'online':
+                            nOnline += 1
+                        if l[6] == 'active':
+                            nActive += 1
+                            active.append('A')
+                        else:
+                            if l[4] == 'OFFLINE':
+                                active.append('_')
+                            else:
+                                active.append('o')
+
+                    if l[6] == 'active':
+                        lastActive = calculateLastActive(l[0], l[1], dt)
+
+                dItem = datetime.datetime.strptime('%s%s' % (tegra['date'], tegra['time']), '%Y-%m-%d%H:%M:%S')
+
+                if dStart is None or dItem < dStart:
+                    dStart = dItem
+                if dEnd is None or dItem > dEnd:
+                    dEnd = dItem
+
+                tegra['production'] = masters['production']
+                tegra['staging']    = masters['staging']
+                tegra['pduID']      = pduLookup(tegra['tegra'])
+                tegra['pdu']        = 'http://pdu%s.build.mozilla.org/' % tegra['pduID']
+                tegra['foopy']      = tegra['hostname'].split('.')[0]
+                tegra['foopyLink']  = '%s:/builds/%s' % (tegra['hostname'], tegra['tegra'])
+                tegra['activeBar']  = ''.join(active[-18:])
+                tegra['lastActive'] = lastActive
+
+                if nTotal > 0:
+                    tegra['percOnline']      = '%2.1f' % ((nOnline / nTotal) * 100)
+                    tegra['percOnlineHover'] = '%d Online for %d items' % (nOnline, nTotal)
+                    tegra['percActive']      = '%2.1f' % ((nActive / nTotal) * 100)
+                    tegra['percActiveHover'] = '%d Active for %d items' % (nActive, nTotal)
                 else:
-                    active.append('_')
-            if l[6] == 'active':
-                lastActive = calculateLastActive(l[0], l[1], dt)
+                    tegra['percOnline']      = 'n/a',
+                    tegra['percOnlineHover'] = 'no data',
+                    tegra['percActive']      = 'n/a',
+                    tegra['percActiveHover'] = 'no data',
 
-        dItem = datetime.datetime.strptime('%s%s' % (tegra['date'], tegra['time']), '%Y-%m-%d%H:%M:%S')
-
-        if dStart is None or dItem < dStart:
-            dStart = dItem
-        if dEnd is None or dItem > dEnd:
-            dEnd = dItem
-
-        tegra['production'] = masters['production']
-        tegra['staging']    = masters['staging']
-        tegra['pduID']      = pduLookup(tegra['tegra'])
-        tegra['pdu']        = 'http://pdu%s.build.mozilla.org/' % tegra['pduID']
-        tegra['foopy']      = tegra['hostname'].split('.')[0]
-        tegra['foopyLink']  = '%s:/builds/%s' % (tegra['hostname'], tegra['tegra'])
-        tegra['activeBar']  = ''.join(active[-12:])
-        tegra['lastActive'] = lastActive
-
-        if nTotal > 0:
-            tegra['percOnline']      = '%2.1f' % ((nOnline / nTotal) * 100)
-            tegra['percOnlineHover'] = '%d Online for %d items' % (nOnline, nTotal)
-            tegra['percActive']      = '%2.1f' % ((nActive / nTotal) * 100)
-            tegra['percActiveHover'] = '%d Active for %d items' % (nActive, nTotal)
-        else:
-            tegra['percOnline']      = 'n/a',
-            tegra['percOnlineHover'] = 'no data',
-            tegra['percActive']      = 'n/a',
-            tegra['percActiveHover'] = 'no data',
-
-        if tegra['master'] == 'p':
-            oProduction += productionEntry % tegra
-            nProduction['total'] += 1
-            if tegra['sTegra'].lower() == 'online':
-                nProduction['online'] += 1
-                if tegra['sSlave'].lower() == 'active':
-                    nProduction['active'] += 1
-            else:
-                nProduction['offline'] += 1
-        else:
-            oStaging += stagingEntry % tegra
-            nStaging['total'] += 1
-            if tegra['sTegra'].lower() == 'online':
-                nStaging['online'] += 1
-                if tegra['sSlave'].lower() == 'active':
-                    nStaging['active'] += 1
-            else:
-                nStaging['offline'] += 1
+                if tegra['master'] == 'p':
+                    oProduction += productionEntry % tegra
+                    nProduction['total'] += 1
+                    if tegra['sTegra'].lower() == 'online':
+                        nProduction['online'] += 1
+                        if tegra['sSlave'].lower() == 'active':
+                            nProduction['active'] += 1
+                    else:
+                        nProduction['offline'] += 1
+                else:
+                    oStaging += stagingEntry % tegra
+                    nStaging['total'] += 1
+                    if tegra['sTegra'].lower() == 'online':
+                        nStaging['online'] += 1
+                        if tegra['sSlave'].lower() == 'active':
+                            nStaging['active'] += 1
+                    else:
+                        nStaging['offline'] += 1
 
 d = { 'dStart':            dStart,
       'dEnd':              dEnd,
@@ -315,6 +353,23 @@ d = { 'dStart':            dStart,
       'production':        masters['production'],
       'staging':           masters['staging'],
     }
+
+s1   = "<tr><th></th>"
+s2   = "<tr><th>Stalled</th>"
+keys = events.keys()
+keys.sort(reverse=True)
+
+for ts in keys:
+    s1 += "<th>%s</th>" % ts
+    s3  = ""
+    n   = 0
+    for tegra in events[ts]:
+        s3 += "%s (%d), " % (tegra, events[ts][tegra])
+        n  += events[ts][tegra]
+    s2 += '<td><abbr title="%s">%d</abbr></td>' % (s3[:-2], n)
+s1 += "</tr>"
+s2 += "</tr>"
+d['stalled'] = "%s\n%s\n" % (s1, s2)
 
 h = open(os.path.join(htmlDir, htmlIndex), 'w+')
 h.write(pageHeader % d)
