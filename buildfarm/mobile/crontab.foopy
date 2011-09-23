@@ -1,0 +1,4 @@
+#  m h dom mth dow
+*/5 * *   *   *  /builds/tegra_stats.sh > /builds/tegra_stats.log 2>&1
+42  * *   *   *  /builds/check.sh -c > /builds/check.log 2>&1
+24  * *   *   *  /builds/check.sh -r > /builds/check2.log 2>&1

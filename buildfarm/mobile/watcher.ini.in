@@ -1,0 +1,10 @@
+[watcher]
+// hostname or ip address of target for ping check
+PingTarget = sedFOOPYIPsed
+// delay in ms. until the first check
+delay = 60000
+// amount of time in ms. between checks
+period = 300000
+// number of failures that trigger a reboot
+strikes = 5
+

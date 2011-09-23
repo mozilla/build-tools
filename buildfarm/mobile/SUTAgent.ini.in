@@ -1,0 +1,6 @@
+[Registration Server]
+IPAddr = sedFOOPYIPsed
+PORT = 20742
+HARDWARE = Android Board
+POOL = GENERAL
+
