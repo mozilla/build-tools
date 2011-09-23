@@ -77,16 +77,20 @@ def pingTegra(tegra):
             break
     return result, out
 
-def getOurIP(hostname='bm-remote.build.mozilla.org'):
+def getOurIP(hostname=None):
     """Open a socket against a known server to discover our IP address
     """
+    if hostname is None:
+        testname = socket.gethostname()
+    else:
+        testname = hostname
     if 'CP_IP' in os.environ:
         result = os.environ['CP_IP']
     else:
         result = None
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            s.connect((hostname, 80))
+            s.connect((testname, 22))
             result = s.getsockname()[0]
             s.close()
         except:
