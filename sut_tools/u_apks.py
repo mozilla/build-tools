@@ -4,7 +4,7 @@ import os, sys
 import time
 import socket
 import random
-import devicemanager
+import devicemanagerSUT as devicemanager
 
 
 def calculatePort():
@@ -85,7 +85,7 @@ for sourceFile in os.listdir(sourceDir):
 
 if len(filelist) > 0:
     print "%s: connecting" % tegraIP
-    dm = devicemanager.DeviceManager(tegraIP)
+    dm = devicemanager.DeviceManagerSUT(tegraIP)
     # Moar data!
     dm.debug = 3
     devRoot  = checkDeviceRoot()

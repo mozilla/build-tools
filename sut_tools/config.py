@@ -4,7 +4,7 @@ import os, sys
 import time
 import random
 import socket
-import devicemanager
+import devicemanagerSUT as devicemanager
 
 
 def setFlag(flagfile, contents=None):
@@ -91,7 +91,7 @@ refWidth  = 1680 # x
 refHeight = 1050 # y
 
 print "connecting to: %s" % sys.argv[1]
-dm = devicemanager.DeviceManager(sys.argv[1])
+dm = devicemanager.DeviceManagerSUT(sys.argv[1])
 # Moar data!
 dm.debug = 3
 devRoot  = dm.getDeviceRoot()

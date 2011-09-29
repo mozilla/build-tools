@@ -2,7 +2,7 @@
 
 
 import os, sys
-import devicemanager
+import devicemanagerSUT as devicemanager
 import socket
 import random
 import time
@@ -19,7 +19,7 @@ proxyIP   = getOurIP()
 proxyPort = calculatePort()
 
 print "connecting to: %s" % sys.argv[1]
-dm = devicemanager.DeviceManager(sys.argv[1])
+dm = devicemanager.DeviceManagerSUT(sys.argv[1])
 dm.debug = 5
 
 setFlag(proxyFile)

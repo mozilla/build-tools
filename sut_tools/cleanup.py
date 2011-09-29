@@ -2,7 +2,7 @@
 
 import os, sys
 import time
-import devicemanager
+import devicemanagerSUT as devicemanager
 
 from sut_lib import clearFlag, setFlag, checkDeviceRoot, stopProcess, waitForDevice
 
@@ -27,7 +27,7 @@ if os.path.exists(flagFile):
     clearFlag(flagFile)
 
 print "Connecting to: " + sys.argv[1]
-dm = devicemanager.DeviceManager(sys.argv[1])
+dm = devicemanager.DeviceManagerSUT(sys.argv[1])
 
 dm.debug = 5
 devRoot  = checkDeviceRoot(dm)

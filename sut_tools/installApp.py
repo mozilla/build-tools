@@ -5,7 +5,7 @@ import time
 import random
 import socket
 import datetime
-import devicemanager
+import devicemanagerSUT as devicemanager
 
 from sut_lib import getOurIP, calculatePort, clearFlag, setFlag, checkDeviceRoot, \
                     getDeviceTimestamp, setDeviceTimestamp, \
@@ -32,7 +32,7 @@ else:
     processName = 'org.mozilla.fennec'
 
 print "connecting to: %s" % sys.argv[1]
-dm = devicemanager.DeviceManager(sys.argv[1])
+dm = devicemanager.DeviceManagerSUT(sys.argv[1])
 # Moar data!
 dm.debug = 3
 devRoot  = checkDeviceRoot(dm)
