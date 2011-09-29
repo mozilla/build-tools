@@ -22,6 +22,8 @@ if [ ! -d /builds/tools ]; then
 
   cd /builds/tools/sut_tools
   ln -s /builds/talos-data/talos/devicemanager.py .
+  ln -s /builds/talos-data/talos/devicemanagerADB.py .
+  ln -s /builds/talos-data/talos/devicemanagerSUT.py .
 fi
 if [ ! -d /builds/sut_tools ]; then
   cd /builds
