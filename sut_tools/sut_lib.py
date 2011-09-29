@@ -21,7 +21,7 @@ import sentrypdu
 log = logging.getLogger()
 
 # all PDUs that might own a tegra
-pdus = [ 'pdu%d.build.mozilla.org' % n for n in range(1,4) ]
+pdus = [ 'pdu%d.build.mozilla.org' % n for n in range(1,5) ]
 
 def dumpException(msg):
     """Gather information on the current exception stack and log it

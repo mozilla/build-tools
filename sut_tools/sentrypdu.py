@@ -23,6 +23,25 @@ class SentryPDU(object):
         t.read_until('Switched CDU:', self.timeout)
         return t
 
+    def _status(self, tegra=None):
+        t = self._login()
+        if tegra:
+            t.write('status %s\n' % tegra)
+        else:
+            t.write('status\n')
+
+        result = ''
+        while 1:
+            found, mo, text = t.expect([ 'More .Y/es N/o.:', 'Switched CDU:' ])
+            result += text
+            if found == 1:
+                break
+            elif found == -1:
+                raise EOFError # uhoh..
+            t.write('y\n')
+
+        return result
+
     def status(self, tegra=None):
         """
         Get the status of all tegras attached to this PDU, or just one if that
@@ -30,21 +49,10 @@ class SentryPDU(object):
         outer is keyed by the tegra name, and the inner dicts have keys id,
         name, status, and state.
         """
-        t = self._login()
-        if tegra:
-            t.write('status %s\n' % tegra)
-        else:
-            t.write('status\n')
-        status_text = ''
-        while 1:
-            found, mo, text = t.expect([ 'More .Y/es N/o.:', 'Switched CDU:' ])
-            status_text += text
-            if found == 1:
-                break
-            elif found == -1:
-                raise EOFError # uhoh..
-            t.write('y\n')
         status = {}
+        status_text = self._status(tegra)
+        if '-- name not found' in status_text.strip().lower():
+            status_text = self._status()
         for line in status_text.split('\n'):
             line = line.strip()
             # all interesting lines seem to start with '.'
@@ -81,4 +89,8 @@ class SentryPDU(object):
         """
         Reboot the given tegra.  Returns True if successful.
         """
+        id     = None
+        status = self.status(tegra)
+        if tegra in status:
+            id = status[tegra]['id']
         return self._op('reboot', tegra)
