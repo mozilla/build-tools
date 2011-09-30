@@ -11,9 +11,14 @@ class SentryPDU(object):
         self.password = password
         self.timeout = timeout
         self.debuglevel = debuglevel
+        self.conn = None
 
     def _login(self):
-        t = telnetlib.Telnet()
+        # cache the connection
+        if self.conn:
+            return self.conn
+
+        t = self.conn = telnetlib.Telnet()
         t.set_debuglevel(self.debuglevel)
         t.open(self.hostname, 23, self.timeout)
         t.read_until('sername:', self.timeout)
