@@ -140,15 +140,15 @@ sub BumpFilePath {
     $newPath =~ s/.*\/build\d+\///;
     # We need to handle partials and complete MARs differently
     if ($newPath =~ m/\.partial\.mar$/) {
-        $newPath =~ s/($oldMarName|$marName)-.+?-($escapedOldVersion|$escapedVersion)\.
-                     /$marName-$oldVersion-$version./x
+        $newPath =~ s/($oldMarName|$marName)-.+?-($escapedOldVersion|$escapedVersion)\.partial
+                     /$marName-$oldVersion-$version.partial/x
                      or die("ASSERT: BumpFilePath() - Could not bump path: " .
-                            "$oldFilePath");
+                            "'$oldFilePath' from '$oldVersion' to '$version'");
     } elsif ($newPath =~ m/\.complete\.mar$/) {
-        $newPath =~ s/($oldMarName|$marName)-($escapedOldVersion|$escapedVersion)\.
-                     /$marName-$version./x
+        $newPath =~ s/($oldMarName|$marName)-($escapedOldVersion|$escapedVersion)\.complete
+                     /$marName-$version.complete/x
                      or die("ASSERT: BumpFilePath() - Could not bump path: " .
-                            "$oldFilePath");
+                            "'$oldFilePath' from '$oldVersion' to '$version'");
     } else {
         die("ASSERT: BumpFilePath() - Unknown file type for '$oldFilePath'");
     }
