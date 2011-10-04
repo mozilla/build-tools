@@ -99,17 +99,17 @@ compare_blocklists()
         return $WGET_STATUS
     fi
 
-    # The downloaded files should have a valid xml header if they were 
-    # retrieved properly, and some random HTML garbage if not.
+    # The downloaded files should be non-empty and have a valid xml header 
+    # if they were retrieved properly, and some random HTML garbage if not.
     XML_HEADER='<?xml version="1.0"?>'
     AMO_HEADER=`head -n1 blocklist_amo.xml`
     HG_HEADER=`head -n1 blocklist_hg.xml`
-    if [ "$XML_HEADER" != "$AMO_HEADER" ]; then
-	echo "AMO blocklist does not appear to be an XML file. wget error?"
-	exit 1
+    if [ ! -s "blocklist_amo.xml" -o "$XML_HEADER" != "$AMO_HEADER" ]; then
+        echo "AMO blocklist does not appear to be an XML file. wget error?"
+        exit 1
     fi 
-    if [ "$XML_HEADER" != "$HG_HEADER" ]; then
-	echo "HG blocklist does not appear to be an XML file. wget error?"
+    if [ ! -s "blocklist_hg.xml" -o "$XML_HEADER" != "$HG_HEADER" ]; then
+        echo "HG blocklist does not appear to be an XML file. wget error?"
         exit 1
     fi
 
