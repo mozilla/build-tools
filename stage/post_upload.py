@@ -160,9 +160,9 @@ def ReleaseToBuildDir(builds_dir, builds_url, options, upload_dir, files, dated)
       {'product': options.product,
        'tinderbox_builds_dir': options.tinderbox_builds_dir}
     if dated:
-        buildid_dir = "%s-%s" % (str(options.buildid),options.revision)
-        tinderboxBuildsPath = os.path.join(tinderboxBuildsPath, buildid_dir)
-        tinderboxUrl = os.path.join(tinderboxUrl, buildid_dir)
+        buildid = str(BuildIDToUnixTime(options.buildid))
+        tinderboxBuildsPath = os.path.join(tinderboxBuildsPath, buildid)
+        tinderboxUrl = os.path.join(tinderboxUrl, buildid)
     if options.builddir:
         tinderboxBuildsPath = os.path.join(tinderboxBuildsPath, options.builddir)
         tinderboxUrl = os.path.join(tinderboxUrl, options.builddir)
