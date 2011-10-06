@@ -32,8 +32,8 @@ dm = devicemanager.DeviceManagerSUT(sys.argv[1])
 dm.debug = 5
 devRoot  = checkDeviceRoot(dm)
 
-if devRoot is None or devRoot == '/tests':
-    setFlag(errorFile, "Remote Device Error: devRoot from devicemanager [%s] is not correct" % devRoot)
+if not str(devRoot).startswith("/mnt/sdcard"):
+    setFlag(errorFile, "Remote Device Error: devRoot from devicemanager [%s] is not correct" % str(devRoot))
     sys.exit(1)
 
 if dm.dirExists(devRoot):
