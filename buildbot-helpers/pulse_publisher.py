@@ -12,7 +12,7 @@ import time
 from datetime import tzinfo, timedelta, datetime
 
 from mozillapulse.messages.build import BuildMessage
-from buildtools.queuedir import QueueDir
+from mozilla_buildtools.queuedir import QueueDir
 from buildbot.util import json
 
 import logging
