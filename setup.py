@@ -15,7 +15,7 @@ setup(
     packages = find_packages("lib/python"),
     package_dir = { '' : "lib/python" },
 
-    test_suite = 'mozilla_buildtools.test',
+    test_suite = 'buildtools.test',
 
     install_requires = [
         'sqlalchemy',

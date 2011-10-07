@@ -4,7 +4,7 @@ Runs commands from a queue!
 """
 import subprocess, os, signal
 import time
-from mozilla_buildtools.queuedir import QueueDir
+from buildtools.queuedir import QueueDir
 from buildbot.util import json
 import logging
 log = logging.getLogger(__name__)
