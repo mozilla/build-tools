@@ -38,7 +38,7 @@ DEFAULT_RSYNC_EXCLUDES = ['--exclude=*tests*',
                           '--exclude=jsshell*',
                           ]
 
-VIRUS_SCAN_CMD = ['extract_and_run_command.py', '-j4', 'clamdscan', '-m',
+VIRUS_SCAN_CMD = ['extract_and_run_command.py', '-j2', 'clamdscan', '-m',
                   '--no-summary', '--']
 
 def validate(options, args):
