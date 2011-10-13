@@ -168,7 +168,11 @@ class PulsePusher(object):
                 self.send(events)
                 for item_id in item_ids:
                     log.info("Removing %s", item_id)
-                    self.queuedir.remove(item_id)
+                    try:
+                        self.queuedir.remove(item_id)
+                    except OSError:
+                        # Somebody (re-)moved it already, that's ok!
+                        pass
             except:
                 log.exception("Error processing messages")
                 # Don't try again soon, something has gone horribly wrong!
