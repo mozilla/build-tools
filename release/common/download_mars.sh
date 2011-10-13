@@ -9,7 +9,11 @@ download_mars () {
     test_only="$3"
 
     echo "Using  $update_url"
-    $retry wget --no-check-certificate -q -O update.xml $update_url
+    $retry wget --no-check-certificate -S -O update.xml $update_url
+
+    echo "Got this response:"
+    cat update.xml
+    echo; echo;  # padding
 
     mkdir -p update/
     if [ -z $only ]; then
