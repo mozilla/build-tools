@@ -2,6 +2,10 @@
 set -e
 SCRIPTS_DIR="$(readlink -f $(dirname $0)/../..)"
 
+if [ -z "$REVISION" ]; then
+    export REVISION="default"
+fi
+
 if [ -z "$HG_REPO" ]; then
     export HG_REPO="http://hg.mozilla.org/mozilla-central"
 fi
@@ -32,7 +36,16 @@ if [ -f "$PROPERTIES_FILE" ]; then
         -s 4 -n info -n 'rel-*' -n $builddir
 fi
 
-python $SCRIPTS_DIR/buildfarm/utils/hgtool.py --tbox $HG_REPO src || exit 2
+python $SCRIPTS_DIR/buildfarm/utils/hgtool.py --rev $REVISION --tbox $HG_REPO src || exit 2
+
+# Put our short revisions into the properties directory for consumption by buildbot.
+if [ ! -d properties ]; then
+    mkdir properties
+fi
+pushd src; GOT_REVISION=`hg parent --template={node} | cut -c1-12`; popd
+echo "revision: $GOT_REVISION" > properties/revision
+echo "got_revision: $GOT_REVISION" > properties/got_revision
+
 if [ ! -d objdir ]; then
     mkdir objdir
 fi
