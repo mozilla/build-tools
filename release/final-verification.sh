@@ -12,7 +12,7 @@ cat $configs | sed 's/betatest/releasetest/' > update.cfg
 ./verify.sh -t update.cfg 2>&1 | tee quickVerify.log
 # this command's exit status will be 1 regardless of whether it passed or failed
 # we grep the log so we can inform buildbot correctly
-if grep HTTP quickVerify.log | grep -v 200 | grep -qv 302; then
+if grep HTTP/ quickVerify.log | grep -v 200 | grep -qv 302; then
     # One or more links failed
     exit 1
 elif grep '^FAIL' quickVerify.log; then
