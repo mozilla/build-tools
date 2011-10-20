@@ -613,5 +613,105 @@
         "pdu": "3",
         "foopy": "foopy05",
         "pduid": ".AB4"
+    },
+    "tegra-129": {
+        "pdu": "5",
+        "foopy": "foopy15",
+        "pduid": ".AA1"
+    },
+    "tegra-130": {
+        "pdu": "5",
+        "foopy": "foopy15",
+        "pduid": ".AB1"
+    },
+    "tegra-132": {
+        "pdu": "5",
+        "foopy": "foopy15",
+        "pduid": ".AB2"
+    },
+    "tegra-133": {
+        "pdu": "5",
+        "foopy": "foopy15",
+        "pduid": ".AA3"
+    },
+    "tegra-134": {
+        "pdu": "5",
+        "foopy": "foopy15",
+        "pduid": ".AB3"
+    },
+    "tegra-135": {
+        "pdu": "5",
+        "foopy": "foopy15",
+        "pduid": ".AA4"
+    },
+    "tegra-136": {
+        "pdu": "5",
+        "foopy": "foopy15",
+        "pduid": ".AB4"
+    },
+    "tegra-138": {
+        "pdu": "5",
+        "foopy": "foopy15",
+        "pduid": ".AB5"
+    },
+    "tegra-139": {
+        "pdu": "5",
+        "foopy": "foopy15",
+        "pduid": ".AA6"
+    },
+    "tegra-140": {
+        "pdu": "5",
+        "foopy": "foopy15",
+        "pduid": ".AB6"
+    },
+    "tegra-141": {
+        "pdu": "5",
+        "foopy": "foopy15",
+        "pduid": ".AA7"
+    },
+    "tegra-142": {
+        "pdu": "5",
+        "foopy": "foopy15",
+        "pduid": ".AB7"
+    },
+    "tegra-144": {
+        "pdu": "5",
+        "foopy": "foopy15",
+        "pduid": ".AB8"
+    },
+    "tegra-145": {
+        "pdu": "5",
+        "foopy": "foopy15",
+        "pduid": ".AA9"
+    },
+    "tegra-146": {
+        "pdu": "5",
+        "foopy": "foopy14",
+        "pduid": ".AB9"
+    },
+    "tegra-148": {
+        "pdu": "5",
+        "foopy": "foopy14",
+        "pduid": ".AB10"
+    },
+    "tegra-149": {
+        "pdu": "5",
+        "foopy": "foopy14",
+        "pduid": ".AA11"
+    },
+    "tegra-150": {
+        "pdu": "5",
+        "foopy": "foopy14",
+        "pduid": ".AB11"
+    },
+    "tegra-151": {
+        "pdu": "5",
+        "foopy": "foopy14",
+        "pduid": ".AA12"
+    },
+    "tegra-153": {
+        "pdu": "5",
+        "foopy": "foopy14",
+        "pduid": ".AA13"
     }
 }

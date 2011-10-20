@@ -52,6 +52,10 @@ pdus =      { "1": ( "033", "034", "037", "038", "041", "042", "045",
                      "115", "116", "117", "118", "119", "120", "121",
                      "122", "123",
                    ),
+              "5": ( "129", "130", "132", "133", "134", "135", "136",
+                     "138", "139", "140", "141", "142", "143", "144",
+                     "145", "146", "148", "149", "150", "151", "153",
+                   ),
             }
 
 pageHeader = """<html>
@@ -202,8 +206,8 @@ def pduLookup(tegraID):
     return "0"
 
 
-oProduction = ''
-oStaging    = ''
+oProduction = {}
+oStaging    = {}
 
 dStart   = None
 dEnd     = None
@@ -315,7 +319,7 @@ for foopy in foopies:
                     tegra['percActiveHover'] = 'no data',
 
                 if tegra['master'] == 'p':
-                    oProduction += productionEntry % tegra
+                    oProduction[tegra['tegra']] = productionEntry % tegra
                     nProduction['total'] += 1
                     if tegra['sTegra'].lower() == 'online':
                         nProduction['online'] += 1
@@ -324,7 +328,7 @@ for foopy in foopies:
                     else:
                         nProduction['offline'] += 1
                 else:
-                    oStaging += stagingEntry % tegra
+                    oStaging[tegra['tegra']] = stagingEntry % tegra
                     nStaging['total'] += 1
                     if tegra['sTegra'].lower() == 'online':
                         nStaging['online'] += 1
@@ -373,12 +377,21 @@ d['stalled'] = "%s\n%s\n" % (s1, s2)
 
 h = open(os.path.join(htmlDir, htmlIndex), 'w+')
 h.write(pageHeader % d)
+
 h.write(productionHeader % d)
-h.write(oProduction)
+keys = oProduction.keys()
+keys.sort()
+for tegra in keys:
+    h.write(oProduction[tegra])
 h.write(productionFooter % d)
+
 h.write(stagingHeader % d)
-h.write(oStaging)
+keys = oStaging.keys()
+keys.sort()
+for tegra in keys:
+    h.write(oStaging[tegra])
 h.write(stagingFooter % d)
+
 h.write(pageFooter)
 h.close()
 

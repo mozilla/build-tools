@@ -57,12 +57,12 @@ for f in ${FOOPIES} ; do
     "14" )
       FOOPY=foopy14
       FOOPYIP=10.250.48.214
-      TEGRAS="118 119 120 121 122 123"
+      TEGRAS="118 119 120 121 122 123 148 149 150 151 153"
       ;;
     "15" )
       FOOPY=foopy15
       FOOPYIP=10.250.48.217
-      TEGRAS=""
+      TEGRAS="129 130 132 133 134 135 136 138 139 140 141 142 144 145 146"
       ;;
     "16" )
       FOOPY=foopy16
