@@ -57,6 +57,7 @@ echo 'ac_add_options --enable-valgrind' >> mozconfig
 echo 'ac_add_options --with-ccache' >> mozconfig
 echo 'ac_add_options --disable-jemalloc' >> mozconfig
 echo 'ac_add_options --disable-elf-hack' >> mozconfig
+echo 'ac_add_options --enable-optimize="-g -O -freorder-blocks"' >> mozconfig
 echo 'CC=/tools/gcc-4.3.3/installed/bin/gcc' >> mozconfig
 echo 'CXX=/tools/gcc-4.3.3/installed/bin/g++' >> mozconfig
 
