@@ -1,0 +1,17 @@
+<!doctype html>
+<title>Graphserver {{ version }}</title>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+<script>
+function confirmDelete(name,delUrl) {
+  if (confirm("Are you sure you want to delete " + name + "?")) {
+    document.location = delUrl;
+  }
+}
+</script>
+<div class=page>
+  <h1>Graphserver {{ version }}</h1>
+  {% for message in get_flashed_messages() %}
+    <div class=flash>{{ message }}</div>
+  {% endfor %}
+  {% block body %}{% endblock %}
+</div>

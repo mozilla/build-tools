@@ -1,0 +1,16 @@
+DROP TABLE IF EXISTS machines;
+CREATE TABLE machines (
+   id INTEGER PRIMARY KEY,
+   os_id INT UNSIGNED NOT NULL,
+   is_throttling INT UNSIGNED NOT NULL DEFAULT '0',
+   cpu_speed VARCHAR(255),
+   name VARCHAR(255) NOT NULL,
+   is_active INT UNSIGNED NOT NULL DEFAULT '0',
+   date_added INT UNSIGNED NOT NULL
+);
+
+DROP TABLE IF EXISTS branches;
+CREATE TABLE branches (
+   id INTEGER PRIMARY KEY,
+   name VARCHAR(255) NOT NULL
+);

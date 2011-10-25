@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+{% block body %}
+    <form action="{{ url_for('update_branches') }}" method=post class=add-branch>
+      <dl>
+        <dt>Branch Name:
+        <dd><input type=text size=30 name=branch_name>
+        <dd><input type=submit value="Submit">
+      </dl>
+    </form>
+    <form action="{{ url_for('update_machines') }}" method=post class=add-machine>
+      <dl>
+        <dt>Machine Name:
+        <dd><input type=text size=10 name=machine_name>
+        <dt>OS_ID:
+        <dd><input type=text size=2 name=os_id>
+        <dt>is_throttling:
+        <dd><input type=text size=1 name=is_throttling value=0>
+        <dt>cpu_speed:
+        <dd><input type=text size=4 name=cpu_speed>
+        <dt>is_active:
+        <dd><input type=text size=2 name=is_active value=1>
+        <dd><input type=submit value="Submit">
+      </dl>
+    </form>
+  <table>
+  <th colspan=8>Branches</th>
+  <tr>
+    <th colspan=3></th>
+    <th>ID</th>
+    <th colspan=4>NAME</th>
+  </tr>
+  {% for branch in branch_list %}
+    <tr>
+        <td colspan=3><form action="{{ url_for('update_branches') }}" method=post>
+                        <input type="submit" value="delete" onClick=javascript:confirmDelete("{{ branch.name }}") />
+                        <input type="hidden" name="id"  value={{ branch.id }} />
+                        <input type="hidden" name="branch_name" value={{ branch.name }} />
+                        <input type="hidden" name="_method" value="delete">
+                      </form></td>
+        <td>{{ branch.id }}</td>
+        <td colspan=4>{{ branch.name }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan=8><em>No branches here so far</em></td></tr>
+  {% endfor %}
+  <th colspan=8>Machines</th>
+  <tr>
+    <th></th>
+    <th>ID</th>
+    <th>OS_ID</th>
+    <th>IS_THROTTLING</th>
+    <th>CPU_SPEED</th>
+    <th>NAME</th>
+    <th>IS_ACTIVE</th>
+    <th>DATE_ADDED</th>
+  </tr>
+  {% for machine in machine_list %}
+    <tr>
+        <td>
+            <form action="{{ url_for('update_machines') }}" method=post>
+                <input type="hidden" name="_method" value="delete">
+                <input type="hidden" value={{ machine.name }} name="machine_name" />
+                <input type="hidden" value={{ machine.id }} name="id" />
+                <input type="submit" value="delete" onClick=javascript:confirmDelete("{{ machine.name }}") />
+            </form>
+        </td>
+        <td>{{ machine.id }}</td>
+        <td>{{ machine.os_id }}</td>
+        <td>{{ machine.is_throttling }}</td>
+        <td>{{ machine.cpu_speed }}</td>
+        <td>{{ machine.name }}</td>
+        <td>{{ machine.is_active }}</td>
+        <td>{{ machine.date_added }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan=8><em>No machines here so far</td></tr>
+  {% endfor %}
+  </table>
+{% endblock %}
