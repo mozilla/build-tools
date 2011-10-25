@@ -30,4 +30,5 @@ repoSetupConfig['reposToClone'] = {
     'build/buildbot': {},
     'build/compare-locales': {},
     'build/partner-repacks': {},
+    'build/mozharness': {},
 }
