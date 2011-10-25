@@ -40,7 +40,8 @@ sub ProcessArgs {
         "old-build-number=s", "patcher-config|c=s", "staging-server|t=s",
         "ftp-server|f=s", "bouncer-server|d=s", "use-beta-channel|u",
         "platform=s@", "shipped-locales|l=s", "old-shipped-locales=s",
-        "update-type=s", "releasenotes-url|n=s", "help|h", "run-tests"
+        "update-type=s", "releasenotes-url|n=s", "schema|s=s",
+        "help|h", "run-tests"
     );
 
     if ($config{'help'}) {
@@ -80,6 +81,8 @@ Options:
      Generally, Alphas and Betas do not pass this, final and point releases do.
   --update-type The update type (minor, major). Defaults to minor.
   -n Release notes URL.
+  -s The schema version to write to the release block for version, which controls
+     the style of snippets used (bug 459972), defaults to 2.
   -h This usage message.
   --run-tests will run the (very basic) unit tests included with this script.
 __USAGE__
@@ -133,6 +136,9 @@ __USAGE__
     if (! defined $config{'platform'}) {
         $config{'platform'} = \@DEFAULT_PLATFORMS;
     }
+    if (! defined $config{'schema'}) {
+        $config{'schema'} = 2;
+    }
 }    
     
 sub CreatePatcherConfig {
@@ -155,6 +161,7 @@ sub CreatePatcherConfig {
     my $platforms = $config{'platform'};
     my $configBumpDir = '.';
     my $releaseNotesUrl = $config{'releasenotes-url'};
+    my $schema = $config{'schema'};
 
     my $prettyVersion = GetPrettyVersion(version => $version,
                                          product => $product);
@@ -247,7 +254,8 @@ sub CreatePatcherConfig {
                                                  buildstr => $oldBuildStr,
                                                  stagingServer => $stagingServer,
                                                  localeInfo => $oldLocaleInfo,
-                                                 platforms => $platforms);
+                                                 platforms => $platforms,
+                                                 schema => $schema);
     
     $releaseObj->{$version} = GetReleaseBlock(version => $version,
                                               appVersion => $appVersion,
@@ -256,7 +264,8 @@ sub CreatePatcherConfig {
                                               buildstr => $buildStr,
                                               stagingServer => $stagingServer,
                                               localeInfo => $localeInfo,
-                                              platforms => $platforms);
+                                              platforms => $platforms,
+                                              schema => $schema);
 
 
     my $patcherConfigObj = new Config::General($rawConfig);

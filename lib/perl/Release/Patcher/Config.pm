@@ -46,9 +46,10 @@ sub GetReleaseBlock {
     my $stagingServer = $args{'stagingServer'};
     my $localeInfo = $args{'localeInfo'};
     my $platforms = $args{'platforms'};
+    my $schema = $args{'schema'};
 
     my $releaseBlock = {};
-    $releaseBlock->{'schema'} = '1';
+    $releaseBlock->{'schema'} = $schema;
     $releaseBlock->{'version'} = $appVersion;
     $releaseBlock->{'extension-version'} = $appVersion;
     $releaseBlock->{'prettyVersion'} = $prettyVersion;
