@@ -3,15 +3,20 @@
         [-V| --version `version`] [-B --branch `branchname`]
         [-N|--build-number `buildnumber`]
         [-c| --release-config `releaseConfigFile`]
+        [-w| --whitelist `mozconfig_whitelist`]
         -p|--products firefox,fennec master:port
 
-    Wrapper script to sanity-check a release. Default behaviour is to reconfig
-    the master, check the branch and revision specific in the release_configs
-    exit, check if the milestone and version# in the source repo match the
-    expected values in the release_configs
+    Wrapper script to sanity-check a release. Default behaviour is to check 
+    the branch and revision specific in the release_configs, check if the 
+    milestone and version# in the source repo match the
+    expected values in the release_configs, check the l10n repos & dashboard,
+    compare the nightly and release mozconfigs for a release branch against
+    a whitelist of known differences between the two. If all tests pass then 
+    the master is reconfiged and then a senchange is generated to kick off
+    the release automation.
 """
 import re, urllib2
-import os
+import os, difflib
 try:
     import simplejson as json
 except ImportError:
@@ -20,7 +25,7 @@ from optparse import OptionParser
 from util.commands import run_cmd
 from util.file import compare
 from util.hg import make_hg_url
-from release.info import readReleaseConfig, getRepoMatchingBranch
+from release.info import readReleaseConfig, getRepoMatchingBranch, readConfig
 from release.versions import getL10nDashboardVersion
 import logging
 from subprocess import CalledProcessError
@@ -28,6 +33,8 @@ log = logging.getLogger(__name__)
 
 RECONFIG_SCRIPT = os.path.join(os.path.dirname(__file__),
                                "../buildfarm/maintenance/buildbot-wrangler.py")
+error_tally = set()
+
 def findVersion(contents, versionNumber):
     """Given an open readable file-handle look for the occurrence
        of the version # in the file"""
@@ -78,6 +85,56 @@ def verify_repo(branch, revision, hghost):
     except urllib2.HTTPError:
         log.error("Repo does not exist with required revision. Check again, or use -b to bypass")
         success = False
+        error_tally.add('verify_repo')
+    return success
+
+def verify_mozconfigs(branch, version, hghost, product, platforms, whitelist=None):
+    if whitelist:
+        mozconfigWhitelist = readConfig(whitelist, ['whitelist'])
+    else:
+        mozconfigWhitelist = {}
+    log.info("Comparing %s mozconfigs to nightly mozconfigs..." % product)
+    success = True
+    types = {'+': 'release', '-': 'nightly'}
+    tag = ''.join([product.upper(), "_",  version.replace('.','_'), "_RELEASE"])
+    for platform in platforms:
+        urls = []
+        mozconfigs = []
+        for type in types.values():
+            urls.append(make_hg_url(hghost, 'build/buildbot-configs', 'http', 
+                                tag, os.path.join('mozilla2', platform, 
+                                branch, type,'mozconfig')))
+        for url in urls:
+            try:
+                mozconfigs.append(urllib2.urlopen(url).readlines())
+            except urllib2.HTTPError as e:
+                log.error("MISSING: %s - ERROR: %s" % (url, e.msg))
+        diffInstance = difflib.Differ()
+        if len(mozconfigs) == 2:
+            diffList = list(diffInstance.compare(mozconfigs[0],mozconfigs[1]))
+            for line in diffList:
+                clean_line = line[1:].strip()
+                if (line[0] == '-'  or line[0] == '+') and len(clean_line) > 1:
+                    # skip comment lines
+                    if clean_line.startswith('#'):
+                        continue
+                    # compare to whitelist
+                    if line[0] == '-' and mozconfigWhitelist.get(branch, {}).has_key(platform) \
+                        and clean_line in mozconfigWhitelist[branch][platform]:
+                            continue
+                    if line[0] == '+' and mozconfigWhitelist.get('nightly', {}).has_key(platform) \
+                        and clean_line in mozconfigWhitelist['nightly'][platform]:
+                            continue
+                    if line[0] == '-':
+                        opposite = 'release'
+                    else:
+                        opposite = 'nightly'
+                    log.error("not in %s mozconfig's whitelist (%s/%s/%s) : %s" % (opposite, branch, platform, types[line[0]], clean_line))
+                    success = False
+                    error_tally.add('verify_mozconfig')
+        else:
+            log.info("Missing mozconfigs to compare for %s" % platform)
+            error_tally.add("verify_mozconfigs: Confirm that %s does not have release/nightly mozconfigs to compare" % platform)
     return success
 
 def verify_build(sourceRepo, hghost):
@@ -93,9 +150,11 @@ def verify_build(sourceRepo, hghost):
                 log.error("%s has incorrect version '%s' (expected '%s')" % \
                   (filename, found_version, versions['version']))
                 success = False
+                error_tally.add('verify_build')
         except urllib2.HTTPError, inst:
             log.error("cannot find %s. Check again, or -b to bypass" % inst.geturl())
             success = False
+            error_tally.add('verify_build')
 
     return success
 
@@ -111,15 +170,18 @@ def verify_configs(revision, hghost, configs_repo, changesets, filename):
         if not compare(official_configs, filename):
             log.error("local configs do not match tagged revisions in repo")
             success = False
+            error_tally.add('verify_configs')
         l10n_changesets = urllib2.urlopen(l10n_url)
         log.info("Comparing tagged revision %s to on-disk %s ..." % (l10n_url, changesets))
         if not compare(l10n_changesets, changesets):
             log.error("local l10n-changesets do not match tagged revisions in repo")
             success = False
+            error_tally.add('verify_configs')
     except urllib2.HTTPError:
         log.error("cannot find configs in repo %s" % configs_url)
         log.error("cannot find configs in repo %s" % l10n_url)
         success = False
+        error_tally.add('verify_configs')
     return success
 
 def query_locale_revisions(l10n_changesets):
@@ -155,6 +217,7 @@ def verify_l10n_changesets(hgHost, l10n_changesets):
         except urllib2.HTTPError:
             log.error("cannot find l10n locale %s in repo %s" % (locale, locale_url))
             success = False
+            error_tally.add('verify_l10n')
     return success
 
 def verify_l10n_dashboard(l10n_changesets):
@@ -178,16 +241,20 @@ def verify_l10n_dashboard(l10n_changesets):
             if not dash_revision:
                 log.error("\tlocale %s missing on dashboard" % locale)
                 success = False
+                error_tally.add('verify_l10n_dashboard')
             elif revision != dash_revision:
                 log.error("\tlocale %s revisions not matching: %s (config) vs. %s (dashboard)" 
                     % (locale, revision, dash_revision))
                 success = False
+                error_tally.add('verify_l10n_dashboard')
         for locale in dash_changesets:
             log.error("\tlocale %s missing in config" % locale)
             success = False
+            error_tally.add('verify_l10n_dashboard')
     except urllib2.HTTPError:
         log.error("cannot find l10n dashboard at %s" % dash_url)
         success = False
+        error_tally.add('verify_l10n_dashboard')
     return success
 
 def verify_options(cmd_options, config):
@@ -196,12 +263,15 @@ def verify_options(cmd_options, config):
     if cmd_options.version and cmd_options.version != config['version']:
         log.error("version passed in does not match release_configs")
         success = False
+        error_tally.add('verify_options')
     if cmd_options.buildNumber and int(cmd_options.buildNumber) != int(config['buildNumber']):
         log.error("buildNumber passed in does not match release_configs")
         success = False
+        error_tally.add('verify_options')
     if not getRepoMatchingBranch(cmd_options.branch, config['sourceRepositories']):
         log.error("branch passed in does not exist in release config")
         success = False
+        error_tally.add('verify_options')
     return success
 
 if __name__ == '__main__':
@@ -216,6 +286,7 @@ if __name__ == '__main__':
             buildNumber=None,
             branch=None,
             products=None,
+            whitelist='mozconfig_whitelist',
             )
     parser.add_option("-b", "--bypass-check", dest="check", action="store_false",
             help="don't bother verifying release repo's on this master")
@@ -234,6 +305,8 @@ if __name__ == '__main__':
             help="specify the release-config files (the first is primary)")
     parser.add_option("-p", "--products", dest="products",
             help="coma separated list of products")
+    parser.add_option("-w", "--whitelist", dest="whitelist",
+            help="whitelist for known mozconfig differences")
 
     options, args = parser.parse_args()
     if not options.products:
@@ -265,6 +338,18 @@ if __name__ == '__main__':
             if not verify_options(options, releaseConfig):
                 test_success = False
                 log.error("Error verifying command-line options, attempting checking repo")
+
+            # verify that mozconfigs for this release pass diff with nightly, compared to a whitelist
+            if not verify_mozconfigs(
+                    options.branch,
+                    options.version,
+                    branchConfig['hghost'],
+                    releaseConfig['productName'],
+                    releaseConfig['enUSPlatforms'],
+                    options.whitelist
+                ):
+                test_success = False
+                log.error("Error verifying mozconfigs")
 
             #verify that the release_configs on-disk match the tagged revisions in hg
             if not verify_configs(
@@ -319,3 +404,6 @@ if __name__ == '__main__':
             log.info("Tests Passed! Did not run reconfig/sendchange. Rerun without `-d`")
     else:
         log.fatal("Tests Failed! Not running sendchange!")
+        log.fatal("Failed tests (run with -b to skip) :")
+        for error in error_tally:
+            log.fatal(error)

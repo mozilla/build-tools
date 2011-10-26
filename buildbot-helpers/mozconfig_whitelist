@@ -1,0 +1,91 @@
+whitelist = {
+    'mozilla-release': {},
+    'mozilla-1.9.2': {},
+    'mozilla-beta': {},
+    'nightly': {},
+    }
+common_platforms = ['win32', 'linux-android', 'linux', 'linux64', 'macosx64', 'macosx']
+
+## KNOWN TO BE ONLY IN NIGHTLY
+for platform in common_platforms:
+    whitelist['nightly'][platform]          = ['ac_add_options --enable-update-channel=nightly',]
+whitelist['nightly']['linux']               +=['CXX=$REAL_CXX', 
+                                               'CXX="ccache $REAL_CXX"', 
+                                               'CC="ccache $REAL_CC"',
+                                               'mk_add_options PROFILE_GEN_SCRIPT=@TOPSRCDIR@/build/profile_pageloader.pl'
+                                               ]
+whitelist['nightly']['macosx']               +=['ac_add_options --enable-codesighs', 
+                                               'ac_add_options --disable-install-strip', 
+                                               'ac_add_options --enable-js-diagnostics',
+                                               'ac_add_options --enable-debug-symbols="-gdwarf-2"',
+                                               'export MOZ_TELEMETRY_REPORTING=1',
+                                               'mk_add_options MOZ_MAKE_FLAGS="-j4"',
+                                               ]
+whitelist['nightly']['linux-maemo5-gtk']    = ['mk_add_options MOZ_MAKE_FLAGS=-j4',]
+whitelist['nightly']['linux-android']       += ['mk_add_options MOZ_MAKE_FLAGS=-j4', 
+                                                'ac_add_options --target=arm-linux-androideabi',
+                                                'ac_add_options --with-android-ndk="/tools/android-ndk-r5c"',
+                                                'ac_add_options --with-android-toolchain=/tools/android-ndk-r5c/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86',
+                                                'ac_add_options --with-android-platform=/tools/android-ndk-r5c/platforms/android-5/arch-arm'
+                                                ]
+whitelist['nightly']['linux-mobile']        = ['CC=/tools/gcc-4.5/bin/gcc', 
+                                               'CXX=/tools/gcc-4.5/bin/g++',
+                                               'ac_add_options --enable-stdcxx-compat',
+                                               ]
+for platform in ['linux', 'linux64', 'macosx64']:
+    whitelist['nightly'][platform]          += ['ac_add_options --enable-codesighs', 'mk_add_options MOZ_MAKE_FLAGS="-j4"']
+whitelist['nightly']['linux']               += ['ac_add_options --with-ccache=/usr/bin/ccache']
+whitelist['nightly']['linux64']             += ['ac_add_options --with-ccache=/usr/bin/ccache']
+whitelist['nightly']['linux']               += ['export MOZILLA_OFFICIAL=1',
+                                                'export MOZ_TELEMETRY_REPORTING=1',
+                                                "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
+                                               ]
+whitelist['nightly']['linux64']             += ['export MOZILLA_OFFICIAL=1',
+                                                'export MOZ_TELEMETRY_REPORTING=1',
+                                                "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
+                                               ]
+whitelist['nightly']['macosx64']            += ['ac_add_options --disable-install-strip']
+whitelist['nightly']['win32']               += ['. $topsrcdir/configs/mozilla2/win32/include/choose-make-flags',
+                                                'mk_add_options MOZ_MAKE_FLAGS=-j1',
+                                                ]
+
+
+## KNOWN ONLY IN BETA              
+for platform in common_platforms:
+    whitelist['mozilla-beta'][platform]         = ['ac_add_options --enable-update-channel=beta', 'ac_add_options --enable-official-branding']
+whitelist['mozilla-beta']['linux-maemo5-gtk']   = ['ac_add_options --enable-official-branding',]
+whitelist['mozilla-beta']['linux-android']       += ['ac_add_options --target=arm-android-eabi', 
+                                                     'ac_add_options --with-android-ndk="/tools/android-ndk"',
+                                                     'ac_add_options --with-android-tools="/tools/android-sdk/tools"']
+whitelist['mozilla-beta']['linux-mobile']       = ['CC=/tools/gcc-4.3.3/installed/bin/gcc', 'CXX=/tools/gcc-4.3.3/installed/bin/g++',]
+whitelist['mozilla-beta']['linux']              += ['export MOZILLA_OFFICIAL=1',
+                                                    'export MOZ_TELEMETRY_REPORTING=1',
+                                                    'mk_add_options MOZ_PGO=1',
+                                                    "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
+                                                    ]
+whitelist['mozilla-beta']['linux64']            += ['export MOZILLA_OFFICIAL=1',
+                                                    'export MOZ_TELEMETRY_REPORTING=1',
+                                                    'mk_add_options MOZ_PGO=1',
+                                                    "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
+                                                    ]
+whitelist['mozilla-beta']['win32']              += ['mk_add_options MOZ_PGO=1']
+
+## KNOWN ONLY IN RELEASE              
+for platform in common_platforms:
+    whitelist['mozilla-release'][platform]         = ['ac_add_options --enable-update-channel=release', 'ac_add_options --enable-official-branding']
+whitelist['mozilla-release']['linux-maemo5-gtk']   = ['ac_add_options --enable-official-branding',]
+whitelist['mozilla-release']['linux-mobile']       = ['CC=/tools/gcc-4.3.3/installed/bin/gcc', 'CXX=/tools/gcc-4.3.3/installed/bin/g++',]
+whitelist['mozilla-release']['linux']              += ['export MOZILLA_OFFICIAL=1',
+                                               'export MOZ_TELEMETRY_REPORTING=1',
+                                              ]
+whitelist['mozilla-release']['linux64']            += ['export MOZILLA_OFFICIAL=1',
+                                               'export MOZ_TELEMETRY_REPORTING=1',
+                                              ]
+
+## KNOWN ONLY IN 1.9.2              
+for platform in common_platforms:
+    whitelist['mozilla-1.9.2'][platform]         = ['ac_add_options --enable-update-channel=release', 'ac_add_options --enable-official-branding']
+whitelist['mozilla-1.9.2']['linux-maemo5-gtk']   = []
+whitelist['mozilla-1.9.2']['linux-mobile']       = []
+whitelist['mozilla-1.9.2']['linux']              += ['CC=$REAL_CC', 'CC="ccache $REAL_CC"', 'CXX=$REAL_CXX']
+whitelist['mozilla-1.9.2']['linux64']            += []
