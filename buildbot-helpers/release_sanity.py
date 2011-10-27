@@ -286,7 +286,7 @@ if __name__ == '__main__':
             buildNumber=None,
             branch=None,
             products=None,
-            whitelist='mozconfig_whitelist',
+            whitelist='../tools/buildbot-helpers/mozconfig_whitelist',
             )
     parser.add_option("-b", "--bypass-check", dest="check", action="store_false",
             help="don't bother verifying release repo's on this master")
