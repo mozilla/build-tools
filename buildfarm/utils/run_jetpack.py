@@ -6,11 +6,22 @@ executable of whatever valid platform is passed.
 """
 import os, sys, urllib, shutil, re
 import logging, subprocess
+from datetime import datetime, timedelta
 from optparse import OptionParser
 
 SDK_TARBALL="addonsdk.tar.bz2"
 POLLER_DIR="addonsdk-poller"
 SDK_DIR="jetpack"
+
+PLATFORMS = {'leopard': 'macosx64',
+             'snowleopard': 'macosx64',
+             'xp': 'win32',
+             'win7': 'win32',
+             'w764': 'win64',
+             'fedora': 'linux',
+             'fedora64': 'linux64',
+             }
+             
 
 log = logging.getLogger()
 # copied runCommand from tools/sut_tools/sut_lib.py
@@ -73,6 +84,8 @@ if __name__ == '__main__':
                       help="Platform of the build to download and to test")
     parser.add_option("-t", "--tarball-url", dest="tarball_url", default="",
                       help="Url to download the jetpack tarball from")
+    parser.add_option("-b", "--branch", dest="branch", default="",
+                      help="The branch this test is pulling an installer to run against")
 
     (options, args) = parser.parse_args()
 
@@ -105,9 +118,37 @@ if __name__ == '__main__':
         os.chdir(POLLER_DIR)
         basepath = os.getcwd()
         sdk_url = options.tarball_url
-        # Download the build from the ftp_url provided
+        # need this as long as we support 32bit macosx debug builds
+        if options.platform == 'leopard' and options.ftp_url.endswith('debug'):
+            platform = 'macosx'
+        else:
+            platform = PLATFORMS[options.platform]
+        branch = options.branch
+        ftp_url = options.ftp_url % locals()
         pat = re.compile('firefox.*%s' % options.ext)
-        urls = urllib.urlopen("%s" % options.ftp_url)
+        urls = urllib.urlopen("%s" % ftp_url)
+        lines = urls.read().splitlines()
+        # initialize an old datetime to compare the current FTP dirs against to find newest
+        most_recent = datetime.now()-timedelta(days=30)
+        directory = None
+
+        # let's use the datetime to locate the FTP directory to search for executable
+        for line in lines:
+            if line.startswith('d'):
+                parts = line.split(" ")
+                # make sure we have a modified time for this dir
+                if ":" in parts[-2]:
+                    time = " ".join([str(datetime.now().year), parts[-4], parts[-3], parts[-2]]) 
+                    dir_time = datetime.strptime(time, "%Y %b %d %H:%M")
+                    if dir_time > most_recent:
+                        most_recent = dir_time
+                        directory = parts[-1]
+
+        # Now get the executable for this platform
+        if directory == None:
+            print "Error, no directory set to check for executables"
+            sys.exit(1)
+        urls = urllib.urlopen("%s/%s" % (ftp_url, directory))
         filenames = urls.read().splitlines()
         executables = []
         for filename in filenames:
@@ -115,13 +156,17 @@ if __name__ == '__main__':
             if pat.match(f):
                 executables.append(f)
         # Only grab the most recent build (in case there's more than one in the dir)
-        exe = sorted(executables, reverse=True)[0]
+        if len(executables) > 0:
+            exe = sorted(executables, reverse=True)[0]
+        else:
+            print "Error: missing Firefox executable"
+            sys.exit(1)
         info_file = exe.replace(options.ext, "%s.txt" % options.ext.split('.')[0])
         # Now get the branch revision
         for filename in filenames:
             if info_file in filename:
                 info = filename.split(" ")[-1]
-                urllib.urlretrieve("%s/%s" % (options.ftp_url, info), info)
+                urllib.urlretrieve("%s/%s/%s" % (ftp_url, directory, info), info)
                 f = open(info, 'r')
                 for line in f.readlines():
                     if "hg.mozilla.org" in line:
@@ -129,8 +174,9 @@ if __name__ == '__main__':
                         branch = line.split('/')[-3].strip()
                         print "TinderboxPrint: <a href=\"http://hg.mozilla.org/%(branch)s/rev/%(branch_rev)s\">%(branch)s-rev:%(branch_rev)s</a>\n" % locals()
                 f.close()
-        print "EXE_URL: %s/%s" % (options.ftp_url, exe)
-        urllib.urlretrieve("%s/%s" % (options.ftp_url, exe), exe)
+        print "EXE_URL: %s/%s/%s" % (ftp_url, directory, exe)
+        # Download the build
+        urllib.urlretrieve("%s/%s/%s" % (ftp_url, directory, exe), exe)
     else:
         parser.error("Incorrect number of arguments")
         sys.exit(1)
@@ -140,7 +186,7 @@ if __name__ == '__main__':
         app_path = "%s/firefox/firefox" % basepath
         poller_cmd = 'tar -xjvf *%s' % options.ext
     elif options.platform in ('macosx', 'macosx64', 'leopard', 'snowleopard'):
-        poller_cmd = '../scripts/buildfarm/utils/installdmg.sh *%s' % options.ext
+        poller_cmd = '../scripts/buildfarm/utils/installdmg.sh *.dmg'
     elif options.platform in ('win32', 'win7', 'win64', 'win764', 'w764', 'xp'):
         app_path = "%s/firefox/firefox.exe" % basepath
         # The --exclude=*.app is here to avoid extracting a symlink on win32 that is only
