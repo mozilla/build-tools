@@ -96,9 +96,6 @@ if __name__ == "__main__":
     parser.add_option("--no-output", dest="print_output",
                       action="store_false", default=True,
                       help="Don't print stdout/stderr output")
-    parser.add_option("--no-automation-errmsg", dest="automation_errmsg",
-                      action="store_false", default=True,
-                      help="Don't print 'Automation Error:' on failure")
 
     parser.set_defaults(
             retries=10,
@@ -127,12 +124,8 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         sys.exit(1)
     except Exception, e:
-        if options.automation_errmsg:
-            log.info("Automation Error: Unable to successfully run %s after %d attempts" % \
-            (args, options.retries))
-        else:
-            log.info("Unable to successfully run %s after %d attempts" % \
-            (args, options.retries))
+        log.info("Unable to successfully run %s after %d attempts" % \
+          (args, options.retries))
         # If we caught a RunWithTimeoutException we can exit with the same
         # rc as the command. If something else was hit, just exit with 1
         rc = getattr(e, 'rc', 1)
