@@ -21,10 +21,28 @@ import json
 log = logging.getLogger()
 
 try:
-    tegras = json.load(open('/builds/tools/buildfarm/mobile/tegras.json', 'r'))
+    tegras  = json.load(open('/builds/tools/buildfarm/mobile/tegras.json', 'r'))
 except:
-    tegras = {}
+    tegras  = {}
 
+try:
+    masters = json.load(open('/builds/tools/buildfarm/maintenance/production-masters.json', 'r'))
+except:
+    masters = {}
+
+
+def getMaster(hostname):
+    # remove all the datacenter cruft from the hostname
+    # because we can never really know if a buildbot.tac
+    # hostname entry is FQDN or not
+    host   = hostname.strip().split('.')[0]
+    result = None
+    for o in masters:
+        if 'hostname' in o:
+            if o['hostname'].startswith(host):
+                result = o
+                break
+    return result
 
 def dumpException(msg):
     """Gather information on the current exception stack and log it
@@ -391,7 +409,7 @@ def reboot_tegra(tegra):
     """
     result = False
     if tegra in tegras:
-        pdu      = 'pdu%s.build.mozilla.org' % tegras[tegra]['pdu']
+        pdu      = tegras[tegra]['pdu']
         deviceID = tegras[tegra]['pduid']
         if deviceID.startswith('.'):
             if deviceID[2] == 'B':

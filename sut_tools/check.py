@@ -15,7 +15,7 @@ import datetime
 # from multiprocessing import get_logger, log_to_stderr
 from sut_lib import checkSlaveAlive, checkSlaveActive, getIPAddress, dumpException, loadOptions, \
                     checkCPAlive, checkCPActive, getLastLine, stopProcess, runCommand, pingTegra, \
-                    reboot_tegra
+                    reboot_tegra, getMaster
 
 
 log            = logging.getLogger()
@@ -32,11 +32,12 @@ defaultOptions = {
                  }
 
 
-def summary(tegra, master, sTegra, sCP, sBS, msg, timestamp):
+def summary(tegra, master, sTegra, sCP, sBS, msg, timestamp, masterHost):
     if options.export:
         ts = timestamp.split()  # assumes "yyyy-mm-dd hh:mm:ss"
         d = { 'tegra':        tegra,
               'master':       master,
+              'masterHost':   masterHost,
               'hostname':     options.hostname,
               'date':         ts[0],
               'time':         ts[1],
@@ -66,6 +67,13 @@ def checkTegra(master, tegra):
              }
 
     log.debug('%s: %s' % (tegra, tegraIP))
+
+    if master is None:
+        status['environment'] = 's'
+        status['master']      = 'localhost'
+    else:
+        status['environment'] = master['environment'][0]
+        status['master']      = 'http://%s:%s' % (master['hostname'], master['http_port'])
 
     fPing, lPing = pingTegra(tegra)
     if fPing:
@@ -138,11 +146,11 @@ def checkTegra(master, tegra):
     if proxyFlag:
         status['msg'] += 'REBOOTING '
 
-    s  = '%s %s %9s %8s %8s :: %s' % (status['tegra'], master, sTegra, status['cp'], status['bs'], status['msg'])
+    s  = '%s %s %9s %8s %8s :: %s' % (status['tegra'], status['environment'], sTegra, status['cp'], status['bs'], status['msg'])
     ts = time.strftime('%Y-%m-%d %H:%M:%S')
     log.info(s)
     open(exportFile, 'a+').write('%s %s\n' % (ts, s))
-    summary(status['tegra'], master, sTegra, status['cp'], status['bs'], status['msg'], ts)
+    summary(status['tegra'], status['environment'], sTegra, status['cp'], status['bs'], status['msg'], ts, status['master'])
 
     if errorFlag and options.reset:
         stopProcess(os.path.join(tegraPath, 'twistd.pid'), 'buildslave')
@@ -175,16 +183,18 @@ def checkTegra(master, tegra):
                 reboot_tegra(tegra)
 
 def findMaster(tegra):
-    result  = 's'
+    result  = None
     tacFile = os.path.join(options.bbpath, tegra, 'buildbot.tac')
 
     if os.path.isfile(tacFile):
         lines = open(tacFile).readlines()
         for line in lines:
+            #buildmaster_host = 'dev-master01.build.scl1.mozilla.com'
             if line.startswith('buildmaster_host = '):
-                if 'foopy' not in line:
-                    result = 'p'
-                    break
+                v, h  = line.split('=')
+                h     = h.strip().replace("'", "").replace('"', '')
+                result = getMaster(h)
+                break
 
     return result
 
@@ -227,7 +237,11 @@ if __name__ == '__main__':
 
     f = True
     for tegra in tegras:
-        m = findMaster(tegra)
+        o = findMaster(tegra)
+        if o is not None and o['environment'] == 'production':
+            m = 'p'
+        else:
+            m = 's'
         if m in options.master:
             if f:
                 if options.export:
@@ -235,7 +249,7 @@ if __name__ == '__main__':
                 log.info('%9s %s %8s %8s %8s :: %s' % ('Tegra ID', 'M', 'Tegra', 'CP', 'Slave', 'Msg'))
                 f = False
 
-            checkTegra(m, tegra)
+            checkTegra(o, tegra)
 
     if options.export and oSummary is not None:
         h = open(os.path.join(options.bbpath, 'tegra_status.txt'), 'w+')

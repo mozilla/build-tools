@@ -1,716 +1,716 @@
 {
     "tegra-098": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy12",
         "pduid": ".AA3"
     },
     "tegra-099": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy12",
         "pduid": ".AB3"
     },
     "tegra-096": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy12",
         "pduid": ".AA2"
     },
     "tegra-097": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy12",
         "pduid": ".AB2"
     },
     "tegra-094": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy12",
         "pduid": ".AA1"
     },
     "tegra-095": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy12",
         "pduid": ".AB1"
     },
     "tegra-092": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy11",
         "pduid": ".AB15"
     },
     "tegra-093": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy11",
         "pduid": ".AA16"
     },
     "tegra-090": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy11",
         "pduid": ".AB15"
     },
     "tegra-091": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy11",
         "pduid": ".AA15"
     },
     "tegra-016": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy06",
         "pduid": ".AB8"
     },
     "tegra-017": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy06",
         "pduid": ".AA9"
     },
     "tegra-014": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy06",
         "pduid": ".AB7"
     },
     "tegra-015": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy06",
         "pduid": ".AA8"
     },
     "tegra-012": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy05",
         "pduid": ".AB6"
     },
     "tegra-013": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy05",
         "pduid": ".AA7"
     },
     "tegra-010": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy05",
         "pduid": ".AB5"
     },
     "tegra-011": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy05",
         "pduid": ".AA6"
     },
     "tegra-018": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy06",
         "pduid": ".AB9"
     },
     "tegra-019": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy06",
         "pduid": ".AA10"
     },
     "tegra-029": {
-        "pdu": "3",
-        "foopy": "foopy07",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
+        "foopy": "foopy06",
         "pduid": ".AA15"
     },
     "tegra-028": {
-        "pdu": "3",
-        "foopy": "foopy07",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
+        "foopy": "foopy06",
         "pduid": ".AB14"
     },
     "tegra-023": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy06",
         "pduid": ".AA12"
     },
     "tegra-022": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy06",
         "pduid": ".AB11"
     },
     "tegra-021": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy06",
         "pduid": ".AA11"
     },
     "tegra-020": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy06",
         "pduid": ".AB10"
     },
     "tegra-027": {
-        "pdu": "3",
-        "foopy": "foopy07",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
+        "foopy": "foopy06",
         "pduid": ".AA14"
     },
     "tegra-026": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy06",
         "pduid": ".AB13"
     },
     "tegra-025": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy06",
         "pduid": ".AA13"
     },
     "tegra-024": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy06",
         "pduid": ".AB12"
     },
     "tegra-038": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy07",
         "pduid": ".AB2"
     },
     "tegra-039": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy07",
         "pduid": ".AA2"
     },
     "tegra-034": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy07",
         "pduid": ".AB1"
     },
     "tegra-035": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy07",
         "pduid": ".AA1"
     },
     "tegra-036": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy07",
         "pduid": ".AB1"
     },
     "tegra-037": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy07",
         "pduid": ".AA2"
     },
     "tegra-030": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy07",
         "pduid": ".AB15"
     },
     "tegra-031": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy07",
         "pduid": ".AA16"
     },
     "tegra-032": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy07",
         "pduid": ".AB16"
     },
     "tegra-033": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy07",
         "pduid": ".AA1"
     },
     "tegra-049": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy08",
         "pduid": ".AA5"
     },
     "tegra-048": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy08",
         "pduid": ".AB4"
     },
     "tegra-122": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy14",
         "pduid": ".AA15"
     },
     "tegra-123": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy14",
         "pduid": ".AB15"
     },
     "tegra-120": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy14",
         "pduid": ".AA14"
     },
     "tegra-121": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy14",
         "pduid": ".AB14"
     },
     "tegra-041": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy08",
         "pduid": ".AA3"
     },
     "tegra-040": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy08",
         "pduid": ".AB2"
     },
     "tegra-043": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy08",
         "pduid": ".AA3"
     },
     "tegra-042": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy08",
         "pduid": ".AB3"
     },
     "tegra-045": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy08",
         "pduid": ".AA4"
     },
     "tegra-044": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy08",
         "pduid": ".AB3"
     },
     "tegra-047": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy08",
         "pduid": ".AA4"
     },
     "tegra-046": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy08",
         "pduid": ".AB4"
     },
     "tegra-119": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy14",
         "pduid": ".AB13"
     },
     "tegra-118": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy14",
         "pduid": ".AA13"
     },
     "tegra-113": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy13",
         "pduid": ".AB10"
     },
     "tegra-112": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy13",
         "pduid": ".AA10"
     },
     "tegra-111": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy13",
         "pduid": ".AB9"
     },
     "tegra-110": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy13",
         "pduid": ".AA9"
     },
     "tegra-117": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy13",
         "pduid": ".AB12"
     },
     "tegra-116": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy13",
         "pduid": ".AA12"
     },
     "tegra-115": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy13",
         "pduid": ".AB11"
     },
     "tegra-114": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy13",
         "pduid": ".AA11"
     },
     "tegra-058": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy09",
         "pduid": ".AB7"
     },
     "tegra-059": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy09",
         "pduid": ".AA7"
     },
     "tegra-052": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy08",
         "pduid": ".AB5"
     },
     "tegra-053": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy09",
         "pduid": ".AA6"
     },
     "tegra-050": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy08",
         "pduid": ".AB5"
     },
     "tegra-051": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy08",
         "pduid": ".AA5"
     },
     "tegra-056": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy09",
         "pduid": ".AB6"
     },
     "tegra-057": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy09",
         "pduid": ".AA7"
     },
     "tegra-054": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy09",
         "pduid": ".AB6"
     },
     "tegra-055": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy09",
         "pduid": ".AA6"
     },
     "tegra-108": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy13",
         "pduid": ".AA8"
     },
     "tegra-109": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy13",
         "pduid": ".AB8"
     },
     "tegra-104": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy12",
         "pduid": ".AA6"
     },
     "tegra-105": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy13",
         "pduid": ".AB6"
     },
     "tegra-106": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy13",
         "pduid": ".AA7"
     },
     "tegra-107": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy13",
         "pduid": ".AB7"
     },
     "tegra-100": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy12",
         "pduid": ".AA4"
     },
     "tegra-101": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy12",
         "pduid": ".AB4"
     },
     "tegra-102": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy12",
         "pduid": ".AA5"
     },
     "tegra-103": {
-        "pdu": "4",
+        "pdu": "pdu4.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy12",
         "pduid": ".AB5"
     },
     "tegra-069": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy10",
         "pduid": ".AA10"
     },
     "tegra-068": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy10",
         "pduid": ".AB9"
     },
     "tegra-067": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy10",
         "pduid": ".AA9"
     },
     "tegra-066": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy10",
         "pduid": ".AB9"
     },
     "tegra-065": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy09",
         "pduid": ".AA9"
     },
     "tegra-064": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy09",
         "pduid": ".AB8"
     },
     "tegra-063": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy09",
         "pduid": ".AA8"
     },
     "tegra-062": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy09",
         "pduid": ".AB8"
     },
     "tegra-061": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy09",
         "pduid": ".AA8"
     },
     "tegra-060": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy09",
         "pduid": ".AB7"
     },
     "tegra-070": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy10",
         "pduid": ".AB10"
     },
     "tegra-071": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy10",
         "pduid": ".AA10"
     },
     "tegra-072": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy10",
         "pduid": ".AB10"
     },
     "tegra-073": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy10",
         "pduid": ".AA11"
     },
     "tegra-074": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy10",
         "pduid": ".AB11"
     },
     "tegra-075": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy10",
         "pduid": ".AA11"
     },
     "tegra-076": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy10",
         "pduid": ".AB11"
     },
     "tegra-077": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy10",
         "pduid": ".AA12"
     },
     "tegra-078": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy10",
         "pduid": ".AB12"
     },
     "tegra-079": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy11",
         "pduid": ".AA12"
     },
     "tegra-089": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy11",
         "pduid": ".AA15"
     },
     "tegra-088": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy11",
         "pduid": ".AB14"
     },
     "tegra-085": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy11",
         "pduid": ".AA14"
     },
     "tegra-084": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy11",
         "pduid": ".AB13"
     },
     "tegra-087": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy11",
         "pduid": ".AA14"
     },
     "tegra-086": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy11",
         "pduid": ".AB14"
     },
     "tegra-081": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy11",
         "pduid": ".AA13"
     },
     "tegra-080": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy11",
         "pduid": ".AB12"
     },
     "tegra-083": {
-        "pdu": "2",
+        "pdu": "pdu2.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy11",
         "pduid": ".AA13"
     },
     "tegra-082": {
-        "pdu": "1",
+        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com",
         "foopy": "foopy11",
         "pduid": ".AB13"
     },
     "tegra-005": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy05",
         "pduid": ".AA3"
     },
     "tegra-004": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy05",
         "pduid": ".AB2"
     },
     "tegra-007": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy05",
         "pduid": ".AA4"
     },
     "tegra-006": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy05",
         "pduid": ".AB3"
     },
     "tegra-001": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy05",
         "pduid": ".AA1"
     },
     "tegra-003": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy05",
         "pduid": ".AA2"
     },
     "tegra-002": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy05",
         "pduid": ".AB1"
     },
     "tegra-009": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy05",
         "pduid": ".AA5"
     },
     "tegra-008": {
-        "pdu": "3",
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy05",
         "pduid": ".AB4"
     },
     "tegra-129": {
-        "pdu": "5",
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy15",
         "pduid": ".AA1"
     },
     "tegra-130": {
-        "pdu": "5",
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy15",
         "pduid": ".AB1"
     },
     "tegra-132": {
-        "pdu": "5",
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy15",
         "pduid": ".AB2"
     },
     "tegra-133": {
-        "pdu": "5",
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy15",
         "pduid": ".AA3"
     },
     "tegra-134": {
-        "pdu": "5",
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy15",
         "pduid": ".AB3"
     },
     "tegra-135": {
-        "pdu": "5",
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy15",
         "pduid": ".AA4"
     },
     "tegra-136": {
-        "pdu": "5",
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy15",
         "pduid": ".AB4"
     },
     "tegra-138": {
-        "pdu": "5",
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy15",
         "pduid": ".AB5"
     },
     "tegra-139": {
-        "pdu": "5",
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy15",
         "pduid": ".AA6"
     },
     "tegra-140": {
-        "pdu": "5",
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy15",
         "pduid": ".AB6"
     },
     "tegra-141": {
-        "pdu": "5",
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy15",
         "pduid": ".AA7"
     },
     "tegra-142": {
-        "pdu": "5",
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy15",
         "pduid": ".AB7"
     },
     "tegra-144": {
-        "pdu": "5",
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy15",
         "pduid": ".AB8"
     },
     "tegra-145": {
-        "pdu": "5",
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy15",
         "pduid": ".AA9"
     },
     "tegra-146": {
-        "pdu": "5",
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy14",
         "pduid": ".AB9"
     },
     "tegra-148": {
-        "pdu": "5",
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy14",
         "pduid": ".AB10"
     },
     "tegra-149": {
-        "pdu": "5",
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy14",
         "pduid": ".AA11"
     },
     "tegra-150": {
-        "pdu": "5",
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy14",
         "pduid": ".AB11"
     },
     "tegra-151": {
-        "pdu": "5",
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy14",
         "pduid": ".AA12"
     },
     "tegra-153": {
-        "pdu": "5",
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com",
         "foopy": "foopy14",
         "pduid": ".AA13"
     }
