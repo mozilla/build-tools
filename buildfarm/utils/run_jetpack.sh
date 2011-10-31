@@ -39,7 +39,7 @@ fi
 if [ "$1" == 'linux' -o "$1" == 'linux64' -o "$1" == 'fedora' -o "$1" == 'fedora64' ]; then
   APP_PATH=$BASE_PATH/firefox/firefox
   POLLER_CMD='tar -xjvf *'$4
-elif [ "$1" == 'macosx' -o "$1" == 'macosx64' -o "$1" == 'leopard' -o "$1" == 'snowleopard' ]; then
+elif [ "$1" == 'macosx' -o "$1" == 'macosx64' -o "$1" == 'leopard' -o "$1" == 'snowleopard' -o "$1" == 'lion' -o "$1" == 'snowleopard-r4' ]; then
   POLLER_CMD='../scripts/buildfarm/utils/installdmg.sh *'$4
 elif [ "$1" == 'win32' -o "$1" == 'win7' -o "$1" == 'win764' -o "$1" == 'w764' -o "$1" == 'xp' ]; then
   APP_PATH=$BASE_PATH/firefox/firefox.exe
@@ -64,7 +64,7 @@ fi
 
 # Make sure we have an app to run the test suite against
 # Mac builds require getting the $APP_PATH after installing the dmg (for jetpack-poller)
-if [ "$1" == 'macosx' -o "$1" == 'macosx64' -o "$1" == 'leopard' -o "$1" == 'snowleopard' ]; then
+if [ "$1" == 'macosx' -o "$1" == 'macosx64' -o "$1" == 'leopard' -o "$1" == 'snowleopard' -o "$1" == 'lion' -o "$1" == 'snowleopard-r4' ]; then
   APP_PATH=$(find $BASE_PATH -maxdepth 1 -type d -name '*.app')
 fi
 if [ ! -e "$APP_PATH" ]; then
