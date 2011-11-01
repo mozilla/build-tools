@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""%prog [-d|--dryrun] [-u|--username `username`] [-b|--bypasscheck]
+"""%prog [-d|--dryrun] [-u|--username `username`] [-b|--bypass-check]
         [-V| --version `version`] [-B --branch `branchname`]
         [-N|--build-number `buildnumber`]
         [-c| --release-config `releaseConfigFile`]
