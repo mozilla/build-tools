@@ -87,7 +87,14 @@ Supported actions:
         parser.error("You need to specify a master via -H and/or -R")
 
     env.user = 'cltbld'
+    selected_masters = masters
     for action in actions:
+        if hasattr(action, 'per_host'):
+            hosts = set(m['hostname'] for m in masters)
+            masters = [dict(hostname=h) for h in hosts]
+        else:
+            masters = selected_masters
+
         if options.concurrency == 1:
             for master in masters:
                 run_action_on_master(action, master)

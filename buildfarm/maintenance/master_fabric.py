@@ -114,6 +114,18 @@ def update_buildbot(master):
             run('hg update -r %s' % master['buildbot_branch'])
             run('unset PYTHONHOME PYTHONPATH; %s setup.py install' % master['buildbot_python'])
 
+def per_host(fn):
+    fn.per_host = True
+    return fn
+
+@per_host
+def update_queue(host):
+    with show('running'):
+        queue_dir = "/builds/buildbot/queue"
+        tools_dir = "%s/tools" % queue_dir
+        with cd(tools_dir):
+            run('hg pull -u')
+
 actions = [
     'check',
     'checkconfig',
@@ -126,5 +138,6 @@ actions = [
     'start',
     'update',
     'update_buildbot',
+    'update_queue',
     ]
 

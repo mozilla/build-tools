@@ -11,10 +11,13 @@ def check_queuedir(d, options):
     msgs = []
 
     # Check 'dead'
-    num_dead = len(os.listdir(os.path.join(d, 'dead')))
+    num_dead = len([f for f in os.listdir(os.path.join(d, 'dead')) if not f.endswith(".log")])
     if num_dead > 0:
         status = CRITICAL
-        msgs.append("%i dead items" % num_dead)
+        if num_dead == 1:
+            msgs.append("%i dead item" % num_dead)
+        else:
+            msgs.append("%i dead items" % num_dead)
 
     # Check 'new'
     new_files = os.listdir(os.path.join(d, 'new'))
