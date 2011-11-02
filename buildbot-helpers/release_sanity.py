@@ -27,6 +27,8 @@ from util.file import compare
 from util.hg import make_hg_url
 from release.info import readReleaseConfig, getRepoMatchingBranch, readConfig
 from release.versions import getL10nDashboardVersion
+from release.l10n import getShippedLocales
+from release.platforms import getLocaleListFromShippedLocales
 import logging
 from subprocess import CalledProcessError
 log = logging.getLogger(__name__)
@@ -52,6 +54,12 @@ def check_buildbot():
     except CalledProcessError:
         print "FAIL: buildbot command doesn't work"
         raise
+
+def locale_diff(locales1,locales2):
+    """ accepts two lists and diffs them both ways, returns any differences found """
+    diff_list = [locale for locale in locales1 if not locale in locales2]
+    diff_list.extend(locale for locale in locales2 if not locale in locales1)
+    return diff_list
 
 def sendchange(branch, revision, username, master, products):
     """Send the change to buildbot to kick off the release automation"""
@@ -89,6 +97,7 @@ def verify_repo(branch, revision, hghost):
     return success
 
 def verify_mozconfigs(branch, version, hghost, product, platforms, whitelist=None):
+    """Compare nightly mozconfigs for branch to release mozconfigs and compare to whitelist of known differences"""
     if whitelist:
         mozconfigWhitelist = readConfig(whitelist, ['whitelist'])
     else:
@@ -257,6 +266,17 @@ def verify_l10n_dashboard(l10n_changesets):
         error_tally.add('verify_l10n_dashboard')
     return success
 
+def verify_l10n_shipped_locales(l10n_changesets, shipped_locales):
+    """Ensure that our l10n-changesets on the master match the repo's shipped locales list"""
+    success = True
+    locales = query_locale_revisions(l10n_changesets)
+    diff_list = locale_diff(locales, shipped_locales)
+    if len(diff_list) > 0:
+        log.error("l10n_changesets and shipped_locales differ on locales: %s" % diff_list)
+        success = False
+        error_tally.add('verify_l10n_shipped_locales')
+    return success
+
 def verify_options(cmd_options, config):
     """Check release_configs against command-line opts"""
     success = True
@@ -373,6 +393,27 @@ if __name__ == '__main__':
             if not verify_l10n_dashboard(releaseConfig['l10nRevisionFile']):
                 test_success = False
                 log.error("Error verifying l10n dashboard changesets")
+
+            #verify that l10n changesets match the shipped locales in firefox product
+            if releaseConfig.get('shippedLocalesPath'):
+                for sr in releaseConfig['sourceRepositories'].values():
+                    sourceRepoPath = sr.get('clonePath', sr['path'])
+                    shippedLocales = getLocaleListFromShippedLocales(
+                                        getShippedLocales(
+                                            releaseConfig['productName'],
+                                            releaseConfig['appName'],
+                                            releaseConfig['version'],
+                                            releaseConfig['buildNumber'],
+                                            sourceRepoPath
+                                    ))
+                    # l10n_changesets do not have an entry for en-US
+                    if 'en-US' in shippedLocales:
+                        shippedLocales.remove('en-US')
+                    if not verify_l10n_shipped_locales(
+                            releaseConfig['l10nRevisionFile'],
+                            shippedLocales):
+                        test_success = False
+                        log.error("Error verifying l10n_changesets matches shipped_locales")
 
             #verify that the relBranch + revision in the release_configs exists in hg
             for sr in releaseConfig['sourceRepositories'].values():
