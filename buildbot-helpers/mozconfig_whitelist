@@ -75,11 +75,16 @@ for platform in common_platforms:
     whitelist['mozilla-release'][platform]         = ['ac_add_options --enable-update-channel=release', 'ac_add_options --enable-official-branding']
 whitelist['mozilla-release']['linux-maemo5-gtk']   = ['ac_add_options --enable-official-branding',]
 whitelist['mozilla-release']['linux-mobile']       = ['CC=/tools/gcc-4.3.3/installed/bin/gcc', 'CXX=/tools/gcc-4.3.3/installed/bin/g++',]
+whitelist['mozilla-release']['win32']              += ['mk_add_options MOZ_PGO=1',]
 whitelist['mozilla-release']['linux']              += ['export MOZILLA_OFFICIAL=1',
                                                'export MOZ_TELEMETRY_REPORTING=1',
+                                               'mk_add_options MOZ_PGO=1',
+                                               "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
                                               ]
 whitelist['mozilla-release']['linux64']            += ['export MOZILLA_OFFICIAL=1',
                                                'export MOZ_TELEMETRY_REPORTING=1',
+                                               'mk_add_options MOZ_PGO=1',
+                                               "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
                                               ]
 
 ## KNOWN ONLY IN 1.9.2              
