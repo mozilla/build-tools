@@ -14,8 +14,11 @@ import logging
 log = logging.getLogger(__name__)
 
 def getShippedLocales(product, appName, version, buildNumber, sourceRepo,
-                      hg='http://hg.mozilla.org'):
-    tag = '%s_%s_BUILD%s' % (product.upper(), version.replace('.', '_'),
+                      hg='http://hg.mozilla.org', revision=None):
+    if revision is not None:
+        tag = revision
+    else:
+        tag = '%s_%s_BUILD%s' % (product.upper(), version.replace('.', '_'),
                              str(buildNumber))
     file = '%s/raw-file/%s/%s/locales/shipped-locales' % \
       (sourceRepo, tag, appName)

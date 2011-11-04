@@ -65,6 +65,14 @@ def getPlatformLocales(shipped_locales, platforms):
                 platform_locales[platform].append(locale)
     return platform_locales
 
+def getLocaleListFromShippedLocales(shipped_locales):
+    """ return the list of locales in shipped_locales, without platform specific info """
+    shipped_locales_list = []
+    for line in shipped_locales.splitlines():
+        entry = line.strip().split()
+        shipped_locales_list.append(entry[0])
+    return shipped_locales_list
+
 def getPlatformLocalesFromJson(json_file, platforms):
     platform_locales = {}
     for platform in platforms:
