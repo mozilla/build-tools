@@ -1,160 +1,160 @@
 <html>
 <head>
 <title>TryChooser Syntax Builder</title>
-<link href="jquery-ui.css" rel="stylesheet" type="text/css"/>
+<link href="jquery-ui.css" rel="stylesheet" type="text/css">
 <script type="text/javascript" src="jquery.min.js"></script>
 <script type="text/javascript" src="trychooser.js"></script>
 <link rel="shortcut icon" href="favicon.ico">
+<link rel="stylesheet" type="text/css" href="trychooser.css">
 </head>
 <body>
 <div id="wrapper">
     <h1>TryChooser Syntax Builder</h1>
-    <link rel="stylesheet" type="text/css" href="trychooser.css" />
+
     <form name="trychooser" method="get" action="#">
     <p>If you'd prefer building your syntax at the command line a mercurial extension, <a href="https://github.com/pbiggar/trychooser">trychooser</a>, is available to you.</p>
-    <strong>TryChooser Syntax:</strong><br />
+    <strong>TryChooser Syntax:</strong><br>
     <textarea class="result_value" cols="80"></textarea>
     
     <h2>Need Everything?</h2>
     <label>
-    <input type="checkbox" id="do_everything" name="do_everything" UNCHECKED></input>
-    mozilla-central matching run</label><br />
+    <input type="checkbox" id="do_everything" name="do_everything" UNCHECKED>
+    mozilla-central matching run</label><br>
     <em>(all platforms, all tests, all talos)</em>
     
     <div id='try-options'>
     
-    <h2>Custom Options</h2>
-    <div id="col1">
-        <span class='option-radio' try-section='b'>
-        <h4>Build Types</h4>
-        <label><input type="radio" name="build_type" value="do" checked>both</input></label>
-        <label><input type="radio" name="build_type" value="d">debug only</input></label>
-        <label><input type="radio" name="build_type" value="o">opt only</input></label>
-        </span>
-        
-        <h4>Platforms</h4>
-        <span class='option-group' try-section='p'>
-        <label><input type="checkbox" class="group-selector all-selector" CHECKED>All</label>
-        <label><input type="checkbox" class="group-selector none-selector">Clear All</label>
-        
-        <ul>
-        <li><label><input type="checkbox" name="platform" value="linux">linux</input></label></li>
-        <li><label><input type="checkbox" name="platform" value="linuxqt">linuxqt</input></label></li>
-        <li><label><input type="checkbox" name="platform" value="linux64">linux64</input></label></li>
-        <li><label><input type="checkbox" name="platform" value="macosx64">macosx64</input></label></li>
-        <li><label><input type="checkbox" name="platform" value="win32">win32</input></label></li>
-        <li><label><input type="checkbox" name="platform" value="linux-android">linux-android</input></label></li>
-        <li><label><input type="checkbox" name="platform" value="linux-maemo5-gtk">linux-maemo5-gtk</input></label></li>
-        <li><label><input type="checkbox" name="platform" value="linux-maemo5-qt">linux-maemo5-qt</input></label></li>
-        <li><label><input type="checkbox" name="platform" value="linux-mobile">linux-mobile (desktop)</input></label></li>
-        <li><label><input type="checkbox" name="platform" value="win32-mobile">win32-mobile (desktop)</input></label></li>
-        <li><label><input type="checkbox" name="platform" value="macosx-mobile">macosx-mobile (desktop)</input></label></li>
-        <li><label><input type="checkbox" name="platform" value="macosx">macosx <span style="color: red">(check when you want 10.5 debug builds)</span></input></label></li>
-        </ul>
-        
-        <strong>Important note re: Mac builds</strong>: As per <a href="http://blog.mozilla.com/nthomas/2010/09/27/firefox-mac-universal-builds-have-changed/">Nick's blog post</a> mac universal builds have changed. For opt builds on Mac OSX 10.5 you must choose 'macosx64'
-        </span>
-        <span class='option-email'>
-        <h4>Email Settings</h4>
-        <label><input type="radio" name="email" checked>Default</input></label><br />
-        <label><input type="radio" name="email" value="-n">No Email</input></label>
-        <label><input type="radio" name="email" value="-e">All Email</input></label><br />
-        <em>(default is email to only send on non-success)</em>
-        </span>
-        
-    </div> <!-- col1 div -->
-    <div id="col2">
-        <h4>Unit Test Suites</h4>
-        <span class='option-group' try-section='u'>
-        <label><input type="checkbox" class="group-selector all-selector" CHECKED>All</label>
-        <label><input type="checkbox" class="group-selector none-selector">None</label>
-        <ul>
-        <li><label><input type="checkbox" value="reftest">reftest</input></label></li>
-        <li><label><input type="checkbox" value="reftest-ipc">reftest-ipc <span style="color: red">(linux opt only)</span></input></label></li>
-        <li><label><input type="checkbox" value="reftest-no-accel">reftest-no-accel <span style="color: red">(win7 only)</span></input></label></li>
-        <li><label><input type="checkbox" value="crashtest">crashtest</input></label></li>
-        <li><label><input type="checkbox" value="crashtest-ipc">crashtest-ipc <span style="color: red">(linux opt only)</span></input></label></li>
-        <li><label><input type="checkbox" value="xpcshell">xpcshell</input></label></li>
-        <li><label><input type="checkbox" value="jsreftest">jsreftest</input></label></li>
-        <li><label><input type="checkbox" value="jetpack">jetpack</input></label></li>
-        <li><label><input type="checkbox" value="mozmill-all">mozmill-all</input></label></li>
-        <li><label><input type="checkbox" value="opengl">opengl</input></label></li><br />
-        <span class='option-subgroup'>
-        <li><label><input type="checkbox" class="subgroup-all-selector" value="mochitests">mochitests (all)</input></label></li>
-        <ul>OR
-        <li><label><input type="checkbox" value="mochitest-1">mochitest-1</input></label></li>
-        <li><label><input type="checkbox" value="mochitest-2">mochitest-2</input></label></li>
-        <li><label><input type="checkbox" value="mochitest-3">mochitest-3</input></label></li>
-        <li><label><input type="checkbox" value="mochitest-4">mochitest-4</input></label></li>
-        <li><label><input type="checkbox" value="mochitest-5">mochitest-5</input></label></li>
-        <li><label><input type="checkbox" value="mochitest-o">mochitest-o</input></label></li>
-        </ul>
-        </span>
-        <h4> Android-Only Unittest Suites</h4>
-        <li><label><input type="checkbox" value="reftest-1">reftest-1</input></label></li>
-        <li><label><input type="checkbox" value="reftest-2">reftest-2</input></label></li>
-        <li><label><input type="checkbox" value="jsreftest-1">jsreftest-1</input></label></li>
-        <li><label><input type="checkbox" value="jsreftest-2">jsreftest-2</input></label></li>
-        <li><label><input type="checkbox" value="jsreftest-3">jsreftest-3</input></label></li>
-        <li><label><input type="checkbox" value="crashtest-1">crashtest-1</input></label></li>
-        <li><label><input type="checkbox" value="crashtest-2">crashtest-2</input></label></li>
-        <li><label><input type="checkbox" value="browser-chrome">browser-chrome</input></label></li>
-        <li><label><input type="checkbox" value="mochitest-6">mochitest-6</input></label></li>
-        <li><label><input type="checkbox" value="mochitest-7">mochitest-7</input></label></li>
-        <li><label><input type="checkbox" value="mochitest-8">mochitest-8</input></label></li>
-        </ul>
-        </span>
-
-        <h4>Experimental Features</h4>
-        <p>Auto-comment to bug on completion (<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=434998#c20">example</a>)
-        <em>Still a work in progress, comment in <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=430942">bug 430942</a> with issues</em>
-        </p>
-        <label>Bug Number: <input id="bugnumber" type="textbox" name="bugnumber" size=8></input></label>
-        <label><input id="post_to_bugzilla" type="checkbox" name="post_to_bugzilla" UNCHECKED>Add to Syntax</input></label><br />
-
-    </div> <!-- col2 div -->
-    <div id="col3">
-        <h4>Talos Suites</h4>
-        <span class='option-group' try-section='t'>
-        <label><input type="checkbox" class="group-selector all-selector">All</label>
-        <label><input type="checkbox" class="group-selector none-selector" CHECKED>None</label>
-        <ul>
-        <li><label><input type="checkbox" name="talos_suite" value="chrome">chrome</input></label></li>
-        <li><label><input type="checkbox" name="talos_suite" value="nochrome">nochrome</input></label></li>
-        <li><label><input type="checkbox" name="talos_suite" value="dirty">dirty</input></label></li>
-        <li><label><input type="checkbox" name="talos_suite" value="tp">tp</input></label></li>
-        <li><label><input type="checkbox" name="talos_suite" value="tp4">tp4 <span style="color: red">(try branch only)</span></input></label></li>
-        <li><label><input type="checkbox" name="talos_suite" value="cold">cold</input></label></li>
-        <li><label><input type="checkbox" name="talos_suite" value="v8">v8</input></label></li>
-        <li><label><input type="checkbox" name="talos_suite" value="svg">svg</input></label></li>
-        <li><label><input type="checkbox" name="talos_suite" value="scroll">scroll</input></label></li>
-        <li><label><input type="checkbox" name="talos_suite" value="dromaeo">dromaeo</input></label></li>
-        <li><label><input type="checkbox" name="talos_suite" value="a11y">a11y</input></label></li>
-        <li><label><input type="checkbox" name="talos_suite" value="paint">paint</input></label></li>
-        <br />
-        <h4>Android-Only Talos Suites:</strong></h4>
-        <li><label><input type="checkbox" name="talos_suite" value="remote-ts">remote-ts</input></label></li>
-        <li><label><input type="checkbox" name="talos_suite" value="remote-tdhtml">remote-tdhtml</input></label></li>
-        <li><label><input type="checkbox" name="talos_suite" value="remote-tsvg">remote-tsvg</input></label></li>
-        <li><label><input type="checkbox" name="talos_suite" value="remote-tsspider">remote-tsspider</input></label></li>
-        <li><label><input type="checkbox" name="talos_suite" value="remote-tpan">remote-tpan</input></label></li>
-        <li><label><input type="checkbox" name="talos_suite" value="remote-tp4m">remote-tp4m</input></label></li>
-        <li><label><input type="checkbox" name="talos_suite" value="remote-tp4m_nochrome">remote-tp4m_nochrome</input></label></li>
-        <li><label><input type="checkbox" name="talos_suite" value="remote-twinopen">remote-twinopen</input></label></li>
-        <li><label><input type="checkbox" name="talos_suite" value="remote-tzoom">remote-tzoom</input></label></li>
-        </ul>
-        </ul>
-        <strong>Want to match Talos suite names up to what they run?</strong>  Check <a href="http://hg.mozilla.org/build/buildbot-configs/file/tip/mozilla-tests/config.py#l34">the current configs</a><br />
-        (contents may shift over time, <br/>
-        you want SUITES = { ... }) 
-        </span>
-    </div> <!-- col3 div -->
-    <div id="results">
-        <strong>TryChooser Syntax:</strong><br />
-        <textarea class="result_value" cols="80"></textarea>
-        </div><!-- try-options div -->
-    </div> <!--- results div -->
-  <div> <!-- wrapper div-->
+        <h2>Custom Options</h2>
+        <div id="col1">
+            <span class='option-radio' try-section='b'>
+            <h4>Build Types</h4>
+            <label><input type="radio" name="build_type" value="do" checked>both</label>
+            <label><input type="radio" name="build_type" value="d">debug only</label>
+            <label><input type="radio" name="build_type" value="o">opt only</label>
+            </span>
+            
+            <h4>Platforms</h4>
+            <span class='option-group' try-section='p'>
+            <label><input type="checkbox" class="group-selector all-selector" CHECKED>All</label>
+            <label><input type="checkbox" class="group-selector none-selector">Clear All</label>
+            
+            <ul>
+            <li><label><input type="checkbox" name="platform" value="linux">linux</label></li>
+            <li><label><input type="checkbox" name="platform" value="linuxqt">linuxqt</label></li>
+            <li><label><input type="checkbox" name="platform" value="linux64">linux64</label></li>
+            <li><label><input type="checkbox" name="platform" value="macosx64">macosx64</label></li>
+            <li><label><input type="checkbox" name="platform" value="win32">win32</label></li>
+            <li><label><input type="checkbox" name="platform" value="linux-android">linux-android</label></li>
+            <li><label><input type="checkbox" name="platform" value="linux-maemo5-gtk">linux-maemo5-gtk</label></li>
+            <li><label><input type="checkbox" name="platform" value="linux-maemo5-qt">linux-maemo5-qt</label></li>
+            <li><label><input type="checkbox" name="platform" value="linux-mobile">linux-mobile (desktop)</label></li>
+            <li><label><input type="checkbox" name="platform" value="win32-mobile">win32-mobile (desktop)</label></li>
+            <li><label><input type="checkbox" name="platform" value="macosx-mobile">macosx-mobile (desktop)</label></li>
+            <li><label><input type="checkbox" name="platform" value="macosx">macosx <span style="color: red">(check when you want 10.5 debug builds)</span></label></li>
+            </ul>
+            
+            <strong>Important note re: Mac builds</strong>: As per <a href="http://blog.mozilla.com/nthomas/2010/09/27/firefox-mac-universal-builds-have-changed/">Nick's blog post</a> mac universal builds have changed. For opt builds on Mac OSX 10.5 you must choose 'macosx64'
+            </span>
+            <span class='option-email'>
+            <h4>Email Settings</h4>
+            <label><input type="radio" name="email" checked>Default</label><br>
+            <label><input type="radio" name="email" value="-n">No Email</label>
+            <label><input type="radio" name="email" value="-e">All Email</label><br>
+            <em>(default is email to only send on non-success)</em>
+            </span>
+            
+        </div> <!-- col1 div -->
+        <div id="col2">
+            <h4>Unit Test Suites</h4>
+            <span class='option-group' try-section='u'>
+            <label><input type="checkbox" class="group-selector all-selector" CHECKED>All</label>
+            <label><input type="checkbox" class="group-selector none-selector">None</label>
+            <ul>
+                <li><label><input type="checkbox" value="reftest">reftest</label></li>
+                <li><label><input type="checkbox" value="reftest-ipc">reftest-ipc <span style="color: red">(linux opt only)</span></label></li>
+                <li><label><input type="checkbox" value="reftest-no-accel">reftest-no-accel <span style="color: red">(win7 only)</span></label></li>
+                <li><label><input type="checkbox" value="crashtest">crashtest</label></li>
+                <li><label><input type="checkbox" value="crashtest-ipc">crashtest-ipc <span style="color: red">(linux opt only)</span></label></li>
+                <li><label><input type="checkbox" value="xpcshell">xpcshell</label></li>
+                <li><label><input type="checkbox" value="jsreftest">jsreftest</label></li>
+                <li><label><input type="checkbox" value="jetpack">jetpack</label></li>
+                <li><label><input type="checkbox" value="mozmill-all">mozmill-all</label></li>
+                <li><label><input type="checkbox" value="opengl">opengl</label></li><br>
+                <span class='option-subgroup'>
+                <li><label><input type="checkbox" class="subgroup-all-selector" value="mochitests">mochitests (all)</label></li>
+                    <ul>OR
+                    <li><label><input type="checkbox" value="mochitest-1">mochitest-1</label></li>
+                    <li><label><input type="checkbox" value="mochitest-2">mochitest-2</label></li>
+                    <li><label><input type="checkbox" value="mochitest-3">mochitest-3</label></li>
+                    <li><label><input type="checkbox" value="mochitest-4">mochitest-4</label></li>
+                    <li><label><input type="checkbox" value="mochitest-5">mochitest-5</label></li>
+                    <li><label><input type="checkbox" value="mochitest-o">mochitest-o</label></li>
+                    </ul>
+            </span>
+            <h4> Android-Only Unittest Suites</h4>
+            <li><label><input type="checkbox" value="reftest-1">reftest-1</label></li>
+            <li><label><input type="checkbox" value="reftest-2">reftest-2</label></li>
+            <li><label><input type="checkbox" value="jsreftest-1">jsreftest-1</label></li>
+            <li><label><input type="checkbox" value="jsreftest-2">jsreftest-2</label></li>
+            <li><label><input type="checkbox" value="jsreftest-3">jsreftest-3</label></li>
+            <li><label><input type="checkbox" value="crashtest-1">crashtest-1</label></li>
+            <li><label><input type="checkbox" value="crashtest-2">crashtest-2</label></li>
+            <li><label><input type="checkbox" value="browser-chrome">browser-chrome</label></li>
+            <li><label><input type="checkbox" value="mochitest-6">mochitest-6</label></li>
+            <li><label><input type="checkbox" value="mochitest-7">mochitest-7</label></li>
+            <li><label><input type="checkbox" value="mochitest-8">mochitest-8</label></li>
+            </ul>
+            </span>
+    
+            <h4>Experimental Features</h4>
+            <p>Auto-comment to bug on completion (<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=434998#c20">example</a>)
+            <em>Still a work in progress, comment in <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=430942">bug 430942</a> with issues</em>
+            </p>
+            <label>Bug Number: <input id="bugnumber" type="textbox" name="bugnumber" size=8></label>
+            <label><input id="post_to_bugzilla" type="checkbox" name="post_to_bugzilla" UNCHECKED>Add to Syntax</label><br>
+    
+        </div> <!-- col2 div -->
+        <div id="col3">
+            <h4>Talos Suites</h4>
+            <span class='option-group' try-section='t'>
+            <label><input type="checkbox" class="group-selector all-selector">All</label>
+            <label><input type="checkbox" class="group-selector none-selector" CHECKED>None</label>
+            <ul>
+                <li><label><input type="checkbox" name="talos_suite" value="chrome">chrome</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="nochrome">nochrome</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="dirty">dirty</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="tp">tp</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="tp4">tp4 <span style="color: red">(try branch only)</span></label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="cold">cold</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="v8">v8</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="svg">svg</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="scroll">scroll</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="dromaeo">dromaeo</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="a11y">a11y</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="paint">paint</label></li>
+                <br>
+                <h4>Android-Only Talos Suites:</h4>
+                <li><label><input type="checkbox" name="talos_suite" value="remote-ts">remote-ts</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="remote-tdhtml">remote-tdhtml</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="remote-tsvg">remote-tsvg</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="remote-tsspider">remote-tsspider</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="remote-tpan">remote-tpan</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="remote-tp4m">remote-tp4m</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="remote-tp4m_nochrome">remote-tp4m_nochrome</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="remote-twinopen">remote-twinopen</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="remote-tzoom">remote-tzoom</label></li>
+            </ul>
+            <strong>Want to match Talos suite names up to what they run?</strong>  Check <a href="http://hg.mozilla.org/build/buildbot-configs/file/tip/mozilla-tests/config.py#l34">the current configs</a><br>
+            (contents may shift over time, <br/>
+            you want SUITES = { ... }) 
+            </span>
+        </div> <!-- col3 div -->
+        <div id="results">
+            <strong>TryChooser Syntax:</strong><br>
+            <textarea class="result_value" cols="80"></textarea>
+        </div><!-- results div -->
+    </div> <!--- try-options div -->
+<div> <!-- wrapper div-->
 
 </form>
 </body>
