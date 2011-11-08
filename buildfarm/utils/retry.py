@@ -35,8 +35,14 @@ class RunWithTimeoutException(Exception):
 
 def run_with_timeout(cmd, timeout, stdout_regexp=None, stderr_regexp=None,
                      fail_if_match=False, print_output=True):
-    stdout = TemporaryFile()
-    stderr = TemporaryFile()
+    if stdout_regexp:
+        stdout = TemporaryFile()
+    else:
+        stdout = None
+    if stderr_regexp:
+        stderr = TemporaryFile()
+    else:
+        stderr = None
     proc = subprocess.Popen(cmd, stdout=stdout, stderr=stderr)
     start_time = time.time()
     log.info("Executing: %s", cmd)
@@ -44,8 +50,9 @@ def run_with_timeout(cmd, timeout, stdout_regexp=None, stderr_regexp=None,
         rc = proc.poll()
         if rc is not None:
             log.debug("Process returned %s", rc)
-            if print_output:
+            if print_output and stdout:
                 print "Process stdio:\n%s" % read_file(stdout)
+            if print_output and stderr:
                 print "Process stderr:\n%s" % read_file(stderr)
             if rc == 0:
                 if stdout_regexp and not \

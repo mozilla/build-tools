@@ -10,7 +10,7 @@ revision/branch on commandline will override those in props-file"""
 import os, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../lib/python"))
 
-from util.hg import mercurial, share, out, remove_path
+from util.hg import mercurial, out, remove_path
 
 if __name__ == '__main__':
     from optparse import OptionParser
@@ -24,7 +24,10 @@ if __name__ == '__main__':
             propsfile=os.environ.get('PROPERTIES_FILE'),
             tbox=bool(os.environ.get('PROPERTIES_FILE')),
             loglevel=logging.INFO,
-            shared_dir=os.environ.get('HG_SHARE_BASE_DIR')
+            shared_dir=os.environ.get('HG_SHARE_BASE_DIR'),
+            clone_by_rev=False,
+            mirrors=None,
+            bundles=None,
             )
     parser.add_option("-r", "--rev", dest="revision", help="which revision to update to")
     parser.add_option("-b", "--branch", dest="branch", help="which branch to update to")
@@ -38,6 +41,14 @@ if __name__ == '__main__':
         help="clone to a shared directory")
     parser.add_option("--check-outgoing", dest="outgoing", action="store_true",
         help="check for and clobber outgoing changesets")
+    parser.add_option("--clone-by-revision", dest="clone_by_rev", action="store_true",
+        help="do initial clone with -r <rev> instead of cloning the entire repo. "
+             "This is slower but is useful when cloning repositories with many "
+             "heads which may timeout otherwise.")
+    parser.add_option("--mirror", dest="mirrors", action="append",
+        help="add a mirror to try cloning/pulling from before repo")
+    parser.add_option("--bundle", dest="bundles", action="append",
+        help="add a bundle to try downloading/unbundling from before doing a full clone")
 
     options, args = parser.parse_args()
 
@@ -72,7 +83,10 @@ if __name__ == '__main__':
             remove_path(options.shared_dir)
 
     got_revision = mercurial(repo, dest, options.branch, options.revision,
-                             shareBase=options.shared_dir)
+                             shareBase=options.shared_dir,
+                             clone_by_rev=options.clone_by_rev,
+                             mirrors=options.mirrors,
+                             bundles=options.bundles)
 
     if options.tbox:
         if repo.startswith("http"):

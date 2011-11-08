@@ -4,9 +4,10 @@ import shutil
 import os
 import subprocess
 
+import util.hg as hg
 from util.hg import clone, pull, update, hg_ver, mercurial, _make_absolute, \
   share, push, apply_and_push, HgUtilError, make_hg_url, get_branch, \
-  get_branches, path
+  get_branches, path, init, unbundle, adjust_paths
 from util.commands import run_cmd, get_output
 
 def getRevisions(dest):
@@ -77,7 +78,7 @@ class TestHg(unittest.TestCase):
 
     def testCloneBranch(self):
         clone(self.repodir, self.wc, branch='branch2',
-                update_dest=False)
+                update_dest=False, clone_by_rev=True)
         # On hg 1.6, we should only have a subset of the revisions
         if hg_ver() >= (1,6,0):
             self.assertEquals(self.revisions[1:],
@@ -88,12 +89,13 @@ class TestHg(unittest.TestCase):
 
     def testCloneUpdateBranch(self):
         rev = clone(self.repodir, os.path.join(self.tmpdir, 'wc'),
-                branch="branch2", update_dest=True)
+                branch="branch2", update_dest=True, clone_by_rev=True)
         self.assertEquals(rev, self.revisions[1], self.revisions)
 
     def testCloneRevision(self):
         clone(self.repodir, self.wc,
-                revision=self.revisions[0], update_dest=False)
+                revision=self.revisions[0], update_dest=False,
+                clone_by_rev=True)
         # We'll only get a subset of the revisions
         self.assertEquals(self.revisions[:1] + self.revisions[2:],
                 getRevisions(self.wc))
@@ -107,7 +109,8 @@ class TestHg(unittest.TestCase):
 
     def testPull(self):
         # Clone just the first rev
-        clone(self.repodir, self.wc, revision=self.revisions[-1], update_dest=False)
+        clone(self.repodir, self.wc, revision=self.revisions[-1],
+                update_dest=False, clone_by_rev=True)
         self.assertEquals(getRevisions(self.wc), self.revisions[-1:])
 
         # Now pull in new changes
@@ -117,7 +120,8 @@ class TestHg(unittest.TestCase):
 
     def testPullRevision(self):
         # Clone just the first rev
-        clone(self.repodir, self.wc, revision=self.revisions[-1], update_dest=False)
+        clone(self.repodir, self.wc, revision=self.revisions[-1],
+                update_dest=False, clone_by_rev=True)
         self.assertEquals(getRevisions(self.wc), self.revisions[-1:])
 
         # Now pull in just the last revision
@@ -129,7 +133,8 @@ class TestHg(unittest.TestCase):
 
     def testPullBranch(self):
         # Clone just the first rev
-        clone(self.repodir, self.wc, revision=self.revisions[-1], update_dest=False)
+        clone(self.repodir, self.wc, revision=self.revisions[-1],
+                update_dest=False, clone_by_rev=True)
         self.assertEquals(getRevisions(self.wc), self.revisions[-1:])
 
         # Now pull in the other branch
@@ -192,18 +197,18 @@ class TestHg(unittest.TestCase):
         self.assertNotEqual(old_revs, getRevisions(self.wc))
 
     def testPush(self):
-        clone(self.repodir, self.wc, revision=self.revisions[-2])
+        clone(self.repodir, self.wc, revision=self.revisions[-2], clone_by_rev=True)
         push(src=self.repodir, remote=self.wc)
         self.assertEquals(getRevisions(self.wc), self.revisions)
 
     def testPushWithBranch(self):
-        clone(self.repodir, self.wc, revision=self.revisions[-1])
+        clone(self.repodir, self.wc, revision=self.revisions[-1], clone_by_rev=True)
         push(src=self.repodir, remote=self.wc, branch='branch2')
         push(src=self.repodir, remote=self.wc, branch='default')
         self.assertEquals(getRevisions(self.wc), self.revisions)
 
     def testPushWithRevision(self):
-        clone(self.repodir, self.wc, revision=self.revisions[-2])
+        clone(self.repodir, self.wc, revision=self.revisions[-2], clone_by_rev=True)
         push(src=self.repodir, remote=self.wc, revision=self.revisions[-1])
         self.assertEquals(getRevisions(self.wc), self.revisions[-2:])
 
@@ -212,7 +217,7 @@ class TestHg(unittest.TestCase):
         self.assertEquals(rev, self.revisions[0])
 
     def testPushNewBranchesNotAllowed(self):
-        clone(self.repodir, self.wc, revision=self.revisions[0])
+        clone(self.repodir, self.wc, revision=self.revisions[0], clone_by_rev=True)
         self.assertRaises(Exception, push, self.repodir, self.wc,
                           push_new_branches=False)
 
@@ -424,7 +429,7 @@ class TestHg(unittest.TestCase):
         p = path(self.wc)
         self.assertEquals(p, self.repodir)
 
-    def testBustedHgrc(self):
+    def testBustedHgrcWithShare(self):
         # Test that we can recover from hgrc being lost
         shareBase = os.path.join(self.tmpdir, 'share')
         sharerepo = os.path.join(shareBase, self.repodir.lstrip("/"))
@@ -445,3 +450,346 @@ class TestHg(unittest.TestCase):
 
         p = path(self.wc)
         self.assertEquals(p, self.repodir)
+
+    def testBustedHgrc(self):
+        # Test that we can recover from hgrc being lost
+        mercurial(self.repodir, self.wc)
+
+        # Delete .hg/hgrc
+        os.unlink(os.path.join(self.wc, '.hg', 'hgrc'))
+
+        # path is busted now
+        p = path(self.wc)
+        self.assertEquals(p, None)
+
+        # cloning again should fix this up
+        mercurial(self.repodir, self.wc)
+
+        p = path(self.wc)
+        self.assertEquals(p, self.repodir)
+
+    def testInit(self):
+        tmpdir = os.path.join(self.tmpdir, 'new')
+        self.assertEquals(False, os.path.exists(tmpdir))
+        init(tmpdir)
+        self.assertEquals(True, os.path.exists(tmpdir))
+        self.assertEquals(True, os.path.exists(os.path.join(tmpdir, '.hg')))
+
+    def testUnbundle(self):
+        # First create the bundle
+        bundle = os.path.join(self.tmpdir, 'bundle')
+        run_cmd(['hg', 'bundle', '-a', bundle], cwd=self.repodir)
+
+        # Now unbundle it in a new place
+        newdir = os.path.join(self.tmpdir, 'new')
+        init(newdir)
+        unbundle(bundle, newdir)
+
+        self.assertEquals(self.revisions, getRevisions(newdir))
+
+    def testCloneWithBundle(self):
+        # First create the bundle
+        bundle = os.path.join(self.tmpdir, 'bundle')
+        run_cmd(['hg', 'bundle', '-a', bundle], cwd=self.repodir)
+
+        # Wrap unbundle so we can tell if it got called
+        orig_unbundle = unbundle
+        try:
+            called = []
+            def new_unbundle(*args, **kwargs):
+                called.append(True)
+                return orig_unbundle(*args, **kwargs)
+            hg.unbundle = new_unbundle
+
+            # Now clone it using the bundle
+            clone(self.repodir, self.wc, bundles=[bundle])
+            self.assertEquals(self.revisions, getRevisions(self.wc))
+            self.assertEquals(called, [True])
+        finally:
+            hg.unbundle = orig_unbundle
+
+    def testCloneWithUnrelatedBundle(self):
+        # First create the bundle
+        bundle = os.path.join(self.tmpdir, 'bundle')
+        run_cmd(['hg', 'bundle', '-a', bundle], cwd=self.repodir)
+
+        # Create an unrelated repo
+        repo2 = os.path.join(self.tmpdir, 'repo2')
+        run_cmd(['%s/init_hgrepo.sh' % os.path.dirname(__file__),
+            repo2])
+
+        self.assertNotEqual(self.revisions, getRevisions(repo2))
+
+        # Clone repo2 using the unrelated bundle
+        clone(repo2, self.wc, bundles=[bundle])
+
+        # Make sure we don't have unrelated revisions
+        self.assertEquals(getRevisions(repo2), getRevisions(self.wc))
+        self.assertEquals(set(),
+                set(getRevisions(self.repodir)).intersection(set(getRevisions(self.wc))))
+
+    def testCloneWithBadBundle(self):
+        # First create the bad bundle
+        bundle = os.path.join(self.tmpdir, 'bundle')
+        open(bundle, 'w').write('ruh oh!')
+
+        # Wrap unbundle so we can tell if it got called
+        orig_unbundle = unbundle
+        try:
+            called = []
+            def new_unbundle(*args, **kwargs):
+                called.append(True)
+                return orig_unbundle(*args, **kwargs)
+            hg.unbundle = new_unbundle
+
+            # Now clone it using the bundle
+            clone(self.repodir, self.wc, bundles=[bundle])
+            self.assertEquals(self.revisions, getRevisions(self.wc))
+            self.assertEquals(called, [True])
+        finally:
+            hg.unbundle = orig_unbundle
+
+    def testCloneWithBundleMissingRevs(self):
+        # First create the bundle
+        bundle = os.path.join(self.tmpdir, 'bundle')
+        run_cmd(['hg', 'bundle', '-a', bundle], cwd=self.repodir)
+
+        # Create a commit
+        open(os.path.join(self.repodir, 'test.txt'), 'w').write('hello!')
+        run_cmd(['hg', 'add', 'test.txt'], cwd=self.repodir)
+        run_cmd(['hg', 'commit', '-m', 'adding changeset'], cwd=self.repodir)
+
+        # Wrap unbundle so we can tell if it got called
+        orig_unbundle = unbundle
+        try:
+            called = []
+            def new_unbundle(*args, **kwargs):
+                called.append(True)
+                return orig_unbundle(*args, **kwargs)
+            hg.unbundle = new_unbundle
+
+            # Now clone it using the bundle
+            clone(self.repodir, self.wc, bundles=[bundle])
+            self.assertEquals(getRevisions(self.repodir), getRevisions(self.wc))
+            self.assertEquals(called, [True])
+        finally:
+            hg.unbundle = orig_unbundle
+
+    def testCloneWithMirror(self):
+        mirror = os.path.join(self.tmpdir, 'repo2')
+        clone(self.repodir, mirror)
+
+        # Create a commit in the original repo
+        open(os.path.join(self.repodir, 'test.txt'), 'w').write('hello!')
+        run_cmd(['hg', 'add', 'test.txt'], cwd=self.repodir)
+        run_cmd(['hg', 'commit', '-m', 'adding changeset'], cwd=self.repodir)
+
+        # Now clone from the mirror
+        clone(self.repodir, self.wc, mirrors=[mirror])
+
+        # We'll be missing the new revision from repodir
+        self.assertNotEquals(getRevisions(self.repodir), getRevisions(self.wc))
+        # But we should have everything from the mirror
+        self.assertEquals(getRevisions(mirror), getRevisions(self.wc))
+        # Our default path should point to the original repo though.
+        self.assertEquals(self.repodir, path(self.wc))
+
+    def testCloneWithBadMirror(self):
+        mirror = os.path.join(self.tmpdir, 'repo2')
+
+        # Now clone from the mirror
+        clone(self.repodir, self.wc, mirrors=[mirror])
+
+        # We still end up with a valid repo
+        self.assertEquals(self.revisions, getRevisions(self.wc))
+        self.assertEquals(self.repodir, path(self.wc))
+
+    def testCloneWithOneBadMirror(self):
+        mirror1 = os.path.join(self.tmpdir, 'mirror1')
+        mirror2 = os.path.join(self.tmpdir, 'mirror2')
+
+        # Mirror 2 is ok
+        clone(self.repodir, mirror2)
+
+        # Create a commit in the original repo
+        open(os.path.join(self.repodir, 'test.txt'), 'w').write('hello!')
+        run_cmd(['hg', 'add', 'test.txt'], cwd=self.repodir)
+        run_cmd(['hg', 'commit', '-m', 'adding changeset'], cwd=self.repodir)
+
+        # Now clone from the mirror
+        clone(self.repodir, self.wc, mirrors=[mirror1, mirror2])
+
+        # We'll be missing the new revision from repodir
+        self.assertNotEquals(getRevisions(self.repodir), getRevisions(self.wc))
+        # But we should have everything from the mirror
+        self.assertEquals(getRevisions(mirror2), getRevisions(self.wc))
+        # Our default path should point to the original repo though.
+        self.assertEquals(self.repodir, path(self.wc))
+
+    def testCloneWithRevAndMirror(self):
+        mirror = os.path.join(self.tmpdir, 'repo2')
+        clone(self.repodir, mirror)
+
+        # Create a commit in the original repo
+        open(os.path.join(self.repodir, 'test.txt'), 'w').write('hello!')
+        run_cmd(['hg', 'add', 'test.txt'], cwd=self.repodir)
+        run_cmd(['hg', 'commit', '-m', 'adding changeset'], cwd=self.repodir)
+
+        # Now clone from the mirror
+        revisions = getRevisions(self.repodir)
+        clone(self.repodir, self.wc, revision=revisions[0],
+                mirrors=[mirror], clone_by_rev=True)
+
+        # We'll be missing the middle revision (on another branch)
+        self.assertEquals(revisions[:2] + revisions[3:], getRevisions(self.wc))
+        # But not from the mirror
+        self.assertNotEquals(getRevisions(mirror), getRevisions(self.wc))
+        # Our default path should point to the original repo though.
+        self.assertEquals(self.repodir, path(self.wc))
+
+    def testPullWithMirror(self):
+        mirror = os.path.join(self.tmpdir, 'repo2')
+        clone(self.repodir, mirror)
+
+        # Create a new commit in the mirror repo
+        open(os.path.join(mirror, 'test.txt'), 'w').write('hello!')
+        run_cmd(['hg', 'add', 'test.txt'], cwd=mirror)
+        run_cmd(['hg', 'commit', '-m', 'adding changeset'], cwd=mirror)
+
+        # Now clone from the original
+        clone(self.repodir, self.wc)
+
+        # Pull using the mirror
+        pull(self.repodir, self.wc, mirrors=[mirror])
+
+        self.assertEquals(getRevisions(self.wc), getRevisions(mirror))
+
+        # Our default path should point to the original repo
+        self.assertEquals(self.repodir, path(self.wc))
+
+    def testPullWithBadMirror(self):
+        mirror = os.path.join(self.tmpdir, 'repo2')
+
+        # Now clone from the original
+        clone(self.repodir, self.wc)
+
+        # Create a new commit in the original repo
+        open(os.path.join(self.repodir, 'test.txt'), 'w').write('hello!')
+        run_cmd(['hg', 'add', 'test.txt'], cwd=self.repodir)
+        run_cmd(['hg', 'commit', '-m', 'adding changeset'], cwd=self.repodir)
+
+        # Pull using the mirror
+        pull(self.repodir, self.wc, mirrors=[mirror])
+
+        self.assertEquals(getRevisions(self.wc), getRevisions(self.repodir))
+
+        # Our default path should point to the original repo
+        self.assertEquals(self.repodir, path(self.wc))
+
+    def testPullWithUnrelatedMirror(self):
+        mirror = os.path.join(self.tmpdir, 'repo2')
+        run_cmd(['%s/init_hgrepo.sh' % os.path.dirname(__file__), mirror])
+
+        # Now clone from the original
+        clone(self.repodir, self.wc)
+
+        # Create a new commit in the original repo
+        open(os.path.join(self.repodir, 'test.txt'), 'w').write('hello!')
+        run_cmd(['hg', 'add', 'test.txt'], cwd=self.repodir)
+        run_cmd(['hg', 'commit', '-m', 'adding changeset'], cwd=self.repodir)
+
+        # Pull using the mirror
+        pull(self.repodir, self.wc, mirrors=[mirror])
+
+        self.assertEquals(getRevisions(self.wc), getRevisions(self.repodir))
+        # We shouldn't have anything from the unrelated mirror
+        self.assertEquals(set(),
+                set(getRevisions(mirror)).intersection(set(getRevisions(self.wc))))
+
+        # Our default path should point to the original repo
+        self.assertEquals(self.repodir, path(self.wc))
+
+    def testMercurialWithShareAndBundle(self):
+        # First create the bundle
+        bundle = os.path.join(self.tmpdir, 'bundle')
+        run_cmd(['hg', 'bundle', '-a', bundle], cwd=self.repodir)
+
+        # Create a commit
+        open(os.path.join(self.repodir, 'test.txt'), 'w').write('hello!')
+        run_cmd(['hg', 'add', 'test.txt'], cwd=self.repodir)
+        run_cmd(['hg', 'commit', '-m', 'adding changeset'], cwd=self.repodir)
+
+        # Wrap unbundle so we can tell if it got called
+        orig_unbundle = unbundle
+        try:
+            called = []
+            def new_unbundle(*args, **kwargs):
+                called.append(True)
+                return orig_unbundle(*args, **kwargs)
+            hg.unbundle = new_unbundle
+
+            shareBase = os.path.join(self.tmpdir, 'share')
+            sharerepo = os.path.join(shareBase, self.repodir.lstrip("/"))
+            os.mkdir(shareBase)
+            mercurial(self.repodir, self.wc, shareBase=shareBase, bundles=[bundle])
+
+            self.assertEquals(called, [True])
+            self.assertEquals(getRevisions(self.repodir), getRevisions(self.wc))
+            self.assertEquals(getRevisions(self.repodir), getRevisions(sharerepo))
+        finally:
+            hg.unbundle = orig_unbundle
+
+    def testMercurialWithShareAndMirror(self):
+        # First create the mirror
+        mirror = os.path.join(self.tmpdir, 'repo2')
+        clone(self.repodir, mirror)
+
+        # Create a commit
+        open(os.path.join(self.repodir, 'test.txt'), 'w').write('hello!')
+        run_cmd(['hg', 'add', 'test.txt'], cwd=self.repodir)
+        run_cmd(['hg', 'commit', '-m', 'adding changeset'], cwd=self.repodir)
+
+        shareBase = os.path.join(self.tmpdir, 'share')
+        sharerepo = os.path.join(shareBase, self.repodir.lstrip("/"))
+        os.mkdir(shareBase)
+        mercurial(self.repodir, self.wc, shareBase=shareBase, mirrors=[mirror])
+
+        # Since we used the mirror, we should be missing a commit
+        self.assertNotEquals(getRevisions(self.repodir), getRevisions(self.wc))
+        self.assertNotEquals(getRevisions(self.repodir), getRevisions(sharerepo))
+        self.assertEquals(getRevisions(mirror), getRevisions(self.wc))
+
+    def testMercurialByRevWithShareAndMirror(self):
+        # First create the mirror
+        mirror = os.path.join(self.tmpdir, 'repo2')
+        clone(self.repodir, mirror)
+
+        shareBase = os.path.join(self.tmpdir, 'share')
+        sharerepo = os.path.join(shareBase, self.repodir.lstrip("/"))
+        os.mkdir(shareBase)
+        mercurial(self.repodir, self.wc, shareBase=shareBase, mirrors=[mirror], clone_by_rev=True, revision=self.revisions[-1])
+
+        # We should only have the one revision
+        self.assertEquals(getRevisions(sharerepo), self.revisions[-1:])
+        self.assertEquals(getRevisions(self.wc), self.revisions[-1:])
+
+    def testAdjustPaths(self):
+        mercurial(self.repodir, self.wc)
+
+        # Make sure our default path is correct
+        self.assertEquals(path(self.wc), self.repodir)
+
+        # Add a comment, make sure it's still there if we don't change
+        # anything
+        hgrc = os.path.join(self.wc, '.hg', 'hgrc')
+        open(hgrc, 'a').write("# Hello world")
+        adjust_paths(self.wc, default=self.repodir)
+        self.assert_("Hello world" in open(hgrc).read())
+
+        # Add a path, and the comment goes away
+        adjust_paths(self.wc, test=self.repodir)
+        self.assert_("Hello world" not in open(hgrc).read())
+
+        # Make sure our paths are correct
+        self.assertEquals(path(self.wc), self.repodir)
+        self.assertEquals(path(self.wc, 'test'), self.repodir)
