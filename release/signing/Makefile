@@ -49,7 +49,7 @@ UPX_BIN         = $(WORKDIR)/upx/upx.exe
 CONCURRENCY    ?= 4
 KEYDIR         ?= d:/2011-keys
 GPG_KEY        ?= $(WORKDIR)/key-checkout/PUBLIC-KEY
-FREE_SPACE_REQ ?= 10000000 # in KB
+FREE_SPACE_REQ ?= 40000000 # in KB
 BASEDIR       ?= ~/signing-work
 PYTHONPATH     := $(WORKDIR)/lib/python:${PYTHONPATH}
 export PYTHONPATH
