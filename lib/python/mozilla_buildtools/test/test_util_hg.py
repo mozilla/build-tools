@@ -505,6 +505,7 @@ class TestHg(unittest.TestCase):
             clone(self.repodir, self.wc, bundles=[bundle])
             self.assertEquals(self.revisions, getRevisions(self.wc))
             self.assertEquals(called, [True])
+            self.assertEquals(path(self.wc), self.repodir)
         finally:
             hg.unbundle = orig_unbundle
 

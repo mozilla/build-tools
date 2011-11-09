@@ -131,6 +131,7 @@ def clone(repo, dest, branch=None, revision=None, update_dest=True,
             log.info("Trying to use bundle %s", bundle)
             try:
                 unbundle(bundle, dest)
+                adjust_paths(dest, default=repo)
                 # Now pull / update
                 return pull(repo, dest, update_dest=update_dest, mirrors=mirrors)
             except:
@@ -327,8 +328,6 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
         # Make sure that our default path is correct
         if hgpath != _make_absolute(repo):
             log.info("hg path isn't correct (%s should be %s); clobbering", hgpath, _make_absolute(repo))
-            # we need to clobber both the shared checkout and the dest,
-            # since hgrc needs to be in both places
             remove_path(dest)
 
     # If the working directory already exists and isn't using share we update
