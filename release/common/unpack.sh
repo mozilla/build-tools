@@ -85,7 +85,7 @@ unpack_build () {
     esac
 
     if [ ! -z $unpack_jars ]; then
-        for f in `find . -name '*.jar'`; do
+        for f in `find . -name '*.jar' -o -name '*.ja'`; do
             unzip -o "$f" -d "$f.dir" > /dev/null
         done
     fi
