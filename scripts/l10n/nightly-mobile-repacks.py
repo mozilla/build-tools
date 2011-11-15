@@ -28,9 +28,8 @@ class RepackError(Exception):
 def createRepacks(sourceRepo,l10nRepoDir, l10nBaseRepo,
                   mozconfigPath, objdir, makeDirs, locales, ftpProduct,
                   stageServer, stageUsername, stageSshKey, compareLocalesRepo,
-                  merge, platform, stage_platform):
+                  merge, platform, stage_platform, mobileDirName):
     sourceRepoName = path.split(sourceRepo)[-1]
-    mobileDirName = "mobile"
     localeSrcDir = path.join(sourceRepoName, objdir, mobileDirName, "locales")
     # Even on Windows we need to use "/" as a separator for this because
     # compare-locales doesn"t work any other way
@@ -142,10 +141,11 @@ if __name__ == "__main__":
     mercurial(options.buildbotConfigs, "buildbot-configs")
     update("buildbot-configs", revision="default")
     branchConfig = validate(options, args)
+    platformConfig = branchConfig["platforms"][options.platform]
+    mobileDirName = platformConfig.get('mobile_dir', 'mobile')
 
     if options.chunks:
-        platformConfig = branchConfig["platforms"][options.platform]
-        locales = getNightlyLocalesForChunk("mobile",
+        locales = getNightlyLocalesForChunk(mobileDirName,
             options.branch, options.platform,
             options.chunks, options.thisChunk)
     else:
@@ -178,4 +178,4 @@ if __name__ == "__main__":
         branchConfig["stage_server"], branchConfig["stage_username"],
         stageSshKey,
         make_hg_url(hg, branchConfig["compare_locales_repo_path"]), merge,
-        options.platform, stage_platform)
+        options.platform, stage_platform, mobileDirName)
