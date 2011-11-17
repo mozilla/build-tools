@@ -6,24 +6,28 @@ echo "setting up tegra directories"
 
 for TNUM in ${tegras} ; do
   TEGRA=tegra-$TNUM
-  echo processing $TEGRA
-  if [ ! -d /builds/$TEGRA ]; then
-    echo creating dir for $TEGRA
-    mkdir /builds/$TEGRA
-  fi
-  cd /builds/$TEGRA
-  if [ ! -f /builds/$TEGRA/clientproxy.py ]; then
-    echo symlinking clientproxy
-    ln -s /builds/tools/sut_tools/clientproxy.py .
-  fi
-  if [ ! -f /builds/$TEGRA/buildbot.tac ]; then
-    echo creating buildbot.tac
-    sed "s/tegra-###/${TEGRA}/" /builds/buildbot.tac.tegras > /builds/$TEGRA/buildbot.tac
+  if [ -d /builds/offline-$TNUM ]; then
+    echo "Skipping offline $TEGRA"
+  else
+    echo processing $TEGRA
+    if [ ! -d /builds/$TEGRA ]; then
+      echo creating dir for $TEGRA
+      mkdir /builds/$TEGRA
+    fi
+    cd /builds/$TEGRA
+    if [ ! -f /builds/$TEGRA/clientproxy.py ]; then
+      echo symlinking clientproxy
+      ln -s /builds/tools/sut_tools/clientproxy.py .
+    fi
+    if [ ! -f /builds/$TEGRA/buildbot.tac ]; then
+      echo creating buildbot.tac
+      sed "s/tegra-###/${TEGRA}/" /builds/buildbot.tac.tegras > /builds/$TEGRA/buildbot.tac
 
-    mv /builds/$TEGRA/buildbot.tac /builds/$TEGRA/buildbot.tac.sed
-    sed "s/bm-foopy.build.mozilla.org/test-master01.build.mozilla.org/" /builds/$TEGRA/buildbot.tac.sed > /builds/$TEGRA/buildbot.tac
+      mv /builds/$TEGRA/buildbot.tac /builds/$TEGRA/buildbot.tac.sed
+      sed "s/bm-foopy.build.mozilla.org/test-master01.build.mozilla.org/" /builds/$TEGRA/buildbot.tac.sed > /builds/$TEGRA/buildbot.tac
 
-    rm -f /builds/$TEGRA/buildbot.tac.sed
+      rm -f /builds/$TEGRA/buildbot.tac.sed
+    fi
   fi
 done
 
