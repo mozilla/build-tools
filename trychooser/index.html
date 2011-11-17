@@ -15,15 +15,15 @@
     <p>If you'd prefer building your syntax at the command line a mercurial extension, <a href="https://github.com/pbiggar/trychooser">trychooser</a>, is available to you.</p>
     <strong>TryChooser Syntax:</strong><br>
     <textarea class="result_value" cols="80"></textarea>
-    
+
     <h2>Need Everything?</h2>
     <label>
     <input type="checkbox" id="do_everything" name="do_everything" UNCHECKED>
     mozilla-central matching run</label><br>
     <em>(all platforms, all tests, all talos)</em>
-    
+
     <div id='try-options'>
-    
+
         <h2>Custom Options</h2>
         <div id="col1">
             <span class='option-radio' try-section='b'>
@@ -32,19 +32,20 @@
             <label><input type="radio" name="build_type" value="d">debug only</label>
             <label><input type="radio" name="build_type" value="o">opt only</label>
             </span>
-            
+
             <h4>Platforms</h4>
             <span class='option-group' try-section='p'>
             <label><input type="checkbox" class="group-selector all-selector" CHECKED>All</label>
             <label><input type="checkbox" class="group-selector none-selector">Clear All</label>
-            
+
             <ul>
             <li><label><input type="checkbox" name="platform" value="linux">linux</label></li>
             <li><label><input type="checkbox" name="platform" value="linuxqt">linuxqt</label></li>
             <li><label><input type="checkbox" name="platform" value="linux64">linux64</label></li>
             <li><label><input type="checkbox" name="platform" value="macosx64">macosx64</label></li>
             <li><label><input type="checkbox" name="platform" value="win32">win32</label></li>
-            <li><label><input type="checkbox" name="platform" value="linux-android">linux-android</label></li>
+            <li><label><input type="checkbox" name="platform" value="android">android</label></li>
+            <li><label><input type="checkbox" name="platform" value="android-xul">android-xul</label></li>
             <li><label><input type="checkbox" name="platform" value="linux-maemo5-gtk">linux-maemo5-gtk</label></li>
             <li><label><input type="checkbox" name="platform" value="linux-maemo5-qt">linux-maemo5-qt</label></li>
             <li><label><input type="checkbox" name="platform" value="linux-mobile">linux-mobile (desktop)</label></li>
@@ -52,7 +53,7 @@
             <li><label><input type="checkbox" name="platform" value="macosx-mobile">macosx-mobile (desktop)</label></li>
             <li><label><input type="checkbox" name="platform" value="macosx">macosx <span style="color: red">(check when you want 10.5 debug builds)</span></label></li>
             </ul>
-            
+
             <strong>Important note re: Mac builds</strong>: As per <a href="http://blog.mozilla.com/nthomas/2010/09/27/firefox-mac-universal-builds-have-changed/">Nick's blog post</a> mac universal builds have changed. For opt builds on Mac OSX 10.5 you must choose 'macosx64'
             </span>
             <span class='option-email'>
@@ -62,7 +63,7 @@
             <label><input type="radio" name="email" value="-e">All Email</label><br>
             <em>(default is email to only send on non-success)</em>
             </span>
-            
+
         </div> <!-- col1 div -->
         <div id="col2">
             <h4>Unit Test Suites</h4>
@@ -94,25 +95,27 @@
             <h4> Android-Only Unittest Suites</h4>
             <li><label><input type="checkbox" value="reftest-1">reftest-1</label></li>
             <li><label><input type="checkbox" value="reftest-2">reftest-2</label></li>
+            <li><label><input type="checkbox" value="reftest-3">reftest-3</label></li>
             <li><label><input type="checkbox" value="jsreftest-1">jsreftest-1</label></li>
             <li><label><input type="checkbox" value="jsreftest-2">jsreftest-2</label></li>
             <li><label><input type="checkbox" value="jsreftest-3">jsreftest-3</label></li>
             <li><label><input type="checkbox" value="crashtest-1">crashtest-1</label></li>
             <li><label><input type="checkbox" value="crashtest-2">crashtest-2</label></li>
+            <li><label><input type="checkbox" value="crashtest-3">crashtest-3</label></li>
             <li><label><input type="checkbox" value="browser-chrome">browser-chrome</label></li>
             <li><label><input type="checkbox" value="mochitest-6">mochitest-6</label></li>
             <li><label><input type="checkbox" value="mochitest-7">mochitest-7</label></li>
             <li><label><input type="checkbox" value="mochitest-8">mochitest-8</label></li>
             </ul>
             </span>
-    
+
             <h4>Experimental Features</h4>
             <p>Auto-comment to bug on completion (<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=434998#c20">example</a>)
             <em>Still a work in progress, comment in <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=430942">bug 430942</a> with issues</em>
             </p>
             <label>Bug Number: <input id="bugnumber" type="textbox" name="bugnumber" size=8></label>
             <label><input id="post_to_bugzilla" type="checkbox" name="post_to_bugzilla" UNCHECKED>Add to Syntax</label><br>
-    
+
         </div> <!-- col2 div -->
         <div id="col3">
             <h4>Talos Suites</h4>
@@ -146,7 +149,7 @@
             </ul>
             <strong>Want to match Talos suite names up to what they run?</strong>  Check <a href="http://hg.mozilla.org/build/buildbot-configs/file/tip/mozilla-tests/config.py#l34">the current configs</a><br>
             (contents may shift over time, <br/>
-            you want SUITES = { ... }) 
+            you want SUITES = { ... })
             </span>
         </div> <!-- col3 div -->
         <div id="results">
