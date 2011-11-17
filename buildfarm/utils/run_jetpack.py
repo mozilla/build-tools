@@ -4,7 +4,7 @@
 Script to pull down the latest jetpack sdk tarball, unpack it, and run its tests against the 
 executable of whatever valid platform is passed.
 """
-import os, sys, urllib, shutil, re
+import os, sys, urllib, shutil, re, traceback
 import logging, subprocess
 from datetime import datetime, timedelta
 from optparse import OptionParser
@@ -99,7 +99,6 @@ if __name__ == '__main__':
             if ".txt" in options.sdk_location:
                 f = open(options.sdk_location, 'r')
                 sdk_url = f.readline()
-                print "SDK_URL: %s" % sdk_url
                 f.close()
             else:
                 sdk_url = options.sdk_location
@@ -200,7 +199,11 @@ if __name__ == '__main__':
 
     # Download/untar sdk tarball as SDK_TARBALL
     print "SDK_URL: %s" % sdk_url
-    urllib.urlretrieve(sdk_url, SDK_TARBALL)
+    try:
+        urllib.urlretrieve(sdk_url, SDK_TARBALL)
+    except:
+        traceback.print_exc(file=sys.stdout)
+        sys.exit(1)
     os.system('tar -xvf %s %s' % (SDK_TARBALL, untar_args))
 
     # Unpack/mount/unzip the executables in addonsdk checkin triggered runs
