@@ -3,6 +3,9 @@ import os
 from twisted.application import service
 from buildslave.bot import BuildSlave
 
+import twisted.spread.pb
+twisted.spread.pb.MAX_BROKER_REFS = 2048
+
 basedir = r'/builds/tegra-###'
 rotateLength = 1000000
 maxRotatedFiles = None
