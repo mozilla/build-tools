@@ -843,5 +843,35 @@
         "foopy": "foopy17", 
         "pdu": "pdu6.df202-1.build.mtv1.mozilla.com", 
         "pduid": ".AB7"
+    },
+    "tegra-179": {
+        "foopy": "foopy17", 
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com", 
+        "pduid": ".AA2"
+    },
+    "tegra-181": {
+        "foopy": "foopy17", 
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com", 
+        "pduid": ".AA8"
+    },
+    "tegra-182": {
+        "foopy": "foopy17", 
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com", 
+        "pduid": ".AA10"
+    },
+    "tegra-183": {
+        "foopy": "foopy17", 
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com", 
+        "pduid": ".AB15"
+    },
+    "tegra-204": {
+        "foopy": "foopy17", 
+        "pdu": "pdu5.df202-1.build.mtv1.mozilla.com", 
+        "pduid": ".AA5"
+    },
+    "tegra-205": {
+        "foopy": "foopy17", 
+        "pdu": "pdu6.df202-1.build.mtv1.mozilla.com", 
+        "pduid": ".AA5"
     }
 }
