@@ -14,7 +14,8 @@ if [ ! -d /builds/talos-data ]; then
 
   hg clone http://hg.mozilla.org/users/tglek_mozilla.com/fennecmark bench@taras.glek
   hg clone http://hg.mozilla.org/build/pageloader pageloader@mozilla.org
-  hg clone http://hg.mozilla.org/build/talos talos
+  hg clone http://hg.mozilla.org/build/talos talos-repo
+  ln -s /builds/talos-data/talos-repo/talos .
 fi
 if [ ! -d /builds/tools ]; then
   cd /builds
