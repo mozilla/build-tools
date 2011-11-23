@@ -1,3 +1,18 @@
+#### Getting Started ####
+
+# in a virtualenv
+easy_install Flask
+easy_install sqlalchemy
+easy_install MySQL-python
+
+# edit config.py
+# replace DATABASE_URI, and put a nice long UUID in SECRET_KEY
+
+cd webapp/
+python graphserver.py (app should now be live on port 5000)
+
+#################################################################################################
+
 For bug https://bugzilla.mozilla.org/show_bug.cgi?id=505803
 
 A webapp for adding/deleting entries from our graphserver databases (staging, production)
