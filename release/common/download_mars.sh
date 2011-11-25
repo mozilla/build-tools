@@ -8,11 +8,26 @@ download_mars () {
     only="$2"
     test_only="$3"
 
-    echo "Using  $update_url"
-    $retry wget --no-check-certificate -S -O update.xml $update_url
+    max_tries=5
+    try=1
+    # retrying until we get offered an update
+    while [ "$try" -le "$max_tries" ]; do
+        echo "Using  $update_url"
+        # retrying until AUS gives us any response at all
+        $retry wget --no-check-certificate -S -O update.xml $update_url
 
-    echo "Got this response:"
-    cat update.xml
+        echo "Got this response:"
+        cat update.xml
+        # If the first line after <updates> is </updates> then we have an
+        # empty snippet. Otherwise we're done
+        if [ "$(grep -A1 '<updates>' update.xml | tail -1)" != "</updates>" ]; then
+            break;
+        fi
+        echo "Empty response, sleeping"
+        sleep 5
+        try=$(($try+1))
+    done
+
     echo; echo;  # padding
 
     mkdir -p update/
