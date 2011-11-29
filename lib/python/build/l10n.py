@@ -49,7 +49,14 @@ def l10nRepackPrep(sourceRepoName, objdir, mozconfigPath,
     run_cmd(["make", "-f", "client.mk", "configure"], cwd=sourceRepoName,
             env=env)
     for dir in makeDirs:
-        run_cmd(["make"], cwd=path.join(sourceRepoName, objdir, dir), env=env)
+        if dir == 'nsprpub':
+            run_cmd(["make", "tier_nspr"], 
+                    cwd=path.join(sourceRepoName, objdir), 
+                    env=env)
+        else:
+            run_cmd(["make"], 
+                    cwd=path.join(sourceRepoName, objdir, dir),
+                    env=env)
 
 def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
                  l10nIni, compareLocalesRepo, env, merge=True):
