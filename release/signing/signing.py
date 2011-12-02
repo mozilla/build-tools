@@ -1,11 +1,9 @@
 import tempfile, os, hashlib, shutil, bz2, re, sys, time, urllib2, httplib
 import fnmatch
 import logging
-import socket, ssl
+import socket
 import shlex
 from subprocess import PIPE, Popen, check_call, STDOUT, call
-
-from poster.encode import multipart_encode
 
 log = logging.getLogger(__name__)
 
@@ -579,6 +577,8 @@ def buildValidatingOpener(ca_certs):
         from httplib import HTTPSConnection
         from urllib2 import HTTPSHandler
 
+    import ssl
+
     class VerifiedHTTPSConnection(HTTPSConnection):
         def connect(self):
             # overrides the version in httplib so that we do
@@ -620,6 +620,7 @@ def uploadfile(baseurl, filename, format_, token, nonce):
     `sesson_key` and `nonce` are string values that get passed as POST
     parameters.
     """
+    from poster.encode import multipart_encode
     filehash = sha1sum(filename)
 
     try:
