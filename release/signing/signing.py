@@ -1,8 +1,13 @@
-import tempfile, os, hashlib, shutil, bz2, re, sys
+import tempfile, os, hashlib, shutil, bz2, re, sys, time, urllib2, httplib
+import fnmatch
 import logging
-from subprocess import *
+import socket, ssl
+import shlex
+from subprocess import PIPE, Popen, check_call, STDOUT, call
 
-log = logging.getLogger()
+from poster.encode import multipart_encode
+
+log = logging.getLogger(__name__)
 
 SEVENZIP = os.environ.get('SEVENZIP', '7z')
 MAR = os.environ.get('MAR', 'mar')
@@ -155,7 +160,7 @@ def copyfile(src, dst, copymode=True):
 def sha1sum(f):
     """Return the SHA-1 hash of the contents of file `f`, in hex format"""
     h = hashlib.sha1()
-    fp = open(f)
+    fp = open(f, 'rb')
     while True:
         block = fp.read(512*1024)
         if not block:
@@ -257,7 +262,7 @@ def bunzip2(filename):
     tmpfile = "%s.tmp" % filename
     os.rename(filename, tmpfile)
     b = bz2.BZ2File(tmpfile)
-    f = open(filename, "w")
+    f = open(filename, "wb")
     while True:
         block = b.read(512*1024)
         if not block:
@@ -275,7 +280,7 @@ def bzip2(filename):
     tmpfile = "%s.tmp" % filename
     os.rename(filename, tmpfile)
     b = bz2.BZ2File(filename, "w")
-    f = open(tmpfile)
+    f = open(tmpfile, 'rb')
     while True:
         block = f.read(512*1024)
         if not block:
@@ -335,10 +340,11 @@ def shouldSign(filename):
     _dont_sign = [
             'D3DCompiler_42.dll', 'd3dx9_42.dll',
             'D3DCompiler_43.dll', 'd3dx9_43.dll',
+            'msvc*.dll',
             ]
     ext = os.path.splitext(filename)[1]
     b = os.path.basename(filename)
-    if ext in ('.dll', '.exe') and b not in _dont_sign:
+    if ext in ('.dll', '.exe') and not any(fnmatch.fnmatch(b, p) for p in _dont_sign):
         return True
     return False
 
@@ -367,3 +373,349 @@ def checkTools():
         call([SEVENZIP, '-h'], stdout=null)
     except OSError:
         raise OSError("7z must be in your $PATH, or set via $SEVENZIP")
+
+def signfile(filename, keydir, fake=False, passphrase=None):
+    """Sign the given file with keys in keydir.
+
+    If passphrase is set, it will be sent as stdin to the process.
+
+    If fake is True, then don't actually sign anything, just sleep for a
+    second to simulate signing time."""
+    if fake:
+        time.sleep(1)
+        return
+    basename = os.path.basename(filename)
+    dirname = os.path.dirname(filename)
+    stdout = tempfile.TemporaryFile()
+    command = ['signcode',
+        '-spc', '%s/MozAuthenticode.spc' % keydir,
+        '-v', '%s/MozAuthenticode.pvk' % keydir,
+        '-t', 'http://timestamp.verisign.com/scripts/timestamp.dll',
+        '-i', 'http://www.mozilla.com',
+        '-a', 'sha1',
+        # Try 5 times, and wait 60 seconds between tries
+        '-tr', '5',
+        '-tw', '60',
+        basename]
+    try:
+        proc = Popen(command, cwd=dirname, stdout=stdout, stderr=STDOUT, stdin=PIPE)
+        if passphrase:
+            proc.stdin.write(passphrase)
+        proc.stdin.close()
+        if proc.wait() != 0:
+            raise ValueError("signcode didn't return with 0")
+        stdout.seek(0)
+        data = stdout.read()
+        # Make sure that the command output "Succeeded".  Sometimes signcode
+        # returns with 0, but doesn't output "Succeeded", which in the past has
+        # meant that the file has been signed, but is missing a timestmap.
+        if data.strip() != "Succeeded" and "Success" not in data:
+            raise ValueError("signcode didn't report success")
+    except:
+        stdout.seek(0)
+        data = stdout.read()
+        log.exception(data)
+        raise
+
+    # Regenerate any .chk files that are now invalid
+    if getChkFile(filename):
+        stdout = tempfile.TemporaryFile()
+        try:
+            command = ['shlibsign', '-v', '-i', basename]
+            check_call(command, cwd=dirname, stdout=stdout, stderr=STDOUT)
+            stdout.seek(0)
+            data = stdout.read()
+            if "signature: 40 bytes" not in data:
+                raise ValueError("shlibsign didn't generate signature")
+        except:
+            stdout.seek(0)
+            data = stdout.read()
+            log.exception(data)
+            raise
+
+
+def getfile(baseurl, filehash, format_):
+    url = "%s/sign/%s/%s" % (baseurl, format_, filehash)
+    log.debug("%s: GET %s", filehash, url)
+    r = urllib2.Request(url)
+    return urllib2.urlopen(r)
+
+def remote_signfile(options, url, filename, fmt, token, dest=None):
+    filehash = sha1sum(filename)
+    if dest is None:
+        dest = filename
+
+    if fmt == 'gpg':
+        dest += '.asc'
+
+    log.info("%s: processing %s on %s", filehash, filename, url)
+
+    parent_dir = os.path.dirname(os.path.abspath(dest))
+    if not os.path.exists(parent_dir):
+        os.makedirs(parent_dir)
+
+    errors = 0
+    pendings = 0
+    max_errors = 20
+    max_pending_tries = 300
+    while True:
+        if pendings >= max_pending_tries:
+            log.error("%s: giving up after %i tries", filehash, pendings)
+            return False
+        if errors >= max_errors:
+            log.error("%s: giving up after %i tries", filehash, errors)
+            return False
+        # Try to get a previously signed copy of this file
+        try:
+            req = getfile(url, filehash, fmt)
+            headers = req.info()
+            responsehash = headers['X-SHA1-Digest']
+            tmpfile = dest + '.tmp'
+            fp = open(tmpfile, 'wb')
+            while True:
+                data = req.read(1024**2)
+                if not data:
+                    break
+                fp.write(data)
+            fp.close()
+            newhash = sha1sum(tmpfile)
+            if newhash != responsehash:
+                log.warn("%s: hash mismatch; trying to download again", filehash)
+                os.unlink(tmpfile)
+                errors += 1
+                continue
+            if os.path.exists(dest):
+                os.unlink(dest)
+            os.rename(tmpfile, dest)
+            log.info("%s: OK", filehash)
+            # See if we should re-sign NSS
+            if options.nsscmd and filehash != responsehash and os.path.exists(os.path.splitext(filename)[0] + ".chk"):
+                cmd = "%s %s" % (options.nsscmd, dest)
+                log.info("Regenerating .chk file")
+                log.debug("Running %s", cmd)
+                check_call(cmd, shell=True)
+            break
+        except urllib2.HTTPError, e:
+            try:
+                if 'X-Pending' in e.headers:
+                    log.debug("%s: pending; try again in a bit", filehash)
+                    time.sleep(1)
+                    pendings += 1
+                    continue
+            except:
+                raise
+
+            errors += 1
+
+            # That didn't work...so let's upload it
+            log.info("%s: uploading for signing", filehash)
+            req = None
+            try:
+                try:
+                    nonce = open(options.noncefile, 'rb').read()
+                except IOError:
+                    nonce = ""
+                req = uploadfile(url, filename, fmt, token, nonce=nonce)
+                nonce = req.info()['X-Nonce']
+                open(options.noncefile, 'wb').write(nonce)
+            except urllib2.HTTPError, e:
+                # python2.5 doesn't think 202 is ok...but really it is!
+                if 'X-Nonce' in e.headers:
+                    log.debug("updating nonce")
+                    nonce = e.headers['X-Nonce']
+                    open(options.noncefile, 'wb').write(nonce)
+                if e.code != 202:
+                    log.info("%s: error uploading file for signing: %s", filehash, e.msg)
+            except (urllib2.URLError, socket.error, httplib.BadStatusLine):
+                # Try again in a little while
+                log.info("%s: connection error; trying again soon", filehash)
+            time.sleep(1)
+            continue
+        except (urllib2.URLError, socket.error):
+            # Try again in a little while
+            log.info("%s: connection error; trying again soon", filehash)
+            time.sleep(1)
+            errors += 1
+            continue
+    return True
+
+def find_files(options, args):
+    retval = []
+    for fn in args:
+        if os.path.isdir(fn):
+            dirname = fn
+            for root, dirs, files in os.walk(dirname):
+                for f in files:
+                    fullpath = os.path.join(root, f)
+                    if not any(fnmatch.fnmatch(f, pat) for pat in options.includes):
+                        log.debug("Skipping %s; doesn't match any include pattern", f)
+                        continue
+                    if any(fnmatch.fnmatch(f, pat) for pat in options.excludes):
+                        log.debug("Skipping %s; matches an exclude pattern", f)
+                        continue
+                    retval.append(fullpath)
+        else:
+            retval.append(fn)
+    return retval
+
+def relpath(d1, d2):
+    """Returns d1 relative to d2"""
+    assert d1.startswith(d2)
+    return d1[len(d2):].lstrip('/')
+
+def buildValidatingOpener(ca_certs):
+    """Build and register an HTTPS connection handler that validates that we're
+    talking to a host matching ca_certs (a file containing a list of
+    certificates we accept.
+
+    Subsequent calls to HTTPS urls will validate that we're talking to an acceptable server.
+    """
+    try:
+        from poster.streaminghttp import StreamingHTTPSHandler as HTTPSHandler, \
+                StreamingHTTPSConnection as HTTPSConnection
+        assert HTTPSHandler # pyflakes
+        assert HTTPSConnection # pyflakes
+    except ImportError:
+        from httplib import HTTPSConnection
+        from urllib2 import HTTPSHandler
+
+    class VerifiedHTTPSConnection(HTTPSConnection):
+        def connect(self):
+            # overrides the version in httplib so that we do
+            #    certificate verification
+            #sock = socket.create_connection((self.host, self.port),
+                                            #self.timeout)
+            #if self._tunnel_host:
+                #self.sock = sock
+                #self._tunnel()
+
+            sock = socket.socket()
+            sock.connect((self.host, self.port))
+
+            # wrap the socket using verification with the root
+            #    certs in trusted_root_certs
+            self.sock = ssl.wrap_socket(sock,
+                                        self.key_file,
+                                        self.cert_file,
+                                        cert_reqs=ssl.CERT_REQUIRED,
+                                        ca_certs=ca_certs,
+                                        )
+
+    # wraps https connections with ssl certificate verification
+    class VerifiedHTTPSHandler(HTTPSHandler):
+        def __init__(self, connection_class=VerifiedHTTPSConnection):
+            self.specialized_conn_class = connection_class
+            HTTPSHandler.__init__(self)
+
+        def https_open(self, req):
+            return self.do_open(self.specialized_conn_class, req)
+
+    https_handler = VerifiedHTTPSHandler()
+    opener = urllib2.build_opener(https_handler)
+    urllib2.install_opener(opener)
+
+def uploadfile(baseurl, filename, format_, token, nonce):
+    """Uploads file (given by `filename`) to server at `baseurl`.
+
+    `sesson_key` and `nonce` are string values that get passed as POST
+    parameters.
+    """
+    filehash = sha1sum(filename)
+
+    try:
+        fp = open(filename, 'rb')
+
+        params = {
+                'filedata': fp,
+                'sha1': filehash,
+                'filename': os.path.basename(filename),
+                'token': token,
+                'nonce': nonce,
+                }
+
+        datagen, headers = multipart_encode(params)
+        r = urllib2.Request("%s/sign/%s" % (baseurl, format_), datagen, headers)
+        return urllib2.urlopen(r)
+    finally:
+        fp.close()
+
+def gpg_signfile(filename, sigfile, gpgdir, fake=False, passphrase=None):
+    """Sign the given file with the default key from gpgdir. The signature is
+    written to sigfile.
+
+    If fake is True, generate a fake signature and sleep for a bit.
+
+    If passphrase is set, it will be passed to gpg on stdin
+    """
+    if fake:
+        open(sigfile, "wb").write("""
+-----BEGIN FAKE SIGNATURE-----
+Version: 1.2.3.4
+
+I am ur signature!
+-----END FAKE SIGNATURE-----""")
+        time.sleep(1)
+        return
+
+    command = ['gpg', '--homedir', gpgdir, '-bsa', '-o', sigfile, '-q', '--batch']
+    if passphrase:
+        command.extend(['--passphrase-fd', '0'])
+    command.append(filename)
+    log.info('Running %s', command)
+    stdout = tempfile.TemporaryFile()
+    try:
+        proc = Popen(command, stdout=stdout, stderr=STDOUT, stdin=PIPE)
+        if passphrase:
+            proc.stdin.write(passphrase)
+        proc.stdin.close()
+        if proc.wait() != 0:
+            raise ValueError("gpg didn't return 0")
+        stdout.seek(0)
+        data = stdout.read()
+    except:
+        stdout.seek(0)
+        data = stdout.read()
+        log.exception(data)
+        raise
+
+def safe_unlink(filename):
+    """unlink filename ignorning errors if the file doesn't exist"""
+    try:
+        if os.path.isdir(filename):
+            for root, dirs, files in os.walk(filename, topdown=True):
+                for f in files:
+                    fp = os.path.join(root, f)
+                    safe_unlink(fp)
+                os.rmdir(root)
+        else:
+            os.unlink(filename)
+    except OSError, e:
+        # Ignore "No such file or directory"
+        if e.errno == 2:
+            return
+        else:
+            raise
+
+def mar_signfile(inputfile, outputfile, mar_cmd, fake=False, passphrase=None):
+    # Now sign it
+    if isinstance(mar_cmd, basestring):
+        mar_cmd = shlex.split(mar_cmd)
+    else:
+        mar_cmd = mar_cmd[:]
+    command = mar_cmd + [inputfile, outputfile]
+    log.info('Running %s', command)
+    stdout = tempfile.TemporaryFile()
+    try:
+        proc = Popen(command, stdout=stdout, stderr=STDOUT, stdin=PIPE)
+        if passphrase:
+            proc.stdin.write(passphrase)
+        proc.stdin.close()
+        if proc.wait() != 0:
+            raise ValueError("mar didn't return 0")
+        stdout.seek(0)
+        data = stdout.read()
+    except:
+        stdout.seek(0)
+        data = stdout.read()
+        log.exception(data)
+        raise

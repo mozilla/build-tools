@@ -2,7 +2,113 @@
 """%prog [options] -x|-t|-c marfile [files]
 
 Utility for managing mar files"""
-import struct, os, bz2
+import struct, os, bz2, hashlib, tempfile
+from subprocess import Popen, PIPE
+
+def rsa_sign(digest, keyfile):
+    proc = Popen(['openssl', 'pkeyutl', '-sign', '-inkey', keyfile], stdin=PIPE, stdout=PIPE)
+    proc.stdin.write(digest)
+    proc.stdin.close()
+    sig = proc.stdout.read()
+    return sig
+
+def rsa_verify(digest, signature, keyfile):
+    tmp = tempfile.NamedTemporaryFile()
+    tmp.write(signature)
+    tmp.flush()
+    proc = Popen(['openssl', 'pkeyutl', '-pubin', '-verify', '-sigfile', tmp.name, '-inkey', keyfile], stdin=PIPE, stdout=PIPE)
+    proc.stdin.write(digest)
+    proc.stdin.close()
+    data = proc.stdout.read()
+    return "Signature Verified Successfully" in data
+
+def packint(i):
+    return struct.pack(">L", i)
+
+def unpackint(s):
+    return struct.unpack(">L", s)[0]
+
+def generate_signature(fp, updatefunc):
+    fp.seek(0)
+    # Magic
+    updatefunc(fp.read(4))
+    # index_offset
+    updatefunc(fp.read(4))
+    # file size
+    updatefunc(fp.read(8))
+    # number of signatures
+    num_sigs = fp.read(4)
+    updatefunc(num_sigs)
+    num_sigs = unpackint(num_sigs)
+    for i in range(num_sigs):
+        # signature algo
+        updatefunc(fp.read(4))
+
+        # signature size
+        sigsize = fp.read(4)
+        updatefunc(sigsize)
+        sigsize = unpackint(sigsize)
+
+        # Read this, but don't update the signature with it
+        fp.read(sigsize)
+
+    # Read the rest of the file
+    while True:
+        block = fp.read(512*1024)
+        if not block:
+            break
+        updatefunc(block)
+
+class MarSignature:
+    """Represents a signature"""
+    size = None
+    sigsize = None
+    algo_id = None
+    signature = None
+    _offset = None # where in the file this signature is located
+    keyfile = None # what key to use
+
+    @classmethod
+    def from_fileobj(cls, fp):
+        _offset = fp.tell()
+        algo_id = unpackint(fp.read(4))
+        self = cls(algo_id)
+        self._offset = _offset
+        sigsize = unpackint(fp.read(4))
+        assert sigsize == self.sigsize
+        self.signature = fp.read(self.sigsize)
+        return self
+
+    def __init__(self, algo_id, keyfile=None):
+        self.algo_id = algo_id
+        self.keyfile = keyfile
+        if self.algo_id == 1:
+            self.sigsize = 256
+            self.size = self.sigsize + 4 + 4
+            self._hsh = hashlib.new('sha1')
+        else:
+            raise ValueError("Unsupported signature algorithm: %s" % algo_id)
+
+    def update(self, data):
+        self._hsh.update(data)
+
+    def verify_signature(self):
+        if self.algo_id == 1:
+            print "digest is", self._hsh.hexdigest()
+            assert self.keyfile
+            return rsa_verify(self._hsh.digest(), self.signature, self.keyfile)
+
+    def write_signature(self, fp):
+        assert self.keyfile
+        print "digest is", self._hsh.hexdigest()
+        self.signature = rsa_sign(self._hsh.digest(), self.keyfile)
+        assert len(self.signature) == self.sigsize
+        fp.seek(self._offset)
+        fp.write("%s%s%s" % (
+            packint(self.algo_id),
+            packint(self.sigsize),
+            self.signature))
+        print "wrote signature %s" % self.algo_id
 
 class MarInfo:
     """Represents information about a member of a MAR file. The following
@@ -61,13 +167,16 @@ class MarFile:
     """
 
     _longint_fmt = ">L"
-    def __init__(self, name, mode="r"):
+    def __init__(self, name, mode="r", signature_versions=[]):
         if mode not in "rw":
             raise ValueError("Mode must be either 'r' or 'w'")
 
         self.name = name
         self.mode = mode
-        self.fileobj = open(name, mode + 'b')
+        if mode == 'w':
+            self.fileobj = open(name, 'wb')
+        else:
+            self.fileobj = open(name, 'rb')
 
         self.members = []
 
@@ -79,12 +188,39 @@ class MarFile:
         # Flag to indicate that we need to re-write the index
         self.rewrite_index = False
 
+        # Signatures, if any
+        self.signatures = []
+        self.signature_versions = signature_versions
+
         if mode == "r":
             # Read the file's index
             self._read_index()
         elif mode == "w":
+            # Create placeholder signatures
+            if signature_versions:
+                # Space for num_signatures and file size
+                self.index_offset += 4 + 8
+
             # Write the magic and placeholder for the index
-            self.fileobj.write("MAR1" + struct.pack(self._longint_fmt, self.index_offset))
+            self.fileobj.write("MAR1" + packint(self.index_offset))
+
+            # Write placeholder for file size
+            self.fileobj.write(struct.pack(">Q", 0))
+
+            # Write num_signatures
+            self.fileobj.write(packint(len(signature_versions)))
+
+            for algo_id, keyfile in signature_versions:
+                sig = MarSignature(algo_id, keyfile)
+                sig._offset = self.index_offset
+                self.index_offset += sig.size
+                self.signatures.append(sig)
+                # algoid
+                self.fileobj.write(packint(algo_id))
+                # numbytes
+                self.fileobj.write(packint(sig.sigsize))
+                # space for signature
+                self.fileobj.write("\0" * sig.sigsize)
 
     def _read_index(self):
         fp = self.fileobj
@@ -98,7 +234,7 @@ class MarFile:
 
         # Read the index_size, we don't use it though
         # We just read all the info sections from here to the end of the file
-        struct.unpack(self._longint_fmt, fp.read(4))[0]
+        fp.read(4)
 
         self.members = []
 
@@ -110,6 +246,40 @@ class MarFile:
 
         # Sort them by where they are in the file
         self.members.sort(key=lambda info:info._offset)
+
+        # Read any signatures
+        first_offset = self.members[0]._offset
+        signature_offset = 16
+        if signature_offset < first_offset:
+            fp.seek(signature_offset)
+            num_sigs = unpackint(fp.read(4))
+            for i in range(num_sigs):
+                sig = MarSignature.from_fileobj(fp)
+                for algo_id, keyfile in self.signature_versions:
+                    if algo_id == sig.algo_id:
+                        sig.keyfile = keyfile
+                        break
+                else:
+                    print "no key specified to validate %i signature" % sig.algo_id
+                self.signatures.append(sig)
+
+    def verify_signatures(self):
+        if not self.signatures:
+            return
+
+        fp = self.fileobj
+
+        generate_signature(fp, self._update_signatures)
+
+        for sig in self.signatures:
+            if not sig.verify_signature():
+                raise IOError("Verification failed")
+            else:
+                print "Verification OK (%s)" % sig.algo_id
+
+    def _update_signatures(self, data):
+        for sig in self.signatures:
+            sig.update(data)
 
     def add(self, path, name=None, fileobj=None, flags=None):
         """Adds `path` to this MAR file.
@@ -176,6 +346,22 @@ class MarFile:
         Furthur modifications to the file are not allowed."""
         if self.mode == "w" and self.rewrite_index:
             self._write_index()
+
+        # Update file size
+        self.fileobj.seek(0, 2)
+        totalsize = self.fileobj.tell()
+        self.fileobj.seek(8)
+        #print "File size is", totalsize, repr(struct.pack(">Q", totalsize))
+        self.fileobj.write(struct.pack(">Q", totalsize))
+
+        if self.mode == "w" and self.signatures:
+            self.fileobj.flush()
+            fileobj = open(self.name, 'rb')
+            generate_signature(fileobj, self._update_signatures)
+            for sig in self.signatures:
+                #print sig._offset
+                sig.write_signature(self.fileobj)
+
         self.fileobj.close()
         self.fileobj = None
 
@@ -191,13 +377,16 @@ class MarFile:
         for m in self.members:
             member_bytes = m.to_bytes()
             index_size += len(member_bytes)
+
+        for m in self.members:
+            member_bytes = m.to_bytes()
             self.fileobj.write(member_bytes)
         self.fileobj.seek(self.index_offset)
-        self.fileobj.write(struct.pack(self._longint_fmt, index_size))
+        self.fileobj.write(packint(index_size))
 
         # Update the offset to the index
         self.fileobj.seek(4)
-        self.fileobj.write(struct.pack(self._longint_fmt, self.index_offset))
+        self.fileobj.write(packint(self.index_offset))
 
     def extractall(self, path=".", members=None):
         """Extracts members into `path`. If members is None (the default), then
@@ -300,6 +489,8 @@ if __name__ == "__main__":
         action=None,
         bz2=False,
         chdir=None,
+        keyfile=None,
+        verify=False,
         )
     parser.add_option("-x", "--extract", action="store_const", const="extract",
             dest="action", help="extract MAR")
@@ -309,6 +500,10 @@ if __name__ == "__main__":
             dest="action", help="create MAR")
     parser.add_option("-j", "--bzip2", action="store_true", dest="bz2",
             help="compress/decompress members with BZ2")
+    parser.add_option("-k", "--keyfile", dest="keyfile",
+            help="sign/verify with given key")
+    parser.add_option("-v", "--verify", dest="verify", action="store_true",
+            help="verify the marfile")
     parser.add_option("-C", "--chdir", dest="chdir",
             help="chdir to this directory before creating or extracing; location of marfile isn't affected by this option.")
 
@@ -328,6 +523,10 @@ if __name__ == "__main__":
     else:
         mar_class = MarFile
 
+    signatures = []
+    if options.keyfile:
+        signatures.append( (1, options.keyfile) )
+
     # Move into the directory requested
     if options.chdir:
         os.chdir(options.chdir)
@@ -337,7 +536,9 @@ if __name__ == "__main__":
         m.extractall()
 
     elif options.action == "list":
-        m = mar_class(marfile)
+        m = mar_class(marfile, signature_versions=signatures)
+        if options.verify:
+            m.verify_signatures()
         print "%-7s %-7s %-7s" % ("SIZE", "MODE", "NAME")
         for m in m.members:
             print "%-7i %04o    %s" % (m.size, m.flags, m.name)
@@ -345,7 +546,7 @@ if __name__ == "__main__":
     elif options.action == "create":
         if not files:
             parser.error("Must specify at least one file to add to marfile")
-        m = mar_class(marfile, "w")
+        m = mar_class(marfile, "w", signature_versions=signatures)
         for f in files:
             m.add(f)
         m.close()

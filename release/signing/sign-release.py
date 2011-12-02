@@ -1,63 +1,11 @@
 #!/usr/bin/python
-import tempfile, os, shutil, time, bz2, sys, re
+import tempfile, os, shutil, time, sys
 import logging
-from subprocess import *
-
-from signing import *
+from signing import copyfile, convertPath, unpackfile, findfiles, shouldSign, \
+	sha1sum, getChkFile, bunzip2, bzip2, packfile, signfile, sortFiles, \
+	filterFiles, fileInfo, checkTools
 
 log = logging.getLogger()
-
-def signfile(filename, keydir, fake=False):
-    """Sign the given file with keys in keydir.
-
-    If fake is True, then don't actually sign anything, just sleep for a
-    second to simulate signing time."""
-    if fake:
-        time.sleep(1)
-        return
-    basename = os.path.basename(filename)
-    dirname = os.path.dirname(filename)
-    stdout = tempfile.TemporaryFile()
-    command = ['signcode',
-        '-spc', '%s/MozAuthenticode.spc' % keydir,
-        '-v', '%s/MozAuthenticode.pvk' % keydir,
-        '-t', 'http://timestamp.verisign.com/scripts/timestamp.dll',
-        '-i', 'http://www.mozilla.com',
-        '-a', 'sha1',
-        # Try 5 times, and wait 60 seconds between tries
-        '-tr', '5',
-        '-tw', '60',
-        basename]
-    try:
-        check_call(command, cwd=dirname, stdout=stdout, stderr=STDOUT)
-        stdout.seek(0)
-        data = stdout.read()
-        # Make sure that the command output "Succeeded".  Sometimes signcode
-        # returns with 0, but doesn't output "Succeeded", which in the past has
-        # meant that the file has been signed, but is missing a timestmap.
-        if data.strip() != "Succeeded":
-            raise ValueError("signcode didn't report success")
-    except:
-        stdout.seek(0)
-        data = stdout.read()
-        log.exception(data)
-        raise
-
-    # Regenerate any .chk files that are now invalid
-    if getChkFile(filename):
-        stdout = tempfile.TemporaryFile()
-        try:
-            command = ['shlibsign', '-v', '-i', basename]
-            check_call(command, cwd=dirname, stdout=stdout, stderr=STDOUT)
-            stdout.seek(0)
-            data = stdout.read()
-            if "signature: 40 bytes" not in data:
-                raise ValueError("shlibsign didn't generate signature")
-        except:
-            stdout.seek(0)
-            data = stdout.read()
-            log.exception(data)
-            raise
 
 def _signLocale(obj, dstdir, files, remember=None):
     # Helper function to sign one individual locale, and keep track of some

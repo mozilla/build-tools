@@ -1,7 +1,7 @@
 import signal, os, time
 
 def kill(pid):
-    """Kill process pid will more agressive signals."""
+    """Kill process pid with progressively more agressive signals."""
     siglist = [signal.SIGINT, signal.SIGTERM]
     while True:
         if siglist:
