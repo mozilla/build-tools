@@ -205,8 +205,8 @@ def main():
     parser.set_defaults(
             verbosity=0,
             logfile=None,
-            max_retries=1,
-            retry_time=0,
+            max_retries=5,
+            retry_time=60,
             )
     parser.add_option("--passwords", dest="passwords")
     parser.add_option("-q", "--queuedir", dest="queuedir")
