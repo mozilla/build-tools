@@ -2,7 +2,9 @@
 """
 signing-server [options] server.ini
 """
-import os
+import os, site
+# Modify our search path to find our modules
+site.addsitedir(os.path.join(os.path.dirname(__file__), "../../lib/python"))
 import hashlib, hmac
 from subprocess import Popen, STDOUT, PIPE
 import re
@@ -12,19 +14,43 @@ import shlex
 import signal
 import time
 import binascii
+import multiprocessing
+import socket
 
 import logging
+import logging.handlers
 
-from signing import sha1sum, safe_unlink
+from signing import sha1sum as sync_sha1sum, safe_unlink
 
 # External dependencies
-import gevent
-import gevent.queue as queue
-from gevent.event import Event
+import daemon
 import webob
 from IPy import IP
 
+import gevent.queue as queue
+import gevent.backdoor
+from gevent.event import Event
+from gevent import pywsgi
+
 log = logging.getLogger(__name__)
+
+# We need to ignore SIGINT (KeyboardInterrupt) in the children so that the
+# parent exits properly.
+def init_worker():
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+_sha1sum_worker_pool = None
+def sha1sum(fn):
+    "Non-blocking sha1sum. Will calculate sha1sum of fn in a subprocess"
+    result = _sha1sum_worker_pool.apply_async(sync_sha1sum, args=(fn,))
+    # Most of the time we'll complete pretty fast, so don't need to sleep very
+    # long
+    sleep_time = 0.1
+    while not result.ready():
+        gevent.sleep(sleep_time)
+        # Increase the time we sleep next time, up to a maximum of 5 seconds
+        sleep_time = min(5, sleep_time*2)
+    return result.get()
 
 def sha1string(s):
     "Return the sha1 hash of the string s"
@@ -146,7 +172,9 @@ class Signer(object):
     `passphrases` is a dict of format => passphrase
     `concurrency` is how many workers to run
     """
-    def __init__(self, signcmd, inputdir, outputdir, concurrency, passphrases):
+    stopped = False
+    def __init__(self, app, signcmd, inputdir, outputdir, concurrency, passphrases):
+        self.app = app
         self.signcmd = signcmd
         self.concurrency = concurrency
         self.inputdir = inputdir
@@ -157,14 +185,15 @@ class Signer(object):
         self.workers = []
         self.queue = queue.Queue()
 
-        self.messages = queue.Queue()
-
     def signfile(self, filehash, filename, format_):
-        item = (filehash, filename, format_)
+        assert not self.stopped
+        e = Event()
+        item = (filehash, filename, format_, e)
         log.debug("Putting %s on the queue", item)
         self.queue.put(item)
         self._start_worker()
         log.debug("%i workers active", len(self.workers))
+        return e
 
     def _start_worker(self):
         if len(self.workers) < self.concurrency:
@@ -176,17 +205,9 @@ class Signer(object):
         log.debug("Done worker")
         self.workers.remove(t)
         # If there's still work to do, start another worker
-        if self.queue.qsize():
+        if self.queue.qsize() and not self.stopped:
             self._start_worker()
         log.debug("%i workers left", len(self.workers))
-
-    def _stop_pool(self):
-        # Kill off all our workers
-        for t in self.workers:
-            t.kill(block=True, timeout=1)
-
-        self.workers = []
-        self.queue = queue.Queue()
 
     def _worker(self):
         # Main worker process
@@ -196,6 +217,8 @@ class Signer(object):
         max_jobs = 10
         jobs = 0
         while True:
+            # Event to signal when we're done
+            e = None
             try:
                 jobs += 1
                 # Fall on our sword if we're too old
@@ -210,7 +233,7 @@ class Signer(object):
                     log.debug("no items, exiting")
                     break
 
-                filehash, filename, format_ = item
+                filehash, filename, format_, e = item
                 log.info("Signing %s (%s - %s)", filename, format_, filehash)
 
                 inputfile = os.path.join(self.inputdir, filehash)
@@ -231,7 +254,7 @@ class Signer(object):
                     log.warning("Signing failed %s (%s - %s)", filename, format_, filehash)
                     log.warning("Signing log: %s", logoutput)
                     safe_unlink(outputfile)
-                    self.messages.put( ('errors', item, 'signing script returned non-zero') )
+                    self.app.messages.put( ('errors', item, 'signing script returned non-zero') )
                     continue
 
                 # Copy our signed result into unsigned and signed so if
@@ -245,7 +268,7 @@ class Signer(object):
                 copied_output = os.path.join(self.outputdir, format_, outputhash)
                 if not os.path.exists(copied_output):
                     safe_copyfile(outputfile, copied_output)
-                self.messages.put( ('done', item, outputhash) )
+                self.app.messages.put( ('done', item, outputhash) )
             except:
                 # Inconceivable! Something went wrong!
                 # Remove our output, it might be corrupted
@@ -255,18 +278,16 @@ class Signer(object):
                 else:
                     logoutput = None
                 log.exception("Exception signing file %s; output: %s ", item, logoutput)
-                self.messages.put( ('errors', item, 'worker hit an exception while signing') )
+                self.app.messages.put( ('errors', item, 'worker hit an exception while signing') )
+            finally:
+                if e:
+                    e.set()
         log.debug("Worker exiting")
 
 class SigningServer:
-    def __init__(self, config, formats, passphrases):
-        self.signer = Signer(
-                config.get('signing', 'signscript'),
-                config.get('paths', 'unsigned_dir'),
-                config.get('paths', 'signed_dir'),
-                config.getint('signing', 'concurrency'),
-                passphrases)
-
+    signer = None
+    def __init__(self, config, passphrases):
+        self.passphrases = passphrases
         ##
         # Stats
         ##
@@ -280,7 +301,6 @@ class SigningServer:
         # Mapping of file hashes to gevent Events
         self.pending = {}
 
-        self.token_secret = config.get('security', 'token_secret')
         # mapping of token keys to token data
         self.tokens = {}
 
@@ -288,6 +308,20 @@ class SigningServer:
         self.nonces = {}
 
         self.redis = None
+        self.redis_prefix = "signing"
+
+        self.load_config(config)
+
+        self.messages = queue.Queue()
+
+        # Start our message handling loop
+        gevent.spawn(self.process_messages)
+
+        # Start our cleanup loop
+        gevent.spawn(self.cleanup_loop)
+
+    def load_config(self, config):
+        self.token_secret = config.get('security', 'token_secret')
         if config.has_option('server', 'redis'):
             import redis
             host = config.get('server', 'redis')
@@ -299,8 +333,6 @@ class SigningServer:
             else:
                 self.redis = redis.Redis(host=host)
 
-        self.redis_prefix = "signing"
-
         self.signed_dir = config.get('paths', 'signed_dir')
         self.unsigned_dir = config.get('paths', 'unsigned_dir')
         self.allowed_ips = [IP(i) for i in \
@@ -310,19 +342,23 @@ class SigningServer:
         self.allowed_filenames = [re.compile(e) for e in \
                 config.get('security', 'allowed_filenames').split(',')]
         self.min_filesize = config.getint('security', 'min_filesize')
-        self.formats = formats
+        self.formats = [f.strip() for f in config.get('signing', 'formats').split(',')]
         self.max_token_age = config.getint('security', 'max_token_age')
+        self.max_file_age = config.getint('server', 'max_file_age')
+        self.token_auth = config.get('security', 'new_token_auth')
+        self.cleanup_interval = config.getint('server', 'cleanup_interval')
 
         for d in self.signed_dir, self.unsigned_dir:
             if not os.path.exists(d):
                 log.info("Creating %s directory", d)
                 os.makedirs(d)
 
-        self.max_file_age = config.getint('server', 'max_file_age')
-        self.token_auth = config.get('security', 'new_token_auth')
-        self.cleanup()
-        # Start our message handling loop
-        gevent.spawn(self.process_messages)
+        self.signer = Signer(self,
+                config.get('signing', 'signscript'),
+                config.get('paths', 'unsigned_dir'),
+                config.get('paths', 'signed_dir'),
+                config.getint('signing', 'concurrency'),
+                self.passphrases)
 
     def verify_nonce(self, token, nonce):
         if self.redis:
@@ -421,6 +457,17 @@ class SigningServer:
         log.debug("Tokens: %s", self.tokens)
         return token
 
+    def cleanup_loop(self):
+        try:
+            self.cleanup()
+        except:
+            log.exception("Error cleaning up")
+        finally:
+            gevent.spawn_later(
+                self.cleanup_interval,
+                self.cleanup_loop,
+                )
+
     def cleanup(self):
         log.info("Stats: %i hits; %i misses; %i uploads", self.hits, self.misses, self.uploads)
         log.debug("Pending: %s", self.pending)
@@ -463,23 +510,21 @@ class SigningServer:
 
     def submit_file(self, filehash, filename, format_):
         assert (filehash, format_) not in self.pending
-        self.pending[(filehash, format_)] = Event()
-        self.signer.signfile(filehash, filename, format_)
+        e = self.signer.signfile(filehash, filename, format_)
+        self.pending[(filehash, format_)] = e
 
     def process_messages(self):
         while True:
-            msg = self.signer.messages.get()
+            msg = self.messages.get()
             log.debug("Got message: %s", msg)
             try:
                 if msg[0] == 'errors':
                     item, txt = msg[1:]
-                    filehash, filename, format_ = item
-                    self.pending[filehash, format_].set()
+                    filehash, filename, format_, e = item
                     del self.pending[filehash, format_]
                 elif msg[0] == 'done':
                     item, outputhash = msg[1:]
-                    filehash, filename, format_ = item
-                    self.pending[filehash, format_].set()
+                    filehash, filename, format_, e = item
                     del self.pending[filehash, format_]
                     # Remember the filename for the output file too
                     self.save_filename(outputhash, filename)
@@ -746,52 +791,98 @@ class SigningServer:
             start_response("500 Internal Server Error", headers)
             return ""
 
-def run(config, formats, passphrases):
-    from gevent import pywsgi
-    import gevent
-    app = SigningServer(config, formats, passphrases)
+def load_config(filename):
+    config = RawConfigParser()
+    if config.read([filename]) != [filename]:
+        return None
+    return config
+
+def create_server(app, listener, config):
+    # Simple wrapper so pywsgi uses logging to log instead of writing to stderr
     class logger(object):
         def write(self, msg):
             log.info(msg)
 
     server = pywsgi.WSGIServer(
-            (config.get('server', 'listen'), config.getint('server', 'port')),
+            listener,
             app,
             certfile=config.get('security', 'public_ssl_cert'),
             keyfile=config.get('security', 'private_ssl_cert'),
             log=logger(),
             )
+    return server
 
-    cleanup_interval = config.getint('server', 'cleanup_interval')
-    def cleanuploop(app):
+def run(config_filename, passphrases):
+    log.info("Running with pid %i", os.getpid())
+
+    # Start our worker pool now, before we create our sockets for the web app
+    # otherwise the workers inherit the file descriptors for the http(s)
+    # socket and we have problems shutting down cleanly
+    global _sha1sum_worker_pool
+    if not _sha1sum_worker_pool:
+        _sha1sum_worker_pool = multiprocessing.Pool(None, init_worker)
+    app = None
+    listener = None
+    server = None
+    backdoor = None
+    handler = None
+    backdoor_state = {}
+    while True:
+        log.info("Loading configuration")
+        config = load_config(config_filename)
+        if not app:
+            app = SigningServer(config, passphrases)
+        else:
+            app.load_config(config)
+
+        listen_addr = (config.get('server', 'listen'), config.getint('server', 'port'))
+        if not listener or listen_addr != listener.getsockname():
+            if listener and server:
+                log.info("Listening address has changed, stopping old wsgi server")
+                log.debug("Old address: %s", listener.getsockname())
+                log.debug("New address: %s", listen_addr)
+                server.stop()
+            listener = gevent.socket.socket()
+            listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            listener.bind(listen_addr)
+            listener.listen(256)
+
+        server = create_server(app, listener, config)
+
+        backdoor_state['server'] = server
+        backdoor_state['app'] = app
+
+        if config.has_option('server', 'backdoor_port'):
+            backdoor_port = config.getint('server', 'backdoor_port')
+            if not backdoor or backdoor.server_port != backdoor_port:
+                if backdoor:
+                    log.info("Stopping old backdoor on port %i", backdoor.server_port)
+                    backdoor.stop()
+                log.info("Starting backdoor on port %i", backdoor_port)
+                backdoor = gevent.backdoor.BackdoorServer(
+                        ('127.0.0.1', backdoor_port),
+                        locals=backdoor_state)
+                gevent.spawn(backdoor.serve_forever)
+
+        # Handle SIGHUP
+        # Create an event to wait on
+        # Our SIGHUP handler will set the event, allowing us to continue
+        sighup_event = Event()
+        h = gevent.signal(signal.SIGHUP, lambda e: e.set(), sighup_event)
+        if handler:
+            # Cancel our old handler
+            handler.cancel()
+        handler = h
+        log.info("Serving on %s", repr(server))
         try:
-            app.cleanup()
-        except:
-            log.exception("Error cleaning up")
-        gevent.spawn_later(cleanup_interval, cleanuploop, app)
+            gevent.spawn(server.serve_forever)
+            # Wait for SIGHUP
+            sighup_event.wait()
+        except KeyboardInterrupt:
+            break
+    log.info("pid %i exiting normally", os.getpid())
 
-    gevent.spawn_later(cleanup_interval, cleanuploop, app)
-    server.serve_forever()
-
-if __name__ == '__main__':
-    from optparse import OptionParser
-    from ConfigParser import RawConfigParser
-    import getpass
-    import logging.handlers
-
-    parser = OptionParser(__doc__)
-    parser.set_defaults(
-            loglevel=logging.INFO,
-            logfile=None,
-            )
-    parser.add_option("-v", dest="loglevel", action="store_const",
-            const=logging.DEBUG, help="be verbose")
-    parser.add_option("-q", dest="loglevel", action="store_const",
-            const=logging.WARNING, help="be quiet")
-    parser.add_option("-l", dest="logfile", help="log to this file instead of stderr")
-
-    options, args = parser.parse_args()
-
+def setup_logging(options):
     if options.logfile:
         handler = logging.handlers.RotatingFileHandler(options.logfile,
                 maxBytes=1024**2, backupCount=10)
@@ -805,12 +896,54 @@ if __name__ == '__main__':
     logger.addHandler(handler)
     logger.setLevel(options.loglevel)
 
+if __name__ == '__main__':
+    from optparse import OptionParser
+    from ConfigParser import RawConfigParser
+    import getpass
+    import sys
+
+    parser = OptionParser(__doc__)
+    parser.set_defaults(
+            loglevel=logging.INFO,
+            logfile=None,
+            daemonize=False,
+            pidfile="signing.pid",
+            action="run",
+            )
+    parser.add_option("-v", dest="loglevel", action="store_const",
+            const=logging.DEBUG, help="be verbose")
+    parser.add_option("-q", dest="loglevel", action="store_const",
+            const=logging.WARNING, help="be quiet")
+    parser.add_option("-l", dest="logfile", help="log to this file instead of stderr")
+    parser.add_option("-d", dest="daemonize", action="store_true",
+            help="daemonize process")
+    parser.add_option("--pidfile", dest="pidfile")
+    parser.add_option("--stop", dest="action", action="store_const", const="stop")
+    parser.add_option("--reload", dest="action", action="store_const", const="reload")
+    parser.add_option("--restart", dest="action", action="store_const", const="restart")
+
+    options, args = parser.parse_args()
+
+    if options.action == "stop":
+        try:
+            pid = int(open(options.pidfile).read())
+            os.kill(pid, signal.SIGINT)
+        except (IOError,ValueError):
+            log.info("no pidfile, assuming process is stopped")
+        sys.exit(0)
+    elif options.action == "reload":
+        pid = int(open(options.pidfile).read())
+        os.kill(pid, signal.SIGHUP)
+        sys.exit(0)
+
     if len(args) != 1:
         parser.error("Need just one server.ini file to read")
 
-    config = RawConfigParser()
-    if config.read(args) != args:
+    config = load_config(args[0])
+    if not config:
         parser.error("Error reading config file: %s" % args[0])
+
+    setup_logging(options)
 
     # Read passphrases
     passphrases = {}
@@ -833,10 +966,56 @@ if __name__ == '__main__':
         finally:
             shutil.rmtree(tmpdir)
 
+    # Possibly stop the old instance
+    # We do this here so that we don't have to wait for the user to enter
+    # passwords before stopping/starting the new instance.
+    if options.action == 'restart':
+        try:
+            pid = int(open(options.pidfile).read())
+            log.info("Killing old server pid:%i", pid)
+            os.kill(pid, signal.SIGINT)
+            # Wait for it to exit
+            while True:
+                log.debug("Waiting for pid %i to exit", pid)
+                # This will raise OSError once the process exits
+                os.kill(pid, 0)
+                gevent.sleep(1)
+        except (IOError, ValueError):
+            log.info("no pidfile, assuming process is stopped")
+        except OSError:
+            # Process is done
+            log.debug("pid %i has exited", pid)
+
+    if options.daemonize:
+        curdir = os.path.abspath(os.curdir)
+        pidfile = os.path.abspath(options.pidfile)
+        logfile = os.path.abspath(options.logfile)
+
+        daemon_ctx = daemon.DaemonContext(
+                # We do our own signal handling in run()
+                signal_map={},
+                working_directory=curdir,
+                )
+        daemon_ctx.open()
+
+        # gevent needs to be reinitialized after the hardcore forking action
+        gevent.reinit()
+        open(pidfile, 'w').write(str(os.getpid()))
+
+        # Set up logging again! createDaemon has closed all our open file
+        # handles
+        setup_logging(options)
+
     try:
-        run(config, formats, passphrases)
+        run(args[0], passphrases)
     except:
         log.exception("error running server")
         raise
     finally:
-        log.info("exiting")
+        try:
+            daemon_ctx.close()
+            if options.daemonize:
+                safe_unlink(pidfile)
+            log.info("exiting")
+        except:
+            log.exception("error shutting down")
