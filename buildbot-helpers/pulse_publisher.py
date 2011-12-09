@@ -9,6 +9,7 @@ see http://hg.mozilla.org/users/clegnitto_mozilla.com/mozillapulse/ for pulse
 code
 """
 import time
+import re
 from datetime import tzinfo, timedelta, datetime
 
 from mozillapulse.messages.build import BuildMessage
@@ -20,6 +21,11 @@ log = logging.getLogger(__name__)
 
 ZERO = timedelta(0)
 HOUR = timedelta(hours=1)
+
+skip_exps = [
+    # Skip step events, they cause too much load
+    re.compile("^build\.\S+\.\d+\.step\."),
+    ]
 
 # A UTC class.
 class UTC(tzinfo):
@@ -104,11 +110,21 @@ class PulsePusher(object):
             self._last_connection = time.time()
         log.debug("Sending %i messages", len(events))
         start = time.time()
+        skipped = 0
+        sent =  0
         for e in events:
+            routing_key = e['event']
+            if any(exp.search(routing_key) for exp in skip_exps):
+                skipped += 1
+                log.debug("Skipping event %s", routing_key)
+                continue
+            else:
+                log.debug("Sending event %s", routing_key)
             msg = BuildMessage(transform_times(e))
             self.publisher.publish(msg)
+            sent += 1
         end = time.time()
-        log.info("Sent %i messages in %.2fs", len(events), end-start)
+        log.info("Sent %i messages in %.2fs (skipped %i)", sent, end-start, skipped)
         self._last_activity = time.time()
 
         # Update our timers
