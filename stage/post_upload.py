@@ -159,16 +159,10 @@ def ReleaseToBuildDir(builds_dir, builds_url, options, upload_dir, files, dated)
     tinderboxUrl = builds_url % \
       {'product': options.product,
        'tinderbox_builds_dir': options.tinderbox_builds_dir}
-    tinderboxBuildsPathOld = None
     if dated:
-        # Bug 671450 - tinderboxBuildsPathOld can be retired after having 
-        # 1 month of builds in the new tinderboxBuildsPath, provided corresponding
-        # log lookup changes have been made to TBPL.        
         buildid = str(BuildIDToUnixTime(options.buildid))
-        tinderboxBuildsPathOld = os.path.join(tinderboxBuildsPath, buildid)
-        buildid_dir = "%s-%s" % (str(options.buildid),options.revision)
-        tinderboxBuildsPath = os.path.join(tinderboxBuildsPath, buildid_dir)
-        tinderboxUrl = os.path.join(tinderboxUrl, buildid_dir)
+        tinderboxBuildsPath = os.path.join(tinderboxBuildsPath, buildid)
+        tinderboxUrl = os.path.join(tinderboxUrl, buildid)
     if options.builddir:
         tinderboxBuildsPath = os.path.join(tinderboxBuildsPath, options.builddir)
         tinderboxUrl = os.path.join(tinderboxUrl, options.builddir)
@@ -185,11 +179,6 @@ def ReleaseToBuildDir(builds_dir, builds_url, options, upload_dir, files, dated)
         else:
             CopyFileToDir(f, upload_dir, tinderboxBuildsPath)
             sys.stderr.write("%s\n" % os.path.join(tinderboxUrl, os.path.basename(f)))
-    # Bug 671450 - see above fore removal criteria
-    # Must also check whether the old directory structure has already been
-    # created. Mobile repacks upload in two stages.
-    if tinderboxBuildsPathOld and not os.path.exists(tinderboxBuildsPathOld):
-        os.symlink(tinderboxBuildsPath, tinderboxBuildsPathOld)
     os.utime(tinderboxBuildsPath, None)
 
 def ReleaseToTinderboxBuilds(options, upload_dir, files, dated=True):
