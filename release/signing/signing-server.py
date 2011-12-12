@@ -444,7 +444,7 @@ class SigningServer:
 
     def get_token(self, slave_ip, duration):
         duration = int(duration)
-        if not 0 < duration < self.max_token_age:
+        if not 0 < duration <= self.max_token_age:
             log.debug("invalid duration")
             raise ValueError("Invalid duration: %s", duration)
         now = int(time.time())
