@@ -30,7 +30,7 @@ echo "========================================================================"
 ls -rt $DIR
 echo "========================================================================"
 
-for dir in $(ls -rt $DIR); do
+for dir in $(ls -rt $DIR | grep -v removed_binaries); do
     curr_df=$(get_df $DIR)
     if [ $curr_df -lt $TARGET_FREE_SPACE ]; then
         echo "Do you really want to remove binaries from $dir? [y/n]" >&2
