@@ -1,17 +1,29 @@
 #!/bin/bash
 
+set -e # if anything goes wrong, there's manual work to be done
+
 if [ "$1" == "ssh" ]; then
   echo "setting up initial ssh config for foopy$2"
-  ssh cltbld@foopy$2 'mkdir /Users/cltbld/.ssh ; chmod 0700 /Users/cltbld/.ssh ; touch /Users/cltbld/.ssh/authorized_keys ; chmod 0644 /Users/cltbld/.ssh/authorized_keys'
-  scp foopy-authorized_keys cltbld@foopy$2:.ssh/authorized_keys
-  scp id_rsa id_rsa.pub cltbld@foopy$2:/Users/cltbld/.ssh/
-  exit
+  # do some sanity checks before we begin
+  if ! [ -r foopy-authorized_keys -a -r id_rsa -a id_rsa.pub -a -r foopy-screenrc ]; then
+    echo "your directory isn't set up properly, check wiki page"
+    exit 1
+  else
+    echo "you'll be prompted for the 'cltbld' password 2 times"
+    echo "(if 4 times, your ssh key isn't in the file and the next step will be very painful)"
+    ssh cltbld@foopy$2 'mkdir /Users/cltbld/.ssh ; chmod 0700 /Users/cltbld/.ssh ; touch /Users/cltbld/.ssh/authorized_keys ; chmod 0644 /Users/cltbld/.ssh/authorized_keys'
+    scp foopy-authorized_keys cltbld@foopy$2:.ssh/authorized_keys
+    scp id_rsa id_rsa.pub cltbld@foopy$2:/Users/cltbld/.ssh/
+    scp foopy-screenrc cltbld@foopy$2:.screenrc
+    exit
+  fi
 fi
 
-if [ -z $1 ] ; then
-  FOOPIES="12"
-else
-  FOOPIES=$*
+FOOPIES=$*
+# if no args are passed, that's a user error
+if [ -z "$FOOPIES" ] ; then
+  echo "missing required foopy number"
+  exit 1
 fi
 
 for f in ${FOOPIES} ; do
@@ -74,17 +86,57 @@ for f in ${FOOPIES} ; do
       FOOPYIP=10.250.48.219
       TEGRAS="173 174 177 179 181 182 183 196 198 204 205"
       ;;
+    "18" )
+      FOOPY=foopy18
+      FOOPYIP=10.250.48.220
+      TEGRAS="206 207 208 209 210 211 212 213 214 215 216 217 218 219"
+      ;;
+    "19" )
+       FOOPY=foopy19
+       FOOPYIP=10.250.48.221
+       TEGRAS="220 221 222 223 224 225 226 227 228 229 230 231 232 233"
+       ;;
+    "20" )
+       FOOPY=foopy20
+       FOOPYIP=10.250.48.224
+       TEGRAS="234 235 236 237 238 239 240 241 242 243 244 245 246 247"
+       ;;
+    "21" )
+      FOOPY=foopy21
+      FOOPYIP=10.250.48.225
+      echo "foopy21 is offline as of 2011-12-13 (bug 704590)"
+      exit 1
+      ;;
+    "22" )
+       FOOPY=foopy22
+       FOOPYIP=10.250.48.226
+       TEGRAS="248 249 250 251 252 253 254 255 256 257 258 259 260 261"
+       ;;
+    "23" )
+       FOOPY=foopy23
+       FOOPYIP=10.250.48.231
+       TEGRAS="262 263 264 265 266 267 268 269 270 271 272 273 274 275"
+       ;;
+    "24" )
+       FOOPY=foopy24
+       FOOPYIP=10.250.48.232
+       TEGRAS="276 277 278 279 280 281 282 283 284 285"
+       ;;
     * )
       FOOPY=""
       TEGRAS=""
-      echo "You must specify a foopy ID"
-      exit
+      echo "You must specify a valid foopy ID"
+      exit 1
   esac
 
   echo "Setting up ${FOOPY} ${FOOPYIP}"
 
   scp setup_foopy.sh cltbld@${FOOPY}:.
   ssh cltbld@${FOOPY} 'chmod +x /Users/cltbld/setup_foopy.sh ; /Users/cltbld/setup_foopy.sh'
+
+  # we can't create /builds - make sure it's there. set -e will catch
+  # the exit code from the remote end and stop us.
+  ssh cltbld@${FOOPY} 'test -d /builds || exit 1'
 
   cp create_dirs.sh.in create_dirs.sh.sed
   sed "s/sedTEGRALISTsed/${TEGRAS}/" create_dirs.sh.sed > create_dirs.sh
@@ -105,7 +157,10 @@ for f in ${FOOPIES} ; do
 
   scp tegra_stats.sh SUTAgent.ini update_tegra_ini.sh watcher.ini cltbld@${FOOPY}:/builds/
 
-  ssh cltbld@${FOOPY} 'chmod +x /builds/update_tegra_ini.sh ; /builds/update_tegra_ini.sh'
+  # made sure all the scripts are executable
+  ssh cltbld@${FOOPY} 'chmod +x /builds/*.sh'
+
+  ssh cltbld@${FOOPY} '/builds/update_tegra_ini.sh
 
   rm -f create_dirs.sh create_dirs.sh.sed
   rm -f tegra_stats.sh tegra_stats.sh.sed
