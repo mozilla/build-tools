@@ -8,7 +8,7 @@ DO_NOT_BUMP_REGEX = '^\d\.\d(pre)?$'
 
 # Regex that matches all possible versions and milestones
 ANY_VERSION_REGEX =\
-    ('\d\.\d[\d\.]*'     # A version number
+    ('\d+\.\d[\d\.]*'    # A version number
     '([a-zA-Z]+\d+)?'    # Might be a project branch
     '((a|b)\d+)?'        # Might be an alpha or beta
     '(pre)?')            # Might be a 'pre' (nightly) version

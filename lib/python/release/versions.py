@@ -20,7 +20,7 @@ def getL10nDashboardVersion(version, product):
 
     parsed = re.match(ANY_VERSION_REGEX, version)
     if parsed.group(1) and parsed.group(1).startswith('b'):
-        ret = '%s%s_beta_%s' % (ret, version[0], parsed.group(1))
+        ret = '%s%s_beta_%s' % (ret, version.split(".")[0], parsed.group(1))
     else:
         ret += version
     return ret
