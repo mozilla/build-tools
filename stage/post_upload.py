@@ -427,6 +427,10 @@ if __name__ == '__main__':
     if len(releaseTo) == 0:
         print "Error, you must pass a --release-to option!"
         error = True
+
+    # Use the short revision
+    if options.revision is not None:
+        options.revision = options.revision[:12]
     
     if error:
         sys.exit(1)
