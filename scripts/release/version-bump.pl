@@ -18,7 +18,7 @@ $|++;
 # In order to avoid very messy logic for consumers we simply replace any
 # version number we find in those files.
 
-my $VERSION_REGEXP = '\d\.\d[\d\.]*'   # A version number
+my $VERSION_REGEXP = '\d{1,2}\.\d[\d\.]*'   # A version number
                    . '([a-zA-Z]+\d+)?' # Might be a project branch
                    . '((a|b)\d+)?'     # Might be an alpha or beta
                    . '(pre)?';         # Might be pre
