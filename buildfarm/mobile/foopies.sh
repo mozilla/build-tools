@@ -160,7 +160,7 @@ for f in ${FOOPIES} ; do
   # made sure all the scripts are executable
   ssh cltbld@${FOOPY} 'chmod +x /builds/*.sh'
 
-  ssh cltbld@${FOOPY} '/builds/update_tegra_ini.sh
+  ssh cltbld@${FOOPY} '/builds/update_tegra_ini.sh'
 
   rm -f create_dirs.sh create_dirs.sh.sed
   rm -f tegra_stats.sh tegra_stats.sh.sed
