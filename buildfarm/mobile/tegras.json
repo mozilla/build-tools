@@ -1049,11 +1049,6 @@
         "pdu": "pdu8.df202-2.build.mtv1.mozilla.com", 
         "pduid": ".AB14"
     }, 
-    "tegra-241": {
-        "foopy": "foopy20", 
-        "pdu": "pdu8.df202-2.build.mtv1.mozilla.com", 
-        "pduid": ".AA14"
-    }, 
     "tegra-242": {
         "foopy": "foopy20", 
         "pdu": "pdu8.df202-2.build.mtv1.mozilla.com", 
@@ -1274,4 +1269,9 @@
         "pdu": "pdu7.df202-2.build.mtv1.mozilla.com", 
         "pduid": ".AB2"
     }
+    "tegra-286": {
+        "foopy": "foopy20", 
+        "pdu": "pdu8.df202-2.build.mtv1.mozilla.com", 
+        "pduid": ".AA14"
+    }, 
 }
