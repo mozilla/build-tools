@@ -125,7 +125,7 @@ if __name__ == '__main__':
             platform = PLATFORMS[options.platform]
         branch = options.branch
         ftp_url = options.ftp_url % locals()
-        pat = re.compile('firefox.*%s' % options.ext)
+        pat = re.compile('firefox.*%s$' % options.ext)
         urls = urllib.urlopen("%s" % ftp_url)
         lines = urls.read().splitlines()
         # initialize an old datetime to compare the current FTP dirs against to find newest
