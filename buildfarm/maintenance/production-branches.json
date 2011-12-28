@@ -1,0 +1,213 @@
+{
+  "accessibility": {
+    "repo": "http://hg.mozilla.org/projects/accessibility",
+    "graph_branches": [
+      "Accessibility"
+    ],
+    "repo_type": "hg"
+  },
+  "ionmonkey": {
+    "repo": "http://hg.mozilla.org/projects/ionmonkey",
+    "graph_branches": [
+      "Ionmonkey"
+    ],
+    "repo_type": "hg"
+  },
+  "private-browsing": {
+    "repo": "http://hg.mozilla.org/projects/private-browsing",
+    "graph_branches": [
+      "Private-Browsing"
+    ],
+    "repo_type": "hg"
+  },
+  "profiling": {
+    "repo": "http://hg.mozilla.org/projects/profiling",
+    "graph_branches": [
+      "Profiling"
+    ],
+    "repo_type": "hg"
+  },
+  "devtools": {
+    "repo": "http://hg.mozilla.org/projects/devtools",
+    "graph_branches": [
+      "Devtools"
+    ],
+    "repo_type": "hg"
+  },
+  "maple": {
+    "repo": "http://hg.mozilla.org/projects/maple",
+    "graph_branches": [
+      "Maple"
+    ],
+    "repo_type": "hg"
+  },
+  "ash": {
+    "repo": "http://hg.mozilla.org/projects/ash",
+    "graph_branches": [
+      "Ash"
+    ],
+    "repo_type": "hg"
+  },
+  "mozilla-release": {
+    "repo": "http://hg.mozilla.org/releases/mozilla-release",
+    "graph_branches": [
+      "Mozilla-Release"
+    ],
+    "repo_type": "hg"
+  },
+  "oak": {
+    "repo": "http://hg.mozilla.org/projects/oak",
+    "graph_branches": [
+      "Oak"
+    ],
+    "repo_type": "hg"
+  },
+  "pine": {
+    "repo": "http://hg.mozilla.org/projects/pine",
+    "graph_branches": [
+      "Pine"
+    ],
+    "repo_type": "hg"
+  },
+  "mozilla-beta": {
+    "repo": "http://hg.mozilla.org/releases/mozilla-beta",
+    "graph_branches": [
+      "Mozilla-Beta"
+    ],
+    "repo_type": "hg"
+  },
+  "holly": {
+    "repo": "http://hg.mozilla.org/projects/holly",
+    "graph_branches": [
+      "Holly"
+    ],
+    "repo_type": "hg"
+  },
+  "mozilla-inbound": {
+    "repo": "http://hg.mozilla.org/integration/mozilla-inbound",
+    "graph_branches": [
+      "Mozilla-Inbound"
+    ],
+    "repo_type": "hg"
+  },
+  "services-central": {
+    "repo": "http://hg.mozilla.org/services/services-central",
+    "graph_branches": [
+      "Services-Central"
+    ],
+    "repo_type": "hg"
+  },
+  "shadow-central": {
+    "repo": "https://hgpvt.mozilla.org/shadow-central",
+    "graph_branches": [
+      "Shadow-Central"
+    ],
+    "repo_type": "hg"
+  },
+  "mozilla-central": {
+    "repo": "http://hg.mozilla.org/mozilla-central",
+    "graph_branches": [
+      "Firefox",
+      "mobile"
+    ],
+    "repo_type": "hg"
+  },
+  "alder": {
+    "repo": "http://hg.mozilla.org/projects/alder",
+    "graph_branches": [
+      "Alder"
+    ],
+    "repo_type": "hg"
+  },
+  "jaegermonkey": {
+    "repo": "http://hg.mozilla.org/projects/jaegermonkey",
+    "graph_branches": [
+      "Jaegermonkey"
+    ],
+    "repo_type": "hg"
+  },
+  "cedar": {
+    "repo": "http://hg.mozilla.org/projects/cedar",
+    "graph_branches": [
+      "Cedar"
+    ],
+    "repo_type": "hg"
+  },
+  "birch": {
+    "repo": "http://hg.mozilla.org/projects/birch",
+    "graph_branches": [
+      "Birch"
+    ],
+    "repo_type": "hg"
+  },
+  "mozilla-aurora": {
+    "repo": "http://hg.mozilla.org/releases/mozilla-aurora",
+    "graph_branches": [
+      "Mozilla-Aurora"
+    ],
+    "repo_type": "hg"
+  },
+  "mozilla-1.9.2": {
+    "repo": "http://hg.mozilla.org/releases/mozilla-1.9.2",
+    "graph_branches": [
+      "Firefox3.6"
+    ],
+    "repo_type": "hg"
+  },
+  "electrolysis": {
+    "repo": "http://hg.mozilla.org/projects/electrolysis",
+    "graph_branches": [
+      "Electrolysis"
+    ],
+    "repo_type": "hg"
+  },
+  "ux": {
+    "repo": "http://hg.mozilla.org/projects/ux",
+    "graph_branches": [
+      "UX"
+    ],
+    "repo_type": "hg"
+  },
+  "places": {
+    "repo": "http://hg.mozilla.org/projects/places",
+    "graph_branches": [
+      "Places"
+    ],
+    "repo_type": "hg"
+  },
+  "elm": {
+    "repo": "http://hg.mozilla.org/projects/elm",
+    "graph_branches": [
+      "Elm"
+    ],
+    "repo_type": "hg"
+  },
+  "try": {
+    "repo": "http://hg.mozilla.org/try",
+    "graph_branches": [
+      "Try"
+    ],
+    "repo_type": "hg"
+  },
+  "larch": {
+    "repo": "http://hg.mozilla.org/projects/larch",
+    "graph_branches": [
+      "Larch"
+    ],
+    "repo_type": "hg"
+  },
+  "build-system": {
+    "repo": "http://hg.mozilla.org/projects/build-system",
+    "graph_branches": [
+      "Build-System"
+    ],
+    "repo_type": "hg"
+  },
+  "fx-team": {
+    "repo": "http://hg.mozilla.org/integration/fx-team",
+    "graph_branches": [
+      "Fx-Team"
+    ],
+    "repo_type": "hg"
+  }
+}
