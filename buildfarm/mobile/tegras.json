@@ -430,12 +430,12 @@
         "pduid": ".AA15"
     }, 
     "tegra-092": {
-        "foopy": "foopy11", 
+        "foopy": "foopy12", 
         "pdu": "pdu2.df201-4.build.mtv1.mozilla.com", 
         "pduid": ".AB15"
     }, 
     "tegra-093": {
-        "foopy": "foopy11", 
+        "foopy": "foopy12", 
         "pdu": "pdu1.df201-4.build.mtv1.mozilla.com", 
         "pduid": ".AA16"
     }, 
