@@ -1013,8 +1013,8 @@ if __name__ == '__main__':
         raise
     finally:
         try:
-            daemon_ctx.close()
             if options.daemonize:
+                daemon_ctx.close()
                 safe_unlink(pidfile)
             log.info("exiting")
         except:

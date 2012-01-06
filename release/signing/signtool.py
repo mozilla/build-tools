@@ -47,6 +47,7 @@ def main():
             nsscmd=None,
             tokenfile=None,
             noncefile=None,
+            cachedir=None,
             )
 
     parser.add_option("-H", "--host", dest="hosts", action="append", help="hostname[:port]")
@@ -69,6 +70,8 @@ def main():
             help="add to exclude patterns")
     parser.add_option("--nsscmd", dest="nsscmd",
             help="command to re-sign nss libraries, if required")
+    parser.add_option("--cachedir", dest="cachedir",
+            help="local cache directory")
     # TODO: Concurrency?
     # TODO: Different certs per server?
 

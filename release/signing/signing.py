@@ -446,11 +446,42 @@ def remote_signfile(options, url, filename, fmt, token, dest=None):
     if fmt == 'gpg':
         dest += '.asc'
 
-    log.info("%s: processing %s on %s", filehash, filename, url)
-
     parent_dir = os.path.dirname(os.path.abspath(dest))
     if not os.path.exists(parent_dir):
         os.makedirs(parent_dir)
+
+    # Check the cache
+    cached_fn = None
+    if options.cachedir:
+        log.debug("%s: checking cache", filehash)
+        cached_fn = os.path.join(options.cachedir, fmt, filehash)
+        if os.path.exists(cached_fn):
+            log.info("%s: exists in the cache; copying to %s", filehash, dest)
+            cached_fp = open(cached_fn, 'rb')
+            tmpfile = dest + '.tmp'
+            fp = open(tmpfile, 'wb')
+            hsh = hashlib.new('sha1')
+            while True:
+                data = cached_fp.read(1024**2)
+                if not data:
+                    break
+                hsh.update(data)
+                fp.write(data)
+            fp.close()
+            newhash = hsh.hexdigest()
+            if os.path.exists(dest):
+                os.unlink(dest)
+            os.rename(tmpfile, dest)
+            log.info("%s: OK", filehash)
+            # See if we should re-sign NSS
+            if options.nsscmd and filehash != newhash and os.path.exists(os.path.splitext(filename)[0] + ".chk"):
+                cmd = '%s "%s"' % (options.nsscmd, dest)
+                log.info("Regenerating .chk file")
+                log.debug("Running %s", cmd)
+                check_call(cmd, shell=True)
+            return True
+
+    log.info("%s: processing %s on %s", filehash, filename, url)
 
     errors = 0
     pendings = 0
@@ -488,10 +519,19 @@ def remote_signfile(options, url, filename, fmt, token, dest=None):
             log.info("%s: OK", filehash)
             # See if we should re-sign NSS
             if options.nsscmd and filehash != responsehash and os.path.exists(os.path.splitext(filename)[0] + ".chk"):
-                cmd = "%s %s" % (options.nsscmd, dest)
+                cmd = '%s "%s"' % (options.nsscmd, dest)
                 log.info("Regenerating .chk file")
                 log.debug("Running %s", cmd)
                 check_call(cmd, shell=True)
+
+            # Possibly write to our cache
+            if cached_fn:
+                cached_dir = os.path.dirname(cached_fn)
+                if not os.path.exists(cached_dir):
+                    log.debug("Creating %s", cached_dir)
+                    os.makedirs(cached_dir)
+                log.info("Copying %s to cache %s", dest, cached_fn)
+                copyfile(dest, cached_fn)
             break
         except urllib2.HTTPError, e:
             try:
