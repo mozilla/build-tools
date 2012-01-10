@@ -750,6 +750,7 @@ def mar_signfile(inputfile, outputfile, mar_cmd, fake=False, passphrase=None):
         proc = Popen(command, stdout=stdout, stderr=STDOUT, stdin=PIPE)
         if passphrase:
             proc.stdin.write(passphrase)
+            proc.stdin.write("\n")
         proc.stdin.close()
         if proc.wait() != 0:
             raise ValueError("mar didn't return 0")

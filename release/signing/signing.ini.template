@@ -63,8 +63,5 @@ testfile_gpg = test.mar
 signcode_keydir = /path/to/keys
 # Where is the gpg directory with our private key
 gpg_homedir = /path/to/.gpg
-# XXX: These will change once we stop using mar.py
 # How to run mar
-mar_cmd = mar
-# What key to use for mar signing
-mar_key = /path/to/rsa.key
+mar_cmd = /path/to/signmar -d /path/to/nsscerts -n keyname -s
