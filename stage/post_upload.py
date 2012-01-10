@@ -31,7 +31,7 @@ TRY_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/try-builds/
 #PVT_BUILD_URL_PATH = "https://dm-pvtbuild01.mozilla.org/staging/%(product)s/%(tinderbox_builds_dir)s"
 #PVT_BUILD_DIR = "/mnt/pvt_builds/staging/%(product)s/%(tinderbox_builds_dir)s"
 
-PARTIAL_MAR_RE = re.compile('\.partial\..*\.mar$')
+PARTIAL_MAR_RE = re.compile('\.partial\..*\.mar(\.asc)?$')
 
 def CopyFileToDir(original_file, source_dir, dest_dir, preserve_dirs=False):
     """ Atomically copy original_file from source_dir into dest_dir,
