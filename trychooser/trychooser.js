@@ -55,6 +55,9 @@ $(document).ready(function() {
                 // All are checked. Mark 'All'.
                 $(this).closest('.option-group').find('.all-selector')
                     .attr('checked', 1);
+            } else {
+                $(this).closest('.option-group').find('.all-selector')
+                    .removeAttr('checked'); // 'All' is no longer true
             }
         } else {
             $(this).closest('.option-group').find('.all-selector')
