@@ -43,7 +43,7 @@ class TestRetry(unittest.TestCase):
         self.assertRaises(Exception, retry, _alwaysFail, exceptions=())
 
     def testRetryFailEnsureRaisesLastException(self):
-        self.assertRaises(Exception, retry, _alwaysFail)
+        self.assertRaises(Exception, retry, _alwaysFail, sleeptime=0)
 
     def testRetrySelectiveExceptionSucceed(self):
         retry(_raiseCustomException, attempts=2, sleeptime=0,
