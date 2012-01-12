@@ -47,6 +47,9 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
         "UPLOAD_USER": stageUsername,
         "UPLOAD_SSH_KEY": stageSshKey,
         "UPLOAD_TO_TEMP": "1",
+        # Android signing
+        "JARSIGNER": os.path.join(os.getcwd(), "scripts", "release",
+                                  "signing", "mozpass.py")
     }
     build.misc.cleanupObjdir(sourceRepoName, objdir, mobileDirName)
     retry(mercurial, args=(sourceRepo, sourceRepoName))
@@ -164,6 +167,8 @@ if __name__ == "__main__":
     mozconfig = path.join("buildbot-configs", "mozilla2", options.platform,
                           sourceRepoInfo['name'], "release", "l10n-mozconfig")
 
+    if 'android' in options.platform:
+        makeDirs.append('config')
 
     stage_platform = branchConfig['platforms'][options.platform].get('stage_platform', options.platform)
     mobileDirName = branchConfig['platforms'][options.platform].get('mobile_dir', 'mobile')
