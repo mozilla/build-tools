@@ -794,3 +794,25 @@ class TestHg(unittest.TestCase):
         # Make sure our paths are correct
         self.assertEquals(path(self.wc), self.repodir)
         self.assertEquals(path(self.wc, 'test'), self.repodir)
+
+    def testOutofSyncMirrorFailingMaster(self):
+        # First create the mirror
+        mirror = os.path.join(self.tmpdir, 'repo2')
+        clone(self.repodir, mirror)
+
+        shareBase = os.path.join(self.tmpdir, 'share')
+        os.mkdir(shareBase)
+        mercurial(self.repodir, self.wc, shareBase=shareBase, mirrors=[mirror])
+
+        # Create a bundle
+        bundle = os.path.join(self.tmpdir, 'bundle')
+        run_cmd(['hg', 'bundle', '-a', bundle], cwd=self.repodir)
+
+        # Move our repodir out of the way so that pulling/cloning from it fails
+        os.rename(self.repodir, self.repodir + "-bad")
+
+        # Try and update to a non-existent revision using our mirror and
+        # bundle, with the master failing. We should fail
+        self.assertRaises(subprocess.CalledProcessError, mercurial,
+                self.repodir, self.wc, shareBase=shareBase, mirrors=[mirror], bundles=[bundle],
+                revision="1234567890")

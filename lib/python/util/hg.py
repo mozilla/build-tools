@@ -133,7 +133,8 @@ def clone(repo, dest, branch=None, revision=None, update_dest=True,
                 unbundle(bundle, dest)
                 adjust_paths(dest, default=repo)
                 # Now pull / update
-                return pull(repo, dest, update_dest=update_dest, mirrors=mirrors)
+                return pull(repo, dest, update_dest=update_dest,
+                        mirrors=mirrors, revision=revision, branch=branch)
             except:
                 remove_path(dest)
                 log.exception("Problem unbundling/pulling from %s", bundle)
