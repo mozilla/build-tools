@@ -345,6 +345,18 @@ Clobber all release builders on <select name="master">
 
 <?php } ?>
 
+<?php
+if (!array_key_exists('branch', $_GET)) {
+  $allbranches = $dbh->query("SELECT DISTINCT branch FROM builds WHERE builddir NOT LIKE '${RELEASE_PREFIX}%' ORDER BY branch ASC");
+  print "<h2>Please select a branch</h2>\n";
+  while ($r = $allbranches->fetch(PDO::FETCH_ASSOC)) {
+    $b = $r['branch'];
+    print "<a href=\"?branch=$b\">$b</a><br/>\n";
+  }
+  print "</body></html>";
+  exit(0);
+}
+?>
 <form method="POST">
 <table border="1" cellspacing="0" cellpadding="1">
  <thead>
@@ -352,7 +364,11 @@ Clobber all release builders on <select name="master">
  </thead>
  <tbody>
 <?php
-  $allbuilders = $dbh->query("SELECT DISTINCT id, branch, builddir, buildername, slave FROM builds WHERE builddir NOT LIKE '${RELEASE_PREFIX}%' ORDER BY branch ASC, buildername ASC");
+  $branch_clause = "";
+  if (array_key_exists('branch', $_GET)) {
+    $branch_clause = "AND branch=".e($_GET['branch']);
+  }
+  $allbuilders = $dbh->query("SELECT DISTINCT id, branch, builddir, buildername, slave FROM builds WHERE builddir NOT LIKE '${RELEASE_PREFIX}%' $branch_clause ORDER BY branch ASC, buildername ASC");
   if ($allbuilders) {
     $last_branch = null;
     $last_builder = null;
