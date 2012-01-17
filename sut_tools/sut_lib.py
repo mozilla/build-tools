@@ -382,7 +382,7 @@ def waitForDevice(dm, waitTime=60):
         print("Remote Device Error: waiting for tegra timed out.")
         sys.exit(1)
 
-def reboot_tegra(tegra):
+def reboot_tegra(tegra, debug=False):
     """
     Try to reboot the given tegra, returning True if successful.
     
@@ -421,6 +421,8 @@ def reboot_tegra(tegra):
                 s   = '3.2.3.1.11.1.%d.%d' % (b, c)
                 oib = '1.3.6.1.4.1.1718.%s' % s
                 cmd = '/usr/bin/snmpset -c private %s %s i 3' % (pdu, oib)
+                if debug:
+                    print 'rebooting %s at %s %s' % (tegra, pdu, deviceID)
                 if os.system(cmd) == 0:
                     result = True
             except:
