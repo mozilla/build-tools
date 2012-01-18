@@ -627,29 +627,4 @@
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/try1/tools"
   },
-  {
-    "basedir": "/builds/buildbot/tests-master",
-    "bbconfigs_branch": "production",
-    "bbconfigs_dir": "/builds/buildbot/configs",
-    "bbcustom_branch": "production-0.8",
-    "bbcustom_dir": "/tools/buildbotcustom/buildbotcustom",
-    "buildbot_bin": "/tools/buildbot-0.8.2/bin/buildbot",
-    "buildbot_branch": "production-0.8",
-    "buildbot_python": "/tools/buildbot-0.8.2/bin/python",
-    "buildbot_setup": "/home/cltbld/buildbot/master/setup.py",
-    "buildbot_version": "0.8.2",
-    "datacentre": "mtv1",
-    "db_name": "test-master01.build.mozilla.org:/builds/buildbot/tests-master",
-    "enabled": true,
-    "environment": "production",
-    "hostname": "test-master01.build.mozilla.org",
-    "http_port": 8012,
-    "master_dir": "/builds/buildbot/tests-master",
-    "name": "test-master01",
-    "pb_port": 9012,
-    "role": "tests",
-    "ssh_port": 1235,
-    "tools_branch": "default",
-    "tools_dir": "/builds/buildbot/tests-master/tools"
-  }
 ]
