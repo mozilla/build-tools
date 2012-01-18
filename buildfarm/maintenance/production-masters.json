@@ -626,5 +626,5 @@
     "ssh_port": 7101,
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/try1/tools"
-  },
+  }
 ]
