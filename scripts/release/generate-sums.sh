@@ -14,14 +14,7 @@ fi
 JSONTOOL="$PYTHON $SCRIPTS_DIR/buildfarm/utils/jsontool.py"
 workdir=`pwd`
 
-platform=$1
-branchConfig=$2
-chunks=$3
-thisChunk=$4
-generatePartials=$5
-if [ "$generatePartials" = "generatePartials" ]; then
-  generatePartials="--generate-partials"
-fi
+branchConfig=$1
 
 branch=$(basename $($JSONTOOL -k properties.branch $PROPERTIES_FILE))
 builder=$($JSONTOOL -k properties.buildername $PROPERTIES_FILE)
@@ -45,9 +38,8 @@ $PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s scripts -s buildprops.json \
   $CLOBBERER_URL $branch $builder $slavebuilddir $slavename $master
 cd $SCRIPTS_DIR/..
 $PYTHON $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
-  -s 7 -n info -n 'rel-*' -n $slavebuilddir
+  -s 0.5 -n info -n 'rel-*' -n $slavebuilddir
 cd $workdir
 
-$PYTHON $MY_DIR/create-release-repacks.py -c $branchConfig -r $releaseConfig \
-  -b $BUILDBOT_CONFIGS -t $releaseTag -p $platform \
-  --chunks $chunks --this-chunk $thisChunk $generatePartials
+$PYTHON $MY_DIR/generate-sums.py -c $branchConfig -r $releaseConfig \
+  -b $BUILDBOT_CONFIGS -t $releaseTag

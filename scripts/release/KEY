@@ -1,0 +1,71 @@
+This file contains the PGP keys of various developers that work on
+Mozilla and its subprojects (such as Firefox and Thunderbird).
+
+Please don't use these keys for email unless you have asked the owner
+because some keys are only used for code signing.
+
+Please realize that this file itself or the public key servers may be
+compromised.  You are encouraged to validate the authenticity of these keys in
+an out-of-band manner.
+
+Mozilla users: pgp < KEY
+Mozilla developers: 
+        (pgpk -ll <your name> && pgpk -xa <your name>) >> KEY
+      or
+        (gpg --fingerprint --list-sigs <your name> \
+             && gpg --armor --export <your name>) >> KEY
+
+Mozilla developers: please ensure that your key is also available via the
+PGP keyservers (such as pgpkeys.mit.edu).
+
+pub   1024D/1EBCAB3A 2011-07-22 [expires: 2013-07-21]
+      Key fingerprint = 9D03 193D 6BDC 541B D796  C4E4 7F4D 6645 1EBC AB3A
+uid                  Mozilla Software Releases <releases@mozilla.org>
+sig 3        1EBCAB3A 2011-07-22  Mozilla Software Releases <releases@mozilla.org>
+sub   1024D/C52175E2 2011-07-22 [expires: 2013-07-21]
+sig          1EBCAB3A 2011-07-22  Mozilla Software Releases <releases@mozilla.org>
+sub   2048g/D8A758E6 2011-07-22 [expires: 2013-07-21]
+sig          1EBCAB3A 2011-07-22  Mozilla Software Releases <releases@mozilla.org>
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: GnuPG v1.4.9 (Cygwin)
+
+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
+=i3MY
+-----END PGP PUBLIC KEY BLOCK-----

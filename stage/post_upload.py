@@ -204,7 +204,7 @@ def ReleaseToCandidatesDir(options, upload_dir, files):
 
     for f in files:
         realCandidatesPath = candidatesPath
-        if 'win32' in f and '/logs/' not in f:
+        if not options.signed and 'win32' in f and '/logs/' not in f:
             realCandidatesPath = os.path.join(realCandidatesPath, 'unsigned')
             url = os.path.join(candidatesUrl, 'unsigned')
         else:
@@ -251,7 +251,7 @@ def ReleaseToMobileCandidatesDir(options, upload_dir, files):
 
     for f in files:
         realCandidatesPath = candidatesPath
-        if 'android' in options.builddir:
+        if not options.signed and 'android' in options.builddir:
             realCandidatesPath = os.path.join(realCandidatesPath, 'unsigned',
                                               options.builddir)
             url = os.path.join(candidatesUrl, 'unsigned',
@@ -350,6 +350,8 @@ if __name__ == '__main__':
     parser.add_option("--release-to-try-builds",
                       action="store_true", dest="release_to_try_builds",
                       help="Copy files to try-builds/$who-$revision")
+    parser.add_option("--signed", action="store_true", dest="signed",
+                      help="Don't use unsigned directory for uploaded files")
     (options, args) = parser.parse_args()
     
     if len(args) < 2:

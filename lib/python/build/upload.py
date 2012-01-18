@@ -16,6 +16,7 @@ def postUploadCmdPrefix(upload_dir=None,
         to_candidates=False,
         to_mobile_candidates=False,
         nightly_dir=None,
+        signed=False,
         ):
     """Returns a post_upload.py command line for the given arguments.
     It is expected that the returned value is augmented with the list of files
@@ -60,5 +61,7 @@ def postUploadCmdPrefix(upload_dir=None,
         cmd.append("--release-to-mobile-candidates-dir")
     if nightly_dir:
         cmd.append("--nightly-dir=%s" % nightly_dir)
+    if signed:
+            cmd.append("--signed")
 
     return " ".join(cmd)

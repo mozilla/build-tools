@@ -16,6 +16,10 @@ workdir=`pwd`
 
 platform=$1
 branchConfig=$2
+generatePartials=$3
+if [ "$generatePartials" = "generatePartials" ]; then
+  generatePartials="--generate-partials"
+fi
 
 releaseConfig=$($JSONTOOL -k properties.release_config $PROPERTIES_FILE)
 releaseTag=$($JSONTOOL -k properties.script_repo_revision $PROPERTIES_FILE)
@@ -24,6 +28,7 @@ locales=$($JSONTOOL -k properties.locale $PROPERTIES_FILE)
 if [ -z "$BUILDBOT_CONFIGS" ]; then
     export BUILDBOT_CONFIGS="http://hg.mozilla.org/build/buildbot-configs"
 fi
+export MOZ_SIGN_CMD="$MOZ_SIGN_CMD"
 
 LOCALE_OPT=
 IFS=":"
@@ -37,4 +42,4 @@ cd $workdir
 
 $PYTHON $MY_DIR/create-release-repacks.py -c $branchConfig -r $releaseConfig \
   -b $BUILDBOT_CONFIGS -t $releaseTag -p $platform \
-  $LOCALE_OPT
+  $LOCALE_OPT $generatePartials

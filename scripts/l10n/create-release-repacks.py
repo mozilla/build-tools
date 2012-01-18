@@ -11,7 +11,7 @@ sys.path.append(path.join(path.dirname(__file__), "../../lib/python"))
 from build.l10n import repackLocale, l10nRepackPrep
 import build.misc
 from build.upload import postUploadCmdPrefix
-from release.download import downloadReleaseBuilds
+from release.download import downloadReleaseBuilds, downloadUpdateIgnore404
 from release.info import readReleaseConfig, readBranchConfig
 from release.l10n import getReleaseLocalesForChunk
 from util.hg import mercurial, update, make_hg_url
@@ -29,7 +29,8 @@ class RepackError(Exception):
 def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                   mozconfigPath, objdir, makeDirs, appName, locales, product,
                   version, buildNumber, stageServer, stageUsername, stageSshKey,
-                  compareLocalesRepo, merge, platform, brand):
+                  compareLocalesRepo, merge, platform, brand,
+                  generatePartials=False, oldVersion=None, oldBuildNumber=None):
     sourceRepoName = path.split(sourceRepo)[-1]
     localeSrcDir = path.join(sourceRepoName, objdir, appName, "locales")
     # Even on Windows we need to use "/" as a separator for this because
@@ -45,13 +46,18 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
         "UPLOAD_SSH_KEY": stageSshKey,
         "UPLOAD_TO_TEMP": "1",
         "MOZ_PKG_PRETTYNAMES": "1",
-        "POST_UPLOAD_CMD": postUploadCmdPrefix(
-            to_candidates=True,
-            product=product,
-            version=version,
-            buildNumber=buildNumber
-        )
     }
+    signed = False
+    if os.environ.get('MOZ_SIGN_CMD'):
+        env['MOZ_SIGN_CMD'] = os.environ['MOZ_SIGN_CMD']
+        signed = True
+    env['POST_UPLOAD_CMD'] = postUploadCmdPrefix(
+        to_candidates=True,
+        product=product,
+        version=version,
+        buildNumber=buildNumber,
+        signed=signed,
+    )
     build.misc.cleanupObjdir(sourceRepoName, objdir, appName)
     retry(mercurial, args=(sourceRepo, sourceRepoName))
     update(sourceRepoName, revision=revision)
@@ -59,14 +65,27 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                    localeSrcDir, env)
     input_env = retry(downloadReleaseBuilds,
                       args=(stageServer, product, brand, version, buildNumber,
-                            platform))
+                            platform),
+                      kwargs={'signed': signed})
     env.update(input_env)
 
     failed = []
     for l in locales:
         try:
-            repackLocale(l, l10nRepoDir, l10nBaseRepo, revision,
-                         localeSrcDir, l10nIni, compareLocalesRepo, env, merge)
+            prevMar = None
+            if generatePartials:
+                prevMar = retry(
+                    downloadUpdateIgnore404,
+                    args=(stageServer, product, oldVersion, oldBuildNumber,
+                          platform, l)
+                )
+            repackLocale(locale=l, l10nRepoDir=l10nRepoDir,
+                         l10nBaseRepo=l10nBaseRepo, revision=revision,
+                         localeSrcDir=localeSrcDir, l10nIni=l10nIni,
+                         compareLocalesRepo=compareLocalesRepo, env=env,
+                         merge=merge, prevMar=prevMar,
+                         productName=product, platform=platform,
+                         version=version, oldVersion=oldVersion)
         except Exception, e:
             failed.append((l, format_exc()))
 
@@ -83,7 +102,6 @@ REQUIRED_RELEASE_CONFIG = ("sourceRepositories", "l10nRepoPath", "appName",
                            "productName", "version", "buildNumber")
 
 def validate(options, args):
-    err = False
     if not options.configfile:
         log.info("Must pass --configfile")
         sys.exit(1)
@@ -102,21 +120,14 @@ def validate(options, args):
           "locale option cannot be used when chunking"
     else:
         if len(options.locales) < 1:
-            err = True
-            log.error("Need at least one locale to repack")
+            raise Exception('Need at least one locale to repack')
 
-    try:
-        releaseConfig = readReleaseConfig(releaseConfigFile,
-                                          required=REQUIRED_RELEASE_CONFIG)
-        sourceRepoName = releaseConfig['sourceRepositories'][options.source_repo_key]['name']
-        branchConfig = readBranchConfig(branchConfigDir, branchConfigFile,
-                                        sourceRepoName,
-                                        required=REQUIRED_BRANCH_CONFIG)
-    except:
-        err = True
-
-    if err:
-        sys.exit(1)
+    releaseConfig = readReleaseConfig(releaseConfigFile,
+                                      required=REQUIRED_RELEASE_CONFIG)
+    sourceRepoName = releaseConfig['sourceRepositories'][options.source_repo_key]['name']
+    branchConfig = readBranchConfig(branchConfigDir, branchConfigFile,
+                                    sourceRepoName,
+                                    required=REQUIRED_BRANCH_CONFIG)
     return branchConfig, releaseConfig
 
 if __name__ == "__main__":
@@ -144,8 +155,15 @@ if __name__ == "__main__":
     parser.add_option("--source-repo-key", dest="source_repo_key")
     parser.add_option("--chunks", dest="chunks", type="int")
     parser.add_option("--this-chunk", dest="thisChunk", type="int")
+    parser.add_option("--generate-partials", dest="generatePartials",
+                      action='store_true', default=False)
 
     options, args = parser.parse_args()
+    if options.generatePartials:
+        makeDirs.extend([
+            path.join("modules", "libbz2"),
+            path.join("other-licenses", "bsdiff")
+        ])
     retry(mercurial, args=(options.buildbotConfigs, "buildbot-configs"))
     update("buildbot-configs", revision=options.releaseTag)
     sys.path.append(os.getcwd())
@@ -176,14 +194,28 @@ if __name__ == "__main__":
     stageSshKey = path.join("~", ".ssh", branchConfig["stage_ssh_key"])
 
     createRepacks(
-        make_hg_url(branchConfig["hghost"], sourceRepoInfo["path"]),
-        options.releaseTag, l10nRepoDir,
-        make_hg_url(branchConfig["hghost"], releaseConfig["l10nRepoPath"]),
-        mozconfig, options.objdir, makeDirs,
-        releaseConfig["appName"], locales, releaseConfig["productName"],
-        releaseConfig["version"], int(releaseConfig["buildNumber"]),
-        branchConfig["stage_server"], branchConfig["stage_username"],
-        stageSshKey,
-        make_hg_url(branchConfig["hghost"],
-                    branchConfig["compare_locales_repo_path"]),
-        releaseConfig["mergeLocales"], options.platform, brandName)
+        sourceRepo=make_hg_url(branchConfig["hghost"], sourceRepoInfo["path"]),
+        revision=options.releaseTag,
+        l10nRepoDir=l10nRepoDir,
+        l10nBaseRepo=make_hg_url(branchConfig["hghost"],
+                                 releaseConfig["l10nRepoPath"]),
+        mozconfigPath=mozconfig,
+        objdir=options.objdir,
+        makeDirs=makeDirs,
+        appName=releaseConfig["appName"],
+        locales=locales,
+        product=releaseConfig["productName"],
+        version=releaseConfig["version"],
+        buildNumber=int(releaseConfig["buildNumber"]),
+        stageServer=branchConfig["stage_server"],
+        stageUsername=branchConfig["stage_username"],
+        stageSshKey=stageSshKey,
+        compareLocalesRepo=make_hg_url(branchConfig["hghost"],
+                                       branchConfig["compare_locales_repo_path"]),
+        merge=releaseConfig["mergeLocales"],
+        platform=options.platform,
+        brand=brandName,
+        generatePartials=options.generatePartials,
+        oldVersion=releaseConfig["oldVersion"],
+        oldBuildNumber=releaseConfig["oldBuildNumber"],
+    )

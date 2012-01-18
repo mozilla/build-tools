@@ -77,6 +77,10 @@ sub GetReleaseBlock {
       '/pub/mozilla.org/' . $product . '/nightly/' . $version . '-candidates/' .
       $buildStr . '/update/%platform%/%locale%/' . $product . '-' . $version .
       '.complete.mar';
+    $releaseBlock->{'checksumsurl'} = 'http://' . $stagingServer .
+      '/pub/mozilla.org/' . $product . '/nightly/' . $version . '-candidates/' .
+      $buildStr . '/%platform%/%locale%/' . $product . '-' . $version .
+      '.checksums';
 
     $releaseBlock->{'exceptions'} = {};
 
