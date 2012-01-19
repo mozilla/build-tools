@@ -20,10 +20,23 @@ import json
 
 log = logging.getLogger()
 
-try:
-    tegras  = json.load(open('/builds/tools/buildfarm/mobile/tegras.json', 'r'))
-except:
-    tegras  = {}
+
+def loadTegrasData(filepath):
+    result = {}
+    tFile  = os.path.join(filepath, 'tegras.json')
+    if os.path.isfile(tFile):
+        try:
+            result = json.load(open(tFile, 'r'))
+        except:
+            result = {}
+    return result
+
+# look for tegras.json where foopies have it
+# if not loaded, then try relative to sut_lib.py's path
+# as that is where it would be if run from tools repo
+tegras = loadTegrasData('/builds/tools/buildfarm/mobile')
+if len(tegras) == 0:
+    tegras = loadTegrasData(os.path.join(os.path.dirname(__file__), '../buildfarm/mobile'))
 
 try:
     masters = json.load(open('/builds/tools/buildfarm/maintenance/production-masters.json', 'r'))
