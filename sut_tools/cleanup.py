@@ -20,6 +20,7 @@ processNames = [ 'org.mozilla.fennec',
                  'org.mozilla.fennec_unofficial',
                  'org.mozilla.firefox',
                  'org.mozilla.firefox_beta',
+                 'org.mozilla.roboexample.test', 
                ]
 
 if os.path.exists(flagFile):
