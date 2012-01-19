@@ -7,6 +7,7 @@ except:
 import re
 import urllib2
 import urlparse
+import sys
 
 def main():
     parser = OptionParser()
@@ -23,7 +24,7 @@ def main():
     #  %(repo_path)s/raw-file/%(revision)s/testing/talos/talos.json
     try:
         jsonFilename = download_file(options.talos_json_url)
-    except:
+    except Exception as e:
         print "ERROR: We have been unable to download the talos.zip indicated " + \
               "in the talos.json file."
         print "ERROR: %s" % str(e)
@@ -32,7 +33,8 @@ def main():
     print "INFO: talos.json URL:  %s" % options.talos_json_url
     talos_zip_url = get_value(jsonFilename, "talos_zip")
     print "INFO: talos.zip URL: '%s'" % talos_zip_url
-    if options.talos_json_url.startswith("http://hg.mozilla.org/try/") == False:
+    if options.talos_json_url.startswith("http://hg.mozilla.org/try/") == False and \
+       options.talos_json_url.startswith("http://hg.mozilla.org/projects/pine/") == False:
         p = re.compile('^http://build.mozilla.org/talos/zips/talos.*?\.zip$')
         m = p.match(talos_zip_url)
         if m == None:
@@ -42,7 +44,7 @@ def main():
             exit(1)
     try:
         download_file(talos_zip_url, "talos.zip")
-    except:
+    except Exception as e:
         print "ERROR: We have been unable to download the talos.zip indicated " + \
               "in the talos.json file."
         print "ERROR: %s" % str(e)
