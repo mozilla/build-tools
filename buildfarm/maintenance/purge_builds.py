@@ -19,7 +19,7 @@ example:
     python %prog -s 6 /builds/moz2_slave /scratchbox/users/cltbld/home/cltbld/build
 """
 
-import os, shutil, re, sys
+import os, shutil, sys
 from fnmatch import fnmatch
 
 DEFAULT_BASE_DIRS=["..", "/scratchbox/users/cltbld/home/cltbld/build"]
@@ -125,6 +125,28 @@ def purge(base_dirs, gigs, ignore, max_age, dry_run=False):
             except:
                 print >>sys.stderr, "Couldn't purge %s properly. Skipping." % d
 
+def purge_hg_shares(share_dir, gigs, max_age, dry_run=False):
+    """Deletes old hg directories under share_dir"""
+    # Find hg directories
+    hg_dirs = []
+    for root, dirs, files in os.walk(share_dir):
+        for d in dirs[:]:
+            path = os.path.join(root, d, '.hg')
+            if os.path.exists(path) or os.path.exists(path + clobber_suffix):
+                hg_dirs.append(os.path.join(root, d))
+                # Remove d from the list so we don't go traversing down into it
+                dirs.remove(d)
+
+    # Now we have a list of hg directories, call purge on them
+    purge(hg_dirs, gigs, [], max_age, dry_run)
+
+    # Clean up empty directories
+    for d in hg_dirs:
+        if not os.path.exists(os.path.join(d, '.hg')):
+            print "Cleaning up", d
+            if not dry_run:
+                rmdirRecursive(d)
+
 if __name__ == '__main__':
     import time
     from optparse import OptionParser
@@ -178,6 +200,12 @@ will be listed in the order in which they would be deleted.''')
         cutoff_time = None
 
     purge(base_dirs, options.size, options.skip, cutoff_time, options.dry_run)
+
+    # Try to cleanup shared hg repos. We run here even if we've freed enough
+    # space so we can be sure and delete repositories older than max_age
+    if 'HG_SHARE_BASE_DIR' in os.environ:
+        purge_hg_shares(os.environ['HG_SHARE_BASE_DIR'], options.size, cutoff_time, options.dry_run)
+
     after = freespace(base_dirs[0])/(1024*1024*1024.0)
 
     # Try to cleanup the current dir if we still need space and it will actually help.
