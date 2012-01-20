@@ -64,4 +64,4 @@ def postUploadCmdPrefix(upload_dir=None,
     if signed:
             cmd.append("--signed")
 
-    return " ".join(cmd)
+    return str(" ".join(cmd))

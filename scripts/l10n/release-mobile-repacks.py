@@ -77,7 +77,7 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                 buildNumber=buildNumber,
                 nightly_dir=nightlyDir,)
             print "env post-locale: %s" % str(env)
-            repackLocale(l, l10nRepoDir, l10nBaseRepo, revision,
+            repackLocale(str(l), l10nRepoDir, l10nBaseRepo, revision,
                          localeSrcDir, l10nIni, compareLocalesRepo, env, merge)
         except Exception, e:
             failed.append((l, format_exc()))
