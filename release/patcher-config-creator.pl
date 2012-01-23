@@ -64,7 +64,7 @@ Options:
   -c The path and filename of the config file to be created.
   -f The FTP server to serve beta builds from. Typically is ftp.mozilla.org
   -t The staging server to serve test builds from. Typically is
-     stage.mozilla.org or stage-old.mozilla.org
+     stage.mozilla.org.
   -d The hostname of the Bouncer server to serve release builds from.
      Typically is download.mozilla.org.
   --platform The list of platforms (multiple). Default to:
