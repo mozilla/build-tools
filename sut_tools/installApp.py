@@ -57,7 +57,7 @@ def find_robocop():
     extracted_location = 'build/tests/bin/robocop.apk'
     self_extracted_location = 'build/robocop.apk'
     actual_location = None
-            
+
     # for better error reporting
     global proxyFile, errorFile
 
@@ -69,25 +69,26 @@ def find_robocop():
     else:
         expected_zip_location = 'build/fennec*tests.zip'
         matches = glob.glob(expected_zip_location)
-        if len(matches) != 1:
-            setFlag(errorFile, "Can't find just one %s; found '%s'" % (expected_zip_location,
-                                                                      str(matches)))
-            sys.exit(1)
+        if len(matches) == 1:
+            # try to grab the file we need from there, giving up if any
+            # assumption doesn't match
+            try:
+                archive = zipfile.ZipFile(matches[0], 'r')
+                apk_info = archive.getinfo('bin/robocop.apk')
+                # it's in the archive, extract to tmp dir - will be created
+                archive.extract(apk_info, 'build/tmp')
+                shutil.move('build/tmp/bin/robocop.apk', self_extracted_location)
+                actual_location = self_extracted_location
+                # got it
+            except Exception as e:
+                print "WARNING (robocop): zip file not as expected: %s (%s)" % (e.message,
+                                                                        str(e.args))
+                print "WARNING (robocop): robocop.apk will not be installed"
+        else:
+            print "WARNING (robocop): Didn't find just one %s; found '%s'" % (expected_zip_location,
+                                                                      str(matches))
+            print "WARNING (robocop): will continue using first listed above (if any)"
 
-        # try to grab the file we need from there, giving up if any
-        # assumption doesn't match
-        try:
-            archive = zipfile.ZipFile(matches[0], 'r')
-            apk_info = archive.getinfo('bin/robocop.apk')
-            # it's in the archive, extract to tmp dir - will be created
-            archive.extract(apk_info, 'build/tmp')
-            shutil.move('build/tmp/bin/robocop.apk', self_extracted_location)
-            actual_location = self_extracted_location
-            # got it
-        except BaseException as e:
-            setFlag(errorFile, "zip file not as exected: %s (%s)" % (e.message,
-                                                                    str(e.args)))
-            sys.exit(1)
     return actual_location
 
 def one_time_setup(ip_addr, major_source):
@@ -173,9 +174,11 @@ def main(argv):
     path_to_main_apk = argv[2]
     dm, devRoot = one_time_setup(ip_addr, path_to_main_apk)
     installOneApp(dm, devRoot, path_to_main_apk)
-    # also install robocop, after first finishes
-    waitForDevice(dm)
-    installOneApp(dm, devRoot, find_robocop())
+    # also install robocop if it's available
+    robocop_to_use = find_robocop()
+    if robocop_to_use is not None:
+        waitForDevice(dm)
+        installOneApp(dm, devRoot, robocop_to_use)
 
     # make sure we're all the way back up before we finish
     waitForDevice(dm)

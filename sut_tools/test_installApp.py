@@ -53,6 +53,8 @@ import time
 import installApp 
 class InstallAppTestCase(unittest.TestCase):
     def setUp(self):
+        # every test should reset the counts
+        the_mock.reset_mock()
         # we want to ensure a "success" from the installApp method
         the_mock.installApp.return_value = None
         # don't exercise find code by default
@@ -88,9 +90,6 @@ class CheckBasicExecution(InstallAppTestCase):
 class CheckArguementHandling(InstallAppTestCase):
     # N.B. the 3rd arguement to installApp.py is never used, so can
     # not be tested
-    def setUp(self):
-        super(CheckArguementHandling, self).setUp()
-        the_mock.reset_mock()
 
     def testIPAddress(self):
         for ip in ('hostname', '255.255.255.255'):
@@ -124,11 +123,8 @@ class CheckOriginalContract(InstallAppTestCase):
         the_mock.installApp.assert_called_once_with(installed_path)
 
 class CheckNewContract(InstallAppTestCase):
-    def setUp(self):
-        super(CheckNewContract, self).setUp()
-        the_mock.reset_mock()
 
-    def testOneSetOfNewCalls(self):
+    def test_robocop_found(self):
         root_path = sut_lib.checkDeviceRoot.return_value
         source_file = 'fennec.eggs.arm.apk'
         robocop_file = 'robocop.apk'
@@ -148,27 +144,40 @@ class CheckNewContract(InstallAppTestCase):
         self.assertEqual(the_mock.pushFile.call_args_list,
                          expected_pushFile_calls)
 
+    def test_robocop_not_found(self):
+        root_path = sut_lib.checkDeviceRoot.return_value
+        source_file = 'fennec.eggs.arm.apk'
+        robocop_file = 'robocop.apk'
+        source_path = os.path.join('build/', source_file)
+        robocop_source_path = os.path.join('build/tests/bin', robocop_file)
+        installed_path = os.path.join(root_path, source_file)
+        robocop_installed_path = os.path.join(root_path, robocop_file)
+        expected_pushFile_calls = [((source_path, installed_path), {}),]
+        expected_installApp_calls = [((installed_path,), {}),]
+
+        # simulate not finding robocop.apk - should not attempt install
+        # then
+        os.path.exists.return_value = False
+        installApp.main(['app', 1, source_path])
+
+        self.assertEqual(the_mock.installApp.call_args_list,
+                         expected_installApp_calls)
+        self.assertEqual(the_mock.pushFile.call_args_list,
+                         expected_pushFile_calls)
+
 class CheckRobocopFind(InstallAppTestCase):
 
-    def setUp(self):
-        super(CheckRobocopFind, self).setUp()
-        self.saved_return_value = os.path.exists.return_value
-
-    def tearDown(self):
-        os.path.exists.return_value = self.saved_return_value
-        super(CheckRobocopFind, self).tearDown()
-
-    def call_expecting_sysexit(self):
-        try:
-            installApp.main(['app',1,'fred'])
-        except SystemExit as e:
-            self.assertEqual(1, e.code)
-        else:
-            self.fail('should have thrown SystemExit')
-
-    def test_exit_if_not_found(self):
+    def test_null_path_if_not_found(self):
         os.path.exists.return_value = False
-        self.call_expecting_sysexit()
+        found_path = installApp.find_robocop()
+        self.assertFalse(found_path,
+                         "Should not have found robocop.apk")
+
+    def test_correct_path_if_found(self):
+        os.path.exists.return_value = True
+        found_path = installApp.find_robocop()
+        self.assertTrue(found_path,
+                         "Should have found robocop.apk")
 
 if __name__ == '__main__':
     unittest.main()
