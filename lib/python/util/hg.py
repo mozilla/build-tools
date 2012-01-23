@@ -268,9 +268,11 @@ def out(src, remote, **kwargs):
                 return []
             raise
 
-def push(src, remote, push_new_branches=True, **kwargs):
+def push(src, remote, push_new_branches=True, force=False, **kwargs):
     cmd = ['hg', 'push']
     cmd.extend(common_args(**kwargs))
+    if force:
+        cmd.append('-f')
     if push_new_branches:
         cmd.append('--new-branch')
     cmd.append(remote)
@@ -418,7 +420,7 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
             bundles=bundles, clone_by_rev=clone_by_rev)
 
 def apply_and_push(localrepo, remote, changer, max_attempts=10,
-                   ssh_username=None, ssh_key=None):
+                   ssh_username=None, ssh_key=None, force=False):
     """This function calls `changer' to make changes to the repo, and tries
        its hardest to get them to the origin repo. `changer' must be a
        callable object that receives two arguments: the directory of the local
@@ -435,7 +437,7 @@ def apply_and_push(localrepo, remote, changer, max_attempts=10,
             if len(new_revs) < 1:
                 raise HgUtilError("No revs to push")
             push(src=localrepo, remote=remote, ssh_username=ssh_username,
-                 ssh_key=ssh_key)
+                 ssh_key=ssh_key, force=force)
             return
         except subprocess.CalledProcessError, e:
             log.debug("Hit error when trying to push: %s" % str(e))

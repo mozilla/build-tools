@@ -221,6 +221,21 @@ class TestHg(unittest.TestCase):
         self.assertRaises(Exception, push, self.repodir, self.wc,
                           push_new_branches=False)
 
+    def testPushWithForce(self):
+        clone(self.repodir, self.wc, revision=self.revisions[0], clone_by_rev=True)
+        run_cmd(['touch', 'newfile'], cwd=self.wc)
+        run_cmd(['hg', 'add', 'newfile'], cwd=self.wc)
+        run_cmd(['hg', 'commit', '-m', '"re-add newfile"'], cwd=self.wc)
+        push(self.repodir, self.wc, push_new_branches=False, force=True)
+
+    def testPushForceFail(self):
+        clone(self.repodir, self.wc, revision=self.revisions[0], clone_by_rev=True)
+        run_cmd(['touch', 'newfile'], cwd=self.wc)
+        run_cmd(['hg', 'add', 'newfile'], cwd=self.wc)
+        run_cmd(['hg', 'commit', '-m', '"add newfile"'], cwd=self.wc)
+        self.assertRaises(Exception, push, self.repodir, self.wc,
+                push_new_branches=False, force=False)
+
     def testMercurialWithNewShare(self):
         shareBase = os.path.join(self.tmpdir, 'share')
         sharerepo = os.path.join(shareBase, self.repodir.lstrip("/"))
@@ -423,6 +438,31 @@ class TestHg(unittest.TestCase):
         def c(r,a):
             pass
         self.assertRaises(HgUtilError, apply_and_push, self.wc, self.repodir, c)
+
+    def testApplyAndPushForce(self):
+        clone(self.repodir, self.wc)
+        def c(repo, attempt, remote, local):
+            run_cmd(['touch', 'newfile'], cwd=remote)
+            run_cmd(['hg', 'add', 'newfile'], cwd=remote)
+            run_cmd(['hg', 'commit', '-m', '"add newfile"'], cwd=remote)
+            run_cmd(['touch', 'newfile'], cwd=local)
+            run_cmd(['hg', 'add', 'newfile'], cwd=local)
+            run_cmd(['hg', 'commit', '-m', '"re-add newfile"'], cwd=local)
+        apply_and_push(self.wc, self.repodir,
+                (lambda r, a: c(r, a, self.repodir, self.wc)), force=True)
+
+    def testApplyAndPushForceFail(self):
+        clone(self.repodir, self.wc)
+        def c(repo, attempt, remote, local):
+            run_cmd(['touch', 'newfile'], cwd=remote)
+            run_cmd(['hg', 'add', 'newfile'], cwd=remote)
+            run_cmd(['hg', 'commit', '-m', '"add newfile"'], cwd=remote)
+            run_cmd(['touch', 'newfile'], cwd=local)
+            run_cmd(['hg', 'add', 'newfile'], cwd=local)
+            run_cmd(['hg', 'commit', '-m', '"re-add newfile"'], cwd=local)
+        self.assertRaises(HgUtilError,
+            apply_and_push, self.wc, self.repodir,
+                (lambda r, a: c(r, a, self.repodir, self.wc)), force=False)
 
     def testPath(self):
         clone(self.repodir, self.wc)
