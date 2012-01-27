@@ -31,7 +31,7 @@ DEFAULT_STAGE_SERVER = 'stage.mozilla.org'
 DEFAULT_HG_SERVER = 'http://hg.mozilla.org'
 
 def getSnippetDirname(oldBaseSnippetDir, channel):
-    if channel == 'release':
+    if channel == 'release' or 'esr':
         ausdir = 'aus2'
     elif channel.find('test') != -1:
         ausdir = 'aus2.test'

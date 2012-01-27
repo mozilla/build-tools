@@ -29,7 +29,7 @@ sub ProcessArgs {
         "verify-config|c=s", "old-candidates-dir|d=s", "linux-extension|e=s",
         "shipped-locales|l=s", "pretty-candidates-dir", "major|m",
         "binary-name=s", "old-binary-name=s", "--test-older-partials",
-        "old-shipped-locales=s", "help", "run-tests"
+        "old-shipped-locales=s", "channel=s", "help", "run-tests"
     );
 
     if ($config{'help'}) {
@@ -77,6 +77,7 @@ Options requiring arguments:
                           for this release.
   --old-shipped-locales   The path and filename to the old-shipped-locales file
                           for this release.
+  --channel               The channel to test on. Defaults to betatest.
 Options without arguments:
   --pretty-candidates-dir When passed, the "to" field in the verify config will
                           be formatted the "pretty" way by using the long
@@ -171,6 +172,9 @@ __USAGE__
         if (! defined $config{'test-older-partials'}) {
             $config{'test-older-partials'} = 0;
         }
+        if (! defined $config{'channel'}) {
+            $config{'channel'} = 'betatest';
+        }
     }
 }
 
@@ -199,9 +203,7 @@ sub BumpVerifyConfig {
     my $prettyCandidatesDir = $config{'pretty-candidates-dir'};
     my $majorMode = $config{'major'};
     my $testOlderPartials = $config{'test-older-partials'};
-
-    # NOTE - channel is hardcoded to betatest
-    my $channel = 'betatest';
+    my $channel = $config{'channel'};
 
     my $buildID = GetBuildIDFromFTP(os => $osname,
                                     releaseDir => $candidatesDir,
