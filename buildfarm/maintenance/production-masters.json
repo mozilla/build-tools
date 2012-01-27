@@ -77,7 +77,7 @@
     "master_dir": "/builds/buildbot/build1/master",
     "name": "bm07-build1",
     "pb_port": 9001,
-    "release_branches": ["mozilla-release", "mozilla-esr"],
+    "release_branches": ["mozilla-release", "mozilla-esr10"],
     "mobile_release_branches": ["mozilla-release"],
     "role": "build",
     "ssh_port": 7001,
