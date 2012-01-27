@@ -33,22 +33,33 @@ def main():
     print "INFO: talos.json URL:  %s" % options.talos_json_url
     talos_zip_url = get_value(jsonFilename, "talos_zip")
     print "INFO: talos.zip URL: '%s'" % talos_zip_url
-    if options.talos_json_url.startswith("http://hg.mozilla.org/try/") == False and \
-       options.talos_json_url.startswith("http://hg.mozilla.org/projects/pine/") == False:
-        p = re.compile('^http://build.mozilla.org/talos/zips/talos.*?\.zip$')
-        m = p.match(talos_zip_url)
-        if m == None:
+    try:
+        if passesRestrictions(options.talos_json_url, talos_zip_url) == False:
             print "ERROR: You have tried to download a talos.zip from a location " + \
                   "different than http://build.mozilla.org/talos/zips"
             print "ERROR: This is only allowed for the 'try' branch."
-            exit(1)
-    try:
+            sys.exit(1)
         download_file(talos_zip_url, "talos.zip")
     except Exception as e:
         print "ERROR: We have been unable to download the talos.zip indicated " + \
               "in the talos.json file."
         print "ERROR: %s" % str(e)
         sys.exit(1)
+
+def passesRestrictions(talosJsonUrl, fileUrl):
+    '''
+    Only certain branches are exempted from having to host their downloadable files
+    in build.mozilla.org
+    '''
+    if talosJsonUrl.startswith("http://hg.mozilla.org/try/") == True or \
+       talosJsonUrl.startswith("http://hg.mozilla.org/projects/pine/") == True:
+        return True
+    else:
+        p = re.compile('^http://build.mozilla.org/talos/')
+        m = p.match(fileUrl)
+        if m == None:
+            return False
+        return True
 
 def get_filename_from_url(url):
     '''
