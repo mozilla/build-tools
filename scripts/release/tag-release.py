@@ -177,8 +177,17 @@ def validate(options, args):
         if not callable(getattr(config['otherReposToTag'], 'iteritems')):
             err = True
             log.info("otherReposToTag exists in config but is not a dict")
+    
     if err:
         sys.exit(1)
+    
+    # Non-fatal warnings only after this point
+    if not (options.tag_source or options.tag_l10n or options.tag_other):
+        log.info("No tag directive specified, defaulting to all")
+        options.tag_source = True
+        options.tag_l10n = True
+        options.tag_other = True
+
     return config
 
 if __name__ == '__main__':
@@ -199,6 +208,12 @@ if __name__ == '__main__':
                       help="The place to clone buildbot-configs from")
     parser.add_option("-t", "--release-tag", dest="release_tag",
                       help="Release tag to update buildbot-configs to")
+    parser.add_option("--tag-source", dest="tag_source",
+                       help="Tag the source repo(s).")
+    parser.add_option("--tag-l10n", dest="tag_l10n",
+                       help="Tag the L10n repo(s).")
+    parser.add_option("--tag-other", dest="tag_other",
+                       help="Tag the other repo(s).")
 
     options, args = parser.parse_args()
     retry(mercurial, args=(options.buildbot_configs, 'buildbot-configs'))
@@ -218,22 +233,24 @@ if __name__ == '__main__':
                                               config['l10nRevisionFile']),
                                     config['l10nRepoPath'])
 
-    for repo in config['sourceRepositories'].values():
-        relbranch = repo['relbranch'] or generatedRelbranch
-        tagRepo(config, repo['path'], repo['name'], repo['revision'], tags,
-                repo['bumpFiles'], relbranch, options.attempts)
+    if options.tag_source:
+        for repo in config['sourceRepositories'].values():
+            relbranch = repo['relbranch'] or generatedRelbranch
+            tagRepo(config, repo['path'], repo['name'], repo['revision'], tags,
+                    repo['bumpFiles'], relbranch, options.attempts)
     failed = []
-    for l in sorted(l10nRepos):
-        info = l10nRepos[l]
-        relbranch = config['l10nRelbranch'] or generatedRelbranch
-        try:
-            tagRepo(config, l, path.basename(l), info['revision'], tags,
-                    info['bumpFiles'], relbranch, options.attempts)
-        # If en-US tags successfully we'll do our best to tag all of the l10n
-        # repos, even if some have errors
-        except:
-            failed.append((l, format_exc()))
-    if 'otherReposToTag' in config:
+    if options.tag_l10n:
+        for l in sorted(l10nRepos):
+            info = l10nRepos[l]
+            relbranch = config['l10nRelbranch'] or generatedRelbranch
+            try:
+                tagRepo(config, l, path.basename(l), info['revision'], tags,
+                        info['bumpFiles'], relbranch, options.attempts)
+            # If en-US tags successfully we'll do our best to tag all of the l10n
+            # repos, even if some have errors
+            except:
+                failed.append((l, format_exc()))
+    if 'otherReposToTag' in config and options.tag_other:
         for repo, revision in config['otherReposToTag'].iteritems():
             try:
                 tagOtherRepo(config, repo, path.basename(repo), revision,
