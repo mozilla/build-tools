@@ -1,5 +1,5 @@
 #!/bin/sh
-set -e
+set -ex
 MY_DIR=$(dirname $(readlink -f $0))
 SCRIPTS_DIR="$MY_DIR/../../"
 PYTHON="/tools/python/bin/python"
@@ -14,6 +14,10 @@ builder=$($JSONTOOL -k properties.buildername $PROPERTIES_FILE)
 slavebuilddir=$($JSONTOOL -k properties.slavebuilddir $PROPERTIES_FILE)
 slavename=$($JSONTOOL -k properties.slavename $PROPERTIES_FILE)
 master=$($JSONTOOL -k properties.master $PROPERTIES_FILE)
+if [ -n "$EXTRA_DATA" ]; then
+  tag_extra_args=$($JSONTOOL -k tag_args $EXTRA_DATA)
+  clobber_extra_args="-s $EXTRA_DATA"
+fi
 
 if [ -z "$BUILDBOT_CONFIGS" ]; then
     export BUILDBOT_CONFIGS="http://hg.mozilla.org/build/buildbot-configs"
@@ -22,10 +26,10 @@ if [ -z "$CLOBBERER_URL" ]; then
     export CLOBBERER_URL="http://build.mozilla.org/clobberer"
 fi
 
-echo "Calling clobberer: $PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s scripts -s buildprops.json $CLOBBERER_URL $branch $builder $slavebuilddir $slavename $master"
+echo "Calling clobberer: $PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s scripts -s buildprops.json $clobber_extra_args $CLOBBERER_URL $branch $builder $slavebuilddir $slavename $master"
 cd $SCRIPTS_DIR/../..
-$PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s scripts -s buildprops.json $CLOBBERER_URL $branch $builder $slavebuilddir $slavename $master
+$PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s scripts -s buildprops.json $clobber_extra_args $CLOBBERER_URL $branch $builder $slavebuilddir $slavename $master
 cd $workdir
 
-echo "Calling tag-release.py: $PYTHON tag-release.py -c $releaseConfig -b $BUILDBOT_CONFIGS -t $releaseTag"
-$PYTHON $MY_DIR/tag-release.py -c $releaseConfig -b $BUILDBOT_CONFIGS -t $releaseTag || exit 2
+echo "Calling tag-release.py: $PYTHON tag-release.py -c $releaseConfig -b $BUILDBOT_CONFIGS -t $releaseTag $tag_extra_args"
+$PYTHON $MY_DIR/tag-release.py -c $releaseConfig -b $BUILDBOT_CONFIGS -t $releaseTag $tag_extra_args || exit 2
