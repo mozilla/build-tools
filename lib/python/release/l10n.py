@@ -73,8 +73,8 @@ def makeReleaseRepackUrls(productName, brandName, version, platform,
                           locale='en-US', signed=False):
     longVersion = version
     builds = {}
+    platformDir = buildbot2ftp(platform)
     if productName not in ('fennec',):
-        platformDir = buildbot2ftp(platform)
         if platform.startswith('linux'):
             filename = '%s.tar.bz2' % productName
             builds[filename] = '/'.join([p.strip('/') for p in [
@@ -101,7 +101,17 @@ def makeReleaseRepackUrls(productName, brandName, version, platform,
         else:
             raise "Unsupported platform"
     else:
-        if platform == 'linux':
+        if platform.startswith('android'):
+            filename = '%s-%s.%s.android-arm.apk' % (productName, version, locale)
+            prefix = []
+            if not signed:
+                prefix.append('unsigned')
+            prefix.extend([platformDir, locale])
+            builds[filename] = '/'.join(
+                [p.strip('/') for p in
+                 prefix + [filename]]
+            )
+        elif platform == 'linux':
             filename = '%s.tar.bz2' % productName
             builds[filename] = '/'.join([p.strip('/') for p in [
                 platform, locale, '%s-%s.%s.linux-i686.tar.bz2' % (productName, version, locale)]])
