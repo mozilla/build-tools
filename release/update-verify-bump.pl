@@ -243,7 +243,7 @@ sub BumpVerifyConfig {
         # bug 630085 - we're only updating people running i386 from Fx3.5 and
         # Fx3.6 to Fx4. TODO: Needs to play nice with other apps. Will get
         # redone to fix bug 633124
-        if ($majorMode and $product eq 'firefox' and $appVersion ge '4.0') {
+        if ($majorMode and $product eq 'firefox' and $appVersion > '4.0') {
             $buildTarget = 'Darwin_x86-gcc3-u-ppc-i386';
         } else {
             $buildTarget = 'Darwin_Universal-gcc3';
