@@ -96,7 +96,7 @@ def verify_repo(branch, revision, hghost):
         error_tally.add('verify_repo')
     return success
 
-def verify_mozconfigs(branch, version, hghost, product, platforms, whitelist=None):
+def verify_mozconfigs(branch, revision, hghost, product, mozconfigs, appName, whitelist=None):
     """Compare nightly mozconfigs for branch to release mozconfigs and compare to whitelist of known differences"""
     if whitelist:
         mozconfigWhitelist = readConfig(whitelist, ['whitelist'])
@@ -105,14 +105,14 @@ def verify_mozconfigs(branch, version, hghost, product, platforms, whitelist=Non
     log.info("Comparing %s mozconfigs to nightly mozconfigs..." % product)
     success = True
     types = {'+': 'release', '-': 'nightly'}
-    tag = ''.join([product.upper(), "_",  version.replace('.','_'), "_RELEASE"])
-    for platform in platforms:
+    for platform,mozconfig in mozconfigs.items():
         urls = []
         mozconfigs = []
-        for type in types.values():
-            urls.append(make_hg_url(hghost, 'build/buildbot-configs', 'http', 
-                                tag, os.path.join('mozilla2', platform, 
-                                branch, type,'mozconfig')))
+        # Create links to the two mozconfigs.
+        releaseConfig = make_hg_url(hghost, branch, 'http', revision, mozconfig)
+        urls.append(releaseConfig)
+        # The nightly one is the exact same URL, with the file part changed.
+        urls.append(releaseConfig.rstrip('release') + 'nightly')
         for url in urls:
             try:
                 mozconfigs.append(urllib2.urlopen(url).readlines())
@@ -362,11 +362,12 @@ if __name__ == '__main__':
 
             # verify that mozconfigs for this release pass diff with nightly, compared to a whitelist
             if not verify_mozconfigs(
-                    options.branch,
-                    options.version,
+                    releaseConfig['sourceRepositories']['mozilla']['path'],
+                    releaseConfig['sourceRepositories']['mozilla']['revision'],
                     branchConfig['hghost'],
                     releaseConfig['productName'],
-                    releaseConfig['enUSPlatforms'],
+                    releaseConfig['mozconfigs'],
+                    releaseConfig['appName'],
                     options.whitelist
                 ):
                 test_success = False
