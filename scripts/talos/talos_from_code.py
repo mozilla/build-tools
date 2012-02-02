@@ -46,8 +46,8 @@ def main():
     if get_value(jsonFilename, 'talos_zip') != None:
          # XXX: This if clause is interim until all branches support the new talos.json format
          url = get_value(jsonFilename, 'talos_zip')
-         download_file(url, "", 'talos_zip')
-         print "INFO: %s -> %s" % (url, 'talos_zip')
+         download_file(url, "", 'talos.zip')
+         print "INFO: %s -> %s" % (url, 'talos.zip')
          # NOTE: We're obviously hard-coding
          url = 'http://build.mozilla.org/talos/xpis/pageloader.xpi'
          download_file(url, "talos/page_load_test", 'pageloader.xpi')
