@@ -361,9 +361,18 @@ if __name__ == '__main__':
                 log.error("Error verifying command-line options, attempting checking repo")
 
             # verify that mozconfigs for this release pass diff with nightly, compared to a whitelist
+            try:
+                path = releaseConfig['sourceRepositories']['mozilla']['path']
+                revision = releaseConfig['sourceRepositories']['mozilla']['revision']
+            except KeyError:
+                try:
+                    path = releaseConfig['sourceRepositories']['mobile']['path']
+                    revision = releaseConfig['sourceRepositories']['mobile']['revision']
+                except:
+                    log.error("Can't determine sourceRepo for mozconfigs")
             if not verify_mozconfigs(
-                    releaseConfig['sourceRepositories']['mozilla']['path'],
-                    releaseConfig['sourceRepositories']['mozilla']['revision'],
+                    path,
+                    revision,
                     branchConfig['hghost'],
                     releaseConfig['productName'],
                     releaseConfig['mozconfigs'],
