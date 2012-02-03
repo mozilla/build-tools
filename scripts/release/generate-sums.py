@@ -84,6 +84,10 @@ if __name__ == '__main__':
     signFiles(files)
     upload_files = files + ['%s.asc' % x for x in files] + \
         [path.join(path.dirname(__file__), 'KEY')]
+    log.info("Fixing permissions...")
+    for f in upload_files:
+        log.info("chmod 644 %s" % f)
+        os.chmod(f, 644)
     rsyncFiles(files=upload_files, server=stageServer, userName=stageUsername,
                sshKey=stageSshKey, target_dir=candidatesDir)
     cmd = 'mkdir -v -m 2775 %s/contrib %s/contrib-localized' % \
