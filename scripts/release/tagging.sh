@@ -14,6 +14,9 @@ builder=$($JSONTOOL -k properties.buildername $PROPERTIES_FILE)
 slavebuilddir=$($JSONTOOL -k properties.slavebuilddir $PROPERTIES_FILE)
 slavename=$($JSONTOOL -k properties.slavename $PROPERTIES_FILE)
 master=$($JSONTOOL -k properties.master $PROPERTIES_FILE)
+if [ -z "$EXTRA_DATA" ]; then
+  tag_extra_args=$($JSONTOOL -k tag_args $EXTRA_DATA)
+fi
 
 if [ -z "$BUILDBOT_CONFIGS" ]; then
     export BUILDBOT_CONFIGS="http://hg.mozilla.org/build/buildbot-configs"
@@ -28,4 +31,4 @@ $PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s scripts -s buildprops.json $CLOBB
 cd $workdir
 
 echo "Calling tag-release.py: $PYTHON tag-release.py -c $releaseConfig -b $BUILDBOT_CONFIGS -t $releaseTag"
-$PYTHON $MY_DIR/tag-release.py -c $releaseConfig -b $BUILDBOT_CONFIGS -t $releaseTag || exit 2
+$PYTHON $MY_DIR/tag-release.py -c $releaseConfig -b $BUILDBOT_CONFIGS -t $releaseTag $tag_extra_args || exit 2
