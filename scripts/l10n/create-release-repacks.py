@@ -30,7 +30,8 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                   mozconfigPath, objdir, makeDirs, appName, locales, product,
                   version, buildNumber, stageServer, stageUsername, stageSshKey,
                   compareLocalesRepo, merge, platform, brand,
-                  generatePartials=False, oldVersion=None, oldBuildNumber=None):
+                  generatePartials=False, oldVersion=None, 
+                  oldBuildNumber=None, appVersion=None):
     sourceRepoName = path.split(sourceRepo)[-1]
     localeSrcDir = path.join(sourceRepoName, objdir, appName, "locales")
     # Even on Windows we need to use "/" as a separator for this because
@@ -40,13 +41,14 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
     env = {
         "MOZ_OBJDIR": objdir,
         "MOZ_MAKE_COMPLETE_MAR": "1",
-        "MOZ_PKG_VERSION": version,
         "UPLOAD_HOST": stageServer,
         "UPLOAD_USER": stageUsername,
         "UPLOAD_SSH_KEY": stageSshKey,
         "UPLOAD_TO_TEMP": "1",
         "MOZ_PKG_PRETTYNAMES": "1",
     }
+    if appVersion is None or version != appVersion:
+        env["MOZ_PKG_VERSION"] = version
     signed = False
     if os.environ.get('MOZ_SIGN_CMD'):
         env['MOZ_SIGN_CMD'] = os.environ['MOZ_SIGN_CMD']
@@ -206,6 +208,7 @@ if __name__ == "__main__":
         locales=locales,
         product=releaseConfig["productName"],
         version=releaseConfig["version"],
+        appVersion=releaseConfig["appVersion"],
         buildNumber=int(releaseConfig["buildNumber"]),
         stageServer=branchConfig["stage_server"],
         stageUsername=branchConfig["stage_username"],
