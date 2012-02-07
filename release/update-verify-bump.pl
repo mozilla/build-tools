@@ -289,13 +289,18 @@ sub BumpVerifyConfig {
     close(FILE) or die ("Could not close file $configFile: $!");
 
     my @strippedFile = ();
+    # If the file is already bumped for this version, undo it, so we can do it
+    # again.
     if ($origFile[0] =~ $oldVersion) {
             print "verifyConfig $configFile already bumped\n";
             print "removing previous config..\n";
             # remove top two lines; the comment and the version config
             splice(@origFile, 0, 2);
             @strippedFile = @origFile;
-    } else {
+    # If the file isn't bumped for this version, we split out the current
+    # "full" check into a small "full" and other "quick" checks. We check
+    # for emptiness because this will be empty for new update verify configs.
+    } elsif ($origFile[1] !~ /^\s*$/) {
         # convert existing full check to a full check for top N locales,
         # and quick check for everything else
         my $versionComment = $origFile[0];

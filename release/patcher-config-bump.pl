@@ -267,6 +267,7 @@ sub BumpPatcherConfig {
      'http://' . $stagingServer. '/pub/mozilla.org/' . $product . 
      '/nightly/' .  $version . '-candidates/' . $buildStr . '/' .
      $pBetatestPath;
+    $partialUpdate->{'esrtest-url'} = $partialUpdate->{'betatest-url'};
 
     if ($useBetaChannel) {
       my $pBetaPath;
@@ -326,6 +327,7 @@ sub BumpPatcherConfig {
      'http://' . $stagingServer . '/pub/mozilla.org/' . $product . 
      '/nightly/' .  $version . '-candidates/' . $buildStr . '/' .
      $cBetatestPath;
+    $completeUpdate->{'esrtest-url'} = $completeUpdate->{'betatest-url'};
 
     if ($useBetaChannel) {
        my $cBetaPath;
