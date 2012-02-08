@@ -87,7 +87,7 @@ if __name__ == '__main__':
     log.info("Fixing permissions...")
     for f in upload_files:
         log.info("chmod 644 %s" % f)
-        os.chmod(f, 644)
+        os.chmod(f, 0644)
     rsyncFiles(files=upload_files, server=stageServer, userName=stageUsername,
                sshKey=stageSshKey, target_dir=candidatesDir)
     cmd = 'mkdir -v -m 2775 %s/contrib %s/contrib-localized' % \
