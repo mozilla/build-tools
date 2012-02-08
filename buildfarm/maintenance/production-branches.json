@@ -55,6 +55,13 @@
     ],
     "repo_type": "hg"
   },
+  "mozilla-esr10": {
+    "repo": "http://hg.mozilla.org/releases/mozilla-esr10",
+    "graph_branches": [
+      "Mozilla-Esr10"
+    ],
+    "repo_type": "hg"
+  },
   "oak": {
     "repo": "http://hg.mozilla.org/projects/oak",
     "graph_branches": [
