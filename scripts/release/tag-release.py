@@ -31,8 +31,8 @@ def getBumpCommitMessage(productName, version):
     return 'Automated checkin: version bump for ' + productName + ' ' + \
            version + ' release. CLOSED TREE a=release'
 
-def getTagCommitMessage(revision, tag):
-    return "Added tag " +  tag + " for changeset " + revision + \
+def getTagCommitMessage(revision, tags):
+    return "Added tag(s) (" +  ", ".join(tags) + ") for changeset " + revision + \
            ". CLOSED TREE a=release"
 
 def bump(repo, bumpFiles, versionKey):
@@ -46,10 +46,10 @@ def bump(repo, bumpFiles, versionKey):
             fh.close()
 
 def tag(repo, revision, tags, username):
-    for tag in tags:
-        cmd = ['hg', 'tag', '-u', username, '-r', revision,
-               '-m', getTagCommitMessage(revision, tag), '-f', tag]
-        run_cmd(cmd, cwd=repo)
+    cmd = ['hg', 'tag', '-u', username, '-r', revision,
+           '-m', getTagCommitMessage(revision, tags), '-f']
+    cmd.extend(tags)
+    run_cmd(cmd, cwd=repo)
 
 def tagRepo(config, repo, reponame, revision, tags, bumpFiles, relbranch,
             pushAttempts, defaultBranch='default'):
