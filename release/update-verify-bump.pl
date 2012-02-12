@@ -291,7 +291,7 @@ sub BumpVerifyConfig {
     my @strippedFile = ();
     # If the file is already bumped for this version, undo it, so we can do it
     # again.
-    if ($origFile[0] =~ $oldVersion) {
+    if ($origFile[0] =~ /$oldVersion\s/) {
             print "verifyConfig $configFile already bumped\n";
             print "removing previous config..\n";
             # remove top two lines; the comment and the version config
