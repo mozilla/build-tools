@@ -444,6 +444,64 @@ def reboot_tegra(tegra, debug=False):
 
     return result
 
+def stopStalled(tegra):
+    tegraIP   = getIPAddress(tegra)
+    tegraPath = os.path.join('/builds', tegra)
+    pids      = []
+
+    # look for any process that is associated with the tegra
+    # PID TTY           TIME CMD
+    # 212 ??         0:17.99 /opt/local/Library/Frameworks/Python.framework/Versions/2.6/Resources/Python.app/Contents/MacOS/Python clientproxy.py -b --tegra=tegra-032
+    p, lines  = runCommand(['ps', '-U', 'cltbld'])
+    for line in lines:
+        if ('bcontroller' in line and tegraIP in line) or \
+           ('server.js' in line and tegra in line):
+            item = line.split()
+            if len(item) > 1:
+                try:
+                    pids.append(int(item[0]))
+                except ValueError:
+                    pass
+    for pid in pids:
+        killPID(pid, sig=signal.SIGKILL, includeChildren=True)
+
+    result = False
+    for f in ('runtestsremote', 'remotereftest', 'remotereftest.pid.xpcshell'):
+        pidFile = os.path.join(tegraPath, '%s.pid' % f)
+        print "checking for previous test processes ... %s" % pidFile
+        if os.path.exists(pidFile):
+            print "pidfile from prior test run found, trying to kill"
+            stopProcess(pidFile, f)
+            if os.path.exists(pidFile):
+                result = True
+
+    return result
+
+def stopTegra(tegra):
+    tegraIP   = getIPAddress(tegra)
+    tegraPath = os.path.join('/builds', tegra)
+    errorFile = os.path.join(tegraPath, 'error.flg')
+    proxyFile = os.path.join(tegraPath, 'proxy.flg')
+
+    log.info('%s: %s - stopping all processes' % (tegra, tegraIP))
+
+    stopStalled(tegra)
+    stopProcess(os.path.join(tegraPath, 'clientproxy.pid'), 'clientproxy')
+    stopProcess(os.path.join(tegraPath, 'twistd.pid'), 'buildslave')
+
+    log.debug('  clearing flag files')
+
+    if os.path.isfile(errorFile):
+        log.info('  error.flg cleared')
+        os.remove(errorFile)
+
+    if os.path.isfile(proxyFile):
+        log.info('  proxy.flg cleared')
+        os.remove(proxyFile)
+
+    reboot_tegra(tegra, debug=True)
+
+
 def loadOptions(defaults=None):
     """Parse command line parameters and populate the options object.
     """

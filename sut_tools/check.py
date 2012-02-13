@@ -15,7 +15,7 @@ import datetime
 # from multiprocessing import get_logger, log_to_stderr
 from sut_lib import checkSlaveAlive, checkSlaveActive, getIPAddress, dumpException, loadOptions, \
                     checkCPAlive, checkCPActive, getLastLine, stopProcess, runCommand, pingTegra, \
-                    reboot_tegra, getMaster
+                    reboot_tegra, stopTegra, getMaster
 
 
 log            = logging.getLogger()
@@ -58,6 +58,7 @@ def checkTegra(master, tegra):
     proxyFlag  = os.path.isfile(proxyFile)
     sTegra     = 'OFFLINE'
     sutFound   = False
+    logTD      = None
 
     status = { 'tegra':  tegra,
                'active': False,
@@ -173,6 +174,10 @@ def checkTegra(master, tegra):
             log.info('clearing proxy.flg')
             os.remove(proxyFile)
 
+        # here we try to catch the state where sutagent and cp are inactive
+        # that is determined by : sTegra == 'INACTIVE' and status['cp'] == 'INACTIVE'
+        # status['cp'] will be set to INACTIVE only if logTD.seconds (last time clientproxy
+        # updated it's log file) is > 3600
     if options.reboot:
         if not sutFound and status['bs'] != 'active':
             log.info('power cycling tegra')
@@ -181,6 +186,14 @@ def checkTegra(master, tegra):
             if sTegra == 'OFFLINE' and status['bs'] != 'active':
                 log.info('power cycling tegra')
                 reboot_tegra(tegra)
+
+    if options.reset and sTegra == 'INACTIVE' and status['cp'] == 'INACTIVE':
+        log.info('stopping hung clientproxy')
+        stopTegra(tegra)
+        time.sleep(5)
+        log.info('starting clientproxy for %s' % tegra)
+        os.chdir(tegraPath)
+        runCommand(['python', 'clientproxy.py', '-b', '--tegra=%s' % tegra])
 
 def findMaster(tegra):
     result  = None
