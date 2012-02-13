@@ -59,7 +59,7 @@ if dm.fileExists('/system/etc/hosts'):
     else:
         print "successfully removed hosts file, we can test!!!"
 
-errcode = checkStalled(os.env['SUT_NAME'])
+errcode = checkStalled(os.environ['SUT_NAME'])
 if errcode > 1:
     if errcode == 2:
         print "processes from previous run were detected and cleaned up"
