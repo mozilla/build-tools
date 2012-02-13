@@ -255,6 +255,45 @@ def stopProcess(pidFile, label):
         except ValueError:
             log.error('%s: unable to read %s' % (label, pidFile))
 
+def checkStalled(tegra):
+    """Returns the following based on if any stalled pids were found:
+            1 = clean, nothing was stalled
+            2 = dirty, but pids were killed
+            3 = dirty, but pids remain
+    """
+    pids      = []
+    tegraIP   = getIPAddress(tegra)
+    tegraPath = os.path.join('/builds', tegra)
+    p, lines  = runCommand(['ps', '-U', 'cltbld'])
+
+    for line in lines:
+        if ('bcontroller' in line and tegraIP in line) or \
+           ('server.js' in line and tegra in line):
+            item = line.split()
+            if len(item) > 1:
+                try:
+                    pids.append(int(item[0]))
+                except ValueError:
+                    pass
+
+    if len(pids) == 0:
+        result = 1
+    else:
+        result = 2
+
+    for pid in pids:
+        if not killPID(pid, sig=signal.SIGKILL, includeChildren=True):
+            result = 3
+
+    for f in ('runtestsremote', 'remotereftest', 'remotereftest.pid.xpcshell'):
+        pidFile = os.path.join(tegraPath, '%s.pid' % f)
+        if os.path.exists(pidFile):
+            stopProcess(pidFile, f)
+            if os.path.exists(pidFile):
+                result = 3
+
+    return result
+
 def stopSlave(pidFile):
     """Try to terminate the buildslave
     """

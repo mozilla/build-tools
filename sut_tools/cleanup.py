@@ -4,7 +4,7 @@ import os, sys
 import time
 import devicemanagerSUT as devicemanager
 
-from sut_lib import clearFlag, setFlag, checkDeviceRoot, stopProcess, waitForDevice
+from sut_lib import clearFlag, setFlag, checkDeviceRoot, stopProcess, checkStalled, waitForDevice
 
 if (len(sys.argv) <> 2):
     print "usage: cleanup.py <ip address>"
@@ -59,15 +59,13 @@ if dm.fileExists('/system/etc/hosts'):
     else:
         print "successfully removed hosts file, we can test!!!"
 
-for f in ('runtestsremote', 'remotereftest', 'remotereftest.pid.xpcshell'):
-    pidFile = os.path.join(pidDir, '%s.pid' % f)
-    print "checking for previous test processes ... %s" % pidFile
-    if os.path.exists(pidFile):
-        print "pidfile from prior test run found, trying to kill"
-        stopProcess(pidFile, f)
-        if os.path.exists(pidFile):
-            setFlag(errorFile, "Remote Device Error: process from previous test run present [%s]" % f)
-            sys.exit(2)
+errcode = checkStalled(os.env['SUT_NAME'])
+if errcode > 1:
+    if errcode == 2:
+        print "processes from previous run were detected and cleaned up"
+    elif errocode == 3:
+        setFlag(errorFile, "Remote Device Error: process from previous test run present")
+        sys.exit(2)
 
 for p in processNames:
     if dm.dirExists('/data/data/%s' % p):
