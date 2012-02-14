@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 from util.commands import run_cmd, get_output
 from util.hg import mercurial, apply_and_push, update, get_revision, \
-  make_hg_url, out, BRANCH, REVISION, get_branches, cleanOutgoingRevs
+  make_hg_url, out, BRANCH, get_branches, cleanOutgoingRevs
 from util.retry import retry
 from build.versions import bumpFile
 from release.info import readReleaseConfig, getTags, generateRelbranchName
@@ -29,11 +29,11 @@ REQUIRED_SOURCE_REPO_KEYS = ('path', 'revision')
 
 def getBumpCommitMessage(productName, version):
     return 'Automated checkin: version bump for ' + productName + ' ' + \
-           version + ' release. CLOSED TREE a=release'
+           version + ' release. DONTBUILD CLOSED TREE a=release'
 
 def getTagCommitMessage(revision, tags):
     return "Added " +  " ".join(tags) + " tags(s) for changeset " + revision + \
-           ". CLOSED TREE a=release"
+           ". DONTBUILD CLOSED TREE a=release"
 
 def bump(repo, bumpFiles, versionKey):
     for f, info in bumpFiles.iteritems():
