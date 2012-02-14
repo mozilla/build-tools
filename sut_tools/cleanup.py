@@ -44,20 +44,22 @@ if dm.dirExists(devRoot):
        setFlag(errorFile, "Remote Device Error: call to removeDir() returned [%s]" % status)
        sys.exit(1)
 
-if dm.fileExists('/system/etc/hosts'):
-    print "removing /system/etc/hosts file"
+if not dm.fileExists('/system/etc/hosts'):
+    print "restoring /system/etc/hosts file"
     try:
         dm.sendCMD(['exec mount -o remount,rw -t yaffs2 /dev/block/mtdblock3 /system'])
-        dm.sendCMD(['exec rm /system/etc/hosts'])
+        data = "127.0.0.1 localhost"
+        dm.verifySendCMD(['push /mnt/sdcard/hosts ' + str(len(data)) + '\r\n', data], newline=False)
+        dm.verifySendCMD(['exec dd if=/mnt/sdcard/hosts of=/system/etc/hosts'])
     except devicemanager.DMError, e:
-        print "Exception hit while trying to remove /system/etc/hosts: %s" % str(e)
-        setFlag(errorFile, "failed to remove /system/etc/hosts")
-        sys.exit(1)
-    if dm.fileExists('/system/etc/hosts'):
-        setFlag(errorFile, "failed to remove /system/etc/hosts")
+        print "Exception hit while trying to restore /system/etc/hosts: %s" % str(e)
+        setFlag(errorFile, "failed to restore /system/etc/hosts")
+        sys.exit(1)  
+    if not dm.fileExists('/system/etc/hosts'):
+        setFlag(errorFile, "failed to restore /system/etc/hosts")
         sys.exit(1)
     else:
-        print "successfully removed hosts file, we can test!!!"
+        print "successfully restored hosts file, we can test!!!"
 
 errcode = checkStalled(os.environ['SUT_NAME'])
 if errcode > 1:

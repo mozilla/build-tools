@@ -87,8 +87,8 @@ proxyFile = os.path.join(cwd, '..', 'proxy.flg')
 errorFile = os.path.join(cwd, '..', 'error.flg')
 proxyIP   = getOurIP()
 proxyPort = calculatePort()
-refWidth  = 1680 # x
-refHeight = 1050 # y
+refWidth  = 1600 # x
+refHeight = 1200 # y
 
 print "connecting to: %s" % sys.argv[1]
 dm = devicemanager.DeviceManagerSUT(sys.argv[1])
