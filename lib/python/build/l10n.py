@@ -111,9 +111,9 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
                      env=env)
             UPLOAD_EXTRA_FILES.append('%s/%s.asc' % (updateDir, partial_mar_name))
 
+    env['UPLOAD_EXTRA_FILES'] = ' '.join(UPLOAD_EXTRA_FILES)
     retry(run_cmd,
-          args=(["make", "upload", "AB_CD=%s" % locale,
-                 'UPLOAD_EXTRA_FILES=%s' % ' '.join(UPLOAD_EXTRA_FILES)],),
+          args=(["make", "upload", "AB_CD=%s" % locale],),
           kwargs={'cwd': localeSrcDir, 'env': env})
 
 def getLocalesForChunk(possibleLocales, chunks, thisChunk):
