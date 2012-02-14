@@ -98,10 +98,11 @@ def deletefile(f):
     if options.dry_run:
         print "rm ", f
     else:
-        try:
-            os.unlink(f)
-        except OSError:
-            print >>sys.stderr, "Error removing file: ", f
+        if os.path.isfile(f):
+            try:
+                os.unlink(f)
+            except OSError:
+                print >>sys.stderr, "Error removing file: ", f
 
 builds = {}
 allfiles = {}
