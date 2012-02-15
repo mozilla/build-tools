@@ -14,36 +14,6 @@
         "pdu": "pdu3.df202-1.build.mtv1.mozilla.com", 
         "pduid": ".AA2"
     }, 
-    "tegra-187": {
-        "foopy": "foopy05", 
-        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com", 
-        "pduid": ".AB2"
-    }, 
-    "tegra-188": {
-        "foopy": "foopy05", 
-        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com", 
-        "pduid": ".AA3"
-    }, 
-    "tegra-189": {
-        "foopy": "foopy05", 
-        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com", 
-        "pduid": ".AB3"
-    }, 
-    "tegra-190": {
-        "foopy": "foopy05", 
-        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com", 
-        "pduid": ".AA4"
-    }, 
-    "tegra-191": {
-        "foopy": "foopy05", 
-        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com", 
-        "pduid": ".AB4"
-    }, 
-    "tegra-192": {
-        "foopy": "foopy05", 
-        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com", 
-        "pduid": ".AA5"
-    }, 
     "tegra-010": {
         "foopy": "foopy05", 
         "pdu": "pdu3.df202-1.build.mtv1.mozilla.com", 
@@ -819,6 +789,36 @@
         "pdu": "pdu3.df202-1.build.mtv1.mozilla.com", 
         "pduid": ".AB15"
     },
+    "tegra-187": {
+        "foopy": "foopy17", 
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com", 
+        "pduid": ".AB2"
+    }, 
+    "tegra-188": {
+        "foopy": "foopy17", 
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com", 
+        "pduid": ".AA3"
+    }, 
+    "tegra-189": {
+        "foopy": "foopy17", 
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com", 
+        "pduid": ".AB3"
+    }, 
+    "tegra-190": {
+        "foopy": "foopy17", 
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com", 
+        "pduid": ".AA4"
+    }, 
+    "tegra-191": {
+        "foopy": "foopy24", 
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com", 
+        "pduid": ".AB4"
+    }, 
+    "tegra-192": {
+        "foopy": "foopy24", 
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com", 
+        "pduid": ".AA5"
+    }, 
     "tegra-194": {
         "foopy": "foopy14", 
         "pdu": "pdu5.df202-1.build.mtv1.mozilla.com", 
