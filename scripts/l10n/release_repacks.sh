@@ -42,6 +42,7 @@ export MOZ_SIGN_CMD="$MOZ_SIGN_CMD"
 
 cd $SCRIPTS_DIR/../..
 $PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s scripts -s buildprops.json \
+  -s data.json -s token -s nonce \
   $CLOBBERER_URL $branch $builder $slavebuilddir $slavename $master
 cd $SCRIPTS_DIR/..
 $PYTHON $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
