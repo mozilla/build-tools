@@ -58,7 +58,8 @@ def tagRepo(config, repo, reponame, revision, tags, bumpFiles, relbranch,
 
     def bump_and_tag(repo, attempt, config, relbranch, revision, tags,
                      defaultBranch):
-        relbranchChangesets = len(tags)
+        # set relbranchChangesets=1 because tag() generates exactly 1 commit
+        relbranchChangesets = 1
         defaultBranchChangesets = 0
 
         if relbranch in get_branches(reponame):
@@ -132,7 +133,8 @@ def tagOtherRepo(config, repo, reponame, revision, pushAttempts):
     retry(mercurial, args=(remote, reponame))
 
     def tagRepo(repo, attempt, config, revision, tags):
-        totalChangesets = len(tags)
+        # set totalChangesets=1 because tag() generates exactly 1 commit
+        totalChangesets = 1
         tag(repo, revision, tags, config['hgUsername'])
         outgoingRevs = retry(out, kwargs=dict(src=reponame, remote=remote,
                                               ssh_username=config['hgUsername'],
