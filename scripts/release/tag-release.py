@@ -32,7 +32,7 @@ def getBumpCommitMessage(productName, version):
            version + ' release. DONTBUILD CLOSED TREE a=release'
 
 def getTagCommitMessage(revision, tags):
-    return "Added " +  " ".join(tags) + " tags(s) for changeset " + revision + \
+    return "Added " +  " ".join(tags) + " tag(s) for changeset " + revision + \
            ". DONTBUILD CLOSED TREE a=release"
 
 def bump(repo, bumpFiles, versionKey):
