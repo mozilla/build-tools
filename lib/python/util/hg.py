@@ -430,6 +430,7 @@ def apply_and_push(localrepo, remote, changer, max_attempts=10,
     branch = get_branch(localrepo)
     changer(localrepo, 1)
     for n in range(1, max_attempts+1):
+        new_revs = []
         try:
             new_revs = out(src=localrepo, remote=remote,
                            ssh_username=ssh_username,
