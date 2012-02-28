@@ -87,7 +87,7 @@ def find_robocop():
         else:
             print "WARNING (robocop): Didn't find just one %s; found '%s'" % (expected_zip_location,
                                                                       str(matches))
-            print "WARNING (robocop): will continue using first listed above (if any)"
+            print "WARNING (robocop): robocop.apk will not be installed"
 
     return actual_location
 
