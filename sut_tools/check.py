@@ -113,22 +113,28 @@ def checkTegra(master, tegra):
 
     if checkCPAlive(tegraPath):
         logTD = checkCPActive(tegraPath)
-        if logTD is not None and logTD.days > 0 or (logTD.days == 0 and logTD.seconds > 300):
-            status['cp']   = 'INACTIVE'
-            status['msg'] += 'CP %dd %ds;' % (logTD.days, logTD.seconds)
+        if logTD is not None:
+            if (logTD.days > 0) or (logTD.days == 0 and logTD.seconds > 300):
+                status['cp']   = 'INACTIVE'
+                status['msg'] += 'CP %dd %ds;' % (logTD.days, logTD.seconds)
+            else:
+                status['cp'] = 'active'
         else:
-            status['cp'] = 'active'
+            status['cp'] = 'INACTIVE'
     else:
         if os.path.isfile(os.path.join(tegraPath, 'clientproxy.pid')):
             status['msg'] += 'clientproxy.pid found;'
 
     if checkSlaveAlive(tegraPath):
         logTD = checkSlaveActive(tegraPath)
-        if logTD is not None and logTD.days > 0 or (logTD.days == 0 and logTD.seconds > 3600):
-            status['bs']   = 'INACTIVE'
-            status['msg'] += 'BS %dd %ds;' % (logTD.days, logTD.seconds)
+        if logTD is not None:
+            if (logTD.days > 0) or (logTD.days == 0 and logTD.seconds > 3600):
+                status['bs']   = 'INACTIVE'
+                status['msg'] += 'BS %dd %ds;' % (logTD.days, logTD.seconds)
+            else:
+                status['bs'] = 'active'
         else:
-            status['bs'] = 'active'
+            status['bs'] = 'INACTIVE'
     else:
         # scan thru tegra-### dir and see if any buildbot.tac.bug#### files exist
         # but ignore buildbot.tac file itself (except to note that it is missing)

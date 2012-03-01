@@ -188,7 +188,7 @@ nStaging =    { 'total':   0,
 #     "foopy": "foopy15",
 #     "pduid": ".AB5"
 # }
-tegras = json.load(open(os.path.join(htmlDir, 'tegras.json')))
+tegras = json.load(open(os.path.join('.', 'tegras.json')))
 
 for key in tegras:
     o = tegras[key]

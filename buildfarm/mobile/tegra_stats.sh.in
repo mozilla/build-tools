@@ -1,9 +1,9 @@
 #!/bin/bash
 cd /builds
 python sut_tools/check.py -e
-rsync -azv -e ssh /builds/tegra_status.txt root@mobile-dashboard1.build.mtv1.mozilla.com:/var/www/tegras/tegra_status-sedFOOPYNNsed.txt
-rsync -azv -e ssh /builds/tegra_events.log root@mobile-dashboard1.build.mtv1.mozilla.com:/var/www/tegras/tegra_events-sedFOOPYNNsed.log
+rsync -azv -e ssh /builds/tegra_status.txt briarpatch@mobile-dashboard1.build.mtv1.mozilla.com:/var/www/tegras/tegra_status-sedFOOPYNNsed.txt
+rsync -azv -e ssh /builds/tegra_events.log briarpatch@mobile-dashboard1.build.mtv1.mozilla.com:/var/www/tegras/tegra_events-sedFOOPYNNsed.log
 for i in tegra-*; do
-  rsync -azv -e ssh /builds/${i}/${i}_status.log root@mobile-dashboard1.build.mtv1.mozilla.com:/var/www/tegras/
+  rsync -azv -e ssh /builds/${i}/${i}_status.log briarpatch@mobile-dashboard1.build.mtv1.mozilla.com:/var/www/tegras/
 done
 
