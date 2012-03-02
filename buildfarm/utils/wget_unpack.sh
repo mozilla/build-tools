@@ -21,7 +21,7 @@ usage(){
 set +e
 
 #stop the attempts if we get a 404, we will try something else in that case
-${retry} --stderr-regexp 404 --fail-if-match wget -O wget_unpack.tar.gz ${1}/${2}
+${retry} --stderr-regexp 'ERROR 404: Not Found' --fail-if-match wget -O wget_unpack.tar.gz ${1}/${2}
 
 getResult=$?
 
