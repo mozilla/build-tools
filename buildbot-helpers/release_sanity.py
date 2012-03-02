@@ -108,6 +108,7 @@ def verify_mozconfigs(branch, revision, hghost, product, mozconfigs, appName, wh
     for platform,mozconfig in mozconfigs.items():
         urls = []
         mozconfigs = []
+        mozconfig_paths = [mozconfig, mozconfig.rstrip('release') + 'nightly']
         # Create links to the two mozconfigs.
         releaseConfig = make_hg_url(hghost, branch, 'http', revision, mozconfig)
         urls.append(releaseConfig)
@@ -134,11 +135,11 @@ def verify_mozconfigs(branch, revision, hghost, product, mozconfigs, appName, wh
                     if line[0] == '+' and mozconfigWhitelist.get('nightly', {}).has_key(platform) \
                         and clean_line in mozconfigWhitelist['nightly'][platform]:
                             continue
+                    message = "found in %s but not in %s: %s"
                     if line[0] == '-':
-                        opposite = 'release'
+                        log.error(message % (mozconfig_paths[0], mozconfig_paths[1], clean_line))
                     else:
-                        opposite = 'nightly'
-                    log.error("not in %s mozconfig's whitelist (%s/%s/%s) : %s" % (opposite, branch, platform, types[line[0]], clean_line))
+                        log.error(message % (mozconfig_paths[1], mozconfig_paths[0], clean_line))
                     success = False
                     error_tally.add('verify_mozconfig')
         else:
