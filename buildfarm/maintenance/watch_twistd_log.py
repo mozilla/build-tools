@@ -63,6 +63,10 @@ class Scanner:
             re.compile(re.escape("exceptions.AttributeError: BuildSlave instance has no attribute 'perspective_shutdown'")),
             # Ignore users cancelling try runs
             re.compile(re.escape("Failure: exceptions.RuntimeError")),
+            # Ignore clean-close "errors" from tegras
+            re.compile(re.escape("Failure: twisted.spread.pb.PBConnectionLost: [Failure instance: Traceback (failure with no frames): <class 'twisted.internet.error.ConnectionDone'>: Connection was closed cleanly")),
+            # Ignore stale broker refs we can't do anything about.
+            re.compile("twisted.spread.pb.DeadReferenceError: Calling Stale Broker"),
             ]
 
     def __init__(self, lasttime=0):
