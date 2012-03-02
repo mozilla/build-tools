@@ -23,12 +23,15 @@ whitelist['nightly']['macosx']              +=['ac_add_options --enable-codesigh
                                                'mk_add_options MOZ_MAKE_FLAGS="-j4"',
                                                ]
 whitelist['nightly']['macosx64']    +=['ac_add_options --with-macbundlename-prefix=Firefox']
-whitelist['nightly']['linux-android']       +=['mk_add_options MOZ_MAKE_FLAGS=-j4',
+whitelist['nightly']['linux-android']       +=['mk_add_options MOZ_MAKE_FLAGS="-j4"',
                                                'ac_add_options --target=arm-linux-androideabi',
                                                'ac_add_options --with-android-ndk="/tools/android-ndk-r5c"',
                                                'ac_add_options --with-android-toolchain=/tools/android-ndk-r5c/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86',
                                                'ac_add_options --with-android-platform=/tools/android-ndk-r5c/platforms/android-5/arch-arm'
                                                 ]
+whitelist['nightly']['android']            += ['ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',]
+whitelist['nightly']['android-xul']        += ['ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',]
+whitelist['nightly']['linux-android']            += ['ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',]
 for platform in ['linux', 'linux64', 'macosx64']:
     whitelist['nightly'][platform]          += ['ac_add_options --enable-codesighs', 'mk_add_options MOZ_MAKE_FLAGS="-j4"']
 whitelist['nightly']['linux']               += ['ac_add_options --with-ccache=/usr/bin/ccache']
@@ -61,6 +64,8 @@ whitelist['mozilla-beta']['linux64']            += ['export MOZILLA_OFFICIAL=1',
                                                     "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
                                                     ]
 whitelist['mozilla-beta']['win32']              += ['mk_add_options MOZ_PGO=1']
+whitelist['mozilla-beta']['android']            += ['ac_add_options --enable-updater']
+whitelist['mozilla-beta']['android-xul']        += ['ac_add_options --enable-updater']
 
 ## KNOWN ONLY IN RELEASE
 for platform in common_platforms:
@@ -76,10 +81,13 @@ whitelist['mozilla-release']['linux64']            += ['export MOZILLA_OFFICIAL=
                                                'mk_add_options MOZ_PGO=1',
                                                "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
                                               ]
+whitelist['mozilla-release']['android']            += ['ac_add_options --enable-updater']
+whitelist['mozilla-release']['android-xul']        += ['ac_add_options --enable-updater']
 
 ## KNOWN ONLY IN ESR10
 for platform in common_platforms:
     whitelist['mozilla-esr10'][platform]         = ['ac_add_options --enable-update-channel=release', 'ac_add_options --enable-official-branding', 'mk_add_options MOZ_MAKE_FLAGS="-j4"',]
+
 whitelist['mozilla-esr10']['win32']              += ['mk_add_options MOZ_PGO=1',]
 whitelist['mozilla-esr10']['linux']              += ['export MOZILLA_OFFICIAL=1',
                                                'export MOZ_TELEMETRY_REPORTING=1',
@@ -91,6 +99,7 @@ whitelist['mozilla-esr10']['linux64']            += ['export MOZILLA_OFFICIAL=1'
                                                'mk_add_options MOZ_PGO=1',
                                                "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
                                               ]
+whitelist['mozilla-esr10']['linux-android']     += ['ac_add_options --enable-update-channel=esr', 'ac_add_options --enable-updater',]
 
 ## KNOWN ONLY IN 1.9.2
 for platform in common_platforms:
