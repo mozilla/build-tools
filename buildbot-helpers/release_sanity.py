@@ -6,12 +6,12 @@
         [-w| --whitelist `mozconfig_whitelist`]
         -p|--products firefox,fennec master:port
 
-    Wrapper script to sanity-check a release. Default behaviour is to check 
-    the branch and revision specific in the release_configs, check if the 
+    Wrapper script to sanity-check a release. Default behaviour is to check
+    the branch and revision specific in the release_configs, check if the
     milestone and version# in the source repo match the
     expected values in the release_configs, check the l10n repos & dashboard,
     compare the nightly and release mozconfigs for a release branch against
-    a whitelist of known differences between the two. If all tests pass then 
+    a whitelist of known differences between the two. If all tests pass then
     the master is reconfiged and then a senchange is generated to kick off
     the release automation.
 """
@@ -24,7 +24,7 @@ except ImportError:
 from optparse import OptionParser
 from util.commands import run_cmd
 from util.file import compare
-from util.hg import make_hg_url
+from util.hg import make_hg_url, get_repo_name
 from release.info import readReleaseConfig, getRepoMatchingBranch, readConfig
 from release.versions import getL10nDashboardVersion
 from release.l10n import getShippedLocales
@@ -98,6 +98,7 @@ def verify_repo(branch, revision, hghost):
 
 def verify_mozconfigs(branch, revision, hghost, product, mozconfigs, appName, whitelist=None):
     """Compare nightly mozconfigs for branch to release mozconfigs and compare to whitelist of known differences"""
+    branch_name = get_repo_name(branch)
     if whitelist:
         mozconfigWhitelist = readConfig(whitelist, ['whitelist'])
     else:
@@ -129,12 +130,20 @@ def verify_mozconfigs(branch, revision, hghost, product, mozconfigs, appName, wh
                     if clean_line.startswith('#'):
                         continue
                     # compare to whitelist
-                    if line[0] == '-' and mozconfigWhitelist.get(branch, {}).has_key(platform) \
-                        and clean_line in mozconfigWhitelist[branch][platform]:
-                            continue
-                    if line[0] == '+' and mozconfigWhitelist.get('nightly', {}).has_key(platform) \
-                        and clean_line in mozconfigWhitelist['nightly'][platform]:
-                            continue
+                    message = ""
+                    if line[0] == '-':
+                        if mozconfigWhitelist.get(branch_name, {}).has_key(platform):
+                            if clean_line in mozconfigWhitelist[branch_name][platform]:
+                                continue
+                    elif line[0] == '+':
+                        if mozconfigWhitelist.get('nightly', {}).has_key(platform):
+                            if clean_line in mozconfigWhitelist['nightly'][platform]:
+                                continue
+                            else:
+                                log.warning("%s not in %s %s!" % (clean_line, platform, mozconfigWhitelist['nightly'][platform]))
+                    else:
+                        log.error("Skipping line %s!" % line)
+                        continue
                     message = "found in %s but not in %s: %s"
                     if line[0] == '-':
                         log.error(message % (mozconfig_paths[0], mozconfig_paths[1], clean_line))
@@ -220,7 +229,7 @@ def verify_l10n_changesets(hgHost, l10n_changesets):
             'revision': revision,
         }
         locale_url = make_hg_url(hgHost, localePath, protocol='https')
-        log.info("Checking for existence l10n changeset %s %s in repo %s ..." 
+        log.info("Checking for existence l10n changeset %s %s in repo %s ..."
             % (locale, revision, locale_url))
         try:
             urllib2.urlopen(locale_url)
@@ -238,7 +247,7 @@ def verify_l10n_dashboard(l10n_changesets):
         'version': getL10nDashboardVersion(releaseConfig['version'],
                                            releaseConfig['productName']),
     }
-    log.info("Comparing l10n changesets on dashboard %s to on-disk %s ..." 
+    log.info("Comparing l10n changesets on dashboard %s to on-disk %s ..."
         % (dash_url, l10n_changesets))
     try:
         dash_changesets = {}
@@ -253,7 +262,7 @@ def verify_l10n_dashboard(l10n_changesets):
                 success = False
                 error_tally.add('verify_l10n_dashboard')
             elif revision != dash_revision:
-                log.error("\tlocale %s revisions not matching: %s (config) vs. %s (dashboard)" 
+                log.error("\tlocale %s revisions not matching: %s (config) vs. %s (dashboard)"
                     % (locale, revision, dash_revision))
                 success = False
                 error_tally.add('verify_l10n_dashboard')
@@ -271,7 +280,7 @@ def verify_l10n_shipped_locales(l10n_changesets, shipped_locales):
     """Ensure that our l10n-changesets on the master match the repo's shipped locales list"""
     success = True
     locales = query_locale_revisions(l10n_changesets)
-    log.info("Comparing l10n changesets to shipped locales ...") 
+    log.info("Comparing l10n changesets to shipped locales ...")
     diff_list = locale_diff(locales, shipped_locales)
     if len(diff_list) > 0:
         log.error("l10n_changesets and shipped_locales differ on locales: %s" % diff_list)
