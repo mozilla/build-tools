@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """%prog [-d|--dryrun] [-u|--username `username`] [-b|--bypass-check]
+        [-l| --bypass-l10n-check] [-m|--bypass-mozconfig-check]
         [-V| --version `version`] [-B --branch `branchname`]
         [-N|--build-number `buildnumber`]
         [-c| --release-config `releaseConfigFile`]
