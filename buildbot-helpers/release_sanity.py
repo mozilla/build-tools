@@ -5,6 +5,7 @@
         [-N|--build-number `buildnumber`]
         [-c| --release-config `releaseConfigFile`]
         [-w| --whitelist `mozconfig_whitelist`]
+        [--l10n-dashboad-version version]
         -p|--products firefox,fennec master:port
 
     Wrapper script to sanity-check a release. Default behaviour is to check
@@ -240,14 +241,18 @@ def verify_l10n_changesets(hgHost, l10n_changesets):
             error_tally.add('verify_l10n')
     return success
 
-def verify_l10n_dashboard(l10n_changesets):
+def verify_l10n_dashboard(l10n_changesets, l10n_dashboard_version=None):
     """Checks the l10n-changesets against the l10n dashboard"""
     success = True
     locales = query_locale_revisions(l10n_changesets)
-    dash_url = 'https://l10n-stage-sj.mozilla.org/shipping/l10n-changesets?ms=%(version)s' % {
-        'version': getL10nDashboardVersion(releaseConfig['version'],
-                                           releaseConfig['productName']),
-    }
+    if l10n_dashboard_version:
+        l10n_dashboard_version = getL10nDashboardVersion(
+            l10n_dashboard_version, releaseConfig['productName'],
+            parse_version=False)
+    else:
+        l10n_dashboard_version = getL10nDashboardVersion(
+            releaseConfig['version'], releaseConfig['productName'])
+    dash_url = 'https://l10n-stage-sj.mozilla.org/shipping/l10n-changesets?ms=%s' % l10n_dashboard_version
     log.info("Comparing l10n changesets on dashboard %s to on-disk %s ..."
         % (dash_url, l10n_changesets))
     try:
@@ -345,6 +350,8 @@ if __name__ == '__main__':
             help="coma separated list of products")
     parser.add_option("-w", "--whitelist", dest="whitelist",
             help="whitelist for known mozconfig differences")
+    parser.add_option("--l10n-dashboad-version", dest="l10n_dashboard_version",
+            help="Override L10N dashboard version")
 
     options, args = parser.parse_args()
     if not options.products:
@@ -420,7 +427,8 @@ if __name__ == '__main__':
                     log.error("Error verifying l10n changesets")
 
                 #verify that l10n changesets match the dashboard
-                if not verify_l10n_dashboard(releaseConfig['l10nRevisionFile']):
+                if not verify_l10n_dashboard(releaseConfig['l10nRevisionFile'],
+                                            options.l10n_dashboard_version):
                     test_success = False
                     log.error("Error verifying l10n dashboard changesets")
 

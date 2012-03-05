@@ -8,7 +8,7 @@ def getPrettyVersion(version):
     version = re.sub(r'rc([0-9]+)$', r' RC \1', version)
     return version
 
-def getL10nDashboardVersion(version, product):
+def getL10nDashboardVersion(version, product, parse_version=True):
     if product == 'firefox':
         ret = 'fx'
     elif product == 'fennec':
@@ -18,9 +18,12 @@ def getL10nDashboardVersion(version, product):
     elif product == 'seamonkey':
         ret = 'sea'
 
-    parsed = re.match(ANY_VERSION_REGEX, version)
-    if parsed.group(1) and parsed.group(1).startswith('b'):
-        ret = '%s%s_beta_%s' % (ret, version.split(".")[0], parsed.group(1))
-    else:
+    if not parse_version:
         ret += version
+    else:
+        parsed = re.match(ANY_VERSION_REGEX, version)
+        if parsed.group(1) and parsed.group(1).startswith('b'):
+            ret = '%s%s_beta_%s' % (ret, version.split(".")[0], parsed.group(1))
+        else:
+            ret += version
     return ret
