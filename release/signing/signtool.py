@@ -166,5 +166,12 @@ def main():
                 log.error("Failed to sign %s with %s", f, fmt)
                 sys.exit(1)
 
+        if fmt == "dmg":
+            for fd in args:
+                log.debug("unpacking %s", fd)
+                unpacktar(fd+'.tar', os.getcwd())
+                os.unlink(fd+'.tar')
+
+
 if __name__ == '__main__':
     main()
