@@ -127,7 +127,7 @@ class TestRetry(unittest.TestCase):
         kwargs = dict(foo='a', bar=7)
         ret = retry(_mirrorArgs, args=args, kwargs=kwargs.copy(), sleeptime=0)
         self.assertEqual(ret[0], args)
-        self.assertDictEqual(ret[1], kwargs)
+        self.assertEqual(ret[1], kwargs)
 
     def testRetriableArgsPassed(self):
         args = (1, 'two', 3)
@@ -135,4 +135,4 @@ class TestRetry(unittest.TestCase):
         func = retriable(sleeptime=0)(_mirrorArgs)
         ret = func(*args, **kwargs)
         self.assertEqual(ret[0], args)
-        self.assertDictEqual(ret[1], kwargs)
+        self.assertEqual(ret[1], kwargs)
