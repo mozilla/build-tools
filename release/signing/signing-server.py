@@ -122,7 +122,13 @@ def run_signscript(cmd, inputfile, outputfile, filename, format_, passphrase=Non
     tries = 0
     while True:
         start = time.time()
-        proc = Popen(cmd, stdout=output, stderr=STDOUT, stdin=PIPE, close_fds=True)
+        # Make sure to call os.setsid() after we fork so the spawned process is
+        # its own session leader. This means that it will get its own process
+        # group, and signals sent to its process group will also be sent to its
+        # children. This allows us to kill of any grandchildren processes (e.g.
+        # signmar) in cases where the child process is taking too long to return.
+        proc = Popen(cmd, stdout=output, stderr=STDOUT, stdin=PIPE,
+                close_fds=True, preexec_fn=lambda: os.setsid())
         if passphrase:
             proc.stdin.write(passphrase)
         proc.stdin.close()
@@ -137,6 +143,9 @@ def run_signscript(cmd, inputfile, outputfile, filename, format_, passphrase=Non
                 else:
                     sig = signal.SIGKILL
                 try:
+                    # Kill off the process group first, and then the process
+                    # itself for good measure
+                    os.kill(-proc.pid, sig)
                     os.kill(proc.pid, sig)
                     gevent.sleep(1)
                     os.kill(proc.pid, 0)
