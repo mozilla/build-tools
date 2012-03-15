@@ -15,8 +15,8 @@ SHORT_DATED_DIR = "%(year)s-%(month)s-%(day)s-%(hour)s-%(minute)s-%(second)s-%(b
 CANDIDATES_DIR = "%(version)s-candidates/build%(buildnumber)s"
 LATEST_DIR = "latest-%(branch)s"
 # Production configs that need to be commented out when doing staging.
-TINDERBOX_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
-LONG_DATED_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(year)s/%(month)s/%(year)s-%(month)s-%(day)s-%(hour)s-%(minute)s-%(second)s-%(branch)s"
+TINDERBOX_URL_PATH = "http://ftp.mozilla.org/pub/mozilla.org/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
+LONG_DATED_URL_PATH = "http://ftp.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(year)s/%(month)s/%(year)s-%(month)s-%(day)s-%(hour)s-%(minute)s-%(second)s-%(branch)s"
 CANDIDATES_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(version)s-candidates/build%(buildnumber)s"
 PVT_BUILD_URL_PATH = "https://dm-pvtbuild01.mozilla.org/%(product)s/%(tinderbox_builds_dir)s"
 PVT_BUILD_DIR = "/mnt/pvt_builds/%(product)s/%(tinderbox_builds_dir)s"
