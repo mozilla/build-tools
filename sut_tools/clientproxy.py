@@ -345,7 +345,20 @@ def monitorEvents(options, events):
                                 else:
                                     events.put(('offline',))
                     else:
-                        events.put(('start',))
+                        events.put(('update',))
+            elif state == 'update':
+                log.info('updating the SUT Agent')
+                proc, output  = runCommand(['python', '/builds/sut_tools/updateSUT.py', options.tegraIP])
+                if proc.returncode == 0:
+                    log.info('updateSUT.py has run without issues')
+                    for i in output:
+                        log.debug(i)
+                    events.put(('start',))
+                else:
+                    log.info('updateSUT.py has had issues')
+                    for i in output:
+                        log.info(i)
+                    sys.exit(1)
             elif state == 'start':
                 if tegraActive and not bbActive:
                     log.debug('starting buildslave in %s' % options.bbpath)
