@@ -1,4 +1,5 @@
 import time
+from functools import wraps
 import traceback
 
 import logging
@@ -38,3 +39,22 @@ def retry(action, attempts=5, sleeptime=60, retry_exceptions=(Exception,),
             continue
         finally:
             n += 1
+
+def retriable(*retry_args, **retry_kwargs):
+    ''' A decorator for retry(). Example usage:
+    @retriable()
+    def foo()
+        ...
+
+    @retriable(attempts=100, sleeptime=10)
+    def bar():
+        ...
+    '''
+
+    def _retriable_factory(func):
+        @wraps(func)
+        def _retriable_wrapper(*args, **kwargs):
+            return retry(func, args=args, kwargs=kwargs, *retry_args,
+                         **retry_kwargs)
+        return _retriable_wrapper
+    return _retriable_factory
