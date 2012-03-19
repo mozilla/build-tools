@@ -21,7 +21,7 @@ from buildslave.bot import BuildSlave
 maxdelay = 300
 buildmaster_host = %(buildmaster_host)r
 passwd = %(passwd)r
-maxRotatedFiles = None
+maxRotatedFiles = 10
 basedir = %(basedir)r
 umask = 002
 slavename = %(slavename)r
