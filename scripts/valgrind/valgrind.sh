@@ -51,25 +51,17 @@ if [ ! -d objdir ]; then
 fi
 cd objdir
 
-# Setup a basic mozconfig file
-echo '. $topsrcdir/browser/config/mozconfig' > mozconfig
-echo 'ac_add_options --enable-valgrind' >> mozconfig
-echo 'ac_add_options --with-ccache' >> mozconfig
-echo 'ac_add_options --disable-jemalloc' >> mozconfig
-echo 'ac_add_options --disable-elf-hack' >> mozconfig
-echo 'ac_add_options --enable-optimize="-g -O -freorder-blocks"' >> mozconfig
-echo 'CC=/tools/gcc-4.5-0moz3/bin/gcc' >> mozconfig
-echo 'CXX=/tools/gcc-4.5-0moz3/bin/g++' >> mozconfig
-
 export G_SLICE=always-malloc
 
 if [ "`uname -m`" = "x86_64" ]; then
     export LD_LIBRARY_PATH=/tools/gcc-4.5-0moz3/installed/lib64
+    _arch=64
 else
     export LD_LIBRARY_PATH=/tools/gcc-4.5-0moz3/installed/lib
+    _arch=32
 fi
 
-make -f ../src/client.mk MOZCONFIG=$PWD/mozconfig configure || exit 2
+MOZCONFIG=../src/browser/config/mozconfigs/linux${_arch}/valgrind make -f ../src/client.mk configure || exit 2
 make -j4 || exit 2
 make package || exit 2
 
