@@ -15,7 +15,7 @@ def main(deviceIP):
         print "INFO: updateSUT.py: We're going to try to install SUTAgentAndroid Version %s" % target_version
         try:
              data = download_apk()
-        except e:
+        except Exception, e:
              print "ERROR: updateSUT.py: We have failed to retrieve the SUT Agent. %s" % e.reason
              return 5
         dm.sendCMD(['push /mnt/sdcard/%s %s\r\n' % (apkfilename, str(len(data))), data], newline=False)
@@ -38,7 +38,7 @@ def main(deviceIP):
 
         try:
             ver = version(dm)
-        except e:
+        except Exception, e:
             print "ERROR: updateSUT.py: We should have been able to get the version"
             print "ERROR: updateSUT.py: %s" % e
             return 5
