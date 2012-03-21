@@ -61,8 +61,11 @@ APP_NAME       ?= browser
 else
 APP_NAME        = $(error APP_NAME must be defined)
 endif
+CVS_USER       ?= cltbld
 
 all: df verify-gpg-passphrase setup stubs verify-signcode-passphrase download verify-download sign stage verify fake-upload
+
+tb-all: df verify-gpg-passphrase setup stubs verify-signcode-passphrase download sign stage verify fake-upload
 
 autosign: df verify-gpg-passphrase setup stubs verify-signcode-passphrase download-loop verify-download sign stage verify fake-upload postsign
 
@@ -134,10 +137,10 @@ cleanup:
 
 setup:
 	# Pull/copy the required tools.
-	cvs -d:ext:cltbld@cvs.mozilla.org:/mofo co -d signing release/signing/tools
-	cvs -d:ext:cltbld@cvs.mozilla.org:/mofo co -d stage release/stage
-	cvs -d:ext:cltbld@cvs.mozilla.org:/mofo co -d key-checkout release/keys/pgp
-	cvs -d:ext:cltbld@cvs.mozilla.org:/cvsroot co -d MozBuild mozilla/tools/release/MozBuild
+	cvs -d:ext:$(CVS_USER)@cvs.mozilla.org:/mofo co -d signing release/signing/tools
+	cvs -d:ext:$(CVS_USER)@cvs.mozilla.org:/mofo co -d stage release/stage
+	cvs -d:ext:$(CVS_USER)@cvs.mozilla.org:/mofo co -d key-checkout release/keys/pgp
+	cvs -d:ext:$(CVS_USER)@cvs.mozilla.org:/cvsroot co -d MozBuild mozilla/tools/release/MozBuild
 	rsync -av $(HOME)/signing-utils/7-Zip . 
 	rsync -av $(HOME)/signing-utils/mar.exe . 
 	rsync -av $(HOME)/signing-utils/upx . 
@@ -156,8 +159,8 @@ checkouts/stubs/7z/7zSD.sfx.compressed: checkouts/stubs/7z/7zSD.sfx
 stubs-cvs:
 	rm -rf checkouts/stubs
 	mkdir -p checkouts/stubs
-	(cd checkouts/stubs; cvs -d:ext:cltbld@cvs.mozilla.org:/cvsroot co -r $(TAG) -d 7z mozilla/other-licenses/7zstub/$(PRODUCT))
-	(cd checkouts/stubs; cvs -d:ext:cltbld@cvs.mozilla.org:/cvsroot co -r $(TAG) -d tagfile mozilla/$(APP_NAME)/installer/windows/app.tag)
+	(cd checkouts/stubs; cvs -d:ext:$(CVS_USER)@cvs.mozilla.org:/cvsroot co -r $(TAG) -d 7z mozilla/other-licenses/7zstub/$(PRODUCT))
+	(cd checkouts/stubs; cvs -d:ext:$(CVS_USER)@cvs.mozilla.org:/cvsroot co -r $(TAG) -d tagfile mozilla/$(APP_NAME)/installer/windows/app.tag)
 
 stubs-hg:
 	rm -rf checkouts/stubs
