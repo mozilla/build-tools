@@ -106,7 +106,7 @@ if __name__ == '__main__':
             basepath = os.getcwd()
         else:
             print("No jetpack directory present!  Cannot run test suite.")
-            sys.exit(1)
+            sys.exit(2)
     elif options.ftp_url != "" and options.ext != "" and options.tarball_url != "":
         # Addonsdk checkin triggered
         is_poller = True
@@ -146,8 +146,8 @@ if __name__ == '__main__':
 
         # Now get the executable for this platform
         if directory == None:
-            print "Error, no directory set to check for executables"
-            sys.exit(1)
+            print "Error, no directory found to check for executables"
+            sys.exit(2)
         urls = urllib.urlopen("%s/%s" % (ftp_url, directory))
         filenames = urls.read().splitlines()
         executables = []
@@ -160,7 +160,7 @@ if __name__ == '__main__':
             exe = sorted(executables, reverse=True)[0]
         else:
             print "Error: missing Firefox executable"
-            sys.exit(1)
+            sys.exit(2)
         info_file = exe.replace(options.ext, "%s.txt" % options.ext.split('.')[0])
         # Now get the branch revision
         for filename in filenames:
@@ -179,7 +179,7 @@ if __name__ == '__main__':
         urllib.urlretrieve("%s/%s/%s" % (ftp_url, directory, exe), exe)
     else:
         parser.error("Incorrect number of arguments")
-        sys.exit(1)
+        sys.exit(2)
 
     # Custom paths/args for each platform's executable
     if options.platform in ('linux', 'linux64', 'fedora', 'fedora64'):
@@ -195,7 +195,7 @@ if __name__ == '__main__':
         poller_cmd = 'unzip -o *%s' % options.ext
     else:
         print "%s is not a valid platform." % options.platform
-        sys.exit(1)
+        sys.exit(2)
 
     # Download/untar sdk tarball as SDK_TARBALL
     print "SDK_URL: %s" % sdk_url
@@ -203,7 +203,7 @@ if __name__ == '__main__':
         urllib.urlretrieve(sdk_url, SDK_TARBALL)
     except:
         traceback.print_exc(file=sys.stdout)
-        sys.exit(1)
+        sys.exit(2)
     os.system('tar -xvf %s %s' % (SDK_TARBALL, untar_args))
 
     # Unpack/mount/unzip the executables in addonsdk checkin triggered runs
@@ -226,7 +226,7 @@ if __name__ == '__main__':
 
     if not os.path.exists(app_path):
         print "The APP_PATH \"%s\" does not exist" % app_path
-        sys.exit(1)
+        sys.exit(2)
 
     # Run it!
     if sdkdir:
@@ -239,4 +239,4 @@ if __name__ == '__main__':
         sys.exit(process.returncode)
     else:
         print "SDK_DIR is either missing or invalid."
-        sys.exit(1)
+        sys.exit(2)
