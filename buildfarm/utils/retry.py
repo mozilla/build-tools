@@ -88,8 +88,11 @@ if __name__ == "__main__":
                       help="""timeout each request after this many seconds.  Set
                       to 0 to have no timeout.  Defaults to 300""")
     parser.add_option("-s", "--sleeptime", type="int", dest="sleeptime",
-                      help="""sleep this many seconds between tries.
-                      Defaults to 30""")
+                      help="""sleep this many seconds between tries, doubling
+                      each retry iteration.  Defaults to 30""")
+    parser.add_option("-m", "--maxsleeptime", type="int", dest="maxsleeptime",
+                      help="""when doubling sleeptime, do not exceed this value.
+                      Defaults to 300""")
     parser.add_option("--stdout-regexp", dest="stdout_regexp",
                       help="""Fail if the expected regexp is not found in
                       stdout""")
@@ -108,6 +111,7 @@ if __name__ == "__main__":
             retries=10,
             timeout=300,
             sleeptime=30,
+            maxsleeptime=300,
             )
 
     options, args = parser.parse_args()
@@ -123,7 +127,7 @@ if __name__ == "__main__":
 
     try:
         rc = retry(run_with_timeout, attempts=options.retries,
-                   sleeptime=options.sleeptime,
+                   sleeptime=options.sleeptime, max_sleeptime=options.maxsleeptime,
                    args=(args, options.timeout, options.stdout_regexp,
                          options.stderr_regexp, options.fail_if_match,
                          options.print_output))

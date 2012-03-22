@@ -5,12 +5,13 @@ import traceback
 import logging
 log = logging.getLogger(__name__)
 
-def retry(action, attempts=5, sleeptime=60, retry_exceptions=(Exception,),
+def retry(action, attempts=5, sleeptime=60, max_sleeptime=5*60, retry_exceptions=(Exception,),
           cleanup=None, args=(), kwargs={}):
     """Call `action' a maximum of `attempts' times until it succeeds,
         defaulting to 5. `sleeptime' is the number of seconds to wait
-        between attempts, defaulting to 0. `retry_exceptions' is a tuple
-        of Exceptions that should be caught. If exceptions other than those
+	between attempts, defaulting to 60 and doubling each retry attempt, to
+        a maximum of `max_sleeptime'.  `retry_exceptions' is a tuple of
+        Exceptions that should be caught. If exceptions other than those
         listed in `retry_exceptions' are raised from `action', they will be
         raised immediately. If `cleanup' is provided and callable it will
         be called immediately after an Exception is caught. No arguments
@@ -20,6 +21,8 @@ def retry(action, attempts=5, sleeptime=60, retry_exceptions=(Exception,),
         to `callable'"""
     assert callable(action)
     assert not cleanup or callable(cleanup)
+    if max_sleeptime < sleeptime:
+        log.debug("max_sleeptime %d less than sleeptime %d" % (max_sleeptime, sleeptime))
     n = 1
     while n <= attempts:
         try:
@@ -36,6 +39,9 @@ def retry(action, attempts=5, sleeptime=60, retry_exceptions=(Exception,),
             if sleeptime > 0:
                 log.info("retry: Failed, sleeping %d seconds before retrying" % sleeptime)
                 time.sleep(sleeptime)
+                sleeptime = sleeptime * 2
+                if sleeptime > max_sleeptime:
+                    sleeptime = max_sleeptime
             continue
         finally:
             n += 1
