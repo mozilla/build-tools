@@ -9,10 +9,12 @@ import sys, site
 site.addsitedir(os.path.join(os.path.dirname(__file__), "../../lib/python"))
 
 import logging
-from signing import remote_signfile, find_files, buildValidatingOpener
+from signing import remote_signfile, find_files, buildValidatingOpener, packtar, unpacktar
 log = logging.getLogger(__name__)
 
 import pefile
+
+TAR = os.environ.get('TAR', 'tar')
 
 def is_authenticode_signed(filename):
     """Returns True if the file is signed with authenticode"""
@@ -103,7 +105,7 @@ def main():
 
     # Handle format
     formats = []
-    allowed_formats = ("signcode", "gpg", "mar")
+    allowed_formats = ("signcode", "gpg", "mar", "dmg" )
     for fmt in options.formats:
         if "," in fmt:
             for fmt in fmt.split(","):
@@ -142,8 +144,18 @@ def main():
     token = open(options.tokenfile, 'rb').read()
 
     for fmt in formats:
+
         log.debug("doing %s signing", fmt)
-        files = find_files(options, args)
+        files = []
+        # We want to package the ".app" file in a tar for mac signing.
+        if fmt == "dmg":
+            for fd in args:
+                packtar(fd+'.tar', [fd], os.getcwd())
+                files.append(fd+'.tar')
+        # For other platforms we sign all of the files individually.
+        else:
+            files = find_files(options, args)
+
         for f in files:
             log.debug("%s", f)
             log.debug("checking %s for signature...", f)
@@ -165,6 +177,13 @@ def main():
             else:
                 log.error("Failed to sign %s with %s", f, fmt)
                 sys.exit(1)
+
+        if fmt == "dmg":
+            for fd in args:
+                log.debug("unpacking %s", fd)
+                unpacktar(fd+'.tar', os.getcwd())
+                os.unlink(fd+'.tar')
+                
 
 if __name__ == '__main__':
     main()

@@ -9,6 +9,7 @@ log = logging.getLogger(__name__)
 
 SEVENZIP = os.environ.get('SEVENZIP', '7z')
 MAR = os.environ.get('MAR', 'mar')
+TAR = os.environ.get('TAR', 'tar')
 
 def _noumask():
     # Utility function to set a umask of 000
@@ -313,12 +314,45 @@ def packmar(marfile, srcdir):
         raise
     nullfd.close()
 
+def unpacktar(tarfile, destdir):
+    """ Unpack given tarball into the specified dir """
+    nullfd = open(os.devnull, "w")
+    tarfile = cygpath(os.path.abspath(tarfile))
+    log.debug("unpack tar %s into %s", tarfile, destdir)
+    try:
+        check_call([TAR, '-xf', tarfile], cwd=destdir, stdout=nullfd, preexec_fn=_noumask)
+    except:
+        log.exception("Error unpacking tar file %s to %s", tarfile, destdir)
+        raise
+    nullfd.close()
+
+def tar_dir(tarfile, srcdir):
+    """ Pack a tar file using all the files in the given srcdir """
+    files = os.listdir(srcdir)
+    packtar(tarfile, files, srcdir)
+    
+def packtar(tarfile, files, srcdir):
+    """ Pack the given files into a tar, setting cwd = srcdir"""
+    nullfd = open(os.devnull, "w")
+    tarfile = cygpath(os.path.abspath(tarfile))
+    log.debug("pack tar %s from folder  %s with files " , tarfile, srcdir)
+    log.debug( files)
+    try:
+        check_call([TAR, '-cf', tarfile] + files, cwd=srcdir, stdout=nullfd, preexec_fn=_noumask)
+    except:
+        log.exception("Error packing tar file %s to %s", tarfile, srcdir)
+        raise
+    nullfd.close()
+
+
 def unpackfile(filename, destdir):
     """Unpack a mar or exe into destdir"""
     if filename.endswith(".mar"):
         return unpackmar(filename, destdir)
     elif filename.endswith(".exe"):
         return unpackexe(filename, destdir)
+    elif filename.endswith(".tar"):
+        return unpacktar(filename, destdir)
     else:
         raise ValueError("Unknown file type: %s" % filename)
 
@@ -329,10 +363,12 @@ def packfile(filename, srcdir):
         return packmar(filename, srcdir)
     elif filename.endswith(".exe"):
         return packexe(filename, srcdir)
+    elif filename.endswith(".tar"):
+        return tar_dir(filename, srcdir)
     else:
         raise ValueError("Unknown file type: %s" % filename)
 
-def shouldSign(filename):
+def shouldSign(filename, platform='win32'):
     """Returns True if filename should be signed."""
     # These should already be signed by Microsoft.
     _dont_sign = [
@@ -342,8 +378,15 @@ def shouldSign(filename):
             ]
     ext = os.path.splitext(filename)[1]
     b = os.path.basename(filename)
-    if ext in ('.dll', '.exe') and not any(fnmatch.fnmatch(b, p) for p in _dont_sign):
-        return True
+    if platform == 'mac':
+        if b.endswith('.app'):
+            return True
+    elif platform in ('win32', 'win64'):
+        if ext in ('.dll', '.exe') and not any(fnmatch.fnmatch(b, p) for p in _dont_sign):
+            return True
+    else:
+        #We should never get here.
+        log.debug("Invalid Platform: %s", platform)
     return False
 
 def getChkFile(filename):
@@ -761,3 +804,120 @@ def mar_signfile(inputfile, outputfile, mar_cmd, fake=False, passphrase=None):
         data = stdout.read()
         log.exception(data)
         raise
+
+def dmg_signfile(filename, keychain, signing_identity, code_resources, lockfile, fake=False, passphrase=None):
+    """ Sign a mac .app folder
+    """
+    from flufl.lock import Lock, AlreadyLockedError, TimeOutError, NotLockedError
+    from datetime import timedelta
+    import pexpect
+
+    basename = os.path.basename(filename)
+    dirname = os.path.dirname(filename)
+    stdout = tempfile.TemporaryFile()
+
+    sign_command = ['codesign',
+        '-s', signing_identity, '-fv',
+        '--keychain', keychain,
+        '--resource-rules', code_resources,
+        basename]
+
+    # pexpect requires a string as input
+    unlock_command = 'security unlock-keychain '+keychain
+    lock_command = ['security', 'lock-keychain', keychain]
+    try:
+        sign_lock = None
+        try: 
+            # Acquire a lock for the signing command, to ensure we don't have a 
+            # race condition where one process locks the keychain immediately after another
+            # unlocks it.
+            log.debug("Try to acquire %s", lockfile)
+            sign_lock = Lock(lockfile)
+            # Put a 30 second timeout on waiting for the lock. 
+            sign_lock.lock(timedelta(0,30))
+
+            # Unlock the keychain so that we do not get a user-interaction prompt to use
+            # the keychain for signing. This operation requires a password.
+            child = pexpect.spawn (unlock_command)
+            child.expect('password to unlock .*')
+            child.sendline(passphrase)
+            # read output until child exits
+            child.read()
+            child.close()
+            if child.exitstatus != 0:
+                raise ValueError("keychain unlock failed")
+
+            # Execute the signing command
+            check_call(sign_command, cwd=dirname, stdout=stdout, stderr=STDOUT)
+
+        except TimeOutError, error:
+            # timed out acquiring lock, give an error
+            log.exception("Timeout acquiring lock  %s for codesign, is something broken? ", lockfile, error)
+            raise
+        except:
+            # catch any other locking error
+            log.exception("Error acquiring  %s for codesign, is something broken?", lockfile)
+            raise
+        finally: 
+            # Lock the keychain again, no matter what happens
+            # This command does not require a password
+            check_call(lock_command)
+
+            # Release the lock, if it was acquired
+            if sign_lock:
+                try:
+                    sign_lock.unlock()
+                    log.debug("Release %s", lockfile)
+                except NotLockedError:
+                    log.debug("%s was already unlocked", lockfile)
+
+    except:
+        stdout.seek(0)
+        data = stdout.read()
+        log.exception(data)
+        raise
+
+def dmg_signpackage(pkgfile, dstfile, keychain, mac_id, fake=False, passphrase=None):
+    """ Sign a mac build, putting results into `dstfile`.
+        pkgfile must be a tar, which gets unpacked, signed, and repacked.
+    """
+    # Keep track of our output in a list here, and we can output everything
+    # when we're done This is to avoid interleaving the output from
+    # multiple processes.
+
+    #TODO: Is it even possible to do 'fake' signing?
+    logs = []
+    logs.append("Repacking %s to %s" % (pkgfile, dstfile))
+
+    tmpdir = tempfile.mkdtemp()
+    pkgdir = os.path.dirname(pkgfile)
+    filename = os.path.basename(pkgfile)
+    try:
+        # Unpack it
+        logs.append("Unpacking %s to %s" % (pkgfile, tmpdir))
+        unpacktar(pkgfile, tmpdir)
+
+        for macdir in os.listdir(tmpdir):
+            macdir = os.path.join(tmpdir, macdir)
+            log.debug('Checking if we should sign %s', macdir)
+            if shouldSign(macdir, 'mac'):
+                log.debug('Signing %s', macdir)
+
+                # Grab the code resources file. Need to find the filename
+                code_resources =  macdir + "/Contents/_CodeSignature/CodeResources"
+                lockfile = os.path.join(pkgdir, '.lock')
+
+                dmg_signfile(macdir, keychain, mac_id, code_resources, lockfile, passphrase=passphrase)
+
+        # Repack it
+        logs.append("Packing %s" % dstfile)
+        tar_dir(dstfile, tmpdir)
+    except:
+        log.exception("Error signing %s", pkgfile)
+        return False
+    finally:
+        # Clean up after ourselves, and output our logs
+        shutil.rmtree(tmpdir)
+        log.info("\n  ".join(logs))
+
+
