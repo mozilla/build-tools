@@ -30,7 +30,6 @@ DEFAULT_RSYNC_EXCLUDES = ['--exclude=*tests*',
                           '--exclude=*crashreporter*',
                           '--exclude=*.log',
                           '--exclude=*.txt',
-                          '--exclude=*.zip',
                           '--exclude=*unsigned*',
                           '--exclude=*update-backup*',
                           '--exclude=*partner-repacks*',
@@ -110,7 +109,7 @@ def pushToMirrors(productName, version, buildNumber, stageServer,
     if not excludes:
         excludes = DEFAULT_RSYNC_EXCLUDES
     if extra_excludes:
-        excludes += extra_excludes
+        excludes += ['--exclude=%s' % ex for ex in extra_excludes]
 
     # fail/warn if target directory exists depending on dry run mode
     try:
@@ -148,6 +147,11 @@ if __name__ == '__main__':
     parser.add_option("-b", "--buildbot-configs", dest="buildbotConfigs")
     parser.add_option("-t", "--release-tag", dest="releaseTag")
     parser.add_option("--source-repo-key", dest="sourceRepoKey")
+    parser.add_option("--product", dest="product")
+    parser.add_option("--ssh-user", dest="ssh_username")
+    parser.add_option("--ssh-key", dest="ssh_key")
+    parser.add_option("--extra-excludes", dest="extra_excludes",
+                      action="append")
 
     options, args = parser.parse_args()
     mercurial(options.buildbotConfigs, "buildbot-configs")
@@ -155,13 +159,13 @@ if __name__ == '__main__':
 
     branchConfig, releaseConfig = validate(options, args)
 
-    productName = releaseConfig['productName']
+    productName = options.product or releaseConfig['productName']
     version = releaseConfig['version']
     buildNumber = releaseConfig['buildNumber']
     stageServer = branchConfig['stage_server']
-    stageUsername = branchConfig['stage_username']
-    stageSshKey = path.join(os.path.expanduser("~"), ".ssh",
-                            branchConfig["stage_ssh_key"])
+    stageUsername = options.ssh_username or branchConfig['stage_username']
+    stageSshKey = options.ssh_key or branchConfig["stage_ssh_key"]
+    stageSshKey = path.join(os.path.expanduser("~"), ".ssh", stageSshKey)
 
     if 'permissions' in args:
         checkStagePermissions(stageServer=stageServer,
@@ -186,6 +190,7 @@ if __name__ == '__main__':
                       productName=productName,
                       version=version,
                       buildNumber=buildNumber,
+                      extra_excludes=options.extra_excludes,
                       dryRun=True)
 
     if 'push' in args:
@@ -194,4 +199,5 @@ if __name__ == '__main__':
                       stageSshKey=stageSshKey,
                       productName=productName,
                       version=version,
+                      extra_excludes=options.extra_excludes,
                       buildNumber=buildNumber)

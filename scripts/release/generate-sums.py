@@ -59,6 +59,11 @@ if __name__ == '__main__':
     parser.add_option("-b", "--buildbot-configs", dest="buildbotConfigs")
     parser.add_option("-t", "--release-tag", dest="releaseTag")
     parser.add_option("--source-repo-key", dest="sourceRepoKey")
+    parser.add_option("--product", dest="product")
+    parser.add_option("--ssh-user", dest="ssh_username")
+    parser.add_option("--ssh-key", dest="ssh_key")
+    parser.add_option("--create-contrib-dirs", dest="create_contrib_dirs",
+                      action="store_true")
 
     options, args = parser.parse_args()
     mercurial(options.buildbotConfigs, "buildbot-configs")
@@ -66,13 +71,13 @@ if __name__ == '__main__':
 
     branchConfig, releaseConfig = validate(options, args)
 
-    productName = releaseConfig['productName']
+    productName = options.product or releaseConfig['productName']
     version = releaseConfig['version']
     buildNumber = releaseConfig['buildNumber']
     stageServer = branchConfig['stage_server']
-    stageUsername = branchConfig['stage_username']
-    stageSshKey = path.join(os.path.expanduser("~"), ".ssh",
-                            branchConfig["stage_ssh_key"])
+    stageUsername = options.ssh_username or branchConfig['stage_username']
+    stageSshKey = options.ssh_key or branchConfig["stage_ssh_key"]
+    stageSshKey = path.join(os.path.expanduser("~"), ".ssh", stageSshKey)
 
     candidatesDir = makeCandidatesDir(productName, version, buildNumber)
     rsyncFilesByPattern(server=stageServer, userName=stageUsername,
@@ -90,7 +95,8 @@ if __name__ == '__main__':
         os.chmod(f, 0644)
     rsyncFiles(files=upload_files, server=stageServer, userName=stageUsername,
                sshKey=stageSshKey, target_dir=candidatesDir)
-    cmd = 'mkdir -v -m 2775 %s/contrib %s/contrib-localized' % \
-        (candidatesDir, candidatesDir)
-    run_remote_cmd(cmd, server=stageServer, username=stageUsername,
-                   sshKey=stageSshKey)
+    if options.create_contrib_dirs:
+        cmd = 'mkdir -v -m 2775 %s/contrib %s/contrib-localized' % \
+            (candidatesDir, candidatesDir)
+        run_remote_cmd(cmd, server=stageServer, username=stageUsername,
+                       sshKey=stageSshKey)

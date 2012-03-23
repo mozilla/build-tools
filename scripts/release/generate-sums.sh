@@ -15,6 +15,7 @@ JSONTOOL="$PYTHON $SCRIPTS_DIR/buildfarm/utils/jsontool.py"
 workdir=`pwd`
 
 branchConfig=$1
+shift
 
 branch=$(basename $($JSONTOOL -k properties.branch $PROPERTIES_FILE))
 builder=$($JSONTOOL -k properties.buildername $PROPERTIES_FILE)
@@ -42,4 +43,4 @@ $PYTHON $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
 cd $workdir
 
 $PYTHON $MY_DIR/generate-sums.py -c $branchConfig -r $releaseConfig \
-  -b $BUILDBOT_CONFIGS -t $releaseTag
+  -b $BUILDBOT_CONFIGS -t $releaseTag $@
