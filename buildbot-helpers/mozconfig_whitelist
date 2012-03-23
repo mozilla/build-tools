@@ -22,7 +22,7 @@ whitelist['nightly']['macosx']              +=['ac_add_options --enable-codesigh
                                                'export MOZ_TELEMETRY_REPORTING=1',
                                                'mk_add_options MOZ_MAKE_FLAGS="-j4"',
                                                ]
-whitelist['nightly']['macosx64']    +=['ac_add_options --with-macbundlename-prefix=Firefox']
+whitelist['nightly']['macosx64']            +=['ac_add_options --with-macbundlename-prefix=Firefox']
 whitelist['nightly']['linux-android']       +=['mk_add_options MOZ_MAKE_FLAGS="-j4"',
                                                'ac_add_options --target=arm-linux-androideabi',
                                                'ac_add_options --with-android-ndk="/tools/android-ndk-r5c"',
@@ -34,6 +34,9 @@ whitelist['nightly']['android-xul']        += ['ac_add_options --enable-update-c
 whitelist['nightly']['linux-android']            += ['ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',]
 for platform in ['linux', 'linux64', 'macosx64']:
     whitelist['nightly'][platform]          += ['ac_add_options --enable-codesighs', 'mk_add_options MOZ_MAKE_FLAGS="-j4"']
+for platform in ['linux', 'linux64', 'macosx64', 'win32']:
+    whitelist['nightly'][platform]          += ['ac_add_options --enable-signmar']
+    whitelist['nightly'][platform]          += ['ac_add_options --enable-js-diagnostics']
 whitelist['nightly']['linux']               += ['ac_add_options --with-ccache=/usr/bin/ccache']
 whitelist['nightly']['linux64']             += ['ac_add_options --with-ccache=/usr/bin/ccache']
 whitelist['nightly']['linux']               += ['export MOZILLA_OFFICIAL=1',
