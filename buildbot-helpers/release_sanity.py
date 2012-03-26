@@ -83,6 +83,18 @@ def sendchange(branch, revision, username, master, products):
     log.info("Executing: %s" % cmd)
     run_cmd(cmd)
 
+def verify_branch(branch, productName):
+    masterConfig = json.load(open('master_config.json'))
+    if (productName != 'fennec' and branch not in masterConfig['release_branches']) or \
+       (productName == 'fennec' and branch not in masterConfig['mobile_release_branches']):
+        success = False
+        log.error("Branch %s isn't enabled for %s", branch, productName)
+        error_tally.add('verify_branch')
+    else:
+        success = True
+        log.info("Branch %s is enabled on master for %s", branch, productName)
+    return success
+
 def verify_repo(branch, revision, hghost):
     """Poll the hgweb interface for a given branch and revision to
        make sure it exists"""
@@ -377,6 +389,10 @@ if __name__ == '__main__':
             options.buildNumber = releaseConfig['buildNumber']
 
         if options.check:
+            if not verify_branch(options.branch, releaseConfig['productName']):
+                test_success = False
+                log.error('Error verifying branch is enabled on master')
+
             from config import BRANCHES
             branchConfig = BRANCHES[options.branch]
             #Match command line options to defaults in release_configs
