@@ -345,20 +345,37 @@ def monitorEvents(options, events):
                                 else:
                                     events.put(('offline',))
                     else:
-                        events.put(('update',))
-            elif state == 'update':
+                        events.put(('verify',))
+            elif state == 'verify':
                 log.info('updating the SUT Agent')
                 proc, output  = runCommand(['python', '/builds/sut_tools/updateSUT.py', options.tegraIP])
                 if proc.returncode == 0:
-                    log.info('updateSUT.py has run without issues')
                     for i in output:
                         log.debug(i)
+                    log.info('updateSUT.py has run without issues')
+                else:
+                    for i in output:
+                        log.warning(i)
+                    log.warning('updateSUT.py has had issues')
+                    sys.exit(1)
+
+                log.info('Running verify code')
+                proc, output = runCommand(['python', '/builds/sut_tools/verify.py',
+                                           options.tegra], env=bbEnv)
+                if proc.returncode == 0:
+                    for i in output:
+                        log.debug(i)
+                    log.info('verify.py has run without issues')
                     events.put(('start',))
                 else:
-                    log.info('updateSUT.py has had issues')
                     for i in output:
-                        log.info(i)
-                    sys.exit(1)
+                        log.warning(i)
+                    log.warning('verify.py returned with errors')
+                    if not os.path.isfile(errorFile):
+                        log.warning('verify.py did not create \'%s\' as expected, bailing.' % errorFile)
+                        sys.exit(1)
+                    # We fall back to normal errorFile handling, which should reboot and try to verify
+                    # A few times before giving up
             elif state == 'start':
                 if tegraActive and not bbActive:
                     log.debug('starting buildslave in %s' % options.bbpath)
