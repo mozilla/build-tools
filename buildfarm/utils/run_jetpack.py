@@ -6,7 +6,6 @@ executable of whatever valid platform is passed.
 """
 import os, sys, urllib, shutil, re, traceback
 import logging, subprocess
-from datetime import datetime, timedelta
 from optparse import OptionParser
 
 SDK_TARBALL="addonsdk.tar.bz2"
@@ -128,21 +127,19 @@ if __name__ == '__main__':
         pat = re.compile('firefox.*%s$' % options.ext)
         urls = urllib.urlopen("%s" % ftp_url)
         lines = urls.read().splitlines()
-        # initialize an old datetime to compare the current FTP dirs against to find newest
-        most_recent = datetime.now()-timedelta(days=30)
         directory = None
 
-        # let's use the datetime to locate the FTP directory to search for executable
+        # Find the largest-numbered numeric directory or symlink
         for line in lines:
-            if line.startswith('d'):
+            if line.startswith('d') or line.startswith('l'):
                 parts = line.split(" ")
-                # make sure we have a modified time for this dir
-                if ":" in parts[-2]:
-                    time = " ".join([str(datetime.now().year), parts[-4], parts[-3], parts[-2]]) 
-                    dir_time = datetime.strptime(time, "%Y %b %d %H:%M")
-                    if dir_time > most_recent:
-                        most_recent = dir_time
-                        directory = parts[-1]
+                # For a symlink, the last three parts are '1332439584', '->', '../old/etc.'
+                if line.startswith('l'):
+                    parts[-1] = parts[-3]
+                if not parts[-1].isdigit():
+                    continue
+                if directory == None or int(parts[-1]) > int(directory):
+                    directory = parts[-1]
 
         # Now get the executable for this platform
         if directory == None:
