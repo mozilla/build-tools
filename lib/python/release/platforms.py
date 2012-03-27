@@ -49,7 +49,7 @@ def shippedlocales2buildbot(platform):
         return [platform]
 
 def buildbot2updatePlatforms(platform):
-    return update_platform_map.get(platform, platform)
+    return update_platform_map.get(platform, [platform])
 
 def getPlatformLocales(shipped_locales, platforms):
     platform_locales = {}
