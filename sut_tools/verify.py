@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
 import sys
 import os
 import time
@@ -149,6 +153,25 @@ def checkSDCard(dm):
         return False
     return True
 
+def cleanupTegra(dm):
+    """ Do cleanup actions necessary to ensure starting in a good state
+
+    Returns False on failure, True on Success
+    """
+    if not dmAlive(dm):
+       return False
+
+    import cleanup
+    try:
+        retval = cleanup.main(dm=dm)
+        if retval == cleanup.RETCODE_SUCCESS:
+            # All is good
+            return True
+    except:
+        pass
+    # Some sort of error happened above
+    return False
+
 def main(tegra):
     # Returns False on failure, True on Success
     global dm, errorFile
@@ -171,6 +194,9 @@ def main(tegra):
         return False
 
     if not checkSDCard(dm):
+        return False
+
+    if not cleanupTegra(dm):
         return False
 
     return True

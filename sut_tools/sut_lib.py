@@ -370,8 +370,13 @@ def setFlag(flagfile, contents=None):
     h.close()
     time.sleep(30)
 
-def clearFlag(flagfile):
+def clearFlag(flagfile, dump=False):
     if os.path.exists(flagfile):
+        if dump:
+            # Py 2.6 syntax
+            print "Contents of %s follow:" % flagfile
+            with open(flagfile, "r") as f:
+                print f.read()
         os.remove(flagfile)
 
 def calculatePort():
