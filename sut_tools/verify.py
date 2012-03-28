@@ -41,8 +41,8 @@ def canPing(tegra):
         if not ret:
             curRetry += 1
             if curRetry == MAX_RETRIES:
-                setFlag(errorFile, "Unable to ping tegra after %s Retries" % numRetries)
-                print "WARNING: Unable to ping tegra after %s try" % numRetries
+                setFlag(errorFile, "Unable to ping tegra after %s Retries" % MAX_RETRIES)
+                print "WARNING: Unable to ping tegra after %s try" % MAX_RETRIES
                 return False
             else:
                 print "INFO: Unable to ping tegra after %s try. Sleeping for 90s then retrying" % curRetry
@@ -66,8 +66,8 @@ def canTelnet(tegra):
         except:
             curRetry += 1
             if curRetry == MAX_RETRIES:
-                setFlag(errorFile, "Unable to connect to tegra after %s Retries" % numRetries)
-                print "WARNING: Unable to connect to tegra after %s try" % numRetries
+                setFlag(errorFile, "Unable to connect to tegra after %s Retries" % MAX_RETRIES)
+                print "WARNING: Unable to connect to tegra after %s try" % MAX_RETRIES
                 return False
             else:
                 print "INFO: Unable to connect to tegra after %s try" % curRetry
