@@ -5,7 +5,7 @@ import requests
 import os
 
 CA_BUNDLE = os.path.join(os.path.dirname(__file__),
-                        '../../../../misc/mozilla-root.crt')
+                        '../../../../misc/certs/GeoTrust_Global_CA.crt')
 
 
 class API(object):
