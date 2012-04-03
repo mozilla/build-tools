@@ -3,7 +3,7 @@
 include("clobberer_creds.php");
 
 // disallow unless the correct token is given
-if ($_ENV['CLEANUP_PASSWORD'] != $CLEANUP_PASSWORD) {
+if (getenv('CLEANUP_PASSWORD') != $CLEANUP_PASSWORD) {
   echo "wrong CLEANUP_PASSWORD\n";
   exit(1);
 }
