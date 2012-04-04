@@ -7,10 +7,9 @@
 import sys
 import os
 import time
-from sut_lib import pingTegra, setFlag
+from sut_lib import pingTegra, setFlag, connect
 import devicemanagerSUT as devicemanager
-from updateSUT import target_version as EXPECTED_SUT_VERSION
-from updateSUT import connect, version
+import updateSUT
 
 MAX_RETRIES = 5
 EXPECTED_TEGRA_SCREEN = 'X:1024 Y:768'
@@ -80,7 +79,7 @@ def canTelnet(tegra):
             break # We're done here
     return True
 
-def checkVersion(dm):
+def checkVersion(dm, flag=False):
     """ Verify SUTAgent Version
 
     Returns False on failure, True on Success
@@ -88,13 +87,40 @@ def checkVersion(dm):
     if not dmAlive(dm):
        return False
 
-    ver = version(dm)
-    if ver != "SUTAgentAndroid Version %s" % EXPECTED_SUT_VERSION:
-        setFlag(errorFile, "Unexpected ver on tegra, got '%s' expected '%s'" % \
-                (ver, "SUTAgentAndroid Version %s" % EXPECTED_SUT_VERSION))
+    ver = updateSUT.version(dm)
+    if not updateSUT.isVersionCorrect(ver=ver):
+        if flag:
+            setFlag(errorFile, "Unexpected ver on tegra, got '%s' expected '%s'" % \
+                    (ver, "SUTAgentAndroid Version %s" % updateSUT.target_version))
         return False
-    print "INFO: Got expected SUTAgent version '%s'" % EXPECTED_SUT_VERSION
+    print "INFO: Got expected SUTAgent version '%s'" % updateSUT.target_version
     return True
+
+def updateSUTVersion(dm):
+    """ Update SUTAgent Version
+
+    Returns False on failure, True on Success
+    """
+    if not dmAlive(dm):
+       return False
+
+    retcode = updateSUT.doUpdate(dm)
+    if retcode == RETCODE_SUCCESS:
+        return True
+    elif retcode == RETCODE_APK_DL_FAILED:
+        setFlag(errorFile, "Remote Device Error: UpdateSUT: Unable to download " \
+                  "new APK for SUTAgent")
+    elif retcode == RETCODE_REVERIFY_FAILED:
+        setFlag(errorFile, "Remote Device Error: UpdateSUT: Unable to re-verify " \
+                  "that the SUTAgent was updated")
+    elif retcode == RETCODE_REVERIFY_WRONG:
+        # We will benefit from the SUT Ver being displayed on our dashboard
+        if checkVersion(dm, flag=True):
+            # we NOW verified correct SUT Ver, Huh?
+            setFlag(errorFile, " Unexpected State: UpdateSUT found incorrect SUTAgent Version after "\
+                      "updating, but we seem to be correct now.")
+    # If we get here we failed to update properly
+    return False
 
 def checkAndFixScreen(dm):
     """ Verify the screen is set as we expect
@@ -186,8 +212,8 @@ def main(tegra):
         return False
 
     if not checkVersion(dm):
-        # TODO Move updateSUT from cp to here
-        return False
+        if not updateSUTVersion(dm):
+            return False
 
     # Resolution Check disabled for now; Bug 737427
     if False and not checkAndFixScreen(dm):

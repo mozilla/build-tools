@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #
 # Assumes Python 2.6
 #
@@ -13,6 +17,7 @@ import datetime
 import traceback
 import subprocess
 import random
+import devicemanagerSUT as devicemanager
 
 from optparse import OptionParser
 import json
@@ -43,6 +48,13 @@ try:
 except:
     masters = {}
 
+def connect(deviceIP, sleep=False):
+    if sleep:
+        print "INFO: updateSUT.py: We're going to sleep for 90 seconds"
+        time.sleep(90)
+
+    print "INFO: updateSUT.py: Connecting to: " + deviceIP
+    return devicemanager.DeviceManagerSUT(deviceIP)
 
 def getMaster(hostname):
     # remove all the datacenter cruft from the hostname

@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #
 # Assumes Python 2.6
 #
@@ -278,6 +282,7 @@ def monitorEvents(options, events):
         except Empty:
             event = None
 
+        log.debug("EVENT: %s" % event)
         if event is None:
             if connected:
                 try:
@@ -347,18 +352,6 @@ def monitorEvents(options, events):
                     else:
                         events.put(('verify',))
             elif state == 'verify':
-                log.info('updating the SUT Agent')
-                proc, output  = runCommand(['python', '/builds/sut_tools/updateSUT.py', options.tegraIP])
-                if proc.returncode == 0:
-                    for i in output:
-                        log.debug(i)
-                    log.info('updateSUT.py has run without issues')
-                else:
-                    for i in output:
-                        log.warning(i)
-                    log.warning('updateSUT.py has had issues')
-                    sys.exit(1)
-
                 log.info('Running verify code')
                 proc, output = runCommand(['python', '/builds/sut_tools/verify.py',
                                            options.tegra], env=bbEnv)
