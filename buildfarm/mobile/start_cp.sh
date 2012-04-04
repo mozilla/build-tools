@@ -1,6 +1,11 @@
 #!/bin/sh -x
 cd /builds
 
+if [ "$TERM" != "screen" ] ; then
+  echo ERROR: Must run while attached to a screen. Use |screen -x|.
+  exit 1
+fi
+
 if [ -z $1 ] ; then
   tegras=tegra-*
   stimer=60
@@ -20,3 +25,5 @@ for i in ${tegras}; do
   fi
 done
 
+echo start_cp.sh finished, remember to DETATCH from your screen session not
+echo quit it! Do so correctly with: C-a d
