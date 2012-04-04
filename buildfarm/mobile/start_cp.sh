@@ -2,7 +2,7 @@
 cd /builds
 
 if [ "$TERM" != "screen" ] ; then
-  echo ERROR: Must run while attached to a screen. Use |screen -x|.
+  "echo ERROR: Must run while attached to a screen. Use \|screen -x\|.""
   exit 1
 fi
 
