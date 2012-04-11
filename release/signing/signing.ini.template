@@ -27,6 +27,11 @@ allowed_ips = 0.0.0.0/0
 allowed_filenames = .*
 # Minimum filesize that we'll sign
 min_filesize = 10
+# Maximum filesize, per format. 52428800 = 50MB, 524288000 = 500MB
+max_filesize_gpg = 524288000
+max_filesize_dmg = 52428800
+max_filesize_mar = 52428800
+max_filesize_signcode = 52428800
 # Secret for signing tokens. This should be kept private!
 # It should also be the same on all equivalent signing servers
 token_secret = secretstring

@@ -330,6 +330,8 @@ class SigningServer:
         gevent.spawn(self.cleanup_loop)
 
     def load_config(self, config):
+        from ConfigParser import NoOptionError
+
         self.token_secret = config.get('security', 'token_secret')
         if config.has_option('server', 'redis'):
             import redis
@@ -352,6 +354,12 @@ class SigningServer:
                 config.get('security', 'allowed_filenames').split(',')]
         self.min_filesize = config.getint('security', 'min_filesize')
         self.formats = [f.strip() for f in config.get('signing', 'formats').split(',')]
+        self.max_filesize = dict()
+        for f in self.formats:
+            try:
+                self.max_filesize[f] = config.getint('security', 'max_filesize_%s' % f)
+            except NoOptionError:
+                self.max_filesize[f] = None
         self.max_token_age = config.getint('security', 'max_token_age')
         self.max_file_age = config.getint('server', 'max_file_age')
         self.token_auth = config.get('security', 'new_token_auth')
@@ -712,6 +720,10 @@ class SigningServer:
         if s < self.min_filesize:
             os.unlink(tmpname)
             start_response("400 File too small", headers)
+            return ""
+        if self.max_filesize[format_] and s > self.max_filesize[format_]:
+            os.unlink(tmpname)
+            start_response("400 File too large", headers)
             return ""
 
         if h.hexdigest() != filehash:
