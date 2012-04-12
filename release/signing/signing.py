@@ -320,7 +320,7 @@ def unpacktar(tarfile, destdir):
     tarfile = cygpath(os.path.abspath(tarfile))
     log.debug("unpack tar %s into %s", tarfile, destdir)
     try:
-        check_call([TAR, '-xf', tarfile], cwd=destdir, stdout=nullfd, preexec_fn=_noumask)
+        check_call([TAR, '-xzf', tarfile], cwd=destdir, stdout=nullfd, preexec_fn=_noumask)
     except:
         log.exception("Error unpacking tar file %s to %s", tarfile, destdir)
         raise
@@ -338,7 +338,7 @@ def packtar(tarfile, files, srcdir):
     log.debug("pack tar %s from folder  %s with files " , tarfile, srcdir)
     log.debug( files)
     try:
-        check_call([TAR, '-cf', tarfile] + files, cwd=srcdir, stdout=nullfd, preexec_fn=_noumask)
+        check_call([TAR, '-czf', tarfile] + files, cwd=srcdir, stdout=nullfd, preexec_fn=_noumask)
     except:
         log.exception("Error packing tar file %s to %s", tarfile, srcdir)
         raise
