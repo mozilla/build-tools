@@ -48,13 +48,13 @@ class API(object):
                                 verify=self.verify, auth=self.auth)
 
     def update_build(self, name, product, version, build_target, locale,
-                     details, copy_to=None):
+                     details, copyTo=None):
         url_template_vars = dict(api_root=self.api_root, name=name,
                                  locale=locale, build_target=build_target)
         url = self.url_template % url_template_vars
         data = dict(product=product, version=version,
                     details=details)
-        if copy_to:
-            data['copy_to'] = copy_to
+        if copyTo:
+            data['copyTo'] = copyTo
 
         return self.request(method='PUT', url=url, data=data)
