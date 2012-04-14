@@ -61,6 +61,11 @@ echo OBJDIR is $OBJDIR
 
 CONFIGURE_ARGS=$(cat $SPIDERDIR/$VARIANT)
 
+NSPR64=""
+if [ "$OSTYPE" = "darwin10.0" ]; then
+    NSPR64="--enable-64bit"
+fi
+
 if [ "$OSTYPE" = "linux-gnu" ]; then
     CONFIGURE_ARGS="$CONFIGURE_ARGS --with-ccache"
     UNAME_M=$(uname -m)
@@ -78,7 +83,7 @@ fi
 
 test -d nspr || mkdir nspr
 (cd nspr
-../../src/nsprpub/configure --prefix=$OBJDIR/dist --with-dist-prefix=$OBJDIR/dist --with-mozilla
+../../src/nsprpub/configure --prefix=$OBJDIR/dist --with-dist-prefix=$OBJDIR/dist --with-mozilla $NSPR64
 make && make install
 ) || exit 2
 
