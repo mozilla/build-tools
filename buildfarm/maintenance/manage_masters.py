@@ -42,6 +42,7 @@ Supported actions:
     parser.add_option("-f", "--master-file", dest="master_file", help="list/url of masters")
     parser.add_option("-H", "--host", dest="hosts", action="append")
     parser.add_option("-R", "--role", dest="roles", action="append")
+    parser.add_option("-M", "--match", dest="match", action="append", help="masters that match the term")
     parser.add_option("-j", dest="concurrency", type="int")
     parser.add_option("-l", dest="show_list", action="store_true", help="list hosts")
     parser.add_option("--all", dest="all_masters", action="store_true", help="work on all masters, not just enabled ones")
@@ -69,6 +70,10 @@ Supported actions:
             masters.append(m)
         elif m['role'] in options.roles:
             masters.append(m)
+        elif options.match:
+            for match in options.match:
+               if match in m["name"]:
+                    masters.append(m)
         elif 'all' in options.hosts or 'all' in options.roles:
             masters.append(m)
 
