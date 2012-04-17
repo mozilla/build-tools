@@ -62,6 +62,15 @@ def get_branches(path):
         branches.append(line.split()[0])
     return branches
 
+def is_hg_cset(rev):
+    """Retruns True if passed revision represents a valid HG revision
+    (long or short(er) 40 bit hex)"""
+    try:
+        _ = int(rev, 16)
+        return True
+    except (TypeError, ValueError):
+        return False
+
 def hg_ver():
     """Returns the current version of hg, as a tuple of
     (major, minor, build)"""
@@ -203,9 +212,6 @@ def common_args(revision=None, branch=None, ssh_username=None, ssh_key=None):
 def pull(repo, dest, update_dest=True, mirrors=None, **kwargs):
     """Pulls changes from hg repo and places it in `dest`.
 
-    If `revision` is set, only the specified revision and its ancestors will
-    be pulled.
-
     If `update_dest` is set, then `dest` will be updated to `revision` if
     set, otherwise to `branch`, otherwise to the head of default.
 
@@ -215,8 +221,7 @@ def pull(repo, dest, update_dest=True, mirrors=None, **kwargs):
     if mirrors:
         for mirror in mirrors:
             try:
-                retval = pull(mirror, dest, update_dest=update_dest, **kwargs)
-                return retval
+                return pull(mirror, dest, update_dest=update_dest, **kwargs)
             except:
                 log.exception("Problem pulling from mirror %s", mirror)
                 continue
@@ -226,7 +231,16 @@ def pull(repo, dest, update_dest=True, mirrors=None, **kwargs):
     # Convert repo to an absolute path if it's a local repository
     repo = _make_absolute(repo)
     cmd = ['hg', 'pull']
-    cmd.extend(common_args(**kwargs))
+    # Don't pass -r to "hg pull", except when it's a valid HG revision.
+    # Pulling using tag names is dangerous: it uses the local .hgtags, so if
+    # the tag has moved on the remote side you won't pull the new revision the
+    # remote tag refers to.
+    pull_kwargs = kwargs.copy()
+    if 'revision' in pull_kwargs and \
+       not is_hg_cset(pull_kwargs['revision']):
+        del pull_kwargs['revision']
+
+    cmd.extend(common_args(**pull_kwargs))
 
     cmd.append(repo)
     run_cmd(cmd, cwd=dest)

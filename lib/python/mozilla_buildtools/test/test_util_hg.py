@@ -7,7 +7,7 @@ import subprocess
 import util.hg as hg
 from util.hg import clone, pull, update, hg_ver, mercurial, _make_absolute, \
   share, push, apply_and_push, HgUtilError, make_hg_url, get_branch, \
-  get_branches, path, init, unbundle, adjust_paths
+  get_branches, path, init, unbundle, adjust_paths, is_hg_cset
 from util.commands import run_cmd, get_output
 
 def getRevisions(dest):
@@ -34,6 +34,34 @@ class TestMakeAbsolute(unittest.TestCase):
 
     def testRelativeFilePath(self):
         self.assertEquals(_make_absolute("file://foo/bar"), "file://%s/foo/bar" % os.getcwd())
+
+
+class TestIsHgCset(unittest.TestCase):
+
+    def testShortCset(self):
+        self.assertTrue(is_hg_cset('fd06332733e5'))
+
+    def testLongCset(self):
+        self.assertTrue(is_hg_cset('bf37aabfd9367aec573487ebe1f784108bbef73f'))
+
+    def testMediumCset(self):
+        self.assertTrue(is_hg_cset('1e3391794bac9d0e707a7681de3'))
+
+    def testInt(self):
+        self.assertFalse(is_hg_cset(1234567890))
+
+    def testTag(self):
+        self.assertFalse(is_hg_cset('FIREFOX_50_0_RELEASE'))
+
+    def testDefault(self):
+        self.assertFalse(is_hg_cset('default'))
+
+    def testTip(self):
+        self.assertFalse(is_hg_cset('tip'))
+
+    def testBranch(self):
+        self.assertFalse(is_hg_cset('GECKO77_203512230833_RELBRANCH'))
+
 
 class TestHg(unittest.TestCase):
     def setUp(self):
@@ -146,6 +174,33 @@ class TestHg(unittest.TestCase):
             self.assertEquals(getRevisions(self.wc), self.revisions[1:])
         else:
             self.assertEquals(getRevisions(self.wc), self.revisions)
+
+    def testPullTag(self):
+        clone(self.repodir, self.wc)
+        run_cmd(['hg', 'tag', '-f', 'TAG1'], cwd=self.repodir)
+        revisions = getRevisions(self.repodir)
+
+        rev = pull(self.repodir, self.wc, revision='TAG1')
+        self.assertEquals(rev, revisions[1])
+        self.assertEquals(getRevisions(self.wc), revisions)
+
+    def testPullTip(self):
+        clone(self.repodir, self.wc)
+        run_cmd(['hg', 'tag', '-f', 'TAG1'], cwd=self.repodir)
+        revisions = getRevisions(self.repodir)
+
+        rev = pull(self.repodir, self.wc, revision='tip')
+        self.assertEquals(rev, revisions[0])
+        self.assertEquals(getRevisions(self.wc), revisions)
+
+    def testPullDefault(self):
+        clone(self.repodir, self.wc)
+        run_cmd(['hg', 'tag', '-f', 'TAG1'], cwd=self.repodir)
+        revisions = getRevisions(self.repodir)
+
+        rev = pull(self.repodir, self.wc, revision='default')
+        self.assertEquals(rev, revisions[0])
+        self.assertEquals(getRevisions(self.wc), revisions)
 
     def testPullUnrelated(self):
         # Create a new repo

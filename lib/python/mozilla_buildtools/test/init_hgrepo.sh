@@ -14,6 +14,7 @@ hg init
 echo "Hello world $RANDOM" > hello.txt
 hg add hello.txt
 hg commit -m "Adding hello"
+hg tag TAG1
 
 hg branch branch2 > /dev/null
 echo "So long, farewell" >> hello.txt
