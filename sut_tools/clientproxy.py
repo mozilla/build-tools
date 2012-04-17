@@ -26,7 +26,7 @@ from logging.handlers import RotatingFileHandler
 from multiprocessing import Process, Queue, current_process, get_logger, log_to_stderr
 
 from sut_lib import checkSlaveAlive, checkSlaveActive, stopSlave, getOurIP, getIPAddress, \
-                    dumpException, runCommand, loadOptions, getLastLine
+                    dumpException, runCommand, loadOptions, getLastLine, setFlag
 
 
 """clientproxy.py
@@ -370,7 +370,7 @@ def monitorEvents(options, events):
                     log.warning('verify.py returned with errors')
                     if not os.path.isfile(errorFile):
                         log.warning('verify.py did not create \'%s\' as expected, bailing.' % errorFile)
-                        sys.exit(1)
+                        setFlag(errorFile, "Verify.py returned with an unexpected error.")
                     # We fall back to normal errorFile handling, which should reboot and try to verify
                     # A few times before giving up
             elif state == 'start':
