@@ -50,10 +50,10 @@ except:
 
 def connect(deviceIP, sleep=False):
     if sleep:
-        print "INFO: updateSUT.py: We're going to sleep for 90 seconds"
+        log.info("updateSUT.py: We're going to sleep for 90 seconds")
         time.sleep(90)
 
-    print "INFO: updateSUT.py: Connecting to: " + deviceIP
+    log.info("updateSUT.py: Connecting to: " + deviceIP)
     return devicemanager.DeviceManagerSUT(deviceIP)
 
 def getMaster(hostname):
@@ -374,10 +374,10 @@ def checkCPActive(bbClient):
 # and buildslave steps
 
 def setFlag(flagfile, contents=None):
-    print(flagfile)
+    log.info(flagfile)
     h = open(flagfile, 'a+')
     if contents is not None:
-        print(contents)
+        log.info(contents)
         h.write('%s\n' % contents)
     h.close()
     time.sleep(30)
@@ -386,9 +386,9 @@ def clearFlag(flagfile, dump=False):
     if os.path.exists(flagfile):
         if dump:
             # Py 2.6 syntax
-            print "Contents of %s follow:" % flagfile
+            log.info("Contents of %s follow:" % flagfile)
             with open(flagfile, "r") as f:
-                print f.read()
+                log.info(f.read())
         os.remove(flagfile)
 
 def calculatePort():
@@ -413,42 +413,42 @@ def getResolution(dm):
 def getDeviceTimestamp(dm):
     ts = int(dm.getCurrentTime()) # epoch time in milliseconds
     dt = datetime.datetime.utcfromtimestamp(ts / 1000)
-    print("Current device time is %s" % dt.strftime('%Y/%m/%d %H:%M:%S'))
+    log.info("Current device time is %s" % dt.strftime('%Y/%m/%d %H:%M:%S'))
     return dt
 
 def setDeviceTimestamp(dm):
     s = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
-    print("Setting device time to %s" % s)
+    log.info("Setting device time to %s" % s)
     try:
         dm.sendCMD(['settime %s' % s])
         return True
     except devicemanager.DMError, e:
-        print "Exception while setting device time: %s" % str(e)
+        log.warn("Exception while setting device time: %s" % str(e))
         return False
 
 def checkDeviceRoot(dm):
     dr = dm.getDeviceRoot()
     # checking for /mnt/sdcard/...
-    print("devroot %s" % str(dr))
+    log.info("devroot %s" % str(dr))
     if not dr or dr == '/tests':
         return None
     return dr
 
 def waitForDevice(dm, waitTime=60):
-    print("Waiting for tegra to come back...")
+    log.info("Waiting for tegra to come back...")
     time.sleep(waitTime)
     tegraIsBack = False
     tries       = 0
     maxTries    = 20
     while tries <= maxTries:
         tries += 1
-        print("Try %d" % tries)
+        log.info("Try %d" % tries)
         if checkDeviceRoot(dm) is not None:
             tegraIsBack = True
             break
         time.sleep(waitTime)
     if not tegraIsBack:
-        print("Remote Device Error: waiting for tegra timed out.")
+        log.error("Remote Device Error: waiting for tegra timed out.")
         sys.exit(1)
 
 def reboot_tegra(tegra, debug=False):
@@ -491,7 +491,7 @@ def reboot_tegra(tegra, debug=False):
                 oib = '1.3.6.1.4.1.1718.%s' % s
                 cmd = '/usr/bin/snmpset -c private %s %s i 3' % (pdu, oib)
                 if debug:
-                    print 'rebooting %s at %s %s' % (tegra, pdu, deviceID)
+                    log.debug('rebooting %s at %s %s' % (tegra, pdu, deviceID))
                 if os.system(cmd) == 0:
                     result = True
             except:
@@ -524,9 +524,9 @@ def stopStalled(tegra):
     result = False
     for f in ('runtestsremote', 'remotereftest', 'remotereftest.pid.xpcshell'):
         pidFile = os.path.join(tegraPath, '%s.pid' % f)
-        print "checking for previous test processes ... %s" % pidFile
+        log.info("checking for previous test processes ... %s" % pidFile)
         if os.path.exists(pidFile):
-            print "pidfile from prior test run found, trying to kill"
+            log.info("pidfile from prior test run found, trying to kill")
             stopProcess(pidFile, f)
             if os.path.exists(pidFile):
                 result = True

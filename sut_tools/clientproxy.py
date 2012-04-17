@@ -95,6 +95,10 @@ def initLogs(options):
     else:
         log.setLevel(logging.INFO)
 
+    # Make sure sut_lib can log to our file as well
+    import sut_lib
+    sut_lib.log = log
+
 class Daemon(object):
     def __init__(self, pidfile):
         self.stdin   = '/dev/null'
