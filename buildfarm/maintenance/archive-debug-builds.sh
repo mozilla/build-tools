@@ -13,7 +13,7 @@ do
   cd $builddir
   archivedir="$(find . -maxdepth 1 -type d -mtime -1 -name '1?????????' | sort -n | tail -1 | cut -c3-)"
   if [[ -n $archivedir && -d "$builddir/$archivedir" ]]; then
-    files="$(find $builddir/$archivedir/ -regex '.*\.\(dmg\|exe\|txt\|bz2\)')"
+    files="$(find $builddir/$archivedir/ -name jsshell\* -o -name \*.dmg -o -name \*.txt -o -name \*.bz2 -o -name \*.exe)"
     if [ -n "$files" ]; then
       echo "Creating archive directory: $ARCHIVE_PATH/$DATE_BASE/$DATE_DIR"
       mkdir -p "$ARCHIVE_PATH/$DATE_BASE/$DATE_DIR"
