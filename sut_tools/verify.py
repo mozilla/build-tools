@@ -105,15 +105,15 @@ def updateSUTVersion(dm):
        return False
 
     retcode = updateSUT.doUpdate(dm)
-    if retcode == RETCODE_SUCCESS:
+    if retcode == updateSUT.RETCODE_SUCCESS:
         return True
-    elif retcode == RETCODE_APK_DL_FAILED:
+    elif retcode == updateSUT.RETCODE_APK_DL_FAILED:
         setFlag(errorFile, "Remote Device Error: UpdateSUT: Unable to download " \
                   "new APK for SUTAgent")
-    elif retcode == RETCODE_REVERIFY_FAILED:
+    elif retcode == updateSUT.RETCODE_REVERIFY_FAILED:
         setFlag(errorFile, "Remote Device Error: UpdateSUT: Unable to re-verify " \
                   "that the SUTAgent was updated")
-    elif retcode == RETCODE_REVERIFY_WRONG:
+    elif retcode == updateSUT.RETCODE_REVERIFY_WRONG:
         # We will benefit from the SUT Ver being displayed on our dashboard
         if checkVersion(dm, flag=True):
             # we NOW verified correct SUT Ver, Huh?
