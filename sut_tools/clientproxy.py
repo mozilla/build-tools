@@ -265,6 +265,7 @@ def monitorEvents(options, events):
     hardResets    = 0
     hardResetsMax = 3
     lastHangCheck = time.time()
+    lastNamedEvent = None # Used to determine what our last event was
 
     log.info('monitoring started (process pid %s)' % current_process().pid)
 
@@ -356,6 +357,8 @@ def monitorEvents(options, events):
                     else:
                         events.put(('verify',))
             elif state == 'verify':
+                if lastNamedEvent in ("verify", "start"):
+                    continue # race got us recursed, skip back to top
                 log.info('Running verify code')
                 proc, output = runCommand(['python', '/builds/sut_tools/verify.py',
                                            options.tegra], env=bbEnv)
@@ -402,6 +405,9 @@ def monitorEvents(options, events):
                 hardResets = 0
             elif state == 'terminate':
                 break
+
+            # Make sure to set this after the above state checks
+            lastNamedEvent = state
 
         if hbFails > maxFails:
             hbFails     = 0
