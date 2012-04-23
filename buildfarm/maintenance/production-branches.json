@@ -104,13 +104,6 @@
     ],
     "repo_type": "hg"
   },
-  "shadow-central": {
-    "repo": "https://hgpvt.mozilla.org/shadow-central",
-    "graph_branches": [
-      "Shadow-Central"
-    ],
-    "repo_type": "hg"
-  },
   "mozilla-central": {
     "repo": "http://hg.mozilla.org/mozilla-central",
     "graph_branches": [
