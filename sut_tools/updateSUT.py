@@ -7,11 +7,12 @@
 import urllib2
 import sys
 import time
+import os
 from sut_lib import connect
 
 # Constants
 target_version = "1.07"
-apkfilename = "sutAgentAndroid.apk"
+apkfilename = "/builds/%s/sutAgentAndroid.apk" % os.getenv('SUT_NAME')
 version_pattern = 'SUTAgentAndroid Version %s'
 
 RETCODE_SUCCESS = 0
