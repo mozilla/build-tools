@@ -17,10 +17,6 @@ import datetime
 import traceback
 import subprocess
 import random
-import re
-import urllib2
-import cStringIO as StringIO
-import gzip
 import devicemanagerSUT as devicemanager
 
 from optparse import OptionParser
@@ -587,66 +583,3 @@ def loadOptions(defaults=None):
 
     return options
 
-class DefaultErrorHandler(urllib2.HTTPDefaultErrorHandler):
-    def http_error_default(self, req, fp, code, msg, headers):
-        result = urllib2.HTTPError(req.get_full_url(), code, msg, headers, fp)
-        result.status = code
-        return result
-
-def fetchUrl(url, debug=False):
-    result = None
-    opener = urllib2.build_opener(DefaultErrorHandler())
-    opener.addheaders.append(('Accept-Encoding', 'gzip'))
-
-    try:
-        response = opener.open(url)
-        raw_data = response.read()
-
-        if response.headers.get('content-encoding', None) == 'gzip':
-            result = gzip.GzipFile(fileobj=StringIO.StringIO(raw_data)).read()
-        else:
-            result = raw_data
-    except:
-        log.error('Error fetching url [%s]' % url, exc_info=True)
-
-    return result
-
-def gracefulSlave(tegra):
-    # An adapted version of graceful_shutdown from briar-patch remote.py
-    tegra_dir = os.path.join("/builds", tegra)
-    def get_tac():
-        log.debug("Determining host's master")
-        p, o = runCommand(["cat", "%s/buildbot.tac" % tegra_dir])
-        data = "\r\n".join(o) + "\r\n"
-        master = re.search('^buildmaster_host\s*=\s*["\'](.*)["\']', data, re.M)
-        port = re.search('^port\s*=\s*(\d+)', data, re.M)
-        host = re.search('^slavename\s*=\s*["\'](.*)["\']', data, re.M)
-        if master and port and host:
-            return master.group(1), int(port.group(1)), host.group(1)
-    
-    tacinfo = get_tac()
-    
-    if tacinfo is None:
-        log.error("Couldn't get info from buildbot.tac; host is disabled?")
-        return False
-    
-    host, port, hostname = tacinfo
-    # HTTP port is host port - 1000
-    port -= 1000
-    # Look at the host's page
-    url = "http://%s:%i/buildslaves/%s" % (host, port, hostname)
-    log.info("Fetching host page %s" % url)
-    data = fetchUrl('%s?numbuilds=0' % url)
-    
-    if data is None:
-        return False
-    
-    if "Graceful Shutdown" not in data:
-        log.error("no shutdown form for %s" % (self.hostname))
-    
-    log.info("Setting Graceful Directive")
-    data = fetchUrl("%s/shutdown" % url)
-    if data is None:
-        return False
-
-    return True
