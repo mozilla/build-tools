@@ -8,6 +8,10 @@ import ConfigParser, sys
 
 app_path = sys.argv[1]
 
+#XXX remove once bug 698843 is closed
+if app_path == "thunderbird-test":
+    app_path = "thunderbird"
+
 appini = ConfigParser.ConfigParser()
 appini.read('%s/application.ini' % app_path)
 
