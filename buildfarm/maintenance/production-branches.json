@@ -136,7 +136,7 @@
   "comm-central": {
     "repo": "http://hg.mozilla.org/comm-central",
     "graph_branches": [
-      "Thunderbird-Trunk",
+      "Thunderbird-Trunk"
     ],
     "repo_type": "hg"
   },
