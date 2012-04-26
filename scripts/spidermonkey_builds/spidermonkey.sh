@@ -62,7 +62,7 @@ echo OBJDIR is $OBJDIR
 CONFIGURE_ARGS=$(cat $SPIDERDIR/$VARIANT)
 
 NSPR64=""
-if [ "$OSTYPE" = "darwin10.0" ]; then
+if [[ "$OSTYPE" == darwin* ]]; then
     NSPR64="--enable-64bit"
 fi
 
