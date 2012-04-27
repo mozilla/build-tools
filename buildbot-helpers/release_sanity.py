@@ -264,7 +264,7 @@ def verify_l10n_dashboard(l10n_changesets, l10n_dashboard_version=None):
     else:
         l10n_dashboard_version = getL10nDashboardVersion(
             releaseConfig['version'], releaseConfig['productName'])
-    dash_url = 'https://l10n-stage-sj.mozilla.org/shipping/l10n-changesets?ms=%s' % l10n_dashboard_version
+    dash_url = 'https://l10n.mozilla.org/shipping/l10n-changesets?ms=%s' % l10n_dashboard_version
     log.info("Comparing l10n changesets on dashboard %s to on-disk %s ..."
         % (dash_url, l10n_changesets))
     try:
