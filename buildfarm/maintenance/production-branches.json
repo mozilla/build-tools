@@ -224,6 +224,13 @@
     ],
     "repo_type": "hg"
   },
+  "try-comm-central": {
+    "repo": "http://hg.mozilla.org/try-comm-central",
+    "graph_branches": [
+      "Try-Comm-Central"
+    ],
+    "repo_type": "hg"
+  },
   "larch": {
     "repo": "http://hg.mozilla.org/projects/larch",
     "graph_branches": [
