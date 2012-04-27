@@ -12,7 +12,8 @@ from sut_lib import connect
 
 # Constants
 target_version = "1.07"
-apkfilename = "/builds/%s/sutAgentAndroid.apk" % os.getenv('SUT_NAME')
+apkfilename = "sutAgentAndroid.apk"
+apkFoopyDir =  "/builds/%s" % os.getenv('SUT_NAME')
 version_pattern = 'SUTAgentAndroid Version %s'
 
 RETCODE_SUCCESS = 0
@@ -48,7 +49,7 @@ def doUpdate(dm):
     tries = 0
     while tries < 5:
         try:
-            dm = connect(deviceIP, sleep=90)
+            dm = connect(os.getenv('SUT_IP'), sleep=90)
             break
         except:
             tries += 1
@@ -94,15 +95,16 @@ def download_apk():
     req = urllib2.Request(url)
     try:
         f = urllib2.urlopen(req)
-    except URLError, e:
+    except urllib2.URLError, e:
         reason = getattr(e, "reason", "SUT-Undef")
         code = getattr(e, "code", "SUT-Undef")
         raise Exception("ERROR: updateSUT.py: code: %s; reason: %s" % (code, reason))
 
-    local_file = open(apkfilename, 'wb')
+    local_file_name = os.path.join(apkFoopyDir, apkfilename)
+    local_file = open(local_file_name, 'wb')
     local_file.write(f.read())
     local_file.close()
-    f = open(apkfilename, 'rb')
+    f = open(local_file_name, 'rb')
     data = f.read()
     f.close()
     return data
