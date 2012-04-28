@@ -251,5 +251,10 @@
       "Fx-Team"
     ],
     "repo_type": "hg"
+  },
+  "addon-sdk": {
+    "repo": "http://hg.mozilla.org/projects/addon-sdk",
+    "graph_branches": [],
+    "repo_type": "hg"
   }
 }
