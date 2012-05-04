@@ -192,6 +192,9 @@ tegras = json.load(open(os.path.join('.', 'tegras.json')))
 
 for key in tegras:
     o = tegras[key]
+    if o['foopy'] == "None":
+        continue # This tegra is not assigned to a foopy
+
     if o['foopy'] not in foopies:
         for line in open(os.path.join(htmlDir, 'tegra_events-%s.log' % o['foopy'])).readlines():
             # 20110915142854,tegra-023,stalled
