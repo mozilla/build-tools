@@ -279,7 +279,10 @@ def checkStalled(tegra):
     p, lines  = runCommand(['ps', '-U', 'cltbld'])
 
     this_tegra_lines = []
+    for line in lines:
+        if tegraIP in line or tegra in line:
             this_tegra_lines.append(line)
+
     for line in this_tegra_lines:
         if ('bcontroller' in line) or ('server.js' in line):
             item = line.split()
@@ -511,7 +514,10 @@ def stopStalled(tegra):
     # 212 ??         0:17.99 /opt/local/Library/Frameworks/Python.framework/Versions/2.6/Resources/Python.app/Contents/MacOS/Python clientproxy.py -b --tegra=tegra-032
     p, lines  = runCommand(['ps', '-U', 'cltbld'])
     this_tegra_lines = []
+    for line in lines:
+        if tegraIP in line or tegra in line:
             this_tegra_lines.append(line)
+
     for line in this_tegra_lines:
         if ('bcontroller' in line) or ('server.js' in line):
             item = line.split()
