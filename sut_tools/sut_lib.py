@@ -22,12 +22,9 @@ import devicemanagerSUT as devicemanager
 from optparse import OptionParser
 import json
 
+
 log = logging.getLogger()
-echoHandler   = logging.StreamHandler(sys.stdout)
-echoFormatter = logging.Formatter('%(levelname)-7s: %(message)s')
-echoHandler.setFormatter(echoFormatter)
-log.addHandler(echoHandler)
-log.setLevel(logging.DEBUG)
+
 
 def loadTegrasData(filepath):
     result = {}
@@ -170,9 +167,8 @@ def getChildPIDs(pid):
     #pid   ppid  pgid
     #18456     1 18455 /opt/local/Libra   ??  S      0:00.88 /opt/local/Library/Frameworks/Python.framework/Versions/2.6/Resources/Python.app/Contents/MacOS/Python /opt/local/Library/Frameworks/Python.framework/Versions/2.6/bin/twistd$
     #18575 18456 18455 /opt/local/Libra   ??  S      0:00.52 /opt/local/Library/Frameworks/Python.framework/Versions/2.6/Resources/Python.app/Contents/MacOS/Python ../../sut_tools/installApp.py 10.250.49.8 ../talos-data/fennec-4.1a1pr$
-    p, lines = runCommand(['ps', '-U', 'cltbld', '-O', 'ppid,pgid,command'], logEcho=False)
+    p, lines = runCommand(['ps', '-U', 'cltbld', '-O', 'ppid,pgid,command'])
     pids = []
-    log.debug("getChildPIDs: matching PIDs follow...")
     for line in lines:
         item = line.split()
         if len(item) > 1:
@@ -180,7 +176,6 @@ def getChildPIDs(pid):
                 p = int(item[1])
                 if p == pid:
                     pids.append(int(item[0]))
-                    log.debug(line)
             except ValueError:
                 pass
     return pids
@@ -281,16 +276,10 @@ def checkStalled(tegra):
     pids      = []
     tegraIP   = getIPAddress(tegra)
     tegraPath = os.path.join('/builds', tegra)
-    p, lines  = runCommand(['ps', '-U', 'cltbld'], logEcho=False)
+    p, lines  = runCommand(['ps', '-U', 'cltbld'])
 
-    # Dump lines relating to this tegra
-    log.debug("checkStalled: matching Processes follow...")
     this_tegra_lines = []
-    for line in lines:
-        if tegraIP in line or tegra in line:
             this_tegra_lines.append(line)
-            log.debug(line)
-
     for line in this_tegra_lines:
         if ('bcontroller' in line) or ('server.js' in line):
             item = line.split()
@@ -520,16 +509,9 @@ def stopStalled(tegra):
     # look for any process that is associated with the tegra
     # PID TTY           TIME CMD
     # 212 ??         0:17.99 /opt/local/Library/Frameworks/Python.framework/Versions/2.6/Resources/Python.app/Contents/MacOS/Python clientproxy.py -b --tegra=tegra-032
-    p, lines  = runCommand(['ps', '-U', 'cltbld'], logEcho=False)
-
-    # Dump lines relating to this tegra
-    log.debug("stopStalled: matching Processes follow...")
+    p, lines  = runCommand(['ps', '-U', 'cltbld'])
     this_tegra_lines = []
-    for line in lines:
-        if tegraIP in line or tegra in line:
             this_tegra_lines.append(line)
-            log.debug(line)
-
     for line in this_tegra_lines:
         if ('bcontroller' in line) or ('server.js' in line):
             item = line.split()
