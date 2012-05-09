@@ -285,13 +285,14 @@ def checkStalled(tegra):
 
     # Dump lines relating to this tegra
     log.debug("checkStalled: matching Processes follow...")
+    this_tegra_lines = []
     for line in lines:
         if tegraIP in line or tegra in line:
+            this_tegra_lines.append(line)
             log.debug(line)
 
-    for line in lines:
-        if ('bcontroller' in line and tegraIP in line) or \
-           ('server.js' in line and tegra in line):
+    for line in this_tegra_lines:
+        if ('bcontroller' in line) or ('server.js' in line):
             item = line.split()
             if len(item) > 1:
                 try:
@@ -523,13 +524,14 @@ def stopStalled(tegra):
 
     # Dump lines relating to this tegra
     log.debug("stopStalled: matching Processes follow...")
+    this_tegra_lines = []
     for line in lines:
         if tegraIP in line or tegra in line:
+            this_tegra_lines.append(line)
             log.debug(line)
 
-    for line in lines:
-        if ('bcontroller' in line and tegraIP in line) or \
-           ('server.js' in line and tegra in line):
+    for line in this_tegra_lines:
+        if ('bcontroller' in line) or ('server.js' in line):
             item = line.split()
             if len(item) > 1:
                 try:
