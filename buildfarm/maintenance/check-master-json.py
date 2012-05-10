@@ -119,7 +119,7 @@ def check_master(master):
         return False
 
     # Check datacentre
-    if master['datacentre'] not in ('mtv1', 'scl1', 'sjc1'):
+    if master['datacentre'] not in ('mtv1', 'scl1', 'scl3'):
         log.error("%s - bad datacentre", name)
         return False
 
