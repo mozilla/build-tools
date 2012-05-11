@@ -41,6 +41,8 @@ finally:
         
     clearFlag(proxyFile)
 
+sys.stdout.flush()
+
 #if status is None or not status:
 #    print "Remote Device Error: call for device reboot failed"
 #    sys.exit(1)

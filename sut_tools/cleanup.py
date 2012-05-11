@@ -100,4 +100,5 @@ if __name__ == '__main__':
         sys.exit(RETCODE_ERROR)
 
     retval = main(tegra=sys.argv[1])
+    sys.stdout.flush()
     sys.exit(retval)
