@@ -615,7 +615,7 @@
         "pduid": ".AA9"
     }, 
     "tegra-146": {
-        "foopy": "None", 
+        "foopy": "foopy19", 
         "pdu": "pdu5.df202-1.build.mtv1.mozilla.com", 
         "pduid": ".AB9"
     }, 
@@ -963,7 +963,7 @@
         "pduid": ".AB9"
     }, 
     "tegra-224": {
-        "foopy": "foopy19", 
+        "foopy": "foopy05", 
         "pdu": "pdu9.df202-2.build.mtv1.mozilla.com", 
         "pduid": ".AA10"
     }, 

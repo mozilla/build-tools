@@ -27,7 +27,7 @@ if [ -z "$FOOPIES" ] ; then
 fi
 
 # Unassigned
-# 065 090 091 146 202 205
+# 065 090 091 202 205
 
 # Assigned Elsewhere
 # Sec-Team (Bug 749637): 198 203 204 275 287
@@ -36,7 +36,7 @@ for f in ${FOOPIES} ; do
   case "$f" in
     "05" | "5" )
       FOOPY=foopy05
-      TEGRAS="184 185 288 187 188 189 190 191 192 010 011 012 013"
+      TEGRAS="010 011 012 013 184 185 187 188 189 190 191 192 224 288"
     ;;
     "06" | "6" )
       FOOPY=foopy06
@@ -100,7 +100,7 @@ for f in ${FOOPIES} ; do
     "19" )
        FOOPY=foopy19
        FOOPYIP=10.250.48.221
-       TEGRAS="220 221 222 223 224 225 226 227 228 229 231 232 233"
+       TEGRAS="146 220 221 222 223 225 226 227 228 229 231 232 233"
        ;;
     "20" )
        FOOPY=foopy20
