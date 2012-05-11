@@ -9,7 +9,7 @@ else
   for tegra in $* ; do
     if [ -d tegra-$tegra ] ; then
       echo killing any stray processes from tegra-$tegra
-      python tegra_checkstalled.py tegra-$tegra
+      python ./tools/tegra_checkstalled.py tegra-$tegra
     else
       echo skipping tegra-${tegra}
     fi
