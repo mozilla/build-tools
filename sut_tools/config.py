@@ -106,7 +106,7 @@ width, height = getResolution(dm)
 print("current resolution X:%d Y:%d" % (width, height))
 
 # adjust resolution up if we are part of a reftest run
-if ('reftest' in testname or 'crashtest' in testname) and width < refWidth:
+if (testname == 'reftest') and width < refWidth:
     try:
         setFlag(proxyFile)
         if dm.adjustResolution(width=refWidth, height=refHeight, type='crt'):
