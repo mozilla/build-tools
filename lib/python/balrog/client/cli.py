@@ -57,7 +57,7 @@ class NightlyRunner(object):
         }
         if props.get('partialMarFilename'):
             data['partial'] = {
-                'from': get_nightly_data_name(self.appName, self.branch,
+                'from': get_nightly_blob_name(self.appName, self.branch,
                                               self.build_type,
                                               props['previous_buildid'],
                                               self.dummy),
