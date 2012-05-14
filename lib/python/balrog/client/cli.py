@@ -29,7 +29,7 @@ class NightlyRunner(object):
         self.auth = auth
         self.dummy = dummy
 
-    def generate_blob(self):
+    def generate_data(self):
         fp = open(self.buildbprops_file)
         bp = json.load(fp)
         fp.close()
@@ -44,20 +44,20 @@ class NightlyRunner(object):
         self.name = get_nightly_blob_name(self.appName, self.branch,
                                           self.build_type, buildID, self.dummy)
         self.locale = props.get('locale', 'en-US')
-        blob = {
+        data = {
             'appv': self.appVersion,
             'extv': props.get('extVersion', self.appVersion),
             'buildID': props['buildid'],
         }
-        blob['complete'] = {
+        data['complete'] = {
             'from': '*',
             'filesize': props['completeMarSize'],
             'hashValue': props['completeMarHash'],
             'fileUrl': props['completeMarUrl']
         }
         if props.get('partialMarFilename'):
-            blob['partial'] = {
-                'from': get_nightly_blob_name(self.appName, self.branch,
+            data['partial'] = {
+                'from': get_nightly_data_name(self.appName, self.branch,
                                               self.build_type,
                                               props['previous_buildid'],
                                               self.dummy),
@@ -65,11 +65,11 @@ class NightlyRunner(object):
                 'hashValue': props['partialMarHash'],
                 'fileUrl': props['partialMarUrl']
             }
-        return blob
+        return data
 
     def run(self):
-        blob = self.generate_blob()
-        blob = json.dumps(blob)
+        data = self.generate_data()
+        data = json.dumps(data)
         api = API(auth=self.auth, api_root=self.api_root)
         copyTo = [get_nightly_blob_name(
             self.appName, self.branch, self.build_type, 'latest', self.dummy)]
@@ -77,4 +77,4 @@ class NightlyRunner(object):
         api.update_build(name=self.name, product=self.appName,
                          build_target=self.build_target,
                          version=self.appVersion, locale=self.locale,
-                         details=blob, copyTo=copyTo)
+                         buildData=data, copyTo=copyTo)
