@@ -11,7 +11,7 @@ import os
 from sut_lib import connect
 
 # Constants
-target_version = "1.07"
+target_version = "1.08"
 apkfilename = "sutAgentAndroid.apk"
 apkFoopyDir =  "/builds/%s" % os.getenv('SUT_NAME')
 version_pattern = 'SUTAgentAndroid Version %s'
@@ -110,6 +110,10 @@ def download_apk():
     return data
 
 if __name__ == '__main__':
+    if os.getenv('SUT_NAME') == None or os.getenv('SUT_IP') == None:
+        print "Make sure that SUT_NAME and SUT_IP are set"
+        sys.exit(1)
+
     if (len(sys.argv) <> 2):
         print "usage: updateSUT.py <ip address>"
         sys.exit(1)
@@ -117,4 +121,5 @@ if __name__ == '__main__':
     # Exit 5 if an error, for buildbot RETRY
     ret = 0
     if main(sys.argv[1]): ret = 5
+    sys.stdout.flush()
     sys.exit(ret)
