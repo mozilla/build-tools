@@ -2,6 +2,14 @@
 """%prog [options] -x|-t|-c marfile [files]
 
 Utility for managing mar files"""
+
+### The canonical location for this file is
+###   http://hg.mozilla.org/build/tools/file/default/buildfarm/utils/mar.py
+###
+### Please update the copy in puppet to deploy new changes to
+### stage.mozilla.org, see
+###   https://wiki.mozilla.org/ReleaseEngineering/How_To/Modify_scripts_on_stage
+
 import struct, os, bz2, hashlib, tempfile
 from subprocess import Popen, PIPE
 

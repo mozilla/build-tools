@@ -1,5 +1,12 @@
 #!/usr/bin/python
 
+### The canonical location for this file is
+###   http://hg.mozilla.org/build/tools/file/default/stage/post_upload.py
+###
+### Please update the copy in puppet to deploy new changes to
+### stage.mozilla.org, see
+###   https://wiki.mozilla.org/ReleaseEngineering/How_To/Modify_scripts_on_stage
+
 # This script expects a directory as its first non-option argument,
 # followed by a list of filenames.
 
