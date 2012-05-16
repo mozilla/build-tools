@@ -13,7 +13,9 @@ from sut_lib import connect
 # Constants
 target_version = "1.08"
 apkfilename = "sutAgentAndroid.apk"
-apkFoopyDir =  "/builds/%s" % os.getenv('SUT_NAME')
+tegra_name = os.getenv('SUT_NAME')
+apkFoopyDirPattern =  "/builds/%(tegra_name)s"
+apkFoopyDir = apkFoopyDirPattern % {'tegra_name': tegra_name}
 version_pattern = 'SUTAgentAndroid Version %s'
 
 RETCODE_SUCCESS = 0
@@ -49,7 +51,7 @@ def doUpdate(dm):
     tries = 0
     while tries < 5:
         try:
-            dm = connect(os.getenv('SUT_IP'), sleep=90)
+            dm = connect(tegra_name, sleep=90)
             break
         except:
             tries += 1
@@ -75,8 +77,8 @@ def doUpdate(dm):
         print "INFO: updateSUT.py: We're now running %s" % ver
         return RETCODE_SUCCESS
 
-def main(deviceIP):
-    dm = connect(deviceIP)
+def main(device):
+    dm = connect(device)
 
     if not isVersionCorrect(dm=dm):
         return doUpdate(dm)
@@ -110,16 +112,24 @@ def download_apk():
     return data
 
 if __name__ == '__main__':
-    if os.getenv('SUT_NAME') == None or os.getenv('SUT_IP') == None:
-        print "Make sure that SUT_NAME and SUT_IP are set"
-        sys.exit(1)
-
     if (len(sys.argv) <> 2):
-        print "usage: updateSUT.py <ip address>"
-        sys.exit(1)
+        if os.getenv('SUT_NAME') in (None, ''):
+            print "usage: updateSUT.py [tegra name]"
+            print "   Must have $SUT_NAME set in environ to omit tegra name"
+            sys.exit(1)
+        else:
+            print "INFO: Using tegra '%s' found in env variable" % tegra_name
+    else:
+        tegra_name = sys.argv[1]
+        apkFoopyDir = apkFoopyDirPattern % {'tegra_name': tegra_name}
 
     # Exit 5 if an error, for buildbot RETRY
     ret = 0
-    if main(sys.argv[1]): ret = 5
+    if main(tegra_name): ret = 5
     sys.stdout.flush()
     sys.exit(ret)
+else:
+    if tegra_name in (None, ''):
+        raise ImportError("To use updateSUT.py non-standalone you need SUT_NAME defined in environment")
+    else:
+        print "DEBUG: updateSUT: Using tegra '%s' found in env variable" % tegra_name

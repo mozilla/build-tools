@@ -95,10 +95,18 @@ def main(tegra=None, dm=None):
     return RETCODE_SUCCESS
 
 if __name__ == '__main__':
+    tegra_name = None
     if (len(sys.argv) <> 2):
-        print "usage: cleanup.py <tegra name || ip address>"
-        sys.exit(RETCODE_ERROR)
+        if os.getenv('SUT_NAME') in (None, ''):
+            print "usage: cleanup.py [tegra name]"
+            print "   Must have $SUT_NAME set in environ to omit tegra name"
+            sys.exit(RETCODE_ERROR)
+        else:
+            tegra_name = os.getenv('SUT_NAME')
+            print "INFO: Using tegra '%s' found in env variable" % tegra_name
+    else:
+        tegra_name = sys.argv[1]
 
-    retval = main(tegra=sys.argv[1])
+    retval = main(tegra=tegra_name)
     sys.stdout.flush()
     sys.exit(retval)
