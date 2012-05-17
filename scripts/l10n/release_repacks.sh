@@ -22,6 +22,11 @@ generatePartials=$5
 if [ "$generatePartials" = "generatePartials" ]; then
   generatePartials="--generate-partials"
 fi
+stage_ssh_key=$6
+stage_server=$7
+stage_username=$8
+hghost=$9
+compare_locales_repo_path=${10}
 
 branch=$(basename $($JSONTOOL -k properties.branch $PROPERTIES_FILE))
 builder=$($JSONTOOL -k properties.buildername $PROPERTIES_FILE)
@@ -30,12 +35,19 @@ slavename=$($JSONTOOL -k properties.slavename $PROPERTIES_FILE)
 master=$($JSONTOOL -k properties.master $PROPERTIES_FILE)
 releaseConfig=$($JSONTOOL -k properties.release_config $PROPERTIES_FILE)
 releaseTag=$($JSONTOOL -k properties.script_repo_revision $PROPERTIES_FILE)
+product=$($JSONTOOL -k properties.product $PROPERTIES_FILE)
 
 if [ -z "$BUILDBOT_CONFIGS" ]; then
     export BUILDBOT_CONFIGS="http://hg.mozilla.org/build/buildbot-configs"
 fi
 if [ -z "$CLOBBERER_URL" ]; then
     export CLOBBERER_URL="http://build.mozilla.org/clobberer"
+fi
+
+if [ "$product" == "thunderbird" ]; then
+    SOURCE_REPO_KEY=--source-repo-key=comm
+else
+    SOURCE_REPO_KEY=
 fi
 
 export MOZ_SIGN_CMD="$MOZ_SIGN_CMD"
@@ -51,4 +63,10 @@ cd $workdir
 
 $PYTHON $MY_DIR/create-release-repacks.py -c $branchConfig -r $releaseConfig \
   -b $BUILDBOT_CONFIGS -t $releaseTag -p $platform \
-  --chunks $chunks --this-chunk $thisChunk $generatePartials
+  --chunks $chunks --this-chunk $thisChunk $generatePartials \
+  --stage-ssh-key=$stage_ssh_key \
+  --stage-server=$stage_server \
+  --stage-username=$stage_username \
+  --hghost=$hghost \
+  --compare-locales-repo-path=$compare_locales_repo_path \
+  $SOURCE_REPO_KEY

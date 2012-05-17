@@ -108,12 +108,6 @@ def validate(options, args):
         log.info("Must pass --configfile")
         sys.exit(1)
     releaseConfigFile = path.join("buildbot-configs", options.releaseConfig)
-    branchConfigFile = path.join("buildbot-configs", options.configfile)
-    branchConfigDir = path.dirname(branchConfigFile)
-
-    if not path.exists(branchConfigFile):
-        log.info("%s does not exist!" % branchConfigFile)
-        sys.exit(1)
 
     if options.chunks or options.thisChunk:
         assert options.chunks and options.thisChunk, \
@@ -127,9 +121,13 @@ def validate(options, args):
     releaseConfig = readReleaseConfig(releaseConfigFile,
                                       required=REQUIRED_RELEASE_CONFIG)
     sourceRepoName = releaseConfig['sourceRepositories'][options.source_repo_key]['name']
-    branchConfig = readBranchConfig(branchConfigDir, branchConfigFile,
-                                    sourceRepoName,
-                                    required=REQUIRED_BRANCH_CONFIG)
+    branchConfig = {
+        'stage_ssh_key': options.stage_ssh_key,
+        'hghost': options.hghost,
+        'stage_server': options.stage_server,
+        'stage_username': options.stage_username,
+        'compare_locales_repo_path': options.compare_locales_repo_path,
+    }
     return branchConfig, releaseConfig
 
 if __name__ == "__main__":
@@ -159,6 +157,11 @@ if __name__ == "__main__":
     parser.add_option("--this-chunk", dest="thisChunk", type="int")
     parser.add_option("--generate-partials", dest="generatePartials",
                       action='store_true', default=False)
+    parser.add_option("--stage-ssh-key", dest="stage_ssh_key")
+    parser.add_option("--hghost", dest="hghost")
+    parser.add_option("--stage-server", dest="stage_server")
+    parser.add_option("--stage-username", dest="stage_username")
+    parser.add_option("--compare-locales-repo-path", dest="compare_locales_repo_path")
 
     options, args = parser.parse_args()
     if options.generatePartials:
@@ -194,6 +197,11 @@ if __name__ == "__main__":
         l10nRepoDir = path.split(releaseConfig["l10nRepoPath"])[-1]
 
     stageSshKey = path.join("~", ".ssh", branchConfig["stage_ssh_key"])
+
+    # If mozilla_dir is defined, extend the paths in makeDirs with the prefix of the mozilla_dir
+    if 'mozilla_dir' in releaseConfig:
+        for i in range(0, len(makeDirs)):
+          makeDirs[i] = path.join(releaseConfig['mozilla_dir'], makeDirs[i])
 
     createRepacks(
         sourceRepo=make_hg_url(branchConfig["hghost"], sourceRepoInfo["path"]),
