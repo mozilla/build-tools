@@ -68,7 +68,7 @@ whitelist['mozilla-beta']['linux64']            += ['export MOZILLA_OFFICIAL=1',
                                                     ]
 whitelist['mozilla-beta']['win32']              += ['mk_add_options MOZ_PGO=1']
 whitelist['mozilla-beta']['android']            += ['ac_add_options --enable-updater']
-whitelist['mozilla-beta']['android-xul']        += ['ac_add_options --enable-updater']
+whitelist['mozilla-beta']['android-xul']        += ['ac_add_options --enable-updater', 'export MOZ_MOBILE_COMPAT=Tablets']
 
 ## KNOWN ONLY IN RELEASE
 for platform in common_platforms:
