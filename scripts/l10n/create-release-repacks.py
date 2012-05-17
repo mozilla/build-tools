@@ -46,6 +46,8 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
         "UPLOAD_SSH_KEY": stageSshKey,
         "UPLOAD_TO_TEMP": "1",
         "MOZ_PKG_PRETTYNAMES": "1",
+        "MOZILLA_REV": os.getenv('MOZILLA_REV', ''),
+        "COMM_REV": os.getenv('COMM_REV', ''),
     }
     if appVersion is None or version != appVersion:
         env["MOZ_PKG_VERSION"] = version
