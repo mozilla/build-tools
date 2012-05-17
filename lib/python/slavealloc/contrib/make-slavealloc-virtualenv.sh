@@ -22,7 +22,7 @@ cd /tools || exit 1
 virtualenv slavealloc-$REV || exit 1
 # install slavealloc, using puppet to find any prerequisite packages
 ./slavealloc-$REV/bin/pip install -e hg+$REPO@$REV#egg=tools \
-   --no-index --find-links=http://staging-puppet.build.mozilla.org/staging/python-packages/ || exit 1
+   --no-index --find-links=http://repos/python/packages/ || exit 1
 
 echo "# if you want to make this default:"
 echo "cd /tools; rm slavealloc; ln -s slavealloc-$REV slavealloc"
