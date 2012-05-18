@@ -36,7 +36,7 @@ for f in ${FOOPIES} ; do
   case "$f" in
     "05" | "5" )
       FOOPY=foopy05
-      TEGRAS="010 011 012 013 184 185 187 188 189 190 191 192 224 288"
+      TEGRAS="010 011 012 013 184 185 224 288"
     ;;
     "06" | "6" )
       FOOPY=foopy06
