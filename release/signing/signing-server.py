@@ -118,7 +118,7 @@ def run_signscript(cmd, inputfile, outputfile, filename, format_, passphrase=Non
 
     cmd.extend((format_, inputfile, outputfile, filename))
     output = open(outputfile + '.out', 'wb')
-    max_time = 30
+    max_time = 120
     tries = 0
     while True:
         start = time.time()
