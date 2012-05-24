@@ -19,16 +19,14 @@ import logging
 import datetime
 import traceback
 import subprocess
-import datetime
 
 from optparse import OptionParser
 from Queue import Empty
 from logging.handlers import RotatingFileHandler
 from multiprocessing import Process, Queue, current_process, get_logger, log_to_stderr
 
-from sut_lib import checkSlaveAlive, checkSlaveActive, stopSlave, getOurIP, \
-                    getIPAddress, dumpException, runCommand, loadOptions, \
-                    getLastLine, setFlag, clearFlag, gracefulSlave
+from sut_lib import checkSlaveAlive, checkSlaveActive, stopSlave, getOurIP, getIPAddress, \
+                    dumpException, runCommand, loadOptions, getLastLine, setFlag
 
 
 """clientproxy.py
@@ -243,7 +241,6 @@ def monitorEvents(options, events):
     pidFile   = os.path.join(options.bbpath, 'twistd.pid')
     flagFile  = os.path.join(options.bbpath, 'proxy.flg')
     errorFile = os.path.join(options.bbpath, 'error.flg')
-    forceRebootFile = os.path.join(options.bbpath, 'forceReboot.flg')
     bbEnv     = { 'PATH':     os.getenv('PATH'),
                   'SUT_NAME': options.tegra,
                   'SUT_IP':   options.tegraIP,
@@ -327,21 +324,11 @@ def monitorEvents(options, events):
             if nChatty > maxChatty:
                 nChatty = 0
 
-            if state == 'forceReboot':
-                log.warning("Force Reboot Necessary, Stopping Buildslave")
-                if bbActive:
-                    stopSlave(pidFile)
-                    bbActive = False
-                if tegraActive:
-                    sendReboot(options.tegraIP, sutDataPort)
-            elif state == 'reboot':
+            if state == 'reboot':
                 tegraActive = False
                 if not os.path.isfile(flagFile):
                     log.warning('Tegra rebooting, stopping buildslave')
                     events.put(('stop',))
-                    if os.path.isfile(forceRebootFile):
-                        log.debug("Told to Force Reboot but we noticed tegra rebooting, clearing")
-                        clearFlag(forceRebootFile)
             elif state == 'stop' or state == 'offline':
                 stopSlave(pidFile)
                 bbActive = False
@@ -457,16 +444,6 @@ def monitorEvents(options, events):
             else:
                 log.warning('buildslave should be active but pidfile not found, marking as offline')
                 events.put(('offline',))
-
-            if os.path.isfile(forceRebootFile):
-                n = datetime.datetime.now()
-                forceRebootTS = datetime.datetime.strptime(
-                                    getLastLine(forceRebootFile)[:19],
-                                    '%Y-%m-%d %H:%M:%S')
-                if forceRebootTS + datetime.timedelta(minutes=10) < n:
-                   events.put(('forceReboot',))
-                   gracefulSlave(options.tegra)
-                   clearFlag(forceRebootFile)
         else:
             if os.path.isfile(pidFile):
                 if checkSlaveAlive(options.bbpath):
