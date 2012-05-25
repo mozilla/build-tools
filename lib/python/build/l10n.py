@@ -66,7 +66,11 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
     localeDir = path.join(l10nRepoDir, locale)
     retry(mercurial, args=(repo, localeDir))
     update(localeDir, revision=revision)
-    
+
+    mozillaDir = ''
+    if 'thunderbird' in productName:
+        mozillaDir = 'mozilla/'
+
     compareLocales(compareLocalesRepo, locale, l10nRepoDir, localeSrcDir,
                    l10nIni, revision=revision, merge=merge)
     env["AB_CD"] = locale
@@ -78,8 +82,8 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
     run_cmd(["make", "installers-%s" % locale], cwd=localeSrcDir, env=env)
     UPLOAD_EXTRA_FILES = []
     if prevMar:
-        nativeDistDir = path.normpath(path.abspath(path.join(localeSrcDir,
-                                                             '../../dist')))
+        nativeDistDir = path.normpath(path.abspath(
+            path.join(localeSrcDir, '../../%sdist' % mozillaDir)))
         posixDistDir = windows2msys(nativeDistDir)
         mar = '%s/host/bin/mar' % posixDistDir
         mbsdiff = '%s/host/bin/mbsdiff' % posixDistDir
@@ -96,14 +100,19 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
         env['MBSDIFF'] = mbsdiff
         run_cmd(['rm', '-rf', previous, current])
         run_cmd(['mkdir', previous, current])
-        run_cmd(['perl', '../../../tools/update-packaging/unwrap_full_update.pl',
-                 '../../../../%s' % prevMar],
+        unwrap_full_update = '../../../tools/update-packaging/unwrap_full_update.pl'
+        make_incremental_update = '../../tools/update-packaging/make_incremental_update.sh'
+        prevMarDir = '../../../../'
+        if mozillaDir:
+            unwrap_full_update = '../../../../%stools/update-packaging/unwrap_full_update.pl' % mozillaDir
+            make_incremental_update = '../../../%stools/update-packaging/make_incremental_update.sh' % mozillaDir
+            prevMarDir = '../../../../../'
+        run_cmd(['perl', unwrap_full_update, '%s/%s' % (prevMarDir, prevMar)],
                 cwd=path.join(nativeDistDir, 'previous'), env=env)
-        run_cmd(['perl', '../../../tools/update-packaging/unwrap_full_update.pl',
-                 current_mar], cwd=path.join(nativeDistDir, 'current'), env=env)
-        run_cmd(
-            ['bash', '../../tools/update-packaging/make_incremental_update.sh',
-             partial_mar, previous, current], cwd=nativeDistDir, env=env)
+        run_cmd(['perl', unwrap_full_update, current_mar],
+                cwd=path.join(nativeDistDir, 'current'), env=env)
+        run_cmd(['bash', make_incremental_update, partial_mar, previous,
+                 current], cwd=nativeDistDir, env=env)
         if os.environ.get('MOZ_SIGN_CMD'):
             run_cmd(['bash', '-c',
                      '%s -f gpg -f mar "%s"' %
