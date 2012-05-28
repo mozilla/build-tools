@@ -913,7 +913,7 @@ def dmg_signpackage(pkgfile, dstfile, keychain, mac_id, fake=False, passphrase=N
         logs.append("Packing %s" % dstfile)
         tar_dir(dstfile, tmpdir)
     except:
-        log.exception("Error signing %s" % pkgfile, exc_info=True)
+        log.exception("Error signing %s" % pkgfile)
         raise
     finally:
         # Clean up after ourselves, and output our logs
