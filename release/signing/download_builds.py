@@ -163,7 +163,7 @@ def main():
             unsigned_dir,
             platform_locales,
             allplatforms,
-            release_config.get('signedPlatforms', ('win32',)),
+            release_config.get('manuallySignedPlatforms', ('win32',)),
             release_config['doPartnerRepacks']):
             log.fatal("Error, missing signing deliverables")
             exit(1)
@@ -175,7 +175,7 @@ def main():
             unsigned_dir,
             platform_locales,
             allplatforms,
-            release_config.get('signedPlatforms', ('win32',)),
+            release_config.get('manuallySignedPlatforms', ('win32',)),
             release_config['doPartnerRepacks']):
         download_builds(ssh_key, stage_username, stage_host, release_config)
         time.sleep(10)

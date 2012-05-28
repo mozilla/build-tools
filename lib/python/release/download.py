@@ -82,7 +82,7 @@ def downloadUpdateIgnore404(*args, **kwargs):
         else:
             raise
 
-def expectedFiles(unsignedDir, locale, platform, signedPlatforms,
+def expectedFiles(unsignedDir, locale, platform, manuallySignedPlatforms,
         firstLocale='en-US'):
     """ When checking a full set of downloaded release builds,
     for a given locale + platform check for the following:
@@ -90,7 +90,7 @@ def expectedFiles(unsignedDir, locale, platform, signedPlatforms,
     - an XPI pack
     - a complete MAR
     """
-    unsigned = 'unsigned' if platform in signedPlatforms else ''
+    unsigned = 'unsigned' if platform in manuallySignedPlatforms else ''
     expectedDir = os.path.join(unsignedDir, unsigned, ftp_platform_map[platform], locale)
     log.debug("looking for %s" % expectedDir)
     updatesDir = os.path.join(unsignedDir, unsigned, 'update', ftp_platform_map[platform], locale)
