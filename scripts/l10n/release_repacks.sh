@@ -16,17 +16,8 @@ workdir=`pwd`
 
 platform=$1
 branchConfig=$2
-chunks=$3
-thisChunk=$4
-generatePartials=$5
-if [ "$generatePartials" = "generatePartials" ]; then
-  generatePartials="--generate-partials"
-fi
-stage_ssh_key=$6
-stage_server=$7
-stage_username=$8
-hghost=$9
-compare_locales_repo_path=${10}
+shift
+shift
 
 branch=$(basename $($JSONTOOL -k properties.branch $PROPERTIES_FILE))
 builder=$($JSONTOOL -k properties.buildername $PROPERTIES_FILE)
@@ -61,12 +52,17 @@ $PYTHON $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
   -s 7 -n info -n 'rel-*' -n $slavebuilddir
 cd $workdir
 
+LOCALE_OPT=
+if $JSONTOOL -k properties.locale $PROPERTIES_FILE; then
+    locales=$($JSONTOOL -k properties.locale $PROPERTIES_FILE)
+    IFS=":"
+    for locale in $locales;
+    do
+        LOCALE_OPT="$LOCALE_OPT --locale $locale"
+    done
+    unset IFS
+fi
+
 $PYTHON $MY_DIR/create-release-repacks.py -c $branchConfig -r $releaseConfig \
   -b $BUILDBOT_CONFIGS -t $releaseTag -p $platform \
-  --chunks $chunks --this-chunk $thisChunk $generatePartials \
-  --stage-ssh-key=$stage_ssh_key \
-  --stage-server=$stage_server \
-  --stage-username=$stage_username \
-  --hghost=$hghost \
-  --compare-locales-repo-path=$compare_locales_repo_path \
-  $SOURCE_REPO_KEY
+  $SOURCE_REPO_KEY $LOCALE_OPT $@
