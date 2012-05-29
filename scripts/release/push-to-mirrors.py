@@ -65,10 +65,10 @@ def validate(options, args):
 
 
 def checkStagePermissions(productName, version, buildNumber, stageServer,
-                          stageUsername=None, stageSshKey=None):
+                          stageUsername, stageSshKey):
     # The following commands should return 0 lines output and exit code 0
-    tests = ["find %s ! -user ffxbld ! -path '*/contrib*'",
-              "find %s ! -group firefox ! -path '*/contrib*'",
+    tests = ["find %%s ! -user %s ! -path '*/contrib*'" % stageUsername,
+              "find %%s ! -group `id -g -n %s` ! -path '*/contrib*'" % stageUsername,
               "find %s -type f ! -perm 644",
               "find %s -mindepth 1 -type d ! -perm 755 ! -path '*/contrib*' ! -path '*/partner-repacks*'",
               "find %s -maxdepth 1 -type d ! -perm 2775 -path '*/contrib*'",
