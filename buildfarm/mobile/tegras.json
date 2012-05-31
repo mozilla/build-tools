@@ -70,7 +70,8 @@
         "pduid": ".AA12"
     }, 
     "tegra-024": {
-        "foopy": "foopy06", 
+        "_comment": "Bug 727345: Assigned to WebQA",
+        "foopy": "None", 
         "pdu": "pdu3.df202-1.build.mtv1.mozilla.com", 
         "pduid": ".AB12"
     }, 
@@ -100,7 +101,8 @@
         "pduid": ".AA15"
     }, 
     "tegra-030": {
-        "foopy": "foopy07", 
+        "_comment": "Bug 703010 - replaced",
+        "foopy": "None", 
         "pdu": "pdu3.df202-1.build.mtv1.mozilla.com", 
         "pduid": ".AB15"
     }, 
@@ -175,7 +177,8 @@
         "pduid": ".AB4"
     }, 
     "tegra-049": {
-        "foopy": "foopy08", 
+        "_comment": "Bug 754406, pulled for clint",
+        "foopy": "None", 
         "pdu": "pdu1.df201-4.build.mtv1.mozilla.com", 
         "pduid": ".AA5"
     }, 
@@ -255,6 +258,7 @@
         "pduid": ".AB8"
     }, 
     "tegra-065": {
+        "_comment": "Bug 759101, pulled for clint",
         "foopy": "None", 
         "pdu": "pdu1.df201-4.build.mtv1.mozilla.com", 
         "pduid": ".AA9"
@@ -310,12 +314,13 @@
         "pduid": ".AB11"
     }, 
     "tegra-077": {
-        "foopy": "foopy10", 
+        "_comment": "Bug 736630, pulled for clint",
+        "foopy": "None", 
         "pdu": "pdu1.df201-4.build.mtv1.mozilla.com", 
         "pduid": ".AA12"
     }, 
     "tegra-078": {
-        "foopy": "None", 
+        "foopy": "foopy07", 
         "pdu": "pdu1.df201-4.build.mtv1.mozilla.com", 
         "pduid": ".AB12"
     }, 
@@ -375,12 +380,12 @@
         "pduid": ".AA15"
     }, 
     "tegra-090": {
-        "foopy": "None", 
+        "foopy": "foopy08", 
         "pdu": "pdu1.df201-4.build.mtv1.mozilla.com", 
         "pduid": ".AB15"
     }, 
     "tegra-091": {
-        "foopy": "None", 
+        "foopy": "foopy10", 
         "pdu": "pdu2.df201-4.build.mtv1.mozilla.com", 
         "pduid": ".AA15"
     }, 
@@ -535,12 +540,14 @@
         "pduid": ".AB14"
     }, 
     "tegra-122": {
-        "foopy": "foopy14", 
+        "_comment": "Bug 701766, on bob's bench being looked at",
+        "foopy": "None", 
         "pdu": "pdu4.df202-1.build.mtv1.mozilla.com", 
         "pduid": ".AA15"
     }, 
     "tegra-123": {
-        "foopy": "foopy14", 
+        "_comment": "Bug 701766, on bob's bench being looked at",
+        "foopy": "None", 
         "pdu": "pdu4.df202-1.build.mtv1.mozilla.com", 
         "pduid": ".AB15"
     }, 
@@ -610,7 +617,7 @@
         "pduid": ".AB8"
     }, 
     "tegra-145": {
-        "foopy": "foopy15", 
+        "foopy": "foopy14", 
         "pdu": "pdu5.df202-1.build.mtv1.mozilla.com", 
         "pduid": ".AA9"
     }, 
@@ -655,7 +662,7 @@
         "pduid": ".AA14"
     },
     "tegra-157": {
-        "foopy": "None", 
+        "foopy": "foopy14", 
         "pdu": "pdu5.df202-1.build.mtv1.mozilla.com", 
         "pduid": ".AA15"
     }, 
@@ -673,11 +680,6 @@
         "foopy": "foopy16", 
         "pdu": "pdu6.df202-1.build.mtv1.mozilla.com", 
         "pduid": ".AB16"
-    }, 
-    "tegra-161": {
-        "foopy": "foopy16", 
-        "pdu": "pdu6.df202-1.build.mtv1.mozilla.com", 
-        "pduid": ".AA15"
     }, 
     "tegra-162": {
         "foopy": "foopy16", 
@@ -725,12 +727,12 @@
         "pduid": ".AB11"
     }, 
     "tegra-171": {
-        "foopy": "None", 
+        "foopy": "foopy16", 
         "pdu": "pdu6.df202-1.build.mtv1.mozilla.com", 
         "pduid": ".AA10"
     }, 
     "tegra-172": {
-        "foopy": "None", 
+        "foopy": "foopy19", 
         "pdu": "pdu6.df202-1.build.mtv1.mozilla.com", 
         "pduid": ".AB10"
     }, 
@@ -815,12 +817,12 @@
         "pduid": ".AA5"
     }, 
     "tegra-194": {
-        "foopy": "None", 
+        "foopy": "foopy19", 
         "pdu": "pdu5.df202-1.build.mtv1.mozilla.com", 
         "pduid": ".AA13"
     }, 
     "tegra-195": {
-        "foopy": "None", 
+        "foopy": "foopy23", 
         "pdu": "pdu5.df202-1.build.mtv1.mozilla.com", 
         "pduid": ".AB14"
     }, 
@@ -953,7 +955,8 @@
         "pduid": ".AB8"
     }, 
     "tegra-222": {
-        "foopy": "foopy19", 
+        "_comment": "Bug 741684 (recovery)",
+        "foopy": "None", 
         "pdu": "pdu9.df202-2.build.mtv1.mozilla.com", 
         "pduid": ".AA9"
     }, 
@@ -973,7 +976,8 @@
         "pduid": ".AB10"
     }, 
     "tegra-226": {
-        "foopy": "foopy19", 
+        "_comment": "Bug 758085, recovery",
+        "foopy": "None", 
         "pdu": "pdu9.df202-2.build.mtv1.mozilla.com", 
         "pduid": ".AA11"
     }, 
@@ -1173,7 +1177,8 @@
         "pduid": ".AB11"
     }, 
     "tegra-268": {
-        "foopy": "foopy23", 
+        "_comment": "Bug 738422, Pulled for ATeam",
+        "foopy": "None", 
         "pdu": "pdu7.df202-2.build.mtv1.mozilla.com", 
         "pduid": ".AA10"
     }, 
