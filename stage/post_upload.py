@@ -40,6 +40,9 @@ TRY_URL_PATH = "http://ftp.mozilla.org/pub/mozilla.org/%(product)s/try-builds/%(
 
 PARTIAL_MAR_RE = re.compile('\.partial\..*\.mar(\.asc)?$')
 
+# Cache of original_file to new location on disk
+_linkCache = {}
+
 def CopyFileToDir(original_file, source_dir, dest_dir, preserve_dirs=False):
     """ Atomically copy original_file from source_dir into dest_dir,
     overwriting old files and preserving directory hierarchy if preserve_dirs
@@ -72,12 +75,23 @@ def CopyFileToDir(original_file, source_dir, dest_dir, preserve_dirs=False):
             # as to not abort the process but continue with the next file
             print "Warning: The file %s has already been unlinked by " + \
                   "another instance of post_upload.py" % new_file
-            return 
-    tmpdir = tempfile.mkdtemp(prefix=".~", dir=dest_dir)
-    tmp_path = os.path.join(tmpdir, os.path.basename(new_file))
-    shutil.copyfile(original_file, tmp_path)
+            return
+
+    # Try hard linking the file
+    if original_file in _linkCache:
+        for src in _linkCache[original_file]:
+            try:
+                os.link(src, new_file)
+                return
+            except OSError:
+                pass
+
+    tmp_fd, tmp_path = tempfile.mkstemp(dir=dest_dir)
+    tmp_fp = os.fdopen(tmp_fd, 'wb')
+    shutil.copyfileobj(open(original_file, 'rb'), tmp_fp)
+    tmp_fp.close()
     os.rename(tmp_path, new_file)
-    os.rmdir(tmpdir)
+    _linkCache.setdefault(original_file, []).append(new_file)
 
 def BuildIDToDict(buildid):
     """Returns an dict with the year, month, day, hour, minute, and second
