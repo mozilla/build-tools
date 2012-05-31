@@ -1,8 +1,10 @@
 whitelist = {
     'mozilla-release': {},
     'mozilla-esr10': {},
-    'mozilla-1.9.2': {},
     'mozilla-beta': {},
+    'comm-release': {},
+    'comm-esr10': {},
+    'comm-beta': {},
     'nightly': {},
     }
 common_platforms = ['win32', 'linux', 'linux64', 'macosx64', 'macosx', 'android', 'android-xul', 'linux-android']
@@ -54,61 +56,59 @@ whitelist['nightly']['win32']               += ['. $topsrcdir/configs/mozilla2/w
 
 
 ## KNOWN ONLY IN BETA
-for platform in common_platforms:
-    whitelist['mozilla-beta'][platform]         = ['ac_add_options --enable-update-channel=beta', 'ac_add_options --enable-official-branding', 'mk_add_options MOZ_MAKE_FLAGS="-j4"',]
-whitelist['mozilla-beta']['linux']              += ['export MOZILLA_OFFICIAL=1',
-                                                    'export MOZ_TELEMETRY_REPORTING=1',
-                                                    'mk_add_options MOZ_PGO=1',
-                                                    "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
-                                                    ]
-whitelist['mozilla-beta']['linux64']            += ['export MOZILLA_OFFICIAL=1',
-                                                    'export MOZ_TELEMETRY_REPORTING=1',
-                                                    'mk_add_options MOZ_PGO=1',
-                                                    "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
-                                                    ]
-whitelist['mozilla-beta']['win32']              += ['mk_add_options MOZ_PGO=1']
-whitelist['mozilla-beta']['android']            += ['ac_add_options --enable-updater']
-whitelist['mozilla-beta']['android-xul']        += ['ac_add_options --enable-updater', 'export MOZ_MOBILE_COMPAT=Tablets']
+for branch in ('mozilla-beta', 'comm-beta'):
+    for platform in common_platforms:
+        whitelist[branch][platform]         = ['ac_add_options --enable-update-channel=beta', 'ac_add_options --enable-official-branding', 'mk_add_options MOZ_MAKE_FLAGS="-j4"',]
+    whitelist[branch]['linux']              += ['export MOZILLA_OFFICIAL=1',
+                                                'export MOZ_TELEMETRY_REPORTING=1',
+                                                'mk_add_options MOZ_PGO=1',
+                                                "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
+                                                ]
+    whitelist[branch]['linux64']            += ['export MOZILLA_OFFICIAL=1',
+                                                'export MOZ_TELEMETRY_REPORTING=1',
+                                                'mk_add_options MOZ_PGO=1',
+                                                "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
+                                                ]
+    whitelist[branch]['win32']              += ['mk_add_options MOZ_PGO=1']
+    whitelist[branch]['android']            += ['ac_add_options --enable-updater']
+    whitelist[branch]['android-xul']        += ['ac_add_options --enable-updater', 'export MOZ_MOBILE_COMPAT=Tablets']
 
 ## KNOWN ONLY IN RELEASE
-for platform in common_platforms:
-    whitelist['mozilla-release'][platform]         = ['ac_add_options --enable-update-channel=release', 'ac_add_options --enable-official-branding', 'mk_add_options MOZ_MAKE_FLAGS="-j4"',]
-whitelist['mozilla-release']['win32']              += ['mk_add_options MOZ_PGO=1',]
-whitelist['mozilla-release']['linux']              += ['export MOZILLA_OFFICIAL=1',
-                                               'export MOZ_TELEMETRY_REPORTING=1',
-                                               'mk_add_options MOZ_PGO=1',
-                                               "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
-                                              ]
-whitelist['mozilla-release']['linux64']            += ['export MOZILLA_OFFICIAL=1',
-                                               'export MOZ_TELEMETRY_REPORTING=1',
-                                               'mk_add_options MOZ_PGO=1',
-                                               "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
-                                              ]
-whitelist['mozilla-release']['android']            += ['ac_add_options --enable-updater']
-whitelist['mozilla-release']['android-xul']        += ['ac_add_options --enable-updater']
+for branch in ('mozilla-release', 'comm-release'):
+    for platform in common_platforms:
+        whitelist[branch][platform]         = ['ac_add_options --enable-update-channel=release', 'ac_add_options --enable-official-branding', 'mk_add_options MOZ_MAKE_FLAGS="-j4"',]
+    whitelist[branch]['win32']              += ['mk_add_options MOZ_PGO=1',]
+    whitelist[branch]['linux']              += ['export MOZILLA_OFFICIAL=1',
+                                                'export MOZ_TELEMETRY_REPORTING=1',
+                                                'mk_add_options MOZ_PGO=1',
+                                                "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
+                                                ]
+    whitelist[branch]['linux64']            += ['export MOZILLA_OFFICIAL=1',
+                                                'export MOZ_TELEMETRY_REPORTING=1',
+                                                'mk_add_options MOZ_PGO=1',
+                                                "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
+                                               ]
+    whitelist[branch]['android']            += ['ac_add_options --enable-updater']
+    whitelist[branch]['android-xul']        += ['ac_add_options --enable-updater']
 
 ## KNOWN ONLY IN ESR10
-for platform in common_platforms:
-    whitelist['mozilla-esr10'][platform]         = ['ac_add_options --enable-update-channel=release', 'ac_add_options --enable-official-branding', 'mk_add_options MOZ_MAKE_FLAGS="-j4"',]
+for branch in ('mozilla-esr10', 'comm-esr10'):
+    for platform in common_platforms:
+        whitelist[branch][platform]         = ['ac_add_options --enable-update-channel=release', 'ac_add_options --enable-official-branding', 'mk_add_options MOZ_MAKE_FLAGS="-j4"',]
 
-whitelist['mozilla-esr10']['win32']              += ['mk_add_options MOZ_PGO=1',]
-whitelist['mozilla-esr10']['linux']              += ['export MOZILLA_OFFICIAL=1',
-                                               'export MOZ_TELEMETRY_REPORTING=1',
-                                               'mk_add_options MOZ_PGO=1',
-                                               "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
-                                              ]
-whitelist['mozilla-esr10']['linux64']            += ['export MOZILLA_OFFICIAL=1',
-                                               'export MOZ_TELEMETRY_REPORTING=1',
-                                               'mk_add_options MOZ_PGO=1',
-                                               "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
-                                              ]
-whitelist['mozilla-esr10']['linux-android']     += ['ac_add_options --enable-update-channel=esr', 'ac_add_options --enable-updater',]
+    whitelist[branch]['win32']              += ['mk_add_options MOZ_PGO=1',]
+    whitelist[branch]['linux']              += ['export MOZILLA_OFFICIAL=1',
+                                                'export MOZ_TELEMETRY_REPORTING=1',
+                                                'mk_add_options MOZ_PGO=1',
+                                                "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
+                                               ]
+    whitelist[branch]['linux64']            += ['export MOZILLA_OFFICIAL=1',
+                                                'export MOZ_TELEMETRY_REPORTING=1',
+                                                'mk_add_options MOZ_PGO=1',
+                                                "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
+                                               ]
+    whitelist[branch]['linux-android']     += ['ac_add_options --enable-update-channel=esr', 'ac_add_options --enable-updater',]
 
-## KNOWN ONLY IN 1.9.2
-for platform in common_platforms:
-    whitelist['mozilla-1.9.2'][platform]         = ['ac_add_options --enable-update-channel=release', 'ac_add_options --enable-official-branding']
-whitelist['mozilla-1.9.2']['linux']              += ['CC=$REAL_CC', 'CC="ccache $REAL_CC"', 'CXX=$REAL_CXX']
-whitelist['mozilla-1.9.2']['linux64']            += []
 
 if __name__ == '__main__':
     import pprint

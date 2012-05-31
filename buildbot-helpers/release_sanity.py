@@ -85,8 +85,12 @@ def sendchange(branch, revision, username, master, products):
 
 def verify_branch(branch, productName):
     masterConfig = json.load(open('master_config.json'))
-    if (productName != 'fennec' and branch not in masterConfig['release_branches']) or \
-       (productName == 'fennec' and branch not in masterConfig['mobile_release_branches']):
+    release_branches_key = 'release_branches'
+    if productName == 'fennec':
+        release_branches_key = 'mobile_release_branches'
+    elif productName == 'thunderbird':
+        release_branches_key = 'thunderbird_release_branches'
+    if branch not in masterConfig[release_branches_key]:
         success = False
         log.error("Branch %s isn't enabled for %s", branch, productName)
         error_tally.add('verify_branch')
@@ -394,7 +398,14 @@ if __name__ == '__main__':
                 log.error('Error verifying branch is enabled on master')
 
             from config import BRANCHES
-            branchConfig = BRANCHES[options.branch]
+            source_repo = 'mozilla'
+            try:
+                branchConfig = BRANCHES[options.branch]
+            except KeyError:
+                from thunderbird_config import BRANCHES
+                branchConfig = BRANCHES[options.branch]
+                source_repo = 'comm'
+
             #Match command line options to defaults in release_configs
             if not verify_options(options, releaseConfig):
                 test_success = False
@@ -402,8 +413,8 @@ if __name__ == '__main__':
 
             # verify that mozconfigs for this release pass diff with nightly, compared to a whitelist
             try:
-                path = releaseConfig['sourceRepositories']['mozilla']['path']
-                revision = releaseConfig['sourceRepositories']['mozilla']['revision']
+                path = releaseConfig['sourceRepositories'][source_repo]['path']
+                revision = releaseConfig['sourceRepositories'][source_repo]['revision']
             except KeyError:
                 try:
                     path = releaseConfig['sourceRepositories']['mobile']['path']
@@ -450,26 +461,26 @@ if __name__ == '__main__':
 
                 #verify that l10n changesets match the shipped locales in firefox product
                 if releaseConfig.get('shippedLocalesPath'):
-                    for sr in releaseConfig['sourceRepositories'].values():
-                        sourceRepoPath = sr.get('clonePath', sr['path'])
-                        shippedLocales = getLocaleListFromShippedLocales(
-                                            getShippedLocales(
-                                                releaseConfig['productName'],
-                                                releaseConfig['appName'],
-                                                releaseConfig['version'],
-                                                releaseConfig['buildNumber'],
-                                                sourceRepoPath,
-                                                'http://hg.mozilla.org',
-                                                sr['revision'],
-                                        ))
-                        # l10n_changesets do not have an entry for en-US
-                        if 'en-US' in shippedLocales:
-                            shippedLocales.remove('en-US')
-                        if not verify_l10n_shipped_locales(
-                                releaseConfig['l10nRevisionFile'],
-                                shippedLocales):
-                            test_success = False
-                            log.error("Error verifying l10n_changesets matches shipped_locales")
+                    sr = releaseConfig['sourceRepositories'][source_repo]
+                    sourceRepoPath = sr.get('clonePath', sr['path'])
+                    shippedLocales = getLocaleListFromShippedLocales(
+                                        getShippedLocales(
+                                            releaseConfig['productName'],
+                                            releaseConfig['appName'],
+                                            releaseConfig['version'],
+                                            releaseConfig['buildNumber'],
+                                            sourceRepoPath,
+                                            'http://hg.mozilla.org',
+                                            sr['revision'],
+                                    ))
+                    # l10n_changesets do not have an entry for en-US
+                    if 'en-US' in shippedLocales:
+                        shippedLocales.remove('en-US')
+                    if not verify_l10n_shipped_locales(
+                            releaseConfig['l10nRevisionFile'],
+                            shippedLocales):
+                        test_success = False
+                        log.error("Error verifying l10n_changesets matches shipped_locales")
 
             #verify that the relBranch + revision in the release_configs exists in hg
             for sr in releaseConfig['sourceRepositories'].values():
