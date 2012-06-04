@@ -955,7 +955,6 @@
         "pduid": ".AB8"
     }, 
     "tegra-222": {
-        "_comment": "Bug 741684 (recovery)",
         "foopy": "None", 
         "pdu": "pdu9.df202-2.build.mtv1.mozilla.com", 
         "pduid": ".AA9"
@@ -976,7 +975,6 @@
         "pduid": ".AB10"
     }, 
     "tegra-226": {
-        "_comment": "Bug 758085, recovery",
         "foopy": "None", 
         "pdu": "pdu9.df202-2.build.mtv1.mozilla.com", 
         "pduid": ".AA11"
