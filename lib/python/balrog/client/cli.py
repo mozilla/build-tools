@@ -4,7 +4,7 @@ except ImportError:
     import json
 
 from release.platforms import buildbot2updatePlatforms
-from balrog.client.api import API
+from balrog.client.api import SingleLocale
 
 
 def get_nightly_blob_name(appName, branch, build_type, suffix, dummy=False):
@@ -70,7 +70,7 @@ class NightlyRunner(object):
     def run(self):
         data = self.generate_data()
         data = json.dumps(data)
-        api = API(auth=self.auth, api_root=self.api_root)
+        api = SingleLocale(auth=self.auth, api_root=self.api_root)
         copyTo = [get_nightly_blob_name(
             self.appName, self.branch, self.build_type, 'latest', self.dummy)]
         copyTo = json.dumps(copyTo)

@@ -1,5 +1,4 @@
 # TODO: extend API to handle release blobs
-
 import logging
 import requests
 import os
@@ -7,12 +6,14 @@ import os
 CA_BUNDLE = os.path.join(os.path.dirname(__file__),
                         '../../../../misc/certs/GeoTrust_Global_CA.crt')
 
+def is_csrf_token_expired(token):
+    from datetime import datetime
+    expiry = token.split('##')[0]
+    if expiry <= datetime.now().strftime('%Y%m%d%H%M%S'):
+        return True
+    return False
 
 class API(object):
-
-    url_template = \
-        '%(api_root)s/releases/%(name)s/builds/%(build_target)s/%(locale)s'
-
     verify = False
     auth = None
 
@@ -39,22 +40,59 @@ class API(object):
         self.auth = auth
         self.timeout = timeout
         self.config = dict(danger_mode=raise_exceptions)
+        self.session = requests.session()
+        self.csrf_token = None
 
-    def request(self, url, data=None, method='GET'):
+    def request(self, data=None, method='GET', url_template_vars={}):
+        url = self.api_root + self.url_template % url_template_vars
+        # If we'll be modifying things, do a GET first to get a CSRF token
+        # and possibly a data_version.
+        if method != 'GET' and method != 'HEAD':
+            # Use the URL of the resource we're going to modify first,
+            # because we'll need its data_version if it exists.
+            try:
+                res = self.do_request(url, None, 'HEAD', {})
+                data['data_version'] = res.headers['X-Data-Version']
+                # We may already have a non-expired CSRF token, but it's
+                # faster/easier just to set it again even if we do, since
+                # we've already made the request.
+                data['csrf_token'] = self.csrf_token = res.headers['X-CSRF-Token']
+            except requests.HTTPError, e:
+                # However, if the resource doesn't exist yet we may as well
+                # not bother doing another request solely for a token unless
+                # we don't have a valid one already.
+                if e.response.status_code != 404:
+                    raise
+                if not self.csrf_token or is_csrf_token_expired(self.csrf_token):
+                    res = self.do_request(self.api_root + '/csrf_token', None, 'HEAD', {})
+                    data['csrf_token'] = self.csrf_token = res.headers['X-CSRF-Token']
+
+            logging.debug('Got CSRF Token: %s' % self.csrf_token)
+        return self.do_request(url, data, method, url_template_vars)
+
+    def do_request(self, url, data, method, url_template_vars):
         logging.debug('Balrog request to %s' % url)
         logging.debug('Data sent: %s' % data)
-        return requests.request(method=method, url=url, data=data,
-                                config=self.config, timeout=self.timeout,
-                                verify=self.verify, auth=self.auth)
+        try:
+            return self.session.request(method=method, url=url, data=data,
+                                        config=self.config, timeout=self.timeout,
+                                        verify=self.verify, auth=self.auth)
+        except requests.HTTPError, e:
+            logging.error('Caught HTTPError: %s' % e.response.content)
+            raise
+
+
+class SingleLocale(API):
+    url_template = '/releases/%(name)s/builds/%(build_target)s/%(locale)s'
 
     def update_build(self, name, product, version, build_target, locale,
                      buildData, copyTo=None):
         url_template_vars = dict(api_root=self.api_root, name=name,
                                  locale=locale, build_target=build_target)
-        url = self.url_template % url_template_vars
         data = dict(product=product, version=version,
                     data=buildData)
         if copyTo:
             data['copyTo'] = copyTo
 
-        return self.request(method='PUT', url=url, data=data)
+        return self.request(method='PUT', data=data,
+                            url_template_vars=url_template_vars)
