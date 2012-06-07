@@ -24,15 +24,23 @@ whitelist['nightly']['macosx']              +=['ac_add_options --enable-codesigh
                                                'export MOZ_TELEMETRY_REPORTING=1',
                                                'mk_add_options MOZ_MAKE_FLAGS="-j4"',
                                                ]
-whitelist['nightly']['macosx64']            +=['ac_add_options --with-macbundlename-prefix=Firefox']
+whitelist['nightly']['macosx64']            +=['ac_add_options --with-macbundlename-prefix=Firefox',
+                                               'mk_add_options MOZ_MAKE_FLAGS="-j12"',
+                                               'ac_add_options --with-ccache',
+                                               ]
 whitelist['nightly']['linux-android']       +=['mk_add_options MOZ_MAKE_FLAGS="-j4"',
                                                'ac_add_options --target=arm-linux-androideabi',
                                                'ac_add_options --with-android-ndk="/tools/android-ndk-r5c"',
                                                'ac_add_options --with-android-toolchain=/tools/android-ndk-r5c/toolchains/arm-linux-androideabi-4.4.3/prebuilt/linux-x86',
                                                'ac_add_options --with-android-platform=/tools/android-ndk-r5c/platforms/android-5/arch-arm'
                                                 ]
-whitelist['nightly']['android']            += ['ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',]
-whitelist['nightly']['android-xul']        += ['ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',]
+whitelist['nightly']['android']            += ['ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',
+                                               'ac_add_options --enable-warnings-as-errors',
+                                               'ac_add_options --with-ccache=/usr/bin/ccache',
+                                                ]
+whitelist['nightly']['android-xul']        += ['ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',
+                                               'ac_add_options --enable-warnings-as-errors',
+                                                ]
 whitelist['nightly']['linux-android']            += ['ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',]
 for platform in ['linux', 'linux64', 'macosx64']:
     whitelist['nightly'][platform]          += ['ac_add_options --enable-codesighs', 'mk_add_options MOZ_MAKE_FLAGS="-j4"']
@@ -44,10 +52,12 @@ whitelist['nightly']['linux64']             += ['ac_add_options --with-ccache=/u
 whitelist['nightly']['linux']               += ['export MOZILLA_OFFICIAL=1',
                                                 'export MOZ_TELEMETRY_REPORTING=1',
                                                 "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
+                                                'STRIP_FLAGS="--strip-debug"',
                                                ]
 whitelist['nightly']['linux64']             += ['export MOZILLA_OFFICIAL=1',
                                                 'export MOZ_TELEMETRY_REPORTING=1',
                                                 "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
+                                                'STRIP_FLAGS="--strip-debug"',
                                                ]
 whitelist['nightly']['macosx64']            += ['ac_add_options --disable-install-strip']
 whitelist['nightly']['win32']               += ['. $topsrcdir/configs/mozilla2/win32/include/choose-make-flags',
