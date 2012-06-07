@@ -14,8 +14,29 @@ def is_csrf_token_expired(token):
     return False
 
 class API(object):
+    """A class that knows how to make requests to a Balrog server, including
+       pre-retrieving CSRF tokens and data versions.
+
+       url_template: The URL to submit to when request() is called. Standard
+                     Python string interpolation can be used here in
+                     combination with the url_template_vars argument to
+                     request().
+       prerequest_url_template: Before submitting the real request, a HEAD
+                                operation will be done on this URL. If the
+                                HEAD request succeeds, it is expected that
+                                there will be X-CSRF-Token and X-Data-Version
+                                headers in the response. If the HEAD request
+                                results in a 404, another HEAD request to
+                                /csrf_token will be made in attempt to get a
+                                CSRF Token. This URL can use string
+                                interpolation the same way url_template can.
+                                In some cases this may be the same as the
+                                url_template.
+    """
     verify = False
     auth = None
+    url_template = None
+    prerequest_url_template = None
 
     def __init__(self, api_root='https://balrog.build.mozilla.org',
                  auth=None, ca_certs=CA_BUNDLE, timeout=60, raise_exceptions=True):
@@ -45,13 +66,14 @@ class API(object):
 
     def request(self, data=None, method='GET', url_template_vars={}):
         url = self.api_root + self.url_template % url_template_vars
+        prerequest_url = self.api_root + self.prerequest_url_template % url_template_vars
         # If we'll be modifying things, do a GET first to get a CSRF token
         # and possibly a data_version.
         if method != 'GET' and method != 'HEAD':
             # Use the URL of the resource we're going to modify first,
             # because we'll need its data_version if it exists.
             try:
-                res = self.do_request(url, None, 'HEAD', {})
+                res = self.do_request(prerequest_url, None, 'HEAD', {})
                 data['data_version'] = res.headers['X-Data-Version']
                 # We may already have a non-expired CSRF token, but it's
                 # faster/easier just to set it again even if we do, since
@@ -84,6 +106,7 @@ class API(object):
 
 class SingleLocale(API):
     url_template = '/releases/%(name)s/builds/%(build_target)s/%(locale)s'
+    prerequest_url_template = '/releases/%(name)s'
 
     def update_build(self, name, product, version, build_target, locale,
                      buildData, copyTo=None):
