@@ -1,0 +1,3 @@
+--enable-optimize
+--enable-debug
+--enable-root-analysis
