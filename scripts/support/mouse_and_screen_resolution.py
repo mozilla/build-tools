@@ -49,12 +49,17 @@ def main():
         conf_dict = json.loads(urllib2.urlopen(options.configuration_url).read())
         new_screen_resolution = conf_dict["win7"]["screen_resolution"]
         new_mouse_position = conf_dict["win7"]["mouse_position"]
-    except Exception, e:
-        # We either had an hg problem or the branch does not have the config file
-        print "We failed to get the configuration file: %s" % str(e)
+    except urllib2.HTTPError, e:
+        print "This branch does not seem to have the configuration file %s" % str(e)
         print "Let's fail over to 1024x768."
         new_screen_resolution = default_screen_resolution
         new_mouse_position = default_mouse_position
+    except urllib2.URLError, e:
+        print "INFRA-ERROR: We couldn't reach hg.mozilla.org: %s" % str(e)
+        return 1
+    except Exception, e:
+        print "ERROR: We were not expecting any more exceptions: %s" % str(e)
+        return 1
 
     current_screen_resolution = queryScreenResolution()
     print "Screen resolution (current): (%(x)s, %(y)s)" % (current_screen_resolution)
@@ -115,4 +120,4 @@ def changeScreenResolution(new):
     win32api.ChangeDisplaySettings (devmode, 0)
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
