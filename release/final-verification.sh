@@ -8,7 +8,7 @@ fi
 configs="$@"
 
 cd updates
-cat $configs | sed 's/betatest/releasetest/' > update.cfg
+cat $configs | sed -r 's/(beta|esr)test/releasetest/' > update.cfg
 ./verify.sh -t update.cfg 2>&1 | tee quickVerify.log
 # this command's exit status will be 1 regardless of whether it passed or failed
 # we grep the log so we can inform buildbot correctly
