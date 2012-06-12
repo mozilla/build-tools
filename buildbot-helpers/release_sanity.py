@@ -5,7 +5,7 @@
         [-N|--build-number `buildnumber`]
         [-c| --release-config `releaseConfigFile`]
         [-w| --whitelist `mozconfig_whitelist`]
-        [--l10n-dashboad-version version]
+        [--l10n-dashboard-version version]
         -p|--products firefox,fennec master:port
 
     Wrapper script to sanity-check a release. Default behaviour is to check
@@ -366,7 +366,7 @@ if __name__ == '__main__':
             help="coma separated list of products")
     parser.add_option("-w", "--whitelist", dest="whitelist",
             help="whitelist for known mozconfig differences")
-    parser.add_option("--l10n-dashboad-version", dest="l10n_dashboard_version",
+    parser.add_option("--l10n-dashboard-version", dest="l10n_dashboard_version",
             help="Override L10N dashboard version")
 
     options, args = parser.parse_args()
