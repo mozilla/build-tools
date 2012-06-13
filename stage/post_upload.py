@@ -82,6 +82,7 @@ def CopyFileToDir(original_file, source_dir, dest_dir, preserve_dirs=False):
         for src in _linkCache[original_file]:
             try:
                 os.link(src, new_file)
+                os.chmod(new_file, 0644)
                 return
             except OSError:
                 pass
@@ -90,6 +91,7 @@ def CopyFileToDir(original_file, source_dir, dest_dir, preserve_dirs=False):
     tmp_fp = os.fdopen(tmp_fd, 'wb')
     shutil.copyfileobj(open(original_file, 'rb'), tmp_fp)
     tmp_fp.close()
+    os.chmod(tmp_path, 0644)
     os.rename(tmp_path, new_file)
     _linkCache.setdefault(original_file, []).append(new_file)
 
