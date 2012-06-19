@@ -19,7 +19,7 @@ if __name__ == '__main__':
     parser = OptionParser(__doc__)
     parser.set_defaults(
             revision=os.environ.get('HG_REV'),
-            branch=os.environ.get('HG_BRANCH', 'default'),
+            branch=os.environ.get('HG_BRANCH', None),
             outgoing=False,
             propsfile=os.environ.get('PROPERTIES_FILE'),
             tbox=bool(os.environ.get('PROPERTIES_FILE')),
