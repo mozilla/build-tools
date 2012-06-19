@@ -23,7 +23,7 @@ from optparse import OptionParser
 nightliesPerBin = 30
 # maximum age permitted for a set of symbols, in days.
 # used to clean up old feature branches, for example
-maxNightlyAge = timedelta(90)
+maxNightlyAge = timedelta(45)
 # end options
 
 # RE to get the version number without alpha/beta designation
