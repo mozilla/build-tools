@@ -103,4 +103,9 @@ fi
 
 make || exit 2
 cp -p ../../src/build/unix/run-mozilla.sh $OBJDIR/dist/bin
+
+# The Root Analysis tests run in a special GC Zeal mode.
+if [[ "$VARIANT" = "rootanalysis" ]]; then
+    export JS_GC_ZEAL=6
+fi
 make check || exit 1

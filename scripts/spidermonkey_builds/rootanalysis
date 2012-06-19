@@ -1,3 +1,4 @@
 --enable-optimize
 --enable-debug
+--enable-gczeal
 --enable-root-analysis
