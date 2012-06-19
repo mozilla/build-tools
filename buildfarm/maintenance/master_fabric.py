@@ -1,7 +1,11 @@
 from fabric.api import run
 from fabric.context_managers import cd, hide, show
 from fabric.operations import put
+from fabric.colors import green, red
 import re, os
+
+OK = green('[OK]')
+FAIL = red('[FAIL]')
 
 def check(master):
     """Checks that the master parameters are valid"""
@@ -15,7 +19,7 @@ def check(master):
         assert run('hg -R %(bbcustom_dir)s ident -b' % master) == master['bbcustom_branch']
         assert run('hg -R %(bbconfigs_dir)s ident -b' % master) == master['bbconfigs_branch']
         assert run('hg -R %(tools_dir)s ident -b' % master) == master['tools_branch']
-        print master['name'], date, "OK"
+        print master['name'], date, OK
 
 def checkconfig(master):
     """Runs buildbot checkconfig"""
@@ -24,9 +28,9 @@ def checkconfig(master):
         with cd(master['basedir']):
             try:
                 run('make checkconfig')
-                print "%-14s OK" % master['name']
+                print "%-14s %s" % (master['name'], OK)
             except:
-                print "%-14s FAILED" % master['name']
+                print "%-14s %s" % (master['name'], FAIL)
                 raise
 
 def show_revisions(master):
@@ -43,7 +47,7 @@ def show_revisions(master):
         bb_version = bb_version.replace('\r\n', '\n')
         m = re.search('^Buildbot version:.*-hg-([0-9a-f]+)-%s' % master['buildbot_branch'], bb_version, re.M)
         if not m:
-            print "Failed to parse buildbot --version output:", repr(bb_version)
+            print FAIL, "Failed to parse buildbot --version output:", repr(bb_version)
             bb_rev = ""
         else:
             bb_rev = m.group(1)
@@ -58,7 +62,7 @@ def reconfig(master):
             put('buildbot-wrangler.py', '%s/buildbot-wrangler.py' % master['basedir'])
             run('rm -f *.pyc')
             run('python buildbot-wrangler.py reconfig %s' % master['master_dir'])
-    print "finished reconfig of %(hostname)s:%(basedir)s" % master
+    print OK, "finished reconfig of %(hostname)s:%(basedir)s" % master
 
 def restart(master):
     with show('running'):
@@ -66,6 +70,7 @@ def restart(master):
             put('buildbot-wrangler.py', '%s/buildbot-wrangler.py' % master['basedir'])
             run('rm -f *.pyc')
             run('python buildbot-wrangler.py restart %s' % master['master_dir'])
+    print OK, "finished restarting of %(hostname)s:%(basedir)s" % master
 
 def graceful_restart(master):
     with show('running'):
@@ -73,12 +78,14 @@ def graceful_restart(master):
             put('buildbot-wrangler.py', '%s/buildbot-wrangler.py' % master['basedir'])
             run('rm -f *.pyc')
             run('python buildbot-wrangler.py graceful_restart %s %s' % (master['master_dir'], master['http_port']))
+    print OK, "finished gracefully restarting of %(hostname)s:%(basedir)s" % master
 
 def stop(master):
     with show('running'):
         with cd(master['basedir']):
             put('buildbot-wrangler.py', '%s/buildbot-wrangler.py' % master['basedir'])
             run('python buildbot-wrangler.py stop %s' % master['master_dir'])
+    print OK, "stopped %(hostname)s:%(basedir)s" % master
 
 def graceful_stop(master):
     with show('running'):
@@ -86,6 +93,7 @@ def graceful_stop(master):
             put('buildbot-wrangler.py', '%s/buildbot-wrangler.py' % master['basedir'])
             run('rm -f *.pyc')
             run('python buildbot-wrangler.py graceful_stop %s %s' % (master['master_dir'], master['http_port']))
+    print OK, "gracefully stopped %(hostname)s:%(basedir)s" % master
 
 def start(master):
     with show('running'):
@@ -93,6 +101,7 @@ def start(master):
             put('buildbot-wrangler.py', '%s/buildbot-wrangler.py' % master['basedir'])
             run('rm -f *.pyc')
             run('python buildbot-wrangler.py start %s' % master['master_dir'])
+    print OK, "started %(hostname)s:%(basedir)s" % master
 
 def update(master):
     with show('running'):
@@ -105,6 +114,7 @@ def update(master):
         with cd(master['tools_dir']):
             run('hg pull')
             run('hg update -r %s' % master['tools_branch'])
+    print OK, "updated %(hostname)s:%(basedir)s" % master
 
 def update_buildbot(master):
     with show('running'):
@@ -113,6 +123,7 @@ def update_buildbot(master):
             run('hg pull')
             run('hg update -r %s' % master['buildbot_branch'])
             run('unset PYTHONHOME PYTHONPATH; %s setup.py install' % master['buildbot_python'])
+    print OK, "updated buildbot in %(hostname)s:%(basedir)s" % master
 
 def per_host(fn):
     fn.per_host = True
@@ -125,6 +136,7 @@ def update_queue(host):
         tools_dir = "%s/tools" % queue_dir
         with cd(tools_dir):
             run('hg pull -u')
+    print OK, "updated queue in %s" % host
 
 actions = [
     'check',
