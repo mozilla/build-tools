@@ -228,11 +228,18 @@ def main(tegra):
     return True
 
 if __name__ == '__main__':
+    tegra_name = os.getenv('SUT_NAME')
     if (len(sys.argv) <> 2):
-        print "usage: verify.py <tegra name>"
-        sys.exit(1)
+        if tegra_name in (None, ''):
+            print "usage: verify.py [tegra name]"
+            print "   Must have $SUT_NAME set in environ to omit tegra name"
+            sys.exit(1)
+        else:
+            print "INFO: Using tegra '%s' found in env variable" % tegra_name
+    else:
+        tegra_name = sys.argv[1]
     
-    if main(sys.argv[1]) == False:
-        sys.exit(1) # Not ok to proceed with startup
+    if main(tegra_name) == False:
+        sys.exit(1) # Not ok to proceed
 
     sys.exit(0)
