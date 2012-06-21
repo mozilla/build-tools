@@ -14,31 +14,36 @@ import sys, os, os.path, shutil, re, tempfile
 from optparse import OptionParser
 from time import mktime, strptime
 from errno import EEXIST
+from ConfigParser import RawConfigParser
 
-NIGHTLY_PATH = "/home/ftp/pub/%(product)s/%(nightly_dir)s"
-TINDERBOX_BUILDS_PATH = "/home/ftp/pub/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
-LONG_DATED_DIR = "%(year)s/%(month)s/%(year)s-%(month)s-%(day)s-%(hour)s-%(minute)s-%(second)s-%(branch)s"
-SHORT_DATED_DIR = "%(year)s-%(month)s-%(day)s-%(hour)s-%(minute)s-%(second)s-%(branch)s"
-CANDIDATES_DIR = "%(version)s-candidates/build%(buildnumber)s"
-LATEST_DIR = "latest-%(branch)s"
-# Production configs that need to be commented out when doing staging.
-TINDERBOX_URL_PATH = "http://ftp.mozilla.org/pub/mozilla.org/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
-LONG_DATED_URL_PATH = "http://ftp.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(year)s/%(month)s/%(year)s-%(month)s-%(day)s-%(hour)s-%(minute)s-%(second)s-%(branch)s"
-CANDIDATES_URL_PATH = "http://stage.mozilla.org/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(version)s-candidates/build%(buildnumber)s"
-PVT_BUILD_URL_PATH = "https://dm-pvtbuild01.mozilla.org/%(product)s/%(tinderbox_builds_dir)s"
-PVT_BUILD_DIR = "/mnt/pvt_builds/%(product)s/%(tinderbox_builds_dir)s"
-TRY_DIR = "/home/ftp/pub/%(product)s/try-builds/%(who)s-%(revision)s/%(builddir)s"
-TRY_URL_PATH = "http://ftp.mozilla.org/pub/mozilla.org/%(product)s/try-builds/%(who)s-%(revision)s/%(builddir)s"
-# Staging configs start here.  Uncomment when working on staging
-#TINDERBOX_URL_PATH = "http://dev-stage01.build.sjc1.mozilla.com/pub/mozilla.org/%(product)s/tinderbox-builds/%(tinderbox_builds_dir)s"
-#LONG_DATED_URL_PATH = "http://dev-stage01.build.sjc1.mozilla.com/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(year)s/%(month)s/%(year)s-%(month)s-%(day)s-%(hour)s-%(minute)s-%(second)s-%(branch)s"
-#CANDIDATES_URL_PATH = "http://dev-stage01.build.sjc1.mozilla.com/pub/mozilla.org/%(product)s/%(nightly_dir)s/%(version)s-candidates/build%(buildnumber)s"
-#TRY_DIR = "/home/ftp/pub/%(product)s/try-builds/%(who)s-%(revision)s/%(builddir)s"
-#TRY_URL_PATH = "http://dev-stage01.build.sjc1.mozilla.com/pub/mozilla.org/%(product)s/try-builds/%(who)s-%(revision)s/%(builddir)s"
-#PVT_BUILD_URL_PATH = "https://dm-pvtbuild01.mozilla.org/staging/%(product)s/%(tinderbox_builds_dir)s"
-#PVT_BUILD_DIR = "/mnt/pvt_builds/staging/%(product)s/%(tinderbox_builds_dir)s"
+# Lets read in the config files.  Because this application is 
+# run once for every upload, we just read the config file once at the beginning
+# of execution.  If this was a longer running app, we'd need to do something
+# to pick up changes in the config file.
+config = RawConfigParser()
+config.read(['post_upload.ini', os.path.expanduser('~/.post_upload.ini'), '/etc/post_upload.ini'])
 
-PARTIAL_MAR_RE = re.compile('\.partial\..*\.mar(\.asc)?$')
+
+# Read in paths that are valid on the stage server
+NIGHTLY_PATH = config.get('paths', 'nightly')
+TINDERBOX_BUILDS_PATH = config.get('paths', 'tinderbox_builds')
+LONG_DATED_DIR = config.get('paths', 'long_dated')
+SHORT_DATED_DIR = config.get('paths', 'short_dated')
+CANDIDATES_DIR = config.get('paths', 'candidates')
+LATEST_DIR = config.get('paths', 'latest')
+TRY_DIR = config.get('paths', 'try')
+PVT_BUILD_DIR = config.get('paths', 'pvt_builds')
+
+# Read in the URLs that are served by this stage
+TINDERBOX_URL_PATH = config.get('urls', 'tinderbox_builds')
+LONG_DATED_URL_PATH = config.get('urls', 'long_dated')
+CANDIDATES_URL_PATH = config.get('urls', 'candidates')
+PVT_BUILD_URL_PATH = config.get('urls', 'pvt_builds')
+TRY_URL_PATH = config.get('urls', 'try')
+
+PARTIAL_MAR_RE = re.compile(config.get('patterns', 'partial_mar'))
+
+
 
 # Cache of original_file to new location on disk
 _linkCache = {}
