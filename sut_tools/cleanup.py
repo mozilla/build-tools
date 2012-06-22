@@ -23,11 +23,9 @@ def main(tegra=None, dm=None):
     flagFile  = os.path.join(pidDir, 'proxy.flg')
     errorFile = os.path.join(pidDir, 'error.flg')
 
-    processNames = [ 'org.mozilla.fencp',
-                     'org.mozilla.fennec',
+    processNames = [ 'org.mozilla.fennec',
                      'org.mozilla.fennec_aurora',
                      'org.mozilla.fennec_unofficial',
-                     'org.mozilla.ffxcp',
                      'org.mozilla.firefox',
                      'org.mozilla.firefox_beta',
                      'org.mozilla.roboexample.test',
