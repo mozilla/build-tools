@@ -75,6 +75,7 @@ if [ "$OSTYPE" = "linux-gnu" ]; then
         export CXX=/tools/gcc-4.5/bin/g++
         if [ "$UNAME_M" = "x86_64" ]; then
             export LD_LIBRARY_PATH=/tools/gcc-4.5/lib64
+            NSPR64="--enable-64bit"
         else
             export LD_LIBRARY_PATH=/tools/gcc-4.5/lib
         fi
