@@ -39,7 +39,8 @@ if [ -f "$PROPERTIES_FILE" ]; then
     fi
 
     cd $SCRIPTS_DIR/../..
-    python $SCRIPTS_DIR/clobberer/clobberer.py -s scripts -s $PROPERTIES_FILE \
+    python $SCRIPTS_DIR/clobberer/clobberer.py -s scripts \
+        -s ${PROPERTIES_FILE##*/} \
         $CLOBBERER_URL $branch "$builder" $builddir $slavename $master
 
     # Purging
