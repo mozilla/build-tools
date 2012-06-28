@@ -1,7 +1,7 @@
 <?php
 /*
 This is a web interface that allows developers to clobber buildbot
-builds on a per-slave/per-builder basis.
+builds on a per-builder basis.
 
 This script simply updates a database that Buildbot reads from at the start of
 every build.
@@ -230,21 +230,25 @@ if (array_get($_POST, 'form_submitted')) {
       continue;
     }
     $t = explode('-', $k, 2);
-    // We only care about slave-<$row_id>
-    // This corresponds to a row that specifies which branch/builder/slave to clobber
-    if ($t[0] == 'slave') {
-      $row_id = e($t[1]);
-      $s = $dbh->query("SELECT * from builds where id = $row_id");
-      $r = $s->fetch(PDO::FETCH_ASSOC);
-      if ($r)
-      {
-        $builddir = e($r['builddir']);
-        $branch = e($r['branch']);
-        $slave = e($r['slave']);
-        if (canSee($builddir, $user)) {
+    // We only care about bld-<$row_id>
+    // This corresponds to a row that specifies which branch/builder to clobber
+    // Build slave IDs are passed in via hidden form.
+    if ($t[0] == 'bld') {
+      $builder_id = $t[1];
+      $builder_slaves = explode('|', $_POST["${builder_id}_slaves"]);
+      foreach ($builder_slaves as $row_id) {
+        $s = $dbh->query("SELECT * from builds where id = $row_id");
+        $r = $s->fetch(PDO::FETCH_ASSOC);
+        if ($r)
+        {
+          $builddir = e($r['builddir']);
+          $branch = e($r['branch']);
+          $slave = e($r['slave']);
+          if (canSee($builddir, $user)) {
             $dbh->exec("INSERT INTO clobber_times "
                 ."(master, branch, builddir, slave, who, lastclobber) VALUES "
                 ."(NULL, $branch, $builddir, $slave, $e_user, $now)") or die(print_r($dbh->errorInfo(), TRUE));
+          }
         }
       }
     }
@@ -374,10 +378,23 @@ if (!array_key_exists('branch', $_GET)) {
 <form method="POST">
 <table border="1" cellspacing="0" cellpadding="1">
  <thead>
-  <tr><td>Branch</td><td>Builder Name</td><td>Slaves</td><td>Last clobbered</td></tr>
+  <tr><td>Branch</td><td>Builder Name</td><td>Last clobbered</td></tr>
  </thead>
  <tbody>
 <?php
+  // Sort the results
+  function sort_func($r1, $r2) {
+    $c1 = strnatcmp($r1['branch'], $r2['branch']);
+    if ($c1 != 0) {
+      return $c1;
+    }
+    $c2 = strnatcmp($r1['buildername'], $r2['buildername']);
+    if ($c2 != 0) {
+      return $c2;
+    }
+    return strnatcmp($r1['slave'], $r2['slave']);
+  }
+
   $branch_clause = "";
   if (array_key_exists('branch', $_GET)) {
     $branch_clause = "AND branch=".e($_GET['branch']);
@@ -389,7 +406,8 @@ if (!array_key_exists('branch', $_GET)) {
     // First pass: count the number of rows for each branch / buildername so we can 
     // set the 'rowspan' attribute
     $rows_per_branch = array();
-    $rows_per_builder = array();
+    $builder_slaves = array();
+    $builder_clobbers = array();
     $rows = array();
     while ($r = $allbuilders->fetch(PDO::FETCH_ASSOC)) {
       if (!canSee($r['builddir'], array_get($_SERVER, 'REMOTE_USER'))) {
@@ -398,31 +416,24 @@ if (!array_key_exists('branch', $_GET)) {
       $rows[] = $r;
       $buildername = $r['buildername'];
       $branch = $r['branch'];
-      if (!array_key_exists($branch, $rows_per_builder)) {
-        $rows_per_builder[$branch] = array();
+      if (!array_key_exists($buildername, $builder_slaves)) {
+          $builder_slaves[$buildername] = array();
       }
-      if (!array_key_exists($buildername, $rows_per_builder[$branch])) {
-        $rows_per_builder[$branch][$buildername] = 1;
-      } else {
-        $rows_per_builder[$branch][$buildername] += 1;
+      $builder_slaves[$buildername][] = $r['id'];
+      if (!array_key_exists($buildername, $builder_clobbers)) {
+          $builder_clobbers[$buildername] = array();
       }
+      $lastclobber = getClobberTime(null, $r['branch'], $r['builddir'], $r['slave']);
+      if ($lastclobber) {
+          $lastclobber_time = strftime("%Y-%m-%d %H:%M:%S %Z", $lastclobber['lastclobber']) . " by " . htmlspecialchars($lastclobber['who']);
+          $builder_clobbers[$buildername][$lastclobber_time] = 1;
+      }
+      $builder_clobbers[$buildername][$lastclobber] = 1;
       if (!array_key_exists($branch, $rows_per_branch)) {
         $rows_per_branch[$branch] = 1;
       } else {
         $rows_per_branch[$branch] += 1;
       }
-    }
-    // Sort the results
-    function sort_func($r1, $r2) {
-      $c1 = strnatcmp($r1['branch'], $r2['branch']);
-      if ($c1 != 0) {
-        return $c1;
-      }
-      $c2 = strnatcmp($r1['buildername'], $r2['buildername']);
-      if ($c2 != 0) {
-        return $c2;
-      }
-      return strnatcmp($r1['slave'], $r2['slave']);
     }
     usort($rows, 'sort_func');
     // Second pass we output the HTML
@@ -436,22 +447,20 @@ if (!array_key_exists('branch', $_GET)) {
         print htmlspecialchars($r['branch']) . "</td>\n";
       }
       if ($last_builder != $r['buildername']) {
-        $rowspan = $rows_per_builder[$r['branch']][$r['buildername']];
         $builder_id = b64_encode($r['buildername']);
         $classes = b64_encode($r['branch']);
-        print "<td rowspan=\"$rowspan\"><input type=\"checkbox\" id=\"$builder_id\" class=\"$classes\" onchange=\"toggleall(this, &quot;$builder_id&quot;)\" />";
+        print "<td><input type=\"checkbox\" id=\"$builder_id\" name=\"bld-$builder_id\" class=\"$classes\" onchange=\"toggleall(this, &quot;$builder_id&quot;)\" />";
+        print "<input type=\"hidden\" name=\"${builder_id}_slaves\" value=\"" . join('|', $builder_slaves[$r['buildername']]) . "\">\n";
         print htmlspecialchars($r['buildername']) . "</td>\n";
+        print "<td>";
+        $clobber_times = array();
+        foreach ($builder_clobbers[$r['buildername']] as $clobber => $dummy) {
+            $clobber_times[] = $clobber;
+        }
+        print join(', ', $clobber_times);
+        print "</td>\n";
       }
       $classes = b64_encode($r['buildername']) . " " . b64_encode($r['branch']);
-      $name = "slave-" . $r['id'];
-      print "<td><input type=\"checkbox\" name=\"$name\" class=\"$classes\" onchange=\"toggleall(this)\" />";
-      print htmlspecialchars($r['slave']) . "</td>\n";
-      $lastclobber = getClobberTime(null, $r['branch'], $r['builddir'], $r['slave']);
-      if ($lastclobber) {
-        print "<td>" . strftime("%Y-%m-%d %H:%M:%S %Z", $lastclobber['lastclobber']) . " by " . htmlspecialchars($lastclobber['who']) . "</td>\n";
-      } else {
-        print "<td></td>\n";
-      }
       print "</tr>\n";
       $last_branch = $r['branch'];
       $last_builder = $r['buildername'];
