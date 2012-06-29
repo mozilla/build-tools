@@ -853,6 +853,7 @@
         "pduid": ".AA3"
     },
     "tegra-202": {
+        "_comment": "Bug 749637: Assigned to Sec-Team",
         "foopy": "None", 
         "pdu": "pdu2.df201-4.build.mtv1.mozilla.com", 
         "pduid": ".AB3"
@@ -870,6 +871,7 @@
         "pduid": ".AA5"
     },
     "tegra-205": {
+        "_comment": "Bug 749637: Assigned to Sec-Team",
         "foopy": "None", 
         "pdu": "pdu6.df202-1.build.mtv1.mozilla.com", 
         "pduid": ".AA5"
@@ -955,6 +957,7 @@
         "pduid": ".AB8"
     }, 
     "tegra-222": {
+        "_comment": "Bug 741684: ctalbert has it",
         "foopy": "None", 
         "pdu": "pdu9.df202-2.build.mtv1.mozilla.com", 
         "pduid": ".AA9"
