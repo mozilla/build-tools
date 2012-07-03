@@ -78,6 +78,6 @@ if __name__ == '__main__':
         if not options.mac_id:
             parser.error("mac_id required when format is dmg")
         safe_unlink(tmpfile)
-        dmg_signpackage(inputfile, tmpfile, options.dmg_keychain, options.mac_id, options.fake, passphrase)
+        dmg_signpackage(inputfile, tmpfile, options.dmg_keychain, options.mac_id, options.mac_cert_subject_ou, options.fake, passphrase)
 
     os.rename(tmpfile, destfile)

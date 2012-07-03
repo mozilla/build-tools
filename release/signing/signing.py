@@ -1,4 +1,5 @@
 import tempfile, os, hashlib, shutil, bz2, re, sys, time, urllib2, httplib
+from os import path
 import fnmatch
 import logging
 import socket
@@ -10,6 +11,9 @@ log = logging.getLogger(__name__)
 SEVENZIP = os.environ.get('SEVENZIP', '7z')
 MAR = os.environ.get('MAR', 'mar')
 TAR = os.environ.get('TAR', 'tar')
+MAC_DESIGNATED_REQUIREMENTS = """\
+=designated =>  identifier "%(identifier)s" and ( (anchor apple generic and    certificate leaf[field.1.2.840.113635.100.6.1.9] ) or (anchor apple generic and    certificate 1[field.1.2.840.113635.100.6.2.6]  and    certificate leaf[field.1.2.840.113635.100.6.1.13] and    certificate leaf[subject.OU] = "%(subject_ou)s"))
+"""
 
 def _noumask():
     # Utility function to set a umask of 000
@@ -805,10 +809,10 @@ def mar_signfile(inputfile, outputfile, mar_cmd, fake=False, passphrase=None):
         log.exception(data)
         raise
 
-def dmg_signfile(filename, keychain, signing_identity, code_resources, lockfile, fake=False, passphrase=None):
+def dmg_signfile(filename, keychain, signing_identity, code_resources, identifier, subject_ou, lockfile, fake=False, passphrase=None):
     """ Sign a mac .app folder
     """
-    from flufl.lock import Lock, AlreadyLockedError, TimeOutError, NotLockedError
+    from flufl.lock import Lock, TimeOutError, NotLockedError
     from datetime import timedelta
     import pexpect
 
@@ -820,6 +824,7 @@ def dmg_signfile(filename, keychain, signing_identity, code_resources, lockfile,
         '-s', signing_identity, '-fv',
         '--keychain', keychain,
         '--resource-rules', code_resources,
+        '--requirement', MAC_DESIGNATED_REQUIREMENTS % locals(),
         basename]
 
     # pexpect requires a string as input
@@ -877,7 +882,12 @@ def dmg_signfile(filename, keychain, signing_identity, code_resources, lockfile,
         log.exception(data)
         raise
 
-def dmg_signpackage(pkgfile, dstfile, keychain, mac_id, fake=False, passphrase=None):
+def get_identifier(appdir):
+    """Return the CFBundleIdentifier from a Mac application."""
+    import plistlib
+    return plistlib.readPlist(path.join(appdir, 'Contents', 'Info.plist'))['CFBundleIdentifier']
+
+def dmg_signpackage(pkgfile, dstfile, keychain, mac_id, subject_ou, fake=False, passphrase=None):
     """ Sign a mac build, putting results into `dstfile`.
         pkgfile must be a tar, which gets unpacked, signed, and repacked.
     """
@@ -891,7 +901,6 @@ def dmg_signpackage(pkgfile, dstfile, keychain, mac_id, fake=False, passphrase=N
 
     tmpdir = tempfile.mkdtemp()
     pkgdir = os.path.dirname(pkgfile)
-    filename = os.path.basename(pkgfile)
     try:
         # Unpack it
         logs.append("Unpacking %s to %s" % (pkgfile, tmpdir))
@@ -907,7 +916,7 @@ def dmg_signpackage(pkgfile, dstfile, keychain, mac_id, fake=False, passphrase=N
                 code_resources =  macdir + "/Contents/_CodeSignature/CodeResources"
                 lockfile = os.path.join(pkgdir, '.lock')
 
-                dmg_signfile(macdir, keychain, mac_id, code_resources, lockfile, passphrase=passphrase)
+                dmg_signfile(macdir, keychain, mac_id, code_resources, get_identifier(macdir), subject_ou, lockfile, passphrase=passphrase)
 
         # Repack it
         logs.append("Packing %s" % dstfile)
