@@ -1,5 +1,6 @@
 """Helper functions to handle file operations"""
-import logging, os
+import logging, os, shutil, hashlib, tempfile
+from ConfigParser import RawConfigParser
 log = logging.getLogger(__name__)
 
 def compare(file1, file2):
@@ -21,3 +22,54 @@ def directoryContains(directory, suffix):
     if not hit:
         log.error("Could not find *%s in %s" % (suffix, directory))
     return hit
+
+def copyfile(src, dst, copymode=True):
+    """Copy src to dst, preserving permissions and times if copymode is True"""
+    shutil.copyfile(src, dst)
+    if copymode:
+        shutil.copymode(src, dst)
+        shutil.copystat(src, dst)
+
+def sha1sum(f):
+    """Return the SHA-1 hash of the contents of file `f`, in hex format"""
+    h = hashlib.sha1()
+    fp = open(f, 'rb')
+    while True:
+        block = fp.read(512*1024)
+        if not block:
+            break
+        h.update(block)
+    return h.hexdigest()
+
+def safe_unlink(filename):
+    """unlink filename ignorning errors if the file doesn't exist"""
+    try:
+        if os.path.isdir(filename):
+            for root, dirs, files in os.walk(filename, topdown=True):
+                for f in files:
+                    fp = os.path.join(root, f)
+                    safe_unlink(fp)
+                os.rmdir(root)
+        else:
+            os.unlink(filename)
+    except OSError, e:
+        # Ignore "No such file or directory"
+        if e.errno == 2:
+            return
+        else:
+            raise
+
+def safe_copyfile(src, dest):
+    """safely copy src to dest using a temporary intermediate and then renaming
+    to dest"""
+    fd, tmpname = tempfile.mkstemp(dir=os.path.dirname(dest))
+    shutil.copyfileobj(open(src, 'rb'), os.fdopen(fd, 'wb'))
+    shutil.copystat(src, tmpname)
+    os.rename(tmpname, dest)
+
+def load_config(filename):
+    config = RawConfigParser()
+    if config.read([filename]) != [filename]:
+        return None
+    return config
+

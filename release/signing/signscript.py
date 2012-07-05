@@ -1,9 +1,14 @@
 #!/usr/bin/python
 """%prog [options] format inputfile outputfile inputfilename"""
-from signing import copyfile, signfile, shouldSign, gpg_signfile, safe_unlink, mar_signfile, dmg_signpackage
-import os
+import os, site
+# Modify our search path to find our modules
+site.addsitedir(os.path.join(os.path.dirname(__file__), "../../lib/python"))
+
 import logging
 import sys
+
+from util.file import copyfile, safe_unlink
+from signing.utils import shouldSign, signfile, gpg_signfile, mar_signfile, dmg_signpackage
 
 if __name__ == '__main__':
     from optparse import OptionParser
@@ -17,6 +22,7 @@ if __name__ == '__main__':
             loglevel=logging.INFO,
             configfile=None,
             mar_cmd=None,
+            signcode_timestamp=None,
         )
     parser.add_option("--keydir", dest="signcode_keydir",
             help="where MozAuthenticode.spc, MozAuthenticode.spk can be found")
@@ -30,6 +36,8 @@ if __name__ == '__main__':
             help="do fake signing")
     parser.add_option("-c", "--config", dest="configfile",
             help="config file to use")
+    parser.add_option("--signcode_disable_timestamp",
+            dest="signcode_timestamp", action="store_false")
     parser.add_option("-v", action="store_const", dest="loglevel", const=logging.DEBUG)
 
     options, args = parser.parse_args()
@@ -38,7 +46,13 @@ if __name__ == '__main__':
         config = RawConfigParser()
         config.read(options.configfile)
         for option, value in config.items('signscript'):
+            if option == "signcode_timestamp":
+                value = config.getboolean('signscript', option)
             options.ensure_value(option, value)
+
+    # Reset to default if this wasn't set in the config file
+    if options.signcode_timestamp is None:
+        options.signcode_timestamp = True
 
     logging.basicConfig(level=options.loglevel, format="%(asctime)s - %(message)s")
 
@@ -58,7 +72,8 @@ if __name__ == '__main__':
             parser.error("keydir required when format is signcode")
         copyfile(inputfile, tmpfile)
         if shouldSign(filename):
-            signfile(tmpfile, options.signcode_keydir, options.fake, passphrase)
+            signfile(tmpfile, options.signcode_keydir, options.fake,
+                    passphrase, timestamp=options.signcode_timestamp)
         else:
             parser.error("Invalid file for signing: %s" % filename)
             sys.exit(1)

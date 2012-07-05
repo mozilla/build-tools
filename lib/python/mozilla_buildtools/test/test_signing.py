@@ -4,7 +4,13 @@ Some automated tests for signing code
 import subprocess
 from unittest import TestCase
 
-from signing import *
+import tempfile
+import shutil
+import os
+
+from release.info import fileInfo
+
+from signing.utils import shouldSign, filterFiles, sortFiles, sums_are_equal
 
 class TestFileParsing(TestCase):
     product = 'firefox'
@@ -155,15 +161,6 @@ class TestFileParsing(TestCase):
         self.assert_(not shouldSign('application.ini'))
         self.assert_(not shouldSign('D3DCompiler_42.dll'))
 
-    def testConvertPath(self):
-        tests = [
-                ('unsigned-build1/unsigned/update/win32/foo/bar', 'signed-build1/update/win32/foo/bar'),
-                ('unsigned-build1/unsigned/win32/foo/bar', 'signed-build1/win32/foo/bar'),
-                ('unsigned-build1/win32/foo/bar', 'signed-build1/win32/foo/bar'),
-                ]
-        for a, b in tests:
-            self.assertEqual(convertPath(a, 'signed-build1'), b)
-
     def testFiltering(self):
         """ Test that only files of the expected platform and type are passed
         through  to be signed """
@@ -229,37 +226,39 @@ class TestFileParsing(TestCase):
               - No detached sigs
         """
         try:
-            os.makedirs("./test-download/update/win32")
-            os.makedirs("./test-download/win32")
-            os.makedirs("./test-download/unsigned/win32/.foo")
-            os.makedirs("./test-download/unsigned/win32/foo")
-            open("./test-download/unsigned/win32/.foo/hello.complete.mar", "w").write("Hello\n")
-            open("./test-download/unsigned/win32/foo/hello.complete.mar", "w").write("Hello\n")
-            open("./test-download/win32/hello.complete.mar", "w").write("Hello\n")
-            open("./test-download/unsigned/win32/hello.partial.mar", "w").write("Hello\n")
-            open("./test-download/unsigned/win32/hello.checksums", "w").write("Hello\n")
-            open("./test-download/unsigned/win32/hello.asc", "w").write("Hello\n")
+            tmpdir = tempfile.mkdtemp()
+            os.makedirs("%s/test-download/update/win32" % tmpdir)
+            os.makedirs("%s/test-download/win32" % tmpdir)
+            os.makedirs("%s/test-download/unsigned/win32/.foo" % tmpdir)
+            os.makedirs("%s/test-download/unsigned/win32/foo" % tmpdir)
+            open("%s/test-download/unsigned/win32/.foo/hello.complete.mar" % tmpdir, "w").write("Hello\n")
+            open("%s/test-download/unsigned/win32/foo/hello.complete.mar" % tmpdir, "w").write("Hello\n")
+            open("%s/test-download/win32/hello.complete.mar" % tmpdir, "w").write("Hello\n")
+            open("%s/test-download/unsigned/win32/hello.partial.mar" % tmpdir, "w").write("Hello\n")
+            open("%s/test-download/unsigned/win32/hello.checksums" % tmpdir, "w").write("Hello\n")
+            open("%s/test-download/unsigned/win32/hello.asc" % tmpdir, "w").write("Hello\n")
+            download_exclude = os.path.join(
+                    os.path.dirname(os.path.abspath(__file__)),
+                    "../../../../release/signing/download-exclude.list",
+                    )
             subprocess.check_call([
                 'rsync',
                 '-av',
                 '--exclude-from',
-                'download-exclude.list',
-                './test-download/',
-                './test-dest/' ])
-            self.failUnless(not os.path.isdir("./test-dest/win32"))
-            self.failUnless(not os.path.isdir("./test-dest/update/win32"))
-            self.failUnless(not os.path.isdir("./test-dest/unsigned/win32/.foo/"))
-            self.failUnless(not os.path.exists("./test-dest/unsigned/win32/.foo/hello.complete.mar"))
-            self.failUnless(not os.path.exists("./test-dest/unsigned/win32/hello.partial.mar"))
-            self.failUnless(not os.path.exists("./test-dest/unsigned/win32/hello.checksums"))
-            self.failUnless(not os.path.exists("./test-dest/unsigned/win32/hello.asc"))
-            self.failUnless(os.path.exists("./test-dest/unsigned/win32/foo/hello.complete.mar"))
+                download_exclude,
+                '%s/test-download/' % tmpdir,
+                '%s/test-dest/' % tmpdir ])
+            self.failUnless(not os.path.isdir("%s/test-dest/win32" % tmpdir))
+            self.failUnless(not os.path.isdir("%s/test-dest/update/win32" % tmpdir))
+            self.failUnless(not os.path.isdir("%s/test-dest/unsigned/win32/.foo/" % tmpdir))
+            self.failUnless(not os.path.exists("%s/test-dest/unsigned/win32/.foo/hello.complete.mar" % tmpdir))
+            self.failUnless(not os.path.exists("%s/test-dest/unsigned/win32/hello.partial.mar" % tmpdir))
+            self.failUnless(not os.path.exists("%s/test-dest/unsigned/win32/hello.checksums" % tmpdir))
+            self.failUnless(not os.path.exists("%s/test-dest/unsigned/win32/hello.asc" % tmpdir))
+            self.failUnless(os.path.exists("%s/test-dest/unsigned/win32/foo/hello.complete.mar" % tmpdir))
         finally:
             # clean up
-            if os.path.isdir("./test-download"):
-                shutil.rmtree("./test-download")
-            if os.path.isdir("./test-dest"):
-                shutil.rmtree("./test-dest")
+            shutil.rmtree(tmpdir)
 
 
 if __name__ == '__main__':

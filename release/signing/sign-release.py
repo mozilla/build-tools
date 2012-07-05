@@ -1,9 +1,16 @@
 #!/usr/bin/python
-import tempfile, os, shutil, time, sys
+import os, site
+# Modify our search path to find our modules
+site.addsitedir(os.path.join(os.path.dirname(__file__), "../../lib/python"))
+import tempfile, shutil, time, sys
 import logging
-from signing import copyfile, convertPath, unpackfile, findfiles, shouldSign, \
-	sha1sum, getChkFile, bunzip2, bzip2, packfile, signfile, sortFiles, \
-	filterFiles, fileInfo, checkTools
+
+from util.file import copyfile, sha1sum
+from util.archives import bunzip2, bzip2, packfile, unpackfile
+from util.paths import convertPath, findfiles
+
+from signing.utils import shouldSign, getChkFile, signfile, sortFiles, \
+    filterFiles, fileInfo, checkTools
 
 log = logging.getLogger()
 

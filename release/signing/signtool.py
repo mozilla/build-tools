@@ -8,13 +8,14 @@ import sys, site
 # Modify our search path to find our modules
 site.addsitedir(os.path.join(os.path.dirname(__file__), "../../lib/python"))
 
+from signing.client import remote_signfile, buildValidatingOpener
+from util.archives import packtar, unpacktar
+from util.paths import findfiles
+
 import logging
-from signing import remote_signfile, find_files, buildValidatingOpener, packtar, unpacktar
 log = logging.getLogger(__name__)
 
 import pefile
-
-TAR = os.environ.get('TAR', 'tar')
 
 def is_authenticode_signed(filename):
     """Returns True if the file is signed with authenticode"""
@@ -154,7 +155,7 @@ def main():
                 files.append(fd+'.tar.gz')
         # For other platforms we sign all of the files individually.
         else:
-            files = find_files(options, args)
+            files = findfiles(args, options.includes, options.excludes)
 
         for f in files:
             log.debug("%s", f)
@@ -183,7 +184,7 @@ def main():
                 log.debug("unpacking %s", fd)
                 unpacktar(fd+'.tar.gz', os.getcwd())
                 os.unlink(fd+'.tar.gz')
-                
+
 
 if __name__ == '__main__':
     main()
