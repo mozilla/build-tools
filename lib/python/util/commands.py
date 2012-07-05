@@ -40,6 +40,9 @@ def run_cmd(cmd, **kwargs):
     try:
         t = time.time()
         return subprocess.check_call(cmd, **kwargs)
+    except subprocess.CalledProcessError, e:
+        log.info('command: ERROR', exc_info=True)
+        raise
     finally:
         elapsed = time.time() - t
         log.info("command: END (%.2fs elapsed)\n", elapsed)

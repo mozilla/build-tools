@@ -84,7 +84,6 @@ def checkStagePermissions(productName, version, buildNumber, stageServer,
                            username=stageUsername, sshKey=stageSshKey)
         except CalledProcessError:
             errors = True
-            print 'Error while running: %s' % test
 
     if errors:
         raise
