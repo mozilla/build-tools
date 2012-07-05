@@ -555,6 +555,7 @@
     "pb_port": 9001,
     "role": "build",
     "ssh_port": 7001,
+    "thunderbird_release_branches": ["comm-beta"],
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build1/tools"
   },
@@ -605,6 +606,7 @@
     "pb_port": 9001,
     "role": "build",
     "ssh_port": 7001,
+    "thunderbird_release_branches": ["comm-esr10"],
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build1/tools"
   },
@@ -655,7 +657,7 @@
     "pb_port": 9001,
     "role": "build",
     "ssh_port": 7001,
-    "thunderbird_release_branches": ["comm-beta", "comm-release", "comm-esr10"],
+    "thunderbird_release_branches": ["comm-release"],
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build1/tools"
   },
