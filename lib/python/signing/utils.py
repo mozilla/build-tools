@@ -9,7 +9,7 @@ import logging
 log = logging.getLogger(__name__)
 
 MAC_DESIGNATED_REQUIREMENTS = """\
-=designated =>  identifier "%(identifier)s" and ( (anchor apple generic and    certificate leaf[field.1.2.840.11
+=designated =>  identifier "%(identifier)s" and ( (anchor apple generic and    certificate leaf[field.1.2.840.113635.100.6.1.9] ) or (anchor apple generic and    certificate 1[field.1.2.840.113635.100.6.2.6]  and    certificate leaf[field.1.2.840.113635.100.6.1.13] and    certificate leaf[subject.OU] = "%(subject_ou)s"))
 """
 
 def signfile(filename, keydir, fake=False, passphrase=None, timestamp=True):
