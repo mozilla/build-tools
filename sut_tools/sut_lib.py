@@ -494,7 +494,7 @@ def reboot_tegra(tegra, debug=False):
                 c   = int(deviceID[3:])
                 s   = '3.2.3.1.11.1.%d.%d' % (b, c)
                 oib = '1.3.6.1.4.1.1718.%s' % s
-                cmd = '/usr/bin/snmpset -c private %s %s i 3' % (pdu, oib)
+                cmd = '/usr/bin/snmpset -v 1 -c private %s %s i 3' % (pdu, oib)
                 if debug:
                     log.debug('rebooting %s at %s %s' % (tegra, pdu, deviceID))
                 if os.system(cmd) == 0:
