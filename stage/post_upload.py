@@ -25,11 +25,13 @@ config.read(['post_upload.ini', os.path.expanduser('~/.post_upload.ini'), '/etc/
 
 
 # Read in paths that are valid on the stage server
+CANDIDATES_PATH = config.get('paths', 'candidates_path')
 NIGHTLY_PATH = config.get('paths', 'nightly')
 TINDERBOX_BUILDS_PATH = config.get('paths', 'tinderbox_builds')
 LONG_DATED_DIR = config.get('paths', 'long_dated')
 SHORT_DATED_DIR = config.get('paths', 'short_dated')
-CANDIDATES_DIR = config.get('paths', 'candidates')
+CANDIDATES_BASE_DIR = config.get('paths', 'candidates_base')
+CANDIDATES_DIR = CANDIDATES_BASE_DIR + config.get('paths', 'candidates')
 LATEST_DIR = config.get('paths', 'latest')
 TRY_DIR = config.get('paths', 'try')
 PVT_BUILD_DIR = config.get('paths', 'pvt_builds')
@@ -219,7 +221,39 @@ def ReleaseToShadowCentralBuilds(options, upload_dir, files, dated=True):
 def ReleaseToTinderboxBuildsOverwrite(options, upload_dir, files):
     ReleaseToTinderboxBuilds(options, upload_dir, files, dated=False)
 
+def rel_symlink(_to, _from):
+    _to = os.path.realpath(_to)
+    _from = os.path.realpath(_from)
+    (_from_path, dummy) = os.path.split(_from)
+    _to = os.path.relpath(_to, _from_path)
+    os.symlink(_to, _from)
+
+def symlink_nightly_to_candidates(nightly_path, candidates_full_path, version):
+    _from = ("%(nightly_path)s/" + CANDIDATES_BASE_DIR) % {'nightly_path': nightly_path, 'version': version}
+    _to   = candidates_full_path
+    if not os.path.isdir(_to):
+        print >> sys.stderr, "mkdir %s" % _to
+        try:
+            os.mkdir(_to)
+        except OSError, e:
+            if e.errno == EEXIST:
+                print "%s already exists, continuing anyways" % _to
+            else:
+                raise
+    if not os.path.islink(_from):
+        print >> sys.stderr, "ln -s %s %s" % (_to, _from)
+        try:
+            rel_symlink(_to, _from)
+        except OSError, e:
+            if e.errno == EEXIST:
+                print "%s already exists, continuing anyways" % _from
+                pass
+            else:
+                raise
+
 def ReleaseToCandidatesDir(options, upload_dir, files):
+    candidatesFullPath = CANDIDATES_BASE_DIR % {'version': options.version}
+    candidatesFullPath = os.path.join(CANDIDATES_PATH, candidatesFullPath)
     candidatesDir = CANDIDATES_DIR % {'version': options.version,
                                       'buildnumber': options.build_number}
     candidatesPath = os.path.join(NIGHTLY_PATH, candidatesDir)
@@ -229,6 +263,8 @@ def ReleaseToCandidatesDir(options, upload_dir, files):
             'buildnumber': options.build_number,
             'product': options.product,
             }
+
+    symlink_nightly_to_candidates(NIGHTLY_PATH, candidatesFullPath, options.version)
 
     for f in files:
         realCandidatesPath = candidatesPath
@@ -308,6 +344,8 @@ def ReleaseToTryBuilds(options, upload_dir, files):
 if __name__ == '__main__':
     releaseTo = []
     error = False
+
+    print >> sys.stderr, "sys.argv: %s" % sys.argv
     
     parser = OptionParser(usage="usage: %prog [options] <directory> <files>")
     parser.add_option("-p", "--product",
@@ -454,6 +492,7 @@ if __name__ == '__main__':
     
     NIGHTLY_PATH = NIGHTLY_PATH % {'product': options.product,
                                    'nightly_dir': options.nightly_dir}
+    CANDIDATES_PATH = CANDIDATES_PATH % {'product': options.product}
     upload_dir = os.path.abspath(args[0])
     files = args[1:]
     if not os.path.isdir(upload_dir):
