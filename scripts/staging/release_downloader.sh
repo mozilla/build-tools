@@ -23,7 +23,7 @@ fi
 
 branch=$(basename $($JSONTOOL -k properties.branch $PROPERTIES_FILE))
 builder=$($JSONTOOL -k properties.buildername $PROPERTIES_FILE)
-builddir=$($JSONTOOL -k properties.builddir $PROPERTIES_FILE)
+slavebuilddir=$($JSONTOOL -k properties.slavebuilddir $PROPERTIES_FILE)
 slavename=$($JSONTOOL -k properties.slavename $PROPERTIES_FILE)
 master=$($JSONTOOL -k properties.master $PROPERTIES_FILE)
 releaseConfig=$($JSONTOOL -k properties.release_config $PROPERTIES_FILE)
@@ -38,10 +38,10 @@ fi
 
 cd $SCRIPTS_DIR/../..
 $PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s build $CLOBBERER_URL $branch \
-  $builder $builddir $slavename $master
+  $builder $slavebuilddir $slavename $master
 cd $SCRIPTS_DIR/../..
 $PYTHON $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
-  -s 0.3 -n info -n 'rel-*' -n $builddir
+  -s 0.3 -n info -n 'rel-*' -n $slavebuilddir
 cd $workdir
 
 $PYTHON $MY_DIR/release_downloader.py -c $branchConfig -r $releaseConfig \
