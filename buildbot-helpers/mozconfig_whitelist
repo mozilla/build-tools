@@ -63,6 +63,9 @@ whitelist['nightly']['macosx64']            += ['ac_add_options --disable-instal
 whitelist['nightly']['win32']               += ['. $topsrcdir/configs/mozilla2/win32/include/choose-make-flags',
                                                 'mk_add_options MOZ_MAKE_FLAGS=-j1',
                                                 ]
+whitelist['nightly']['win32']              += ['if test "$IS_NIGHTLY" != ""; then']
+whitelist['nightly']['win32']              += ['ac_add_options --disable-auto-deps']
+whitelist['nightly']['win32']              += ['fi']
 
 
 ## KNOWN ONLY IN BETA
