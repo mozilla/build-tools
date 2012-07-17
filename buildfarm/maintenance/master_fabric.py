@@ -105,15 +105,8 @@ def start(master):
 
 def update(master):
     with show('running'):
-        with cd(master['bbcustom_dir']):
-            run('hg pull')
-            run('hg update -r %s' % master['bbcustom_branch'])
-        with cd(master['bbconfigs_dir']):
-            run('hg pull')
-            run('hg update -r %s' % master['bbconfigs_branch'])
-        with cd(master['tools_dir']):
-            run('hg pull')
-            run('hg update -r %s' % master['tools_branch'])
+        with cd(master['basedir']):
+            run('source bin/activate && make update')
     print OK, "updated %(hostname)s:%(basedir)s" % master
 
 def update_buildbot(master):
