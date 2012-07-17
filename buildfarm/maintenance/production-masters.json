@@ -157,7 +157,7 @@
     "role": "build",
     "ssh_port": 7001,
     "release_branches": ["mozilla-release"],
-    "mobile_release_branches": ["mozilla-release", "mozilla-aurora"],
+    "mobile_release_branches": ["mozilla-release"],
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build1/tools"
   },
