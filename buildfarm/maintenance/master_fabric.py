@@ -118,6 +118,12 @@ def update_buildbot(master):
             run('unset PYTHONHOME PYTHONPATH; %s setup.py install' % master['buildbot_python'])
     print OK, "updated buildbot in %(hostname)s:%(basedir)s" % master
 
+def fix_makefile_symlink(master):
+    with show('running'):
+        run('rm -f %(basedir)s/Makefile' % master)
+        run('ln -s %(bbconfigs_dir)s/Makefile.master %(basedir)s/Makefile' % master)
+    print OK, "updated Makefile symlink in %(hostname)s:%(basedir)s" % master
+
 def per_host(fn):
     fn.per_host = True
     return fn
@@ -144,5 +150,6 @@ actions = [
     'update',
     'update_buildbot',
     'update_queue',
+    'fix_makefile_symlink',
     ]
 
