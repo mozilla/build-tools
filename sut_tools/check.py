@@ -16,7 +16,7 @@ import datetime
 # from multiprocessing import get_logger, log_to_stderr
 from sut_lib import checkSlaveAlive, checkSlaveActive, getIPAddress, dumpException, loadOptions, \
                     checkCPAlive, checkCPActive, getLastLine, stopProcess, runCommand, pingTegra, \
-                    reboot_tegra, stopTegra, getMaster
+                    reboot_tegra, stopTegra, getMaster, logRebootTraceback, rebtLog
 
 
 log            = logging.getLogger()
@@ -164,6 +164,8 @@ def checkTegra(master, tegra):
         stopProcess(os.path.join(tegraPath, 'twistd.pid'), 'buildslave')
 
         if not options.reboot:
+            rebtLog = false # clear it out so we specify tegra_ip over again
+            logRebootTraceback(tegraIP)
             try:
                 hbSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 hbSocket.settimeout(float(120))

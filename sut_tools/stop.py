@@ -60,6 +60,7 @@ def stopTegra(tegra):
 
     log.debug('  sending rebt to tegra')
 
+    logRebootTraceback(tegra)
     try:
         hbSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         hbSocket.settimeout(float(120))

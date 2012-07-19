@@ -24,7 +24,7 @@ import json
 
 
 log = logging.getLogger()
-
+rebtLog = False
 
 def loadTegrasData(filepath):
     result = {}
@@ -215,6 +215,44 @@ def killPID(pid, sig=signal.SIGTERM, includeChildren=False):
         # if pid doesn't exist, then it worked ;)
         return True
 
+# temporary try to solve Bug 771626 
+def getRebootLogger(tegra_name):
+    global rebtLog
+    if rebtLog:
+        return rebtLog
+
+    from logging.handlers import RotatingFileHandler
+    from multiprocessing import get_logger
+    rebtLog = get_logger()
+    tegra_ip = tegra_name
+    if 'tegra' in tegra_name:
+        tegra_ip = getOurIP(tegra_name)
+
+    fileHandler   = RotatingFileHandler(os.path.join('/builds', 'reboots.log'), maxBytes=1000000, backupCount=99)
+    fileFormatter = logging.Formatter('%%(asctime)s %(tegra_ip)-15s %%(processName)s: %%(message)s' % tegra_ip)
+
+    fileHandler.setFormatter(fileFormatter)
+
+    rebtLog.addHandler(fileHandler)
+    rebtLog.fileHandler = fileHandler
+
+    echoHandler   = logging.StreamHandler()
+    echoFormatter = logging.Formatter('%(tegra_ip)-15s %%(processName)s: %%(message)s' % tegra_ip)
+    echoHandler.setFormatter(echoFormatter)
+    rebtLog.addHandler(echoHandler)
+    rebtLog.info('echoing')
+
+    rebtLog.setLevel(logging.DEBUG)
+    return rebtLog
+
+# temporary try to solve Bug 771626 
+def logRebootTraceback(tegra):
+    rebtLog = getRebootLogger(tegra)
+    rebtLog.info("Reboot Tegra Called for tegra %s" % tegra)
+    for s in traceback.format_list(traceback.extract_stack()):
+        if '\n' in s:
+            for t in s.split('\n'):
+                rebtLog.debug(t)
 
 def getLastLine(filename):
     """Run the tail command against the given file and return
@@ -497,6 +535,7 @@ def reboot_tegra(tegra, debug=False):
                 cmd = '/usr/bin/snmpset -v 1 -c private %s %s i 3' % (pdu, oib)
                 if debug:
                     log.debug('rebooting %s at %s %s' % (tegra, pdu, deviceID))
+                logRebootTraceback(tegra)
                 if os.system(cmd) == 0:
                     result = True
             except:
