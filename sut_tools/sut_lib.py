@@ -229,7 +229,7 @@ def getRebootLogger(tegra_name):
         tegra_ip = getOurIP(tegra_name)
 
     fileHandler   = RotatingFileHandler(os.path.join('/builds', 'reboots.log'), maxBytes=1000000, backupCount=99)
-    fileFormatter = logging.Formatter('%%(asctime)s %(tegra_ip)-15s %%(processName)s: %%(message)s' % tegra_ip)
+    fileFormatter = logging.Formatter('%%(asctime)s %(tegra_ip)-15s %%(processName)s: %%(message)s' % {'tegra_ip':tegra_ip})
 
     fileHandler.setFormatter(fileFormatter)
 
