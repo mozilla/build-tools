@@ -9,7 +9,7 @@ import socket
 import signal
 import logging
 
-from sut_lib import loadOptions, getIPAddress, stopProcess, checkSlaveAlive, dumpException
+from sut_lib import loadOptions, getIPAddress, stopProcess, checkSlaveAlive, dumpException, logRebootTraceback
 
 
 options        = None
