@@ -164,7 +164,7 @@ def checkTegra(master, tegra):
         stopProcess(os.path.join(tegraPath, 'twistd.pid'), 'buildslave')
 
         if not options.reboot:
-            rebtLog = false # clear it out so we specify tegra_ip over again
+            rebtLog = False # clear it out so we specify tegra_ip over again
             logRebootTraceback(tegraIP)
             try:
                 hbSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
