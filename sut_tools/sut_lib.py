@@ -237,7 +237,7 @@ def getRebootLogger(tegra_name):
     rebtLog.fileHandler = fileHandler
 
     echoHandler   = logging.StreamHandler()
-    echoFormatter = logging.Formatter('%(tegra_ip)-15s %%(processName)s: %%(message)s' % tegra_ip)
+    echoFormatter = logging.Formatter('%(tegra_ip)-15s %%(processName)s: %%(message)s' % {'tegra_ip':tegra_ip})
     echoHandler.setFormatter(echoFormatter)
     rebtLog.addHandler(echoHandler)
     rebtLog.info('echoing')
