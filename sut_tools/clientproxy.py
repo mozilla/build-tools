@@ -26,8 +26,7 @@ from logging.handlers import RotatingFileHandler
 from multiprocessing import Process, Queue, current_process, get_logger, log_to_stderr
 
 from sut_lib import checkSlaveAlive, checkSlaveActive, stopSlave, getOurIP, getIPAddress, \
-                    dumpException, runCommand, loadOptions, getLastLine, setFlag, \
-                    logRebootTraceback
+                    dumpException, runCommand, loadOptions, getLastLine, setFlag
 
 
 """clientproxy.py
@@ -224,7 +223,6 @@ def handleDialback(port, events):
 
 def sendReboot(ip, port):
     log.warning('sending rebt to tegra')
-    logRebootTraceback(ip)
     try:
         hbSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         hbSocket.settimeout(float(120))
