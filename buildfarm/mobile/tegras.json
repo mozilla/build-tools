@@ -257,12 +257,6 @@
         "pdu": "pdu2.df201-4.build.mtv1.mozilla.com", 
         "pduid": ".AB8"
     }, 
-    "tegra-065": {
-        "_comment": "Bug 759101, pulled for clint",
-        "foopy": "None", 
-        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com", 
-        "pduid": ".AA9"
-    }, 
     "tegra-066": {
         "foopy": "foopy10", 
         "pdu": "pdu1.df201-4.build.mtv1.mozilla.com", 
