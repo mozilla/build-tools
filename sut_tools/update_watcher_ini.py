@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import sys
+
 def main(tegra):
     import devicemanagerSUT
     destname = '/data/data/com.mozilla.watcher/files/watcher.ini'
