@@ -1278,5 +1278,10 @@
         "foopy": "foopy05", 
         "pdu": "pdu3.df202-1.build.mtv1.mozilla.com", 
         "pduid": ".AA2"
+    },
+    "tegra-316": {
+        "foopy": "foopy05",
+        "pdu": "pdu7.df202-2.build.mtv1.mozilla.com",
+        "pduid": ".AA10"
     } 
 }
