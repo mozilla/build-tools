@@ -115,7 +115,7 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
                  current], cwd=nativeDistDir, env=env)
         if os.environ.get('MOZ_SIGN_CMD'):
             run_cmd(['bash', '-c',
-                     '%s -f gpg -f mar "%s"' %
+                     '%s -f mar -f gpg "%s"' %
                      (os.environ['MOZ_SIGN_CMD'], partial_mar)],
                      env=env)
             UPLOAD_EXTRA_FILES.append('%s/%s.asc' % (updateDir, partial_mar_name))
