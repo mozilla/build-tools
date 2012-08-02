@@ -18,6 +18,8 @@ EXPECTED_TEGRA_SCREEN_ARGS = {'width': 1024, 'height': 768, 'type': 'crt'}
 errorFile = None
 dm = None
 
+watcherINI = "\r\n[watcher]\r\nPingTarget = bm-remote.build.mozilla.org\r\nstrikes = 0\r\n"
+
 def dmAlive(dm):
     """ Check that a devicemanager connection is still active
 
@@ -198,6 +200,51 @@ def cleanupTegra(dm):
     # Some sort of error happened above
     return False
 
+def setWatcherINI(dm):
+    """ If necessary Installs the (correct) watcher.ini for our infra
+
+    Returns False on failure, True on Success
+    """
+    realLoc = "/data/data/com.mozilla.watcher/files/watcher.ini"
+
+    def watcherDataCurrent():
+        remoteFileData = dm.stripPrompt(dm.sendCMD(['exec su -c "cat %s"' % realLoc])).split('return code [0]')[0]
+        if watcherINI != remoteFileData:
+            print remoteFileData
+            return False
+        else:
+            return True
+
+    if not dmAlive(dm):
+       return False
+    
+    try:
+       if dm.fileExists(realLoc):
+           if watcherDataCurrent():
+               return True
+    except:
+        setFlag(errorFile, "Unable to identify if watcher.ini is current")
+        return False
+
+    try:
+        tmpname = '/mnt/sdcard/watcher.ini'
+        # Need to install it
+        dm.verifySendCMD(['push %s %s\r\n' % (tmpname, len(watcherINI)), watcherINI], newline = False)
+        dm.sendCMD(['exec su -c "dd if=%s of=%s"' % (tmpname, realLoc)])
+    except:
+        setFlag(errorFile, "Unable to properly upload the watcher.ini")
+        return False
+    
+    try:
+       if dm.fileExists(realLoc):
+           if watcherDataCurrent():
+               return True
+    except:
+        pass
+    setFlag(errorFile, "Unable to verify the updated watcher.ini")
+    return False
+
+
 def main(tegra):
     # Returns False on failure, True on Success
     global dm, errorFile
@@ -223,6 +270,9 @@ def main(tegra):
         return False
 
     if not cleanupTegra(dm):
+        return False
+    
+    if not setWatcherINI(dm):
         return False
 
     return True
