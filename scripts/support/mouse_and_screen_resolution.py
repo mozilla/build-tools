@@ -26,6 +26,25 @@ from win32api import GetSystemMetrics
 default_screen_resolution = {"x": 1024, "y": 768}
 default_mouse_position = {"x": 1010, "y": 10}
 
+def wfetch(url, retries=5):
+    while retries >= 0:
+        try:
+            return urllib2.urlopen(url).read()
+        except urllib2.HTTPError, e:
+            print("Failed to fetch '%s': %s" % (url, str(e)))
+            if retries == 0:
+                raise
+            print("Retrying...")
+            retries = retries - 1
+        except urllib2.URLError, e:
+            print("Failed to fetch '%s': %s" % (url, str(e)))
+            if retries == 0:
+                raise
+            print("Retrying...")
+            retries = retries - 1
+        time.sleep(60)
+    raise Exception("Could not fetch url '%s'" % url)
+
 def main():
     '''
     We load the configuration file from:
@@ -46,7 +65,7 @@ def main():
         return 0
 
     try:
-        conf_dict = json.loads(urllib2.urlopen(options.configuration_url).read())
+        conf_dict = json.loads(wfetch(options.configuration_url))
         new_screen_resolution = conf_dict["win7"]["screen_resolution"]
         new_mouse_position = conf_dict["win7"]["mouse_position"]
     except urllib2.HTTPError, e:
