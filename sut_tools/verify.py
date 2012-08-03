@@ -205,12 +205,13 @@ def setWatcherINI(dm):
 
     Returns False on failure, True on Success
     """
+    import hashlib
     realLoc = "/data/data/com.mozilla.watcher/files/watcher.ini"
+    currentHash = hashlib.md5(watcherINI).hexdigest()
 
     def watcherDataCurrent():
-        remoteFileData = dm.stripPrompt(dm.sendCMD(['exec su -c "cat %s"' % realLoc])).split('return code [0]')[0]
-        if watcherINI != remoteFileData:
-            print remoteFileData
+        remoteFileHash = dm.getRemoteHash(realLoc)
+        if currentHash != remoteFileHash:
             return False
         else:
             return True
