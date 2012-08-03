@@ -23,7 +23,7 @@ if [ -f "$PROPERTIES_FILE" ]; then
 
     # Clobbering
     if [ -z "$CLOBBERER_URL" ]; then
-        export CLOBBERER_URL="http://build.mozilla.org/clobberer"
+        export CLOBBERER_URL="http://clobberer.pvt.build.mozilla.org/index.php"
     fi
 
     cd $SCRIPTS_DIR/../..

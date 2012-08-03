@@ -29,7 +29,7 @@ if [ -z "$BUILDBOT_CONFIGS" ]; then
     export BUILDBOT_CONFIGS="http://hg.mozilla.org/build/buildbot-configs"
 fi
 if [ -z "$CLOBBERER_URL" ]; then
-    export CLOBBERER_URL="http://build.mozilla.org/clobberer"
+    export CLOBBERER_URL="http://clobberer.pvt.build.mozilla.org/index.php"
 fi
 
 export MOZ_SIGN_CMD="$MOZ_SIGN_CMD"
