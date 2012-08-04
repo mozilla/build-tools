@@ -4,7 +4,7 @@
 Script to pull down the latest jetpack sdk tarball, unpack it, and run its tests against the 
 executable of whatever valid platform is passed.
 """
-import os, sys, urllib, shutil, re, traceback
+import os, sys, urllib, shutil, re, traceback, time
 import logging, subprocess
 from optparse import OptionParser
 
@@ -109,9 +109,25 @@ if __name__ == '__main__':
     elif options.ftp_url != "" and options.ext != "" and options.tarball_url != "":
         # Addonsdk checkin triggered
         is_poller = True
+
         # Clobber previous run
+        # First try to delete n-2 run which failed to be removed
+        if os.path.exists("./"+POLLER_DIR+".deleteme"):
+          try:
+              shutil.rmtree(POLLER_DIR + ".deleteme")
+              time.sleep(1)
+          except:
+              print("Unable to delete n-2 run folder")
+        # Then try to delete n-1 test run
         if os.path.exists("./%s" % POLLER_DIR):
-            shutil.rmtree(POLLER_DIR)
+            try:
+                shutil.rmtree(POLLER_DIR)
+            except OSError, e:
+                print("Unable to delete n-1 run folder")
+                time.sleep(1)
+                # Rename it and try to delete it on next run
+                os.rename(POLLER_DIR, POLLER_DIR + ".deleteme")
+
         # Make a new workdir
         os.mkdir(POLLER_DIR)
         os.chdir(POLLER_DIR)
