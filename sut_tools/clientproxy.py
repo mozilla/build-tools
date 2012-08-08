@@ -242,6 +242,7 @@ def monitorEvents(options, events):
     flagFile  = os.path.join(options.bbpath, 'proxy.flg')
     errorFile = os.path.join(options.bbpath, 'error.flg')
     bbEnv     = { 'PATH':     os.getenv('PATH'),
+                  'HOME':     os.getenv('HOME'),
                   'SUT_NAME': options.tegra,
                   'SUT_IP':   options.tegraIP,
                 }
