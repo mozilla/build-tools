@@ -551,7 +551,7 @@
     "hostname": "buildbot-master29.build.scl1.mozilla.com",
     "http_port": 8201,
     "limit_platforms": [
-        "android-armv6"
+        "android"
     ],
     "master_dir": "/builds/buildbot/tests1-panda/master",
     "name": "bm29-tests1-panda",
