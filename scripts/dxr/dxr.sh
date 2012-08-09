@@ -93,6 +93,6 @@ if [ -n "$upload_host" ]; then
     echo "Tarring up into $fn"
     tar zcf $fn www
     echo "Uploading"
-    echo scp -i $upload_sshkey $fn $upload_user@$upload_host:/pub/mozilla.org/firefox/dxr/$fn
-    scp -i $upload_sshkey $fn $upload_user@$upload_host:/pub/mozilla.org/firefox/dxr/$fn
+    echo scp -i $upload_sshkey $fn $upload_user@$upload_host:/pub/mozilla.org/dxr/$fn
+    scp -i $upload_sshkey $fn $upload_user@$upload_host:/pub/mozilla.org/dxr/$fn
 fi
