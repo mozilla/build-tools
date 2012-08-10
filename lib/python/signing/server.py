@@ -459,11 +459,6 @@ class SigningServer:
         now = time.time()
         for f in os.listdir(self.unsigned_dir):
             unsigned = os.path.join(self.unsigned_dir, f)
-            if not f.endswith(".fn") and sha1sum(unsigned) != f:
-                log.info("Deleting %s with bad hash", unsigned)
-                safe_unlink(unsigned)
-                continue
-
             # Clean up old files
             if os.path.getmtime(unsigned) < now-self.max_file_age:
                 log.info("Deleting %s (too old)", unsigned)
