@@ -14,7 +14,7 @@ def getfile(baseurl, filehash, format_):
     r = urllib2.Request(url)
     return urllib2.urlopen(r)
 
-def remote_signfile(options, url, filename, fmt, token, dest=None):
+def remote_signfile(options, urls, filename, fmt, token, dest=None):
     filehash = sha1sum(filename)
     if dest is None:
         dest = filename
@@ -57,8 +57,6 @@ def remote_signfile(options, url, filename, fmt, token, dest=None):
                 check_call(cmd, shell=True)
             return True
 
-    log.info("%s: processing %s on %s", filehash, filename, url)
-
     errors = 0
     pendings = 0
     max_errors = 20
@@ -72,6 +70,8 @@ def remote_signfile(options, url, filename, fmt, token, dest=None):
             return False
         # Try to get a previously signed copy of this file
         try:
+            url = urls[0]
+            log.info("%s: processing %s on %s", filehash, filename, url)
             req = getfile(url, filehash, fmt)
             headers = req.info()
             responsehash = headers['X-SHA1-Digest']
@@ -143,11 +143,17 @@ def remote_signfile(options, url, filename, fmt, token, dest=None):
             except (urllib2.URLError, socket.error, httplib.BadStatusLine):
                 # Try again in a little while
                 log.info("%s: connection error; trying again soon", filehash)
+                # Move the current url to the back
+                urls.pop(0)
+                urls.append(url)
             time.sleep(1)
             continue
         except (urllib2.URLError, socket.error):
             # Try again in a little while
             log.info("%s: connection error; trying again soon", filehash)
+            # Move the current url to the back
+            urls.pop(0)
+            urls.append(url)
             time.sleep(1)
             errors += 1
             continue

@@ -163,19 +163,12 @@ def main():
             if fmt == 'signcode' and is_authenticode_signed(f):
                 log.info("Skipping %s because it looks like it's already signed", f)
                 continue
-            for url in urls[:]:
-                if options.output_dir:
-                    dest = os.path.join(options.output_dir, os.path.basename(f))
-                else:
-                    dest = None
-
-                if remote_signfile(options, url, f, fmt, token, dest):
-                    break
-                elif len(urls) > 1:
-                    # Move the url to the end of the list
-                    urls.remove(url)
-                    urls.append(url)
+            if options.output_dir:
+                dest = os.path.join(options.output_dir, os.path.basename(f))
             else:
+                dest = None
+
+            if not remote_signfile(options, urls, f, fmt, token, dest):
                 log.error("Failed to sign %s with %s", f, fmt)
                 sys.exit(1)
 
