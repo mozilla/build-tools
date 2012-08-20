@@ -768,5 +768,63 @@
     "ssh_port": 7001,
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build1/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-macosx",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-macosx/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-macosx/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-macosx/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-macosx/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-macosx/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "scl3",
+    "db_name": "buildbot-master37.srv.releng.scl3.mozilla.com:/builds/buildbot/tests1-macosx/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master37.srv.releng.scl3.mozilla.com",
+    "http_port": 8201,
+    "limit_platforms": [
+        "macosx",
+        "macosx64"
+    ],
+    "master_dir": "/builds/buildbot/tests1-macosx/master",
+    "name": "bm37-tests1-macosx",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-macosx/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-macosx",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-macosx/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-macosx/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-macosx/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-macosx/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-macosx/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "scl3",
+    "db_name": "buildbot-master38.srv.releng.scl3.mozilla.com:/builds/buildbot/tests1-macosx/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master38.srv.releng.scl3.mozilla.com",
+    "http_port": 8201,
+    "limit_platforms": [
+        "macosx",
+        "macosx64"
+    ],
+    "master_dir": "/builds/buildbot/tests1-macosx/master",
+    "name": "bm38-tests1-macosx",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-macosx/tools"
   }
 ]
