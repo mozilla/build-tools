@@ -1,28 +1,30 @@
 from copy import copy
-import os, re
+import os
+import re
 from util.algorithms import getChunk
+
 
 class UpdateVerifyError(Exception):
     pass
+
 
 class UpdateVerifyConfig(object):
     comment_regex = re.compile("^#")
     key_write_order = ("release", "product", "platform", "build_id", "locales",
                        "channel", "patch_types", "from", "aus_server",
-                       "ftp_server", "to")
-    global_keys = ("product", "platform", "channel", "aus_server", "ftp_server",
-                   "to")
-    release_keys = ("release", "build_id", "locales", "patch_types", "from")
-    first_only_keys = ("from", "aus_server", "ftp_server", "to")
+                       "ftp_server_from", "ftp_server_to", "to")
+    global_keys = ("product", "platform", "channel", "aus_server", "to")
+    release_keys = ("release", "build_id", "locales", "patch_types", "from",
+                    "ftp_server_from", "ftp_server_to")
+    first_only_keys = ("from", "aus_server", "to")
     compare_attrs = global_keys + ("releases",)
 
     def __init__(self, product=None, platform=None, channel=None,
-                 aus_server=None, ftp_server=None, to=None):
+                 aus_server=None, to=None):
         self.product = product
         self.platform = platform
         self.channel = channel
         self.aus_server = aus_server
-        self.ftp_server = ftp_server
         self.to = to
         self.releases = []
 
@@ -50,7 +52,7 @@ class UpdateVerifyConfig(object):
 
     def _addEntry(self, entry, first):
         releaseKeys = {}
-        for k,v in entry.items():
+        for k, v in entry.items():
             if k in self.global_keys:
                 setattr(self, k, entry[k])
             elif k in self.release_keys:
@@ -64,8 +66,7 @@ class UpdateVerifyConfig(object):
     def read(self, config):
         f = open(config)
         # Only the first non-comment line of an update verify config should
-        # have a "from", "ausServer", and "ftpServer". Ignore any subsequent
-        # lines with them.
+        # have a "from" and"ausServer". Ignore any subsequent lines with them.
         first = True
         for line in f.readlines():
             # Skip comment lines
@@ -87,17 +88,18 @@ class UpdateVerifyConfig(object):
                 if value is not None:
                     fh.write(key)
                     fh.write("=")
-                    if isinstance(value, basestring):
-                        fh.write('"%s" ' % str(value))
-                    else:
+                    if isinstance(value, (list, tuple)):
                         fh.write('"%s" ' % " ".join(value))
+                    else:
+                        fh.write('"%s" ' % str(value))
             # Rewind one character to avoid having a trailing space
             fh.seek(-1, os.SEEK_CUR)
             fh.write("\n")
             first = False
 
     def addRelease(self, release=None, build_id=None, locales=[],
-                   patch_types=['complete'], from_path=None):
+                   patch_types=['complete'], from_path=None,
+                   ftp_server_from=None, ftp_server_to=None):
         """Locales and patch_types can be passed as either a string or a list.
            If a string is passed, they will be converted to a list for internal
            storage"""
@@ -107,13 +109,14 @@ class UpdateVerifyConfig(object):
             locales = sorted(list(locales.split()))
         if isinstance(patch_types, basestring):
             patch_types = list(patch_types.split())
-
         self.releases.append({
             "release": release,
             "build_id": build_id,
             "locales": locales,
             "patch_types": patch_types,
-            "from": from_path
+            "from": from_path,
+            "ftp_server_from": ftp_server_from,
+            "ftp_server_to": ftp_server_to,
         })
 
     def addLocaleToRelease(self, build_id, locale, from_path=None):
@@ -149,7 +152,7 @@ class UpdateVerifyConfig(object):
 
         newConfig = UpdateVerifyConfig(self.product, self.platform,
                                        self.channel, self.aus_server,
-                                       self.ftp_server, self.to)
+                                       self.to)
         for t in allTests:
             build_id, locale, from_path = t
             if from_path == "None":
@@ -157,6 +160,8 @@ class UpdateVerifyConfig(object):
             r = self.getRelease(build_id, from_path)
             try:
                 newConfig.addRelease(r["release"], build_id, locales=[],
+                                     ftp_server_from=r["ftp_server_from"],
+                                     ftp_server_to=r["ftp_server_to"],
                                      patch_types=r["patch_types"], from_path=from_path)
             except UpdateVerifyError:
                 pass

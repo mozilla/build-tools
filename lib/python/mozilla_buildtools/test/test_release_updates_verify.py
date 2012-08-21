@@ -24,14 +24,16 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         self.uvc.channel = "betatest"
         self.uvc.platform = "bar"
         self.uvc.aus_server = "aus"
-        self.uvc.ftp_server = "ftp"
+        self.uvc.ftp_server_from = "ftp"
+        self.uvc.ftp_server_to = "ftp"
         self.uvc.to = "/firefox/4.0rc2.tar.bz2"
         uvc2 = UpdateVerifyConfig()
         uvc2.product = "foo"
         uvc2.channel = "betatest"
         uvc2.platform = "bar"
         uvc2.aus_server = "aus"
-        uvc2.ftp_server = "ftp"
+        uvc2.ftp_server_form = "ftp"
+        uvc2.ftp_server_to = "ftp"
         uvc2.to = "/firefox/4.0rc2.tar.bz2"
         self.assertEquals(self.uvc, uvc2)
 
@@ -48,57 +50,79 @@ class TestUpdateVerifyConfig(unittest.TestCase):
                 "build_id": 555,
                 "locales": ["af", "de"],
                 "patch_types": ["partial", "complete"],
-                "from": "/pub/firefox/foo.bz2"
+                "from": "/pub/firefox/foo.bz2",
+                "ftp_server_from": "from",
+                "ftp_server_to": "to"
             }
         ]
         self.uvc.addRelease("4.0", build_id=555, locales=["af", "de"],
                             patch_types=["partial", "complete"],
-                            from_path="/pub/firefox/foo.bz2")
+                            from_path="/pub/firefox/foo.bz2",
+                            ftp_server_from="from", ftp_server_to="to")
         self.assertEquals(self.uvc.releases, releases)
 
     def testRead(self):
+        ftp_server_from = "stage.mozilla.org/firefox"
+        ftp_server_to = "stage.mozilla.org/firefox"
         uvc2 = UpdateVerifyConfig()
         uvc2.product = "Firefox"
         uvc2.platform = "Linux_x86-gcc3"
         uvc2.channel = "betatest"
         uvc2.aus_server = "https://aus2.mozilla.org"
-        uvc2.ftp_server = "stage.mozilla.org/firefox"
         uvc2.to = "/firefox/4.0rc2.tar.bz2"
         uvc2.addRelease("4.0", build_id="888",
                         locales=["af", "de", "en-US", "ja", "zh-TW"],
                         patch_types=["partial", "complete"],
-                        from_path="/firefox/4.0rc1.tar.bz2")
+                        from_path="/firefox/4.0rc1.tar.bz2",
+                        ftp_server_from=ftp_server_from,
+                        ftp_server_to=ftp_server_to)
         uvc2.addRelease("4.0b12", build_id="777",
                         locales=["af", "en-US"],
-                        from_path="/firefox/4.0b12.tar.bz2")
+                        from_path="/firefox/4.0b12.tar.bz2",
+                        ftp_server_from=ftp_server_from,
+                        ftp_server_to=ftp_server_to)
         uvc2.addRelease("4.0b12", build_id="777",
-                        locales=["de", "ja", "zh-TW"])
-        uvc2.addRelease("3.7a1", build_id="666", locales=["en-US"])
+                        locales=["de", "ja", "zh-TW"],
+                        ftp_server_from=ftp_server_from,
+                        ftp_server_to=ftp_server_to)
+        uvc2.addRelease("3.7a1", build_id="666", locales=["en-US"],
+                        ftp_server_from=ftp_server_from,
+                        ftp_server_to=ftp_server_to)
 
         self.uvc.read(self.config)
         self.assertEquals(self.uvc, uvc2)
 
     def testWrite(self):
+        ftp_server_from = "stage.mozilla.org/firefox"
+        ftp_server_to = "stage.mozilla.org/firefox"
         self.uvc.product = "Firefox"
         self.uvc.platform = "Linux_x86-gcc3"
         self.uvc.channel = "betatest"
         self.uvc.aus_server = "https://aus2.mozilla.org"
-        self.uvc.ftp_server = "stage.mozilla.org/firefox"
         self.uvc.to = "/firefox/4.0rc2.tar.bz2"
         self.uvc.addRelease("4.0", build_id="888",
                         locales=("af", "de", "en-US", "ja", "zh-TW"),
                         patch_types=("partial", "complete"),
-                        from_path="/firefox/4.0rc1.tar.bz2")
+                        from_path="/firefox/4.0rc1.tar.bz2",
+                        ftp_server_from=ftp_server_from,
+                        ftp_server_to=ftp_server_to)
         self.uvc.addRelease("4.0b12", build_id="777",
                         locales=["af", "en-US"],
-                        from_path="/firefox/4.0b12.tar.bz2")
+                        from_path="/firefox/4.0b12.tar.bz2",
+                        ftp_server_from=ftp_server_from,
+                        ftp_server_to=ftp_server_to)
         self.uvc.addRelease("4.0b12", build_id="777",
-                        locales=("de", "ja", "zh-TW"))
-        self.uvc.addRelease("3.7a1", build_id="666", locales=("en-US",))
+                        locales=("de", "ja", "zh-TW"),
+                        ftp_server_from=ftp_server_from,
+                        ftp_server_to=ftp_server_to)
+        self.uvc.addRelease("3.7a1", build_id="666", locales=("en-US",),
+                        ftp_server_from=ftp_server_from,
+                        ftp_server_to=ftp_server_to)
 
         self.uvc.write(self.tmpfile)
         self.tmpfile.close()
-        self.assertEquals(md5(open(self.config).read()).hexdigest(), md5(open(self.tmpfilename).read()).hexdigest())
+        self.assertEquals(md5(open(self.config).read()).hexdigest(),
+                          md5(open(self.tmpfilename).read()).hexdigest())
 
     def testReadInvalidKey(self):
         invalidLine = 'foo="bar"'
@@ -113,21 +137,26 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         self.assertRaises(UpdateVerifyError, self.uvc._parseLine, invalidLine)
 
     def testGetChunk(self):
+        ftp_server_from = "stage.mozilla.org/firefox"
+        ftp_server_to = "stage.mozilla.org/firefox"
         self.uvc.read(self.config)
         uvc2 = UpdateVerifyConfig()
         uvc2.product = "Firefox"
         uvc2.platform = "Linux_x86-gcc3"
         uvc2.channel = "betatest"
         uvc2.aus_server = "https://aus2.mozilla.org"
-        uvc2.ftp_server = "stage.mozilla.org/firefox"
         uvc2.to = "/firefox/4.0rc2.tar.bz2"
         uvc2.addRelease("4.0", build_id="888",
                         locales=["af", "de", "en-US"],
                         patch_types=["partial", "complete"],
-                        from_path="/firefox/4.0rc1.tar.bz2")
+                        from_path="/firefox/4.0rc1.tar.bz2",
+                        ftp_server_from=ftp_server_from,
+                        ftp_server_to=ftp_server_to)
         uvc2.addRelease("4.0b12", build_id="777",
                         locales=["de", "ja"],
                         patch_types=["complete"],
+                        ftp_server_from=ftp_server_from,
+                        ftp_server_to=ftp_server_to,
                         from_path=None)
         chunkedConfig = self.uvc.getChunk(chunks=3, thisChunk=1)
         self.assertEquals(chunkedConfig, uvc2)
@@ -137,7 +166,8 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         self.uvc.platform = "Linux_x86-gcc3"
         self.uvc.channel = "betatest"
         self.uvc.aus_server = "https://aus2.mozilla.org"
-        self.uvc.ftp_server = "stage.mozilla.org/firefox"
+        self.uvc.ftp_server_from = "stage.mozilla.org/firefox"
+        self.uvc.ftp_server_to = "stage.mozilla.org/firefox"
         self.uvc.to = "/firefox/Firefox 4.0 Beta 2.exe"
         self.uvc.addRelease("4.0b1", build_id="222",
                             locales=["en-US", "ja", "zh-TW"],
@@ -148,7 +178,8 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         uvc2.platform = "Linux_x86-gcc3"
         uvc2.channel = "betatest"
         uvc2.aus_server = "https://aus2.mozilla.org"
-        uvc2.ftp_server = "stage.mozilla.org/firefox"
+        uvc2.ftp_server_from = "stage.mozilla.org/firefox"
+        uvc2.ftp_server_to = "stage.mozilla.org/firefox"
         uvc2.to = "/firefox/Firefox 4.0 Beta 2.exe"
         uvc2.addRelease("4.0b1", build_id="222",
                         locales=["en-US", "ja"],
@@ -178,39 +209,49 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         self.assertEquals(self.uvc.getRelease("123", None), {})
 
     def testGetFullReleaseTests(self):
+        ftp_server_from = "stage.mozilla.org/firefox"
+        ftp_server_to = "stage.mozilla.org/firefox"
         self.uvc.read(self.config)
         uvc2 = UpdateVerifyConfig()
         uvc2.product = "Firefox"
         uvc2.platform = "Linux_x86-gcc3"
         uvc2.channel = "betatest"
         uvc2.aus_server = "https://aus2.mozilla.org"
-        uvc2.ftp_server = "stage.mozilla.org/firefox"
         uvc2.to = "/firefox/4.0rc2.tar.bz2"
         uvc2.addRelease("4.0", build_id="888",
                         locales=["af", "de", "en-US", "ja", "zh-TW"],
                         patch_types=["partial", "complete"],
-                        from_path="/firefox/4.0rc1.tar.bz2")
+                        from_path="/firefox/4.0rc1.tar.bz2",
+                        ftp_server_from=ftp_server_from,
+                        ftp_server_to=ftp_server_to)
         uvc2.addRelease("4.0b12", build_id="777",
                         locales=["af", "en-US"],
                         patch_types=["complete"],
-                        from_path="/firefox/4.0b12.tar.bz2")
+                        from_path="/firefox/4.0b12.tar.bz2",
+                        ftp_server_from=ftp_server_from,
+                        ftp_server_to=ftp_server_to)
         self.assertEquals(self.uvc.getFullReleaseTests(), uvc2.releases)
 
     def testGetQuickReleaseTests(self):
+        ftp_server_from = "stage.mozilla.org/firefox"
+        ftp_server_to = "stage.mozilla.org/firefox"
         self.uvc.read(self.config)
         uvc2 = UpdateVerifyConfig()
         uvc2.product = "Firefox"
         uvc2.platform = "Linux_x86-gcc3"
         uvc2.channel = "betatest"
         uvc2.aus_server = "https://aus2.mozilla.org"
-        uvc2.ftp_server = "stage.mozilla.org/firefox"
         uvc2.to = "/firefox/4.0rc2.tar.bz2"
         uvc2.addRelease("4.0b12", build_id="777",
                         locales=["de", "ja", "zh-TW"],
                         patch_types=["complete"],
-                        from_path=None)
+                        from_path=None,
+                        ftp_server_from=ftp_server_from,
+                        ftp_server_to=ftp_server_to)
         uvc2.addRelease("3.7a1", build_id="666",
                         locales=["en-US"],
                         patch_types=["complete"],
-                        from_path=None)
+                        from_path=None,
+                        ftp_server_from=ftp_server_from,
+                        ftp_server_to=ftp_server_to)
         self.assertEquals(self.uvc.getQuickReleaseTests(), uvc2.releases)

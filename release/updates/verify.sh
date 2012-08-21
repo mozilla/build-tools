@@ -6,7 +6,8 @@
 . ../common/download_builds.sh
 . ../common/check_updates.sh
 
-ftp_server="http://stage.mozilla.org/pub/mozilla.org"
+ftp_server_to="http://stage.mozilla.org/pub/mozilla.org"
+ftp_server_from="http://stage.mozilla.org/pub/mozilla.org"
 aus_server="https://aus2.mozilla.org"
 to=""
 
@@ -133,7 +134,7 @@ do
         fi
         from_path=`echo $from | sed "s/%locale%/${locale}/"`
         to_path=`echo $to | sed "s/%locale%/${locale}/"`
-        download_builds "${ftp_server}/${from_path}" "${ftp_server}/${to_path}"
+        download_builds "${ftp_server_from}/${from_path}" "${ftp_server_to}/${to_path}"
         err=$?
         if [ "$err" != "0" ]; then
           echo "FAIL: download_builds returned non-zero exit code: $err"

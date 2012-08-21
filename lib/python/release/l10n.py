@@ -70,7 +70,8 @@ def getL10nRepositories(fileName, l10nRepoPath, relbranch=None):
 
 
 def makeReleaseRepackUrls(productName, brandName, version, platform,
-                          locale='en-US', signed=False):
+                          locale='en-US', signed=False,
+                          exclude_secondary=False):
     longVersion = version
     builds = {}
     platformDir = buildbot2ftp(platform)
@@ -90,10 +91,11 @@ def makeReleaseRepackUrls(productName, brandName, version, platform,
             if not signed:
                 prefix.append('unsigned')
             prefix.extend([platformDir, locale])
-            builds[filename] = '/'.join(
-                [p.strip('/') for p in 
-                 prefix + ['%s-%s.zip' % (productName, version)]]
-            )
+            if not exclude_secondary:
+                builds[filename] = '/'.join(
+                    [p.strip('/') for p in
+                     prefix + ['%s-%s.zip' % (productName, version)]]
+                )
             builds[instname] = '/'.join(
                 [p.strip('/') for p in 
                  prefix + ['%s Setup %s.exe' % (brandName, longVersion)]]
