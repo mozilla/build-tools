@@ -52,7 +52,7 @@ class TuxedoEntrySubmitter(object):
 
     def __init__(self, config, productName, version, tuxedoServerUrl,
                  brandName=None, bouncerProductName=None, shippedLocales=None,
-                 addMARs=True, oldVersion=None, username=None, password=None,
+                 partialVersions=None, username=None, password=None,
                  verbose=True, dryRun=False, platforms=None, milestone=None,
                  bouncerProductSuffix=None):
         self.config = config
@@ -63,13 +63,13 @@ class TuxedoEntrySubmitter(object):
         self.brandName = brandName or productName.capitalize()
         self.bouncerProductName = bouncerProductName or productName.capitalize()
         self.shippedLocales = shippedLocales
-        self.addMARs = addMARs
-        self.oldVersion = oldVersion
+        self.partialVersions = partialVersions
         self.username = username
         self.password = password
         self.verbose = verbose
         self.dryRun = dryRun
         self.platforms = platforms
+        self.addMARs = False
 
         if not self.platforms:
             self.platforms = getPlatforms()
@@ -86,9 +86,11 @@ class TuxedoEntrySubmitter(object):
                                                    bouncerProductSuffix)
         self.complete_mar_bouncer_product_name = '%s-%s-Complete' % \
             (self.bouncerProductName, self.version)
-        self.partial_mar_bouncer_product_name = '%s-%s-Partial-%s' % \
-            (self.bouncerProductName, self.version,
-             self.oldVersion)
+        self.partial_mar_bouncer_product_names = {}
+        for previousVersion in self.partialVersions:
+            self.addMARs = True
+            self.partial_mar_bouncer_product_names[previousVersion] = '%s-%s-Partial-%s' % \
+                (self.bouncerProductName, self.version, previousVersion)
         self.read_config()
 
     def read_config(self):
@@ -97,7 +99,7 @@ class TuxedoEntrySubmitter(object):
 
 [DEFAULT]
 complete_mar_template = /%(product)s/releases/%(version)s/update/%(ftp_platform)s/%(locale)s/%(product)s-%(version)s.complete.mar
-partial_mar_template = /%(product)s/releases/%(version)s/update/%(ftp_platform)s/%(locale)s/%(product)s-%(old_version)s-%(version)s.partial.mar
+partial_mar_template = /%(product)s/releases/%(version)s/update/%(ftp_platform)s/%(locale)s/%(product)s-%(previous_version)s-%(version)s.partial.mar
 
 [win32]
 full_product_template = /%(product)s/releases/%(version)s/%(ftp_platform)s/%(locale)s/%(brandName)s Setup %(prettyVersion)s.exe
@@ -181,8 +183,9 @@ full_product_template = /%(product)s/releases/%(version)s/%(ftp_platform)s/%(loc
         self.product_add(self.bouncer_product_name)
         if self.addMARs:
             self.product_add(self.complete_mar_bouncer_product_name)
-            if self.oldVersion:
-                self.product_add(self.partial_mar_bouncer_product_name)
+            if self.partialVersions:
+                for name in self.partial_mar_bouncer_product_names.values():
+                    self.product_add(name)
 
     def add_locations(self):
         for platform in self.platforms:
@@ -192,7 +195,6 @@ full_product_template = /%(product)s/releases/%(version)s/%(ftp_platform)s/%(loc
                              'version': self.version,
                              'milestone': self.milestone,
                              'prettyVersion': getPrettyVersion(self.version),
-                             'old_version': self.oldVersion,
                              'ftp_platform': buildbot2ftp(platform),
                              'locale': ':lang'}
             # Full product
@@ -206,10 +208,11 @@ full_product_template = /%(product)s/releases/%(version)s/%(ftp_platform)s/%(loc
                                   platform, path)
 
                 # Partial MAR product
-                if self.oldVersion:
+                for previousVersion in self.partialVersions:
+                    template_dict['previous_version'] = previousVersion
                     path = self.partial_mar_template[platform] % template_dict
-                    self.location_add(self.partial_mar_bouncer_product_name,
-                                      platform, path)
+                    name = self.partial_mar_bouncer_product_names[previousVersion]
+                    self.location_add(name, platform, path)
 
     def submit(self):
         self.add_products()
@@ -239,11 +242,8 @@ def getOptions():
                       help="Bouncer product suffix")
     parser.add_option("-l", "--shipped-locales", dest="shippedLocales",
                       help="shipped-locales file location")
-    parser.add_option("-m", "--add-mars", action="store_true",
-                      dest="addMARs", default=False,
-                      help="Add MAR entries")
-    parser.add_option("-o", "--old-version", dest="oldVersion",
-                      help="Old product version")
+    parser.add_option("--partial-version", dest="partialVersions", action="append",
+                      default=[], help="Old product version")
     parser.add_option("--platform", action="append",
                       dest="platforms",
                       help="Platform(s) to be processed")
@@ -293,8 +293,7 @@ def main():
                                   brandName=options.brandName,
                                   bouncerProductName=options.bouncerProductName,
                                   shippedLocales=options.shippedLocales,
-                                  addMARs=options.addMARs,
-                                  oldVersion=options.oldVersion,
+                                  partialVersions=options.partialVersions,
                                   username=username,
                                   password=password,
                                   verbose=options.verbose,
