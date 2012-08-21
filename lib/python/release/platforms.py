@@ -23,12 +23,31 @@ sl_platform_map = {'win32': 'win32', 'win64': 'win64', 'macosx': 'osx',
 update_platform_map = {
     'linux': ['Linux_x86-gcc3'],
     'linux64': ['Linux_x86_64-gcc3'],
-    'macosx': ['Darwin_Universal-gcc3', 'Darwin_x86-gcc3-u-ppc-i386',
-               'Darwin_ppc-gcc3-u-ppc-i386'],
-    'macosx64': ['Darwin_x86_64-gcc3', 'Darwin_x86-gcc3-u-i386-x86_64',
-                 'Darwin_x86_64-gcc3-u-i386-x86_64'],
+    'macosx64': ['Darwin_x86-gcc3-u-i386-x86_64', 'Darwin_x86_64-gcc3-u-i386-x86_64'],
     'win32': ['WINNT_x86-msvc'],
     'win64': ['WINNT_x86_64-msvc'],
+}
+
+# These FTP -> other mappings are provided so that things interpreting patcher
+# configs can figure update/bouncer platforms without using the Buildbot
+# platform as an intermediary. (It's difficult to do that, because ftp:buildbot
+# is a many:1 mapping, so some guesswork ends up being involved.) In the future
+# when we redesign the patcher configs we can use Buildbot platform in them and
+# rid ourselves of these mappings. (bug 778125)
+ftp_update_platform_map = {
+    'linux-i686': update_platform_map['linux'],
+    'linux-x86_64': update_platform_map['linux64'],
+    'mac': update_platform_map['macosx64'],
+    'win32': update_platform_map['win32'],
+    'win64': update_platform_map['win64'],
+}
+
+ftp_bouncer_platform_map = {
+    'linux-i686': 'linux',
+    'linux-x86_64': 'linux64',
+    'mac': 'osx',
+    'win32': 'win',
+    'win64': 'win64',
 }
 
 def buildbot2bouncer(platform):
@@ -50,6 +69,12 @@ def shippedlocales2buildbot(platform):
 
 def buildbot2updatePlatforms(platform):
     return update_platform_map.get(platform, [platform])
+
+def ftp2updatePlatforms(platform):
+    return ftp_update_platform_map.get(platform, platform)
+
+def ftp2bouncer(platform):
+    return ftp_bouncer_platform_map.get(platform, platform)
 
 def getPlatformLocales(shipped_locales, platforms):
     platform_locales = {}
