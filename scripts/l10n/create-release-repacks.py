@@ -30,8 +30,8 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                   mozconfigPath, objdir, makeDirs, appName, locales, product,
                   version, buildNumber, stageServer, stageUsername, stageSshKey,
                   compareLocalesRepo, merge, platform, brand,
-                  generatePartials=False, oldVersion=None, 
-                  oldBuildNumber=None, appVersion=None):
+                  generatePartials=False, partialUpdates=None,
+                  appVersion=None):
     sourceRepoName = path.split(sourceRepo)[-1]
     localeSrcDir = path.join(sourceRepoName, objdir, appName, "locales")
     # Even on Windows we need to use "/" as a separator for this because
@@ -76,20 +76,21 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
     failed = []
     for l in locales:
         try:
-            prevMar = None
             if generatePartials:
-                prevMar = retry(
-                    downloadUpdateIgnore404,
-                    args=(stageServer, product, oldVersion, oldBuildNumber,
-                          platform, l)
-                )
+                for oldVersion in partialUpdates:
+                    oldBuildNumber = partialUpdates[oldVersion]['buildNumber']
+                    partialUpdates[oldVersion]['mar'] = retry(
+                        downloadUpdateIgnore404,
+                        args=(stageServer, product, oldVersion, oldBuildNumber,
+                            platform, l)
+                    )
             repackLocale(locale=l, l10nRepoDir=l10nRepoDir,
                          l10nBaseRepo=l10nBaseRepo, revision=revision,
                          localeSrcDir=localeSrcDir, l10nIni=l10nIni,
                          compareLocalesRepo=compareLocalesRepo, env=env,
-                         merge=merge, prevMar=prevMar,
+                         merge=merge,
                          productName=product, platform=platform,
-                         version=version, oldVersion=oldVersion)
+                         version=version, partialUpdates=partialUpdates)
         except Exception, e:
             failed.append((l, format_exc()))
 
@@ -229,6 +230,5 @@ if __name__ == "__main__":
         platform=options.platform,
         brand=brandName,
         generatePartials=options.generatePartials,
-        oldVersion=releaseConfig["oldVersion"],
-        oldBuildNumber=releaseConfig["oldBuildNumber"],
+        partialUpdates=releaseConfig["partialUpdates"],
     )

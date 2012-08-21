@@ -60,8 +60,8 @@ def l10nRepackPrep(sourceRepoName, objdir, mozconfigPath,
 
 def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
                  l10nIni, compareLocalesRepo, env, merge=True,
-                 prevMar=None, productName=None, platform=None,
-                 version=None, oldVersion=None):
+                 productName=None, platform=None,
+                 version=None, partialUpdates=None):
     repo = "/".join([l10nBaseRepo, locale])
     localeDir = path.join(l10nRepoDir, locale)
     retry(mercurial, args=(repo, localeDir))
@@ -81,43 +81,47 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
         env["MOZ_PKG_PLATFORM"] = "mac"
     run_cmd(["make", "installers-%s" % locale], cwd=localeSrcDir, env=env)
     UPLOAD_EXTRA_FILES = []
-    if prevMar:
-        nativeDistDir = path.normpath(path.abspath(
-            path.join(localeSrcDir, '../../%sdist' % mozillaDir)))
-        posixDistDir = windows2msys(nativeDistDir)
-        mar = '%s/host/bin/mar' % posixDistDir
-        mbsdiff = '%s/host/bin/mbsdiff' % posixDistDir
-        current = '%s/current' % posixDistDir
-        previous = '%s/previous' % posixDistDir
-        updateDir = 'update/%s/%s' % (buildbot2ftp(platform), locale)
-        updateAbsDir = '%s/%s' % (posixDistDir, updateDir)
-        current_mar = '%s/%s-%s.complete.mar' % (updateAbsDir, productName, version)
+    nativeDistDir = path.normpath(path.abspath(
+        path.join(localeSrcDir, '../../%sdist' % mozillaDir)))
+    posixDistDir = windows2msys(nativeDistDir)
+    mar = '%s/host/bin/mar' % posixDistDir
+    mbsdiff = '%s/host/bin/mbsdiff' % posixDistDir
+    current = '%s/current' % posixDistDir
+    previous = '%s/previous' % posixDistDir
+    updateDir = 'update/%s/%s' % (buildbot2ftp(platform), locale)
+    updateAbsDir = '%s/%s' % (posixDistDir, updateDir)
+    current_mar = '%s/%s-%s.complete.mar' % (updateAbsDir, productName, version)
+    unwrap_full_update = '../../../tools/update-packaging/unwrap_full_update.pl'
+    make_incremental_update = '../../tools/update-packaging/make_incremental_update.sh'
+    prevMarDir = '../../../../'
+    if mozillaDir:
+        unwrap_full_update = '../../../../%stools/update-packaging/unwrap_full_update.pl' % mozillaDir
+        make_incremental_update = '../../../%stools/update-packaging/make_incremental_update.sh' % mozillaDir
+        prevMarDir = '../../../../../'
+    env['MAR'] = mar
+    env['MBSDIFF'] = mbsdiff
+
+    run_cmd(['rm', '-rf', current])
+    run_cmd(['mkdir', current])
+    run_cmd(['perl', unwrap_full_update, current_mar],
+            cwd=path.join(nativeDistDir, 'current'), env=env)
+    for oldVersion in partialUpdates:
         partial_mar_name = '%s-%s-%s.partial.mar' % (productName, oldVersion,
-                                                     version)
+                                                    version)
         partial_mar = '%s/%s' % (updateAbsDir, partial_mar_name)
         UPLOAD_EXTRA_FILES.append('%s/%s' % (updateDir, partial_mar_name))
-        env['MAR'] = mar
-        env['MBSDIFF'] = mbsdiff
-        run_cmd(['rm', '-rf', previous, current])
-        run_cmd(['mkdir', previous, current])
-        unwrap_full_update = '../../../tools/update-packaging/unwrap_full_update.pl'
-        make_incremental_update = '../../tools/update-packaging/make_incremental_update.sh'
-        prevMarDir = '../../../../'
-        if mozillaDir:
-            unwrap_full_update = '../../../../%stools/update-packaging/unwrap_full_update.pl' % mozillaDir
-            make_incremental_update = '../../../%stools/update-packaging/make_incremental_update.sh' % mozillaDir
-            prevMarDir = '../../../../../'
+        run_cmd(['rm', '-rf', previous])
+        run_cmd(['mkdir', previous])
+        prevMar = partialUpdates[oldVersion]['mar']
         run_cmd(['perl', unwrap_full_update, '%s/%s' % (prevMarDir, prevMar)],
                 cwd=path.join(nativeDistDir, 'previous'), env=env)
-        run_cmd(['perl', unwrap_full_update, current_mar],
-                cwd=path.join(nativeDistDir, 'current'), env=env)
         run_cmd(['bash', make_incremental_update, partial_mar, previous,
-                 current], cwd=nativeDistDir, env=env)
+                current], cwd=nativeDistDir, env=env)
         if os.environ.get('MOZ_SIGN_CMD'):
             run_cmd(['bash', '-c',
-                     '%s -f mar -f gpg "%s"' %
-                     (os.environ['MOZ_SIGN_CMD'], partial_mar)],
-                     env=env)
+                    '%s -f mar -f gpg "%s"' %
+                    (os.environ['MOZ_SIGN_CMD'], partial_mar)],
+                    env=env)
             UPLOAD_EXTRA_FILES.append('%s/%s.asc' % (updateDir, partial_mar_name))
 
     env['UPLOAD_EXTRA_FILES'] = ' '.join(UPLOAD_EXTRA_FILES)
