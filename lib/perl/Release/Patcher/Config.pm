@@ -133,24 +133,17 @@ sub BumpFilePath {
     my $version = $args{'version'};
     my $oldVersion = $args{'oldVersion'};
 
-    # we need an escaped copy of oldVersion so we can accurately match
-    # filenames
-    my $escapedOldVersion = $oldVersion;
-    $escapedOldVersion =~ s/\./\\./g;
-    my $escapedVersion = $version;
-    $escapedVersion =~ s/\./\\./g;
-
     # strip out everything up to and including 'buildN/'
     my $newPath = $oldFilePath;
     $newPath =~ s/.*\/build\d+\///;
     # We need to handle partials and complete MARs differently
     if ($newPath =~ m/\.partial\.mar$/) {
-        $newPath =~ s/($oldMarName|$marName)-.+?-($escapedOldVersion|$escapedVersion)\.partial
+        $newPath =~ s/($oldMarName|$marName)-(.+?)\.partial
                      /$marName-$oldVersion-$version.partial/x
                      or die("ASSERT: BumpFilePath() - Could not bump path: " .
                             "'$oldFilePath' from '$oldVersion' to '$version'");
     } elsif ($newPath =~ m/\.complete\.mar$/) {
-        $newPath =~ s/($oldMarName|$marName)-($escapedOldVersion|$escapedVersion)\.complete
+        $newPath =~ s/($oldMarName|$marName)-(.+?)\.complete
                      /$marName-$version.complete/x
                      or die("ASSERT: BumpFilePath() - Could not bump path: " .
                             "'$oldFilePath' from '$oldVersion' to '$version'");

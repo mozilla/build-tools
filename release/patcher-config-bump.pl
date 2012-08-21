@@ -31,6 +31,7 @@ sub ProcessArgs {
     GetOptions(
         \%config,
         "product|p=s", "brand|r=s", "version|v=s", "old-version|o=s",
+        "partial-version=s@",
         "app-version|a=s", "build-number|b=s", "patcher-config|c=s",
         "staging-server|t=s", "ftp-server|f=s", "bouncer-server|d=s",
         "use-beta-channel|u", "shipped-locales|l=s", "releasenotes-url|n=s",
@@ -49,7 +50,8 @@ Options:
   -v The current version of the product (eg. 3.1a1, 3.0rc1)
   -a The current 'app version' of the product (eg. 3.1a1, 3.0). If not
      specified is assumed to be the same as version
-  -o The previous version of the product (eg. 3.0, 3.0b5)
+  --partial-version An older version (that is already in the patcher config)
+     that should receive a partial update.
   -b The current build number of this release. (eg, 1, 2, 3)
   -c The path and filename of the config file to be bumped.
   -f The FTP server to serve beta builds from. Typically is ftp.mozilla.org
@@ -136,6 +138,7 @@ sub BumpPatcherConfig {
     my $brand = $config{'brand'};
     my $version = $config{'version'};
     my $oldVersion = $config{'old-version'};
+    my @partialVersions = @{$config{'partial-version'}};
     my $appVersion = $config{'app-version'};
     my $build = $config{'build-number'};
     my $patcherConfig = $config{'patcher-config'};
@@ -237,66 +240,71 @@ sub BumpPatcherConfig {
     }
 
     my $buildStr = 'build' . $build;
+    my @oldPartialVersions = keys(%{$currentUpdateObj->{'partials'}});
+    my $oldPaths = $currentUpdateObj->{'partials'}->{$oldPartialVersions[0]};
 
-    my $partialUpdate = {};
-    $partialUpdate->{'url'} = 'http://' . $bouncerServer . '/?product=' .
-                              $product. '-' . $version . '-partial-' . 
-                              $oldVersion .
-                             '&os=%bouncer-platform%&lang=%locale%';
+    $currentUpdateObj->{'partials'} = {};
+    for my $partialVersion (@partialVersions) {
+        my $partialUpdate = {};
+        $partialUpdate->{'url'} = 'http://' . $bouncerServer . '/?product=' .
+                                $product. '-' . $version . '-partial-' .
+                                $partialVersion .
+                                '&os=%bouncer-platform%&lang=%locale%';
 
-    my $pPath = BumpFilePath(
-      oldFilePath => $currentUpdateObj->{'partial'}->{'path'},
-      product => $product,
-      marName => $config{'marname'},
-      oldMarName => $config{'oldmarname'},
-      version => $version,
-      oldVersion => $oldVersion
-    );
-    $partialUpdate->{'path'} = catfile($product, 'nightly', $version .
-                               '-candidates', $buildStr, $pPath);
-
-    my $pBetatestPath = BumpFilePath(
-      oldFilePath => $currentUpdateObj->{'partial'}->{'betatest-url'},
-      product => $product,
-      marName => $config{'marname'},
-      oldMarName => $config{'oldmarname'},
-      version => $version,
-      oldVersion => $oldVersion
-    );
-    $partialUpdate->{'betatest-url'} =
-     'http://' . $stagingServer. '/pub/mozilla.org/' . $product . 
-     '/nightly/' .  $version . '-candidates/' . $buildStr . '/' .
-     $pBetatestPath;
-    $partialUpdate->{'esrtest-url'} = $partialUpdate->{'betatest-url'};
-
-    if ($useBetaChannel) {
-      my $pBetaPath;
-      if (defined($currentUpdateObj->{'partial'}->{'beta-url'})) {
-        $pBetaPath = BumpFilePath(
-          oldFilePath => $currentUpdateObj->{'partial'}->{'beta-url'},
+        my $pPath = BumpFilePath(
+          oldFilePath => $oldPaths->{'path'},
           product => $product,
           marName => $config{'marname'},
           oldMarName => $config{'oldmarname'},
           version => $version,
-          oldVersion => $oldVersion
+          oldVersion => $partialVersion
         );
-      } else {
-        # patcher-config-creator.pl ensures this exists
-        $pBetaPath = BumpFilePath(
-          oldFilePath => $currentUpdateObj->{'partial'}->{'betatest-url'},
+        $partialUpdate->{'path'} = catfile($product, 'nightly', $version .
+                                '-candidates', $buildStr, $pPath);
+
+        my $pBetatestPath = BumpFilePath(
+          oldFilePath => $oldPaths->{'betatest-url'},
           product => $product,
           marName => $config{'marname'},
           oldMarName => $config{'oldmarname'},
           version => $version,
-          oldVersion => $oldVersion
+          oldVersion => $partialVersion
         );
-      }
-      $partialUpdate->{'beta-url'} =
-       'http://' . $ftpServer . '/pub/mozilla.org/' . $product. '/nightly/' . 
-        $version . '-candidates/' . $buildStr . '/' . 
-        $pBetaPath;
+        $partialUpdate->{'betatest-url'} =
+        'http://' . $stagingServer. '/pub/mozilla.org/' . $product . 
+        '/nightly/' .  $version . '-candidates/' . $buildStr . '/' .
+        $pBetatestPath;
+        $partialUpdate->{'esrtest-url'} = $partialUpdate->{'betatest-url'};
+
+        if ($useBetaChannel) {
+        my $pBetaPath;
+        if (defined($oldPaths->{'beta-url'})) {
+            $pBetaPath = BumpFilePath(
+              oldFilePath => $oldPaths->{'beta-url'},
+              product => $product,
+              marName => $config{'marname'},
+              oldMarName => $config{'oldmarname'},
+              version => $version,
+              oldVersion => $partialVersion
+            );
+        } else {
+            # patcher-config-creator.pl ensures this exists
+            $pBetaPath = BumpFilePath(
+              oldFilePath => $oldPaths->{'betatest-url'},
+              product => $product,
+              marName => $config{'marname'},
+              oldMarName => $config{'oldmarname'},
+              version => $version,
+              oldVersion => $partialVersion
+            );
+        }
+        $partialUpdate->{'beta-url'} =
+        'http://' . $ftpServer . '/pub/mozilla.org/' . $product. '/nightly/' . 
+            $version . '-candidates/' . $buildStr . '/' . 
+            $pBetaPath;
+        }
+        $currentUpdateObj->{'partials'}{$partialVersion} = $partialUpdate;
     }
-    $currentUpdateObj->{'partial'} = $partialUpdate;
 
     # Now the same thing, only complete update
     my $completeUpdate = {};
