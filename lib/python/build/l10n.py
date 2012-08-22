@@ -106,23 +106,24 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
     run_cmd(['perl', unwrap_full_update, current_mar],
             cwd=path.join(nativeDistDir, 'current'), env=env)
     for oldVersion in partialUpdates:
-        partial_mar_name = '%s-%s-%s.partial.mar' % (productName, oldVersion,
-                                                    version)
-        partial_mar = '%s/%s' % (updateAbsDir, partial_mar_name)
-        UPLOAD_EXTRA_FILES.append('%s/%s' % (updateDir, partial_mar_name))
-        run_cmd(['rm', '-rf', previous])
-        run_cmd(['mkdir', previous])
         prevMar = partialUpdates[oldVersion]['mar']
-        run_cmd(['perl', unwrap_full_update, '%s/%s' % (prevMarDir, prevMar)],
-                cwd=path.join(nativeDistDir, 'previous'), env=env)
-        run_cmd(['bash', make_incremental_update, partial_mar, previous,
-                current], cwd=nativeDistDir, env=env)
-        if os.environ.get('MOZ_SIGN_CMD'):
-            run_cmd(['bash', '-c',
-                    '%s -f mar -f gpg "%s"' %
-                    (os.environ['MOZ_SIGN_CMD'], partial_mar)],
-                    env=env)
-            UPLOAD_EXTRA_FILES.append('%s/%s.asc' % (updateDir, partial_mar_name))
+        if prevMar:
+            partial_mar_name = '%s-%s-%s.partial.mar' % (productName, oldVersion,
+                                                        version)
+            partial_mar = '%s/%s' % (updateAbsDir, partial_mar_name)
+            UPLOAD_EXTRA_FILES.append('%s/%s' % (updateDir, partial_mar_name))
+            run_cmd(['rm', '-rf', previous])
+            run_cmd(['mkdir', previous])
+            run_cmd(['perl', unwrap_full_update, '%s/%s' % (prevMarDir, prevMar)],
+                    cwd=path.join(nativeDistDir, 'previous'), env=env)
+            run_cmd(['bash', make_incremental_update, partial_mar, previous,
+                    current], cwd=nativeDistDir, env=env)
+            if os.environ.get('MOZ_SIGN_CMD'):
+                run_cmd(['bash', '-c',
+                        '%s -f mar -f gpg "%s"' %
+                        (os.environ['MOZ_SIGN_CMD'], partial_mar)],
+                        env=env)
+                UPLOAD_EXTRA_FILES.append('%s/%s.asc' % (updateDir, partial_mar_name))
 
     env['UPLOAD_EXTRA_FILES'] = ' '.join(UPLOAD_EXTRA_FILES)
     retry(run_cmd,
