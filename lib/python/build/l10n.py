@@ -124,6 +124,9 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
                         (os.environ['MOZ_SIGN_CMD'], partial_mar)],
                         env=env)
                 UPLOAD_EXTRA_FILES.append('%s/%s.asc' % (updateDir, partial_mar_name))
+        else:
+            log.warning("Skipping partial MAR creation for %s %s" % (oldVersion,
+                       locale))
 
     env['UPLOAD_EXTRA_FILES'] = ' '.join(UPLOAD_EXTRA_FILES)
     retry(run_cmd,
