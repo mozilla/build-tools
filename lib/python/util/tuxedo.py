@@ -7,7 +7,7 @@ from release.platforms import buildbot2bouncer
 PRODUCT_INSTALLER, PRODUCT_COMPLETE_MAR, PRODUCT_PARTIAL_MAR = range(3)
 
 
-def generateBouncerProduct(bouncerProductName, version, oldVersion=None,
+def generateBouncerProduct(bouncerProductName, version, previousVersion=None,
                            productType=PRODUCT_INSTALLER):
     assert productType in (PRODUCT_INSTALLER, PRODUCT_COMPLETE_MAR,
                            PRODUCT_PARTIAL_MAR)
@@ -18,8 +18,8 @@ def generateBouncerProduct(bouncerProductName, version, oldVersion=None,
     elif productType == PRODUCT_COMPLETE_MAR:
         ret = '%s-%s-Complete' % (bouncerProductName, version)
     elif productType == PRODUCT_PARTIAL_MAR:
-        assert oldVersion, "oldVersion paramter is required for partial MARs"
-        ret = '%s-%s-Partial-%s' % (bouncerProductName, version, oldVersion)
+        assert previousVersion, "previousVersion paramter is required for partial MARs"
+        ret = '%s-%s-Partial-%s' % (bouncerProductName, version, previousVersion)
 
     return ret
 
@@ -63,7 +63,7 @@ def get_product_uptake(tuxedoServerUrl, bouncerProductName, os,
 
 
 def get_release_uptake(tuxedoServerUrl, bouncerProductName, version,
-                       platforms, oldVersion=None, checkMARs=True,
+                       platforms, partialVersions=None, checkMARs=True,
                        username=None, password=None):
     assert isinstance(platforms, (list, tuple))
     bouncerProduct = generateBouncerProduct(bouncerProductName, version)
@@ -71,10 +71,12 @@ def get_release_uptake(tuxedoServerUrl, bouncerProductName, version,
         bouncerProductName,
         version,
         productType=PRODUCT_COMPLETE_MAR)
-    bouncerPartialMARProduct = generateBouncerProduct(
-        bouncerProductName, version,
-        oldVersion,
-        productType=PRODUCT_PARTIAL_MAR)
+    bouncerPartialMARProducts = []
+    for previousVersion in partialVersions:
+        bouncerPartialMARProducts.append(generateBouncerProduct(
+            bouncerProductName, version,
+            previousVersion,
+            productType=PRODUCT_PARTIAL_MAR))
     dl = []
 
     for os in [buildbot2bouncer(x) for x in platforms]:
@@ -87,10 +89,10 @@ def get_release_uptake(tuxedoServerUrl, bouncerProductName, version,
                 tuxedoServerUrl=tuxedoServerUrl,
                 os=os, bouncerProductName=bouncerCompleteMARProduct,
                 username=username, password=password))
-            if oldVersion:
+            for product in bouncerPartialMARProducts:
                 dl.append(get_product_uptake(
                     tuxedoServerUrl=tuxedoServerUrl, os=os,
-                    bouncerProductName=bouncerPartialMARProduct,
+                    bouncerProductName=product,
                     username=username, password=password))
 
     def get_min(res):
