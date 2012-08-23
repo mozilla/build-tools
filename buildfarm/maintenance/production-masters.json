@@ -461,7 +461,7 @@
     "buildbot_version": "0.8.2",
     "datacentre": "mtv1",
     "db_name": "buildbot-master10.build.mtv1.mozilla.com:/builds/buildbot/tests1-tegra/master",
-    "enabled": false,
+    "enabled": true,
     "environment": "production",
     "hostname": "buildbot-master10.build.mtv1.mozilla.com",
     "http_port": 8201,
