@@ -347,8 +347,6 @@
     "hostname": "buildbot-master19.build.mtv1.mozilla.com",
     "http_port": 8201,
     "limit_platforms": [
-      "linux-android",
-      "android-xul",
       "android"
     ],
     "master_dir": "/builds/buildbot/tests1-tegra/master",
@@ -377,8 +375,6 @@
     "hostname": "buildbot-master20.build.mtv1.mozilla.com",
     "http_port": 8201,
     "limit_platforms": [
-      "linux-android",
-      "android-xul",
       "android"
     ],
     "master_dir": "/builds/buildbot/tests1-tegra/master",
@@ -436,8 +432,6 @@
     "hostname": "buildbot-master22.build.mtv1.mozilla.com",
     "http_port": 8201,
     "limit_platforms": [
-      "linux-android",
-      "android-xul",
       "android"
     ],
     "master_dir": "/builds/buildbot/tests1-tegra/master",
@@ -466,8 +460,6 @@
     "hostname": "buildbot-master10.build.mtv1.mozilla.com",
     "http_port": 8201,
     "limit_platforms": [
-      "linux-android",
-      "android-xul",
       "android"
     ],
     "master_dir": "/builds/buildbot/tests1-tegra/master",
@@ -559,7 +551,6 @@
     "role": "build",
     "ssh_port": 7001,
     "release_branches": ["mozilla-esr10"],
-    "mobile_release_branches": ["mozilla-esr10"],
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build1/tools"
   },
