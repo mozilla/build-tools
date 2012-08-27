@@ -11,7 +11,7 @@ import os
 from sut_lib import connect
 
 # Constants
-target_version = "1.11"
+target_version = "1.12"
 apkfilename = "sutAgentAndroid.apk"
 tegra_name = os.getenv('SUT_NAME')
 apkFoopyDirPattern =  "/builds/%(tegra_name)s"
