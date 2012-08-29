@@ -376,6 +376,9 @@ if __name__ == '__main__':
     parser.add_option("--builddir",
                       action="store", dest="builddir",
                       help="Subdir to arrange packaged unittest build paths properly.")
+    parser.add_option("--subdir",
+                      action="store", dest="builddir",
+                      help="Subdir to arrange packaged unittest build paths properly.")
     parser.add_option("--tinderbox-builds-dir",
                       action="store", dest="tinderbox_builds_dir",
                       help="Set tinderbox builds dir to build paths properly.")
