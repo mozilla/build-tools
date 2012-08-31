@@ -385,6 +385,10 @@ version   12.0
         pc = samplePatcherConfigObj
         self.assertEquals(pc.getOptionalAttrs('12.0'), {'actions': 'silent'})
 
+    def testGetFromVersions(self):
+        pc = samplePatcherConfigObj
+        self.assertEquals(sorted(pc.getFromVersions()), ['11.0', '12.0', '13.0'])
+
 class TestSubstitutePath(unittest.TestCase):
     def testNoSubstitutes(self):
         self.assertEquals(substitutePath('/foo/bar/blah', 'aaa', 'bbb'), '/foo/bar/blah')

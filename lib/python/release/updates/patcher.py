@@ -38,6 +38,16 @@ class PatcherConfig(dict):
         """Returns the value section of a node, even if it contains whitespace."""
         return n.split(" ", 1)[1].strip()
 
+    def getFromVersions(self):
+        # From versions come from both the "from" value in current-update
+        # as well as by analyzing the past-update section. The original patcher
+        # scripts go so far as to analyze the channels in the past-update
+        # sections to deal with cases where the list of channels was different
+        # in earlier versions. These days we don't have that case so we simply
+        # assume that all of the fromVersions in the past-update lines are
+        # versions that should have update paths to the latest on all channels.
+        return tuple([self['current-update']['from']] + [v[0] for v in self['past-update']])
+
     def getOptionalAttrs(self, version):
         if version not in self['release']:
             log.debug("%s not found in config" % version)
@@ -94,14 +104,8 @@ class PatcherConfig(dict):
         """
         if not self['current-update']:
             return
-        # From versions come from both the "from" value in current-update
-        # as well as by analyzing the past-update section. The original patcher
-        # scripts go so far as to analyze the channels in the past-update
-        # sections to deal with cases where the list of channels was different
-        # in earlier versions. These days we don't have that case so we simply
-        # assume that all of the fromVersions in the past-update lines are
-        # versions that should have update paths to the latest on all channels.
-        fromVersions = tuple([self['current-update']['from']] + [v[0] for v in self['past-update']])
+
+        fromVersions = self.getFromVersions()
         channels = tuple(self['current-update']['testchannel'] + self['current-update']['channel'])
 
         # Now that we know all of the versions that need updates to the latest

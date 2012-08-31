@@ -106,7 +106,7 @@ if __name__ == "__main__":
 
     partials = pc['current-update']['partials'].keys()
     # Exclude current version from update verify
-    completes = [c for c in pc['release'].keys() if c != to_version]
+    completes = pc.getFromVersions()
 
     uvc = UpdateVerifyConfig(product=app_name, platform=update_platform,
                              channel=options.channel,
