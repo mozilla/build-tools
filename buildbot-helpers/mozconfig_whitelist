@@ -7,7 +7,7 @@ whitelist = {
     'comm-beta': {},
     'nightly': {},
     }
-common_platforms = ['win32', 'linux', 'linux64', 'macosx64', 'macosx', 'android', 'android-xul', 'linux-android']
+common_platforms = ['win32', 'linux', 'linux64', 'macosx64', 'macosx', 'android', 'android-xul', 'linux-android', 'android-armv6']
 
 ## KNOWN TO BE ONLY IN NIGHTLY
 for platform in common_platforms:
@@ -40,6 +40,10 @@ whitelist['nightly']['android']            += ['ac_add_options --enable-update-c
                                                 ]
 whitelist['nightly']['android-xul']        += ['ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',
                                                'ac_add_options --enable-warnings-as-errors',
+                                                ]
+whitelist['nightly']['android-armv6']      += ['ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',
+                                               'ac_add_options --enable-warnings-as-errors',
+                                               'ac_add_options --with-ccache=/usr/bin/ccache',
                                                 ]
 whitelist['nightly']['linux-android']            += ['ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',]
 for platform in ['linux', 'linux64', 'macosx64']:
@@ -84,6 +88,7 @@ for branch in ('mozilla-beta', 'comm-beta'):
                                                 ]
     whitelist[branch]['win32']              += ['mk_add_options MOZ_PGO=1']
     whitelist[branch]['android']            += ['ac_add_options --enable-updater']
+    whitelist[branch]['android-armv6']      += ['ac_add_options --enable-updater']
     whitelist[branch]['android-xul']        += ['ac_add_options --enable-updater', 'export MOZ_MOBILE_COMPAT=Tablets']
 
 ## KNOWN ONLY IN RELEASE
