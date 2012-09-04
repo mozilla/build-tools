@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+set -x
 SCRIPTS_DIR="$(readlink -f $(dirname $0)/../..)"
 
 if [ -z "$REVISION" ]; then
@@ -12,6 +13,7 @@ fi
 
 if [ -f "$PROPERTIES_FILE" ]; then
     PYTHON="/tools/python/bin/python"
+    [ -x $PYTHON ] || PYTHON=python
     JSONTOOL="$PYTHON $SCRIPTS_DIR/buildfarm/utils/jsontool.py"
 
     builder=$($JSONTOOL -k properties.buildername $PROPERTIES_FILE)
