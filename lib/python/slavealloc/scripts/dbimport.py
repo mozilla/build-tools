@@ -32,6 +32,10 @@ def setup_argparse(subparsers):
             help="""csv of password data to import (columns: pool, distro,
             password); a distro of '*' is converted to NULL""")
 
+    subparser.add_argument('--enable', dest='enable', action='store_true',
+            default=False,
+            help="""Enable newly added masters or slaves (default is to disable)""")
+
     return subparser
 
 def process_args(subparser, args):
@@ -109,7 +113,7 @@ def main(args):
                 pb_port=int(row['pb_port']),
                 dcid=datacenters[row['datacenter']],
                 poolid=pools[row['pool']],
-                enabled=False)
+                enabled=args.enable)
             for row in masters ])
 
     if slaves:
@@ -124,7 +128,8 @@ def main(args):
                 speedid=speeds[row['speed']],
                 poolid=pools[row['pool']],
                 basedir=row['basedir'],
-                current_masterid=None)
+                current_masterid=None,
+                enabled=args.enable)
             for row in slaves ])
 
     if passwords:
