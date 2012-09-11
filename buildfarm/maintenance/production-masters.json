@@ -347,7 +347,8 @@
     "hostname": "buildbot-master19.build.mtv1.mozilla.com",
     "http_port": 8201,
     "limit_platforms": [
-      "android"
+      "android",
+      "android-armv6"
     ],
     "master_dir": "/builds/buildbot/tests1-tegra/master",
     "name": "bm19-tests1-tegra",
@@ -375,7 +376,8 @@
     "hostname": "buildbot-master20.build.mtv1.mozilla.com",
     "http_port": 8201,
     "limit_platforms": [
-      "android"
+      "android",
+      "android-armv6"
     ],
     "master_dir": "/builds/buildbot/tests1-tegra/master",
     "name": "bm20-tests1-tegra",
@@ -432,7 +434,8 @@
     "hostname": "buildbot-master22.build.mtv1.mozilla.com",
     "http_port": 8201,
     "limit_platforms": [
-      "android"
+      "android",
+      "android-armv6"
     ],
     "master_dir": "/builds/buildbot/tests1-tegra/master",
     "name": "bm22-tests1-tegra",
@@ -460,7 +463,8 @@
     "hostname": "buildbot-master10.build.mtv1.mozilla.com",
     "http_port": 8201,
     "limit_platforms": [
-      "android"
+      "android",
+      "android-armv6"
     ],
     "master_dir": "/builds/buildbot/tests1-tegra/master",
     "name": "bm10-tests1-tegra",
@@ -572,7 +576,8 @@
     "hostname": "buildbot-master29.build.scl1.mozilla.com",
     "http_port": 8201,
     "limit_platforms": [
-        "android"
+        "android",
+        "android-armv6"
     ],
     "master_dir": "/builds/buildbot/tests1-panda/master",
     "name": "bm29-tests1-panda",
