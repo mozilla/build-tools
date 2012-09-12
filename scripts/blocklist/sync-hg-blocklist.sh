@@ -6,11 +6,12 @@
 # 2008-07-14 - Use a permanent local clone (dtownsend)
 # 2008-07-24 - Fix hg username (dtownsend)
 
-USAGE="usage: $0 [-n] [-c] [-d] [-p product] [-u hg_ssh_user] [-k hg_ssh_key] -b branch"
+USAGE="usage: $0 [-n] [-c] [-d] [-a] [-p product] [-u hg_ssh_user] [-k hg_ssh_key] -b branch"
 DRY_RUN=false
 BRANCH=""
 CLOSED_TREE=false
 DONTBUILD=false
+APPROVAL=false
 HG_SSH_USER='ffxbld'
 HG_SSH_KEY='~cltbld/.ssh/ffxbld_dsa'
 PRODUCT='firefox'
@@ -22,6 +23,7 @@ while [ $# -gt 0 ]; do
         -n) DRY_RUN=true;;
         -c) CLOSED_TREE=true;;
         -d) DONTBUILD=true;;
+        -a) APPROVAL=true;;
         -u) HG_SSH_USER="$2"; shift;;
         -k) HG_SSH_KEY="$2"; shift;;
         -*) echo >&2 \
@@ -153,14 +155,17 @@ update_blocklist_in_hg()
     cp -f blocklist_amo.xml ${REPODIR}/${APP_DIR}/app/blocklist.xml
     COMMIT_MESSAGE="Automated blocklist update from host $HOST"
     if [ $DONTBUILD == true ]; then
-        COMMIT_MESSAGE="${COMMIT_MESSAGE} (DONTBUILD)"
+        COMMIT_MESSAGE="${COMMIT_MESSAGE} - (DONTBUILD)"
     fi
     if [ $CLOSED_TREE == true ]; then
-        COMMIT_MESSAGE="${COMMIT_MESSAGE} - CLOSED TREE a=blocklist-update"
+        COMMIT_MESSAGE="${COMMIT_MESSAGE} - CLOSED TREE"
     fi
-    echo ${HG} -R $REPODIR commit -u "${HG_SSH_USER}" -m "${COMMIT_MESSAGE}"
+    if [ $APPROVAL == true ]; then
+        COMMIT_MESSAGE="${COMMIT_MESSAGE} - a=blocklist-update"
+    fi
+    echo ${HG} -R $REPODIR commit -u \"${HG_SSH_USER}\" -m \"${COMMIT_MESSAGE}\"
     ${HG} -R $REPODIR commit -u "${HG_SSH_USER}" -m "${COMMIT_MESSAGE}"
-    echo ${HG} -R $REPODIR push -e "ssh -l ${HG_SSH_USER} -i ${HG_SSH_KEY}" ${HGPUSHREPO}
+    echo ${HG} -R $REPODIR push -e \"ssh -l ${HG_SSH_USER} -i ${HG_SSH_KEY}\" ${HGPUSHREPO}
     ${HG} -R $REPODIR push -e "ssh -l ${HG_SSH_USER} -i ${HG_SSH_KEY}" ${HGPUSHREPO}
     PUSH_STATUS=$?
     if [ $PUSH_STATUS != 0 ]; then
