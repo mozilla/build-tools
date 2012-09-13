@@ -348,7 +348,7 @@
     "http_port": 8201,
     "limit_platforms": [
       "android",
-      "android-armv6"
+      "android-armv6",
       "android-noion"
     ],
     "master_dir": "/builds/buildbot/tests1-tegra/master",
@@ -378,7 +378,7 @@
     "http_port": 8201,
     "limit_platforms": [
       "android",
-      "android-armv6"
+      "android-armv6",
       "android-noion"
     ],
     "master_dir": "/builds/buildbot/tests1-tegra/master",
@@ -437,7 +437,7 @@
     "http_port": 8201,
     "limit_platforms": [
       "android",
-      "android-armv6"
+      "android-armv6",
       "android-noion"
     ],
     "master_dir": "/builds/buildbot/tests1-tegra/master",
@@ -467,7 +467,7 @@
     "http_port": 8201,
     "limit_platforms": [
       "android",
-      "android-armv6"
+      "android-armv6",
       "android-noion"
     ],
     "master_dir": "/builds/buildbot/tests1-tegra/master",
@@ -581,7 +581,7 @@
     "http_port": 8201,
     "limit_platforms": [
         "android",
-        "android-armv6"
+        "android-armv6",
         "android-noion"
     ],
     "master_dir": "/builds/buildbot/tests1-panda/master",
