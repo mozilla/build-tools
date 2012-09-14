@@ -37,7 +37,7 @@ def doUpdate(dm):
     try:
          data = download_apk()
     except Exception, e:
-         print "ERROR: updateSUT.py: We have failed to retrieve the SUT Agent. %s" % str(e)
+         print "Automation Error: updateSUT.py: We have failed to retrieve the SUT Agent. %s" % str(e)
          return RETCODE_APK_DL_FAILED
     dm.sendCMD(['push /mnt/sdcard/%s %s\r\n' % (apkfilename, str(len(data))), data], newline=False)
     dm.debug = 5
@@ -55,22 +55,22 @@ def doUpdate(dm):
             break
         except:
             tries += 1
-            print "WARNING: updateSUT.py: We have tried to connect %s time(s) after trying to update." % tries
+            print "Automation Error: updateSUT.py: We have tried to connect %s time(s) after trying to update." % tries
 
     try:
         ver = version(dm)
     except Exception, e:
-        print "ERROR: updateSUT.py: We should have been able to get the version"
-        print "ERROR: updateSUT.py: %s" % e
+        print "Automation Error: updateSUT.py: We should have been able to get the version"
+        print "Automation Error: updateSUT.py: %s" % e
         return RETCODE_REVERIFY_FAILED
 
     dm.debug = _oldDebug # Restore it
 
     if ver == None:
-        print "ERROR: updateSUT.py: We should have been able to connect and determine the version."
+        print "Automation Error: updateSUT.py: We should have been able to connect and determine the version."
         return RETCODE_REVERIFY_FAILED
     elif not isVersionCorrect(ver=ver):
-        print "ERROR: updateSUT.py: We should have had the %s version but instead we have %s" % \
+        print "Automation Error: updateSUT.py: We should have had the %s version but instead we have %s" % \
               (target_version, ver)
         return RETCODE_REVERIFY_WRONG
     else:
@@ -100,7 +100,7 @@ def download_apk():
     except urllib2.URLError, e:
         reason = getattr(e, "reason", "SUT-Undef")
         code = getattr(e, "code", "SUT-Undef")
-        raise Exception("ERROR: updateSUT.py: code: %s; reason: %s" % (code, reason))
+        raise Exception("Automation Error: updateSUT.py: code: %s; reason: %s" % (code, reason))
 
     local_file_name = os.path.join(apkFoopyDir, apkfilename)
     local_file = open(local_file_name, 'wb')
