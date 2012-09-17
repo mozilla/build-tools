@@ -39,19 +39,15 @@
             <label><input type="checkbox" class="group-selector none-selector">Clear All</label>
 
             <ul>
-            <li><label><input type="checkbox" name="platform" value="b2g">b2g</label></li>
             <li><label><input type="checkbox" name="platform" value="linux">linux</label></li>
-            <li><label><input type="checkbox" name="platform" value="linuxqt">linuxqt</label></li>
             <li><label><input type="checkbox" name="platform" value="linux64">linux64</label></li>
             <li><label><input type="checkbox" name="platform" value="macosx64">macosx64</label></li>
             <li><label><input type="checkbox" name="platform" value="win32">win32</label></li>
             <li><label><input type="checkbox" name="platform" value="win64">win64</label></li>
             <li><label><input type="checkbox" name="platform" value="android">android</label></li>
-            <li><label><input type="checkbox" name="platform" value="android-xul">android-xul</label></li>
-            <li><label><input type="checkbox" name="platform" value="macosx">macosx <span style="color: red">(check when you want 10.5 debug builds)</span></label></li>
+            <li><label><input type="checkbox" name="platform" value="android-armv6">android-armv6</label></li>
             </ul>
 
-            <strong>Important note re: Mac builds</strong>: As per <a href="http://blog.mozilla.com/nthomas/2010/09/27/firefox-mac-universal-builds-have-changed/">Nick's blog post</a> mac universal builds have changed. For opt builds on Mac OSX 10.5 you must choose 'macosx64'
             </span>
             <span class='option-email'>
             <h4>Email Settings</h4>
@@ -70,15 +66,14 @@
             <ul>
                 <li><label><input type="checkbox" value="reftest">reftest</label></li>
                 <li><label><input type="checkbox" value="reftest-ipc">reftest-ipc <span style="color: red">(linux opt only)</span></label></li>
-                <li><label><input type="checkbox" value="reftest-no-accel">reftest-no-accel <span style="color: red">(win7 only)</span></label></li>
+                <li><label><input type="checkbox" value="reftest-no-accel">reftest-no-accel <span style="color: red">(linux/win7 only)</span></label></li>
                 <li><label><input type="checkbox" value="crashtest">crashtest</label></li>
                 <li><label><input type="checkbox" value="crashtest-ipc">crashtest-ipc <span style="color: red">(linux opt only)</span></label></li>
                 <li><label><input type="checkbox" value="xpcshell">xpcshell</label></li>
                 <li><label><input type="checkbox" value="jsreftest">jsreftest</label></li>
                 <li><label><input type="checkbox" value="jetpack">jetpack</label></li>
-                <li><label><input type="checkbox" value="mozmill">mozmill</label></li>
-                <li><label><input type="checkbox" value="opengl">opengl</label></li><br>
-                <li><label><input type="checkbox" value="peptest">peptest<span style="color: red">(firefox desktop only)</span></label></li>
+                <li><label><input type="checkbox" value="marionette">marionette</label></li>
+                <li><label><input type="checkbox" value="mozmill">mozmill <span style="color: red">(thunderbird only)</span></label></li>
                 <span class='option-subgroup'>
                 <li><label><input type="checkbox" class="subgroup-all-selector" value="mochitests">mochitests (all)</label></li>
                     <ul>OR
@@ -94,13 +89,12 @@
             <li><label><input type="checkbox" value="reftest-1">reftest-1</label></li>
             <li><label><input type="checkbox" value="reftest-2">reftest-2</label></li>
             <li><label><input type="checkbox" value="reftest-3">reftest-3</label></li>
+            <li><label><input type="checkbox" value="reftest-4">reftest-4</label></li>
             <li><label><input type="checkbox" value="jsreftest-1">jsreftest-1</label></li>
             <li><label><input type="checkbox" value="jsreftest-2">jsreftest-2</label></li>
             <li><label><input type="checkbox" value="jsreftest-3">jsreftest-3</label></li>
-            <li><label><input type="checkbox" value="crashtest-1">crashtest-1</label></li>
             <li><label><input type="checkbox" value="crashtest-2">crashtest-2</label></li>
             <li><label><input type="checkbox" value="crashtest-3">crashtest-3</label></li>
-            <li><label><input type="checkbox" value="browser-chrome">browser-chrome</label></li>
             <li><label><input type="checkbox" value="mochitest-6">mochitest-6</label></li>
             <li><label><input type="checkbox" value="mochitest-7">mochitest-7</label></li>
             <li><label><input type="checkbox" value="mochitest-8">mochitest-8</label></li>
@@ -122,34 +116,28 @@
             <label><input type="checkbox" class="group-selector all-selector">All</label>
             <label><input type="checkbox" class="group-selector none-selector" CHECKED>None</label>
             <ul>
-                <li><label><input type="checkbox" name="talos_suite" value="chrome.2">chrome.2</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="chrome_mac.2">chrome_mac.2</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="nochrome.2">nochrome.2</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="dirty">dirty</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="tpr_responsiveness">tpr_responsiveness</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="tprow">tprow</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="tp4">tp4 <span style="color: red">(try branch only)</span></label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="svg">svg</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="dromaeo">dromaeo</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="tpn">tpn</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="chromez>chromez</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="nochromer">nochromer</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="other">other</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="dirtypaint">dirtypaint</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="svgr">svgr</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="dromaeojs">dromaeojs</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="xperf">xperf</label></li>
                 <br>
                 <h4>Android-Only Talos Suites:</h4>
                 <li><label><input type="checkbox" name="talos_suite" value="remote-ts">remote-ts</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="remote-tdhtml">remote-tdhtml</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="remote-tsvg">remote-tsvg</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="remote-tsspider">remote-tsspider</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="remote-tpan">remote-tpan</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="remote-trobopan">remote-trobopan</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="remote-trobocheck">remote-trobocheck</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="remote-troboprovider">remote-troboprovider</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="remote-trobocheck2">remote-trobocheck2</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="remote-trobocheck3">remote-trobocheck3</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="remote-tp4m">remote-tp4m</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="remote-tp4m_nochrome">remote-tp4m_nochrome</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="remote-twinopen">remote-twinopen</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="remote-tzoom">remote-tzoom</label></li>
             </ul>
-            <strong>Want to match Talos suite names up to what they run?</strong>  Check <a href="http://hg.mozilla.org/build/buildbot-configs/file/tip/mozilla-tests/config.py#l181">the current configs</a><br>
+            <strong>Want to match Talos suite names up to what they run?</strong>  Check <a href="http://hg.mozilla.org/build/buildbot-configs/file/tip/mozilla-tests/config.py#l179">the current configs</a><br>
             (contents may shift over time, <br/>
             you want SUITES = { ... })
             </span>
