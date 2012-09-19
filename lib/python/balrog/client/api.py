@@ -4,7 +4,7 @@ import requests
 import os
 
 CA_BUNDLE = os.path.join(os.path.dirname(__file__),
-                        '../../../../misc/certs/GeoTrust_Global_CA.crt')
+                        '../../../../misc/certs/ca-bundle.crt')
 
 def is_csrf_token_expired(token):
     from datetime import datetime
