@@ -59,7 +59,7 @@ def main():
         print "You need to specify --configuration-url."
         return 1
 
-    if not (platform.version() == '6.1.7600' and not 'PROGRAMFILES(X86)' in os.environ):
+    if not (platform.version().startswith('6.1.760') and not 'PROGRAMFILES(X86)' in os.environ):
         # We only want to run this for Windows 7 32-bit
         print "INFO: This script was written to be used with Windows 7 32-bit machines."
         return 0
@@ -115,6 +115,15 @@ def queryMousePosition():
 def queryScreenResolution():
     return {"x": GetSystemMetrics (0), "y": GetSystemMetrics (1)}
 
+def queryScreenFrequency():
+    try:
+        p=win32api.EnumDisplaySettings(None, win32con.ENUM_CURRENT_SETTINGS)
+        return p.DisplayFrequency
+    except Exception, e:
+        print "INFRA-ERROR: We were expecting to get the screen frequency instead we " + \
+              "got this exception => %s" % str(e)
+        return 1
+
 def changeScreenResolution(new):
     # Set new screen resolution
     display_modes = {}
@@ -133,8 +142,7 @@ def changeScreenResolution(new):
             )
             display_modes[key] = devmode
             n += 1
-
-    mode_required = (32, new["x"], new["y"], 60)
+    mode_required = (32, new["x"], new["y"], queryScreenFrequency())
     devmode = display_modes[mode_required]
     win32api.ChangeDisplaySettings (devmode, 0)
 
