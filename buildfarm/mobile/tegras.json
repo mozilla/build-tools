@@ -961,11 +961,6 @@
         "pdu": "pdu9.df202-2.build.mtv1.mozilla.com", 
         "pduid": ".AB10"
     }, 
-    "tegra-226": {
-        "foopy": "None", 
-        "pdu": "pdu9.df202-2.build.mtv1.mozilla.com", 
-        "pduid": ".AA11"
-    }, 
     "tegra-227": {
         "foopy": "foopy19", 
         "pdu": "pdu9.df202-2.build.mtv1.mozilla.com", 
