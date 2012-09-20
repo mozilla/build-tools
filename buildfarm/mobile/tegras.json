@@ -1327,7 +1327,7 @@
     "tegra-305": {
         "foopy": "foopy22", 
         "pdu": "pdu1.df201-2.build.mtv1.mozilla.com", 
-        "pduid": ".AA16"
+        "pduid": ".AA1"
     },
     "tegra-306": {
         "foopy": "foopy22", 
