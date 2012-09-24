@@ -68,6 +68,10 @@ make -j4 || exit 2
 make package || exit 2
 
 debugger_args="--error-exitcode=1 --smc-check=all-non-file --gen-suppressions=all --leak-check=full --num-callers=50 --show-possibly-lost=no"
+cross-architecture-suppression_file=$PWD/_valgrind/cross-architecture.sup
+if [ -f $cross-architecture-suppression_file ]; then
+    debugger_args="$debugger_args --suppressions=$cross-architecture-suppression_file"
+fi
 suppression_file=$PWD/_valgrind/${MACHTYPE}.sup
 if [ -f $suppression_file ]; then
     debugger_args="$debugger_args --suppressions=$suppression_file"
