@@ -67,7 +67,7 @@ MOZCONFIG=../src/browser/config/mozconfigs/linux${_arch}/valgrind make -f ../src
 make -j4 || exit 2
 make package || exit 2
 
-debugger_args="--error-exitcode=1 --smc-check=all --gen-suppressions=all --leak-check=full --num-callers=50"
+debugger_args="--error-exitcode=1 --smc-check=all-non-file --gen-suppressions=all --leak-check=full --num-callers=50 --show-possibly-lost=no"
 suppression_file=$PWD/_valgrind/${MACHTYPE}.sup
 if [ -f $suppression_file ]; then
     debugger_args="$debugger_args --suppressions=$suppression_file"
