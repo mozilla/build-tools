@@ -7,7 +7,7 @@ TIMEOUT=90
 if [ -d mnt ]; then
     echo "mnt already exists, trying to clean up"
     hdiutil detach mnt -force
-    rm -rdfv mnt
+    rm -rdf mnt
 fi
 
 # Install an on-exit handler that will unmount and remove the 'mnt' directory
@@ -15,7 +15,7 @@ trap "{ if [ -d mnt ]; then hdiutil detach mnt -force; rm -rdfv mnt; fi; }" EXIT
 
 mkdir -p mnt
 
-hdiutil attach -verbose -noautoopen -mountpoint ./mnt "$1"
+hdiutil attach -noautoopen -mountpoint ./mnt "$1"
 # Wait for files to show up
 # hdiutil uses a helper process, diskimages-helper, which isn't always done its
 # work by the time hdiutil exits.  So we wait until something shows up in the
@@ -30,7 +30,7 @@ while [ "$(echo mnt/*)" == "mnt/*" ]; do
     i=$(expr $i + 1)
 done
 # Now we can copy everything out of the mnt directory into the current directory
-rsync -av ./mnt/* .
+rsync -a ./mnt/* .
 hdiutil detach mnt
 rm -rdf mnt
 # Sleep for a bit to let messages from diskimage-helper go away
