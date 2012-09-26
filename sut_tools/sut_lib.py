@@ -382,7 +382,7 @@ def setFlag(flagfile, contents=None):
     log.info(flagfile)
     h = open(flagfile, 'a+')
     if contents is not None:
-        log.info(contents)
+        log.error(contents)
         h.write('%s\n' % contents)
     h.close()
     time.sleep(30)
