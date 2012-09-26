@@ -348,7 +348,8 @@
     "http_port": 8201,
     "limit_platforms": [
       "android",
-      "android-armv6"
+      "android-armv6",
+      "android-noion"
     ],
     "master_dir": "/builds/buildbot/tests1-tegra/master",
     "name": "bm19-tests1-tegra",
@@ -377,7 +378,8 @@
     "http_port": 8201,
     "limit_platforms": [
       "android",
-      "android-armv6"
+      "android-armv6",
+      "android-noion"
     ],
     "master_dir": "/builds/buildbot/tests1-tegra/master",
     "name": "bm20-tests1-tegra",
@@ -435,7 +437,8 @@
     "http_port": 8201,
     "limit_platforms": [
       "android",
-      "android-armv6"
+      "android-armv6",
+      "android-noion"
     ],
     "master_dir": "/builds/buildbot/tests1-tegra/master",
     "name": "bm22-tests1-tegra",
@@ -464,7 +467,8 @@
     "http_port": 8201,
     "limit_platforms": [
       "android",
-      "android-armv6"
+      "android-armv6",
+      "android-noion"
     ],
     "master_dir": "/builds/buildbot/tests1-tegra/master",
     "name": "bm10-tests1-tegra",
@@ -577,7 +581,8 @@
     "http_port": 8201,
     "limit_platforms": [
         "android",
-        "android-armv6"
+        "android-armv6",
+        "android-noion"
     ],
     "master_dir": "/builds/buildbot/tests1-panda/master",
     "name": "bm29-tests1-panda",
