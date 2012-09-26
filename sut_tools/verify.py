@@ -31,7 +31,7 @@ def dmAlive(dm):
             return True
     except:
         pass # the actual exception holds no additional value here
-    setFlag(errorFile, "Device manager lost connection to tegra")
+    setFlag(errorFile, "Automation Error: Device manager lost connection to tegra")
     return False
 
 def canPing(tegra):
@@ -46,8 +46,7 @@ def canPing(tegra):
         if not ret:
             curRetry += 1
             if curRetry == MAX_RETRIES:
-                setFlag(errorFile, "Unable to ping tegra after %s attempts" % MAX_RETRIES)
-                print "Automation Error: Unable to ping tegra after %s attempts" % MAX_RETRIES
+                setFlag(errorFile, "Automation Error: Unable to ping tegra after %s attempts" % MAX_RETRIES)
                 return False
             else:
                 print "INFO: Unable to ping tegra. Sleeping for 90s then retrying"
@@ -71,8 +70,7 @@ def canTelnet(tegra):
         except:
             curRetry += 1
             if curRetry == MAX_RETRIES:
-                setFlag(errorFile, "Unable to connect to tegra after %s attempts" % MAX_RETRIES)
-                print "Automation Error: Unable to connect to tegra after %s attempts" % MAX_RETRIES
+                setFlag(errorFile, "Automation Error: Unable to connect to tegra after %s attempts" % MAX_RETRIES)
                 return False
             else:
                 print "INFO: Unable to connect to tegra"
@@ -92,7 +90,7 @@ def checkVersion(dm, flag=False):
     ver = updateSUT.version(dm)
     if not updateSUT.isVersionCorrect(ver=ver):
         if flag:
-            setFlag(errorFile, "Unexpected ver on tegra, got '%s' expected '%s'" % \
+            setFlag(errorFile, "Remote Device Error: Unexpected ver on tegra, got '%s' expected '%s'" % \
                     (ver, "SUTAgentAndroid Version %s" % updateSUT.target_version))
         return False
     print "INFO: Got expected SUTAgent version '%s'" % updateSUT.target_version
@@ -138,7 +136,7 @@ def checkAndFixScreen(dm):
     # Verify we have the expected screen resolution
     info = dm.getInfo("screen")
     if not info["screen"][0] == EXPECTED_TEGRA_SCREEN:
-        setFlag(errorFile, "Unexpected Screen on tegra, got '%s' expected '%s'" % \
+        setFlag(errorFile, "Remote Device Error: Unexpected Screen on tegra, got '%s' expected '%s'" % \
                             (info["screen"][0], EXPECTED_TEGRA_SCREEN))
         if not dm.adjustResolution(**EXPECTED_TEGRA_SCREEN_ARGS):
             setFlag(errorFile, "Command to update resolution returned failure")
@@ -160,23 +158,23 @@ def checkSDCard(dm):
 
     try:
         if not dm.dirExists("/mnt/sdcard"):
-            setFlag(errorFile, "Mount of sdcard does not seem to exist")
+            setFlag(errorFile, "Remote Device Error: Mount of sdcard does not seem to exist")
             return False
         if dm.fileExists("/mnt/sdcard/writetest"):
             print "INFO: /mnt/sdcard/writetest left over from previous run, cleaning"
             dm.removeFile("/mnt/sdcard/writetest")
         print "INFO: attempting to create file /mnt/sdcard/writetest"
         if not dm.pushFile("/builds/sut_tools/verify.py", "/mnt/sdcard/writetest"):
-            setFlag(errorFile, "unable to write to sdcard")
+            setFlag(errorFile, "Remote Device Error: unable to write to sdcard")
             return False
         if not dm.fileExists("/mnt/sdcard/writetest"):
-            setFlag(errorFile, "Written tempfile doesn't exist on inspection")
+            setFlag(errorFile, "Remote Device Error: Written tempfile doesn't exist on inspection")
             return False
         if not dm.removeFile("/mnt/sdcard/writetest"):
-            setFlag(errorFile, "Unable to cleanup from written tempfile")
+            setFlag(errorFile, "Remote Device Error: Unable to cleanup from written tempfile")
             return False
     except Exception, e:
-        setFlag(errorFile, "Unknown error while testing ability to write to" \
+        setFlag(errorFile, "Remote Device Error: Unknown error while testing ability to write to" \
                            "sdcard, see following exception: %s" % e)
         return False
     return True

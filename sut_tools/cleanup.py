@@ -48,7 +48,7 @@ def main(tegra=None, dm=None):
     # Now Verify that they are all gone
     for p in processNames:
         if dm.dirExists('/data/data/%s' % p):
-            setFlag(errorFile, "Unable to properly uninstall %s" % p)
+            setFlag(errorFile, "Remote Device Error: Unable to properly uninstall %s" % p)
             return RETCODE_ERROR
 
     devRoot  = checkDeviceRoot(dm)
@@ -61,8 +61,8 @@ def main(tegra=None, dm=None):
         status = dm.removeDir(devRoot)
         print "removeDir() returned [%s]" % status
         if status is None or not status:
-           setFlag(errorFile, "Remote Device Error: call to removeDir() returned [%s]" % status)
-           return RETCODE_ERROR
+            setFlag(errorFile, "Remote Device Error: call to removeDir() returned [%s]" % status)
+            return RETCODE_ERROR
         if dm.dirExists(devRoot):
             setFlag(errorFile, "Remote Device Error: Unable to properly remove %s" % devRoot)
             return RETCODE_ERROR
@@ -75,11 +75,10 @@ def main(tegra=None, dm=None):
             dm.verifySendCMD(['push /mnt/sdcard/hosts ' + str(len(data)) + '\r\n', data], newline=False)
             dm.verifySendCMD(['exec dd if=/mnt/sdcard/hosts of=/system/etc/hosts'])
         except devicemanager.DMError, e:
-            print "Exception hit while trying to restore /system/etc/hosts: %s" % str(e)
-            setFlag(errorFile, "failed to restore /system/etc/hosts")
+            setFlag(errorFile, "Remote Device Error: Exception hit while trying to restore /system/etc/hosts: %s" % str(e))
             return RETCODE_ERROR
         if not dm.fileExists('/system/etc/hosts'):
-            setFlag(errorFile, "failed to restore /system/etc/hosts")
+            setFlag(errorFile, "Remote Device Error: failed to restore /system/etc/hosts")
             return RETCODE_ERROR
         else:
             print "successfully restored hosts file, we can test!!!"

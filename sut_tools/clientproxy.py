@@ -374,7 +374,7 @@ def monitorEvents(options, events):
                     log.warning('verify.py returned with errors')
                     if not os.path.isfile(errorFile):
                         log.warning('verify.py did not create \'%s\' as expected, bailing.' % errorFile)
-                        setFlag(errorFile, "Verify.py returned with an unexpected error.")
+                        setFlag(errorFile, "Remote Device Error: Verify.py returned with an unexpected error.")
                     # We fall back to normal errorFile handling, which should reboot and try to verify
                     # A few times before giving up
             elif state == 'start':

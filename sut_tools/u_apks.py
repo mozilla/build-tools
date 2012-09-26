@@ -92,7 +92,7 @@ if len(filelist) > 0:
 
     # checking for /mnt/sdcard/...
     if devRoot is None:
-        print "%s: devRoot from devicemanager [%s] is not correct - exiting" % (tegraIP, devRoot)
+        print "Remote Device Error: %s: devRoot from devicemanager [%s] is not correct - exiting" % (tegraIP, devRoot)
         sys.exit(1)
 
     for source, apk, process in filelist:
@@ -122,6 +122,6 @@ if len(filelist) > 0:
             waitForDevice()
 
             if checkDeviceRoot is None:
-                print "%s: devRoot from devicemanager is not correct.  updateApp() call not verified" % tegraIP
+                print "Remote Device Error: %s: devRoot from devicemanager is not correct.  updateApp() call not verified" % tegraIP
                 sys.exit(1)
 

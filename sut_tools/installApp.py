@@ -37,8 +37,7 @@ def installOneApp(dm, devRoot, app_file_local_path):
             try:
                 print dm.sendCMD(['exec su -c "logcat -d -v time *:W"'])
             except devicemanager.DMError, e:
-                print "Exception hit while trying to run logcat: %s" % str(e)
-                setFlag(errorFile, "Remote Device Error: can't run logcat")
+                setFlag(errorFile, "Remote Device Error: Exception hit while trying to run logcat: %s" % str(e))
                 sys.exit(1)
         else:
             clearFlag(proxyFile)
