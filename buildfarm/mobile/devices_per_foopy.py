@@ -1,5 +1,8 @@
 import json
-f = open('tegras.json', 'r')
+
+STAGING_FOOPIES = ("foopy05", "foopy06", "foopy25", "foopy26")
+
+f = open('devices.json', 'r')
 j = json.load(f)
 foopies = {}
 nofoopy = {}
@@ -20,21 +23,21 @@ for key in j:
        else:
            nofoopy[newkey] = 1
 
-prod_tegras = 0
+prod_devices = 0
 prod_foopies = 0
 prod_text = []
 stage_text = []
-stage_tegras = 0
+stage_devices = 0
 stage_foopies = 0
 for foopy in sorted(foopies.keys()):
    # exclude staging foopies
-   if not foopy in ("foopy05", "foopy06"):
-       prod_text.append("  %s contains %s tegras" % (foopy, len(foopies[foopy])))
-       prod_tegras += len(foopies[foopy])
+   if not foopy in STAGING_FOOPIES:
+       prod_text.append("  %s contains %s devices" % (foopy, len(foopies[foopy])))
+       prod_devices += len(foopies[foopy])
        prod_foopies += 1
-   if foopy in ("foopy05", "foopy06"):
-      stage_text.append("  %s contains %s tegras" % (foopy, len(foopies[foopy])))
-      stage_tegras += len(foopies[foopy])
+   if foopy in STAGING_FOOPIES:
+      stage_text.append("  %s contains %s devices" % (foopy, len(foopies[foopy])))
+      stage_devices += len(foopies[foopy])
       stage_foopies += 1
 
 unassigned_text = []
@@ -46,13 +49,13 @@ for unassigned in sorted(nofoopy.keys()):
 
 print "PRODUCTION:"
 print "\n".join(prod_text)
-print "We have %s tegras in %s foopies which means a ratio of %s tegras per foopy" % \
-      (prod_tegras, prod_foopies, prod_tegras/prod_foopies)
+print "We have %s devices in %s foopies which means a ratio of %s devices per foopy" % \
+      (prod_devices, prod_foopies, prod_devices/prod_foopies)
 print
 print "STAGING:"
 print "\n".join(stage_text)
-print "We have %s tegras in %s foopies which means a ratio of %s tegras per foopy" % \
-      (stage_tegras, stage_foopies, stage_tegras/stage_foopies)
+print "We have %s devices in %s foopies which means a ratio of %s devices per foopy" % \
+      (stage_devices, stage_foopies, stage_devices/stage_foopies)
 print
 print "UNASSIGNED"
 print "\n".join(unassigned_text)

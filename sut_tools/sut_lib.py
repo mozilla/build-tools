@@ -52,9 +52,9 @@ def getSUTLogger(filename=None, loggername=None):
 
 log = getSUTLogger()
 
-def loadTegrasData(filepath):
+def loadDevicesData(filepath):
     result = {}
-    tFile  = os.path.join(filepath, 'tegras.json')
+    tFile  = os.path.join(filepath, 'devices.json')
     if os.path.isfile(tFile):
         try:
             result = json.load(open(tFile, 'r'))
@@ -62,12 +62,12 @@ def loadTegrasData(filepath):
             result = {}
     return result
 
-# look for tegras.json where foopies have it
+# look for devices.json where foopies have it
 # if not loaded, then try relative to sut_lib.py's path
 # as that is where it would be if run from tools repo
-tegras = loadTegrasData('/builds/tools/buildfarm/mobile')
+tegras = loadDevicesData('/builds/tools/buildfarm/mobile')
 if len(tegras) == 0:
-    tegras = loadTegrasData(os.path.join(os.path.dirname(__file__), '../buildfarm/mobile'))
+    tegras = loadDevicesData(os.path.join(os.path.dirname(__file__), '../buildfarm/mobile'))
 
 try:
     masters = json.load(open('/builds/tools/buildfarm/maintenance/production-masters.json', 'r'))
@@ -506,7 +506,7 @@ def reboot_tegra(tegra, debug=False):
     c   Outlet ID (1 - 16)
     y   command: 1 turn on, 2 turn off, 3 reboot
     
-    a and b are determined by the DeviceID we get from the tegras.json file
+    a and b are determined by the DeviceID we get from the devices.json file
     
        .AB14
           ^^ Outlet ID

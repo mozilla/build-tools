@@ -168,7 +168,7 @@ dStart   = None
 dEnd     = None
 dToday   = datetime.datetime.today()
 percDays = 7
-tegras   = {}
+devices   = {}
 events   = {}
 foopies  = {}
 
@@ -188,10 +188,13 @@ nStaging =    { 'total':   0,
 #     "foopy": "foopy15",
 #     "pduid": ".AB5"
 # }
-tegras = json.load(open(os.path.join('.', 'tegras.json')))
+devices = json.load(open(os.path.join('.', 'devices.json')))
 
-for key in tegras:
-    o = tegras[key]
+for key in devices:
+    if not "tegra" in key:
+        # Don't worry about supporting other devices in the dashboard yet
+        continue
+    o = devices[key]
     if o['foopy'] == "None":
         continue # This tegra is not assigned to a foopy
 
@@ -277,7 +280,7 @@ for key in tegras:
                     if dEnd is None or dItem > dEnd:
                         dEnd = dItem
 
-                    pdu                 = tegras[tegra['tegra']]['pdu']
+                    pdu                 = devices[tegra['tegra']]['pdu']
                     tegra['pdu']        = 'http://%s/main.html?1,1' % pdu
                     tegra['pduID']      = pdu.split('.')[0].replace('pdu', '')
                     tegra['foopy']      = tegra['hostname'].split('.')[0]
