@@ -2,7 +2,7 @@
 
 
 import os, sys
-import devicemanagerSUT as devicemanager
+from mozdevice import devicemanagerSUT as devicemanager
 import socket
 import random
 import time
@@ -25,7 +25,7 @@ dm.debug = 5
 setFlag(proxyFile)
 try:
     dm.getInfo('process')
-    print dm.sendCMD(['exec su -c "logcat -d -v time *:W"'])
+    print dm._runCmds([{'cmd': 'exec su -c "logcat -d -v time *:W"'}])
 
     print 'calling dm.reboot()'
 

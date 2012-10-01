@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os, sys
-import devicemanagerSUT as devicemanager
+from mozdevice import devicemanagerSUT as devicemanager
 
 if (len(sys.argv) <> 3):
   print "usage: install.py <ip address> <localfilename>"

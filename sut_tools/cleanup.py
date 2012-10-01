@@ -6,7 +6,7 @@
 
 import os, sys
 import time
-import devicemanagerSUT as devicemanager
+from mozdevice import devicemanagerSUT as devicemanager
 
 from sut_lib import clearFlag, setFlag, checkDeviceRoot, stopProcess, checkStalled, waitForDevice
 
@@ -42,8 +42,11 @@ def main(tegra=None, dm=None):
 
     for p in processNames:
         if dm.dirExists('/data/data/%s' % p):
-            print dm.uninstallAppAndReboot(p)
-            waitForDevice(dm)
+            try:
+                print dm.uninstallAppAndReboot(p)
+                waitForDevice(dm)
+            except devicemanager.DMError, err:
+                pass
     
     # Now Verify that they are all gone
     for p in processNames:
@@ -70,10 +73,10 @@ def main(tegra=None, dm=None):
     if not dm.fileExists('/system/etc/hosts'):
         print "restoring /system/etc/hosts file"
         try:
-            dm.sendCMD(['exec mount -o remount,rw -t yaffs2 /dev/block/mtdblock3 /system'])
+            dm._runCmds([{'cmd': 'exec mount -o remount,rw -t yaffs2 /dev/block/mtdblock3 /system'}])
             data = "127.0.0.1 localhost"
-            dm.verifySendCMD(['push /mnt/sdcard/hosts ' + str(len(data)) + '\r\n', data], newline=False)
-            dm.verifySendCMD(['exec dd if=/mnt/sdcard/hosts of=/system/etc/hosts'])
+            dm._runCmds([{'cmd': 'push /mnt/sdcard/hosts ' + str(len(data)) + '\r\n', 'data': data}])
+            dm._runCmds([{'cmd': 'exec dd if=/mnt/sdcard/hosts of=/system/etc/hosts'}])
         except devicemanager.DMError, e:
             setFlag(errorFile, "Remote Device Error: Exception hit while trying to restore /system/etc/hosts: %s" % str(e))
             return RETCODE_ERROR

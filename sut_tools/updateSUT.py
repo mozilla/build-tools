@@ -39,9 +39,9 @@ def doUpdate(dm):
     except Exception, e:
          print "Automation Error: updateSUT.py: We have failed to retrieve the SUT Agent. %s" % str(e)
          return RETCODE_APK_DL_FAILED
-    dm.sendCMD(['push /mnt/sdcard/%s %s\r\n' % (apkfilename, str(len(data))), data], newline=False)
+    dm._runCmds([{'cmd': 'push /mnt/sdcard/%s %s\r\n' % (apkfilename, str(len(data))), 'data': data}])
     dm.debug = 5
-    dm.sendCMD(['updt com.mozilla.SUTAgentAndroid /mnt/sdcard/%s' % apkfilename])
+    dm._runCmds([{'cmd': 'updt com.mozilla.SUTAgentAndroid /mnt/sdcard/%s' % apkfilename}])
     # XXX devicemanager.py might need to close the sockets so we won't need these 2 steps
     if dm._sock:
         dm._sock.close()
@@ -87,7 +87,7 @@ def main(device):
         return RETCODE_SUCCESS
 
 def version(dm):
-    ver = dm.sendCMD(['ver']).split("\n")[0]
+    ver = dm._runCmds([{'cmd': 'ver'}]).split("\n")[0]
     print "INFO: updateSUT.py: We're running %s" % ver
     return ver
 

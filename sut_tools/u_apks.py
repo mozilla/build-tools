@@ -4,7 +4,7 @@ import os, sys
 import time
 import socket
 import random
-import devicemanagerSUT as devicemanager
+from mozdevice import devicemanagerSUT as devicemanager
 
 
 def calculatePort():

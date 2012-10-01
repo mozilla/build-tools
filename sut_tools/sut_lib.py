@@ -17,7 +17,7 @@ import datetime
 import traceback
 import subprocess
 import random
-import devicemanagerSUT as devicemanager
+from mozdevice import devicemanagerSUT as devicemanager
 
 from optparse import OptionParser
 import json
@@ -426,7 +426,7 @@ def setDeviceTimestamp(dm):
     s = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
     log.info("Setting device time to %s" % s)
     try:
-        dm.sendCMD(['settime %s' % s])
+        dm._runCmds([{'cmd': 'settime %s' % s}])
         return True
     except devicemanager.DMError, e:
         log.warn("Exception while setting device time: %s" % str(e))

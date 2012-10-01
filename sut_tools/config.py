@@ -4,7 +4,7 @@ import os, sys
 import time
 import random
 import socket
-import devicemanagerSUT as devicemanager
+from mozdevice import devicemanagerSUT as devicemanager
 
 
 def setFlag(flagfile, contents=None):

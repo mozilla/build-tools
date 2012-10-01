@@ -8,7 +8,7 @@ import sys
 import os
 import time
 from sut_lib import pingTegra, setFlag, connect
-import devicemanagerSUT as devicemanager
+from mozdevice import devicemanagerSUT as devicemanager
 import updateSUT
 
 MAX_RETRIES = 5
@@ -228,8 +228,8 @@ def setWatcherINI(dm):
     try:
         tmpname = '/mnt/sdcard/watcher.ini'
         # Need to install it
-        dm.verifySendCMD(['push %s %s\r\n' % (tmpname, len(watcherINI)), watcherINI], newline = False)
-        dm.sendCMD(['exec su -c "dd if=%s of=%s"' % (tmpname, realLoc)])
+        dm._runCmds([{'cmd': 'push %s %s\r\n' % (tmpname, len(watcherINI)), 'data': watcherINI}])
+        dm._runCmds([{'cmd': 'exec su -c "dd if=%s of=%s"' % (tmpname, realLoc)}])
     except:
         setFlag(errorFile, "Unable to properly upload the watcher.ini")
         return False

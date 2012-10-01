@@ -6,7 +6,7 @@ import time
 import random
 import socket
 import datetime
-import devicemanagerSUT as devicemanager
+from mozdevice import devicemanagerSUT as devicemanager
 
 from sut_lib import getOurIP, calculatePort, clearFlag, setFlag, checkDeviceRoot, \
                     getDeviceTimestamp, setDeviceTimestamp, \
@@ -35,7 +35,7 @@ def installOneApp(dm, devRoot, app_file_local_path):
             dm.getInfo('memory')
             dm.getInfo('uptime')
             try:
-                print dm.sendCMD(['exec su -c "logcat -d -v time *:W"'])
+                print dm._runCmds([{'cmd': 'exec su -c "logcat -d -v time *:W"'}])
             except devicemanager.DMError, e:
                 setFlag(errorFile, "Remote Device Error: Exception hit while trying to run logcat: %s" % str(e))
                 sys.exit(1)
