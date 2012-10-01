@@ -164,7 +164,7 @@ def checkSDCard(dm):
             log.info("INFO: /mnt/sdcard/writetest left over from previous run, cleaning")
             dm.removeFile("/mnt/sdcard/writetest")
         log.info("INFO: attempting to create file /mnt/sdcard/writetest")
-        if not dm.pushFile("/builds/sut_tools/verify.py", "/mnt/sdcard/writetest"):
+        if not dm.pushFile(os.path.join(os.path.abspath(os.path.dirname( __file__ )), "verify.py"), "/mnt/sdcard/writetest"):
             setFlag(errorFile, "Remote Device Error: unable to write to sdcard")
             return False
         if not dm.fileExists("/mnt/sdcard/writetest"):
@@ -174,12 +174,12 @@ def checkSDCard(dm):
             setFlag(errorFile, "Remote Device Error: Unable to cleanup from written tempfile")
             return False
     except Exception, e:
-        setFlag(errorFile, "Remote Device Error: Unknown error while testing ability to write to" \
+        setFlag(errorFile, "Remote Device Error: Unknown error while testing ability to write to " \
                            "sdcard, see following exception: %s" % e)
         return False
     return True
 
-def cleanupTegra(dm):
+def cleanupTegra(dm, doCheckStalled):
     """ Do cleanup actions necessary to ensure starting in a good state
 
     Returns False on failure, True on Success
@@ -189,7 +189,7 @@ def cleanupTegra(dm):
 
     import cleanup
     try:
-        retval = cleanup.main(dm=dm)
+        retval = cleanup.main(dm=dm, doCheckStalled=doCheckStalled)
         if retval == cleanup.RETCODE_SUCCESS:
             # All is good
             return True
@@ -218,9 +218,8 @@ def setWatcherINI(dm):
        return False
     
     try:
-       if dm.fileExists(realLoc):
-           if watcherDataCurrent():
-               return True
+       if watcherDataCurrent():
+           return True
     except:
         setFlag(errorFile, "Unable to identify if watcher.ini is current")
         return False
@@ -230,21 +229,21 @@ def setWatcherINI(dm):
         # Need to install it
         dm._runCmds([{'cmd': 'push %s %s\r\n' % (tmpname, len(watcherINI)), 'data': watcherINI}])
         dm._runCmds([{'cmd': 'exec su -c "dd if=%s of=%s"' % (tmpname, realLoc)}])
-    except:
+    except devicemanager.AgentError, err:
+        log.info("Error while pushing watcher.ini: %s" % err)
         setFlag(errorFile, "Unable to properly upload the watcher.ini")
         return False
     
     try:
-       if dm.fileExists(realLoc):
-           if watcherDataCurrent():
-               return True
+       if watcherDataCurrent():
+           return True
     except:
         pass
     setFlag(errorFile, "Unable to verify the updated watcher.ini")
     return False
 
 
-def main(tegra):
+def verifyDevice(tegra, checksut=False, doCheckStalled=False, watcherINI=False):
     # Returns False on failure, True on Success
     global dm, errorFile
     tegraPath = os.path.join('/builds', tegra)
@@ -252,27 +251,35 @@ def main(tegra):
 
     if not canPing(tegra):
         # TODO Reboot via PDU if ping fails
+        log.info("verifyDevice: failing to ping")
         return False
 
     if not canTelnet(tegra):
+        log.info("verifyDevice: failing to telnet")
         return False
 
-    if not checkVersion(dm):
+    if checksut and not checkVersion(dm):
         if not updateSUTVersion(dm):
+            log.info("verifyDevice: failing to updateSUT")
             return False
 
     # Resolution Check disabled for now; Bug 737427
     if False and not checkAndFixScreen(dm):
+        log.info("verifyDevice: failing to fix screen")
         return False
 
     if not checkSDCard(dm):
+        log.info("verifyDevice: failing to check SD card")
         return False
 
-    if not cleanupTegra(dm):
+    if not cleanupTegra(dm, doCheckStalled):
+        log.info("verifyDevice: failing to cleanup tegra")
         return False
     
-    if not setWatcherINI(dm):
-        return False
+    if watcherINI:
+        if not setWatcherINI(dm):
+            log.info("verifyDevice: failing to set watcher.ini")
+            return False
 
     return True
 
@@ -288,7 +295,7 @@ if __name__ == '__main__':
     else:
         tegra_name = sys.argv[1]
     
-    if main(tegra_name) == False:
+    if verifyDevice(tegra_name) == False:
         sys.exit(1) # Not ok to proceed
 
     sys.exit(0)

@@ -454,7 +454,7 @@ def setDeviceTimestamp(dm):
     try:
         dm._runCmds([{'cmd': 'settime %s' % s}])
         return True
-    except devicemanager.DMError, e:
+    except devicemanager.AgentError, e:
         log.warn("Exception while setting device time: %s" % str(e))
         return False
 
@@ -475,6 +475,11 @@ def waitForDevice(dm, waitTime=60):
     while tries <= maxTries:
         tries += 1
         log.info("Try %d" % tries)
+        if dm._sock:
+            dm._sock.close()
+            dm._sock = None
+        dm.deviceRoot = None
+        dm.retries = 0
         if checkDeviceRoot(dm) is not None:
             tegraIsBack = True
             break

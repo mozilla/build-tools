@@ -13,7 +13,7 @@ RETCODE_SUCCESS = 0
 RETCODE_ERROR = 1
 RETCODE_KILLSTALLED = 2
 
-def main(tegra=None, dm=None):
+def main(tegra=None, dm=None, doCheckStalled=True):
     assert ((tegra is not None) or (dm is not None)) # Require one to be set
 
     tegra_name = os.environ['SUT_NAME']
@@ -84,13 +84,14 @@ def main(tegra=None, dm=None):
         else:
             log.info("successfully restored hosts file, we can test!!!")
 
-    errcode = checkStalled(tegra_name)
-    if errcode > 1:
-        if errcode == 2:
-            log.error("processes from previous run were detected and cleaned up")
-        elif errocode == 3:
-            setFlag(errorFile, "Remote Device Error: process from previous test run present")
-            return RETCODE_KILLSTALLED
+    if doCheckStalled:
+        errcode = checkStalled(tegra_name)
+        if errcode > 1:
+            if errcode == 2:
+                log.error("processes from previous run were detected and cleaned up")
+            elif errocode == 3:
+                setFlag(errorFile, "Remote Device Error: process from previous test run present")
+                return RETCODE_KILLSTALLED
 
     return RETCODE_SUCCESS
 

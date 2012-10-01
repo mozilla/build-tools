@@ -13,13 +13,11 @@ from sut_lib import getOurIP, calculatePort, clearFlag, setFlag, checkDeviceRoot
 #        a class would solve, but this module is scheduled for rewrite
 
 
-def installOneApp(dm, devRoot, app_file_local_path):
+def installOneApp(dm, devRoot, app_file_local_path, proxyFile, errorFile, logcat=True):
 
     source       = app_file_local_path
     filename     = os.path.basename(source)
     target       = os.path.join(devRoot, filename)
-
-    global proxyFile, errorFile
 
     log.info("Installing %s" % target)
     if dm.pushFile(source, target):
@@ -30,20 +28,23 @@ def installOneApp(dm, devRoot, app_file_local_path):
             dm.getInfo('process')
             dm.getInfo('memory')
             dm.getInfo('uptime')
-            try:
-                log.info(dm._runCmds([{'cmd': 'exec su -c "logcat -d -v time *:W"'}]))
-            except devicemanager.DMError, e:
-                setFlag(errorFile, "Remote Device Error: Exception hit while trying to run logcat: %s" % str(e))
-                sys.exit(1)
+            if logcat:
+                try:
+                    print dm._runCmds([{'cmd': 'exec su -c "logcat -d -v time *:W"'}])
+                except devicemanager.DMError, e:
+                    setFlag(errorFile, "Remote Device Error: Exception hit while trying to run logcat: %s" % str(e))
+                    return 1
         else:
-            clearFlag(proxyFile)
+            if proxyFile:
+                clearFlag(proxyFile)
             setFlag(errorFile, "Remote Device Error: updateApp() call failed - exiting")
-            sys.exit(1)
-
+            return 1
     else:
-        clearFlag(proxyFile)
+        if proxyFile:
+            clearFlag(proxyFile)
         setFlag(errorFile, "Remote Device Error: unable to push %s" % target)
-        sys.exit(1)
+        return 1
+    return 0
 
 def find_robocop():
     # we hardcode the relative path to robocop.apk for bug 715215
@@ -123,7 +124,7 @@ def one_time_setup(ip_addr, major_source):
 
     if devRoot is None or devRoot == '/tests':
         setFlag(errorFile, "Remote Device Error: devRoot from devicemanager [%s] is not correct - exiting" % devRoot)
-        sys.exit(1)
+        return None, None
 
     try:
         setFlag(proxyFile)
@@ -147,8 +148,11 @@ def one_time_setup(ip_addr, major_source):
             if width != 1024 and height != 768:
                 clearFlag(proxyFile)
                 setFlag(errorFile, "Remote Device Error: Resolution change failed.  Should be %d/%d but is %d/%d" % (1024,768,width,height))
-                sys.exit(1)
+                return None, None
 
+    except devicemanager.AgentError, err:
+        log.error("remoteDeviceError: while doing one time setup for installation: %s" % err)
+        return None, None
     finally:
         clearFlag(proxyFile)
 
@@ -168,18 +172,24 @@ def main(argv):
     ip_addr = argv[1]
     path_to_main_apk = argv[2]
     dm, devRoot = one_time_setup(ip_addr, path_to_main_apk)
-    installOneApp(dm, devRoot, path_to_main_apk)
+    if not dm:
+        return 1
+
+    if installOneApp(dm, devRoot, path_to_main_apk, proxyFile, errorFile):
+        return 1
+
     # also install robocop if it's available
     robocop_to_use = find_robocop()
     if robocop_to_use is not None:
         waitForDevice(dm)
-        installOneApp(dm, devRoot, robocop_to_use)
+        if installOneApp(dm, devRoot, robocop_to_use, proxyFile, errorFile):
+            return 1
 
     # make sure we're all the way back up before we finish
     waitForDevice(dm)
+    return 0
 
 if __name__ == '__main__':
     # Stop buffering! (but not while testing)
     sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
-
-    main(sys.argv)
+    sys.exit(main(sys.argv))
