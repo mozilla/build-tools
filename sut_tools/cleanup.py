@@ -5,10 +5,8 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os, sys
-import time
 from mozdevice import devicemanagerSUT as devicemanager
-
-from sut_lib import clearFlag, setFlag, checkDeviceRoot, stopProcess, checkStalled, waitForDevice
+from sut_lib import clearFlag, setFlag, checkDeviceRoot, checkStalled, waitForDevice, log
 
 # main() RETURN CODES
 RETCODE_SUCCESS = 0
@@ -32,18 +30,18 @@ def main(tegra=None, dm=None):
                    ]
 
     if os.path.exists(flagFile):
-        print "Warning proxy.flg found during cleanup"
+        log.info("Warning proxy.flg found during cleanup")
         clearFlag(flagFile, dump=True)
 
     if dm is None:
-        print "Connecting to: " + tegra
+        log.info("Connecting to: " + tegra)
         dm = devicemanager.DeviceManagerSUT(tegra)
         dm.debug = 5
 
     for p in processNames:
         if dm.dirExists('/data/data/%s' % p):
             try:
-                print dm.uninstallAppAndReboot(p)
+                log.info(dm.uninstallAppAndReboot(p))
                 waitForDevice(dm)
             except devicemanager.DMError, err:
                 pass
@@ -62,7 +60,7 @@ def main(tegra=None, dm=None):
 
     if dm.dirExists(devRoot):
         status = dm.removeDir(devRoot)
-        print "removeDir() returned [%s]" % status
+        log.info("removeDir() returned [%s]" % status)
         if status is None or not status:
             setFlag(errorFile, "Remote Device Error: call to removeDir() returned [%s]" % status)
             return RETCODE_ERROR
@@ -71,7 +69,7 @@ def main(tegra=None, dm=None):
             return RETCODE_ERROR
 
     if not dm.fileExists('/system/etc/hosts'):
-        print "restoring /system/etc/hosts file"
+        log.info("restoring /system/etc/hosts file")
         try:
             dm._runCmds([{'cmd': 'exec mount -o remount,rw -t yaffs2 /dev/block/mtdblock3 /system'}])
             data = "127.0.0.1 localhost"
@@ -84,12 +82,12 @@ def main(tegra=None, dm=None):
             setFlag(errorFile, "Remote Device Error: failed to restore /system/etc/hosts")
             return RETCODE_ERROR
         else:
-            print "successfully restored hosts file, we can test!!!"
+            log.info("successfully restored hosts file, we can test!!!")
 
     errcode = checkStalled(tegra_name)
     if errcode > 1:
         if errcode == 2:
-            print "processes from previous run were detected and cleaned up"
+            log.error("processes from previous run were detected and cleaned up")
         elif errocode == 3:
             setFlag(errorFile, "Remote Device Error: process from previous test run present")
             return RETCODE_KILLSTALLED
@@ -105,7 +103,7 @@ if __name__ == '__main__':
             sys.exit(RETCODE_ERROR)
         else:
             tegra_name = os.getenv('SUT_NAME')
-            print "INFO: Using tegra '%s' found in env variable" % tegra_name
+            log.info("INFO: Using tegra '%s' found in env variable" % tegra_name)
     else:
         tegra_name = sys.argv[1]
 

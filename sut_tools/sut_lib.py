@@ -22,9 +22,35 @@ from mozdevice import devicemanagerSUT as devicemanager
 from optparse import OptionParser
 import json
 
+def getSUTLogger(filename=None, loggername=None):
 
-log = logging.getLogger()
+    if not loggername:
+        loggername = __name__
+ 
+    logger = logging.getLogger('')
+    logger.handlers = []
 
+    logger = logging.getLogger(loggername)
+    logger.handlers = []
+
+    extra_kwargs = {}
+    if filename:
+        extra_kwargs['filename'] = filename
+        extra_kwargs['filemode'] = "a"
+
+    logging.basicConfig(level=logging.DEBUG,
+                            format="%(asctime)s: %(levelname)s: %(message)s", 
+                            datefmt='%m/%d/%Y %H:%M:%S',
+                            **extra_kwargs)
+    if filename:
+        console = logging.StreamHandler()
+        console.setLevel(logging.INFO)
+        root = logging.getLogger('')
+        root.addHandler(console)
+
+    return logging.getLogger(loggername)
+
+log = getSUTLogger()
 
 def loadTegrasData(filepath):
     result = {}

@@ -2,15 +2,11 @@
 
 import os, sys
 import glob, shutil, zipfile
-import time
-import random
-import socket
-import datetime
 from mozdevice import devicemanagerSUT as devicemanager
 
 from sut_lib import getOurIP, calculatePort, clearFlag, setFlag, checkDeviceRoot, \
                     getDeviceTimestamp, setDeviceTimestamp, \
-                    getResolution, waitForDevice, runCommand
+                    getResolution, waitForDevice, runCommand, log
 
 
 # hwine: minor ugg - the flag files need to be global. Refactoring into
@@ -25,17 +21,17 @@ def installOneApp(dm, devRoot, app_file_local_path):
 
     global proxyFile, errorFile
 
-    print "Installing %s" % target
+    log.info("Installing %s" % target)
     if dm.pushFile(source, target):
         status = dm.installApp(target)
         if status is None:
-            print '-'*42
-            print 'installApp() done - gathering debug info'
+            log.info('-'*42)
+            log.info('installApp() done - gathering debug info')
             dm.getInfo('process')
             dm.getInfo('memory')
             dm.getInfo('uptime')
             try:
-                print dm._runCmds([{'cmd': 'exec su -c "logcat -d -v time *:W"'}])
+                log.info(dm._runCmds([{'cmd': 'exec su -c "logcat -d -v time *:W"'}]))
             except devicemanager.DMError, e:
                 setFlag(errorFile, "Remote Device Error: Exception hit while trying to run logcat: %s" % str(e))
                 sys.exit(1)
@@ -80,13 +76,13 @@ def find_robocop():
                 actual_location = self_extracted_location
                 # got it
             except Exception as e:
-                print "WARNING (robocop): zip file not as expected: %s (%s)" % (e.message,
-                                                                        str(e.args))
-                print "WARNING (robocop): robocop.apk will not be installed"
+                log.warning("(robocop): zip file not as expected: %s (%s)" % (e.message,
+                                                                        str(e.args)))
+                log.warning("(robocop): robocop.apk will not be installed")
         else:
-            print "WARNING (robocop): Didn't find just one %s; found '%s'" % (expected_zip_location,
-                                                                      str(matches))
-            print "WARNING (robocop): robocop.apk will not be installed"
+            log.warning("(robocop): Didn't find just one %s; found '%s'" % (expected_zip_location,
+                                                                      str(matches)))
+            log.warning("(robocop): robocop.apk will not be installed")
 
     return actual_location
 
@@ -115,10 +111,10 @@ def one_time_setup(ip_addr, major_source):
     workdir      = os.path.dirname(major_source)
     inifile      = os.path.join(workdir, 'fennec', 'application.ini')
     remoteappini = os.path.join(workdir, 'talos', 'remoteapp.ini')
-    print 'copying %s to %s' % (inifile, remoteappini)
+    log.info('copying %s to %s' % (inifile, remoteappini))
     runCommand(['cp', inifile, remoteappini])
 
-    print "connecting to: %s" % ip_addr
+    log.info("connecting to: %s" % ip_addr)
     dm = devicemanager.DeviceManagerSUT(ip_addr)
 # Moar data!
     dm.debug = 3
@@ -131,7 +127,7 @@ def one_time_setup(ip_addr, major_source):
 
     try:
         setFlag(proxyFile)
-        print proxyIP, proxyPort
+        log.info("%s, %s" % (proxyIP, proxyPort))
         getDeviceTimestamp(dm)
         setDeviceTimestamp(dm)
         getDeviceTimestamp(dm)
@@ -143,7 +139,7 @@ def one_time_setup(ip_addr, major_source):
         #adjust resolution down to allow fennec to install without memory issues
         if (width >= 1050 or height >= 1050):
             dm.adjustResolution(1024, 768, 'crt')
-            print 'calling reboot'
+            log.info('calling reboot')
             dm.reboot(proxyIP, proxyPort)
             waitForDevice(dm)
 

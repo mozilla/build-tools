@@ -7,7 +7,7 @@
 import sys
 import os
 import time
-from sut_lib import pingTegra, setFlag, connect
+from sut_lib import pingTegra, setFlag, connect, log
 from mozdevice import devicemanagerSUT as devicemanager
 import updateSUT
 
@@ -40,7 +40,7 @@ def canPing(tegra):
     Returns False on failure, True on Success
     """
     curRetry = 0
-    print "INFO: attempting to ping tegra"
+    log.info("INFO: attempting to ping tegra")
     while curRetry < MAX_RETRIES:
         ret, _ = pingTegra(tegra)
         if not ret:
@@ -49,7 +49,7 @@ def canPing(tegra):
                 setFlag(errorFile, "Automation Error: Unable to ping tegra after %s attempts" % MAX_RETRIES)
                 return False
             else:
-                print "INFO: Unable to ping tegra. Sleeping for 90s then retrying"
+                log.info("INFO: Unable to ping tegra after %s try. Sleeping for 90s then retrying" % curRetry)
                 time.sleep(90)
         else:
             break # we're done here
@@ -73,7 +73,7 @@ def canTelnet(tegra):
                 setFlag(errorFile, "Automation Error: Unable to connect to tegra after %s attempts" % MAX_RETRIES)
                 return False
             else:
-                print "INFO: Unable to connect to tegra"
+                log.info("INFO: Unable to connect to tegra after %s try" % curRetry)
                 sleepDuration = 90
         else:
             break # We're done here
@@ -93,7 +93,7 @@ def checkVersion(dm, flag=False):
             setFlag(errorFile, "Remote Device Error: Unexpected ver on tegra, got '%s' expected '%s'" % \
                     (ver, "SUTAgentAndroid Version %s" % updateSUT.target_version))
         return False
-    print "INFO: Got expected SUTAgent version '%s'" % updateSUT.target_version
+    log.info("INFO: Got expected SUTAgent version '%s'" % updateSUT.target_version)
     return True
 
 def updateSUTVersion(dm):
@@ -143,7 +143,7 @@ def checkAndFixScreen(dm):
         else:
             dm.reboot() # Reboot sooner than cp would trigger a hard Reset
         return False
-    print "INFO: Got expected screen size '%s'" % EXPECTED_TEGRA_SCREEN
+    log.info("INFO: Got expected screen size '%s'" % EXPECTED_TEGRA_SCREEN)
     return True
 
 def checkSDCard(dm):
@@ -161,9 +161,9 @@ def checkSDCard(dm):
             setFlag(errorFile, "Remote Device Error: Mount of sdcard does not seem to exist")
             return False
         if dm.fileExists("/mnt/sdcard/writetest"):
-            print "INFO: /mnt/sdcard/writetest left over from previous run, cleaning"
+            log.info("INFO: /mnt/sdcard/writetest left over from previous run, cleaning")
             dm.removeFile("/mnt/sdcard/writetest")
-        print "INFO: attempting to create file /mnt/sdcard/writetest"
+        log.info("INFO: attempting to create file /mnt/sdcard/writetest")
         if not dm.pushFile("/builds/sut_tools/verify.py", "/mnt/sdcard/writetest"):
             setFlag(errorFile, "Remote Device Error: unable to write to sdcard")
             return False
@@ -284,7 +284,7 @@ if __name__ == '__main__':
             print "   Must have $SUT_NAME set in environ to omit tegra name"
             sys.exit(1)
         else:
-            print "INFO: Using tegra '%s' found in env variable" % tegra_name
+            log.info("INFO: Using tegra '%s' found in env variable" % tegra_name)
     else:
         tegra_name = sys.argv[1]
     

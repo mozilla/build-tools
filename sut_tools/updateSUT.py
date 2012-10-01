@@ -8,7 +8,7 @@ import urllib2
 import sys
 import time
 import os
-from sut_lib import connect
+from sut_lib import connect, log
 
 # Constants
 target_version = "1.13"
@@ -33,11 +33,11 @@ def isVersionCorrect(dm=None, ver=None):
 
 def doUpdate(dm):
     _oldDebug = dm.debug
-    print "INFO: updateSUT.py: We're going to try to install SUTAgentAndroid Version %s" % target_version
+    log.info("updateSUT.py: We're going to try to install SUTAgentAndroid Version %s" % target_version)
     try:
          data = download_apk()
     except Exception, e:
-         print "Automation Error: updateSUT.py: We have failed to retrieve the SUT Agent. %s" % str(e)
+         log.error("Automation Error: updateSUT.py: We have failed to retrieve the SUT Agent. %s" % str(e))
          return RETCODE_APK_DL_FAILED
     dm._runCmds([{'cmd': 'push /mnt/sdcard/%s %s\r\n' % (apkfilename, str(len(data))), 'data': data}])
     dm.debug = 5
@@ -55,26 +55,26 @@ def doUpdate(dm):
             break
         except:
             tries += 1
-            print "Automation Error: updateSUT.py: We have tried to connect %s time(s) after trying to update." % tries
+            log.warning("Automation Error: updateSUT.py: We have tried to connect %s time(s) after trying to update." % tries)
 
     try:
         ver = version(dm)
     except Exception, e:
-        print "Automation Error: updateSUT.py: We should have been able to get the version"
-        print "Automation Error: updateSUT.py: %s" % e
+        log.error("Automation Error: updateSUT.py: We should have been able to get the version")
+        log.error("Automation Error: updateSUT.py: %s" % e)
         return RETCODE_REVERIFY_FAILED
 
     dm.debug = _oldDebug # Restore it
 
     if ver == None:
-        print "Automation Error: updateSUT.py: We should have been able to connect and determine the version."
+        log.error("Automation Error: updateSUT.py: We should have been able to connect and determine the version.")
         return RETCODE_REVERIFY_FAILED
     elif not isVersionCorrect(ver=ver):
-        print "Automation Error: updateSUT.py: We should have had the %s version but instead we have %s" % \
-              (target_version, ver)
+        log.error("Automation Error: updateSUT.py: We should have had the %s version but instead we have %s" % \
+              (target_version, ver))
         return RETCODE_REVERIFY_WRONG
     else:
-        print "INFO: updateSUT.py: We're now running %s" % ver
+        log.info("updateSUT.py: We're now running %s" % ver)
         return RETCODE_SUCCESS
 
 def main(device):
@@ -88,12 +88,12 @@ def main(device):
 
 def version(dm):
     ver = dm._runCmds([{'cmd': 'ver'}]).split("\n")[0]
-    print "INFO: updateSUT.py: We're running %s" % ver
+    log.info("INFO: updateSUT.py: We're running %s" % ver)
     return ver
 
 def download_apk():
     url = 'http://build.mozilla.org/talos/mobile/sutAgentAndroid.%s.apk' % target_version
-    print "INFO: updateSUT.py: We're downloading the apk: %s" % url
+    log.info("INFO: updateSUT.py: We're downloading the apk: %s" % url)
     req = urllib2.Request(url)
     try:
         f = urllib2.urlopen(req)
@@ -132,4 +132,4 @@ else:
     if tegra_name in (None, ''):
         raise ImportError("To use updateSUT.py non-standalone you need SUT_NAME defined in environment")
     else:
-        print "DEBUG: updateSUT: Using tegra '%s' found in env variable" % tegra_name
+        log.debug("updateSUT: Using tegra '%s' found in env variable" % tegra_name)
