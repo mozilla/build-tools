@@ -23,12 +23,14 @@ def makeCandidatesDir(product, version, buildNumber, nightlyDir=None,
     else:
         return directory
 
-def makeReleasesDir(product, version, protocol=None, server=None,
+def makeReleasesDir(product, version=None, protocol=None, server=None,
                     ftp_root='/pub/mozilla.org/'):
     if protocol:
         assert server is not None, "server is required with protocol"
 
-    directory = '%s%s/releases/%s/' % (ftp_root, product, version)
+    directory = '%s%s/releases/' % (ftp_root, product)
+    if version:
+        directory += '%s/' % version
 
     if protocol:
         return urlunsplit((protocol, server, directory, None, None))

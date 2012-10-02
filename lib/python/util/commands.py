@@ -57,7 +57,7 @@ def run_remote_cmd(cmd, server, username=None, sshKey=None, ssh='ssh',
     cmd_prefix.append(server)
     if isinstance(cmd, basestring):
         cmd = [cmd]
-    run_cmd(cmd_prefix + cmd, **kwargs)
+    return run_cmd(cmd_prefix + cmd, **kwargs)
 
 def get_output(cmd, include_stderr=False, dont_log=False, **kwargs):
     """Run cmd (a list of arguments) and return the output.  If include_stderr

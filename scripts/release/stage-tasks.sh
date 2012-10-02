@@ -42,5 +42,5 @@ $PYTHON $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
   -s 0.3 -n info -n 'rel-*' -n $slavebuilddir
 cd $workdir
 
-$PYTHON $MY_DIR/push-to-mirrors.py -c $branchConfig -r $releaseConfig \
+$PYTHON $MY_DIR/stage-tasks.py -c $branchConfig -r $releaseConfig \
   -b $BUILDBOT_CONFIGS -t $releaseTag $action $@

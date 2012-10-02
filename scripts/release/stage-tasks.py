@@ -5,6 +5,7 @@ from os import path
 import sys
 import logging
 from subprocess import CalledProcessError
+from tempfile import NamedTemporaryFile
 try:
     import json
 except ImportError:
@@ -18,6 +19,7 @@ from release.info import readReleaseConfig, readBranchConfig
 from release.paths import makeCandidatesDir, makeReleasesDir
 from util.hg import update, make_hg_url, mercurial
 from util.commands import run_remote_cmd
+from util.transfer import scp
 
 
 DEFAULT_BUILDBOT_CONFIGS_REPO = make_hg_url('hg.mozilla.org',
@@ -132,6 +134,45 @@ def pushToMirrors(productName, version, buildNumber, stageServer,
                    server=stageServer, username=stageUsername,
                    sshKey=stageSshKey)
 
+
+indexFileTemplate = """\
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<style media="all">@import "http://www.mozilla.org/style/firefox/4.0beta/details.css";</style>
+<title>Thanks for your interest in Firefox %(version)s</title>
+</head>
+<body>
+<h1>Thanks for your interest in Firefox %(version)s</h1>
+<p>We aren't quite finished qualifying Firefox %(version)s yet. You should check out the latest <a href="http://www.mozilla.org/firefox/channel">Beta</a>.</p>
+<p>When we're all done with Firefox %(version)s it will show up on <a href="http://firefox.com?ref=ftp">Firefox.com</a>.</p>
+</body>
+</html>"""
+
+def makeIndexFiles(productName, version, buildNumber, stageServer,
+                     stageUsername, stageSshKey):
+    candidates_dir = makeCandidatesDir(productName, version, buildNumber)
+    indexFile = NamedTemporaryFile()
+    indexFile.write(indexFileTemplate % {'version': version})
+    indexFile.flush()
+
+    scp(indexFile.name, '%s@%s:%s/index.html' % (stageUsername, stageServer, candidates_dir))
+    run_remote_cmd(['find', candidates_dir, '-mindepth', '1', '-type', 'd', '-exec', 'cp', '-pv', '%s/index.html' % candidates_dir, '{}', '\\;'],
+                   server=stageServer, username=stageUsername, sshKey=stageSshKey)
+
+def deleteIndexFiles(cleanup_dir, stageServer, stageUsername,
+                     stageSshKey):
+    run_remote_cmd(['find', cleanup_dir, '-name', 'index.html', '-exec', 'rm', '-v', '{}', '\\;'],
+                   server=stageServer, username=stageUsername, sshKey=stageSshKey)
+
+def updateSymlink(productName, version, stageServer, stageUsername,
+                  stageSshKey):
+    releases_dir = makeReleasesDir(productName)
+
+    run_remote_cmd(['cd %s && rm latest && ln -s %s latest' % (releases_dir, version)],
+                   server=stageServer, username=stageUsername, sshKey=stageSshKey)
+
+
 if __name__ == '__main__':
     from optparse import OptionParser
     parser = OptionParser("")
@@ -165,6 +206,7 @@ if __name__ == '__main__':
     stageUsername = options.ssh_username or branchConfig['stage_username']
     stageSshKey = options.ssh_key or branchConfig["stage_ssh_key"]
     stageSshKey = path.join(os.path.expanduser("~"), ".ssh", stageSshKey)
+    createIndexFiles = releaseConfig.get('makeIndexFiles', False)
 
     if 'permissions' in args:
         checkStagePermissions(stageServer=stageServer,
@@ -193,6 +235,13 @@ if __name__ == '__main__':
                       dryRun=True)
 
     if 'push' in args:
+        if createIndexFiles:
+            makeIndexFiles(stageServer=stageServer,
+                           stageUsername=stageUsername,
+                           stageSshKey=stageSshKey,
+                           productName=productName,
+                           version=version,
+                           buildNumber=buildNumber)
         pushToMirrors(stageServer=stageServer,
                       stageUsername=stageUsername,
                       stageSshKey=stageSshKey,
@@ -200,3 +249,20 @@ if __name__ == '__main__':
                       version=version,
                       extra_excludes=options.extra_excludes,
                       buildNumber=buildNumber)
+        if createIndexFiles:
+            deleteIndexFiles(stageServer=stageServer,
+                             stageUsername=stageUsername,
+                             stageSshKey=stageSshKey,
+                             cleanup_dir=makeCandidatesDir(productName, version, buildNumber))
+
+    if 'postrelease' in args:
+        if createIndexFiles:
+            deleteIndexFiles(stageServer=stageServer,
+                             stageUsername=stageUsername,
+                             stageSshKey=stageSshKey,
+                             cleanup_dir=makeReleasesDir(productName, version))
+        updateSymlink(stageServer=stageServer,
+                      stageUsername=stageUsername,
+                      stageSshKey=stageSshKey,
+                      productName=productName,
+                      version=version)
