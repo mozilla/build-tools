@@ -25,7 +25,7 @@ def reboot(dm):
         log.info(status)
     finally:
         try:
-            waitForDevice(dm, waitTime=600)
+            waitForDevice(dm, waitTime=300)
         except SystemExit:
             clearFlag(proxyFile)
             setFlag(errorFile, "Remote Device Error: call for device reboot failed")

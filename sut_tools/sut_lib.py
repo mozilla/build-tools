@@ -471,8 +471,8 @@ def waitForDevice(dm, waitTime=60):
     time.sleep(waitTime)
     tegraIsBack = False
     tries       = 0
-    maxTries    = 20
-    while tries <= maxTries:
+    maxTries    = 3
+    while tries < maxTries:
         tries += 1
         log.info("Try %d" % tries)
         if dm._sock:

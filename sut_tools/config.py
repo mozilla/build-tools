@@ -62,14 +62,14 @@ def waitForDevice(waitTime=60):
     time.sleep(waitTime)
     tegraIsBack = False
     tries = 0
-    maxTries = 20
-    while tries <= maxTries:
+    maxTries = 3
+    while tries < maxTries:
         tries += 1
         print "Try %d" % tries
         if checkDeviceRoot() is not None:
             tegraIsBack = True
             break
-        time.sleep(60)
+        time.sleep(waitTime)
     if not tegraIsBack:
         print("Remote Device Error: waiting for tegra timed out.")
         sys.exit(1)
