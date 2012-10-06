@@ -243,7 +243,7 @@ def setWatcherINI(dm):
     return False
 
 
-def verifyDevice(tegra, checksut=False, doCheckStalled=False, watcherINI=False):
+def verifyDevice(tegra, checksut=False, doCheckStalled=True, watcherINI=True):
     # Returns False on failure, True on Success
     global dm, errorFile
     tegraPath = os.path.join('/builds', tegra)
