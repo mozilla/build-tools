@@ -156,7 +156,8 @@ def makeIndexFiles(productName, version, buildNumber, stageServer,
     indexFile.write(indexFileTemplate % {'version': version})
     indexFile.flush()
 
-    scp(indexFile.name, '%s@%s:%s/index.html' % (stageUsername, stageServer, candidates_dir))
+    scp(indexFile.name, '%s@%s:%s/index.html' % (stageUsername, stageServer, candidates_dir),
+        sshKey=stageSshKey)
     run_remote_cmd(['find', candidates_dir, '-mindepth', '1', '-type', 'd', '-exec', 'cp', '-pv', '%s/index.html' % candidates_dir, '{}', '\\;'],
                    server=stageServer, username=stageUsername, sshKey=stageSshKey)
 
