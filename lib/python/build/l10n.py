@@ -49,9 +49,9 @@ def l10nRepackPrep(sourceRepoName, objdir, mozconfigPath,
     run_cmd(["make", "-f", "client.mk", "configure"], cwd=sourceRepoName,
             env=env)
     for dir in makeDirs:
-        if dir == 'nsprpub':
-            run_cmd(["make", "tier_nspr"], 
-                    cwd=path.join(sourceRepoName, objdir), 
+        if dir.startswith("tier"):
+            run_cmd(["make", dir],
+                    cwd=path.join(sourceRepoName, objdir),
                     env=env)
         else:
             run_cmd(["make"], 

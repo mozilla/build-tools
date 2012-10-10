@@ -137,7 +137,7 @@ if __name__ == "__main__":
     from optparse import OptionParser
     parser = OptionParser("")
 
-    makeDirs = ["config", "nsprpub", path.join("modules", "libmar")]
+    makeDirs = ["config", "tier_base", "tier_nspr", path.join("modules", "libmar")]
 
     parser.set_defaults(
         buildbotConfigs=os.environ.get("BUILDBOT_CONFIGS",
