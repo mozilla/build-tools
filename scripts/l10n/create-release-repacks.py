@@ -48,6 +48,7 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
         "MOZ_PKG_PRETTYNAMES": "1",
         "MOZILLA_REV": os.getenv('MOZILLA_REV', ''),
         "COMM_REV": os.getenv('COMM_REV', ''),
+        "LD_LIBRARY_PATH": os.getenv("LD_LIBRARY_PATH", "")
     }
     if appVersion is None or version != appVersion:
         env["MOZ_PKG_VERSION"] = version
