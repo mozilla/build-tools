@@ -48,10 +48,12 @@ def l10nRepackPrep(sourceRepoName, objdir, mozconfigPath,
     shutil.copy(mozconfigPath, path.join(sourceRepoName, ".mozconfig"))
     run_cmd(["make", "-f", "client.mk", "configure"], cwd=sourceRepoName,
             env=env)
+    # we'll get things like (config, tier_base) for Firefox releases
+    # and (mozilla/config, mozilla/tier_base) for Thunderbird releases
     for dir in makeDirs:
-        if dir.startswith("tier"):
-            run_cmd(["make", dir],
-                    cwd=path.join(sourceRepoName, objdir),
+        if path.basename(dir).startswith("tier"):
+            run_cmd(["make", path.basename(dir)],
+                    cwd=path.join(sourceRepoName, objdir, path.dirname(dir)),
                     env=env)
         else:
             run_cmd(["make"], 
