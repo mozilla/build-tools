@@ -18,7 +18,6 @@ def main(tegra=None, dm=None, doCheckStalled=True):
 
     tegra_name = os.environ['SUT_NAME']
     pidDir    = os.path.join('/builds/', tegra_name)
-    flagFile  = os.path.join(pidDir, 'proxy.flg')
     errorFile = os.path.join(pidDir, 'error.flg')
 
     processNames = [ 'org.mozilla.fennec',
@@ -28,10 +27,6 @@ def main(tegra=None, dm=None, doCheckStalled=True):
                      'org.mozilla.firefox_beta',
                      'org.mozilla.roboexample.test',
                    ]
-
-    if os.path.exists(flagFile):
-        log.info("Warning proxy.flg found during cleanup")
-        clearFlag(flagFile, dump=True)
 
     if dm is None:
         log.info("Connecting to: " + tegra)

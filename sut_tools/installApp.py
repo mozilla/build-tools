@@ -13,7 +13,7 @@ from sut_lib import getOurIP, calculatePort, clearFlag, setFlag, checkDeviceRoot
 #        a class would solve, but this module is scheduled for rewrite
 
 
-def installOneApp(dm, devRoot, app_file_local_path, proxyFile, errorFile, logcat=True):
+def installOneApp(dm, devRoot, app_file_local_path, errorFile, logcat=True):
 
     source       = app_file_local_path
     filename     = os.path.basename(source)
@@ -35,13 +35,9 @@ def installOneApp(dm, devRoot, app_file_local_path, proxyFile, errorFile, logcat
                     setFlag(errorFile, "Remote Device Error: Exception hit while trying to run logcat: %s" % str(e))
                     return 1
         else:
-            if proxyFile:
-                clearFlag(proxyFile)
             setFlag(errorFile, "Remote Device Error: updateApp() call failed - exiting")
             return 1
     else:
-        if proxyFile:
-            clearFlag(proxyFile)
         setFlag(errorFile, "Remote Device Error: unable to push %s" % target)
         return 1
     return 0
@@ -55,7 +51,7 @@ def find_robocop():
     actual_location = None
 
     # for better error reporting
-    global proxyFile, errorFile
+    global errorFile
 
     if os.path.exists(extracted_location):
         actual_location = extracted_location
@@ -96,14 +92,13 @@ def one_time_setup(ip_addr, major_source):
             install has the meta data we need
 
     Side Effects:
-        We two globals, needed for error reporting:
-            errorFile, proxyFile
+        global, needed for error reporting:
+            errorFile
     '''
 
     # set up the flag files, used throughout
     cwd       = os.getcwd()
-    global proxyFile, errorFile
-    proxyFile = os.path.join(cwd, '..', 'proxy.flg')
+    global errorFile
     errorFile = os.path.join(cwd, '..', 'error.flg')
 
     proxyIP   = getOurIP()
@@ -127,7 +122,6 @@ def one_time_setup(ip_addr, major_source):
         return None, None
 
     try:
-        setFlag(proxyFile)
         log.info("%s, %s" % (proxyIP, proxyPort))
         getDeviceTimestamp(dm)
         setDeviceTimestamp(dm)
@@ -146,15 +140,12 @@ def one_time_setup(ip_addr, major_source):
 
             width, height = getResolution(dm)
             if width != 1024 and height != 768:
-                clearFlag(proxyFile)
                 setFlag(errorFile, "Remote Device Error: Resolution change failed.  Should be %d/%d but is %d/%d" % (1024,768,width,height))
                 return None, None
 
     except devicemanager.AgentError, err:
         log.error("remoteDeviceError: while doing one time setup for installation: %s" % err)
         return None, None
-    finally:
-        clearFlag(proxyFile)
 
     return dm, devRoot
 
@@ -175,14 +166,14 @@ def main(argv):
     if not dm:
         return 1
 
-    if installOneApp(dm, devRoot, path_to_main_apk, proxyFile, errorFile):
+    if installOneApp(dm, devRoot, path_to_main_apk, errorFile):
         return 1
 
     # also install robocop if it's available
     robocop_to_use = find_robocop()
     if robocop_to_use is not None:
         waitForDevice(dm)
-        if installOneApp(dm, devRoot, robocop_to_use, proxyFile, errorFile):
+        if installOneApp(dm, devRoot, robocop_to_use, errorFile):
             return 1
 
     # make sure we're all the way back up before we finish

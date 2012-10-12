@@ -83,7 +83,6 @@ if (len(sys.argv) <> 3):
 
 cwd       = os.getcwd()
 testname  = sys.argv[2]
-proxyFile = os.path.join(cwd, '..', 'proxy.flg')
 errorFile = os.path.join(cwd, '..', 'error.flg')
 proxyIP   = getOurIP()
 proxyPort = calculatePort()
@@ -107,18 +106,15 @@ print("current resolution X:%d Y:%d" % (width, height))
 
 # adjust resolution up if we are part of a reftest run
 if (testname == 'reftest') and width < refWidth:
-    try:
-        setFlag(proxyFile)
-        if dm.adjustResolution(width=refWidth, height=refHeight, type='crt'):
-            status = dm.reboot(ipAddr=proxyIP, port=proxyPort)
-            print status
-            waitForDevice()
+    if dm.adjustResolution(width=refWidth, height=refHeight, type='crt'):
+        status = dm.reboot(ipAddr=proxyIP, port=proxyPort)
+        print status
+        waitForDevice()
 
-            width, height = getResolution(dm)
-            print("current resolution X:%d Y:%d" % (width, height))
-            if width != refWidth and height != refHeight:
-                setFlag(errorFile, "Remote Device Error: current resolution X:%d Y:%d does not match what was set X:%d Y:%d" % (width, height, refWidth, refHeight))
-                sys.exit(1)
-    finally:
-        clearFlag(proxyFile)
+        width, height = getResolution(dm)
+        print("current resolution X:%d Y:%d" % (width, height))
+        if width != refWidth and height != refHeight:
+            setFlag(errorFile, "Remote Device Error: current resolution X:%d Y:%d does not match what was set X:%d Y:%d" % (width, height, refWidth, refHeight))
+            sys.exit(1)
+
 

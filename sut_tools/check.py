@@ -54,9 +54,7 @@ def checkTegra(master, tegra):
     tegraPath  = os.path.join(options.bbpath, tegra)
     exportFile = os.path.join(tegraPath, '%s_status.log' % tegra)
     errorFile  = os.path.join(tegraPath, 'error.flg')
-    proxyFile  = os.path.join(tegraPath, 'proxy.flg')
     errorFlag  = os.path.isfile(errorFile)
-    proxyFlag  = os.path.isfile(proxyFile)
     sTegra     = 'OFFLINE'
     sutFound   = False
     logTD      = None
@@ -151,8 +149,6 @@ def checkTegra(master, tegra):
 
     if errorFlag:
         status['msg'] += 'error.flg [%s] ' % getLastLine(errorFile)
-    if proxyFlag:
-        status['msg'] += 'REBOOTING '
 
     s  = '%s %s %9s %8s %8s :: %s' % (status['tegra'], status['environment'], sTegra, status['cp'], status['bs'], status['msg'])
     ts = time.strftime('%Y-%m-%d %H:%M:%S')
@@ -177,9 +173,6 @@ def checkTegra(master, tegra):
         if errorFlag:
             log.info('clearing error.flg')
             os.remove(errorFile)
-        if proxyFlag:
-            log.info('clearing proxy.flg')
-            os.remove(proxyFile)
 
         # here we try to catch the state where sutagent and cp are inactive
         # that is determined by : sTegra == 'INACTIVE' and status['cp'] == 'INACTIVE'

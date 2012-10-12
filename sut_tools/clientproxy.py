@@ -239,7 +239,6 @@ def monitorEvents(options, events):
     state of the buildslave if it's been started.
     """
     pidFile   = os.path.join(options.bbpath, 'twistd.pid')
-    flagFile  = os.path.join(options.bbpath, 'proxy.flg')
     errorFile = os.path.join(options.bbpath, 'error.flg')
     bbEnv     = { 'PATH':     os.getenv('PATH'),
                   'HOME':     os.getenv('HOME'),
@@ -304,8 +303,6 @@ def monitorEvents(options, events):
                     if 'ebooting ...' in hbData:
                         log.warning('device is rebooting')
                         events.put(('reboot',))
-                        if os.path.isfile(flagFile):
-                            time.sleep(5)
                         hbSocket.close()
                         connected = False
                     else:
@@ -327,9 +324,6 @@ def monitorEvents(options, events):
 
             if state == 'reboot':
                 tegraActive = False
-                if not os.path.isfile(flagFile):
-                    log.warning('Tegra rebooting, stopping buildslave')
-                    events.put(('stop',))
             elif state == 'stop' or state == 'offline':
                 stopSlave(pidFile)
                 bbActive = False
@@ -415,10 +409,7 @@ def monitorEvents(options, events):
             sleepFails += 5
             if sleepFails > 300:
                 sleepFails = 300
-            if os.path.isfile(flagFile):
-                log.debug('install flag found, resetting error count')
-            else:
-                events.put(('offline',))
+            events.put(('offline',))
             if connected:
                 hbSocket.close()
                 connected = False

@@ -38,7 +38,6 @@ def stopTegra(tegra):
     tegraIP   = getIPAddress(tegra)
     tegraPath = os.path.join(options.bbpath, tegra)
     errorFile = os.path.join(tegraPath, 'error.flg')
-    proxyFile = os.path.join(tegraPath, 'proxy.flg')
 
     log.info('%s: %s - stopping all processes' % (tegra, tegraIP))
 
@@ -53,10 +52,6 @@ def stopTegra(tegra):
     if os.path.isfile(errorFile):
         log.info('  error.flg cleared')
         os.remove(errorFile)
-
-    if os.path.isfile(proxyFile):
-        log.info('  proxy.flg cleared')
-        os.remove(proxyFile)
 
     log.debug('  sending rebt to tegra')
 

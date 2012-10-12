@@ -10,12 +10,10 @@ from sut_lib import getOurIP, calculatePort, clearFlag, setFlag, waitForDevice, 
 
 def reboot(dm):
     cwd       = os.getcwd()
-    proxyFile = os.path.join(cwd, '..', 'proxy.flg')
     errorFile = os.path.join(cwd, '..', 'error.flg')
     proxyIP   = getOurIP()
     proxyPort = calculatePort()
 
-    setFlag(proxyFile)
     try:
         dm.getInfo('process')
         log.info(dm._runCmds([{'cmd': 'exec su -c "logcat -d -v time *:W"'}]))
@@ -27,10 +25,8 @@ def reboot(dm):
         try:
             waitForDevice(dm, waitTime=300)
         except SystemExit:
-            clearFlag(proxyFile)
             setFlag(errorFile, "Remote Device Error: call for device reboot failed")
             return 1
-        clearFlag(proxyFile)
 
     sys.stdout.flush()
     return 0
