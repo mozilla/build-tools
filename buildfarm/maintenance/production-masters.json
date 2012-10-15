@@ -78,9 +78,6 @@
     "pb_port": 9301,
     "role": "scheduler",
     "ssh_port": 7301,
-    "release_branches": ["mozilla-release", "mozilla-beta", "mozilla-esr10"],
-    "mobile_release_branches": ["mozilla-release", "mozilla-beta"],
-    "thunderbird_release_branches": ["comm-beta", "comm-esr10", "comm-release"],
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build_scheduler/tools"
   },
@@ -159,9 +156,8 @@
     "pb_port": 9001,
     "role": "build",
     "ssh_port": 7001,
-    "release_branches": ["mozilla-release", "mozilla-beta", "mozilla-esr10"],
-    "mobile_release_branches": ["mozilla-release", "mozilla-beta"],
-    "thunderbird_release_branches": ["comm-beta", "comm-esr10", "comm-release"],
+    "release_branches": ["mozilla-release"],
+    "mobile_release_branches": ["mozilla-release"],
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build1/tools"
   },
@@ -187,6 +183,8 @@
     "pb_port": 9001,
     "role": "build",
     "ssh_port": 7001,
+    "release_branches": ["mozilla-beta"],
+    "mobile_release_branches": ["mozilla-beta"],
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build1/tools"
   },
@@ -560,6 +558,7 @@
     "pb_port": 9001,
     "role": "build",
     "ssh_port": 7001,
+    "release_branches": ["mozilla-esr10"],
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build1/tools"
   },
@@ -615,9 +614,7 @@
     "pb_port": 9001,
     "role": "build",
     "ssh_port": 7001,
-    "release_branches": ["mozilla-release", "mozilla-beta", "mozilla-esr10"],
-    "mobile_release_branches": ["mozilla-release", "mozilla-beta"],
-    "thunderbird_release_branches": ["comm-beta", "comm-esr10", "comm-release"],
+    "thunderbird_release_branches": ["comm-beta"],
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build1/tools"
   },
@@ -668,9 +665,7 @@
     "pb_port": 9001,
     "role": "build",
     "ssh_port": 7001,
-    "release_branches": ["mozilla-release", "mozilla-beta", "mozilla-esr10"],
-    "mobile_release_branches": ["mozilla-release", "mozilla-beta"],
-    "thunderbird_release_branches": ["comm-beta", "comm-esr10", "comm-release"],
+    "thunderbird_release_branches": ["comm-esr10"],
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build1/tools"
   },
@@ -721,6 +716,7 @@
     "pb_port": 9001,
     "role": "build",
     "ssh_port": 7001,
+    "thunderbird_release_branches": ["comm-release"],
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build1/tools"
   },
