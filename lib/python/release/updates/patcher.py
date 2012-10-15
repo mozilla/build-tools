@@ -107,6 +107,7 @@ class PatcherConfig(dict):
 
         fromVersions = self.getFromVersions()
         channels = tuple(self['current-update']['testchannel'] + self['current-update']['channel'])
+        toLocales = self['release'][self['current-update']['to']]['locales']
 
         # Now that we know all of the versions that need updates to the latest
         # we can start yielding the paths.
@@ -121,6 +122,11 @@ class PatcherConfig(dict):
                     # applicable to the platforms listed.
                     if locale in r['exceptions'] and platform not in r['exceptions'][locale]:
                         log.debug("Not generating update path for %s %s because it's not in the exception list." % (platform, locale))
+                        continue
+                    # Make sure the locale is in the "to" release. If it's not
+                    # we shouldn't generate an update for it!
+                    if locale not in toLocales:
+                        log.debug('Not generating update path for %s %s %s because %s isn\'t a locale for the "to" version' % (version, platform, locale, locale))
                         continue
                     # Some patcher configs will have a <partial> block for
                     # backwards compatibility purposes. We don't support that

@@ -77,7 +77,8 @@ samplePatcherConfigObj['release'] = {
         'checksumsurl': 'http://%platform%.%locale%.13.0.checksum',
         'completemarurl': 'http://%platform%.%locale%.13.0.complete.mar',
         'extension-version': '13.0',
-        'locales': ['de', 'en-US', 'ja', 'ja-JP-mac', 'zu'],
+        # Drop "zu" here to make sure that dropping and re-adding a locale works
+        'locales': ['de', 'en-US', 'ja', 'ja-JP-mac'],
         'prettyVersion': '13.0',
         'schema': 2,
         'version': '13.0',
@@ -94,7 +95,8 @@ samplePatcherConfigObj['release'] = {
         'checksumsurl': 'http://%platform%.%locale%.13.0.1.checksum',
         'completemarurl': 'http://%platform%.%locale%.13.0.1.complete.mar',
         'extension-version': '13.0.1',
-        'locales': ['de', 'en-US', 'ja', 'ja-JP-mac', 'zu'],
+        # Drop "de" here to make sure that fully dropping a locale works
+        'locales': ['en-US', 'ja', 'ja-JP-mac', 'zu'],
         'prettyVersion': '13.0.1',
         'schema': 2,
         'version': '13.0.1',
@@ -122,30 +124,22 @@ class TestPatcherConfig(unittest.TestCase):
 
     def testGetUpdatePaths(self):
         expected = (
-            ('11.0', 'mac', 'de', ('betatest', 'releasetest', 'release'), ('complete',)),
             ('11.0', 'mac', 'en-US', ('betatest', 'releasetest', 'release'), ('complete',)),
             ('11.0', 'mac', 'ja-JP-mac', ('betatest', 'releasetest', 'release'), ('complete',)),
             ('11.0', 'mac', 'zu', ('betatest', 'releasetest', 'release'), ('complete',)),
-            ('11.0', 'win32', 'de', ('betatest', 'releasetest', 'release'), ('complete',)),
             ('11.0', 'win32', 'en-US', ('betatest', 'releasetest', 'release'), ('complete',)),
             ('11.0', 'win32', 'ja', ('betatest', 'releasetest', 'release'), ('complete',)),
             ('11.0', 'win32', 'zu', ('betatest', 'releasetest', 'release'), ('complete',)),
-            ('12.0', 'mac', 'de', ('betatest', 'releasetest', 'release'), ('complete','partial')),
             ('12.0', 'mac', 'en-US', ('betatest', 'releasetest', 'release'), ('complete','partial')),
             ('12.0', 'mac', 'ja-JP-mac', ('betatest', 'releasetest', 'release'), ('complete','partial')),
             ('12.0', 'mac', 'zu', ('betatest', 'releasetest', 'release'), ('complete','partial')),
-            ('12.0', 'win32', 'de', ('betatest', 'releasetest', 'release'), ('complete','partial')),
             ('12.0', 'win32', 'en-US', ('betatest', 'releasetest', 'release'), ('complete','partial')),
             ('12.0', 'win32', 'ja', ('betatest', 'releasetest', 'release'), ('complete','partial')),
             ('12.0', 'win32', 'zu', ('betatest', 'releasetest', 'release'), ('complete','partial')),
-            ('13.0', 'mac', 'de', ('betatest', 'releasetest', 'release'), ('complete','partial')),
             ('13.0', 'mac', 'en-US', ('betatest', 'releasetest', 'release'), ('complete','partial')),
             ('13.0', 'mac', 'ja-JP-mac', ('betatest', 'releasetest', 'release'), ('complete','partial')),
-            ('13.0', 'mac', 'zu', ('betatest', 'releasetest', 'release'), ('complete','partial')),
-            ('13.0', 'win32', 'de', ('betatest', 'releasetest', 'release'), ('complete','partial')),
             ('13.0', 'win32', 'en-US', ('betatest', 'releasetest', 'release'), ('complete','partial')),
             ('13.0', 'win32', 'ja', ('betatest', 'releasetest', 'release'), ('complete','partial')),
-            ('13.0', 'win32', 'zu', ('betatest', 'releasetest', 'release'), ('complete','partial')),
         )
         got = []
         # getUpdatePaths is a generator, so we need to store the results before comparison
