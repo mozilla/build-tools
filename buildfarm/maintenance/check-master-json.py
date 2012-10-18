@@ -31,7 +31,9 @@ def check_master(master):
             'bbcustom_branch', 'bbconfigs_branch', 'tools_dir',
             'tools_branch', 'datacentre', 'buildbot_bin', 'buildbot_branch',
             'buildbot_python', 'buildbot_setup', 'environment')
-    opt_keys = ('http_port', 'ssh_port', 'pb_port', 'buildbot_version', 'limit_platforms', 'release_branches')
+    opt_keys = ('http_port', 'ssh_port', 'pb_port', 'buildbot_version',
+                'limit_fx_platforms', 'limit_tb_platforms', 'limit_b2g_platforms',
+                'release_branches', 'thunderbird_release_branches', 'mobile_release_branches')
     int_keys = ('http_port', 'ssh_port', 'pb_port')
 
     for k in required_keys:
@@ -53,7 +55,7 @@ def check_master(master):
     hostname, domain = master['hostname'].split(".", 1)
 
     # Check domain
-    if not re.match("build\.(\w+)\.mozilla\.com", domain):
+    if not re.match("(build|srv\.releng)\.(\w+)\.mozilla\.com", domain):
         log.error("%s - bad domain %s", name, domain)
         return False
 
@@ -69,6 +71,7 @@ def check_master(master):
     exp = "%s-%s(\d)" % (abbrev, role)
     instance_num = re.match(exp, name)
     if not instance_num:
+        # TODO: schedulers don't follow this logic
         log.error("%s - bad name (doesn't match %s)", name, exp)
         return False
 
@@ -104,7 +107,8 @@ def check_master(master):
 
     # Check master_dir
     if master['master_dir'] != "/builds/buildbot/%s/master" % instance:
-        log.error("%s - bad master_dir", name)
+        # TODO this needs tweaking for tests
+        log.error("%s - bad master_dir %s" % (name, master.get('master_dir', 'None')))
         return False
 
     # Check basedir

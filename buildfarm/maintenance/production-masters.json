@@ -16,10 +16,15 @@
     "environment": "production",
     "hostname": "buildbot-master04.build.scl1.mozilla.com",
     "http_port": 8201,
-    "limit_platforms": [
+    "limit_fx_platforms": [
         "macosx",
         "macosx64"
     ],
+    "limit_tb_platforms": [
+        "macosx",
+        "macosx64"
+    ],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm04-tests1-macosx",
     "pb_port": 9201,
@@ -45,10 +50,15 @@
     "environment": "production",
     "hostname": "buildbot-master06.build.scl1.mozilla.com",
     "http_port": 8201,
-    "limit_platforms": [
+    "limit_fx_platforms": [
         "macosx",
         "macosx64"
     ],
+    "limit_tb_platforms": [
+        "macosx",
+        "macosx64"
+    ],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm06-tests1-macosx",
     "pb_port": 9201,
@@ -125,10 +135,15 @@
     "environment": "production",
     "hostname": "buildbot-master11.build.scl1.mozilla.com",
     "http_port": 8201,
-    "limit_platforms": [
+    "limit_fx_platforms": [
         "macosx",
         "macosx64"
     ],
+    "limit_tb_platforms": [
+        "macosx",
+        "macosx64"
+    ],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm11-tests1-macosx",
     "pb_port": 9201,
@@ -232,10 +247,15 @@
     "environment": "production",
     "hostname": "buildbot-master15.build.scl1.mozilla.com",
     "http_port": 8201,
-    "limit_platforms": [
+    "limit_fx_platforms": [
       "win32",
       "win64"
     ],
+    "limit_tb_platforms": [
+      "win32",
+      "win64"
+    ],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-windows/master",
     "name": "bm15-tests1-windows",
     "pb_port": 9201,
@@ -261,10 +281,15 @@
     "environment": "production",
     "hostname": "buildbot-master16.build.scl1.mozilla.com",
     "http_port": 8201,
-    "limit_platforms": [
+    "limit_fx_platforms": [
       "win32",
       "win64"
     ],
+    "limit_tb_platforms": [
+      "win32",
+      "win64"
+    ],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-windows/master",
     "name": "bm16-tests1-windows",
     "pb_port": 9201,
@@ -290,9 +315,16 @@
     "environment": "production",
     "hostname": "buildbot-master17.build.scl1.mozilla.com",
     "http_port": 8201,
-    "limit_platforms": [
+    "limit_fx_platforms": [
       "linux",
       "linux64"
+    ],
+    "limit_tb_platforms": [
+      "linux",
+      "linux64"
+    ],
+    "limit_b2g_platforms": [
+      "ics_armv7a_gecko"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm17-tests1-linux",
@@ -319,9 +351,16 @@
     "environment": "production",
     "hostname": "buildbot-master18.build.scl1.mozilla.com",
     "http_port": 8201,
-    "limit_platforms": [
+    "limit_fx_platforms": [
       "linux",
       "linux64"
+    ],
+    "limit_tb_platforms": [
+      "linux",
+      "linux64"
+    ],
+    "limit_b2g_platforms": [
+      "ics_armv7a_gecko"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm18-tests1-linux",
@@ -348,11 +387,13 @@
     "environment": "production",
     "hostname": "buildbot-master19.build.mtv1.mozilla.com",
     "http_port": 8201,
-    "limit_platforms": [
+    "limit_fx_platforms": [
       "android",
       "android-armv6",
       "android-noion"
     ],
+    "limit_tb_platforms": [],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-tegra/master",
     "name": "bm19-tests1-tegra",
     "pb_port": 9201,
@@ -378,11 +419,13 @@
     "environment": "production",
     "hostname": "buildbot-master20.build.mtv1.mozilla.com",
     "http_port": 8201,
-    "limit_platforms": [
+    "limit_fx_platforms": [
       "android",
       "android-armv6",
       "android-noion"
     ],
+    "limit_tb_platforms": [],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-tegra/master",
     "name": "bm20-tests1-tegra",
     "pb_port": 9201,
@@ -408,10 +451,15 @@
     "environment": "production",
     "hostname": "buildbot-master21.build.scl1.mozilla.com",
     "http_port": 8201,
-    "limit_platforms": [
+    "limit_fx_platforms": [
         "macosx",
         "macosx64"
     ],
+    "limit_tb_platforms": [
+        "macosx",
+        "macosx64"
+    ],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm21-tests1-macosx",
     "pb_port": 9201,
@@ -437,11 +485,13 @@
     "environment": "production",
     "hostname": "buildbot-master22.build.mtv1.mozilla.com",
     "http_port": 8201,
-    "limit_platforms": [
+    "limit_fx_platforms": [
       "android",
       "android-armv6",
       "android-noion"
     ],
+    "limit_tb_platforms": [],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-tegra/master",
     "name": "bm22-tests1-tegra",
     "pb_port": 9201,
@@ -467,11 +517,13 @@
     "environment": "production",
     "hostname": "buildbot-master10.build.mtv1.mozilla.com",
     "http_port": 8201,
-    "limit_platforms": [
+    "limit_fx_platforms": [
       "android",
       "android-armv6",
       "android-noion"
     ],
+    "limit_tb_platforms": [],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-tegra/master",
     "name": "bm10-tests1-tegra",
     "pb_port": 9201,
@@ -497,10 +549,15 @@
     "environment": "production",
     "hostname": "buildbot-master23.build.scl1.mozilla.com",
     "http_port": 8201,
-    "limit_platforms": [
+    "limit_fx_platforms": [
       "win32",
       "win64"
     ],
+    "limit_tb_platforms": [
+      "win32",
+      "win64"
+    ],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-windows/master",
     "name": "bm23-tests1-windows",
     "pb_port": 9201,
@@ -526,9 +583,16 @@
     "environment": "production",
     "hostname": "buildbot-master24.build.scl1.mozilla.com",
     "http_port": 8201,
-    "limit_platforms": [
+    "limit_fx_platforms": [
       "linux",
       "linux64"
+    ],
+    "limit_tb_platforms": [
+      "linux",
+      "linux64"
+    ],
+    "limit_b2g_platforms": [
+      "ics_armv7a_gecko"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm24-tests1-linux",
@@ -580,11 +644,13 @@
     "environment": "production",
     "hostname": "buildbot-master29.build.scl1.mozilla.com",
     "http_port": 8201,
-    "limit_platforms": [
+    "limit_fx_platforms": [
         "android",
         "android-armv6",
         "android-noion"
     ],
+    "limit_tb_platforms": [],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-panda/master",
     "name": "bm29-tests1-panda",
     "pb_port": 9201,
@@ -791,10 +857,15 @@
     "environment": "production",
     "hostname": "buildbot-master37.srv.releng.scl3.mozilla.com",
     "http_port": 8201,
-    "limit_platforms": [
+    "limit_fx_platforms": [
         "macosx",
         "macosx64"
     ],
+    "limit_tb_platforms": [
+        "macosx",
+        "macosx64"
+    ],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm37-tests1-macosx",
     "pb_port": 9201,
@@ -820,10 +891,15 @@
     "environment": "production",
     "hostname": "buildbot-master38.srv.releng.scl3.mozilla.com",
     "http_port": 8201,
-    "limit_platforms": [
+    "limit_fx_platforms": [
         "macosx",
         "macosx64"
     ],
+    "limit_tb_platforms": [
+        "macosx",
+        "macosx64"
+    ],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm38-tests1-macosx",
     "pb_port": 9201,
