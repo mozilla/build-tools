@@ -3,14 +3,16 @@ cd /builds
 
 if [ -z $1 ] ; then
   tegras=tegra-*
+  pandas=panda-*
+  devices="$tegras $pandas"
 else
-  tegras=$1
+  devices=$1
 fi
 
-for i in ${tegras}; do
+for i in ${devices}; do
   if [ -d $i ] ; then
     if [ -e $i/clientproxy.pid ] ; then
-      python sut_tools/stop.py -t $i
+      python sut_tools/stop.py --device $i
       sleep 5
       ps auxww | grep "${i}"
     fi

@@ -13,19 +13,28 @@ if [ "$TERM" != "screen" ] ; then
   exit 1
 fi
 
+tegras=`ls -d tegra-* 2&> /dev/null`
+pandas=`ls -d panda-* 2&> /dev/null`
+
 if [ -z $1 ] ; then
-  tegras=tegra-*
+  devices="$tegras $pandas"
   stimer=60
 else
-  tegras=$1
+  devices=$1
   stimer=5
 fi
 
-for i in ${tegras}; do
+if [ -n "$pandas" -a -n "$tegras" ] ; then
+   # Preserve the assertion that a single foopy won't handle both device types
+   echo ERROR: Found both panda-* and tegra-* in directory.
+   exit 1
+fi
+
+for i in ${devices}; do
   if [ -d $i ] ; then
     cd $i
     if [ ! -e clientproxy.pid ] ; then
-      python clientproxy.py -b --tegra=$i
+      python clientproxy.py -b --device=$i
       sleep ${stimer}
     fi
     cd ..

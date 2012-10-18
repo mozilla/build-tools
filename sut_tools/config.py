@@ -58,20 +58,20 @@ def checkDeviceRoot():
     return dr
 
 def waitForDevice(waitTime=60):
-    print "Waiting for tegra to come back..."
+    print "Waiting for device to come back..."
     time.sleep(waitTime)
-    tegraIsBack = False
+    deviceIsBack = False
     tries = 0
     maxTries = 3
     while tries < maxTries:
         tries += 1
         print "Try %d" % tries
         if checkDeviceRoot() is not None:
-            tegraIsBack = True
+            deviceIsBack = True
             break
         time.sleep(waitTime)
-    if not tegraIsBack:
-        print("Remote Device Error: waiting for tegra timed out.")
+    if not deviceIsBack:
+        print("Remote Device Error: waiting for device timed out.")
         sys.exit(1)
 
 # Stop buffering!

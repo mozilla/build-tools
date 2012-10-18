@@ -65,9 +65,11 @@ def loadDevicesData(filepath):
 # look for devices.json where foopies have it
 # if not loaded, then try relative to sut_lib.py's path
 # as that is where it would be if run from tools repo
-tegras = loadDevicesData('/builds/tools/buildfarm/mobile')
-if len(tegras) == 0:
-    tegras = loadDevicesData(os.path.join(os.path.dirname(__file__), '../buildfarm/mobile'))
+allDevices = loadDevicesData('/builds/tools/buildfarm/mobile')
+if len(allDevices) == 0:
+    allDevices = loadDevicesData(os.path.join(os.path.dirname(__file__), '../buildfarm/mobile'))
+tegras = [devices[x] for x in devices if x.startswith('tegra-')]
+pandas = [devices[x] for x in devices if x.startswith('panda-')]
 
 try:
     masters = json.load(open('/builds/tools/buildfarm/maintenance/production-masters.json', 'r'))
@@ -130,7 +132,7 @@ def runCommand(cmd, env=None, logEcho=True):
 
     return p, o
 
-def pingTegra(tegra):
+def pingDevice(device):
     # bash-3.2$ ping -c 2 -o tegra-056
     # PING tegra-056.build.mtv1.mozilla.com (10.250.49.43): 56 data bytes
     # 64 bytes from 10.250.49.43: icmp_seq=0 ttl=64 time=1.119 ms
@@ -141,7 +143,7 @@ def pingTegra(tegra):
 
     out    = []
     result = False
-    p, o = runCommand(['ping', '-c 5', tegra], logEcho=False)
+    p, o = runCommand(['ping', '-c 5', device], logEcho=False)
     for s in o:
         out.append(s)
         if ('5 packets transmitted, 5 packets received' in s) or \
@@ -172,7 +174,7 @@ def getOurIP(hostname=None):
 
 def getIPAddress(hostname):
     """Parse the output of nslookup to determine what is the
-    IP address for the tegra ID that is to be monitored.
+    IP address for the device ID that is to be monitored.
     """
     ipAddress = None
     f         = False
@@ -294,23 +296,23 @@ def stopProcess(pidFile, label):
         except ValueError:
             log.error('%s: unable to read %s' % (label, pidFile))
 
-def checkStalled(tegra):
+def checkStalled(device):
     """Returns the following based on if any stalled pids were found:
             1 = clean, nothing was stalled
             2 = dirty, but pids were killed
             3 = dirty, but pids remain
     """
     pids      = []
-    tegraIP   = getIPAddress(tegra)
-    tegraPath = os.path.join('/builds', tegra)
+    deviceIP   = getIPAddress(device)
+    devicePath = os.path.join('/builds', device)
     p, lines  = runCommand(['ps', '-U', 'cltbld'])
 
-    this_tegra_lines = []
+    this_device_lines = []
     for line in lines:
-        if tegraIP in line or tegra in line:
-            this_tegra_lines.append(line)
+        if deviceIP in line or device in line:
+            this_device_lines.append(line)
 
-    for line in this_tegra_lines:
+    for line in this_device_lines:
         if ('bcontroller' in line) or ('server.js' in line):
             item = line.split()
             if len(item) > 1:
@@ -329,7 +331,7 @@ def checkStalled(tegra):
             result = 3
 
     for f in ('runtestsremote', 'remotereftest', 'remotereftest.pid.xpcshell'):
-        pidFile = os.path.join(tegraPath, '%s.pid' % f)
+        pidFile = os.path.join(devicePath, '%s.pid' % f)
         if os.path.exists(pidFile):
             stopProcess(pidFile, f)
             if os.path.exists(pidFile):
@@ -467,9 +469,9 @@ def checkDeviceRoot(dm):
     return dr
 
 def waitForDevice(dm, waitTime=60):
-    log.info("Waiting for tegra to come back...")
+    log.info("Waiting for device to come back...")
     time.sleep(waitTime)
-    tegraIsBack = False
+    deviceIsBack = False
     tries       = 0
     maxTries    = 3
     while tries < maxTries:
@@ -481,16 +483,16 @@ def waitForDevice(dm, waitTime=60):
         dm.deviceRoot = None
         dm.retries = 0
         if checkDeviceRoot(dm) is not None:
-            tegraIsBack = True
+            deviceIsBack = True
             break
         time.sleep(waitTime)
-    if not tegraIsBack:
-        log.error("Remote Device Error: waiting for tegra timed out.")
+    if not deviceIsBack:
+        log.error("Remote Device Error: waiting for device timed out.")
         sys.exit(1)
 
-def reboot_tegra(tegra, debug=False):
+def reboot_device(device, debug=False):
     """
-    Try to reboot the given tegra, returning True if successful.
+    Try to reboot the given device, returning True if successful.
     
     snmpset -c private pdu4.build.mozilla.org 1.3.6.1.4.1.1718.3.2.3.1.11.1.1.13 i 3
     1.3.6.1.4.1.1718.3.2.3.1.11.a.b.c
@@ -514,7 +516,7 @@ def reboot_tegra(tegra, debug=False):
         ^    Enclosure ID (we are assuming 1 (or A) below)
     """
     result = False
-    if tegra in tegras:
+    if device in tegras:
         pdu      = tegras[tegra]['pdu']
         deviceID = tegras[tegra]['pduid']
         if deviceID.startswith('.'):
@@ -537,21 +539,21 @@ def reboot_tegra(tegra, debug=False):
 
     return result
 
-def stopStalled(tegra):
-    tegraIP   = getIPAddress(tegra)
-    tegraPath = os.path.join('/builds', tegra)
+def stopStalled(device):
+    deviceIP   = getIPAddress(device)
+    devicePath = os.path.join('/builds', device)
     pids      = []
 
-    # look for any process that is associated with the tegra
+    # look for any process that is associated with the device
     # PID TTY           TIME CMD
     # 212 ??         0:17.99 /opt/local/Library/Frameworks/Python.framework/Versions/2.6/Resources/Python.app/Contents/MacOS/Python clientproxy.py -b --tegra=tegra-032
     p, lines  = runCommand(['ps', '-U', 'cltbld'])
-    this_tegra_lines = []
+    this_device_lines = []
     for line in lines:
-        if tegraIP in line or tegra in line:
-            this_tegra_lines.append(line)
+        if deviceIP in line or device in line:
+            this_device_lines.append(line)
 
-    for line in this_tegra_lines:
+    for line in this_device_lines:
         if ('bcontroller' in line) or ('server.js' in line):
             item = line.split()
             if len(item) > 1:
@@ -564,7 +566,7 @@ def stopStalled(tegra):
 
     result = False
     for f in ('runtestsremote', 'remotereftest', 'remotereftest.pid.xpcshell'):
-        pidFile = os.path.join(tegraPath, '%s.pid' % f)
+        pidFile = os.path.join(devicePath, '%s.pid' % f)
         log.info("checking for previous test processes ... %s" % pidFile)
         if os.path.exists(pidFile):
             log.info("pidfile from prior test run found, trying to kill")
@@ -574,16 +576,16 @@ def stopStalled(tegra):
 
     return result
 
-def stopTegra(tegra):
-    tegraIP   = getIPAddress(tegra)
-    tegraPath = os.path.join('/builds', tegra)
-    errorFile = os.path.join(tegraPath, 'error.flg')
+def stopDevice(device):
+    deviceIP   = getIPAddress(device)
+    devicePath = os.path.join('/builds', device)
+    errorFile = os.path.join(devicePath, 'error.flg')
 
-    log.info('%s: %s - stopping all processes' % (tegra, tegraIP))
+    log.info('%s: %s - stopping all processes' % (device, deviceIP))
 
-    stopStalled(tegra)
-    stopProcess(os.path.join(tegraPath, 'clientproxy.pid'), 'clientproxy')
-    stopProcess(os.path.join(tegraPath, 'twistd.pid'), 'buildslave')
+    stopStalled(device)
+    stopProcess(os.path.join(devicePath, 'clientproxy.pid'), 'clientproxy')
+    stopProcess(os.path.join(devicePath, 'twistd.pid'), 'buildslave')
 
     log.debug('  clearing flag files')
 
@@ -591,7 +593,7 @@ def stopTegra(tegra):
         log.info('  error.flg cleared')
         os.remove(errorFile)
 
-    reboot_tegra(tegra, debug=True)
+    reboot_device(device, debug=True)
 
 
 def loadOptions(defaults=None):

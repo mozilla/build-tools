@@ -86,7 +86,7 @@ def find_robocop():
 def one_time_setup(ip_addr, major_source):
     ''' One time setup of state
 
-    ip_addr - of the tegra we want to install app at
+    ip_addr - of the device we want to install app at
     major_source - we've hacked this script to install
             may-also-be-needed tools, but the source we're asked to
             install has the meta data we need

@@ -7,13 +7,13 @@
 import sys
 import os
 import time
-from sut_lib import pingTegra, setFlag, connect, log
+from sut_lib import pingDevice, setFlag, connect, log
 from mozdevice import devicemanagerSUT as devicemanager
 import updateSUT
 
 MAX_RETRIES = 5
-EXPECTED_TEGRA_SCREEN = 'X:1024 Y:768'
-EXPECTED_TEGRA_SCREEN_ARGS = {'width': 1024, 'height': 768, 'type': 'crt'}
+EXPECTED_DEVICE_SCREEN = 'X:1024 Y:768'
+EXPECTED_DEVICE_SCREEN_ARGS = {'width': 1024, 'height': 768, 'type': 'crt'}
 
 errorFile = None
 dm = None
@@ -31,31 +31,31 @@ def dmAlive(dm):
             return True
     except:
         pass # the actual exception holds no additional value here
-    setFlag(errorFile, "Automation Error: Device manager lost connection to tegra")
+    setFlag(errorFile, "Automation Error: Device manager lost connection to device")
     return False
 
-def canPing(tegra):
-    """ Check a tegra is reachable by ping
+def canPing(device):
+    """ Check a device is reachable by ping
 
     Returns False on failure, True on Success
     """
     curRetry = 0
-    log.info("INFO: attempting to ping tegra")
+    log.info("INFO: attempting to ping device")
     while curRetry < MAX_RETRIES:
-        ret, _ = pingTegra(tegra)
+        ret, _ = pingDevice(device)
         if not ret:
             curRetry += 1
             if curRetry == MAX_RETRIES:
-                setFlag(errorFile, "Automation Error: Unable to ping tegra after %s attempts" % MAX_RETRIES)
+                setFlag(errorFile, "Automation Error: Unable to ping device after %s attempts" % MAX_RETRIES)
                 return False
             else:
-                log.info("INFO: Unable to ping tegra after %s try. Sleeping for 90s then retrying" % curRetry)
+                log.info("INFO: Unable to ping device after %s try. Sleeping for 90s then retrying" % curRetry)
                 time.sleep(90)
         else:
             break # we're done here
     return True
 
-def canTelnet(tegra):
+def canTelnet(device):
     """ Checks if we can establish a Telnet session (via devicemanager)
 
     Sets global `dm`
@@ -66,14 +66,14 @@ def canTelnet(tegra):
     sleepDuration = 0
     while curRetry < MAX_RETRIES:
         try:
-            dm = connect(tegra, sleepDuration)
+            dm = connect(device, sleepDuration)
         except:
             curRetry += 1
             if curRetry == MAX_RETRIES:
-                setFlag(errorFile, "Automation Error: Unable to connect to tegra after %s attempts" % MAX_RETRIES)
+                setFlag(errorFile, "Automation Error: Unable to connect to device after %s attempts" % MAX_RETRIES)
                 return False
             else:
-                log.info("INFO: Unable to connect to tegra after %s try" % curRetry)
+                log.info("INFO: Unable to connect to device after %s try" % curRetry)
                 sleepDuration = 90
         else:
             break # We're done here
@@ -90,7 +90,7 @@ def checkVersion(dm, flag=False):
     ver = updateSUT.version(dm)
     if not updateSUT.isVersionCorrect(ver=ver):
         if flag:
-            setFlag(errorFile, "Remote Device Error: Unexpected ver on tegra, got '%s' expected '%s'" % \
+            setFlag(errorFile, "Remote Device Error: Unexpected ver on device, got '%s' expected '%s'" % \
                     (ver, "SUTAgentAndroid Version %s" % updateSUT.target_version))
         return False
     log.info("INFO: Got expected SUTAgent version '%s'" % updateSUT.target_version)
@@ -126,7 +126,7 @@ def checkAndFixScreen(dm):
     """ Verify the screen is set as we expect
 
     If the screen is incorrectly set, this function attempts to fix it,
-    which ends up requiring a reboot of the tegra.
+    which ends up requiring a reboot of the device.
 
     Returns False if screen is wrong, True if correct
     """
@@ -135,15 +135,15 @@ def checkAndFixScreen(dm):
 
     # Verify we have the expected screen resolution
     info = dm.getInfo("screen")
-    if not info["screen"][0] == EXPECTED_TEGRA_SCREEN:
-        setFlag(errorFile, "Remote Device Error: Unexpected Screen on tegra, got '%s' expected '%s'" % \
-                            (info["screen"][0], EXPECTED_TEGRA_SCREEN))
-        if not dm.adjustResolution(**EXPECTED_TEGRA_SCREEN_ARGS):
+    if not info["screen"][0] == EXPECTED_DEVICE_SCREEN:
+        setFlag(errorFile, "Remote Device Error: Unexpected Screen on device, got '%s' expected '%s'" % \
+                            (info["screen"][0], EXPECTED_DEVICE_SCREEN))
+        if not dm.adjustResolution(**EXPECTED_DEVICE_SCREEN_ARGS):
             setFlag(errorFile, "Command to update resolution returned failure")
         else:
             dm.reboot() # Reboot sooner than cp would trigger a hard Reset
         return False
-    log.info("INFO: Got expected screen size '%s'" % EXPECTED_TEGRA_SCREEN)
+    log.info("INFO: Got expected screen size '%s'" % EXPECTED_DEVICE_SCREEN)
     return True
 
 def checkSDCard(dm):
@@ -179,7 +179,7 @@ def checkSDCard(dm):
         return False
     return True
 
-def cleanupTegra(dm, doCheckStalled):
+def cleanupDevice(dm, doCheckStalled):
     """ Do cleanup actions necessary to ensure starting in a good state
 
     Returns False on failure, True on Success
@@ -243,18 +243,18 @@ def setWatcherINI(dm):
     return False
 
 
-def verifyDevice(tegra, checksut=False, doCheckStalled=True, watcherINI=False):
+def verifyDevice(device, checksut=False, doCheckStalled=True, watcherINI=False):
     # Returns False on failure, True on Success
     global dm, errorFile
-    tegraPath = os.path.join('/builds', tegra)
-    errorFile = os.path.join(tegraPath, 'error.flg')
+    devicePath = os.path.join('/builds', device)
+    errorFile = os.path.join(devicePath, 'error.flg')
 
-    if not canPing(tegra):
+    if not canPing(device):
         # TODO Reboot via PDU if ping fails
         log.info("verifyDevice: failing to ping")
         return False
 
-    if not canTelnet(tegra):
+    if not canTelnet(device):
         log.info("verifyDevice: failing to telnet")
         return False
 
@@ -272,8 +272,8 @@ def verifyDevice(tegra, checksut=False, doCheckStalled=True, watcherINI=False):
         log.info("verifyDevice: failing to check SD card")
         return False
 
-    if not cleanupTegra(dm, doCheckStalled):
-        log.info("verifyDevice: failing to cleanup tegra")
+    if not cleanupDevice(dm, doCheckStalled):
+        log.info("verifyDevice: failing to cleanup device")
         return False
     
     if watcherINI:
@@ -284,18 +284,18 @@ def verifyDevice(tegra, checksut=False, doCheckStalled=True, watcherINI=False):
     return True
 
 if __name__ == '__main__':
-    tegra_name = os.getenv('SUT_NAME')
+    device_name = os.getenv('SUT_NAME')
     if (len(sys.argv) <> 2):
-        if tegra_name in (None, ''):
-            print "usage: verify.py [tegra name]"
-            print "   Must have $SUT_NAME set in environ to omit tegra name"
+        if device_name in (None, ''):
+            print "usage: verify.py [device name]"
+            print "   Must have $SUT_NAME set in environ to omit device name"
             sys.exit(1)
         else:
-            log.info("INFO: Using tegra '%s' found in env variable" % tegra_name)
+            log.info("INFO: Using device '%s' found in env variable" % device_name)
     else:
-        tegra_name = sys.argv[1]
+        device_name = sys.argv[1]
     
-    if verifyDevice(tegra_name) == False:
+    if verifyDevice(device_name) == False:
         sys.exit(1) # Not ok to proceed
 
     sys.exit(0)

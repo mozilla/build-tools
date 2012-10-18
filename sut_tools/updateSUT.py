@@ -13,9 +13,9 @@ from sut_lib import connect, log
 # Constants
 target_version = "1.14"
 apkfilename = "sutAgentAndroid.apk"
-tegra_name = os.getenv('SUT_NAME')
-apkFoopyDirPattern =  "/builds/%(tegra_name)s"
-apkFoopyDir = apkFoopyDirPattern % {'tegra_name': tegra_name}
+device_name = os.getenv('SUT_NAME')
+apkFoopyDirPattern =  "/builds/%(device_name)s"
+apkFoopyDir = apkFoopyDirPattern % {'device_name': device_name}
 version_pattern = 'SUTAgentAndroid Version %s'
 
 RETCODE_SUCCESS = 0
@@ -51,7 +51,7 @@ def doUpdate(dm):
     tries = 0
     while tries < 5:
         try:
-            dm = connect(tegra_name, sleep=90)
+            dm = connect(device_name, sleep=90)
             break
         except:
             tries += 1
@@ -114,22 +114,22 @@ def download_apk():
 if __name__ == '__main__':
     if (len(sys.argv) <> 2):
         if os.getenv('SUT_NAME') in (None, ''):
-            print "usage: updateSUT.py [tegra name]"
-            print "   Must have $SUT_NAME set in environ to omit tegra name"
+            print "usage: updateSUT.py [device name]"
+            print "   Must have $SUT_NAME set in environ to omit device name"
             sys.exit(1)
         else:
-            print "INFO: Using tegra '%s' found in env variable" % tegra_name
+            print "INFO: Using device '%s' found in env variable" % device_name
     else:
-        tegra_name = sys.argv[1]
-        apkFoopyDir = apkFoopyDirPattern % {'tegra_name': tegra_name}
+        device_name = sys.argv[1]
+        apkFoopyDir = apkFoopyDirPattern % {'device_name': device_name}
 
     # Exit 5 if an error, for buildbot RETRY
     ret = 0
-    if main(tegra_name): ret = 5
+    if main(device_name): ret = 5
     sys.stdout.flush()
     sys.exit(ret)
 else:
-    if tegra_name in (None, ''):
+    if device_name in (None, ''):
         raise ImportError("To use updateSUT.py non-standalone you need SUT_NAME defined in environment")
     else:
-        log.debug("updateSUT: Using tegra '%s' found in env variable" % tegra_name)
+        log.debug("updateSUT: Using device '%s' found in env variable" % device_name)

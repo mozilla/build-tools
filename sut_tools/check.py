@@ -15,8 +15,8 @@ import datetime
 
 # from multiprocessing import get_logger, log_to_stderr
 from sut_lib import checkSlaveAlive, checkSlaveActive, getIPAddress, dumpException, loadOptions, \
-                    checkCPAlive, checkCPActive, getLastLine, stopProcess, runCommand, pingTegra, \
-                    reboot_tegra, stopTegra, getMaster
+                    checkCPAlive, checkCPActive, getLastLine, stopProcess, runCommand, pingDevice, \
+                    reboot_device, stopDevice, getMaster
 
 
 log            = logging.getLogger()
@@ -75,7 +75,7 @@ def checkTegra(master, tegra):
         status['environment'] = master['environment'][0]
         status['master']      = 'http://%s:%s' % (master['hostname'], master['http_port'])
 
-    fPing, lPing = pingTegra(tegra)
+    fPing, lPing = pingDevice(tegra)
     if fPing:
         try:
             hbSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -181,19 +181,19 @@ def checkTegra(master, tegra):
     if options.reboot:
         if not sutFound and status['bs'] != 'active':
             log.info('power cycling tegra')
-            reboot_tegra(tegra)
+            reboot_device(tegra)
         else:
             if sTegra == 'OFFLINE' and status['bs'] != 'active':
                 log.info('power cycling tegra')
-                reboot_tegra(tegra)
+                reboot_device(tegra)
 
     if options.reset and sTegra == 'INACTIVE' and status['cp'] == 'INACTIVE':
         log.info('stopping hung clientproxy')
-        stopTegra(tegra)
+        stopDevice(tegra)
         time.sleep(5)
         log.info('starting clientproxy for %s' % tegra)
         os.chdir(tegraPath)
-        runCommand(['python', 'clientproxy.py', '-b', '--tegra=%s' % tegra])
+        runCommand(['python', 'clientproxy.py', '-b', '--device=%s' % tegra])
 
 def findMaster(tegra):
     result  = None

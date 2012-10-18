@@ -35,8 +35,8 @@ Manage a buildbot client/slave instance for each defined Android device.
 
     Parameters
         --bbpath   <path>   Parent directory where the buildslave to control is located.
-        --tegra             Tegra to manage. If not given it will be determined.
-        --tegraIP           IP address of Tegra to manage. Will be discovered if not given.
+        --device            Device to manage. If not given it will be determined.
+        --deviceIP          IP address of Device to manage. Will be discovered if not given.
         --debug             Turn on debug logging.
         --background        Fork to a daemon process.
         --logpath           Path where log file output is written.
@@ -51,7 +51,7 @@ options         = None
 daemon          = None
 
 sutDataPort     = 20700
-sutDialbackPort = 42000 # base - tegra id # will be added to this
+sutDialbackPort = 42000 # base - device id # will be added to this
 maxErrors       = 5
 
 ourIP           = None
@@ -62,9 +62,9 @@ ourName         = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 defaultOptions = {
                    'debug':      ('-d', '--debug',      False,    'Enable Debug', 'b'),
                    'background': ('-b', '--background', False,    'daemonize ourselves', 'b'),
-                   'bbpath':     ('-p', '--bbpath',     ourPath,  'Path where the Tegra buildbot slave clients can be found'),
-                   'tegra':      ('-t', '--tegra',      None,     'Tegra to manage, if not given it will be figured out from environment'),
-                   'tegraIP':    ('',   '--tegraIP',    None,     'IP of Tegra to manage, if not given it will found via nslookup'),
+                   'bbpath':     ('-p', '--bbpath',     ourPath,  'Path where the Device buildbot slave clients can be found'),
+                   'device':     ('',   '--device',     None,     'Device to manage, if not given it will be figured out from environment'),
+                   'deviceIP':   ('',   '--deviceIP',   None,     'IP of Device to manage, if not given it will found via nslookup'),
                    'logpath':    ('-l', '--logpath',    ourPath,  'Path where log file is to be written'),
                    'pidpath':    ('',   '--pidpath',    ourPath,  'Path where the pid file is to be created'),
                    'hangtime':   ('',   '--hangtime',   1200,     'How long (in seconds) a slave can be idle'),
@@ -207,7 +207,7 @@ def handleDialback(port, events):
     """Dialback listener
     The SUTAgent will 'ping' our address/port when it first starts.
     
-    This DialbackHandler method will be called for an incoming Tegra's ping
+    This DialbackHandler method will be called for an incoming Device's ping
     when the listener is connected to by SUTAgent.
     
     NOTE: This code should only be run in it's own thread/process
@@ -222,7 +222,7 @@ def handleDialback(port, events):
             break
 
 def sendReboot(ip, port):
-    log.warning('sending rebt to tegra')
+    log.warning('sending rebt to device')
     try:
         hbSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         hbSocket.settimeout(float(120))
@@ -233,7 +233,7 @@ def sendReboot(ip, port):
         log.debug('Error sending reboot')
 
 def monitorEvents(options, events):
-    """This is the main state machine for the Tegra monitor.
+    """This is the main state machine for the Device monitor.
 
     Respond to the events sent via queue and also monitor the
     state of the buildslave if it's been started.
@@ -242,20 +242,20 @@ def monitorEvents(options, events):
     errorFile = os.path.join(options.bbpath, 'error.flg')
     bbEnv     = { 'PATH':     os.getenv('PATH'),
                   'HOME':     os.getenv('HOME'),
-                  'SUT_NAME': options.tegra,
-                  'SUT_IP':   options.tegraIP,
+                  'SUT_NAME': options.device,
+                  'SUT_IP':   options.deviceIP,
                 }
 
     event         = None
     bbActive      = False
-    tegraActive   = False
+    deviceActive   = False
     connected     = False
     nChatty       = 0
     maxChatty     = 10
     hbFails       = 0
     maxFails      = 50
     sleepFails    = 5
-    softCount     = 0    # how many times tegraActive is True
+    softCount     = 0    # how many times deviceActive is True
                          # but errorFlag is set
     softCountMax  = 5    # how many active events to wait bdfore
                          # triggering a soft reset
@@ -274,7 +274,7 @@ def monitorEvents(options, events):
             try:
                 hbSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 hbSocket.settimeout(float(120))
-                hbSocket.connect((options.tegraIP, sutDataPort))
+                hbSocket.connect((options.deviceIP, sutDataPort))
                 connected = True
             except:
                 connected = False
@@ -323,7 +323,7 @@ def monitorEvents(options, events):
                 nChatty = 0
 
             if state == 'reboot':
-                tegraActive = False
+                deviceActive = False
             elif state == 'stop' or state == 'offline':
                 stopSlave(pidFile)
                 bbActive = False
@@ -331,22 +331,22 @@ def monitorEvents(options, events):
                     hbSocket.close()
                     connected = False
             elif state == 'active' or state == 'dialback':
-                tegraActive = True
+                deviceActive = True
                 if not bbActive:
                     if os.path.isfile(errorFile):
-                        log.warning('Tegra active but error flag set [%d/%d]' % (softCount, softResets))
+                        log.warning('Device active but error flag set [%d/%d]' % (softCount, softResets))
                         softCount += 1
                         if softCount > softCountMax:
                             softCount = 0
                             if softResets < softResetMax:
                                 softResets += 1
-                                log.warning('removing error flag to see if tegra comes back')
+                                log.warning('removing error flag to see if device comes back')
                                 os.remove(errorFile)
                             else:
                                 hardResets += 1
                                 log.warning('hard reset reboot check [%d/%d]' % (hardResets, hardResetsMax))
                                 if hardResets < hardResetsMax:
-                                    sendReboot(options.tegraIP, sutDataPort)
+                                    sendReboot(options.deviceIP, sutDataPort)
                                 else:
                                     events.put(('offline',))
                     else:
@@ -356,7 +356,7 @@ def monitorEvents(options, events):
                     continue # race got us recursed, skip back to top
                 log.info('Running verify code')
                 proc, output = runCommand(['python', '/builds/sut_tools/verify.py',
-                                           options.tegra], env=bbEnv)
+                                           options.device], env=bbEnv)
                 if proc.returncode == 0:
                     for i in output:
                         log.debug(i)
@@ -372,7 +372,7 @@ def monitorEvents(options, events):
                     # We fall back to normal errorFile handling, which should reboot and try to verify
                     # A few times before giving up
             elif state == 'start':
-                if tegraActive and not bbActive:
+                if deviceActive and not bbActive:
                     log.debug('starting buildslave in %s' % options.bbpath)
                     bbProc, _ = runCommand(['twistd', '--no_save',
                                                       '--rundir=%s' % options.bbpath,
@@ -414,7 +414,7 @@ def monitorEvents(options, events):
                 hbSocket.close()
                 connected = False
 
-        log.debug('bbActive %s tegraActive %s' % (bbActive, tegraActive))
+        log.debug('bbActive %s deviceActive %s' % (bbActive, deviceActive))
 
         if os.path.isfile(errorFile):
             if bbActive:
@@ -476,25 +476,25 @@ if __name__ == '__main__':
     initLogs(options)
 
     options.bbpath = os.path.abspath(options.bbpath)
-    if options.tegra is None:
-        if 'tegra-' in ourPath.lower():
-            options.tegra = os.path.basename(os.path.split(ourPath)[-1])
+    if options.device is None:
+        if 'tegra-' in ourPath.lower() or 'panda-' in ourPath.lower():
+            options.device = os.path.basename(os.path.split(ourPath)[-1])
 
-    if options.tegra is None:
-        log.error('Tegra has not been specified, exiting')
+    if options.device is None:
+        log.error('Device has not been specified, exiting')
         sys.exit(1)
 
-    if options.tegraIP is None:
-        options.tegraIP = getIPAddress(options.tegra)
+    if options.deviceIP is None:
+        options.deviceIP = getIPAddress(options.device)
 
     try:
-        n = int(options.tegra.split('-')[1])
+        n = int(options.device.split('-')[1])
     except:
         n = 0
     sutDialbackPort += n
 
     p = os.getpid()
-    log.info('%s: ourIP %s tegra %s tegraIP %s bbpath %s' % (p, ourIP, options.tegra, options.tegraIP, options.bbpath))
+    log.info('%s: ourIP %s device %s deviceIP %s bbpath %s' % (p, ourIP, options.device, options.deviceIP, options.bbpath))
 
     pidFile = os.path.join(ourPath, '%s.pid' % ourName)
 

@@ -16,8 +16,8 @@ options        = None
 log            = logging.getLogger()
 defaultOptions = {
                    'debug':  ('-d', '--debug',  False,     'Enable debug output', 'b'),
-                   'bbpath': ('-p', '--bbpath', '/builds', 'Path where the Tegra buildbot slave clients can be found'),
-                   'tegra':  ('-t', '--tegra',  None,      'Tegra to check, if not given all Tegras will be checked'),
+                   'bbpath': ('-p', '--bbpath', '/builds', 'Path where the Device buildbot slave clients can be found'),
+                   'device':  ('',  '--device',  None,     'Device to check, if not given all Devices will be checked'),
                  }
 
 
@@ -34,18 +34,18 @@ def initLogs(options):
   else:
      log.setLevel(logging.INFO)
 
-def stopTegra(tegra):
-    tegraIP   = getIPAddress(tegra)
-    tegraPath = os.path.join(options.bbpath, tegra)
-    errorFile = os.path.join(tegraPath, 'error.flg')
+def stopDevice(device):
+    deviceIP   = getIPAddress(device)
+    devicePath = os.path.join(options.bbpath, device)
+    errorFile = os.path.join(devicePath, 'error.flg')
 
-    log.info('%s: %s - stopping all processes' % (tegra, tegraIP))
+    log.info('%s: %s - stopping all processes' % (device, deviceIP))
 
-    stopProcess(os.path.join(tegraPath, 'remotereftest.pid'), 'remotereftest')
-    stopProcess(os.path.join(tegraPath, 'runtestsremote.pid'), 'runtestsremote')
-    stopProcess(os.path.join(tegraPath, 'remotereftest.pid.xpcshell.pid'), 'xpcshell')
-    stopProcess(os.path.join(tegraPath, 'clientproxy.pid'), 'clientproxy')
-    stopProcess(os.path.join(tegraPath, 'twistd.pid'), 'buildslave')
+    stopProcess(os.path.join(devicePath, 'remotereftest.pid'), 'remotereftest')
+    stopProcess(os.path.join(devicePath, 'runtestsremote.pid'), 'runtestsremote')
+    stopProcess(os.path.join(devicePath, 'remotereftest.pid.xpcshell.pid'), 'xpcshell')
+    stopProcess(os.path.join(devicePath, 'clientproxy.pid'), 'clientproxy')
+    stopProcess(os.path.join(devicePath, 'twistd.pid'), 'buildslave')
 
     log.debug('  clearing flag files')
 
@@ -53,16 +53,16 @@ def stopTegra(tegra):
         log.info('  error.flg cleared')
         os.remove(errorFile)
 
-    log.debug('  sending rebt to tegra')
+    log.debug('  sending rebt to device')
 
     try:
         hbSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         hbSocket.settimeout(float(120))
-        hbSocket.connect((tegraIP, 20700))
+        hbSocket.connect((deviceIP, 20700))
         hbSocket.send('rebt\n')
         hbSocket.close()
     except:
-        log.error('  tegra socket error')
+        log.error('  device socket error')
 
 
 if __name__ == '__main__':
@@ -71,9 +71,9 @@ if __name__ == '__main__':
 
     options.bbpath = os.path.abspath(options.bbpath)
 
-    if options.tegra is None:
-        log.error('you must specify a single Tegra')
+    if options.device is None:
+        log.error('you must specify a single Device')
         sys.exit(2)
 
-    stopTegra(options.tegra)
+    stopDevice(options.device)
 

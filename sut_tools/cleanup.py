@@ -13,11 +13,11 @@ RETCODE_SUCCESS = 0
 RETCODE_ERROR = 1
 RETCODE_KILLSTALLED = 2
 
-def main(tegra=None, dm=None, doCheckStalled=True):
-    assert ((tegra is not None) or (dm is not None)) # Require one to be set
+def main(device=None, dm=None, doCheckStalled=True):
+    assert ((device is not None) or (dm is not None)) # Require one to be set
 
-    tegra_name = os.environ['SUT_NAME']
-    pidDir    = os.path.join('/builds/', tegra_name)
+    device_name = os.environ['SUT_NAME']
+    pidDir    = os.path.join('/builds/', device_name)
     errorFile = os.path.join(pidDir, 'error.flg')
 
     processNames = [ 'org.mozilla.fennec',
@@ -29,8 +29,8 @@ def main(tegra=None, dm=None, doCheckStalled=True):
                    ]
 
     if dm is None:
-        log.info("Connecting to: " + tegra)
-        dm = devicemanager.DeviceManagerSUT(tegra)
+        log.info("Connecting to: " + device)
+        dm = devicemanager.DeviceManagerSUT(device)
         dm.debug = 5
 
     for p in processNames:
@@ -80,7 +80,7 @@ def main(tegra=None, dm=None, doCheckStalled=True):
             log.info("successfully restored hosts file, we can test!!!")
 
     if doCheckStalled:
-        errcode = checkStalled(tegra_name)
+        errcode = checkStalled(device_name)
         if errcode > 1:
             if errcode == 2:
                 log.error("processes from previous run were detected and cleaned up")
@@ -91,18 +91,18 @@ def main(tegra=None, dm=None, doCheckStalled=True):
     return RETCODE_SUCCESS
 
 if __name__ == '__main__':
-    tegra_name = None
+    device_name = None
     if (len(sys.argv) <> 2):
         if os.getenv('SUT_NAME') in (None, ''):
-            print "usage: cleanup.py [tegra name]"
-            print "   Must have $SUT_NAME set in environ to omit tegra name"
+            print "usage: cleanup.py [device name]"
+            print "   Must have $SUT_NAME set in environ to omit device name"
             sys.exit(RETCODE_ERROR)
         else:
-            tegra_name = os.getenv('SUT_NAME')
-            log.info("INFO: Using tegra '%s' found in env variable" % tegra_name)
+            device_name = os.getenv('SUT_NAME')
+            log.info("INFO: Using device '%s' found in env variable" % device_name)
     else:
-        tegra_name = sys.argv[1]
+        device_name = sys.argv[1]
 
-    retval = main(tegra=tegra_name)
+    retval = main(device=device_name)
     sys.stdout.flush()
     sys.exit(retval)

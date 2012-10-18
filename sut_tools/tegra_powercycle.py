@@ -21,5 +21,5 @@ for tegra in sys.argv[1:]:
     if not tegra in sut_lib.tegras:
         print "ERROR: %s not found in devices.json" % tegra
 
-    sut_lib.reboot_tegra(tegra, debug=True)
+    sut_lib.reboot_device(tegra, debug=True)
 
