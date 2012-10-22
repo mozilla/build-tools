@@ -158,7 +158,9 @@ def makeIndexFiles(productName, version, buildNumber, stageServer,
 
     scp(indexFile.name, '%s@%s:%s/index.html' % (stageUsername, stageServer, candidates_dir),
         sshKey=stageSshKey)
-    run_remote_cmd(['find', candidates_dir, '-mindepth', '1', '-type', 'd', '-exec', 'cp', '-pv', '%s/index.html' % candidates_dir, '{}', '\\;'],
+    run_remote_cmd(['chmod', '644', '%s/index.html' % candidates_dir],
+                   server=stageServer, username=stageUsername, sshKey=stageSshKey)
+    run_remote_cmd(['find', candidates_dir, '-mindepth', '1', '-type', 'd', '-not', '-regex', '.*contrib.*', '-exec', 'cp', '-pv', '%s/index.html' % candidates_dir, '{}', '\\;'],
                    server=stageServer, username=stageUsername, sshKey=stageSshKey)
 
 def deleteIndexFiles(cleanup_dir, stageServer, stageUsername,
@@ -167,11 +169,14 @@ def deleteIndexFiles(cleanup_dir, stageServer, stageUsername,
                    server=stageServer, username=stageUsername, sshKey=stageSshKey)
 
 def updateSymlink(productName, version, stageServer, stageUsername,
-                  stageSshKey):
+                  stageSshKey, target):
     releases_dir = makeReleasesDir(productName)
 
-    run_remote_cmd(['cd %s && rm latest && ln -s %s latest' % (releases_dir, version)],
-                   server=stageServer, username=stageUsername, sshKey=stageSshKey)
+    run_remote_cmd([
+            'cd %(rd)s && rm -f %(target)s && ln -s %(version)s %(target)s' % \
+                dict(rd=releases_dir, version=version, target=target)
+        ],
+        server=stageServer, username=stageUsername, sshKey=stageSshKey)
 
 
 if __name__ == '__main__':
@@ -207,7 +212,8 @@ if __name__ == '__main__':
     stageUsername = options.ssh_username or branchConfig['stage_username']
     stageSshKey = options.ssh_key or branchConfig["stage_ssh_key"]
     stageSshKey = path.join(os.path.expanduser("~"), ".ssh", stageSshKey)
-    createIndexFiles = releaseConfig.get('makeIndexFiles', False)
+    createIndexFiles = releaseConfig.get('makeIndexFiles', False) and productName != 'xulrunner'
+    ftpSymlinkName = releaseConfig.get('ftpSymlinkName')
 
     if 'permissions' in args:
         checkStagePermissions(stageServer=stageServer,
@@ -262,8 +268,10 @@ if __name__ == '__main__':
                              stageUsername=stageUsername,
                              stageSshKey=stageSshKey,
                              cleanup_dir=makeReleasesDir(productName, version))
-        updateSymlink(stageServer=stageServer,
-                      stageUsername=stageUsername,
-                      stageSshKey=stageSshKey,
-                      productName=productName,
-                      version=version)
+        if ftpSymlinkName:
+            updateSymlink(stageServer=stageServer,
+                          stageUsername=stageUsername,
+                          stageSshKey=stageSshKey,
+                          productName=productName,
+                          version=version,
+                          target=ftpSymlinkName)
