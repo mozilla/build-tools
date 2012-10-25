@@ -46,7 +46,8 @@ class PatcherConfig(dict):
         # in earlier versions. These days we don't have that case so we simply
         # assume that all of the fromVersions in the past-update lines are
         # versions that should have update paths to the latest on all channels.
-        return tuple([self['current-update']['from']] + [v[0] for v in self['past-update']])
+        return tuple(set([self['current-update']['from']] + [v[0] for v in
+                                                             self['past-update']]))
 
     def getOptionalAttrs(self, version):
         if version not in self['release']:
