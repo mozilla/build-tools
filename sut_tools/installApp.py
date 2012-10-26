@@ -6,7 +6,7 @@ from mozdevice import devicemanagerSUT as devicemanager
 
 from sut_lib import getOurIP, calculatePort, clearFlag, setFlag, checkDeviceRoot, \
                     getDeviceTimestamp, setDeviceTimestamp, \
-                    getResolution, waitForDevice, runCommand, log
+                    getResolution, waitForDevice, runCommand, log, soft_reboot
 
 
 # hwine: minor ugg - the flag files need to be global. Refactoring into
@@ -100,6 +100,7 @@ def one_time_setup(ip_addr, major_source):
     cwd       = os.getcwd()
     global errorFile
     errorFile = os.path.join(cwd, '..', 'error.flg')
+    deviceName = os.path.basename(cwd)
 
     proxyIP   = getOurIP()
     proxyPort = calculatePort()
@@ -134,8 +135,8 @@ def one_time_setup(ip_addr, major_source):
         #adjust resolution down to allow fennec to install without memory issues
         if (width >= 1050 or height >= 1050):
             dm.adjustResolution(1024, 768, 'crt')
-            log.info('calling reboot')
-            dm.reboot(proxyIP, proxyPort)
+            log.info('forcing device reboot')
+            soft_reboot(device=deviceName, dm=dm, ipAddr=proxyIP, port=proxyPort)
             waitForDevice(dm)
 
             width, height = getResolution(dm)

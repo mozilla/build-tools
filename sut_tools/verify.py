@@ -7,7 +7,7 @@
 import sys
 import os
 import time
-from sut_lib import pingDevice, setFlag, connect, log
+from sut_lib import pingDevice, setFlag, connect, log, soft_reboot
 from mozdevice import devicemanagerSUT as devicemanager
 import updateSUT
 
@@ -122,7 +122,7 @@ def updateSUTVersion(dm):
     # If we get here we failed to update properly
     return False
 
-def checkAndFixScreen(dm):
+def checkAndFixScreen(dm, device):
     """ Verify the screen is set as we expect
 
     If the screen is incorrectly set, this function attempts to fix it,
@@ -141,7 +141,7 @@ def checkAndFixScreen(dm):
         if not dm.adjustResolution(**EXPECTED_DEVICE_SCREEN_ARGS):
             setFlag(errorFile, "Command to update resolution returned failure")
         else:
-            dm.reboot() # Reboot sooner than cp would trigger a hard Reset
+            soft_reboot(dm=dm, device=device) # Reboot sooner than cp would trigger a hard Reset
         return False
     log.info("INFO: Got expected screen size '%s'" % EXPECTED_DEVICE_SCREEN)
     return True
@@ -264,7 +264,7 @@ def verifyDevice(device, checksut=False, doCheckStalled=True, watcherINI=False):
             return False
 
     # Resolution Check disabled for now; Bug 737427
-    if False and not checkAndFixScreen(dm):
+    if False and not checkAndFixScreen(dm, device):
         log.info("verifyDevice: failing to fix screen")
         return False
 

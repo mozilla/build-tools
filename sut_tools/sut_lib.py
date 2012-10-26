@@ -17,6 +17,7 @@ import datetime
 import traceback
 import subprocess
 import random
+import relay as relayModule
 from mozdevice import devicemanagerSUT as devicemanager
 
 from optparse import OptionParser
@@ -494,6 +495,30 @@ def waitForDevice(dm, waitTime=60):
     if not deviceIsBack:
         log.error("Remote Device Error: waiting for device timed out.")
         sys.exit(1)
+
+def soft_reboot(device, dm, *args, **kwargs):
+    """
+    Use the softest/kindest reboot method we think we should use.
+
+    This does a reboot over devicemanager* in some cases, and a relay/pdu reboot in others
+    """
+    if 'panda-' in device:
+        # Using devicemanager for reboots on pandas doesn't work reliably
+        if reboot_relay(device):
+            return True
+        else:
+            log.warn("Automation Error: Unable to reboot %s via Relay Board." % device)
+
+    # If this panda doesn't successfully relay-reboot fall through to devicemanager
+    return dm.reboot(*args, **kwargs)
+
+def reboot_relay(device):
+    if device in pandas and pandas[device]['relayhost']:
+        relay_host = pandas[device]['relayhost']
+        bank, relay = map(int, pandas[device]['relayid'].split(":"))
+        log.info("Calling PDU powercycle for %s, %s:%s:%s" % (device, relay_host, bank, relay))
+        return relayModule.powercycle(relay_host, bank, relay)
+    return False
 
 def reboot_device(device, debug=False):
     """

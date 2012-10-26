@@ -5,7 +5,7 @@ import time
 import random
 import socket
 from mozdevice import devicemanagerSUT as devicemanager
-
+from sut_lib import soft_reboot
 
 def setFlag(flagfile, contents=None):
     print flagfile
@@ -88,9 +88,11 @@ proxyIP   = getOurIP()
 proxyPort = calculatePort()
 refWidth  = 1600 # x
 refHeight = 1200 # y
+deviceName = os.path.basename(cwd)
+deviceIP = sys.argv[1]
 
-print "connecting to: %s" % sys.argv[1]
-dm = devicemanager.DeviceManagerSUT(sys.argv[1])
+print "connecting to: %s" % deviceIP
+dm = devicemanager.DeviceManagerSUT(deviceIP)
 # Moar data!
 dm.debug = 3
 devRoot  = dm.getDeviceRoot()
@@ -107,7 +109,7 @@ print("current resolution X:%d Y:%d" % (width, height))
 # adjust resolution up if we are part of a reftest run
 if (testname == 'reftest') and width < refWidth:
     if dm.adjustResolution(width=refWidth, height=refHeight, type='crt'):
-        status = dm.reboot(ipAddr=proxyIP, port=proxyPort)
+        status = soft_reboot(dm=dm, device=deviceName, ipAddr=proxyIP, port=proxyPort)
         print status
         waitForDevice()
 
