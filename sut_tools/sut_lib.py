@@ -474,7 +474,7 @@ def checkDeviceRoot(dm):
         return None
     return dr
 
-def waitForDevice(dm, waitTime=60):
+def waitForDevice(dm, waitTime=120):
     log.info("Waiting for device to come back...")
     time.sleep(waitTime)
     deviceIsBack = False

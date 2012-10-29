@@ -6,7 +6,8 @@
 
 import os, sys
 from mozdevice import devicemanagerSUT as devicemanager
-from sut_lib import clearFlag, setFlag, checkDeviceRoot, checkStalled, waitForDevice, log
+from sut_lib import clearFlag, setFlag, checkDeviceRoot, checkStalled, \
+                    waitForDevice, log, soft_reboot
 
 # main() RETURN CODES
 RETCODE_SUCCESS = 0
@@ -33,19 +34,17 @@ def main(device=None, dm=None, doCheckStalled=True):
         dm = devicemanager.DeviceManagerSUT(device)
         dm.debug = 5
 
+    found = False
     for p in processNames:
-        if dm.dirExists('/data/data/%s' % p):
-            try:
-                log.info(dm.uninstallAppAndReboot(p))
-                waitForDevice(dm)
-            except devicemanager.DMError, err:
-                pass
-    
-    # Now Verify that they are all gone
-    for p in processNames:
-        if dm.dirExists('/data/data/%s' % p):
-            setFlag(errorFile, "Remote Device Error: Unable to properly uninstall %s" % p)
-            return RETCODE_ERROR
+        try:
+            dm.uninstallApp(p)
+            found = True
+        except devicemanager.DMError, err:
+            pass
+
+    if found:
+        soft_reboot(device=device, dm=dm)
+        waitForDevice(dm)
 
     devRoot  = checkDeviceRoot(dm)
 

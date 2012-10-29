@@ -133,7 +133,7 @@ def one_time_setup(ip_addr, major_source):
 
         width, height = getResolution(dm)
         #adjust resolution down to allow fennec to install without memory issues
-        if (width >= 1050 or height >= 1050):
+        if (width == 1600 or height == 1200):
             dm.adjustResolution(1024, 768, 'crt')
             log.info('forcing device reboot')
             soft_reboot(device=deviceName, dm=dm, ipAddr=proxyIP, port=proxyPort)

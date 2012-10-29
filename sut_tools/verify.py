@@ -179,7 +179,7 @@ def checkSDCard(dm):
         return False
     return True
 
-def cleanupDevice(dm, doCheckStalled):
+def cleanupDevice(device, dm, doCheckStalled):
     """ Do cleanup actions necessary to ensure starting in a good state
 
     Returns False on failure, True on Success
@@ -189,7 +189,7 @@ def cleanupDevice(dm, doCheckStalled):
 
     import cleanup
     try:
-        retval = cleanup.main(dm=dm, doCheckStalled=doCheckStalled)
+        retval = cleanup.main(device=device, dm=dm, doCheckStalled=doCheckStalled)
         if retval == cleanup.RETCODE_SUCCESS:
             # All is good
             return True
@@ -272,7 +272,7 @@ def verifyDevice(device, checksut=False, doCheckStalled=True, watcherINI=False):
         log.info("verifyDevice: failing to check SD card")
         return False
 
-    if not cleanupDevice(dm, doCheckStalled):
+    if not cleanupDevice(device, dm, doCheckStalled):
         log.info("verifyDevice: failing to cleanup device")
         return False
     
