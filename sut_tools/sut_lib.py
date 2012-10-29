@@ -68,8 +68,13 @@ def loadDevicesData(filepath):
 allDevices = loadDevicesData('/builds/tools/buildfarm/mobile')
 if len(allDevices) == 0:
     allDevices = loadDevicesData(os.path.join(os.path.dirname(__file__), '../buildfarm/mobile'))
-tegras = [devices[x] for x in devices if x.startswith('tegra-')]
-pandas = [devices[x] for x in devices if x.startswith('panda-')]
+tegras = dict()
+pandas = dict()
+for x in allDevices:
+    if x.startswith('tegra-'):
+       tegras[x] = allDevices[x]
+    if x.startswith('panda-'):
+       pandas[x] = allDevices[x]
 
 try:
     masters = json.load(open('/builds/tools/buildfarm/maintenance/production-masters.json', 'r'))

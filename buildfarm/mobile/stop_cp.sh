@@ -2,8 +2,8 @@
 cd /builds
 
 if [ -z $1 ] ; then
-  tegras=tegra-*
-  pandas=panda-*
+  tegras=`ls -d tegra-* 2> /dev/null`
+  pandas=`ls -d panda-* 2> /dev/null`
   devices="$tegras $pandas"
 else
   devices=$1

@@ -13,8 +13,8 @@ if [ "$TERM" != "screen" ] ; then
   exit 1
 fi
 
-tegras=`ls -d tegra-* 2&> /dev/null`
-pandas=`ls -d panda-* 2&> /dev/null`
+tegras=`ls -d tegra-* 2> /dev/null`
+pandas=`ls -d panda-* 2> /dev/null`
 
 if [ -z $1 ] ; then
   devices="$tegras $pandas"
