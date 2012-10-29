@@ -141,7 +141,7 @@ class PatcherConfig(dict):
 
     def addPastUpdate(self, value):
         for existing in self['past-update']:
-            if value[0:2] == existing[0:2]:
+            if value[0] == existing[0]:
                 raise PatcherConfigError("Found multiple past-updates with duplicate to/from versions: %s" % value)
         self['past-update'].append(value)
 

@@ -330,6 +330,10 @@ version   12.0
         self.pc['past-update'] = [['1', '2', ['abc']]]
         self.assertRaises(PatcherConfigError, self.pc.addPastUpdate, ['1', '2', ['test']])
 
+    def testAddDuplicatePastUpdate2(self):
+        self.pc['past-update'] = [['1', '2', ['abc']]]
+        self.assertRaises(PatcherConfigError, self.pc.addPastUpdate, ['1', '3', ['test']])
+
     def testAddRelease(self):
         self.pc.addRelease('3.0', {
             'schema': 2,
