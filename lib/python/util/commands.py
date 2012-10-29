@@ -1,32 +1,30 @@
 """Functions for running commands"""
-import subprocess, os
+import subprocess
+import os
 import time
 
 import logging
 log = logging.getLogger(__name__)
 
+
 def log_cmd(cmd, **kwargs):
     # cwd is special in that we always want it printed, even if it's not
     # explicitly chosen
+    kwargs = kwargs.copy()
     if 'cwd' not in kwargs:
         kwargs['cwd'] = os.getcwd()
-    def escape(s):
-        s = s.encode('unicode_escape').encode('string_escape')
-        if ' ' in s:
-            # don't need to escape ', since string_escape already does that
-            return "'%s'" % s
-        else:
-            return s
     log.info("command: START")
-    log.info("command: %s", " ".join(escape(s) for s in cmd))
-    for key,value in kwargs.iteritems():
+    log.info("command: %s" % subprocess.list2cmdline(cmd))
+    for key, value in kwargs.iteritems():
         log.info("command: %s: %s", key, str(value))
     log.info("command: output:")
+
 
 def merge_env(env):
     new_env = os.environ.copy()
     new_env.update(env)
     return new_env
+
 
 def run_cmd(cmd, **kwargs):
     """Run cmd (a list of arguments).  Raise subprocess.CalledProcessError if
@@ -40,12 +38,13 @@ def run_cmd(cmd, **kwargs):
     try:
         t = time.time()
         return subprocess.check_call(cmd, **kwargs)
-    except subprocess.CalledProcessError, e:
+    except subprocess.CalledProcessError:
         log.info('command: ERROR', exc_info=True)
         raise
     finally:
         elapsed = time.time() - t
         log.info("command: END (%.2fs elapsed)\n", elapsed)
+
 
 def run_remote_cmd(cmd, server, username=None, sshKey=None, ssh='ssh',
                    **kwargs):
@@ -58,6 +57,7 @@ def run_remote_cmd(cmd, server, username=None, sshKey=None, ssh='ssh',
     if isinstance(cmd, basestring):
         cmd = [cmd]
     return run_cmd(cmd_prefix + cmd, **kwargs)
+
 
 def get_output(cmd, include_stderr=False, dont_log=False, **kwargs):
     """Run cmd (a list of arguments) and return the output.  If include_stderr
@@ -93,6 +93,7 @@ def get_output(cmd, include_stderr=False, dont_log=False, **kwargs):
     finally:
         elapsed = time.time() - t
         log.info("command: END (%.2f elapsed)\n", elapsed)
+
 
 def remove_path(path):
     """This is a replacement for shutil.rmtree that works better under
