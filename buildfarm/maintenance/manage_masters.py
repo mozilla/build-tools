@@ -11,6 +11,9 @@ def run_action_on_master(action, master):
         with settings(host_string=master['hostname']):
             action_func(master)
             return True
+    except AttributeError:
+        print "[%s] %s action is not defined." % (master['hostname'], action)
+        return False
     except:
         import traceback
         print "Failed to run", action, "on", master['name']
