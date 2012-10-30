@@ -547,8 +547,8 @@ def reboot_device(device, debug=False):
     """
     result = False
     if device in tegras:
-        pdu      = tegras[tegra]['pdu']
-        deviceID = tegras[tegra]['pduid']
+        pdu      = tegras[device]['pdu']
+        deviceID = tegras[device]['pduid']
         if deviceID.startswith('.'):
             if deviceID[2] == 'B':
                 b = 2
@@ -560,7 +560,7 @@ def reboot_device(device, debug=False):
                 oib = '1.3.6.1.4.1.1718.%s' % s
                 cmd = '/usr/bin/snmpset -v 1 -c private %s %s i 3' % (pdu, oib)
                 if debug:
-                    log.debug('rebooting %s at %s %s' % (tegra, pdu, deviceID))
+                    log.debug('rebooting %s at %s %s' % (device, pdu, deviceID))
                 if os.system(cmd) == 0:
                     result = True
             except:
