@@ -21,6 +21,14 @@ class Watcher:
 
         self.started = False
 
+        if os.path.exists(fname):
+          os.utime(fname, None)
+        else:
+          try:
+            open(fname, 'w').close()
+          except:
+            print "Could not create %s." % fname
+            sys.exit(1)
         self.fp = open(fname)
         self.fp.seek(0, 2) # SEEK_END
         self.current_inode = os.fstat(self.fp.fileno()).st_ino
