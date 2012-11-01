@@ -154,7 +154,7 @@ update_blocklist_in_hg()
     fi
 
     cp -f blocklist_amo.xml ${REPODIR}/${APP_DIR}/app/blocklist.xml
-    COMMIT_MESSAGE="Automated blocklist update from host $HOST"
+    COMMIT_MESSAGE="No bug, Automated blocklist update from host $HOST"
     if [ $DONTBUILD == true ]; then
         COMMIT_MESSAGE="${COMMIT_MESSAGE} - (DONTBUILD)"
     fi
