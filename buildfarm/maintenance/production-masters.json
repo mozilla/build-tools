@@ -907,7 +907,7 @@
     "ssh_port": 7201,
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/tests1-macosx/tools"
-  }
+  },
   {
     "basedir": "/builds/buildbot/tests1-panda",
     "bbconfigs_branch": "production",
@@ -1227,5 +1227,5 @@
     "ssh_port": 7201,
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/tests1-panda/tools"
-  },
+  }
 ]
