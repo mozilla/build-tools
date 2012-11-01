@@ -15,6 +15,7 @@ APPROVAL=false
 HG_SSH_USER='ffxbld'
 HG_SSH_KEY='~cltbld/.ssh/ffxbld_dsa'
 PRODUCT='firefox'
+REPODIR='blocklist'
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -26,6 +27,7 @@ while [ $# -gt 0 ]; do
         -a) APPROVAL=true;;
         -u) HG_SSH_USER="$2"; shift;;
         -k) HG_SSH_KEY="$2"; shift;;
+        -r) REPODIR="$2"; shift;;
         -*) echo >&2 \
 	    $USAGE
             exit 1;;
@@ -62,7 +64,6 @@ HGHOST="hg.mozilla.org"
 HGREPO="http://${HGHOST}/${BRANCH}"
 HGPUSHREPO="ssh://${HGHOST}/${BRANCH}"
 BLOCKLIST_URL_HG="${HGREPO}/raw-file/default/${APP_DIR}/app/blocklist.xml"
-REPODIR='blocklist'
 
 HG=hg
 WGET=wget
