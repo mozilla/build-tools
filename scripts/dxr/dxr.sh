@@ -37,7 +37,7 @@ if [ -f "$PROPERTIES_FILE" ]; then
     # Purging
     cd $SCRIPTS_DIR/..
     $PYTHON $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
-        -s 6 -n info -n 'rel-*' -n $builddir
+        -s 10 -n info -n 'rel-*' -n $builddir
 fi
 
 # Set up mock environment
