@@ -1,8 +1,14 @@
 #!/bin/sh
 set -e
+set -x
 MY_DIR=$(dirname $(readlink -f $0))
 SCRIPTS_DIR="$MY_DIR/../../"
-PYTHON="/tools/python/bin/python"
+if [ -x "/tools/python/bin/python" ]; then
+    PYTHON="/tools/python/bin/python"
+else
+    PYTHON=`which python`
+fi
+
 JSONTOOL="$PYTHON $SCRIPTS_DIR/buildfarm/utils/jsontool.py"
 workdir=`pwd`
 
