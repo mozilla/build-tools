@@ -18,12 +18,8 @@ if [ ! -f "$SPIDERDIR/$VARIANT" ]; then
     exit 1
 fi
 
+PYTHON="python"
 if [ -f "$PROPERTIES_FILE" ]; then
-    if [ "$OSTYPE" = "msys" ]; then
-        PYTHON="python"
-    else
-        PYTHON="/tools/python/bin/python"
-    fi
     JSONTOOL="$PYTHON $SCRIPTS_DIR/buildfarm/utils/jsontool.py"
 
     builder=$($JSONTOOL -k properties.buildername $PROPERTIES_FILE)
@@ -39,17 +35,17 @@ if [ -f "$PROPERTIES_FILE" ]; then
     fi
 
     cd $SCRIPTS_DIR/../..
-    python $SCRIPTS_DIR/clobberer/clobberer.py -s scripts \
+    $PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s scripts \
         -s ${PROPERTIES_FILE##*/} \
         $CLOBBERER_URL $branch "$builder" $builddir $slavename $master
 
     # Purging
     cd $SCRIPTS_DIR/..
-    python $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
+    $PYTHON $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
         -s 4 -n info -n 'rel-*' -n $builddir
 fi
 
-python $SCRIPTS_DIR/buildfarm/utils/hgtool.py --tbox $HG_REPO src || exit 2
+$PYTHON $SCRIPTS_DIR/buildfarm/utils/hgtool.py --tbox $HG_REPO src || exit 2
 
 (cd src/js/src; autoconf-2.13 || autoconf2.13)
 
