@@ -208,7 +208,7 @@ def setWatcherINI(dm):
     currentHash = hashlib.md5(watcherINI).hexdigest()
 
     def watcherDataCurrent():
-        remoteFileHash = dm.getRemoteHash(realLoc)
+        remoteFileHash = dm._getRemoteHash(realLoc)
         if currentHash != remoteFileHash:
             return False
         else:
@@ -295,7 +295,10 @@ if __name__ == '__main__':
     else:
         device_name = sys.argv[1]
     
-    if verifyDevice(device_name) == False:
+    # Only attempt updating the watcher if we run against a tegra.
+    doWatcherUpdate = 'tegra' in device_name
+    
+    if verifyDevice(device_name, watcherINI=doWatcherUpdate) == False:
         sys.exit(1) # Not ok to proceed
 
     sys.exit(0)
