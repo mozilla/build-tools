@@ -18,17 +18,23 @@ def reboot(dm):
 
     try:
         dm.getInfo('process')
-        log.info(dm._runCmds([{'cmd': 'exec su -c "logcat -d -v time *:W"'}]))
+        log.info(dm._runCmds([{'cmd': 'exec su -c "logcat -d -v time *:W"'}], timeout=10))
+    except:
+        log.info("Failure to trying to run logcat on device")
 
+    try:
         log.info('forcing device reboot')
         status = soft_reboot(dm=dm, device=deviceName, ipAddr=proxyIP, port=proxyPort)
         log.info(status)
-    finally:
-        try:
-            waitForDevice(dm, waitTime=300)
-        except SystemExit:
-            setFlag(errorFile, "Remote Device Error: call for device reboot failed")
-            return 1
+    except:
+        log.info("Failure while rebooting device")
+
+
+    try:
+        waitForDevice(dm, waitTime=300)
+    except SystemExit:
+        setFlag(errorFile, "Remote Device Error: Device failed to recover after reboot")
+        return 1
 
     sys.stdout.flush()
     return 0
