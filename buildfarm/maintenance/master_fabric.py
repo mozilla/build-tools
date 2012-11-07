@@ -124,6 +124,20 @@ def fix_makefile_symlink(master):
         run('ln -s %(bbconfigs_dir)s/Makefile.master %(basedir)s/Makefile' % master)
     print OK, "updated Makefile symlink in %(hostname)s:%(basedir)s" % master
 
+
+def add_esr17_symlinks(master):
+    with show('running'):
+        run('ln -s %(bbconfigs_dir)s/mozilla/release-firefox-mozilla-esr17.py '
+            '%(master_dir)s/' % master)
+        run('ln -s %(bbconfigs_dir)s/mozilla/l10n-changesets_mozilla-esr17 '
+            '%(master_dir)s/' % master)
+        run('ln -s %(bbconfigs_dir)s/mozilla/release-thunderbird-comm-esr17.py '
+            '%(master_dir)s/' % master)
+        run('ln -s %(bbconfigs_dir)s/mozilla/l10n-changesets_thunderbird-esr17 '
+            '%(master_dir)s/' % master)
+    print OK, "Added esr17 symlinks in %(hostname)s:%(basedir)s" % master
+
+
 def per_host(fn):
     fn.per_host = True
     return fn
@@ -151,5 +165,6 @@ actions = [
     'update_buildbot',
     'update_queue',
     'fix_makefile_symlink',
+    'add_esr17_symlinks',
     ]
 

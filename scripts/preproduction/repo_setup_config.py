@@ -11,6 +11,10 @@ repoSetupConfig['reposToClone'] = {
                 'mozilla/preproduction_release_overrides.py',
                 'mozilla/preproduction_release_overrides-esr10.py',
              ],
+            'mozilla/release-firefox-mozilla-esr17.py': [
+                'mozilla/preproduction_release_overrides.py',
+                'mozilla/preproduction_release_overrides-esr17.py',
+             ],
             'mozilla/release-firefox-mozilla-beta.py': [
                 'mozilla/preproduction_release_overrides.py',
                 'mozilla/preproduction_release_overrides-beta.py',
