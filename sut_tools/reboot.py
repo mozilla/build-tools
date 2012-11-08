@@ -16,6 +16,14 @@ def reboot(dm):
     proxyIP   = getOurIP()
     proxyPort = calculatePort()
 
+    if 'panda' not in deviceName and 'tegra' not in deviceName:
+        # Attempt to set devicename via env variable 'SUT_NAME'
+        sname = os.getenv('SUT_NAME')
+        if sname.strip():
+            deviceName = sname.strip()
+        else:
+            log.info("Unable to find a proper devicename, will attempt to reboot device")
+
     try:
         dm.getInfo('process')
         log.info(dm._runCmds([{'cmd': 'exec su -c "logcat -d -v time *:W"'}], timeout=10))
@@ -23,7 +31,7 @@ def reboot(dm):
         log.info("Failure to trying to run logcat on device")
 
     try:
-        log.info('forcing device reboot')
+        log.info('forcing device %s reboot' % deviceName)
         status = soft_reboot(dm=dm, device=deviceName, ipAddr=proxyIP, port=proxyPort)
         log.info(status)
     except:
