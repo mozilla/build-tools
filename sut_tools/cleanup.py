@@ -34,19 +34,24 @@ def main(device=None, dm=None, doCheckStalled=True):
         dm = devicemanager.DeviceManagerSUT(device)
         dm.debug = 5
 
-    for p in processNames:
-        if dm.dirExists('/data/data/%s' % p):
-            try:
-                log.info(dm.uninstallAppAndReboot(p))
-                waitForDevice(dm)
-            except devicemanager.DMError, err:
-                pass
+    packages = dm._runCmds([ { 'cmd': 'exec pm list packages' }])
+    for package in packages.split('\n'):
+        for proc in processNames:
+            if package.strip() == "package:%s" % proc:
+                try:
+                    log.info(dm.uninstallAppAndReboot(proc))
+                    waitForDevice(dm)
+                except devicemanager.DMError, err:
+                    setFlag(errorFile, "Remote Device Error: Unable to uninstall %s and reboot: %s" % (proc, err))
+                    return RETCODE_ERROR
 
     # Now Verify that they are all gone
-    for p in processNames:
-        if dm.dirExists('/data/data/%s' % p):
-            setFlag(errorFile, "Remote Device Error: Unable to properly uninstall %s" % p)
-            return RETCODE_ERROR
+    packages = dm._runCmds([ { 'cmd': 'exec pm list packages' }])
+    for package in packages.split('\n'):
+        for proc in processNames:
+            if package == "package:%s" % proc:
+                setFlag(errorFile, "Remote Device Error: Unable to properly uninstall %s" % proc)
+                return RETCODE_ERROR
 
     devRoot  = checkDeviceRoot(dm)
 

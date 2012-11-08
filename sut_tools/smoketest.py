@@ -59,7 +59,7 @@ def smoketest(device_name, number):
     deviceRoot = dm.getDeviceRoot()
 
     # This does all the steps of verify.py including the cleanup.
-    if verifyDevice(device_name, checksut=False, doCheckStalled=False, watcherINI=False) == False:
+    if verifyDevice(device_name, checksut=False, doCheckStalled=False, watcherINI=True) == False:
         log.error("failed to run verify on %s" % (device_name))
         return 1 # Not ok to proceed
     log.info("Successfully verified the device")
@@ -69,7 +69,7 @@ def smoketest(device_name, number):
     time.sleep(30)
     dm = devicemanager.DeviceManagerSUT(device_name, 20701)
     print "in smoketest, going to call installOneApp with dm: %s, %s" % (dm, dm._sock)
-    if installOneApp(dm, deviceRoot, os.path.abspath(appFileName), None, None, logcat=False):
+    if installOneApp(dm, deviceRoot, os.path.abspath(appFileName), None, logcat=False):
         log.error("failed to install %s on device %s" % (app, device_name))
         return 1
     log.info("Successfully installed the application")
