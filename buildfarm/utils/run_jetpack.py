@@ -69,7 +69,7 @@ def summarizeJetpackTestLog(name, log):
     # Format the counts
     summary = "%d/%d" % (totalCount, failCount)
     # Return the summary.
-    return "TinderboxPrint:%s<br />%s\n" % (name, summary)
+    return "TinderboxPrint:%s<br/>%s\n" % (name, summary)
 
 if __name__ == '__main__':
     is_poller = False
