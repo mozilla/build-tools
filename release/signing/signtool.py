@@ -106,15 +106,15 @@ def main():
 
     # Handle format
     formats = []
-    allowed_formats = ("signcode", "gpg", "mar", "dmg" )
+    allowed_formats = ("signcode", "gpg", "mar", "dmg", "jar", "b2gmar")
     for fmt in options.formats:
         if "," in fmt:
             for fmt in fmt.split(","):
                 if fmt not in allowed_formats:
-                    parser.error("invalid format: %s", fmt)
+                    parser.error("invalid format: %s" % fmt)
                 formats.append(fmt)
         elif fmt not in allowed_formats:
-            parser.error("invalid format: %s", fmt)
+            parser.error("invalid format: %s" % fmt)
         else:
             formats.append(fmt)
 

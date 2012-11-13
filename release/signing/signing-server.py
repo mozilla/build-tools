@@ -224,10 +224,10 @@ if __name__ == '__main__':
         passphrase = getpass.getpass("%s passphrase: " % format_)
         if not passphrase:
             passphrase = None
+        tmpdir = tempfile.mkdtemp()
         try:
             log.info("checking %s passphrase", format_)
             src = config.get('signing', 'testfile_%s' % format_)
-            tmpdir = tempfile.mkdtemp()
             dst = os.path.join(tmpdir, os.path.basename(src))
             shutil.copyfile(src, dst)
             if 0 != run_signscript(config.get('signing', 'signscript'), src, dst, src, format_, passphrase, max_tries=2):

@@ -1,4 +1,4 @@
-import time, os, tempfile, shlex, shutil, fnmatch
+import time, os, tempfile, shlex, shutil, fnmatch, re
 # TODO: Use util.command
 from subprocess import Popen, PIPE, STDOUT, check_call, call
 
@@ -142,6 +142,68 @@ def mar_signfile(inputfile, outputfile, mar_cmd, fake=False, passphrase=None):
         log.exception(data)
         raise
 
+
+def jar_unsignfile(filename):
+    # Find all the files in META-INF
+    command = ['unzip', '-l', filename]
+    stdout = tempfile.TemporaryFile()
+    log.debug("running %s", command)
+    proc = Popen(command, stdout=stdout, stderr=STDOUT, stdin=PIPE)
+    if proc.wait() != 0:
+        stdout.seek(0)
+        data = stdout.read()
+        log.error("unzip output: %s", data)
+        raise ValueError("Couldn't list zip contents")
+
+    stdout.seek(0)
+    data = stdout.read()
+    meta_files = re.findall(r'\b(META-INF/.*)$', data, re.I + re.M)
+    if not meta_files:
+        # Nothing to do
+        return
+
+    # Now delete them
+    command = ['zip', filename, '-d'] + meta_files
+    stdout = tempfile.TemporaryFile()
+    log.debug("running %s", command)
+    proc = Popen(command, stdout=stdout, stderr=STDOUT, stdin=PIPE)
+    # Zip returns with 0 in normal operatoin
+    # it returns with 12 if it has nothing to do
+    if proc.wait() not in (0, 12):
+        stdout.seek(0)
+        data = stdout.read()
+        log.error("zip output: %s", data)
+        raise ValueError("Couldn't remove previous signature")
+
+def jar_signfile(filename, keystore, keyname, fake=False, passphrase=None):
+    """Sign a jar file
+    """
+    # unsign first
+    jar_unsignfile(filename)
+    command = ["jarsigner", "-keystore", keystore, filename]
+    if keyname:
+        command.append(keyname)
+    stdout = tempfile.TemporaryFile()
+    try:
+        log.debug("running %s", command)
+        proc = Popen(command, stdout=stdout, stderr=STDOUT, stdin=PIPE)
+        if passphrase:
+            passphrases = passphrase.split(' ')
+            for p in passphrases:
+                proc.stdin.write(p)
+                proc.stdin.write("\n")
+        proc.stdin.close()
+        if proc.wait() != 0:
+            stdout.seek(0)
+            data = stdout.read()
+            log.error("jarsigner output: %s", data)
+            raise ValueError("jarsigner didn't return 0")
+    except:
+        stdout.seek(0)
+        data = stdout.read()
+        log.exception(data)
+        raise
+
 def dmg_signfile(filename, keychain, signing_identity, code_resources, identifier, subject_ou, lockfile, fake=False, passphrase=None):
     """ Sign a mac .app folder
     """
@@ -166,12 +228,12 @@ def dmg_signfile(filename, keychain, signing_identity, code_resources, identifie
     try:
         sign_lock = None
         try:
-            # Acquire a lock for the signing command, to ensure we don't have a 
+            # Acquire a lock for the signing command, to ensure we don't have a
             # race condition where one process locks the keychain immediately after another
             # unlocks it.
             log.debug("Try to acquire %s", lockfile)
             sign_lock = Lock(lockfile)
-            # Put a 30 second timeout on waiting for the lock. 
+            # Put a 30 second timeout on waiting for the lock.
             sign_lock.lock(timedelta(0,30))
 
             # Unlock the keychain so that we do not get a user-interaction prompt to use
