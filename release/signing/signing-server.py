@@ -2,7 +2,8 @@
 """
 signing-server [options] server.ini
 """
-import os, site
+import os
+import site
 # Modify our search path to find our modules
 site.addsitedir(os.path.join(os.path.dirname(__file__), "../../lib/python"))
 import shutil
@@ -15,7 +16,7 @@ import logging
 import logging.handlers
 
 from util.file import sha1sum as sync_sha1sum, safe_unlink
-from util.file import load_config
+from util.file import load_config, get_config, get_config_int, get_config_bool
 from signing.server import SigningServer, create_server, run_signscript
 
 # External dependencies
@@ -114,10 +115,14 @@ def run(config_filename, passphrases):
             break
     log.info("pid %i exiting normally", os.getpid())
 
-def setup_logging(options):
-    if options.logfile:
-        handler = logging.handlers.RotatingFileHandler(options.logfile,
-                maxBytes=1024**2, backupCount=10)
+
+def setup_logging(loglevel=None, logfile=None, log_maxsize=None, log_maxfiles=None):
+    if logfile:
+        handler = logging.handlers.RotatingFileHandler(
+            logfile,
+            maxBytes=log_maxsize,
+            backupCount=log_maxfiles,
+        )
     else:
         handler = logging.StreamHandler()
 
@@ -126,7 +131,20 @@ def setup_logging(options):
 
     logger = logging.getLogger()
     logger.addHandler(handler)
-    logger.setLevel(options.loglevel)
+    logger.setLevel(logging.INFO)
+
+    if logfile:
+        log.info("Logging to %s; maxBytes=%s; backupCount=%s; loglevel=%s",
+                 logfile, log_maxsize, log_maxfiles,
+                 logging.getLevelName(loglevel)
+                 )
+    else:
+        log.info("Logging to stderr; loglevel=%s",
+                 logging.getLevelName(loglevel)
+                 )
+
+    logger.setLevel(loglevel)
+
 
 if __name__ == '__main__':
     from optparse import OptionParser
@@ -135,19 +153,24 @@ if __name__ == '__main__':
 
     parser = OptionParser(__doc__)
     parser.set_defaults(
-            loglevel=logging.INFO,
-            logfile=None,
-            daemonize=False,
-            pidfile="signing.pid",
-            action="run",
-            )
+        # Defaults for these are actually set below
+        # We set default to None here so we can tell if the user has overridden
+        # them on the cmdline
+        logfile=None,
+        loglevel=None,
+        log_maxfiles=None,
+        log_maxsize=None,
+        daemonize=None,
+        pidfile="signing.pid",
+        action="run",
+    )
     parser.add_option("-v", dest="loglevel", action="store_const",
-            const=logging.DEBUG, help="be verbose")
+                      const=logging.DEBUG, help="be verbose")
     parser.add_option("-q", dest="loglevel", action="store_const",
-            const=logging.WARNING, help="be quiet")
+                      const=logging.WARNING, help="be quiet")
     parser.add_option("-l", dest="logfile", help="log to this file instead of stderr")
     parser.add_option("-d", dest="daemonize", action="store_true",
-            help="daemonize process")
+                      help="daemonize process")
     parser.add_option("--pidfile", dest="pidfile")
     parser.add_option("--stop", dest="action", action="store_const", const="stop")
     parser.add_option("--reload", dest="action", action="store_const", const="reload")
@@ -159,7 +182,7 @@ if __name__ == '__main__':
         try:
             pid = int(open(options.pidfile).read())
             os.kill(pid, signal.SIGINT)
-        except (IOError,ValueError):
+        except (IOError, ValueError):
             log.info("no pidfile, assuming process is stopped")
         sys.exit(0)
     elif options.action == "reload":
@@ -174,7 +197,25 @@ if __name__ == '__main__':
     if not config:
         parser.error("Error reading config file: %s" % args[0])
 
-    setup_logging(options)
+    # Set up options if they haven't been overridden on the cmdline
+    if options.logfile is None:
+        options.logfile = get_config(config, "logging", "logfile", None)
+    if options.loglevel is None:
+        loglevel = get_config(config, "logging", "loglevel", "INFO")
+        options.loglevel = getattr(logging, loglevel)
+    if options.log_maxfiles is None:
+        options.log_maxfiles = get_config_int(config, "logging", "log_maxfiles", 50)
+    if options.log_maxsize is None:
+        # 10 MB log size by default
+        options.log_maxsize = get_config_int(config, "logging", "log_maxsize", 10 * (1024 ** 2))
+    if options.daemonize is None:
+        options.daemonize = get_config_bool(config, "server", "daemonize", False)
+    os.umask(0o077)
+    setup_logging(logfile=options.logfile,
+                  loglevel=options.loglevel,
+                  log_maxsize=options.log_maxsize,
+                  log_maxfiles=options.log_maxfiles,
+                  )
 
     # Read passphrases
     passphrases = {}
@@ -223,10 +264,11 @@ if __name__ == '__main__':
         logfile = os.path.abspath(options.logfile)
 
         daemon_ctx = daemon.DaemonContext(
-                # We do our own signal handling in run()
-                signal_map={},
-                working_directory=curdir,
-                )
+            # We do our own signal handling in run()
+            signal_map={},
+            working_directory=curdir,
+            umask=0o077,
+        )
         daemon_ctx.open()
 
         # gevent needs to be reinitialized after the hardcore forking action
@@ -235,7 +277,11 @@ if __name__ == '__main__':
 
         # Set up logging again! createDaemon has closed all our open file
         # handles
-        setup_logging(options)
+        setup_logging(logfile=options.logfile,
+                      loglevel=options.loglevel,
+                      log_maxsize=options.log_maxsize,
+                      log_maxfiles=options.log_maxfiles,
+                      )
 
     try:
         run(args[0], passphrases)

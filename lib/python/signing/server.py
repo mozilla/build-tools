@@ -470,9 +470,6 @@ class SigningServer:
         for format_ in os.listdir(self.signed_dir):
             for f in os.listdir(os.path.join(self.signed_dir, format_)):
                 signed = os.path.join(self.signed_dir, format_, f)
-                # Don't delete logs
-                if signed.endswith(".out"):
-                    continue
                 unsigned = os.path.join(self.unsigned_dir, f)
                 if not os.path.exists(unsigned):
                     log.info("Deleting %s with no unsigned file", signed)

@@ -67,9 +67,27 @@ def safe_copyfile(src, dest):
     shutil.copystat(src, tmpname)
     os.rename(tmpname, dest)
 
+
 def load_config(filename):
     config = RawConfigParser()
     if config.read([filename]) != [filename]:
         return None
     return config
 
+
+def get_config(config, section, option, default):
+    if config.has_section(section) and config.has_option(section, option):
+        return config.get(section, option)
+    return default
+
+
+def get_config_int(config, section, option, default):
+    if config.has_section(section) and config.has_option(section, option):
+        return config.getint(section, option)
+    return default
+
+
+def get_config_bool(config, section, option, default):
+    if config.has_section(section) and config.has_option(section, option):
+        return config.getboolean(section, option)
+    return default
