@@ -651,9 +651,7 @@
     "hostname": "buildbot-master29.build.scl1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-        "android",
-        "android-armv6",
-        "android-noion"
+        "android"
     ],
     "limit_tb_platforms": [],
     "limit_b2g_platforms": [],
@@ -935,9 +933,7 @@
     "hostname": "buildbot-master39.build.scl1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-        "android",
-        "android-armv6",
-        "android-noion"
+        "android"
     ],
     "limit_tb_platforms": [],
     "limit_b2g_platforms": [],
@@ -967,9 +963,7 @@
     "hostname": "buildbot-master40.build.scl1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-        "android",
-        "android-armv6",
-        "android-noion"
+        "android"
     ],
     "limit_tb_platforms": [],
     "limit_b2g_platforms": [],
@@ -999,9 +993,7 @@
     "hostname": "buildbot-master41.build.scl1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-        "android",
-        "android-armv6",
-        "android-noion"
+        "android"
     ],
     "limit_tb_platforms": [],
     "limit_b2g_platforms": [],
@@ -1031,9 +1023,7 @@
     "hostname": "buildbot-master42.build.scl1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-        "android",
-        "android-armv6",
-        "android-noion"
+        "android"
     ],
     "limit_tb_platforms": [],
     "limit_b2g_platforms": [],
@@ -1063,9 +1053,7 @@
     "hostname": "buildbot-master43.build.scl1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-        "android",
-        "android-armv6",
-        "android-noion"
+        "android"
     ],
     "limit_tb_platforms": [],
     "limit_b2g_platforms": [],
@@ -1095,9 +1083,7 @@
     "hostname": "buildbot-master44.build.scl1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-        "android",
-        "android-armv6",
-        "android-noion"
+        "android"
     ],
     "limit_tb_platforms": [],
     "limit_b2g_platforms": [],
@@ -1127,9 +1113,7 @@
     "hostname": "buildbot-master45.build.scl1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-        "android",
-        "android-armv6",
-        "android-noion"
+        "android"
     ],
     "limit_tb_platforms": [],
     "limit_b2g_platforms": [],
@@ -1159,9 +1143,7 @@
     "hostname": "buildbot-master46.build.scl1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-        "android",
-        "android-armv6",
-        "android-noion"
+        "android"
     ],
     "limit_tb_platforms": [],
     "limit_b2g_platforms": [],
@@ -1191,9 +1173,7 @@
     "hostname": "buildbot-master47.build.scl1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-        "android",
-        "android-armv6",
-        "android-noion"
+        "android"
     ],
     "limit_tb_platforms": [],
     "limit_b2g_platforms": [],
@@ -1223,9 +1203,7 @@
     "hostname": "buildbot-master48.build.scl1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-        "android",
-        "android-armv6",
-        "android-noion"
+        "android"
     ],
     "limit_tb_platforms": [],
     "limit_b2g_platforms": [],
