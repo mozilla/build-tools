@@ -13,7 +13,7 @@ common_platforms = ['win32', 'linux', 'linux64', 'macosx64', 'macosx', 'android'
 
 ## KNOWN TO BE ONLY IN NIGHTLY
 for platform in common_platforms:
-    whitelist['nightly'][platform]          = ['ac_add_options --enable-update-channel=nightly',]
+    whitelist['nightly'][platform]          = ['ac_add_options --enable-update-channel=nightly', '''mk_add_options CLIENT_PY_ARGS="--hg-options='--verbose --time' --hgtool=../tools/buildfarm/utils/hgtool.py --skip-chatzilla --skip-comm --skip-inspector --skip-venkman --tinderbox-print"''']
 whitelist['nightly']['linux']               +=['CXX=$REAL_CXX',
                                                'CXX="ccache $REAL_CXX"',
                                                'CC="ccache $REAL_CC"',
@@ -128,6 +128,12 @@ for branch in ('mozilla-esr10', 'comm-esr10'):
                                                 "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
                                                ]
     whitelist[branch]['linux-android']     += ['ac_add_options --enable-update-channel=esr', 'ac_add_options --enable-updater',]
+
+## KNOWN ONLY IN COMM-ESR10
+for platform in common_platforms:
+    # After https://bugzilla.mozilla.org/show_bug.cgi?id=787982 is re-fixed for releases, we'll need this for all comm branches
+    whitelist['comm-esr10'][platform] += ['''mk_add_options CLIENT_PY_ARGS="--hg-options='--verbose --time' --hgtool=../tools/buildfarm/utils/hgtool.py --skip-chatzilla --skip-comm --skip-inspector --skip-venkman --tinderbox-print --comm-rev=${COMM_REV} --mozilla-rev=${MOZILLA_REV}"''']
+
 
 ## KNOWN ONLY IN ESR17
 for branch in ('mozilla-esr17', 'comm-esr17'):
