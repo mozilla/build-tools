@@ -2,14 +2,21 @@
 import foopy_fabric
 from fabric.api import env
 from fabric.context_managers import settings
+from fabric.colors import red
+from Crypto.Random import atfork
 
+FAIL = red('[FAIL]')
 
 def run_action_on_foopy(action, foopy):
+    atfork()
     try:
         action_func = getattr(foopy_fabric, action)
         with settings(host_string="%s.build.mozilla.org" % foopy):
             action_func(foopy)
             return True
+    except AttributeError:
+        print FAIL, "[%s] %s action is not defined." % (foopy, action)
+        return False
     except:
         import traceback
         print "Failed to run", action, "on", foopy
@@ -28,11 +35,16 @@ if __name__ == '__main__':
     
     parser.set_defaults(
         hosts=[],
+        concurrency=1,
         )
     parser.add_option("-f", "--devices-file", dest="devices_file", help="list/url of devices.json")
     parser.add_option("-H", "--host", dest="hosts", action="append")
+    parser.add_option("-j", dest="concurrency", type="int")
 
     options, actions = parser.parse_args()
+
+    if options.concurrency > 1:
+        import multiprocessing
 
     if not options.devices_file:
         parser.error("devices-file is required")
@@ -63,5 +75,22 @@ if __name__ == '__main__':
     env.user = 'cltbld'
     
     for action in actions:
-        for foopy in selected_foopies:
-            run_action_on_foopy(action, foopy)
+        if options.concurrency == 1:
+            for foopy in selected_foopies:
+                run_action_on_foopy(action, foopy)
+        else:
+            p = multiprocessing.Pool(processes=options.concurrency)
+            results = []
+            for foopy in selected_foopies:
+                result = p.apply_async(run_action_on_foopy, (action, foopy) )
+                results.append( (foopy, result) )
+            p.close()
+            failed = False
+            for foopy, result in results:
+                if not result.get():
+                    print foopy, "FAILED"
+                    failed = True
+            p.join()
+            if failed:
+                sys.exit(1)
+
