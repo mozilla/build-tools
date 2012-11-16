@@ -517,7 +517,16 @@ def reboot_relay(device):
         relay_host = pandas[device]['relayhost']
         bank, relay = map(int, pandas[device]['relayid'].split(":"))
         log.info("Calling PDU powercycle for %s, %s:%s:%s" % (device, relay_host, bank, relay))
-        return relayModule.powercycle(relay_host, bank, relay)
+        maxTries = 15
+        curTry = 1
+        while not relayModule.powercycle(relay_host, bank, relay):
+            log.info("Was not able to powercycle, attempt %s of %s" % (curTry, maxTries))
+            curTry += 1
+            if curTry > maxTries:
+                log.error("Failed to powercycle %s times, giving up" % maxTries)
+                return False # Stop Trying
+            time.sleep(1) # Give us a chance to get a free socket next time
+        return True
     return False
 
 def reboot_device(device, debug=False):
