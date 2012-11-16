@@ -25,6 +25,7 @@ def run_action_on_foopy(action, foopy):
 
 if __name__ == '__main__':
     from optparse import OptionParser
+    import sys
     import urllib
     try:
         import simplejson as json
