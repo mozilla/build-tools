@@ -38,8 +38,9 @@ def main(device=None, dm=None, doCheckStalled=True):
     for package in packages.split('\n'):
         for proc in processNames:
             if package.strip() == "package:%s" % proc:
+                log.info("Uninstalling %s..." % proc)
                 try:
-                    log.info(dm.uninstallAppAndReboot(proc))
+                    dm.uninstallAppAndReboot(proc)
                     waitForDevice(dm)
                 except devicemanager.DMError, err:
                     setFlag(errorFile, "Remote Device Error: Unable to uninstall %s and reboot: %s" % (proc, err))

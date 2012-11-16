@@ -194,7 +194,7 @@ def cleanupDevice(device, dm, doCheckStalled):
             # All is good
             return True
     except:
-        pass
+        setFlag(errorFile, "Remote Device Error: Unhandled exception in cleanupDevice")
     # Some sort of error happened above
     return False
 

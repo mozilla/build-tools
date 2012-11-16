@@ -24,11 +24,14 @@ def reboot(dm):
         else:
             log.info("Unable to find a proper devicename, will attempt to reboot device")
 
-    try:
-        dm.getInfo('process')
-        log.info(dm._runCmds([{'cmd': 'exec su -c "logcat -d -v time *:W"'}], timeout=10))
-    except:
-        log.info("Failure to trying to run logcat on device")
+    if dm is not None:
+        try:
+            dm.getInfo('process')
+            log.info(dm._runCmds([{'cmd': 'exec su -c "logcat -d -v time *:W"'}], timeout=10))
+        except:
+            log.info("Failure trying to run logcat on device")
+    else:
+        log.info("We were unable to connect to device %s, skipping logcat" % deviceName)
 
     try:
         log.info('forcing device %s reboot' % deviceName)
@@ -53,8 +56,13 @@ if __name__ == '__main__':
         sys.exit(1)
 
     deviceIP = sys.argv[1]
-    print "connecting to: %s" % deviceIP
-    dm = devicemanager.DeviceManagerSUT(deviceIP)
-    dm.debug = 5
+    dm = None
+    try:
+        log.info("connecting to: %s" % deviceIP)
+        dm = devicemanager.DeviceManagerSUT(deviceIP)
+        dm.debug = 5
+        dm.default_timeout = 30 # Set our timeout lower for deviceManager here
+    except:
+        pass
     sys.exit(reboot(dm))
 
