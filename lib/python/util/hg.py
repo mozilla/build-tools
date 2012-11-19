@@ -466,7 +466,8 @@ def apply_and_push(localrepo, remote, changer, max_attempts=10,
             # After we successfully rebase or strip away heads the push is
             # is attempted again at the start of the loop
             try:
-                run_cmd(['hg', 'rebase'], cwd=localrepo)
+                run_cmd(['hg', '--config', 'ui.merge=internal:merge',
+                         'rebase'], cwd=localrepo)
             except subprocess.CalledProcessError, e:
                 log.debug("Failed to rebase: %s" % str(e))
                 update(localrepo, branch=branch)
