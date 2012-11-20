@@ -155,7 +155,9 @@ update_blocklist_in_hg()
     if [ ! -d ${REPODIR} ]; then
         CLONE_CMD=""
         if [ -f "${HGTOOL}" ]; then
-	    CLONE_CMD="${HGTOOL}"
+	    # Need to pass the default branch here to avoid pollution from buildprops.json
+	    # when hgtool.py is run in production.
+	    CLONE_CMD="${HGTOOL} --branch default"
             if [ "${MIRROR}" != "" ]; then
                 CLONE_CMD="${CLONE_CMD} --mirror ${MIRROR}"
             fi
