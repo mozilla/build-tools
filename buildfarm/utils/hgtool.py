@@ -22,7 +22,6 @@ if __name__ == '__main__':
             branch=os.environ.get('HG_BRANCH', None),
             outgoing=False,
             propsfile=os.environ.get('PROPERTIES_FILE'),
-            tbox=bool(os.environ.get('PROPERTIES_FILE')),
             loglevel=logging.INFO,
             shared_dir=os.environ.get('HG_SHARE_BASE_DIR'),
             clone_by_rev=False,
@@ -33,10 +32,6 @@ if __name__ == '__main__':
     parser.add_option("-b", "--branch", dest="branch", help="which branch to update to")
     parser.add_option("-p", "--props-file", dest="propsfile",
         help="build json file containing revision information")
-    parser.add_option("--tbox", dest="tbox", action="store_true",
-        help="output TinderboxPrint messages")
-    parser.add_option("--no-tbox", dest="tbox", action="store_false",
-        help="don't output TinderboxPrint messages")
     parser.add_option("-s", "--shared-dir", dest="shared_dir",
         help="clone to a shared directory")
     parser.add_option("--check-outgoing", dest="outgoing", action="store_true",
@@ -88,11 +83,4 @@ if __name__ == '__main__':
                              mirrors=options.mirrors,
                              bundles=options.bundles)
 
-    if options.tbox:
-        if repo.startswith("http"):
-            url = "%s/rev/%s" % (repo, got_revision)
-            print "TinderboxPrint: <a href=\"%(url)s\">revision: %(got_revision)s</a>" % locals()
-        else:
-            print "TinderboxPrint: revision: %s" % got_revision
-    else:
-        print "Got revision %s" % got_revision
+    print "Got revision %s" % got_revision
