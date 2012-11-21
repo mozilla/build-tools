@@ -39,6 +39,7 @@ whitelist['nightly']['linux-android']       +=['mk_add_options MOZ_MAKE_FLAGS="-
 whitelist['nightly']['android']            += ['ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',
                                                'ac_add_options --enable-warnings-as-errors',
                                                'ac_add_options --with-ccache=/usr/bin/ccache',
+                                               'STRIP_FLAGS="--strip-debug"',
                                                 ]
 whitelist['nightly']['android-xul']        += ['ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',
                                                'ac_add_options --enable-warnings-as-errors',
