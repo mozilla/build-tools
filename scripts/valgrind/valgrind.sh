@@ -38,7 +38,7 @@ if [ -f "$PROPERTIES_FILE" ]; then
         -s 5 -n info -n 'rel-*' -n $builddir
 fi
 
-python $SCRIPTS_DIR/buildfarm/utils/hgtool.py --rev $REVISION --tbox $HG_REPO src || exit 2
+python $SCRIPTS_DIR/buildfarm/utils/hgtool.py --rev $REVISION $HG_REPO src || exit 2
 
 # Put our short revisions into the properties directory for consumption by buildbot.
 if [ ! -d properties ]; then

@@ -58,7 +58,7 @@ python /tools/tooltool.py -m $(dirname $0)/dxr.manifest -o --url http://runtime-
 
 echo "Checking out sources"
 cd dxr-build-env
-$PYTHON $SCRIPTS_DIR/buildfarm/utils/hgtool.py --rev $REVISION --tbox -b default $HG_REPO src || exit 2
+$PYTHON $SCRIPTS_DIR/buildfarm/utils/hgtool.py --rev $REVISION -b default $HG_REPO src || exit 2
 
 # TODO: support dxr/dxr-stable here
 $PYTHON $SCRIPTS_DIR/buildfarm/utils/hgtool.py --rev $REVISION -b default http://hg.mozilla.org/projects/dxr dxr || exit 2

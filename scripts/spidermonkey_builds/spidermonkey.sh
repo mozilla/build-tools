@@ -45,7 +45,7 @@ if [ -f "$PROPERTIES_FILE" ]; then
         -s 4 -n info -n 'rel-*' -n $builddir
 fi
 
-$PYTHON $SCRIPTS_DIR/buildfarm/utils/hgtool.py --tbox $HG_REPO src || exit 2
+$PYTHON $SCRIPTS_DIR/buildfarm/utils/hgtool.py $HG_REPO src || exit 2
 
 (cd src/js/src; autoconf-2.13 || autoconf2.13)
 
