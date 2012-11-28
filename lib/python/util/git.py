@@ -28,7 +28,7 @@ def _make_absolute(repo):
 def has_revision(dest, revision):
     """Returns True if revision exists in dest"""
     try:
-        get_output(['git', 'log', '--oneline', '--quiet', revision], cwd=dest, include_stderr=True)
+        get_output(['git', 'log', '--oneline', '-n1', revision], cwd=dest, include_stderr=True)
         return True
     except subprocess.CalledProcessError:
         return False
@@ -186,15 +186,19 @@ def update(dest, branch=None, revision=None, remote_name="origin"):
     set then the working copy will be updated to the latest revision on the
     current branch.  Local changes will be discarded."""
     # If we have a revision, switch to that
+    # We use revision^0 (and branch^0 below) to force the names to be
+    # dereferenced into commit ids, which makes git check them out in a
+    # detached state. This is equivalent to 'git checkout --detach', except is
+    # supported by older versions of git
     if revision is not None:
-        cmd = ['git', 'checkout', '-q', '--detach', '-f', revision]
+        cmd = ['git', 'checkout', '-q', '-f', revision + '^0']
         run_cmd(cmd, cwd=dest)
     else:
         if not branch:
             branch = '%s/master' % remote_name
         else:
             branch = '%s/%s' % (remote_name, branch)
-        cmd = ['git', 'checkout', '-q', '--detach', '-f', branch]
+        cmd = ['git', 'checkout', '-q', '-f', branch + '^0']
 
         run_cmd(cmd, cwd=dest)
     return get_revision(dest)
