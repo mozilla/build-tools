@@ -411,9 +411,6 @@ if (!array_key_exists('branch', $_GET)) {
     $builder_clobbers = array();
     $rows = array();
     while ($r = $allbuilders->fetch(PDO::FETCH_ASSOC)) {
-      if (!canSee($r['builddir'], array_get($_SERVER, 'REMOTE_USER'))) {
-        continue;
-      }
       $rows[] = $r;
       $buildername = $r['buildername'];
       $branch = $r['branch'];
