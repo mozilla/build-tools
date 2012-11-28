@@ -20,6 +20,7 @@ def main(device=None, dm=None, doCheckStalled=True):
     device_name = os.environ['SUT_NAME']
     pidDir    = os.path.join('/builds/', device_name)
     errorFile = os.path.join(pidDir, 'error.flg')
+    reboot_needed = False
 
     processNames = [ 'org.mozilla.fennec',
                      'org.mozilla.fennec_aurora',
@@ -40,11 +41,19 @@ def main(device=None, dm=None, doCheckStalled=True):
             if package.strip() == "package:%s" % proc:
                 log.info("Uninstalling %s..." % proc)
                 try:
-                    dm.uninstallAppAndReboot(proc)
-                    waitForDevice(dm)
+                    if 'panda' in device_name:
+                        dm.uninstallApp(proc)
+                        reboot_needed = True
+                    else:
+                        dm.uninstallAppAndReboot(proc)
+                        waitForDevice(dm)
                 except devicemanager.DMError, err:
                     setFlag(errorFile, "Remote Device Error: Unable to uninstall %s and reboot: %s" % (proc, err))
                     return RETCODE_ERROR
+
+    if reboot_needed:
+        soft_reboot(device_name, dm)
+        waitForDevice(dm)
 
     # Now Verify that they are all gone
     packages = dm._runCmds([ { 'cmd': 'exec pm list packages' }])
