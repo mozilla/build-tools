@@ -475,6 +475,13 @@ def checkDeviceRoot(dm):
     return dr
 
 def waitForDevice(dm, waitTime=120):
+    retVal = _waitForDevice(dm, waitTime)
+    if not retVal:
+        log.error("Remote Device Error: waiting for device timed out.")
+        sys.exit(1)
+    return retVal
+
+def _waitForDevice(dm, waitTime=120):
     log.info("Waiting for device to come back...")
     time.sleep(waitTime)
     deviceIsBack = False
@@ -494,7 +501,20 @@ def waitForDevice(dm, waitTime=120):
         time.sleep(waitTime)
     if not deviceIsBack:
         log.error("Remote Device Error: waiting for device timed out.")
-        sys.exit(1)
+        return False
+    return True
+
+def soft_reboot_and_verify(device, dm, waitTime=90, max_attempts=5, *args, **kwargs):
+    attempt = 0
+    while attempt < max_attempts:
+        retVal = soft_reboot(device, dm, *args, **kwargs)
+        if not retVal:
+            continue
+
+        if _waitForDevice(dm, waitTime):
+            return True
+        attempt += 1
+    return False
 
 def soft_reboot(device, dm, *args, **kwargs):
     """
