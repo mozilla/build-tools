@@ -7,7 +7,7 @@
 import os, sys
 from mozdevice import devicemanagerSUT as devicemanager
 from sut_lib import clearFlag, setFlag, checkDeviceRoot, checkStalled, \
-                    waitForDevice, log, soft_reboot
+                    waitForDevice, log, soft_reboot_and_verify
 
 # main() RETURN CODES
 RETCODE_SUCCESS = 0
@@ -52,8 +52,9 @@ def main(device=None, dm=None, doCheckStalled=True):
                     return RETCODE_ERROR
 
     if reboot_needed:
-        soft_reboot(device_name, dm)
-        waitForDevice(dm)
+        if not soft_reboot_and_verify(device_name, dm):
+            # NOTE: soft_reboot_and_verify will setFlag if needed
+            return RETCODE_ERROR
 
     # Now Verify that they are all gone
     packages = dm._runCmds([ { 'cmd': 'exec pm list packages' }])

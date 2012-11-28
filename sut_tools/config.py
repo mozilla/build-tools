@@ -5,7 +5,7 @@ import time
 import random
 import socket
 from mozdevice import devicemanagerSUT as devicemanager
-from sut_lib import soft_reboot
+from sut_lib import soft_reboot_and_verify
 
 def setFlag(flagfile, contents=None):
     print flagfile
@@ -109,9 +109,10 @@ print("current resolution X:%d Y:%d" % (width, height))
 # adjust resolution up if we are part of a reftest run
 if (testname == 'reftest') and width < refWidth:
     if dm.adjustResolution(width=refWidth, height=refHeight, type='crt'):
-        status = soft_reboot(dm=dm, device=deviceName, ipAddr=proxyIP, port=proxyPort)
-        print status
-        waitForDevice()
+        if not soft_reboot_and_verify(dm=dm, device=deviceName, ipAddr=proxyIP, port=proxyPort):
+            # NOTE: soft_reboot_and_verify will setFlag if needed
+            sys.exit(1)
+
 
         width, height = getResolution(dm)
         print("current resolution X:%d Y:%d" % (width, height))

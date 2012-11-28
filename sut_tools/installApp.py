@@ -6,7 +6,7 @@ from mozdevice import devicemanagerSUT as devicemanager
 
 from sut_lib import getOurIP, calculatePort, clearFlag, setFlag, checkDeviceRoot, \
                     getDeviceTimestamp, setDeviceTimestamp, \
-                    getResolution, waitForDevice, runCommand, log, soft_reboot
+                    getResolution, waitForDevice, runCommand, log, soft_reboot_and_verify
 
 
 # hwine: minor ugg - the flag files need to be global. Refactoring into
@@ -136,8 +136,8 @@ def one_time_setup(ip_addr, major_source):
         if (width == 1600 or height == 1200):
             dm.adjustResolution(1024, 768, 'crt')
             log.info('forcing device reboot')
-            soft_reboot(device=deviceName, dm=dm, ipAddr=proxyIP, port=proxyPort)
-            waitForDevice(dm)
+            if not soft_reboot_and_verify(device=deviceName, dm=dm, ipAddr=proxyIP, port=proxyPort):
+                return None, None
 
             width, height = getResolution(dm)
             if width != 1024 and height != 768:
