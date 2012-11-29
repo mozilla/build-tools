@@ -110,6 +110,7 @@ for branch in ('mozilla-release', 'comm-release'):
                                                 "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
                                                ]
     whitelist[branch]['android']            += ['ac_add_options --enable-updater']
+    whitelist[branch]['android-armv6']      += ['ac_add_options --enable-updater']
     whitelist[branch]['android-xul']        += ['ac_add_options --enable-updater']
 
 ## KNOWN ONLY IN ESR10
