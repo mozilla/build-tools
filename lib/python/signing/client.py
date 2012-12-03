@@ -1,7 +1,9 @@
-import urllib2, os, hashlib, time, socket, httplib
+import base64, urllib2, os, hashlib, time, socket, httplib
 
 # TODO: Use util.command
 from subprocess import check_call
+
+from poster.encode import multipart_encode
 
 from util.file import sha1sum, copyfile
 
@@ -13,6 +15,17 @@ def getfile(baseurl, filehash, format_):
     log.debug("%s: GET %s", filehash, url)
     r = urllib2.Request(url)
     return urllib2.urlopen(r)
+
+def get_token(baseurl, username, password, slave_ip, duration):
+    auth = base64.encodestring('%s:%s' % (username, password))
+    url = '%s/token' % baseurl
+    datagen, headers = multipart_encode({
+        'slave_ip': slave_ip,
+        'duration': duration,
+    })
+    headers['Authorization'] = 'Basic %s' % auth
+    r = urllib2.Request(url, datagen, headers)
+    return urllib2.urlopen(r).read()
 
 def remote_signfile(options, urls, filename, fmt, token, dest=None):
     filehash = sha1sum(filename)
