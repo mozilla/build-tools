@@ -90,6 +90,13 @@
     ],
     "repo_type": "hg"
   },
+  "mozilla-b2g18": {
+    "repo": "http://hg.mozilla.org/releases/mozilla-b2g18",
+    "graph_branches": [
+      "Mozilla-B2g18"
+    ],
+    "repo_type": "hg"
+  },
   "oak": {
     "repo": "http://hg.mozilla.org/projects/oak",
     "graph_branches": [
