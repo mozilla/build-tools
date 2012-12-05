@@ -1,4 +1,4 @@
-import base64, urllib2, os, hashlib, time, socket, httplib
+import base64, urllib2, os, hashlib, time, socket, httplib, urllib
 
 # TODO: Use util.command
 from subprocess import check_call
@@ -17,14 +17,17 @@ def getfile(baseurl, filehash, format_):
     return urllib2.urlopen(r)
 
 def get_token(baseurl, username, password, slave_ip, duration):
-    auth = base64.encodestring('%s:%s' % (username, password))
+    auth = base64.encodestring('%s:%s' % (username, password)).rstrip('\n')
     url = '%s/token' % baseurl
-    datagen, headers = multipart_encode({
+    data = urllib.urlencode({
         'slave_ip': slave_ip,
         'duration': duration,
     })
-    headers['Authorization'] = 'Basic %s' % auth
-    r = urllib2.Request(url, datagen, headers)
+    headers = {
+        'Authorization': 'Basic %s' % auth,
+        'Content-Length': str(len(data)),
+    }
+    r = urllib2.Request(url, data, headers)
     return urllib2.urlopen(r).read()
 
 def remote_signfile(options, urls, filename, fmt, token, dest=None):
