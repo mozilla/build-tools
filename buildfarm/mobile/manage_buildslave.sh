@@ -1,28 +1,48 @@
 #!/bin/bash
-PWD=`pwd`
-DEVICE=`basename $PWD`
-opt="$1"
-BB_PATH=/tools/buildbot-0.8.4-pre-moz2/bin/buildslave
-BB_PYTHON=/tools/buildbot-0.8.4-pre-moz2/bin/python2.7
-BB_TWISTD=/tools/buildbot-0.8.4-pre-moz2/bin/twistd
+BB_PATH=/tools/buildbot/bin/buildslave
+BB_PYTHON=/tools/buildbot/bin/python2.7
+BB_TWISTD=/tools/buildbot/bin/twistd
+OPTIONS="gettac start stop restart"
 
-if [ -z $1 ]; then
-    echo You can call this script with *gettac* or all other options that buildslave can take
-    ${BB_PATH} --help
+opt="$1"
+
+if [ -z $opt ]; then
+    echo "You can call this script with the following options:"
+    echo $OPTIONS
     exit 1
+else
+    if [ -z $2 ]; then
+        echo You have to specify which device to manage.
+        exit 1
+    fi
+    DEVICE=$2
+    DEVICE_PATH=/builds/${DEVICE}
+    if [ ! -d "$DEVICE_PATH" ]; then
+        echo "$DEVICE_PATH does not exist. Try again with the correct device name."
+        exit 1
+    fi
 fi
 
+
 if [ "$opt" = "gettac" ]; then
-    rm buildbot.tac
-    wget -q -O/builds/$DEVICE/buildbot.tac http://slavealloc.build.mozilla.org/gettac/$DEVICE
-elif [ "$opt" = "start" ]; then
+    rm $DEVICE_PATH/buildbot.tac
+    wget -q -O$DEVICE_PATH/buildbot.tac http://slavealloc.build.mozilla.org/gettac/$DEVICE
+elif [ "$opt" = "stop" ]; then
+    ${BB_PATH} stop $DEVICE_PATH
+elif [ "$opt" = "restart" ]; then
+    ${BB_PATH} stop $DEVICE_PATH
+    opt="start"
+fi
+
+if [ "$opt" = "start" ]; then
     echo "We want to always start buildbot through twistd"
     echo "We will run with the twistd command instead of calling buildslave"
+    pushd $DEVICE_PATH
     ${BB_PYTHON} ${BB_TWISTD} --no_save \
-        --rundir=/builds/$DEVICE \
-        --pidfile=/builds/$DEVICE/twistd.pid \
-        --python=/builds/$DEVICE/buildbot.tac
-    tail /builds/$DEVICE/twistd.log
-else
-    ${BB_PATH} $opt
+        --rundir=$DEVICE_PATH \
+        --pidfile=$DEVICE_PATH/twistd.pid \
+        --python=$DEVICE_PATH/buildbot.tac
+    sleep 1
+    tail $DEVICE_PATH/twistd.log
+    popd
 fi
