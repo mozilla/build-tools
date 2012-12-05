@@ -11,3 +11,5 @@ twistd\.pid
 .*\.egg-info
 dist/
 slavealloc.log
+lib/python/slavealloc/www/icons
+lib/python/slavealloc/www/js/bugzilla.js
