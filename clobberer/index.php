@@ -46,18 +46,27 @@ function isSpecial($user)
   return in_array($user, $SPECIAL_PEOPLE);
 }
 
+$canSeeCache = array();
 function canSee($builddir, $user)
 {
+  global $canSeeCache;
+  $key = $builddir . '|' . $user;
+   if (array_key_exists($key, $canSeeCache)) {
+     return $canSeeCache[$key];
+   }
+
   $builders = array();
   foreach (getReleaseBuilders() as $builder) {
     $builders[] = $builder['builddir'];
   }
   global $RELEASE_PREFIX;
   if (!in_array($builddir, $builders) && strpos($builddir, $RELEASE_PREFIX)!==0) {
-    return true;
+    $canSeeCache[$key] = true;
   }
-
-  return isSpecial($user);
+  else {
+    $canSeeCache[$key] = isSpecial($user);
+  }
+  return $canSeeCache[$key];
 }
 
 function b64_encode($s)
@@ -89,8 +98,14 @@ function getBuilders($slave)
   return $retval;
 }
 
+$getReleaseBuildersCache = array();
 function getReleaseBuilders()
 {
+  global $getReleaseBuildersCache;
+  $key = "$RELEASE_PREFIX%";
+  if (array_key_exists($key, $getReleaseBuildersCache)) {
+    return $getReleaseBuildersCache[$key];
+  }
   global $dbh;
   global $RELEASE_PREFIX;
   $ret = array();
@@ -103,6 +118,7 @@ function getReleaseBuilders()
     );
     $ret[] = $r;
   }
+  $getReleaseBuildersCache[$key] = $ret;
   return $ret;
 }
 
