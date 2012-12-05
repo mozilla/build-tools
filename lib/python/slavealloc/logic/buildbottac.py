@@ -45,7 +45,9 @@ except ImportError:
 s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
                keepalive, usepty, umask=umask, maxdelay=maxdelay)
 s.setServiceParent(application)
+"""
 
+idleizer_template = """\
 # enable idleizer
 from buildslave import idleizer
 idlz = idleizer.Idleizer(s,
@@ -74,6 +76,13 @@ def make_buildbot_tac(allocation):
     info['slavename'] = allocation.slavename
     info['basedir'] = allocation.slave_basedir
     info['passwd'] = allocation.slave_password
-    template = template_header + (allocation.template or default_template)
+    template = template_header
+    if allocation.template:
+        template += allocation.template
+    else:
+        template += default_template
+        if not 'panda-' in info['slavename']:
+            # XXX We shouldn't hardcode the 'panda-' check here
+            template += idleizer_template
 
     return unicode(template % info).encode('utf8')
