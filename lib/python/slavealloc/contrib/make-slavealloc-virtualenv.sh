@@ -24,5 +24,15 @@ virtualenv slavealloc-$REV || exit 1
 ./slavealloc-$REV/bin/pip install -e hg+$REPO@$REV#egg=tools \
    --no-index --find-links=http://repos/python/packages/ || exit 1
 
+# Make symlinks to the bugzilla lookup APIs that live under last-job-per-slave.
+if [ -d /tools/last-job-per-slave ]; then
+  cd /tools/slavealloc-$REV/src/tools/lib/python/slavealloc/www
+  ln -s /tools/last-job-per-slave/icons icons
+  cd /tools/slavealloc-$REV/src/tools/lib/python/slavealloc/www/js
+  ln -s /tools/last-job-per-slave/bugzilla.js bugzilla.js
+else
+  echo "# /tools/last-job-per-slave not found."
+fi
+
 echo "# if you want to make this default:"
 echo "cd /tools; rm slavealloc; ln -s slavealloc-$REV slavealloc"
