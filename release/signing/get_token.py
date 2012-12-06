@@ -1,5 +1,6 @@
 import os
 import site
+import sys
 
 my_dir = os.path.dirname(__file__)
 site.addsitedir(os.path.join(my_dir, '../../lib/python'))
@@ -20,4 +21,4 @@ if __name__ == '__main__':
 
     buildValidatingOpener(options.cert)
     baseurl = 'https://%s' % options.host
-    print get_token(baseurl, options.username, options.password, options.slave_ip, options.duration)
+    sys.stdout.write(get_token(baseurl, options.username, options.password, options.slave_ip, options.duration))
