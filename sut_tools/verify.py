@@ -255,7 +255,7 @@ def setWatcherINI(dm):
     return False
 
 
-def verifyDevice(device, checksut=False, doCheckStalled=True, watcherINI=False):
+def verifyDevice(device, checksut=True, doCheckStalled=True, watcherINI=False):
     # Returns False on failure, True on Success
     global dm, errorFile
     devicePath = os.path.join('/builds', device)
