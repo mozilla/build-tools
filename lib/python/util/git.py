@@ -45,8 +45,12 @@ def has_ref(dest, refname):
 
 
 def init(dest):
-    """Initializes an empty repository at dest. If dest exists, it will be removed."""
-    safe_unlink(dest)
+    """Initializes an empty repository at dest. If dest exists and isn't empty, it will be removed."""
+    if not os.path.isdir(dest):
+        safe_unlink(dest)
+    else:
+        for f in os.listdir(dest):
+            safe_unlink(os.path.join(dest, f))
     run_cmd(['git', 'init', '-q', dest])
 
 
