@@ -295,9 +295,9 @@ class SigningServer:
             if ':' in host:
                 host, port = host.split(":")
                 port = int(port)
-                self.redis = redis.Redis(host=host, port=port)
+                self.redis = redis.Redis(host=host, port=port, socket_timeout=30)
             else:
-                self.redis = redis.Redis(host=host)
+                self.redis = redis.Redis(host=host, socket_timeout=30)
 
         self.signed_dir = config.get('paths', 'signed_dir')
         self.unsigned_dir = config.get('paths', 'unsigned_dir')
@@ -362,11 +362,13 @@ class SigningServer:
         nonce_digest = sign_data(nonce, self.token_secret)
         self.nonces[token] = nonce_digest
         if self.redis:
+            log.debug("saving nonce to redis")
             self.redis.setex("%s:nonce:%s" %
-                    (self.redis_prefix, b64sha1sum(token)),
-                    nonce_digest,
-                    int(expiry-time.time()),
-                    )
+                             (self.redis_prefix, b64sha1sum(token)),
+                             nonce_digest,
+                             int(expiry - time.time()),
+                             )
+            log.debug("saved nonce to redis")
 
     def verify_token(self, token, slave_ip):
         token_data = self.tokens.get(token)
@@ -416,11 +418,13 @@ class SigningServer:
         self.tokens[token] = token_data
         valid_to = unpack_token_data(token_data)['valid_to']
         if self.redis:
+            log.debug("saving token to redis")
             self.redis.setex("%s:tokens:%s" %
-                    (self.redis_prefix, b64sha1sum(token)),
-                    token_data,
-                    int(valid_to-time.time()),
-                    )
+                             (self.redis_prefix, b64sha1sum(token)),
+                             token_data,
+                             int(valid_to - time.time()),
+                             )
+            log.debug("saved token to redis")
 
         # Set the initial nonce to ""
         self.save_nonce(token, "", valid_to)
