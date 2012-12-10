@@ -1,8 +1,19 @@
 #!/usr/bin/env python
+import time
 import master_fabric
 from fabric.api import env
 from fabric.context_managers import settings
 from Crypto.Random import atfork
+
+def print_status(remaining, failed_masters):
+    print "=" * 30, "Remaining masters", "=" * 30
+    for m in remaining:
+        print m
+    if failed_masters:
+        print "=" * 30, "failed masters", "=" * 30
+        for m in failed_masters:
+            print m
+    print "=" * 80
 
 def run_action_on_master(action, master):
     atfork()
@@ -49,6 +60,8 @@ Supported actions:
     parser.add_option("-j", dest="concurrency", type="int")
     parser.add_option("-l", dest="show_list", action="store_true", help="list hosts")
     parser.add_option("--all", dest="all_masters", action="store_true", help="work on all masters, not just enabled ones")
+    parser.add_option("-i", dest="status_interval", type="int", default="60",
+                      help="Interval between statuses")
 
     options, actions = parser.parse_args()
 
@@ -114,10 +127,24 @@ Supported actions:
                 results.append( (master, result) )
             p.close()
             failed = False
-            for master, result in results:
-                if not result.get():
-                    print master['name'], "FAILED"
-                    failed = True
+            failed_masters = []
+            tries = 0
+            while True:
+                for master, result in list(results):
+                    if result.ready():
+                        results.remove((master,result))
+                        if not result.get():
+                            failed_masters.append(master['name'])
+                            print master['name'], "FAILED"
+                            failed = True
+                tries += 1
+                if not results:
+                    break
+                if tries % options.status_interval == 0:
+                    print_status([m['name'] for (m, r) in results],
+                                 failed_masters)
+                time.sleep(1)
+
             p.join()
             if failed:
                 sys.exit(1)
