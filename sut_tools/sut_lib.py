@@ -507,13 +507,13 @@ def _waitForDevice(dm, waitTime=120):
 def soft_reboot_and_verify(device, dm, waitTime=90, max_attempts=5, *args, **kwargs):
     attempt = 0
     while attempt < max_attempts:
+        attempt += 1
         retVal = soft_reboot(device, dm, *args, **kwargs)
         if not retVal:
             continue
 
         if _waitForDevice(dm, waitTime):
             return True
-        attempt += 1
     return False
 
 def soft_reboot(device, dm, *args, **kwargs):
