@@ -11,10 +11,39 @@ if [ -z "$HG_REPO" ]; then
     export HG_REPO="http://hg.mozilla.org/integration/mozilla-inbound"
 fi
 
+function usage() {
+  echo "Usage: $0 [-m mirror_url] [-b bundle_url] [-r revision] variant"
+}
+
+# It doesn't work to just pull from try. If you try to pull the full repo,
+# it'll error out because it's too big. Even if you restrict to a particular
+# revision, the pull is painfully slow (as in, it could take days) without
+# --bundle and/or --mirror.
+hgtool_args=()
+while [ $# -gt 1 ]; do
+  if [ "$1" = "-m" ]; then
+    shift
+    hgtool_args+=(--mirror "$1")
+    shift
+  elif [ "$1" = "-b" ]; then
+    shift
+    hgtool_args+=(--bundle "$1")
+    shift
+  elif [ "$1" = "-r" ]; then
+    shift
+    hgtool_args+=(--clone-by-revision -r "$1")
+    shift
+  else
+    echo "Invalid arguments" >&2
+    usage
+    exit 1
+  fi
+done
+
 VARIANT=$1
 if [ ! -f "$SPIDERDIR/$VARIANT" ]; then
     echo "Could not find $VARIANT"
-    echo "build.sh <variant>"
+    usage
     exit 1
 fi
 
@@ -37,7 +66,7 @@ if [ -f "$PROPERTIES_FILE" ]; then
     cd $SCRIPTS_DIR/../..
     $PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s scripts \
         -s ${PROPERTIES_FILE##*/} \
-        $CLOBBERER_URL $branch "$builder" $builddir $slavename $master
+        $CLOBBERER_URL $branch "$builder" $builddir $slavename $master || true
 
     # Purging
     cd $SCRIPTS_DIR/..
@@ -45,7 +74,7 @@ if [ -f "$PROPERTIES_FILE" ]; then
         -s 4 -n info -n 'rel-*' -n $builddir
 fi
 
-$PYTHON $SCRIPTS_DIR/buildfarm/utils/hgtool.py $HG_REPO src || exit 2
+$PYTHON $SCRIPTS_DIR/buildfarm/utils/hgtool.py "${hgtool_args[@]}" $HG_REPO src || exit 2
 
 (cd src/js/src; autoconf-2.13 || autoconf2.13)
 
@@ -64,17 +93,18 @@ if [[ "$OSTYPE" == darwin* ]]; then
 fi
 
 if [ "$OSTYPE" = "linux-gnu" ]; then
+    GCCDIR=/tools/gcc-4.5-0moz3
     CONFIGURE_ARGS="$CONFIGURE_ARGS --with-ccache"
     UNAME_M=$(uname -m)
     MAKEFLAGS=-j4
     if [ "$UNAME_M" != "arm" ]; then
-        export CC=/tools/gcc-4.5/bin/gcc
-        export CXX=/tools/gcc-4.5/bin/g++
+        export CC=$GCCDIR/bin/gcc
+        export CXX=$GCCDIR/bin/g++
         if [ "$UNAME_M" = "x86_64" ]; then
-            export LD_LIBRARY_PATH=/tools/gcc-4.5/lib64
+            export LD_LIBRARY_PATH=$GCCDIR/lib64
             NSPR64="--enable-64bit"
         else
-            export LD_LIBRARY_PATH=/tools/gcc-4.5/lib
+            export LD_LIBRARY_PATH=$GCCDIR/lib
         fi
     fi
 fi
