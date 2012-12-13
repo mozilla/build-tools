@@ -110,7 +110,7 @@ print("current resolution X:%d Y:%d" % (width, height))
 if (testname == 'reftest') and width < refWidth:
     if dm.adjustResolution(width=refWidth, height=refHeight, type='crt'):
         if not soft_reboot_and_verify(dm=dm, device=deviceName, ipAddr=proxyIP, port=proxyPort):
-            # NOTE: soft_reboot_and_verify will setFlag if needed
+            print("Remote Device Error: Timed out while waiting for device to come back after resolution change.")
             sys.exit(1)
 
 
