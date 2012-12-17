@@ -79,4 +79,5 @@ fi
 
 export OBJDIR=.
 export JARLOG_DIR=./jarlog/en-US
+export XPCOM_CC_RUN_DURING_SHUTDOWN=1
 python _profile/pgo/profileserver.py --debugger=valgrind --debugger-args="$debugger_args" || exit 1
