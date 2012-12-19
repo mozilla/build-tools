@@ -69,7 +69,22 @@ def run_action_on_foopy(action, foopy):
         return False
 
 def run_action_on_devices(action, foopy_dict):
-    print FAIL, "Per-Device Actions not yet supported"
+    atfork()
+    action_func = getattr(foopy_fabric, action)
+    try:
+        with settings(host_string="%s.build.mozilla.org" % foopy_dict['host']):
+            for device in foopy_dict['devices']:
+                action_func(device)
+            return True
+        return False
+    except AttributeError:
+        print FAIL, "[%s] %s action is not defined." % (foopy_dict['host'], action)
+        return False
+    except:
+        import traceback
+        print "Failed to run", action, "on", foopy_dict['host']
+        print traceback.format_exc()
+        return False
 
 if __name__ == '__main__':
     from optparse import OptionParser
