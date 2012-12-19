@@ -374,7 +374,7 @@ def monitorEvents(options, events):
             elif state == 'start':
                 if deviceActive and not bbActive:
                     log.debug('starting buildslave in %s' % options.bbpath)
-                    bbProc, _ = runCommand(['twistd', '--no_save',
+                    bbProc, output = runCommand(['twistd', '--no_save',
                                                       '--rundir=%s' % options.bbpath,
                                                       '--pidfile=%s' % pidFile,
                                                       '--python=%s' % os.path.join(options.bbpath, 'buildbot.tac')], 
@@ -394,6 +394,10 @@ def monitorEvents(options, events):
                                 break
                             else:
                                 time.sleep(5)
+                        # If we made it this far, we don't see a buildbot pidfile
+                        log.warning("No buildbot pidfile found, as expected...")
+                        log.info("See Output of buildslave start:")
+                        log.info(output)
             elif state == 'dialback':
                 softCount  = 0
                 softResets = 0
