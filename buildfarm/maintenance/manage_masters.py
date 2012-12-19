@@ -19,7 +19,7 @@ def run_action_on_master(action, master):
     atfork()
     try:
         action_func = getattr(master_fabric, action)
-        with settings(host_string=master['hostname']):
+        with settings(host_string=master.get('ip_address', master['hostname'])):
             action_func(master)
             return True
     except AttributeError:
