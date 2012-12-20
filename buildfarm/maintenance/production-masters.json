@@ -1293,8 +1293,6 @@
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build1/tools",
     "limit_branches": ["build-system"],
-    "limit_tb_branches": [],
-    "limit_b2g_branches": [],
-    "limit_projects": []
+    "limit_b2g_branches": []
   }
 ]
