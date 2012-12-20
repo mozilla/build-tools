@@ -3,7 +3,9 @@ import logging
 from apache_conf_parser import ApacheConfParser
 
 from release.platforms import ftp2bouncer
-from release.updates.snippets import SCHEMA_2_OPTIONAL_ATTRIBUTES
+from release.updates.snippets import (SCHEMA_2_OPTIONAL_ATTRIBUTES,
+    SCHEMA_2_OPTIONAL_ATTRIBUTES_SINGLE_VALUE,
+    SCHEMA_2_OPTIONAL_ATTRIBUTES_MULTI_VALUE)
 
 log = logging.getLogger()
 
@@ -222,10 +224,12 @@ class PatcherConfig(dict):
                 raise PatcherConfigError("Found multiple entries for '%s' in current-update section" % node.name)
 
             # These are all single-value nodes.
-            if node.name in ('details', 'from', 'to', 'beta-dir'):
+            if node.name in ('details', 'from', 'to', 'beta-dir') + \
+               SCHEMA_2_OPTIONAL_ATTRIBUTES_SINGLE_VALUE:
                 cu[node.name] = self._stripStringNode(node.content)
             # These are potentially multiple value nodes.
-            elif node.name in ('channel', 'testchannel', 'actions'):
+            elif node.name in ('channel', 'testchannel') + \
+                 SCHEMA_2_OPTIONAL_ATTRIBUTES_MULTI_VALUE:
                 cu[node.name] = list(node.arguments)
             # Force is weird in that it's a multiple value node, but the
             # patcher config bumping script lists it multiple times rather

@@ -2,10 +2,13 @@ from os import path
 
 from release.platforms import ftp2updatePlatforms, ftp_update_platform_map
 
-SCHEMA_2_OPTIONAL_ATTRIBUTES = (
-    'showPrompt', 'showNeverForVersion', 'showSurvey', 'actions', 'licenseUrl',
-    'billboardURL', 'openURL', 'notificationURL', 'alertURL',
+SCHEMA_2_OPTIONAL_ATTRIBUTES_SINGLE_VALUE = (
+    'showPrompt', 'showNeverForVersion', 'showSurvey', 'licenseUrl',
+    'billboardURL', 'openURL', 'notificationURL', 'alertURL', 'promptWaitTime',
 )
+SCHEMA_2_OPTIONAL_ATTRIBUTES_MULTI_VALUE = ('actions',)
+SCHEMA_2_OPTIONAL_ATTRIBUTES = SCHEMA_2_OPTIONAL_ATTRIBUTES_SINGLE_VALUE + \
+                               SCHEMA_2_OPTIONAL_ATTRIBUTES_MULTI_VALUE
 
 schema1_snippet_template = """\
 version=%(schema)s
