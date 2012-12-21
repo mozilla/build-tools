@@ -1291,8 +1291,6 @@
     "role": "build",
     "ssh_port": 7001,
     "tools_branch": "default",
-    "tools_dir": "/builds/buildbot/build1/tools",
-    "limit_branches": ["build-system"],
-    "limit_b2g_branches": []
+    "tools_dir": "/builds/buildbot/build1/tools"
   }
 ]
