@@ -1268,29 +1268,38 @@
     "tools_dir": "/builds/buildbot/build1/tools"
   },
   {
-    "basedir": "/builds/buildbot/build1",
+    "basedir": "/builds/buildbot/tests1-macosx",
     "bbconfigs_branch": "production",
-    "bbconfigs_dir": "/builds/buildbot/build1/buildbot-configs",
+    "bbconfigs_dir": "/builds/buildbot/tests1-macosx/buildbot-configs",
     "bbcustom_branch": "production-0.8",
-    "bbcustom_dir": "/builds/buildbot/build1/buildbotcustom",
-    "buildbot_bin": "/builds/buildbot/build1/bin/buildbot",
+    "bbcustom_dir": "/builds/buildbot/tests1-macosx/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-macosx/bin/buildbot",
     "buildbot_branch": "production-0.8",
-    "buildbot_python": "/builds/buildbot/build1/bin/python",
-    "buildbot_setup": "/builds/buildbot/build1/buildbot/master/setup.py",
+    "buildbot_python": "/builds/buildbot/tests1-macosx/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-macosx/buildbot/master/setup.py",
     "buildbot_version": "0.8.2",
     "datacentre": "scl3",
-    "db_name": "buildbot-master50.srv.releng.aws-us-west-2.mozilla.com:/builds/buildbot/build1/master",
+    "db_name": "buildbot-master50.srv.releng.aws-us-west-2.mozilla.com:/builds/buildbot/tests1-macosx/master",
     "enabled": true,
     "environment": "production",
     "hostname": "buildbot-master50.srv.releng.aws-us-west-2.mozilla.com",
     "ip_address": "10.132.48.232",
-    "http_port": 8001,
-    "master_dir": "/builds/buildbot/build1/master",
-    "name": "bm50-build1",
-    "pb_port": 9001,
-    "role": "build",
-    "ssh_port": 7001,
+    "http_port": 8201,
+    "limit_fx_platforms": [
+        "macosx",
+        "macosx64"
+    ],
+    "limit_tb_platforms": [
+        "macosx",
+        "macosx64"
+    ],
+    "limit_b2g_platforms": [],
+    "master_dir": "/builds/buildbot/tests1-macosx/master",
+    "name": "bm50-tests1-macosx",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
     "tools_branch": "default",
-    "tools_dir": "/builds/buildbot/build1/tools"
+    "tools_dir": "/builds/buildbot/tests1-macosx/tools"
   }
 ]
