@@ -35,7 +35,7 @@ label {
 }
 #col1 {
     float:left;
-    width:350px;
+    width:450px;
     padding: 5px;
 }
 #col2 {
@@ -54,4 +54,14 @@ label {
 
 h4 {
     background: lightgray;
+}
+
+.build_queue {
+    float: right;
+    width: 55px;
+}
+
+.test_queue {
+    float: right;
+    width: 55px;
 }
