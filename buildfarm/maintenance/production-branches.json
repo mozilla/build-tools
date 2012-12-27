@@ -277,5 +277,33 @@
     "repo": "http://hg.mozilla.org/projects/addon-sdk",
     "graph_branches": [],
     "repo_type": "hg"
+  },
+  "date": {
+    "repo": "http://hg.mozilla.org/integration/date",
+    "graph_branches": [
+      "Date"
+    ],
+    "repo_type": "hg"
+  },
+  "fig": {
+    "repo": "http://hg.mozilla.org/integration/fig",
+    "graph_branches": [
+      "Fig"
+    ],
+    "repo_type": "hg"
+  },
+  "gum": {
+    "repo": "http://hg.mozilla.org/integration/gum",
+    "graph_branches": [
+      "Gum"
+    ],
+    "repo_type": "hg"
+  },
+  "jamun": {
+    "repo": "http://hg.mozilla.org/integration/jamun",
+    "graph_branches": [
+      "Jamun"
+    ],
+    "repo_type": "hg"
   }
 }
