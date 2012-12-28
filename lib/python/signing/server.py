@@ -78,8 +78,10 @@ def run_signscript(cmd, inputfile, outputfile, filename, format_, passphrase=Non
         proc.stdin.close()
         log.debug("%s: %s", proc.pid, cmd)
         siglist = [signal.SIGINT, signal.SIGTERM]
+        timeout = False
         while True:
             if time.time() - start > max_time:
+                timeout = True
                 log.debug("%s: Exceeded timeout", proc.pid)
                 # Kill off the process
                 if siglist:
@@ -98,8 +100,13 @@ def run_signscript(cmd, inputfile, outputfile, filename, format_, passphrase=Non
                     rc = -1
                     break
 
+
             rc = proc.poll()
             if rc is not None:
+                # if we killed the child, we want to break before we poll, since polling may not give 
+                # an error return code.
+                if timeout:
+                    rc = -1
                 break
 
             # Check again in a bit
