@@ -270,6 +270,10 @@ def verifyDevice(device, checksut=True, doCheckStalled=True, watcherINI=False):
         log.info("verifyDevice: failing to telnet")
         return False
 
+    if not checkSDCard(dm):
+        log.info("verifyDevice: failing to check SD card")
+        return False
+
     if checksut and not checkVersion(dm):
         if not updateSUTVersion(dm):
             log.info("verifyDevice: failing to updateSUT")
@@ -278,10 +282,6 @@ def verifyDevice(device, checksut=True, doCheckStalled=True, watcherINI=False):
     # Resolution Check disabled for now; Bug 737427
     if False and not checkAndFixScreen(dm, device):
         log.info("verifyDevice: failing to fix screen")
-        return False
-
-    if not checkSDCard(dm):
-        log.info("verifyDevice: failing to check SD card")
         return False
 
     if not cleanupDevice(device, dm, doCheckStalled):
