@@ -179,7 +179,21 @@ def checkSDCard(dm):
         return False
     return True
 
-def cleanupDevice(device, dm, doCheckStalled):
+def cleanupFoopy(device):
+    """ Do cleanup actions necessary to ensure foopy in a good state
+
+    Returns False on failure, True on Success
+    """
+    import cleanup
+    retval = cleanup.cleanupFoopy(device=device)
+    if retval == cleanup.RETCODE_SUCCESS:
+        # All is good
+        return True
+    # else:
+    setFlag(errorFile, "Automation Error: Unable to properly cleanup foopy processes")
+    return False
+
+def cleanupDevice(device, dm):
     """ Do cleanup actions necessary to ensure starting in a good state
 
     Returns False on failure, True on Success
@@ -189,7 +203,7 @@ def cleanupDevice(device, dm, doCheckStalled):
 
     import cleanup
     try:
-        retval = cleanup.main(device=device, dm=dm, doCheckStalled=doCheckStalled)
+        retval = cleanup.cleanupDevice(device=device, dm=dm)
         if retval == cleanup.RETCODE_SUCCESS:
             # All is good
             return True
@@ -261,6 +275,11 @@ def verifyDevice(device, checksut=True, doCheckStalled=True, watcherINI=False):
     devicePath = os.path.join('/builds', device)
     errorFile = os.path.join(devicePath, 'error.flg')
 
+    if doCheckStalled:
+        if not cleanupFoopy(device):
+            log.info("verifyDevice: failing to cleanup foopy")
+            return False
+
     if not canPing(device):
         # TODO Reboot via PDU if ping fails
         log.info("verifyDevice: failing to ping")
@@ -284,7 +303,7 @@ def verifyDevice(device, checksut=True, doCheckStalled=True, watcherINI=False):
         log.info("verifyDevice: failing to fix screen")
         return False
 
-    if not cleanupDevice(device, dm, doCheckStalled):
+    if not cleanupDevice(device, dm):
         log.info("verifyDevice: failing to cleanup device")
         return False
     

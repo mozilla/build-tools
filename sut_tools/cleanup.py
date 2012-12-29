@@ -14,7 +14,16 @@ RETCODE_SUCCESS = 0
 RETCODE_ERROR = 1
 RETCODE_KILLSTALLED = 2
 
-def main(device=None, dm=None, doCheckStalled=True):
+def cleanupFoopy(device=None):
+    errcode = checkStalled(device_name)
+    if errcode == 2:
+        log.error("processes from previous run were detected and cleaned up")
+    elif errocode == 3:
+        setFlag(errorFile, "Remote Device Error: process from previous test run present")
+        return RETCODE_KILLSTALLED
+    return RETCODE_SUCCESS
+
+def cleanupDevice(device=None, dm=None):
     assert ((device is not None) or (dm is not None)) # Require one to be set
 
     device_name = os.environ['SUT_NAME']
@@ -96,16 +105,14 @@ def main(device=None, dm=None, doCheckStalled=True):
         else:
             log.info("successfully restored hosts file, we can test!!!")
 
-    if doCheckStalled:
-        errcode = checkStalled(device_name)
-        if errcode > 1:
-            if errcode == 2:
-                log.error("processes from previous run were detected and cleaned up")
-            elif errocode == 3:
-                setFlag(errorFile, "Remote Device Error: process from previous test run present")
-                return RETCODE_KILLSTALLED
-
     return RETCODE_SUCCESS
+
+def main(device=None, dm=None, doCheckStalled=True):
+    if doCheckStalled:
+        retcode = cleanupFoopy(device)
+        if not retcode == RETCODE_SUCCESS:
+            return retcode
+    return cleanupDevice(device, dm)
 
 if __name__ == '__main__':
     device_name = None
