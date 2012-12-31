@@ -106,13 +106,16 @@ def powercycle(relay_hostname, bank, relay):
     """
     assert(bank >= 1 and bank <= 4)
     assert(relay >= 1 and relay <= 8)
-    with connected_socket(relay_hostname, PORT) as sock:
-        # Turn relay on to power off device
-        if not set_status(sock, bank, relay, True):
-            return False
-        # Turn relay off to power on device
-        if set_status(sock, bank, relay, False):
-            return False
+    try:
+        with connected_socket(relay_hostname, PORT) as sock:
+            # Turn relay on to power off device
+            if not set_status(sock, bank, relay, True):
+                return False
+            # Turn relay off to power on device
+            if set_status(sock, bank, relay, False):
+                return False
+    except:
+        return False
     return True
  
 
