@@ -18,7 +18,7 @@ def cleanupFoopy(device=None):
     errcode = checkStalled(device)
     if errcode == 2:
         log.error("processes from previous run were detected and cleaned up")
-    elif errocode == 3:
+    elif errcode == 3:
         setFlag(errorFile, "Remote Device Error: process from previous test run present")
         return RETCODE_KILLSTALLED
     return RETCODE_SUCCESS
