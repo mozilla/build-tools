@@ -15,7 +15,7 @@ RETCODE_ERROR = 1
 RETCODE_KILLSTALLED = 2
 
 def cleanupFoopy(device=None):
-    errcode = checkStalled(device_name)
+    errcode = checkStalled(device)
     if errcode == 2:
         log.error("processes from previous run were detected and cleaned up")
     elif errocode == 3:
@@ -26,8 +26,9 @@ def cleanupFoopy(device=None):
 def cleanupDevice(device=None, dm=None):
     assert ((device is not None) or (dm is not None)) # Require one to be set
 
-    device_name = os.environ['SUT_NAME']
-    pidDir    = os.path.join('/builds/', device_name)
+    if not device:
+        device = os.environ['SUT_NAME']
+    pidDir    = os.path.join('/builds/', device)
     errorFile = os.path.join(pidDir, 'error.flg')
     reboot_needed = False
 
@@ -50,7 +51,7 @@ def cleanupDevice(device=None, dm=None):
             if package.strip() == "package:%s" % proc:
                 log.info("Uninstalling %s..." % proc)
                 try:
-                    if 'panda' in device_name:
+                    if 'panda' in device:
                         dm.uninstallApp(proc)
                         reboot_needed = True
                     else:
@@ -61,7 +62,7 @@ def cleanupDevice(device=None, dm=None):
                     return RETCODE_ERROR
 
     if reboot_needed:
-        if not soft_reboot_and_verify(device_name, dm):
+        if not soft_reboot_and_verify(device, dm):
             # NOTE: soft_reboot_and_verify will setFlag if needed
             return RETCODE_ERROR
 
@@ -108,6 +109,10 @@ def cleanupDevice(device=None, dm=None):
     return RETCODE_SUCCESS
 
 def main(device=None, dm=None, doCheckStalled=True):
+    assert ((device is not None) or (dm is not None)) # Require one to be set
+
+    device_name = os.environ['SUT_NAME']
+
     if doCheckStalled:
         retcode = cleanupFoopy(device)
         if not retcode == RETCODE_SUCCESS:
