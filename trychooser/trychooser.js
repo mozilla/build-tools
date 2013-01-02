@@ -1,17 +1,4 @@
 $(document).ready(function() {
-    //$('#try-options').hide();
-
-    //$('#do_everything').attr('checked', 1); // reset on page refresh
-
-    // Toplevel toggle: do everything, or choose the specifics?
-    $('#do_everything').change(function() {
-        if ($(this).attr('checked')) {
-            $('#try-options').fadeOut();
-        } else {
-            $('#try-options').fadeIn();
-        }
-    });
-
     // Several subsections are headed by all/none selectors. Make them control
     // their dependents
 
@@ -98,58 +85,49 @@ $(document).ready(function() {
 });
 
 function setresult() {
-    var label;
-    var value;
-    if ($('#do_everything').attr('checked')) {
-        label = 'Do Everything';
-        value = 'try: -b do -p all -u all -t all';
-    } else {
-        label = 'Other';
-        value = 'try: ';
-        var args = [];
+    var value = 'try: ';
+    var args = [];
 
-        $('.option-radio').each(function() {
-            var arg = '-' + $(this).attr('try-section') + ' ';
-            arg += $(this).find(':checked').attr('value');
+    $('.option-radio').each(function() {
+        var arg = '-' + $(this).attr('try-section') + ' ';
+        arg += $(this).find(':checked').attr('value');
+        args.push(arg);
+    });
+
+    $('.option-email').each(function() {
+        var arg = $(this).find(':checked').attr('value');
+        if (arg != 'on')
             args.push(arg);
-        });
+    });
 
-        $('.option-email').each(function() {
-            var arg = $(this).find(':checked').attr('value');
-            if (arg != 'on')
-                args.push(arg);
-        });
-
-        $('.option-group').each(function() {
-            var arg = '-' + $(this).attr('try-section') + ' ';
-            if ($(this).find('.none-selector:checked').length > 0) {
-                arg += 'none';
-            } else if ($(this).find('.all-selector:checked').length > 0) {
-                arg += 'all';
+    $('.option-group').each(function() {
+        var arg = '-' + $(this).attr('try-section') + ' ';
+        if ($(this).find('.none-selector:checked').length > 0) {
+            arg += 'none';
+        } else if ($(this).find('.all-selector:checked').length > 0) {
+            arg += 'all';
+        } else {
+            var group = $(this).closest('.option-group');
+            var options;
+            if (group.find('.subgroup-all-selector:checked').length > 0) {
+                // Special-case. We need to collapse things into a subgroup "all" value
+                options = group.find(':checked:not(.group-selector):not(.option-subgroup *)')
+                    .add('.subgroup-all-selector', group);
             } else {
-                var group = $(this).closest('.option-group');
-                var options;
-                if (group.find('.subgroup-all-selector:checked').length > 0) {
-                    // Special-case. We need to collapse things into a subgroup "all" value
-                    options = group.find(':checked:not(.group-selector):not(.option-subgroup *)')
-                        .add('.subgroup-all-selector', group);
-                } else {
-                    options = group.find(':checked:not(.group-selector):not(.subgroup-all-selector)');
-                }
-                var names = [];
-                options.each(function(i,elt){ names.push($(elt).attr('value')) });
-                arg += names.join(',');
+                options = group.find(':checked:not(.group-selector):not(.subgroup-all-selector)');
             }
-            args.push(arg);
-        });
+            var names = [];
+            options.each(function(i,elt){ names.push($(elt).attr('value')) });
+            arg += names.join(',');
+        }
+        args.push(arg);
+    });
 
-        value = 'try: ' + args.join(' ');
-    }
-    
+    value = 'try: ' + args.join(' ');
+
     if ($('#post_to_bugzilla').attr('checked')) {
         value = value + ' --post-to-bugzilla Bug ' + document.getElementById("bugnumber").value;
     }
 
-    $('.result_label').text(label);
     $('.result_value').val(value);
 }
