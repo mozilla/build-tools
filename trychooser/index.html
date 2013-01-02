@@ -29,15 +29,15 @@
         <div id="col1">
             <span class='option-radio' try-section='b'>
             <h4>Build Types</h4>
-            <label><input type="radio" name="build_type" value="do" checked>both</label>
+            <label><input type="radio" name="build_type" value="do">both</label>
             <label><input type="radio" name="build_type" value="d">debug only</label>
-            <label><input type="radio" name="build_type" value="o">opt only</label>
+            <label><input type="radio" name="build_type" value="o" CHECKED>opt only</label>
             </span>
 
             <h4>Platforms</h4>
             <span class='option-group' try-section='p'>
-            <label><input type="checkbox" class="group-selector all-selector" CHECKED>All</label>
-            <label><input type="checkbox" class="group-selector none-selector">Clear All</label>
+            <label><input type="checkbox" class="group-selector all-selector">All</label>
+            <label><input type="checkbox" class="group-selector none-selector" CHECKED>None</label>
 
             <ul>
             <li>
@@ -120,8 +120,8 @@
         <div id="col2">
             <h4>Unit Test Suites</h4>
             <span class='option-group' try-section='u'>
-            <label><input type="checkbox" class="group-selector all-selector" CHECKED>All</label>
-            <label><input type="checkbox" class="group-selector none-selector">None</label>
+            <label><input type="checkbox" class="group-selector all-selector">All</label>
+            <label><input type="checkbox" class="group-selector none-selector" CHECKED>None</label>
             <ul>
                 <li><label><input type="checkbox" value="reftest">reftest</label></li>
                 <li><label><input type="checkbox" value="reftest-ipc">reftest-ipc <span style="color: red">(linux opt only)</span></label></li>
