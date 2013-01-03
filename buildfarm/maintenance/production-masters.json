@@ -1050,7 +1050,7 @@
     "buildbot_version": "0.8.2",
     "datacentre": "scl1",
     "db_name": "buildbot-master43.build.scl1.mozilla.com:/builds/buildbot/tests1-panda/master",
-    "enabled": false,
+    "enabled": true,
     "environment": "production",
     "hostname": "buildbot-master43.build.scl1.mozilla.com",
     "http_port": 8201,
