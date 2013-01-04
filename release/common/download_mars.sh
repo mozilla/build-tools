@@ -14,7 +14,7 @@ download_mars () {
     while [ "$try" -le "$max_tries" ]; do
         echo "Using  $update_url"
         # retrying until AUS gives us any response at all
-        $retry wget --no-check-certificate -S -O update.xml $update_url
+        $retry wget --no-check-certificate --server-response -O update.xml $update_url
 
         echo "Got this response:"
         cat update.xml
@@ -53,7 +53,7 @@ download_mars () {
         curl -k -s -I -L $URL
         return
       else
-        $retry wget --no-check-certificate -nv -O update/$patch_type.mar $URL 2>&1 
+        $retry wget --server-response --no-check-certificate -nv -O update/$patch_type.mar $URL 2>&1 
       fi
       if [ "$?" != 0 ]; then
         echo "Could not download $patch_type!"
