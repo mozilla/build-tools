@@ -251,12 +251,10 @@
     "hostname": "buildbot-master15.build.scl1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-      "win32",
-      "win64"
+      "win32"
     ],
     "limit_tb_platforms": [
-      "win32",
-      "win64"
+      "win32"
     ],
     "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-windows/master",
@@ -285,12 +283,10 @@
     "hostname": "buildbot-master16.build.scl1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-      "win32",
-      "win64"
+      "win32"
     ],
     "limit_tb_platforms": [
-      "win32",
-      "win64"
+      "win32"
     ],
     "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-windows/master",
@@ -553,12 +549,10 @@
     "hostname": "buildbot-master23.build.scl1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-      "win32",
-      "win64"
+      "win32"
     ],
     "limit_tb_platforms": [
-      "win32",
-      "win64"
+      "win32"
     ],
     "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-windows/master",
