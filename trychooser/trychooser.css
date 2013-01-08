@@ -11,6 +11,7 @@ body {
 
 ul {
     list-style: none;
+    padding-left: 25px;
 }
 
 .result_value {
@@ -31,36 +32,34 @@ label {
 }
 #wrapper {
     margin: 0 auto;
-    width: 1200px;
+    width: 975px;
 }
 #col1 {
     float:left;
-    width:450px;
+    width:375px;
     padding: 5px;
 }
 #col2 {
     float:left;
-    width:350px;
+    width:275px;
     padding: 5px;
 }
 #col3 {
     float:left;
-    width:350px;
+    width:275px;
     padding: 5px;
 }
 #results {
     clear: both;
 }
-
 h4 {
+    margin: 10px 0 5px;
     background: lightgray;
 }
-
 .build_queue {
     float: right;
     width: 55px;
 }
-
 .test_queue {
     float: right;
     width: 55px;

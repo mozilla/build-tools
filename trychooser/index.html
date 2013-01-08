@@ -14,11 +14,10 @@
 
     <form name="trychooser" method="get" action="#">
     <p>Trychooser is also a mercurial extension, <a href="https://github.com/pbiggar/trychooser">trychooser</a>, can help you use a CLI and also will push to try for you.</p>
-    <strong>TryChooser Syntax:</strong><br>
+    <strong>Computed Syntax:</strong><br>
     <textarea class="result_value" cols="80"></textarea>
 
     <div id='try-options'>
-
         <div id="col1">
             <span class='option-radio' try-section='b'>
             <h4>Build Types</h4>
@@ -31,7 +30,6 @@
             <span class='option-group' try-section='p'>
             <label><input type="checkbox" class="group-selector all-selector">All</label>
             <label><input type="checkbox" class="group-selector none-selector" CHECKED>None</label>
-
             <ul>
             <li>
                 <label>Platform</label>
@@ -99,8 +97,8 @@
                 <span id="build_unagi" class="build_queue">N/A</span>
             </li>
             </ul>
-
             </span>
+
             <span class='option-email'>
             <h4>Email Settings</h4>
             <label><input type="radio" name="email" checked>Default</label><br>
@@ -108,6 +106,13 @@
             <label><input type="radio" name="email" value="-e">All Email</label><br>
             <em>(default is no email)</em>
             </span>
+
+            <h4>Experimental Features</h4>
+            <p>Auto-comment to bug on completion (<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=434998#c20">example</a>)
+            <em>Still a work in progress, comment in <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=430942">bug 430942</a> with issues</em>
+            </p>
+            <label>Bug Number: <input id="bugnumber" type="textbox" name="bugnumber" size=8></label>
+            <label><input id="post_to_bugzilla" type="checkbox" name="post_to_bugzilla" UNCHECKED>Add to Syntax</label><br>
 
         </div> <!-- col1 div -->
         <div id="col2">
@@ -138,6 +143,7 @@
                     <li><label><input type="checkbox" value="mochitest-o">mochitest-o</label></li>
                     </ul>
             </span>
+
             <h4> Android-Only Unittest Suites</h4>
             <li><label><input type="checkbox" value="reftest-1">reftest-1</label></li>
             <li><label><input type="checkbox" value="reftest-2">reftest-2</label></li>
@@ -152,6 +158,7 @@
             <li><label><input type="checkbox" value="mochitest-7">mochitest-7</label></li>
             <li><label><input type="checkbox" value="mochitest-8">mochitest-8</label></li>
             <li><label><input type="checkbox" value="robocop">robocop</label></li>
+
             <h4>B2G-Only Unittest Suites</h4>
             <li><label><input type="checkbox" value="reftest-1">reftest-1</label></li>
             <li><label><input type="checkbox" value="reftest-2">reftest-2</label></li>
@@ -162,14 +169,6 @@
             <li><label><input type="checkbox" value="marionette-webapi">marionette-webapi</label></li>
             </ul>
             </span>
-
-            <h4>Experimental Features</h4>
-            <p>Auto-comment to bug on completion (<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=434998#c20">example</a>)
-            <em>Still a work in progress, comment in <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=430942">bug 430942</a> with issues</em>
-            </p>
-            <label>Bug Number: <input id="bugnumber" type="textbox" name="bugnumber" size=8></label>
-            <label><input id="post_to_bugzilla" type="checkbox" name="post_to_bugzilla" UNCHECKED>Add to Syntax</label><br>
-
         </div> <!-- col2 div -->
         <div id="col3">
             <h4>Talos Suites</h4>
@@ -185,7 +184,7 @@
                 <li><label><input type="checkbox" name="talos_suite" value="svgr">svgr</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="dromaeojs">dromaeojs</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="xperf">xperf</label></li>
-                <br>
+
                 <h4>Android-Only Talos Suites:</h4>
                 <li><label><input type="checkbox" name="talos_suite" value="remote-ts">remote-ts</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="remote-tdhtml">remote-tdhtml</label></li>
@@ -197,15 +196,12 @@
                 <li><label><input type="checkbox" name="talos_suite" value="remote-trobocheck2">remote-trobocheck2</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="remote-tp4m_nochrome">remote-tp4m_nochrome</label></li>
             </ul>
-            <strong>Want to match Talos suite names up to what they run?</strong>  Check <a href="http://hg.mozilla.org/build/buildbot-configs/file/tip/mozilla-tests/config.py#l179">the current configs</a><br>
-            (contents may shift over time, <br/>
-            you want SUITES = { ... })
             </span>
+
+            <p class="indent1"><strong>Want to match Talos suite names up to what they run?</strong>  Check <a href="http://hg.mozilla.org/build/buildbot-configs/file/tip/mozilla-tests/config.py#l179">the current configs</a><br>
+            (contents may shift over time, <br/>
+            you want SUITES = { ... })</p>
         </div> <!-- col3 div -->
-        <div id="results">
-            <strong>TryChooser Syntax:</strong><br>
-            <textarea class="result_value" cols="80"></textarea>
-        </div><!-- results div -->
     </div> <!--- try-options div -->
 <div> <!-- wrapper div-->
 
