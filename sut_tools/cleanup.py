@@ -47,18 +47,22 @@ def cleanupDevice(device=None, dm=None):
 
     packages = dm._runCmds([ { 'cmd': 'exec pm list packages' }])
     for package in packages.split('\n'):
+        if not package.strip().startswith("package:"):
+            continue #unknown entry
+        package_basename = package.strip()[8:]
         for proc in processNames:
-            if package.strip() == "package:%s" % proc:
-                log.info("Uninstalling %s..." % proc)
+            if package_basename == "%s" % proc or \
+               package_basename.startswith("%s_" % proc):
+                log.info("Uninstalling %s..." % package_basename)
                 try:
                     if 'panda' in device:
-                        dm.uninstallApp(proc)
+                        dm.uninstallApp(package_basename)
                         reboot_needed = True
                     else:
-                        dm.uninstallAppAndReboot(proc)
+                        dm.uninstallAppAndReboot(package_basename)
                         waitForDevice(dm)
                 except devicemanager.DMError, err:
-                    setFlag(errorFile, "Remote Device Error: Unable to uninstall %s and reboot: %s" % (proc, err))
+                    setFlag(errorFile, "Remote Device Error: Unable to uninstall %s and reboot: %s" % (package_basename, err))
                     return RETCODE_ERROR
 
     if reboot_needed:
