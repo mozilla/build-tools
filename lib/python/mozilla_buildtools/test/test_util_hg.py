@@ -412,7 +412,7 @@ class TestHg(unittest.TestCase):
                 revision='FIREFOX_3_6_12_RELEASE',
                 filename="/lib/python/util/hg.py"
                 )
-        expected_url = "http://hg.mozilla.org/build/tools/raw-file/FIREFOX_3_6_12_RELEASE/lib/python/util/hg.py"
+        expected_url = "https://hg.mozilla.org/build/tools/raw-file/FIREFOX_3_6_12_RELEASE/lib/python/util/hg.py"
         self.assertEquals(file_url, expected_url)
 
     def testMakeHGUrlNoFilename(self):
@@ -421,7 +421,7 @@ class TestHg(unittest.TestCase):
                 "/build/tools",
                 revision="default"
         )
-        expected_url = "http://hg.mozilla.org/build/tools/rev/default"
+        expected_url = "https://hg.mozilla.org/build/tools/rev/default"
         self.assertEquals(file_url, expected_url)
 
     def testMakeHGUrlNoRevisionNoFilename(self):
@@ -429,7 +429,7 @@ class TestHg(unittest.TestCase):
                 "hg.mozilla.org",
                 "/build/tools"
         )
-        expected_url = "http://hg.mozilla.org/build/tools"
+        expected_url = "https://hg.mozilla.org/build/tools"
         self.assertEquals(repo_url, expected_url)
 
     def testMakeHGUrlDifferentProtocol(self):

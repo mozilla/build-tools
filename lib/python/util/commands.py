@@ -104,9 +104,9 @@ def run_cmd_periodic_poll(cmd, warning_interval=300, poll_interval=0.25,
                               exc_info=True)
             else:
                 log.warning("Command execution is taking longer than"
-                            "warning_internal (%d)"
+                            "warning_interval (%d)"
                             ", executing warning_callback"
-                            "Started at: %s, elapsed: %.2fs" % (warning_callback,
+                            "Started at: %s, elapsed: %.2fs" % (warning_interval,
                                                                 start_time,
                                                                 elapsed))
 
