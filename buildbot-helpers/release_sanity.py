@@ -6,7 +6,7 @@
         [-c| --release-config `releaseConfigFile`]
         [-w| --whitelist `mozconfig_whitelist`]
         [--l10n-dashboard-version version]
-        -p|--products firefox,fennec master:port
+        master:port
 
     Wrapper script to sanity-check a release. Default behaviour is to check
     the branch and revision specific in the release_configs, check if the
@@ -17,87 +17,39 @@
     the master is reconfiged and then a senchange is generated to kick off
     the release automation.
 """
-import re, urllib2
-import os, difflib
 try:
     import simplejson as json
 except ImportError:
     import json
+
+import difflib
+import logging
+import os
+import site
+import urllib2
+
 from optparse import OptionParser
-from util.commands import run_cmd
+from os import path
+from tempfile import mkdtemp
+from shutil import rmtree
+
+site.addsitedir(path.join(path.dirname(__file__), "../lib/python"))
+
 from util.file import compare
-from util.hg import make_hg_url, get_repo_name
+from util.hg import make_hg_url, get_repo_name, mercurial, update
 from release.info import readReleaseConfig, getRepoMatchingBranch, readConfig
 from release.versions import getL10nDashboardVersion
 from release.l10n import getShippedLocales
 from release.platforms import getLocaleListFromShippedLocales
-import logging
-from subprocess import CalledProcessError
+from release.sanity import check_buildbot, find_version, locale_diff, \
+    sendchange
+from util.fabric.common import check_fabric, FabricHelper
+from util.retry import retry
+
 log = logging.getLogger(__name__)
-
-RECONFIG_SCRIPT = os.path.join(os.path.dirname(__file__),
-                               "../buildfarm/maintenance/buildbot-wrangler.py")
 error_tally = set()
+HG = 'hg.mozilla.org'
 
-def findVersion(contents, versionNumber):
-    """Given an open readable file-handle look for the occurrence
-       of the version # in the file"""
-    ret = re.search(re.compile(re.escape(versionNumber), re.DOTALL), contents)
-    return ret
-
-def reconfig():
-    """reconfig the master in the cwd"""
-    run_cmd(['python', RECONFIG_SCRIPT, 'reconfig', os.getcwd()])
-
-def check_buildbot():
-    """check if buildbot command works"""
-    try:
-        run_cmd(['buildbot', '--version'])
-    except CalledProcessError:
-        print "FAIL: buildbot command doesn't work"
-        raise
-
-def locale_diff(locales1,locales2):
-    """ accepts two lists and diffs them both ways, returns any differences found """
-    diff_list = [locale for locale in locales1 if not locale in locales2]
-    diff_list.extend(locale for locale in locales2 if not locale in locales1)
-    return diff_list
-
-def sendchange(branch, revision, username, master, products):
-    """Send the change to buildbot to kick off the release automation"""
-    cmd = [
-       'buildbot',
-       'sendchange',
-       '--username',
-       username,
-       '--master',
-       master,
-       '--branch',
-       branch,
-       '-p',
-       'products:%s' % products,
-       '-p',
-       'script_repo_revision:%s' % revision,
-       'release_build'
-       ]
-    log.info("Executing: %s" % cmd)
-    run_cmd(cmd)
-
-def verify_branch(branch, productName):
-    masterConfig = json.load(open('master_config.json'))
-    release_branches_key = 'release_branches'
-    if productName == 'fennec':
-        release_branches_key = 'mobile_release_branches'
-    elif productName == 'thunderbird':
-        release_branches_key = 'thunderbird_release_branches'
-    if branch not in masterConfig[release_branches_key]:
-        success = False
-        log.error("Branch %s isn't enabled for %s", branch, productName)
-        error_tally.add('verify_branch')
-    else:
-        success = True
-        log.info("Branch %s is enabled on master for %s", branch, productName)
-    return success
 
 def verify_repo(branch, revision, hghost):
     """Poll the hgweb interface for a given branch and revision to
@@ -109,13 +61,17 @@ def verify_repo(branch, revision, hghost):
         repo_page = urllib2.urlopen(repo_url)
         log.info("Got: %s !" % repo_page.geturl())
     except urllib2.HTTPError:
-        log.error("Repo does not exist with required revision. Check again, or use -b to bypass")
+        log.error("Repo does not exist with required revision."
+                  " Check again, or use -b to bypass")
         success = False
         error_tally.add('verify_repo')
     return success
 
-def verify_mozconfigs(branch, revision, hghost, product, mozconfigs, appName, whitelist=None):
-    """Compare nightly mozconfigs for branch to release mozconfigs and compare to whitelist of known differences"""
+
+def verify_mozconfigs(branch, revision, hghost, product, mozconfigs,
+                      whitelist=None):
+    """Compare nightly mozconfigs for branch to release mozconfigs and
+    compare to whitelist of known differences"""
     branch_name = get_repo_name(branch)
     if whitelist:
         mozconfigWhitelist = readConfig(whitelist, ['whitelist'])
@@ -123,13 +79,13 @@ def verify_mozconfigs(branch, revision, hghost, product, mozconfigs, appName, wh
         mozconfigWhitelist = {}
     log.info("Comparing %s mozconfigs to nightly mozconfigs..." % product)
     success = True
-    types = {'+': 'release', '-': 'nightly'}
-    for platform,mozconfig in mozconfigs.items():
+    for platform, mozconfig in mozconfigs.items():
         urls = []
         mozconfigs = []
         mozconfig_paths = [mozconfig, mozconfig.rstrip('release') + 'nightly']
         # Create links to the two mozconfigs.
-        releaseConfig = make_hg_url(hghost, branch, 'http', revision, mozconfig)
+        releaseConfig = make_hg_url(hghost, branch, 'http', revision,
+                                    mozconfig)
         urls.append(releaseConfig)
         # The nightly one is the exact same URL, with the file part changed.
         urls.append(releaseConfig.rstrip('release') + 'nightly')
@@ -140,42 +96,51 @@ def verify_mozconfigs(branch, revision, hghost, product, mozconfigs, appName, wh
                 log.error("MISSING: %s - ERROR: %s" % (url, e.msg))
         diffInstance = difflib.Differ()
         if len(mozconfigs) == 2:
-            diffList = list(diffInstance.compare(mozconfigs[0],mozconfigs[1]))
+            diffList = list(diffInstance.compare(mozconfigs[0], mozconfigs[1]))
             for line in diffList:
                 clean_line = line[1:].strip()
-                if (line[0] == '-'  or line[0] == '+') and len(clean_line) > 1:
+                if (line[0] == '-' or line[0] == '+') and len(clean_line) > 1:
                     # skip comment lines
                     if clean_line.startswith('#'):
                         continue
                     # compare to whitelist
                     message = ""
                     if line[0] == '-':
-                        if mozconfigWhitelist.get(branch_name, {}).has_key(platform):
-                            if clean_line in mozconfigWhitelist[branch_name][platform]:
+                        if platform in mozconfigWhitelist.get(branch_name, {}):
+                            if clean_line in \
+                                mozconfigWhitelist[branch_name][platform]:
                                 continue
                     elif line[0] == '+':
-                        if mozconfigWhitelist.get('nightly', {}).has_key(platform):
-                            if clean_line in mozconfigWhitelist['nightly'][platform]:
+                        if platform in mozconfigWhitelist.get('nightly', {}):
+                            if clean_line in \
+                                mozconfigWhitelist['nightly'][platform]:
                                 continue
                             else:
-                                log.warning("%s not in %s %s!" % (clean_line, platform, mozconfigWhitelist['nightly'][platform]))
+                                log.warning("%s not in %s %s!" % (
+                                    clean_line, platform,
+                                    mozconfigWhitelist['nightly'][platform]))
                     else:
                         log.error("Skipping line %s!" % line)
                         continue
                     message = "found in %s but not in %s: %s"
                     if line[0] == '-':
-                        log.error(message % (mozconfig_paths[0], mozconfig_paths[1], clean_line))
+                        log.error(message % (mozconfig_paths[0],
+                                             mozconfig_paths[1], clean_line))
                     else:
-                        log.error(message % (mozconfig_paths[1], mozconfig_paths[0], clean_line))
+                        log.error(message % (mozconfig_paths[1],
+                                             mozconfig_paths[0], clean_line))
                     success = False
                     error_tally.add('verify_mozconfig')
         else:
             log.info("Missing mozconfigs to compare for %s" % platform)
-            error_tally.add("verify_mozconfigs: Confirm that %s does not have release/nightly mozconfigs to compare" % platform)
+            error_tally.add("verify_mozconfigs: Confirm that %s does not have "
+                            "release/nightly mozconfigs to compare" % platform)
     return success
 
+
 def verify_build(sourceRepo, hghost):
-    """ Ensure that the bumpFiles match what the release config wants them to be"""
+    """ Ensure that the bumpFiles match what the release config wants them to
+    be"""
     success = True
     for filename, versions in sourceRepo['bumpFiles'].iteritems():
         try:
@@ -183,35 +148,47 @@ def verify_build(sourceRepo, hghost):
                               revision=sourceRepo['revision'],
                               filename=filename)
             found_version = urllib2.urlopen(url).read()
-            if not findVersion(found_version, versions['version']):
-                log.error("%s has incorrect version '%s' (expected '%s')" % \
-                  (filename, found_version, versions['version']))
+            if not find_version(found_version, versions['version']):
+                log.error("%s has incorrect version '%s' (expected '%s')" %
+                          (filename, found_version, versions['version']))
                 success = False
                 error_tally.add('verify_build')
         except urllib2.HTTPError, inst:
-            log.error("cannot find %s. Check again, or -b to bypass" % inst.geturl())
+            log.error("cannot find %s. Check again, or -b to bypass" %
+                      inst.geturl())
             success = False
             error_tally.add('verify_build')
 
     return success
 
-def verify_configs(revision, hghost, configs_repo, changesets, filename):
-    """Check the release_configs and l10n-changesets against tagged revisions"""
-    configs_url = make_hg_url(hghost, configs_repo, revision=revision, filename="mozilla/%s" % filename)
-    l10n_url = make_hg_url(hghost, configs_repo, revision=revision, filename="mozilla/%s" % changesets)
+
+def verify_configs(configs_dir, revision, hghost, configs_repo, changesets,
+                   filename):
+    """Check the release_configs and l10n-changesets against tagged
+    revisions"""
+
+    release_config_file = path.join(configs_dir, 'mozilla', filename)
+    l10n_changesets_file = path.join(configs_dir, 'mozilla', changesets)
+    configs_url = make_hg_url(hghost, configs_repo, revision=revision,
+                              filename=path.join('mozilla', filename))
+    l10n_url = make_hg_url(hghost, configs_repo, revision=revision,
+                           filename=path.join('mozilla', changesets))
 
     success = True
     try:
         official_configs = urllib2.urlopen(configs_url)
-        log.info("Comparing tagged revision %s to on-disk %s ..." % (configs_url, filename))
-        if not compare(official_configs, filename):
+        log.info("Comparing tagged revision %s to on-disk %s ..." % (
+            configs_url, filename))
+        if not compare(official_configs, release_config_file):
             log.error("local configs do not match tagged revisions in repo")
             success = False
             error_tally.add('verify_configs')
         l10n_changesets = urllib2.urlopen(l10n_url)
-        log.info("Comparing tagged revision %s to on-disk %s ..." % (l10n_url, changesets))
-        if not compare(l10n_changesets, changesets):
-            log.error("local l10n-changesets do not match tagged revisions in repo")
+        log.info("Comparing tagged revision %s to on-disk %s ..." % (
+            l10n_url, changesets))
+        if not compare(l10n_changesets, l10n_changesets_file):
+            log.error("local l10n-changesets do not match tagged revisions"
+                      " in repo")
             success = False
             error_tally.add('verify_configs')
     except urllib2.HTTPError:
@@ -221,19 +198,21 @@ def verify_configs(revision, hghost, configs_repo, changesets, filename):
         error_tally.add('verify_configs')
     return success
 
+
 def query_locale_revisions(l10n_changesets):
     locales = {}
     if l10n_changesets.endswith('.json'):
         fh = open(l10n_changesets, 'r')
         locales_json = json.load(fh)
         fh.close()
-        for locale in locales_json.keys():
+        for locale in locales_json:
             locales[locale] = locales_json[locale]["revision"]
     else:
         for line in open(l10n_changesets, 'r'):
             locale, revision = line.split()
             locales[locale] = revision
     return locales
+
 
 def verify_l10n_changesets(hgHost, l10n_changesets):
     """Checks for the existance of all l10n changesets"""
@@ -248,14 +227,16 @@ def verify_l10n_changesets(hgHost, l10n_changesets):
         }
         locale_url = make_hg_url(hgHost, localePath, protocol='https')
         log.info("Checking for existence l10n changeset %s %s in repo %s ..."
-            % (locale, revision, locale_url))
+                 % (locale, revision, locale_url))
         try:
             urllib2.urlopen(locale_url)
         except urllib2.HTTPError:
-            log.error("cannot find l10n locale %s in repo %s" % (locale, locale_url))
+            log.error("cannot find l10n locale %s in repo %s" % (locale,
+                                                                 locale_url))
             success = False
             error_tally.add('verify_l10n')
     return success
+
 
 def verify_l10n_dashboard(l10n_changesets, l10n_dashboard_version=None):
     """Checks the l10n-changesets against the l10n dashboard"""
@@ -268,9 +249,10 @@ def verify_l10n_dashboard(l10n_changesets, l10n_dashboard_version=None):
     else:
         l10n_dashboard_version = getL10nDashboardVersion(
             releaseConfig['version'], releaseConfig['productName'])
-    dash_url = 'https://l10n.mozilla.org/shipping/l10n-changesets?ms=%s' % l10n_dashboard_version
+    dash_url = 'https://l10n.mozilla.org/shipping/l10n-changesets?ms=%s' % \
+        l10n_dashboard_version
     log.info("Comparing l10n changesets on dashboard %s to on-disk %s ..."
-        % (dash_url, l10n_changesets))
+             % (dash_url, l10n_changesets))
     try:
         dash_changesets = {}
         for line in urllib2.urlopen(dash_url):
@@ -284,7 +266,8 @@ def verify_l10n_dashboard(l10n_changesets, l10n_dashboard_version=None):
                 success = False
                 error_tally.add('verify_l10n_dashboard')
             elif revision != dash_revision:
-                log.error("\tlocale %s revisions not matching: %s (config) vs. %s (dashboard)"
+                log.error("\tlocale %s revisions not matching: %s (config)"
+                          " vs. %s (dashboard)"
                     % (locale, revision, dash_revision))
                 success = False
                 error_tally.add('verify_l10n_dashboard')
@@ -298,17 +281,21 @@ def verify_l10n_dashboard(l10n_changesets, l10n_dashboard_version=None):
         error_tally.add('verify_l10n_dashboard')
     return success
 
+
 def verify_l10n_shipped_locales(l10n_changesets, shipped_locales):
-    """Ensure that our l10n-changesets on the master match the repo's shipped locales list"""
+    """Ensure that our l10n-changesets on the master match the repo's shipped
+    locales list"""
     success = True
     locales = query_locale_revisions(l10n_changesets)
     log.info("Comparing l10n changesets to shipped locales ...")
     diff_list = locale_diff(locales, shipped_locales)
     if len(diff_list) > 0:
-        log.error("l10n_changesets and shipped_locales differ on locales: %s" % diff_list)
+        log.error("l10n_changesets and shipped_locales differ on locales:"
+                  " %s" % diff_list)
         success = False
         error_tally.add('verify_l10n_shipped_locales')
     return success
+
 
 def verify_options(cmd_options, config):
     """Check release_configs against command-line opts"""
@@ -317,86 +304,142 @@ def verify_options(cmd_options, config):
         log.error("version passed in does not match release_configs")
         success = False
         error_tally.add('verify_options')
-    if cmd_options.buildNumber and int(cmd_options.buildNumber) != int(config['buildNumber']):
+    if cmd_options.buildNumber and \
+        int(cmd_options.buildNumber) != int(config['buildNumber']):
         log.error("buildNumber passed in does not match release_configs")
         success = False
         error_tally.add('verify_options')
-    if not getRepoMatchingBranch(cmd_options.branch, config['sourceRepositories']):
+    if not getRepoMatchingBranch(cmd_options.branch,
+                                 config['sourceRepositories']):
         log.error("branch passed in does not exist in release config")
         success = False
         error_tally.add('verify_options')
     return success
 
+
 if __name__ == '__main__':
-    from localconfig import GLOBAL_VARS
     parser = OptionParser(__doc__)
     parser.set_defaults(
-            check=True,
-            checkL10n=True,
-            checkMozconfigs=True,
-            dryrun=False,
-            username="cltbld",
-            loglevel=logging.INFO,
-            version=None,
-            buildNumber=None,
-            branch=None,
-            products=None,
-            whitelist='../tools/buildbot-helpers/mozconfig_whitelist',
-            )
-    parser.add_option("-b", "--bypass-check", dest="check", action="store_false",
-            help="don't bother verifying release repo's on this master")
-    parser.add_option("-l", "--bypass-l10n-check", dest="checkL10n", action="store_false",
-            help="don't bother verifying l10n milestones")
-    parser.add_option("-m", "--bypass-mozconfig-check", dest="checkMozconfigs", action="store_false",
-            help="don't bother verifying mozconfigs")
-    parser.add_option("-d", "--dryrun", dest="dryrun", action="store_true",
-            help="just do the reconfig/checks, without starting anything")
-    parser.add_option("-u", "--username", dest="username",
-            help="specify a specific username to attach to the sendchange (cltbld)")
-    parser.add_option("-V", "--version", dest="version",
-            help="firefox version string for release in format: x.x.x")
+        check=True,
+        checkL10n=True,
+        checkL10nDashboard=True,
+        checkMozconfigs=True,
+        dryrun=False,
+        username="cltbld",
+        loglevel=logging.INFO,
+        version=None,
+        buildNumber=None,
+        branch=None,
+        whitelist=path.abspath(path.join(path.dirname(__file__),
+                                         "mozconfig_whitelist")),
+        skip_reconfig=False,
+        configs_repo_url='build/buildbot-configs',
+        configs_branch='production',
+        masters_json_file=path.abspath(path.join(
+            path.dirname(__file__),
+            "../buildfarm/maintenance/production-masters.json")),
+        concurrency=8,
+        skip_verify_configs=False,
+    )
+    parser.add_option(
+        "-b", "--bypass-check", dest="check", action="store_false",
+        help="don't bother verifying release repo's on this master")
+    parser.add_option(
+        "-l", "--bypass-l10n-check", dest="checkL10n", action="store_false",
+        help="don't bother verifying l10n milestones")
+    parser.add_option(
+        "--bypass-l10n-dashboard-check", dest="checkL10nDashboard",
+        action="store_false", help="don't verify l10n changesets against the dashboard (implied when --bypass-l10n-check is passed)")
+    parser.add_option(
+        "-m", "--bypass-mozconfig-check",  dest="checkMozconfigs",
+        action="store_false", help="don't verify mozconfigs")
+    parser.add_option(
+        "-d", "--dryrun", "--dry-run", dest="dryrun", action="store_true",
+        help="just do the reconfig/checks, without starting anything")
+    parser.add_option(
+        "-u", "--username", dest="username",
+        help="specify a specific username to attach to the sendchange")
+    parser.add_option(
+        "-V", "--version", dest="version",
+        help="version string for release in format: x.x.x")
     parser.add_option("-N", "--build-number", dest="buildNumber", type="int",
-            help="buildNumber for this release, uses release_config otherwise")
-    parser.add_option("-B", "--branch", dest="branch",
-            help="branch name for this release, uses release_config otherwise")
-    parser.add_option("-c", "--release-config", dest="releaseConfigFiles",
-            action="append",
-            help="specify the release-config files (the first is primary)")
-    parser.add_option("-p", "--products", dest="products",
-            help="coma separated list of products")
+                      help="build number for this release, "
+                      "uses release_config otherwise")
+    parser.add_option(
+        "-B", "--branch", dest="branch",
+        help="branch name for this release, uses release_config otherwise")
+    parser.add_option(
+        "-c", "--release-config", dest="releaseConfigFiles", action="append",
+        help="specify the release-config files (the first is primary)")
     parser.add_option("-w", "--whitelist", dest="whitelist",
-            help="whitelist for known mozconfig differences")
-    parser.add_option("--l10n-dashboard-version", dest="l10n_dashboard_version",
-            help="Override L10N dashboard version")
+                      help="whitelist for known mozconfig differences")
+    parser.add_option(
+        "--l10n-dashboard-version", dest="l10n_dashboard_version",
+        help="Override L10N dashboard version")
+    parser.add_option("--skip-reconfig", dest="skip_reconfig",
+                      action="store_true", help="Do not run reconfig")
+    parser.add_option("--configs-dir", dest="configs_dir",
+                      help="buildbot-configs directory")
+    parser.add_option("--configs-repo-url", dest="configs_repo_url",
+                      help="buildbot-configs repo URL")
+    parser.add_option("--configs-branch", dest="configs_branch",
+                      help="buildbot-configs branch")
+    parser.add_option("--masters-json-file", dest="masters_json_file",
+                      help="Path to production-masters.json file.")
+    parser.add_option('-j', dest='concurrency', type='int',
+                      help='Fabric concurrency level')
+    parser.add_option("--skip-verify-configs", dest="skip_verify_configs",
+                      action="store_true",
+                      help="Do not verify configs agains remote repos")
 
     options, args = parser.parse_args()
-    if not options.products:
-        parser.error("Need to provide a list of products, e.g. -p firefox,fennec")
     if not options.dryrun and not args:
-        parser.error("Need to provide a master to sendchange to, or -d for a dryrun")
+        parser.error("Need to provide a master to sendchange to,"
+                     " or -d for a dryrun")
     elif not options.branch:
         parser.error("Need to provide a branch to release")
     elif not options.releaseConfigFiles:
         parser.error("Need to provide a release config file")
 
     logging.basicConfig(level=options.loglevel,
-            format="%(asctime)s : %(levelname)s : %(message)s")
+                        format="%(asctime)s : %(levelname)s : %(message)s")
 
     releaseConfig = None
     test_success = True
     buildNumber = options.buildNumber
+    products = []
+
+    check_buildbot()
+    check_fabric()
+
+    if options.configs_dir:
+        configs_dir = options.configs_dir
+        cleanup_configs = False
+    else:
+        cleanup_configs = True
+        configs_dir = mkdtemp()
+        remote = make_hg_url(HG, options.configs_repo_url)
+        retry(mercurial, args=(remote, configs_dir),
+              kwargs={'branch': options.configs_branch})
+        update(configs_dir, options.configs_branch)
+
+    # https://bugzilla.mozilla.org/show_bug.cgi?id=678103#c5
+    # This goes through the list of config files in reverse order, which is a
+    # hacky way of making sure that the config file that's listed first is the
+    # one that's loaded in releaseConfig for the sendchange.
     for releaseConfigFile in list(reversed(options.releaseConfigFiles)):
-        releaseConfig = readReleaseConfig(releaseConfigFile)
+        abs_release_config_file = path.join(configs_dir, 'mozilla',
+                                            releaseConfigFile)
+        releaseConfig = readReleaseConfig(abs_release_config_file)
+        products.append(releaseConfig['productName'])
 
         if not options.buildNumber:
-            log.warn("No buildNumber specified, using buildNumber in release_config, which may be out of date!")
+            log.warn("No buildNumber specified, using buildNumber in"
+                     " release_config, which may be out of date!")
             options.buildNumber = releaseConfig['buildNumber']
 
         if options.check:
-            if not verify_branch(options.branch, releaseConfig['productName']):
-                test_success = False
-                log.error('Error verifying branch is enabled on master')
-
+            site.addsitedir(path.join(configs_dir, 'mozilla'))
             from config import BRANCHES
             source_repo = 'mozilla'
             try:
@@ -409,57 +452,66 @@ if __name__ == '__main__':
             #Match command line options to defaults in release_configs
             if not verify_options(options, releaseConfig):
                 test_success = False
-                log.error("Error verifying command-line options, attempting checking repo")
+                log.error("Error verifying command-line options,"
+                          " attempting checking repo")
 
-            # verify that mozconfigs for this release pass diff with nightly, compared to a whitelist
+            # verify that mozconfigs for this release pass diff with nightly,
+            # compared to a whitelist
             try:
-                path = releaseConfig['sourceRepositories'][source_repo]['path']
-                revision = releaseConfig['sourceRepositories'][source_repo]['revision']
+                repo_path = \
+                    releaseConfig['sourceRepositories'][source_repo]['path']
+                revision = \
+                    releaseConfig['sourceRepositories'][source_repo]['revision']
             except KeyError:
                 try:
-                    path = releaseConfig['sourceRepositories']['mobile']['path']
-                    revision = releaseConfig['sourceRepositories']['mobile']['revision']
-                except:
+                    repo_path = \
+                        releaseConfig['sourceRepositories']['mobile']['path']
+                    revision = \
+                        releaseConfig['sourceRepositories']['mobile']['revision']
+                except KeyError:
                     log.error("Can't determine sourceRepo for mozconfigs")
-            if options.checkMozconfigs:
-                if not verify_mozconfigs(
-                        path,
+            if options.checkMozconfigs and \
+                    not verify_mozconfigs(
+                        repo_path,
                         revision,
                         branchConfig['hghost'],
                         releaseConfig['productName'],
                         releaseConfig['mozconfigs'],
-                        releaseConfig['appName'],
-                        options.whitelist
-                    ):
-                    test_success = False
-                    log.error("Error verifying mozconfigs")
+                        options.whitelist):
+                test_success = False
+                log.error("Error verifying mozconfigs")
 
-            #verify that the release_configs on-disk match the tagged revisions in hg
-            if not verify_configs(
-                    "%s_BUILD%s" % (releaseConfig['baseTag'], buildNumber),
-                    branchConfig['hghost'],
-                    GLOBAL_VARS['config_repo_path'],
-                    releaseConfig['l10nRevisionFile'],
-                    releaseConfigFile,
-                    ):
+            #verify that the release_configs on-disk match the tagged
+            #revisions in hg
+            l10nRevisionFile = path.join(configs_dir, 'mozilla',
+                                         releaseConfig['l10nRevisionFile'])
+            if not options.skip_verify_configs and \
+                    not verify_configs(
+                        configs_dir,
+                        "%s_BUILD%s" % (releaseConfig['baseTag'], buildNumber),
+                        branchConfig['hghost'],
+                        options.configs_repo_url,
+                        releaseConfig['l10nRevisionFile'],
+                        releaseConfigFile):
                 test_success = False
                 log.error("Error verifying configs")
 
             if options.checkL10n:
                 #verify that l10n changesets exist
-                if not verify_l10n_changesets(
-                        branchConfig['hghost'],
-                        releaseConfig['l10nRevisionFile']):
+                if not verify_l10n_changesets(branchConfig['hghost'],
+                                              l10nRevisionFile):
                     test_success = False
                     log.error("Error verifying l10n changesets")
 
-                #verify that l10n changesets match the dashboard
-                if not verify_l10n_dashboard(releaseConfig['l10nRevisionFile'],
-                                            options.l10n_dashboard_version):
-                    test_success = False
-                    log.error("Error verifying l10n dashboard changesets")
+                if options.checkL10nDashboard:
+                    #verify that l10n changesets match the dashboard
+                    if not verify_l10n_dashboard(
+                        l10nRevisionFile,
+                        options.l10n_dashboard_version):
+                        test_success = False
+                        log.error("Error verifying l10n dashboard changesets")
 
-                #verify that l10n changesets match the shipped locales in firefox product
+                #verify that l10n changesets match the shipped locales
                 if releaseConfig.get('shippedLocalesPath'):
                     sr = releaseConfig['sourceRepositories'][source_repo]
                     sourceRepoPath = sr.get('clonePath', sr['path'])
@@ -476,13 +528,14 @@ if __name__ == '__main__':
                     # l10n_changesets do not have an entry for en-US
                     if 'en-US' in shippedLocales:
                         shippedLocales.remove('en-US')
-                    if not verify_l10n_shipped_locales(
-                            releaseConfig['l10nRevisionFile'],
-                            shippedLocales):
+                    if not verify_l10n_shipped_locales(l10nRevisionFile,
+                                                       shippedLocales):
                         test_success = False
-                        log.error("Error verifying l10n_changesets matches shipped_locales")
+                        log.error("Error verifying l10n_changesets matches"
+                                  " shipped_locales")
 
-            #verify that the relBranch + revision in the release_configs exists in hg
+            #verify that the relBranch + revision in the release_configs
+            #exists in hg
             for sr in releaseConfig['sourceRepositories'].values():
                 sourceRepoPath = sr.get('clonePath', sr['path'])
                 if not verify_repo(sourceRepoPath, sr['revision'],
@@ -490,28 +543,41 @@ if __name__ == '__main__':
                     test_success = False
                     log.error("Error verifying repos")
 
-            #if this is a respin, verify that the version/milestone files have been bumped
+            #if this is a respin, verify that the version/milestone files
+            #have been bumped
             if buildNumber > 1:
                 for sr in releaseConfig['sourceRepositories'].values():
                     if not verify_build(sr, branchConfig['hghost']):
                         test_success = False
 
-    check_buildbot()
     if test_success:
         if not options.dryrun:
-            reconfig()
-            sourceRepoPath = getRepoMatchingBranch(options.branch, releaseConfig['sourceRepositories'])['path']
+            if not options.skip_reconfig:
+                fabric_helper = FabricHelper(
+                    masters_json_file=options.masters_json_file,
+                    concurrency=options.concurrency,
+                    roles=['build', 'scheduler'])
+                fabric_helper.update_and_reconfig()
+            sourceRepoPath = getRepoMatchingBranch(
+                options.branch, releaseConfig['sourceRepositories'])['path']
             sendchange(
-                    sourceRepoPath,
-                    "%s_RELEASE" % releaseConfig['baseTag'],
-                    options.username,
-                    args[0],
-                    options.products,
-                    )
+                sourceRepoPath,
+                "%s_RELEASE" % releaseConfig['baseTag'],
+                options.username,
+                args[0],
+                products,
+            )
         else:
-            log.info("Tests Passed! Did not run reconfig/sendchange. Rerun without `-d`")
+            log.info("Tests Passed! Did not run reconfig/sendchange."
+                     " Rerun without `-d`")
+            if cleanup_configs:
+                log.info("Removing temporary directory: %s" % configs_dir)
+                rmtree(configs_dir)
     else:
         log.fatal("Tests Failed! Not running sendchange!")
         log.fatal("Failed tests (run with -b to skip) :")
         for error in error_tally:
             log.fatal(error)
+        if cleanup_configs:
+            log.info("Not removing temporary directory: %s" % configs_dir)
+        exit(1)

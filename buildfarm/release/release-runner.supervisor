@@ -1,0 +1,8 @@
+[program:releaserunner]
+command=/home/cltbld/release-runner/build-tools/buildfarm/release/release-runner.sh
+exitcodes=0
+user=cltbld
+log_stderr=true
+log_stdout=true
+redirect_stderr=true
+stdout_logfile=/var/log/supervisor/release-runner.log

@@ -51,6 +51,12 @@ def findOldBuildIDs(product, version, buildNumber, platforms,
                 log.error("Hit exception: %s" % e)
     return ids
 
+def getReleaseConfigName(product, branch, staging=False):
+    cfg = 'release-%s-%s.py' % (product, branch)
+    if staging:
+        cfg = 'staging_%s' % cfg
+    return cfg
+
 def readReleaseConfig(configfile, required=[]):
     return readConfig(configfile, keys=['releaseConfig'], required=required)
 
@@ -84,6 +90,11 @@ def readConfig(configfile, keys=[], required=[]):
 def isFinalRelease(version):
     return bool(re.match(FINAL_RELEASE_REGEX, version))
 
+def getBaseTag(product, version):
+    product = product.upper()
+    version = version.replace('.', '_')
+    return '%s_%s' % (product, version)
+
 def getTags(baseTag, buildNumber, buildTag=True):
     t = ['%s_RELEASE' % baseTag]
     if buildTag:
@@ -100,6 +111,9 @@ def generateRelbranchName(milestone, prefix='GECKO'):
     return '%s%s_%s_RELBRANCH' % (
       prefix, milestone.replace('.', ''),
       datetime.now().strftime('%Y%m%d%H'))
+
+def getReleaseName(product, version, buildNumber):
+    return '%s-%s-build%s' % (product.title(), version, str(buildNumber))
 
 def getRepoMatchingBranch(branch, sourceRepositories):
     for sr in sourceRepositories.values():

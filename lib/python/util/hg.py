@@ -24,7 +24,7 @@ def _make_absolute(repo):
         repo = os.path.abspath(repo)
     return repo
 
-def make_hg_url(hgHost, repoPath, protocol='http', revision=None,
+def make_hg_url(hgHost, repoPath, protocol='https', revision=None,
                 filename=None):
     """construct a valid hg url from a base hg url (hg.mozilla.org),
     repoPath, revision and possible filename"""
@@ -527,3 +527,24 @@ def adjust_paths(dest, **paths):
 
     if changed:
         config.write(open(hgrc, 'w'))
+
+def commit(dest, msg, user=None):
+    cmd = ['hg', 'commit', '-m', msg]
+    if user:
+        cmd.extend(['-u', user])
+    run_cmd(cmd, cwd=dest)
+    return get_revision(dest)
+
+def tag(dest, tags, user=None, msg=None, rev=None, force=None):
+    cmd = ['hg', 'tag']
+    if user:
+        cmd.extend(['-u', user])
+    if msg:
+        cmd.extend(['-m', msg])
+    if rev:
+        cmd.extend(['-r', rev])
+    if force:
+        cmd.append('-f')
+    cmd.extend(tags)
+    run_cmd(cmd, cwd=dest)
+    return get_revision(dest)

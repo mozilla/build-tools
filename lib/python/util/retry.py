@@ -9,7 +9,7 @@ def retry(action, attempts=5, sleeptime=60, max_sleeptime=5*60, retry_exceptions
           cleanup=None, args=(), kwargs={}):
     """Call `action' a maximum of `attempts' times until it succeeds,
         defaulting to 5. `sleeptime' is the number of seconds to wait
-	between attempts, defaulting to 60 and doubling each retry attempt, to
+        between attempts, defaulting to 60 and doubling each retry attempt, to
         a maximum of `max_sleeptime'.  `retry_exceptions' is a tuple of
         Exceptions that should be caught. If exceptions other than those
         listed in `retry_exceptions' are raised from `action', they will be

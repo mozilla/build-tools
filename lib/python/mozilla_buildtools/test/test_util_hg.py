@@ -7,7 +7,7 @@ import subprocess
 import util.hg as hg
 from util.hg import clone, pull, update, hg_ver, mercurial, _make_absolute, \
   share, push, apply_and_push, HgUtilError, make_hg_url, get_branch, \
-  get_branches, path, init, unbundle, adjust_paths, is_hg_cset
+  get_branches, path, init, unbundle, adjust_paths, is_hg_cset, commit, tag
 from util.commands import run_cmd, get_output
 
 def getRevisions(dest):
@@ -18,6 +18,23 @@ def getRevisions(dest):
             continue
         retval.append(rev)
     return retval
+
+def getRevInfo(dest, rev):
+    output = get_output(['hg', 'log', '-R', dest, '-r', rev, '--template', '{author}\n{desc}\n{tags}']).splitlines()
+    info = {
+        'user': output[0],
+        'msg': output[1],
+        'tags': []
+    }
+    if len(output) > 2:
+        info['tags'] = output[2].split()
+    return info
+
+def getTags(dest):
+    tags = []
+    for tag in get_output(['hg', 'tags', '-R', dest]).splitlines():
+        tags.append(tag.split()[0])
+    return tags
 
 class TestMakeAbsolute(unittest.TestCase):
     def testAbsolutePath(self):
@@ -911,3 +928,58 @@ class TestHg(unittest.TestCase):
         self.assertRaises(subprocess.CalledProcessError, mercurial,
                 self.repodir, self.wc, shareBase=shareBase, mirrors=[mirror], bundles=[bundle],
                 revision="1234567890")
+
+    def testCommit(self):
+        run_cmd(['touch', 'newfile'], cwd=self.repodir)
+        run_cmd(['hg', 'add', 'newfile'], cwd=self.repodir)
+        rev = commit(self.repodir, user='unittest', msg='gooooood')
+        info = getRevInfo(self.repodir, rev)
+        self.assertEquals(info['msg'], 'gooooood')
+        # can't test for user, because it depends on local hg configs.
+
+    def testCommitWithUser(self):
+        run_cmd(['touch', 'newfile'], cwd=self.repodir)
+        run_cmd(['hg', 'add', 'newfile'], cwd=self.repodir)
+        rev = commit(self.repodir, user='unittest', msg='new stuff!')
+        info = getRevInfo(self.repodir, rev)
+        self.assertEquals(info['user'], 'unittest')
+        self.assertEquals(info['msg'], 'new stuff!')
+
+    def testTag(self):
+        tag(self.repodir, ['test_tag'])
+        self.assertTrue('test_tag' in getTags(self.repodir))
+
+    def testMultitag(self):
+        tag(self.repodir, ['tag1', 'tag2'])
+        tags = getTags(self.repodir)
+        self.assertTrue('tag1' in tags)
+        self.assertTrue('tag2' in tags)
+
+    def testTagWithMsg(self):
+        rev = tag(self.repodir, ['tag'], msg='I made a tag!')
+        info = getRevInfo(self.repodir, rev)
+        self.assertEquals('I made a tag!', info['msg'])
+
+    def testTagWithUser(self):
+        rev = tag(self.repodir, ['taggy'], user='tagger')
+        info = getRevInfo(self.repodir, rev)
+        self.assertEquals('tagger', info['user'])
+
+    def testTagWithRevision(self):
+        tag(self.repodir, ['tag'], rev='1')
+        info = getRevInfo(self.repodir, '1')
+        self.assertEquals(['tag'], info['tags'])
+
+    def testMultitagWithRevision(self):
+        tag(self.repodir, ['tag1', 'tag2'], rev='1')
+        info = getRevInfo(self.repodir, '1')
+        self.assertEquals(['tag1', 'tag2'], info['tags'])
+
+    def testTagFailsIfExists(self):
+        run_cmd(['hg', 'tag', '-R', self.repodir, 'tagg'])
+        self.assertRaises(subprocess.CalledProcessError, tag, self.repodir, 'tagg')
+
+    def testForcedTag(self):
+        run_cmd(['hg', 'tag', '-R', self.repodir, 'tag'])
+        tag(self.repodir, ['tag'], force=True)
+        self.assertTrue('tag' in getTags(self.repodir))

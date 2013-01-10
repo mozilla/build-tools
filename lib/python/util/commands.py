@@ -59,6 +59,60 @@ def run_remote_cmd(cmd, server, username=None, sshKey=None, ssh='ssh',
     return run_cmd(cmd_prefix + cmd, **kwargs)
 
 
+def run_cmd_periodic_poll(cmd, warning_interval=300, poll_interval=0.25,
+                          warning_callback=None, **kwargs):
+    """Run cmd (a list of arguments) in a subprocess and check its completion
+    periodically.  Raise subprocess.CalledProcessError if the command exits
+    with non-zero.  If the command returns successfully, return 0.
+    warning_callback function will be called with the following arguments if the
+    command's execution takes longer then warning_interval:
+        start_time, elapsed, proc
+    """
+    log_cmd(cmd, **kwargs)
+    # We update this after logging because we don't want all of the inherited
+    # env vars muddling up the output
+    if 'env' in kwargs:
+        kwargs['env'] = merge_env(kwargs['env'])
+    proc = subprocess.Popen(cmd, **kwargs)
+    start_time = time.time()
+    last_check = start_time
+
+    while True:
+        rc = proc.poll()
+
+        if rc is not None:
+            log.debug("Process returned %s", rc)
+            if rc == 0:
+                elapsed = time.time() - start_time
+                log.info("command: END (%.2fs elapsed)\n", elapsed)
+                return 0
+            else:
+                raise subprocess.CalledProcessError(rc, cmd)
+
+        now = time.time()
+        if now - last_check > warning_interval:
+            # reset last_check to avoid spamming callback
+            last_check = now
+            elapsed = now - start_time
+            if warning_callback:
+                log.debug("Calling warning_callback function: %s(%s)" %
+                    (warning_callback, start_time))
+                try:
+                    warning_callback(start_time, elapsed, proc)
+                except Exception:
+                    log.error("Callback raised an exception, ignoring...",
+                              exc_info=True)
+            else:
+                log.warning("Command execution is taking longer than"
+                            "warning_internal (%d)"
+                            ", executing warning_callback"
+                            "Started at: %s, elapsed: %.2fs" % (warning_callback,
+                                                                start_time,
+                                                                elapsed))
+
+        time.sleep(poll_interval)
+
+
 def get_output(cmd, include_stderr=False, dont_log=False, **kwargs):
     """Run cmd (a list of arguments) and return the output.  If include_stderr
     is set, stderr will be included in the output, otherwise it will be sent to
@@ -78,7 +132,7 @@ def get_output(cmd, include_stderr=False, dont_log=False, **kwargs):
         output = ""
         t = time.time()
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=stderr,
-                **kwargs)
+                                **kwargs)
         proc.wait()
         output = proc.stdout.read()
         if proc.returncode != 0:

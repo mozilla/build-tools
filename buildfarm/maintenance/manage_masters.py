@@ -1,9 +1,15 @@
 #!/usr/bin/env python
+
+import site
+from os import path
 import time
-import master_fabric
 from fabric.api import env
 from fabric.context_managers import settings
 from Crypto.Random import atfork
+
+site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
+
+import util.fabric.actions
 
 def print_status(remaining, failed_masters):
     print "=" * 30, "Remaining masters", "=" * 30
@@ -15,10 +21,11 @@ def print_status(remaining, failed_masters):
             print m
     print "=" * 80
 
+
 def run_action_on_master(action, master):
     atfork()
     try:
-        action_func = getattr(master_fabric, action)
+        action_func = getattr(util.fabric.actions, "action_%s" % action)
         with settings(host_string=master.get('ip_address', master['hostname'])):
             action_func(master)
             return True
@@ -44,7 +51,7 @@ if __name__ == '__main__':
     parser = OptionParser("""%%prog [options] action [action ...]
 
 Supported actions:
-%s""" % textwrap.fill(", ".join(master_fabric.actions)))
+%s""" % textwrap.fill(", ".join(util.fabric.actions.get_actions())))
 
     parser.set_defaults(
             hosts=[],
@@ -53,13 +60,17 @@ Supported actions:
             show_list=False,
             all_masters=False,
             )
-    parser.add_option("-f", "--master-file", dest="master_file", help="list/url of masters")
+    parser.add_option("-f", "--master-file", dest="master_file",
+                      help="list/url of masters")
     parser.add_option("-H", "--host", dest="hosts", action="append")
     parser.add_option("-R", "--role", dest="roles", action="append")
-    parser.add_option("-M", "--match", dest="match", action="append", help="masters that match the term")
+    parser.add_option("-M", "--match", dest="match", action="append",
+                      help="masters that match the term")
     parser.add_option("-j", dest="concurrency", type="int")
-    parser.add_option("-l", dest="show_list", action="store_true", help="list hosts")
-    parser.add_option("--all", dest="all_masters", action="store_true", help="work on all masters, not just enabled ones")
+    parser.add_option("-l", dest="show_list", action="store_true",
+                      help="list hosts")
+    parser.add_option("--all", dest="all_masters", action="store_true",
+                      help="work on all masters, not just enabled ones")
     parser.add_option("-i", dest="status_interval", type="int", default="60",
                       help="Interval between statuses")
 
@@ -88,14 +99,15 @@ Supported actions:
             masters.append(m)
         elif options.match:
             for match in options.match:
-               if match in m["name"]:
+                if match in m["name"]:
                     masters.append(m)
         elif 'all' in options.hosts or 'all' in options.roles:
             masters.append(m)
 
     if options.show_list:
         if len(masters) == 0:
-            masters = [m for m in all_masters if m['enabled'] or options.all_masters]
+            masters = [m for m in all_masters if m['enabled'] or
+                       options.all_masters]
 
         fmt = "%(role)-9s %(name)-14s %(hostname)s:%(basedir)s"
         print fmt % dict(role='role', name='name', hostname='hostname',
@@ -123,8 +135,8 @@ Supported actions:
             p = multiprocessing.Pool(processes=options.concurrency)
             results = []
             for master in masters:
-                result = p.apply_async(run_action_on_master, (action, master) )
-                results.append( (master, result) )
+                result = p.apply_async(run_action_on_master, (action, master))
+                results.append((master, result))
             p.close()
             failed = False
             failed_masters = []
