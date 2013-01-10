@@ -94,6 +94,8 @@ def verify_mozconfigs(branch, revision, hghost, product, mozconfigs,
                 mozconfigs.append(urllib2.urlopen(url).readlines())
             except urllib2.HTTPError as e:
                 log.error("MISSING: %s - ERROR: %s" % (url, e.msg))
+                # Nothing to compare against
+                return False
         diffInstance = difflib.Differ()
         if len(mozconfigs) == 2:
             diffList = list(diffInstance.compare(mozconfigs[0], mozconfigs[1]))
