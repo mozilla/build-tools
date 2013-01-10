@@ -113,8 +113,11 @@ def getPartials(release):
     return partials
 
 
-def bump_configs(release, cfgFile, l10nContents, workdir, hg_username,
-                 productionBranch):
+def bump_configs(release, cfgFile, l10nContents, workdir,
+                 hg_username, productionBranch, defaultBranch='default'):
+    # Update the production branch first, because that's where we want to read
+    # the templates from
+    update(workdir, productionBranch)
     cfgDir = path.join(workdir, 'mozilla')
     templateFile = path.join(cfgDir, '%s.template' % cfgFile)
     tags = getTags(getBaseTag(release['product'], release['version']),
@@ -131,7 +134,7 @@ def bump_configs(release, cfgFile, l10nContents, workdir, hg_username,
     with open(templateFile) as f:
         template = f.read()
     releaseConfig = substituteReleaseConfig(template, **subs)
-    # Write out the new configs on default....
+    # Write out the new configs on the production branch...
     with open(cfgFile, 'w') as f:
         f.write(releaseConfig)
     with open(l10nChangesetsFile, 'w') as f:
@@ -139,8 +142,8 @@ def bump_configs(release, cfgFile, l10nContents, workdir, hg_username,
     commit(workdir, 'Update release config for %s' % release['name'],
            user=hg_username)
 
-    # And also on whatever the production branch is
-    update(workdir, productionBranch)
+    # And then write the same files to the default branch
+    update(workdir, defaultBranch)
     with open(cfgFile, 'w') as f:
         f.write(releaseConfig)
     with open(l10nChangesetsFile, 'w') as f:
