@@ -33,7 +33,14 @@ def getShippedLocales(product, appName, version, buildNumber, sourceRepo,
 def getCommonLocales(a, b):
     return [locale for locale in a if locale in b]
 
-def getL10nRepositories(fileName, l10nRepoPath, relbranch=None):
+def parsePlainL10nChangesets(changesets):
+    ret = {}
+    for line in changesets.splitlines():
+        locale, revision = line.rstrip().split()
+        ret[locale] = revision
+    return ret
+
+def getL10nRepositories(changesets, l10nRepoPath, relbranch=None):
     """Reads in a list of locale names and revisions for their associated
        repository from 'fileName'.
     """
@@ -41,9 +48,8 @@ def getL10nRepositories(fileName, l10nRepoPath, relbranch=None):
     if not l10nRepoPath.endswith('/'):
         l10nRepoPath = l10nRepoPath + '/'
     repositories = {}
-    file_handle = open(fileName)
     try:
-        for locale, data in json.load(file_handle).iteritems():
+        for locale, data in json.loads(changesets).iteritems():
             locale = urljoin(l10nRepoPath, locale)
             repositories[locale] = {
                 'revision': data['revision'],
@@ -51,9 +57,7 @@ def getL10nRepositories(fileName, l10nRepoPath, relbranch=None):
                 'bumpFiles': []
             }
     except (TypeError, ValueError):
-        file_handle.seek(0)
-        for localeLine in file_handle.readlines():
-            locale, revision = localeLine.rstrip().split()
+        for locale, revision in parsePlainL10nChangesets(changesets).iteritems():
             if revision == 'FIXME':
                 raise Exception('Found FIXME in %s for locale "%s"' % \
                                 (fileName, locale))
@@ -63,8 +67,6 @@ def getL10nRepositories(fileName, l10nRepoPath, relbranch=None):
                 'relbranchOverride': relbranch,
                 'bumpFiles': []
             }
-    finally:
-        file_handle.close()
 
     return repositories
 

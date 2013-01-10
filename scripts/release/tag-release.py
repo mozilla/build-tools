@@ -216,9 +216,8 @@ if __name__ == '__main__':
         generatedRelbranch = generateRelbranchName(
             config['milestone'], prefix=config['relbranchPrefix'])
     tags = getTags(config['baseTag'], config['buildNumber'])
-    l10nRepos = getL10nRepositories(path.join('buildbot-configs', configDir,
-                                              config['l10nRevisionFile']),
-                                    config['l10nRepoPath'])
+    l10nRevisionFile = path.join('buildbot-configs', configDir, config['l10nRevisionFile'])
+    l10nRepos = getL10nRepositories(open(l10nRevisionFile).read(), config['l10nRepoPath'])
 
     for repo in config['sourceRepositories'].values():
         relbranch = repo['relbranch'] or generatedRelbranch
