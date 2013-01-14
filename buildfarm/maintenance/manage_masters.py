@@ -7,7 +7,7 @@ from fabric.api import env
 from fabric.context_managers import settings
 from Crypto.Random import atfork
 
-site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
+site.addsitedir(path.join(path.dirname(path.realpath(__file__)), "../../lib/python"))
 
 import util.fabric.actions
 
