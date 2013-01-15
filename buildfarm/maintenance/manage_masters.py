@@ -3,6 +3,7 @@
 import site
 from os import path
 import time
+import sys
 from fabric.api import env
 from fabric.context_managers import settings
 from Crypto.Random import atfork
@@ -11,17 +12,35 @@ site.addsitedir(
     path.join(path.dirname(path.realpath(__file__)), "../../lib/python"))
 
 import util.fabric.actions
+from util.algorithms import find_console_width
+
+
+def columnize(array, extra_buff=1):
+    maxw = max([len(name) for name in array]) + extra_buff
+    space = 0
+    cols = 1
+    real_buff = maxw
+    if sys.stdout.isatty():
+        space = find_console_width()
+        cols = min(space / (maxw), len(array))
+        real_buff = ((space - (cols * maxw)) / cols) + maxw
+    # left justify with remaining buffer space padded
+    piece = "%-" + str(real_buff-1) + "s"
+    for i, val in enumerate(array):
+        if (i+1) % cols and not i == len(array):
+            print piece % val,
+        else:
+            print piece % val
+
 
 
 def print_status(remaining, failed_masters):
     if remaining:
         print "=" * 30, "Remaining masters", "=" * 30
-        for m in remaining:
-            print m
+        columnize([m['name'] for m in remaining])
     if failed_masters:
-        print "=" * 30, "failed masters", "=" * 30
-        for m in failed_masters:
-            print m
+        print "=" * 30, "Failed masters", "=" * 30
+        columnize(failed_masters)
     print "=" * 80
 
 
@@ -42,7 +61,6 @@ def run_action_on_master(action, master):
         return False
 
 if __name__ == '__main__':
-    import sys
     import urllib
     from optparse import OptionParser
     import textwrap
