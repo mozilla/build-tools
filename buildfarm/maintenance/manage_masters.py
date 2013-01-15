@@ -12,9 +12,10 @@ site.addsitedir(path.join(path.dirname(path.realpath(__file__)), "../../lib/pyth
 import util.fabric.actions
 
 def print_status(remaining, failed_masters):
-    print "=" * 30, "Remaining masters", "=" * 30
-    for m in remaining:
-        print m
+    if remaining:
+        print "=" * 30, "Remaining masters", "=" * 30
+        for m in remaining:
+            print m
     if failed_masters:
         print "=" * 30, "failed masters", "=" * 30
         for m in failed_masters:
@@ -158,5 +159,8 @@ Supported actions:
                 time.sleep(1)
 
             p.join()
+            # One final print before we exit, to be sure that results are not missed
+            print_status([m['name'] for (m, r) in results],
+                                 failed_masters)
             if failed:
                 sys.exit(1)
