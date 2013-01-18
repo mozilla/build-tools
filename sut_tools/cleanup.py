@@ -32,11 +32,11 @@ def cleanupDevice(device=None, dm=None):
     errorFile = os.path.join(pidDir, 'error.flg')
     reboot_needed = False
 
-    processNames = [ 'org.mozilla.fennec',
-                     'org.mozilla.fennec_aurora',
+    processNames = [ 'org.mozilla.fennec_aurora',
                      'org.mozilla.fennec_unofficial',
-                     'org.mozilla.firefox',
+                     'org.mozilla.fennec',
                      'org.mozilla.firefox_beta',
+                     'org.mozilla.firefox',
                      'org.mozilla.roboexample.test',
                    ]
 
