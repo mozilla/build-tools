@@ -649,7 +649,8 @@
     ],
     "limit_tb_platforms": [],
     "limit_b2g_platforms": [
-        "b2g_panda"
+        "b2g_panda",
+        "b2g_panda_gaia_central"
     ],
     "master_dir": "/builds/buildbot/tests1-panda/master",
     "name": "bm29-tests1-panda",
