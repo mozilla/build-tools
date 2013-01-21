@@ -141,6 +141,14 @@ def bump_configs(release, cfgFile, l10nContents, workdir,
         f.write(l10nContents)
     commit(workdir, 'Update release config for %s' % release['name'],
            user=hg_username)
+    # Write out the tags now too, because we want them on the production
+    # branch.
+    prodRev = commit(workdir, 'Update release config for %s' % release['name'],
+                     user=hg_username)
+    forceTag = False
+    if release['buildNumber'] > 1:
+        forceTag = True
+    tag(workdir, tags, rev=prodRev, force=forceTag, user=hg_username)
 
     # And then write the same files to the default branch
     update(workdir, defaultBranch)
@@ -148,12 +156,6 @@ def bump_configs(release, cfgFile, l10nContents, workdir,
         f.write(releaseConfig)
     with open(l10nChangesetsFile, 'w') as f:
         f.write(l10nContents)
-    prodRev = commit(workdir, 'Update release config for %s' % release['name'],
-                     user=hg_username)
-    forceTag = False
-    if release['buildNumber'] > 1:
-        forceTag = True
-    tag(workdir, tags, rev=prodRev, force=forceTag, user=hg_username)
 
 
 def tag_repo(workdir, branch, tags, force, pushRepo, hg_username,
@@ -298,21 +300,22 @@ if __name__ == '__main__':
         for release in rr.new_releases:
             rr.update_status(release, 'Writing configs')
             l10nContents = rr.get_release_l10n(release['name'])
-            tags.extend(getTags(getBaseTag(release['product'],
-                                            release['version']),
-                                release['buildNumber']))
+            tags.extend(getTags(
+                getBaseTag(release['product'], release['version']),
+                release['buildNumber'])
+            )
             update(configs_workdir, revision='default')
             cfgFile = getReleaseConfigName(
                 release['product'], path.basename(release['branch']),
                 staging)
             bump_configs(release=release, cfgFile=cfgFile,
-                            l10nContents=l10nContents,
-                            workdir=configs_workdir, hg_username=hg_username,
-                            productionBranch=buildbot_configs_branch)
+                         l10nContents=l10nContents, workdir=configs_workdir,
+                         hg_username=hg_username,
+                         productionBranch=buildbot_configs_branch)
             rr.update_status(release, 'Running release sanity')
             rs_args = get_release_sanity_args(configs_workdir, release,
-                                                cfgFile, masters_json,
-                                                buildbot_configs_branch)
+                                              cfgFile, masters_json,
+                                              buildbot_configs_branch)
             run_cmd(['python', RELEASE_SANITY_SCRIPT] + rs_args +
                     ['--dry-run'])
             rr.update_status(
@@ -332,11 +335,11 @@ if __name__ == '__main__':
         for release in rr.new_releases:
             rr.update_status(release, 'Tagging other repositories')
         tag_repo(workdir=custom_workdir, branch=buildbotcustom_branch,
-                    tags=tags, force=force_tag, pushRepo=custom_pushRepo,
-                    hg_username=hg_username, hg_ssh_key=hg_ssh_key)
+                 tags=tags, force=force_tag, pushRepo=custom_pushRepo,
+                 hg_username=hg_username, hg_ssh_key=hg_ssh_key)
         tag_repo(workdir=tools_workdir, branch=tools_branch, tags=tags,
-                    force=force_tag, pushRepo=tools_pushRepo,
-                    hg_username=hg_username, hg_ssh_key=hg_ssh_key)
+                 force=force_tag, pushRepo=tools_pushRepo,
+                 hg_username=hg_username, hg_ssh_key=hg_ssh_key)
         for release in rr.new_releases:
             rr.update_status(release, 'Reconfiging masters')
 
