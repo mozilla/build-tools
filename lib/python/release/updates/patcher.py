@@ -200,7 +200,7 @@ class PatcherConfig(dict):
             raise PatcherConfigError("No release found for version '%s'" % self['current-update']['to'])
         if self['current-update']['from'] not in self['release']:
             raise PatcherConfigError("No release found for version '%s'" % self['current-update']['from'])
-        for version in self['current-update']['partials']:
+        for version in self['current-update'].get('partials', {}):
             if version not in self['release']:
                 raise PatcherConfigError("No release found for version '%s'" % version)
         for version in self['past-update']:
