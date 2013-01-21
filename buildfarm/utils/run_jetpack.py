@@ -1,30 +1,40 @@
 #!/usr/bin/python
 """ Usage: %prog platform [sdk_location] [tarball_url] [ftp_url] [extension]
 
-Script to pull down the latest jetpack sdk tarball, unpack it, and run its tests against the 
+Script to pull down the latest jetpack sdk tarball, unpack it, and run its tests against the
 executable of whatever valid platform is passed.
 """
-import os, sys, urllib, shutil, re, traceback, time
-import logging, subprocess
+import os
+import sys
+import urllib
+import shutil
+import re
+import traceback
+import time
+import logging
+import subprocess
 from optparse import OptionParser
 
-SDK_TARBALL="addonsdk.tar.bz2"
-POLLER_DIR="addonsdk-poller"
-SDK_DIR="jetpack"
+SDK_TARBALL = "addonsdk.tar.bz2"
+POLLER_DIR = "addonsdk-poller"
+SDK_DIR = "jetpack"
 
-PLATFORMS = {'leopard': 'macosx64',
-             'snowleopard': 'macosx64',
-             'lion': 'macosx64',
-             'mountainlion': 'macosx64',
-             'xp': 'win32',
-             'win7': 'win32',
-             'w764': 'win64',
-             'fedora': 'linux',
-             'fedora64': 'linux64',
-             }
-             
+PLATFORMS = {
+    'leopard': 'macosx64',
+    'snowleopard': 'macosx64',
+    'lion': 'macosx64',
+    'mountainlion': 'macosx64',
+    'xp': 'win32',
+    'win7': 'win32',
+    'w764': 'win64',
+    'fedora': 'linux',
+    'fedora64': 'linux64',
+    'ubuntu64': 'linux64',
+}
 
 log = logging.getLogger()
+
+
 # copied runCommand from tools/sut_tools/sut_lib.py
 def runCommand(cmd, env=None, logEcho=True):
     """Execute the given command.
@@ -33,7 +43,8 @@ def runCommand(cmd, env=None, logEcho=True):
     log.debug('calling [%s]' % ' '.join(cmd))
 
     o = []
-    p = subprocess.Popen(cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    p = subprocess.Popen(cmd, env=env, stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT)
 
     try:
         for item in p.stdout:
@@ -47,15 +58,17 @@ def runCommand(cmd, env=None, logEcho=True):
 
     return p, o
 
+
 def emphasizeFailureText(text):
     return '<em class="testfail">%s</em>' % text
+
 
 def summarizeJetpackTestLog(name, log):
     infoRe = re.compile(r"(\d+) of (\d+) tests passed")
     successCount = 0
     failCount = 0
     totalCount = 0
-    summary=""
+    summary = ""
     for line in log:
         m = infoRe.match(line)
         if m:
@@ -73,7 +86,7 @@ def summarizeJetpackTestLog(name, log):
 
 if __name__ == '__main__':
     is_poller = False
-    untar_args=''
+    untar_args = ''
     parser = OptionParser(usage=__doc__)
     parser.add_option("-e", "--extension", dest="ext", default="",
                       help="Extension to match in the builds directory for downloading the build")
@@ -113,12 +126,12 @@ if __name__ == '__main__':
 
         # Clobber previous run
         # First try to delete n-2 run which failed to be removed
-        if os.path.exists("./"+POLLER_DIR+".deleteme"):
-          try:
-              shutil.rmtree(POLLER_DIR + ".deleteme")
-              time.sleep(1)
-          except:
-              print("Unable to delete n-2 run folder")
+        if os.path.exists("./" + POLLER_DIR + ".deleteme"):
+            try:
+                shutil.rmtree(POLLER_DIR + ".deleteme")
+                time.sleep(1)
+            except EnvironmentError:
+                print("Unable to delete n-2 run folder")
         # Then try to delete n-1 test run
         if os.path.exists("./%s" % POLLER_DIR):
             try:
@@ -155,11 +168,11 @@ if __name__ == '__main__':
                     parts[-1] = parts[-3]
                 if not parts[-1].isdigit():
                     continue
-                if directory == None or int(parts[-1]) > int(directory):
+                if directory is None or int(parts[-1]) > int(directory):
                     directory = parts[-1]
 
         # Now get the executable for this platform
-        if directory == None:
+        if directory is None:
             print "Error, no directory found to check for executables"
             sys.exit(4)
         urls = urllib.urlopen("%s/%s" % (ftp_url, directory))
@@ -215,7 +228,7 @@ if __name__ == '__main__':
     print "SDK_URL: %s" % sdk_url
     try:
         urllib.urlretrieve(sdk_url, SDK_TARBALL)
-    except:
+    except EnvironmentError:
         traceback.print_exc(file=sys.stdout)
         sys.exit(4)
     os.system('tar -xvf %s %s' % (SDK_TARBALL, untar_args))
@@ -224,18 +237,18 @@ if __name__ == '__main__':
     if is_poller:
         os.system(poller_cmd)
 
-    # Find the sdk dir and Mac .app file to run tests with 
+    # Find the sdk dir and Mac .app file to run tests with
     # Must happen after poller_cmd is run or Mac has no executable yet in addonsdk checkin runs
     dirs = os.listdir('.')
-    for dir in dirs:
-        if 'addon-sdk' in dir:
-            sdk_rev = dir.split('-')[2]
+    for d in dirs:
+        if 'addon-sdk' in d:
+            sdk_rev = d.split('-')[2]
             print "TinderboxPrint: <a href=\"http://hg.mozilla.org/projects/addon-sdk/rev/%(sdk_rev)s\">sdk-rev:%(sdk_rev)s</a>\n" % locals()
-            sdkdir = os.path.abspath(dir)
+            sdkdir = os.path.abspath(d)
             print "SDKDIR: %s" % sdkdir
         if options.platform in ('macosx', 'macosx64', 'leopard', 'snowleopard', 'lion', 'mountainlion'):
-            if '.app' in dir:
-                app_path = os.path.abspath(dir)
+            if '.app' in d:
+                app_path = os.path.abspath(d)
                 print "APP_PATH: %s" % app_path
 
     if not os.path.exists(app_path):
@@ -245,11 +258,12 @@ if __name__ == '__main__':
     # Run it!
     if sdkdir:
         os.chdir(sdkdir)
-        args = ['python', 'bin/cfx', '--verbose', 'testall', '-a', 'firefox', '-b', app_path]
+        args = ['python', 'bin/cfx', '--verbose', 'testall', '-a', 'firefox',
+                '-b', app_path]
         process, output = runCommand(args)
         print '\n'.join(output)
         if is_poller:
-            print summarizeJetpackTestLog("Jetpack",output)
+            print summarizeJetpackTestLog("Jetpack", output)
         sys.exit(process.returncode)
     else:
         print "SDK_DIR is either missing or invalid."
