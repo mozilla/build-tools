@@ -139,12 +139,10 @@ def bump_configs(release, cfgFile, l10nContents, workdir,
         f.write(releaseConfig)
     with open(l10nChangesetsFile, 'w') as f:
         f.write(l10nContents)
-    commit(workdir, 'Update release config for %s' % release['name'],
-           user=hg_username)
-    # Write out the tags now too, because we want them on the production
-    # branch.
     prodRev = commit(workdir, 'Update release config for %s' % release['name'],
                      user=hg_username)
+    # Write out the tags now too, because we want them on the production
+    # branch.
     forceTag = False
     if release['buildNumber'] > 1:
         forceTag = True
