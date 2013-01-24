@@ -31,7 +31,7 @@ sub ProcessArgs {
     GetOptions(
         \%config,
         "product|p=s", "brand|r=s", "version|v=s", "old-version|o=s",
-        "partial-version=s@",
+        "partial-version=s@", "prompt-wait-time=s",
         "app-version|a=s", "build-number|b=s", "patcher-config|c=s",
         "staging-server|t=s", "ftp-server|f=s", "bouncer-server|d=s",
         "use-beta-channel|u", "shipped-locales|l=s", "releasenotes-url|n=s",
@@ -76,6 +76,9 @@ Options:
     previous release. Default value is set to --marname.
   -s The schema version to write to the release block for version, which controls
      the style of snippets used (bug 459972), defaults to 2.
+  --prompt-wait-time The amount of time to wait before prompting the user to update
+                     to this release. Not specifying this will use the default value
+                     as specified in the application.
   -h This usage message.
   --run-tests will run the (very basic) unit tests included with this script.
 __USAGE__
@@ -150,6 +153,7 @@ sub BumpPatcherConfig {
     my $releaseNotesUrl = $config{'releasenotes-url'};
     my $platforms = $config{'platform'};
     my $schema = $config{'schema'};
+    my $promptWaitTime = $config{'prompt-wait-time'};
 
     my $prettyVersion = GetPrettyVersion(version => $version,
                                          product => $product);
@@ -170,6 +174,13 @@ sub BumpPatcherConfig {
     die "ASSERT: BumpPatcherConfig(): null appObj" if (! defined($appObj));
 
     my $currentUpdateObj = $appObj->{'current-update'};
+
+    if ($promptWaitTime) {
+        $currentUpdateObj->{'promptWaitTime'} = $promptWaitTime;
+    }
+    else {
+        delete($currentUpdateObj->{'promptWaitTime'});
+    }
 
     # Add the release we're replacing to the past-releases array, but only if
     # it's a new release; we used to determine this by looking at the build 
