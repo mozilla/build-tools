@@ -74,6 +74,10 @@ Supported actions:
                       help="work on all masters, not just enabled ones")
     parser.add_option("-i", dest="status_interval", type="int", default="60",
                       help="Interval between statuses")
+    parser.add_option("-u", "--username", dest="username", default="cltbld",
+                      help="Username passed to Fabric")
+    parser.add_option("-k", "--ssh-key", dest="ssh_key",
+                      help="SSH key passed to Fabric")
 
     options, actions = parser.parse_args()
 
@@ -120,7 +124,9 @@ Supported actions:
     if len(masters) == 0:
         parser.error("You need to specify a master via -H and/or -R")
 
-    env.user = 'cltbld'
+    env.user = options.username
+    if options.ssh_key:
+        env.key_filename = options.ssh_key
     selected_masters = masters
     for action in actions:
         if hasattr(action, 'per_host'):

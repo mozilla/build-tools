@@ -19,19 +19,26 @@ def check_fabric():
 
 class FabricHelper(object):
     def __init__(self, masters_json_file, roles, concurrency=8,
-                 subprocess=False, warning_interval=300, callback=None):
+                 subprocess=False, warning_interval=300, callback=None,
+                 username=None, ssh_key=None):
         self.masters_json_file = masters_json_file
         self.roles = roles
         self.concurrency = concurrency
         self.subprocess = subprocess
         self.warning_interval = warning_interval
         self.callback = callback
+        self.username = username
+        self.ssh_key = ssh_key
 
     def fabric_cmd(self, actions, **cmdKwargs):
         cmd = ['python', FABRIC_SCRIPT, '-f', self.masters_json_file,
                '-j', str(self.concurrency)]
         for role in self.roles:
             cmd += ['-R', role]
+        if self.username:
+            cmd += ['--username', self.username]
+        if self.ssh_key:
+            cmd += ['--ssh-key', self.ssh_key]
         cmd += actions
         # don't buffer output
         env = {'PYTHONUNBUFFERED': '1'}

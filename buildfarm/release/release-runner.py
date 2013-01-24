@@ -167,10 +167,12 @@ def tag_repo(workdir, branch, tags, force, pushRepo, hg_username,
                    ssh_username=hg_username, ssh_key=hg_ssh_key)
 
 
-def update_and_reconfig(masters_json, callback=None):
+def update_and_reconfig(masters_json, callback=None, username=None,
+                        ssh_key=None):
     fabric_helper = FabricHelper(masters_json_file=masters_json,
                                  roles=['scheduler', 'build'], subprocess=True,
-                                 callback=callback)
+                                 callback=callback, username=username,
+                                 ssh_key=ssh_key)
     fabric_helper.update_and_reconfig()
 
 
@@ -234,6 +236,8 @@ if __name__ == '__main__':
     sleeptime = config.getint('release-runner', 'sleeptime')
     notify_from = get_config(config, 'release-runner', 'notify_from', None)
     notify_to = get_config(config, 'release-runner', 'notify_to', None)
+    ssh_username = get_config(config, 'release-runner', 'ssh_username', None)
+    ssh_key = get_config(config, 'release-runner', 'ssh_key', None)
     if isinstance(notify_to, basestring):
         notify_to = [x.strip() for x in notify_to.split(',')]
     smtp_server = get_config(config, 'release-runner', 'smtp_server',
@@ -346,7 +350,8 @@ if __name__ == '__main__':
         if notify_from and notify_to:
             callback = partial(reconfig_warning, notify_from, notify_to,
                                smtp_server, rr)
-        update_and_reconfig(masters_json, callback=callback)
+        update_and_reconfig(masters_json, callback=callback,
+                            username=ssh_username, ssh_key=ssh_key)
     except Exception, e:
         # Rather than catching individual problems and giving very specific
         # status updates to the kickoff application, we use this catch-all.

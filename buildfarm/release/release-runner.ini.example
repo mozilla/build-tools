@@ -21,6 +21,8 @@ sendchange_master: localhost:9001
 staging: false
 verbose: true
 sleeptime: 30
+ssh_username: cltbld
+ssh_key: /home/cltbld/.ssh/release-runner
 
 [symlinks]
 production_config.py: {buildbot_configs}/mozilla/localconfig.py
