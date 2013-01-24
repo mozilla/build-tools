@@ -82,41 +82,6 @@ def downloadUpdateIgnore404(*args, **kwargs):
         else:
             raise
 
-def expectedFiles(unsignedDir, locale, platform, manuallySignedPlatforms,
-        firstLocale='en-US'):
-    """ When checking a full set of downloaded release builds,
-    for a given locale + platform check for the following:
-    - container package file for a given locale + platform (i.e. exe, dmg)
-    - an XPI pack
-    - a complete MAR
-    """
-    unsigned = 'unsigned' if platform in manuallySignedPlatforms else ''
-    expectedDir = os.path.join(unsignedDir, unsigned, ftp_platform_map[platform], locale)
-    log.debug("looking for %s" % expectedDir)
-    updatesDir = os.path.join(unsignedDir, unsigned, 'update', ftp_platform_map[platform], locale)
-    langpackDir = os.path.join(unsignedDir, unsigned, ftp_platform_map[platform], 'xpi')
-
-    if os.path.isdir(expectedDir):
-        packages = directoryContains(expectedDir, installer_ext_map[platform])
-    else:
-        log.error("%s does not exist", expectedDir)
-        packages = False
-
-    if os.path.isdir(updatesDir):
-        update = directoryContains(updatesDir, '.complete.mar')
-    else:
-        log.error("%s does not exist", updatesDir)
-        update = False
-
-    if os.path.isdir(langpackDir):
-        langpack = directoryContains(langpackDir, "%s.xpi" % locale) or \
-            locale == firstLocale
-    else:
-        log.error("%s does not exist", langpackDir)
-        langpack = False
-
-    return update and packages and langpack
-
 def rsyncFilesByPattern(server, userName, sshKey, source_dir, target_dir,
                         pattern):
     cmd = ['rsync', '-e',
