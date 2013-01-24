@@ -10,11 +10,11 @@ import stat
 
 
 def organize(basedir):
-    """This function organizes a directory of files by moving files that contain
-       a date string in the format YYYY-MM-DD into child directories of the format
-       YYYY/DD/file, and creating top-level symlinks to the most recent 30 days
-       of directories.  It also creates a 'latest' symlink to point to the most
-       recent date directory.
+    """ This function organizes a directory of files by moving files that contain
+        a date string in the format YYYY-MM-DD(-HH) into child directories of the format
+        YYYY/MM/YYYY-MM-DD(-HH)/file, and creating top-level symlinks to the most recent
+        30 days of directories.  It also creates a 'latest' symlink to point to the most
+        recent date directory.
     """
 
     # Generate a list of top-level symlink dirs, and files that need to be
@@ -23,7 +23,7 @@ def organize(basedir):
     files_to_move = []
     symlink_dirs = []
     for item in os.listdir(basedir):
-        m = re.search('(\d{4}-\d{2}-\d{2})', item)
+        m = re.search('(\d{4}-\d{2}-\d{2})(-\d{2})?', item)
         if m:
             if os.path.isfile(item) and not os.path.islink(item):
                 date = m.group(0)
@@ -82,4 +82,3 @@ if __name__ == "__main__":
     options, args = parser.parse_args()
 
     organize(options.basedir)
-
