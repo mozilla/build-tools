@@ -83,7 +83,7 @@ class ReleaseRunner(object):
 
     def update_status(self, release, status):
         log.info('updating status for %s to %s' % (release['name'], status))
-        self.release_api.updateStatus(release['name'], status)
+        self.release_api.update(release['name'], status=status)
 
     def start_release_automation(self, release, master):
         sendchange(
@@ -98,7 +98,11 @@ class ReleaseRunner(object):
 
     def mark_as_completed(self, release):
         log.info('mark as completed %s' % release['name'])
-        self.release_api.markAsCompleted(release['name'])
+        self.release_api.update(release['name'], complete=True, status='Started')
+
+    def mark_as_failed(self, release, why):
+        log.info('mark as failed %s' % release['name'])
+        self.release_api.update(release['name'], ready=False, status=why)
 
 
 def getPartials(release):
@@ -359,7 +363,7 @@ if __name__ == '__main__':
         # logs and manual intervention, it's not worth the pain and ugliness
         # to do more than this.
         for release in rr.new_releases:
-            rr.update_status(release, 'Failed: %s' % repr(e))
+            rr.mark_as_failed(release, 'Failed: %s' % repr(e))
         raise
 
     rc = 0

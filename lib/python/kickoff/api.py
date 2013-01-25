@@ -6,10 +6,11 @@ except ImportError:
     import json
 
 CA_BUNDLE = os.path.join(os.path.dirname(__file__),
-                        '../../../../misc/certs/ca-bundle.crt')
+                         '../../../../misc/certs/ca-bundle.crt')
 
 import logging
 log = logging.getLogger(__name__)
+
 
 def is_csrf_token_expired(token):
     from datetime import datetime
@@ -17,6 +18,7 @@ def is_csrf_token_expired(token):
     if expiry <= datetime.now().strftime('%Y%m%d%H%M%S'):
         return True
     return False
+
 
 class API(object):
     auth = None
@@ -51,11 +53,13 @@ class API(object):
             log.error('Caught HTTPError: %s' % e.response.content)
             raise
 
+
 class Releases(API):
     url_template = '/releases'
 
     def getReleases(self, ready=1, complete=0):
         return json.loads(self.request(params={'ready': ready, 'complete': complete}).content)
+
 
 class Release(API):
     url_template = '/releases/%(name)s'
@@ -63,15 +67,10 @@ class Release(API):
     def getRelease(self, name):
         return json.loads(self.request(url_template_vars={'name': name}).content)
 
-    def updateStatus(self, name, status):
-        data = {'status': status}
+    def update(self, name, **data):
         url_template_vars = {'name': name}
         return self.request(method='POST', data=data, url_template_vars=url_template_vars).content
 
-    def markAsCompleted(self, name):
-        data = {'complete': True, 'status': 'Started'}
-        url_template_vars = {'name': name}
-        return self.request(method='POST', data=data, url_template_vars=url_template_vars).content
 
 class ReleaseL10n(API):
     url_template = '/releases/%(name)s/l10n'
