@@ -1,7 +1,16 @@
 #!/bin/bash
-BB_PATH=/tools/buildbot/bin/buildslave
-BB_PYTHON=/tools/buildbot/bin/python2.7
-BB_TWISTD=/tools/buildbot/bin/twistd
+if [ -d "/tools/buildbot/bin" ]; then
+  BB_PATH=/tools/buildbot/bin/buildslave
+  BB_PYTHON=/tools/buildbot/bin/python2.7
+  BB_TWISTD=/tools/buildbot/bin/twistd
+else
+  BB_PATH=`which buildslave`
+  BB_PYTHON=`which python`
+  BB_TWISTD=`which twistd`
+fi
+hash "$BB_PATH" "$BB_PYTHON" "$BB_TWISTD" 2>/dev/null || \
+    (echo "Can't find all needed executables to manage buildslave" 1>&2; exit 1)
+
 OPTIONS="gettac start stop restart"
 
 opt="$1"
