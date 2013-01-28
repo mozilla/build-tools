@@ -30,7 +30,7 @@ class API(object):
         self.auth = auth
         self.verify = ca_certs
         self.timeout = timeout
-        self.config = dict(danger_mode=raise_exceptions)
+        self.config = dict(danger_mode=raise_exceptions, max_retries=10)
         self.session = requests.session()
         self.csrf_token = None
 

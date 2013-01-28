@@ -14,6 +14,7 @@ import textwrap
 
 site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 
+import requests
 from kickoff.api import Releases, Release, ReleaseL10n
 from release.config import substituteReleaseConfig
 from release.info import getBaseTag, getTags, readReleaseConfig, \
@@ -83,7 +84,11 @@ class ReleaseRunner(object):
 
     def update_status(self, release, status):
         log.info('updating status for %s to %s' % (release['name'], status))
-        self.release_api.update(release['name'], status=status)
+        try:
+            self.release_api.update(release['name'], status=status)
+        except requests.HTTPError, e:
+            log.warning('Caught HTTPError: %s' % e.response.content)
+            log.warning('status update failed, continuing...', exc_info=True)
 
     def start_release_automation(self, release, master):
         sendchange(
