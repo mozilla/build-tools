@@ -29,6 +29,7 @@ PLATFORMS = {
     'w764': 'win64',
     'fedora': 'linux',
     'fedora64': 'linux64',
+    'ubuntu32': 'linux',
     'ubuntu64': 'linux64',
 }
 
