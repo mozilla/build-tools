@@ -2,7 +2,7 @@ import re
 import unittest
 
 from build.versions import bumpFile, nextVersion, BuildVersionsException, \
-  ANY_VERSION_REGEX
+  ANY_VERSION_REGEX, getPossibleNextVersions
 
 class TestAnyVersionRegex(unittest.TestCase):
     avr = '^%s$' % ANY_VERSION_REGEX
@@ -216,3 +216,20 @@ class TestBumpFile(unittest.TestCase):
     def testBumpUnknownFile(self):
         self.assertRaises(BuildVersionsException, bumpFile, "random.txt",
                           "blahblah", "3.4.5")
+
+class TestGetPossibleNextVersions(unittest.TestCase):
+    def testBeta(self):
+        got = getPossibleNextVersions('17.0b1')
+        self.assertEquals({'17.0b2', '18.0b1'}, got)
+
+    def testFinal(self):
+        got = getPossibleNextVersions('5.0')
+        self.assertEquals({'5.0.1', '6.0'}, got)
+
+    def testEsr(self):
+        got = getPossibleNextVersions('10.0.4esr')
+        self.assertEquals({'10.0.5esr'}, got)
+
+    def testPointRelease(self):
+        got = getPossibleNextVersions('15.0.2')
+        self.assertEquals({'15.0.3', '16.0'}, got)
