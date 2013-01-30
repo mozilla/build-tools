@@ -35,7 +35,7 @@ if [ -f "$PROPERTIES_FILE" ]; then
     # Purging
     cd $SCRIPTS_DIR/..
     python $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
-        -s 5 -n info -n 'rel-*' -n $builddir
+        -s 8 -n info -n 'rel-*' -n $builddir
 fi
 
 python $SCRIPTS_DIR/buildfarm/utils/hgtool.py --rev $REVISION $HG_REPO src || exit 2
