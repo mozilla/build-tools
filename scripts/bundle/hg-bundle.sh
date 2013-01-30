@@ -15,7 +15,7 @@ fi
 hg clone "http://hg.mozilla.org/$REPO_PATH" clone || exit 1
 
 # bundle
-BUNDLE=`echo $BRANCH | tr -c '\n[:alnum:]' '-'`.hg
+BUNDLE=`echo $BRANCH | tr -c '\n[:alnum:]_' '-'`.hg
 ( cd clone && hg bundle -a "../$BUNDLE" ) || exit 1
 
 # blow away the checkout to save space
