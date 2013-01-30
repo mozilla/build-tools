@@ -22,12 +22,15 @@ def organize(basedir):
     os.chdir(basedir)
     files_to_move = []
     symlink_dirs = []
+    date_regex = '(\d{4}-\d{2}-\d{2})(-\d{2})?'
+    date_re = re.compile(date_regex)
     for item in os.listdir(basedir):
-        m = re.search('(\d{4}-\d{2}-\d{2})(-\d{2})?', item)
+        m = date_re.search(item)
         if m:
             if os.path.isfile(item) and not os.path.islink(item):
                 date = m.group(0)
-                files_to_move.append((item, date))
+                short_filename = re.sub('[_-]?' + date_regex, '', item)
+                files_to_move.append((item, date, short_filename))
             elif os.path.isdir(item) and os.path.islink(item):
                 symlink_dirs.append(item)
 
@@ -35,7 +38,7 @@ def organize(basedir):
     # corresponding top-level symlinks; move files into date-specific
     # directories.
     perms = stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
-    for (filename, date) in files_to_move:
+    for (filename, date, short_filename) in files_to_move:
         date_parts = date.split('-')
         directory = os.path.join(date_parts[0], date_parts[1], date)
         if date not in symlink_dirs:
@@ -49,6 +52,11 @@ def organize(basedir):
                 os.symlink(directory, date)
                 symlink_dirs.append(date)
         os.rename(filename, os.path.join(directory, filename))
+        short_symlink = os.path.join(directory, short_filename)
+        if os.path.exists(short_symlink) and os.path.islink(short_symlink):
+            os.remove(short_symlink)
+        if not os.path.exists(short_symlink):
+            os.symlink(filename, short_symlink)
 
     # Delete any top-level symlinks that are > 30 days old
     for symlink in symlink_dirs:
