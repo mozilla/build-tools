@@ -2419,7 +2419,8 @@
         "foopy": "foopy52"
     }, 
     "panda-0250": {
-        "foopy": "foopy52"
+        "_comment": "Bug 836857 - To be replaced",
+        "foopy": "None"
     }, 
     "panda-0251": {
         "foopy": "foopy52"
@@ -3073,7 +3074,8 @@
         "foopy": "foopy69"
     }, 
     "panda-0468": {
-        "foopy": "foopy69"
+        "_comment": "Bug 836857 - To be replaced",
+        "foopy": "None"
     }, 
     "panda-0469": {
         "foopy": "foopy69"
@@ -3475,7 +3477,8 @@
         "relayid": "1:4"
     },
     "panda-0570": {
-        "foopy": "foopy77",
+        "_comment": "Bug 836857 - To be replaced",
+        "foopy": "None",
         "relayhost": "panda-relay-051.p6.releng.scl1.mozilla.com",
         "relayid": "2:1"
     },
@@ -3495,7 +3498,8 @@
         "relayid": "2:4"
     },
     "panda-0574": {
-        "foopy": "foopy78",
+        "_comment": "Bug 836857 - To be replaced",
+        "foopy": "None",
         "relayhost": "panda-relay-051.p6.releng.scl1.mozilla.com",
         "relayid": "2:5"
     },
@@ -3930,7 +3934,8 @@
         "relayid": "2:4"
     },
     "panda-0662": {
-        "foopy": "foopy85",
+        "_comment": "Bug 836857 - To be replaced",
+        "foopy": "None",
         "relayhost": "panda-relay-059.p7.releng.scl1.mozilla.com",
         "relayid": "2:5"
     },
@@ -4525,7 +4530,8 @@
         "relayid": "2:2"
     },
     "panda-0781": {
-        "foopy": "foopy94",
+        "_comment": "Bug 836857 - To be replaced",
+        "foopy": "None",
         "relayhost": "panda-relay-070.p8.releng.scl1.mozilla.com",
         "relayid": "2:3"
     },
@@ -4585,7 +4591,8 @@
         "relayid": "2:3"
     },
     "panda-0793": {
-        "foopy": "foopy95",
+        "_comment": "Bug 836857 - To be replaced",
+        "foopy": "None",
         "relayhost": "panda-relay-071.p9.releng.scl1.mozilla.com",
         "relayid": "2:4"
     },
@@ -4597,12 +4604,12 @@
     "panda-0795": {
         "foopy": "foopy95",
         "relayhost": "panda-relay-071.p9.releng.scl1.mozilla.com",
-        "relayid": "2:6"
+        "relayid": "2:7"
     },
     "panda-0796": {
         "foopy": "foopy95",
         "relayhost": "panda-relay-071.p9.releng.scl1.mozilla.com",
-        "relayid": "2:7"
+        "relayid": "2:8"
     },
     "panda-0797": {
         "foopy": "foopy95",
