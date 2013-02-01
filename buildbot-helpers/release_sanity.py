@@ -22,9 +22,7 @@ try:
 except ImportError:
     import json
 
-import difflib
 import logging
-import os
 import site
 import urllib2
 
@@ -36,13 +34,13 @@ from shutil import rmtree
 site.addsitedir(path.join(path.dirname(__file__), "../lib/python"))
 
 from util.file import compare
-from util.hg import make_hg_url, get_repo_name, mercurial, update
-from release.info import readReleaseConfig, getRepoMatchingBranch, readConfig
+from util.hg import make_hg_url, mercurial, update
+from release.info import readReleaseConfig, getRepoMatchingBranch
 from release.versions import getL10nDashboardVersion
 from release.l10n import getShippedLocales
 from release.platforms import getLocaleListFromShippedLocales
 from release.sanity import check_buildbot, find_version, locale_diff, \
-    sendchange
+    sendchange, verify_mozconfigs
 from util.fabric.common import check_fabric, FabricHelper
 from util.retry import retry
 
@@ -65,78 +63,6 @@ def verify_repo(branch, revision, hghost):
                   " Check again, or use -b to bypass")
         success = False
         error_tally.add('verify_repo')
-    return success
-
-
-def verify_mozconfigs(branch, revision, hghost, product, mozconfigs,
-                      whitelist=None):
-    """Compare nightly mozconfigs for branch to release mozconfigs and
-    compare to whitelist of known differences"""
-    branch_name = get_repo_name(branch)
-    if whitelist:
-        mozconfigWhitelist = readConfig(whitelist, ['whitelist'])
-    else:
-        mozconfigWhitelist = {}
-    log.info("Comparing %s mozconfigs to nightly mozconfigs..." % product)
-    success = True
-    for platform, mozconfig in mozconfigs.items():
-        urls = []
-        mozconfigs = []
-        mozconfig_paths = [mozconfig, mozconfig.rstrip('release') + 'nightly']
-        # Create links to the two mozconfigs.
-        releaseConfig = make_hg_url(hghost, branch, 'http', revision,
-                                    mozconfig)
-        urls.append(releaseConfig)
-        # The nightly one is the exact same URL, with the file part changed.
-        urls.append(releaseConfig.rstrip('release') + 'nightly')
-        for url in urls:
-            try:
-                mozconfigs.append(urllib2.urlopen(url).readlines())
-            except urllib2.HTTPError as e:
-                log.error("MISSING: %s - ERROR: %s" % (url, e.msg))
-                # Nothing to compare against
-                return False
-        diffInstance = difflib.Differ()
-        if len(mozconfigs) == 2:
-            diffList = list(diffInstance.compare(mozconfigs[0], mozconfigs[1]))
-            for line in diffList:
-                clean_line = line[1:].strip()
-                if (line[0] == '-' or line[0] == '+') and len(clean_line) > 1:
-                    # skip comment lines
-                    if clean_line.startswith('#'):
-                        continue
-                    # compare to whitelist
-                    message = ""
-                    if line[0] == '-':
-                        if platform in mozconfigWhitelist.get(branch_name, {}):
-                            if clean_line in \
-                                    mozconfigWhitelist[branch_name][platform]:
-                                continue
-                    elif line[0] == '+':
-                        if platform in mozconfigWhitelist.get('nightly', {}):
-                            if clean_line in \
-                                    mozconfigWhitelist['nightly'][platform]:
-                                continue
-                            else:
-                                log.warning("%s not in %s %s!" % (
-                                    clean_line, platform,
-                                    mozconfigWhitelist['nightly'][platform]))
-                    else:
-                        log.error("Skipping line %s!" % line)
-                        continue
-                    message = "found in %s but not in %s: %s"
-                    if line[0] == '-':
-                        log.error(message % (mozconfig_paths[0],
-                                             mozconfig_paths[1], clean_line))
-                    else:
-                        log.error(message % (mozconfig_paths[1],
-                                             mozconfig_paths[0], clean_line))
-                    success = False
-                    error_tally.add('verify_mozconfig')
-        else:
-            log.info("Missing mozconfigs to compare for %s" % platform)
-            error_tally.add("verify_mozconfigs: Confirm that %s does not have "
-                            "release/nightly mozconfigs to compare" % platform)
     return success
 
 
@@ -483,6 +409,7 @@ if __name__ == '__main__':
                         releaseConfig['mozconfigs'],
                         options.whitelist):
                 test_success = False
+                error_tally.add('verify_mozconfig')
                 log.error("Error verifying mozconfigs")
 
             # verify that the release_configs on-disk match the tagged

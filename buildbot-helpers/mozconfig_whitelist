@@ -142,7 +142,8 @@ for branch in ('mozilla-esr17', 'comm-esr17'):
     for platform in common_platforms:
         whitelist[branch][platform]         = ['ac_add_options --enable-official-branding',
                                                'mk_add_options MOZ_PGO=1',
-                                               'mk_add_options MOZ_MAKE_FLAGS="-j4"',]
+                                               'mk_add_options MOZ_MAKE_FLAGS="-j4"',
+                                               'export MOZ_ESR=1']
 
 
 if __name__ == '__main__':
