@@ -108,12 +108,12 @@ def verify_mozconfigs(branch, revision, hghost, product, mozconfigs,
                     if line[0] == '-':
                         if platform in mozconfigWhitelist.get(branch_name, {}):
                             if clean_line in \
-                                mozconfigWhitelist[branch_name][platform]:
+                                    mozconfigWhitelist[branch_name][platform]:
                                 continue
                     elif line[0] == '+':
                         if platform in mozconfigWhitelist.get('nightly', {}):
                             if clean_line in \
-                                mozconfigWhitelist['nightly'][platform]:
+                                    mozconfigWhitelist['nightly'][platform]:
                                 continue
                             else:
                                 log.warning("%s not in %s %s!" % (
