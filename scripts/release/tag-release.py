@@ -77,7 +77,6 @@ def tagRepo(config, repo, reponame, revision, tags, bumpFiles, relbranch,
                             '-m', getBumpCommitMessage(config['productName'], config['version'])],
                            cwd=reponame)
                 relbranchChangesets += 1
-                revision = get_revision(reponame)
             except subprocess.CalledProcessError, e:
                 # We only want to ignore exceptions caused by having nothing to
                 # commit, which are OK. We still want to raise exceptions caused
@@ -85,6 +84,10 @@ def tagRepo(config, repo, reponame, revision, tags, bumpFiles, relbranch,
                 if e.returncode != 1 or "nothing changed" not in e.output:
                     raise
 
+        # We always want our tags pointing at the tip of the relbranch
+        # so we need to grab the current revision after we've switched
+        # branches and bumped versions.
+        revision = get_revision(reponame)
         # Create the desired tags on the relbranch
         tag(repo, revision, tags, config['hgUsername'])
 
