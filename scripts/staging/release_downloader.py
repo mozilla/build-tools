@@ -5,7 +5,8 @@ from os import path
 import sys
 import logging
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
+logging.basicConfig(
+    stream=sys.stdout, level=logging.INFO, format="%(message)s")
 log = logging.getLogger(__name__)
 
 sys.path.append(path.join(path.dirname(__file__), "../../lib/python"))
@@ -22,6 +23,7 @@ REQUIRED_BRANCH_CONFIG = ("stage_server", "stage_username", "stage_ssh_key")
 REQUIRED_RELEASE_CONFIG = ("productName", "version", "buildNumber",
                            "oldVersion", "oldBuildNumber")
 
+
 def validate(options, args):
     if not options.configfile:
         log.info("Must pass --configfile")
@@ -36,11 +38,13 @@ def validate(options, args):
 
     releaseConfig = readReleaseConfig(releaseConfigFile,
                                       required=REQUIRED_RELEASE_CONFIG)
-    sourceRepoName = releaseConfig['sourceRepositories'][options.sourceRepoKey]['name']
+    sourceRepoName = releaseConfig['sourceRepositories'][
+        options.sourceRepoKey]['name']
     branchConfig = readBranchConfig(branchConfigDir, branchConfigFile,
                                     sourceRepoName,
                                     required=REQUIRED_BRANCH_CONFIG)
     return branchConfig, releaseConfig
+
 
 def downloadRelease(productName, version, buildNumber, stageServer,
                     stageUsername=None, stageSshKey=None,
@@ -59,8 +63,8 @@ def downloadRelease(productName, version, buildNumber, stageServer,
           -X %(candidatesDir)s/contrib* \
           -X %(candidatesDir)s/partner-repacks \
           -X %(candidatesDir)s/win32-EUballot \
-          %(stageUrlPrefix)s%(candidatesDir)s/' % \
-          (dict(candidatesDir=candidatesDir, stageUrlPrefix=stageUrlPrefix)),
+          %(stageUrlPrefix)s%(candidatesDir)s/' %
+        (dict(candidatesDir=candidatesDir, stageUrlPrefix=stageUrlPrefix)),
         'ln -s %s %s' % (candidatesDir, releasesDir),
     ]
 

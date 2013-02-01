@@ -11,14 +11,17 @@
 
 import logging
 from optparse import OptionParser
-import os, os.path, sys
+import os
+import os.path
+import sys
 
 from release.info import findOldBuildIDs, getBuildID
 from release.l10n import getShippedLocales, getCommonLocales
 from release.platforms import buildbot2updatePlatforms, getPlatformLocales, \
-  getSupportedPlatforms
+    getSupportedPlatforms
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
+logging.basicConfig(
+    stream=sys.stdout, level=logging.INFO, format="%(message)s")
 log = logging.getLogger(__name__)
 
 REQUIRED_OPTIONS = ('brandName', 'product', 'appName', 'version', 'appVersion',
@@ -29,6 +32,7 @@ DEFAULT_CHANNELS = ('beta', 'betatest')
 DEFAULT_PLATFORMS = getSupportedPlatforms()
 DEFAULT_STAGE_SERVER = 'stage.mozilla.org'
 DEFAULT_HG_SERVER = 'http://hg.mozilla.org'
+
 
 def getSnippetDirname(oldBaseSnippetDir, channel):
     if channel in ('release', 'esr'):
@@ -49,10 +53,12 @@ def getSnippetDirname(oldBaseSnippetDir, channel):
         raise Exception('Want to use %s as the snippet dir for %s but it doesn\'t exist.' % (ausdir, channel))
     return fulldir
 
-def createSnippets(brandName, product, appName, version, appVersion, oldVersion,
-                   oldAppVersion, buildNumber, oldBuildNumber, platforms,
-                   channels, oldBaseSnippetDir, stageServer, hg, sourceRepo,
-                   generatePartials):
+
+def createSnippets(
+    brandName, product, appName, version, appVersion, oldVersion,
+    oldAppVersion, buildNumber, oldBuildNumber, platforms,
+    channels, oldBaseSnippetDir, stageServer, hg, sourceRepo,
+        generatePartials):
     errs = []
     snippets = ['complete.txt']
     if generatePartials:
@@ -90,8 +96,8 @@ def createSnippets(brandName, product, appName, version, appVersion, oldVersion,
                                                    chan, 'complete.txt')
                             oldCompleteSnippet = open(oldFile).read()
                         except Exception, e:
-                            errs.append("Error reading from %s\n%s" % \
-                              (oldFile, e))
+                            errs.append("Error reading from %s\n%s" %
+                                       (oldFile, e))
                             continue
                         newDir = os.path.join(baseSnippetDir, brandName,
                                               appVersion, update_platform,
@@ -106,8 +112,8 @@ def createSnippets(brandName, product, appName, version, appVersion, oldVersion,
                         except OSError, e:
                             errs.append("Error creating %s\n%s" % (newDir, e))
                         except Exception, e:
-                            errs.append("Hit error creating %s\n%s" % \
-                            (newFile, e))
+                            errs.append("Hit error creating %s\n%s" %
+                                       (newFile, e))
 
                 for l in [l for l in platformLocales if l not in commonLocales]:
                     log.debug("WARNING: %s not in oldVersion for %s, did not generate snippets for it" % (l, platform))
@@ -115,6 +121,7 @@ def createSnippets(brandName, product, appName, version, appVersion, oldVersion,
     for e in errs:
         log.error(e)
     return len(errs)
+
 
 def writeSnippet(snippet, contents):
     if os.path.exists(snippet):
@@ -125,13 +132,16 @@ def writeSnippet(snippet, contents):
     f.write(contents)
     f.close()
 
+
 def getOptions():
     parser = OptionParser()
     parser.add_option("-B", "--brand", dest="brandName", help="Brand Name")
     parser.add_option("-p", "--product", dest="product", help="Product Name")
     parser.add_option("-a", "--app-name", dest="appName", help="App Name")
-    parser.add_option("-v", "--version", dest="version", help="Product Version")
-    parser.add_option("-A", "--app-version", dest="appVersion", help="Product App Version")
+    parser.add_option(
+        "-v", "--version", dest="version", help="Product Version")
+    parser.add_option(
+        "-A", "--app-version", dest="appVersion", help="Product App Version")
     parser.add_option("-o", "--old-version", dest="oldVersion",
                       help="Previous Product Version")
     parser.add_option("--old-app-version", dest="oldAppVersion",
@@ -162,6 +172,7 @@ def getOptions():
 
     return parser.parse_args()
 
+
 def validateOptions(options, args):
     errs = ""
     for a in REQUIRED_OPTIONS:
@@ -180,6 +191,7 @@ def validateOptions(options, args):
         log.error(errs)
         sys.exit(1)
 
+
 def adjustOptions(options, args):
     options.oldBaseSnippetDir = os.path.abspath(options.oldBaseSnippetDir)
     options.buildNumber = int(options.buildNumber)
@@ -188,6 +200,7 @@ def adjustOptions(options, args):
     options.channels = options.channels or DEFAULT_CHANNELS
     if options.verbose:
         log.setLevel(logging.DEBUG)
+
 
 def main():
     (options, args) = getOptions()

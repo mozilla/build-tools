@@ -4,6 +4,7 @@ from jinja2 import UndefinedError
 
 from release.config import substituteReleaseConfig
 
+
 class TestSubstituteReleaseConfig(unittest.TestCase):
     def testSimple(self):
         config = '{{ product }} {{ version }} {{ branch }}'
@@ -12,4 +13,5 @@ class TestSubstituteReleaseConfig(unittest.TestCase):
 
     def testUndefined(self):
         config = '{{ blech }}'
-        self.assertRaises(UndefinedError, substituteReleaseConfig, config, '1', '2.0')
+        self.assertRaises(
+            UndefinedError, substituteReleaseConfig, config, '1', '2.0')

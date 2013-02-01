@@ -1,23 +1,27 @@
 """
 Implement an on-disk queue for stuff
 """
-import os, tempfile, time
+import os
+import tempfile
+import time
 import logging
 log = logging.getLogger(__name__)
 
 try:
     import pyinotify
     assert pyinotify
+
     class _MovedHandler(pyinotify.ProcessEvent):
         def process_IN_MOVED_TO(self, event):
             pass
 except ImportError:
     pyinotify = None
 
+
 class QueueDir(object):
     # How long before things are considered to be "old"
     # Also how long between cleanup jobs
-    cleanup_time = 300 # 5 minutes
+    cleanup_time = 300  # 5 minutes
 
     # Should the producer do cleanup?
     producer_cleanup = True
@@ -101,7 +105,7 @@ class QueueDir(object):
         """
         # write data to tmp
         fd, tmp_name = tempfile.mkstemp(prefix="%i-%i-%i" % (self.started,
-            self.count, self.pid), dir=self.tmp_dir)
+                                                             self.count, self.pid), dir=self.tmp_dir)
         os.write(fd, data)
         os.close(fd)
 
@@ -126,7 +130,8 @@ class QueueDir(object):
         self.cleanup()
         items = os.listdir(self.new_dir)
         if sorted:
-            items.sort(key=lambda f: os.path.getmtime(os.path.join(self.new_dir, f)))
+            items.sort(
+                key=lambda f: os.path.getmtime(os.path.join(self.new_dir, f)))
         for item in items:
             try:
                 dst_name = os.path.join(self.cur_dir, item)
@@ -192,7 +197,7 @@ class QueueDir(object):
         for t, item_id in self.to_requeue[:]:
             if now > t:
                 self.requeue(item_id)
-                self.to_requeue.remove( (t, item_id) )
+                self.to_requeue.remove((t, item_id))
             else:
                 self.touch(item_id)
 
@@ -213,7 +218,7 @@ class QueueDir(object):
         try:
             bits = item_id.split(".")
             core_item_id = ".".join(bits[:-1])
-            count = int(bits[-1])+1
+            count = int(bits[-1]) + 1
         except:
             core_item_id = item_id
             count = 1
@@ -224,7 +229,7 @@ class QueueDir(object):
             return
 
         if delay:
-            self.to_requeue.append( (time.time() + delay, item_id) )
+            self.to_requeue.append((time.time() + delay, item_id))
             self.to_requeue.sort()
             return
 

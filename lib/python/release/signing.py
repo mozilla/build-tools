@@ -1,6 +1,7 @@
 import os
 from util.commands import run_cmd
 
+
 def generateChecksums(checksums_dir, sums_info):
     """
     Generates {MD5,SHA1,etc}SUMS files using *.checksums files.
@@ -28,7 +29,7 @@ def generateChecksums(checksums_dir, sums_info):
                     print "Failed to parse the following line:"
                     print line
                     raise
-                if sums.has_key(hash_type):
+                if hash_type in sums:
                     sums[hash_type].append((hash, file_name))
     for hash_type in sums_info.keys():
         sums_file = open(sums_info[hash_type], 'w')
@@ -37,6 +38,8 @@ def generateChecksums(checksums_dir, sums_info):
             sums_file.write('%s  %s\n' % (hash, file_name))
         sums_file.close()
 
+
 def signFiles(files):
     for f in files:
-        run_cmd(['bash', '-c', os.environ['MOZ_SIGN_CMD'] + ' -f gpg "%s"' % f])
+        run_cmd(
+            ['bash', '-c', os.environ['MOZ_SIGN_CMD'] + ' -f gpg "%s"' % f])

@@ -1,7 +1,11 @@
 #!/usr/bin/python
-import subprocess, re
+import subprocess
+import re
+
+
 def count_ctors(filename):
-    proc = subprocess.Popen(['readelf', '-W', '-S', filename], stdout=subprocess.PIPE)
+    proc = subprocess.Popen(
+        ['readelf', '-W', '-S', filename], stdout=subprocess.PIPE)
 
     for line in proc.stdout:
         f = line.split()

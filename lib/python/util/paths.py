@@ -7,6 +7,7 @@ from subprocess import PIPE, Popen
 
 log = logging.getLogger(__name__)
 
+
 def windows2msys(path):
     """Translate a Windows pathname to an MSYS pathname.
     Necessary because we call out to ssh/scp, which are MSYS binaries
@@ -14,7 +15,8 @@ def windows2msys(path):
     if not sys.platform.startswith('win32'):
         return path
     (drive, path) = os.path.splitdrive(os.path.abspath(path))
-    return "/" + drive[0] + path.replace('\\','/')
+    return "/" + drive[0] + path.replace('\\', '/')
+
 
 def cygpath(filename):
     """Convert a cygwin path into a windows style path"""
@@ -24,6 +26,7 @@ def cygpath(filename):
     else:
         return filename
 
+
 def convertPath(srcpath, dstdir):
     """Given `srcpath`, return a corresponding path within `dstdir`"""
     bits = srcpath.split("/")
@@ -32,6 +35,7 @@ def convertPath(srcpath, dstdir):
     if bits[0] == 'unsigned':
         bits.pop(0)
     return os.path.join(dstdir, *bits)
+
 
 def findfiles(roots, includes=['*'], excludes=[]):
     retval = []
@@ -54,10 +58,12 @@ def findfiles(roots, includes=['*'], excludes=[]):
             retval.append(fn)
     return retval
 
+
 def relpath(d1, d2):
     """Returns d1 relative to d2"""
     assert d1.startswith(d2)
     return d1[len(d2):].lstrip('/')
+
 
 def finddirs(root):
     """Return a list of all the directories under `root`"""
@@ -66,4 +72,3 @@ def finddirs(root):
         for d in dirs:
             retval.append(os.path.join(root, d))
     return retval
-

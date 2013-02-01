@@ -145,7 +145,7 @@ if __name__ == "__main__":
         for locale, platforms in pc['release'][v]['exceptions'].iteritems():
             if ftp_platform not in platforms and locale in locales:
                 log.info("Removing %s locale from %s platform for %s" % (
-                locale, ftp_platform, v))
+                         locale, ftp_platform, v))
                 locales.remove(locale)
         # Exclude locales being full checked
         quick_check_locales = [l for l in locales

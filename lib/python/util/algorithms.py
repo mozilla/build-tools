@@ -1,15 +1,17 @@
 from copy import copy
 
+
 class ChunkingError(Exception):
     pass
 
+
 def getChunk(things, chunks, thisChunk):
     if thisChunk > chunks:
-        raise ChunkingError("thisChunk (%d) is greater than total chunks (%d)" % \
-          (thisChunk, chunks))
+        raise ChunkingError("thisChunk (%d) is greater than total chunks (%d)" %
+                           (thisChunk, chunks))
     possibleThings = copy(things)
     nThings = len(possibleThings)
-    for c in range(1, chunks+1):
+    for c in range(1, chunks + 1):
         n = nThings / chunks
         # If our things aren't evenly divisible by the number of chunks
         # we need to append one more onto some of them

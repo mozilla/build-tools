@@ -1,5 +1,6 @@
 from urlparse import urlunsplit
 
+
 def makeCandidatesDir(product, version, buildNumber, nightlyDir=None,
                       protocol=None, server=None, ftp_root='/pub/mozilla.org/'):
     if protocol:
@@ -16,12 +17,13 @@ def makeCandidatesDir(product, version, buildNumber, nightlyDir=None,
         nightlyDir = 'nightly'
 
     directory = ftp_root + product + '/' + nightlyDir + '/' + \
-          str(version) + '-candidates/build' + str(buildNumber) + '/'
+        str(version) + '-candidates/build' + str(buildNumber) + '/'
 
     if protocol:
         return urlunsplit((protocol, server, directory, None, None))
     else:
         return directory
+
 
 def makeReleasesDir(product, version=None, protocol=None, server=None,
                     ftp_root='/pub/mozilla.org/'):

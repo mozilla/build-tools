@@ -2,11 +2,12 @@ import sqlalchemy
 from slavealloc import exceptions
 from slavealloc.data import queries, model
 
+
 class Allocation(object):
     """
-    
+
     A container class to hold all of the information necessary to make an allocation
-    
+
     @ivar slavename: the slave name
     @ivar slaveid: its slaveid
     @ivar enabled: true if this slave is enabled
@@ -26,14 +27,14 @@ class Allocation(object):
 
         # slave info, including template
         q = sqlalchemy.select(
-                [ model.slaves, model.tac_templates.c.template ],
-                whereclause=(model.slaves.c.name == slavename),
-                from_obj = [
-                    model.slaves.outerjoin(
-                        model.tac_templates,
-                        onclause=(
-                            model.slaves.c.custom_tplid == model.tac_templates.c.tplid))])
-                    
+            [model.slaves, model.tac_templates.c.template],
+            whereclause=(model.slaves.c.name == slavename),
+            from_obj = [
+                model.slaves.outerjoin(
+                    model.tac_templates,
+                    onclause=(
+                        model.slaves.c.custom_tplid == model.tac_templates.c.tplid))])
+
         slave_row = q.execute().fetchone()
         if not slave_row:
             raise exceptions.NoAllocationError
@@ -74,7 +75,7 @@ class Allocation(object):
         Commit this allocation to the database
         """
         # note that this will work correctly for enabled slaves
-        q = model.slaves.update(whereclause=(model.slaves.c.slaveid == self.slaveid),
-                            values=dict(current_masterid=self.masterid))
+        q = model.slaves.update(
+            whereclause=(model.slaves.c.slaveid == self.slaveid),
+            values=dict(current_masterid=self.masterid))
         q.execute()
-

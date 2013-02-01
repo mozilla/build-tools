@@ -18,10 +18,13 @@ if __name__ == "__main__":
 
     parser.add_option("-c", "--config", dest="config")
     parser.add_option("--snippet-dir", dest="snippet_dir", default="aus2")
-    parser.add_option("--test-snippet-dir", dest="test_snippet_dir", default="aus2.test")
+    parser.add_option(
+        "--test-snippet-dir", dest="test_snippet_dir", default="aus2.test")
     parser.add_option("--hash-type", dest="hashType", default="sha512")
-    parser.add_option("--checksums-dir", dest="checksumsDir", default="checksums")
-    parser.add_option("-v", "--verbose", dest="verbose", default=False, action="store_true")
+    parser.add_option(
+        "--checksums-dir", dest="checksumsDir", default="checksums")
+    parser.add_option(
+        "-v", "--verbose", dest="verbose", default=False, action="store_true")
 
     options, args = parser.parse_args()
 
@@ -63,14 +66,19 @@ if __name__ == "__main__":
     # - Download a fresh copy of the checksums file and cache both places.
     def getChecksum(platform, locale, checksumsFile):
         if checksums.get(platform, {}).get(locale):
-            log.debug("Using in-memory checksums for %s %s" % (platform, locale))
+            log.debug(
+                "Using in-memory checksums for %s %s" % (platform, locale))
         else:
             try:
-                cacheChecksums(platform, locale, parseChecksumsFile(open(checksumsFile).read()))
-                log.debug("Using on-disk checksums for %s %s" % (platform, locale))
+                cacheChecksums(platform, locale,
+                               parseChecksumsFile(open(checksumsFile).read()))
+                log.debug(
+                    "Using on-disk checksums for %s %s" % (platform, locale))
             except (IOError, ValueError):
-                contents = requests.get(checksumsUrl, config={'danger_mode': True}).content
-                log.debug("Using newly downloaded checksums for %s %s" % (platform, locale))
+                contents = requests.get(
+                    checksumsUrl, config={'danger_mode': True}).content
+                log.debug("Using newly downloaded checksums for %s %s" %
+                          (platform, locale))
                 # Cache the sums in-memory and on-disk.
                 cacheChecksums(platform, locale, parseChecksumsFile(contents))
                 with open(checksumsFile, 'w') as f:
@@ -82,19 +90,24 @@ if __name__ == "__main__":
         buildid = pc['release'][version]['platforms'][platform]
         fromBuildid = fromRelease['platforms'][platform]
         fromAppVersion = fromRelease['extension-version']
-        detailsUrl = substitutePath(pc['current-update']['details'], platform, locale, appVersion)
+        detailsUrl = substitutePath(
+            pc['current-update']['details'], platform, locale, appVersion)
         optionalAttrs = pc.getOptionalAttrs(fromVersion)
-        checksumsUrl = substitutePath(pc['release'][version]['checksumsurl'], platform, locale)
-        checksumsFile = path.join(options.checksumsDir, "%s-%s-%s-%s" % (appName, platform, locale, version))
+        checksumsUrl = substitutePath(
+            pc['release'][version]['checksumsurl'], platform, locale)
+        checksumsFile = path.join(options.checksumsDir, "%s-%s-%s-%s" %
+                                  (appName, platform, locale, version))
 
         info = getChecksum(platform, locale, checksumsFile)
         # We may have multiple update types to generate a snippet for...
         for type_ in updateTypes:
             # And also multiple channels...
             for channel in channels:
-                log.debug("Processing: %s %s %s %s %s" % (fromVersion, platform, locale, channel, type_))
+                log.debug("Processing: %s %s %s %s %s" % (
+                    fromVersion, platform, locale, channel, type_))
                 url = pc.getUrl(fromVersion, platform, locale, type_, channel)
-                filename = path.basename(pc.getPath(fromVersion, platform, locale, type_))
+                filename = path.basename(
+                    pc.getPath(fromVersion, platform, locale, type_))
                 for f in info:
                     if filename == path.basename(f):
                         hash_ = info[f]['hashes'][hashType]

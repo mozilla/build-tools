@@ -1,8 +1,12 @@
 #!/usr/bin/python
-import os, site
+import os
+import site
 # Modify our search path to find our modules
 site.addsitedir(os.path.join(os.path.dirname(__file__), "../../lib/python"))
-import tempfile, shutil, time, sys
+import tempfile
+import shutil
+import time
+import sys
 import logging
 
 from util.file import copyfile, sha1sum
@@ -13,6 +17,7 @@ from signing.utils import shouldSign, getChkFile, signfile, sortFiles, \
     filterFiles, fileInfo, checkTools
 
 log = logging.getLogger()
+
 
 def _signLocale(obj, dstdir, files, remember=None):
     # Helper function to sign one individual locale, and keep track of some
@@ -38,9 +43,10 @@ def _signLocale(obj, dstdir, files, remember=None):
         nSigned += results[2]
     return nFiles, cacheHits, nSigned
 
+
 class Signer:
     def __init__(self, keydir, concurrency=1, keepCache=False, fake=False,
-            unsignedInstallers=False):
+                 unsignedInstallers=False):
         """
         `keydir`    - where MozAuthenticode.svc,.pvk can be found
 
@@ -84,8 +90,8 @@ class Signer:
             os.makedirs(dstdir, 0755)
         # Copying files isn't atomic, so copy to a temporary file first, and
         # then rename to the final destination when we're done copying
-        copyfile(filename, dstfile+".tmp")
-        os.rename(dstfile+".tmp", dstfile)
+        copyfile(filename, dstfile + ".tmp")
+        os.rename(dstfile + ".tmp", dstfile)
 
     def getFile(self, hsh, filename):
         """Returns the path to a file in our cache identified by `hsh`, and that is named `filename`
@@ -139,7 +145,8 @@ class Signer:
                 nFiles += 1
                 chk = getChkFile(f)
 
-                # Look in the cache for another file with the same original hash
+                # Look in the cache for another file with the same original
+                # hash
                 cachedFile = self.getFile(h, f)
                 if cachedFile:
                     cacheHits += 1
@@ -155,7 +162,8 @@ class Signer:
                         # If there's a .chk file for this file, copy that out of cache
                         # It's an error if this file doesn't exist in cache
                         cachedChk = self.getFile(h, chk)
-                        logs.append("Copying %s from %s" % (os.path.basename(cachedChk), cachedChk))
+                        logs.append("Copying %s from %s" %
+                                    (os.path.basename(cachedChk), cachedChk))
                         copyfile(cachedChk, chk, copymode=False)
                 else:
                     # We need to sign this file
@@ -171,19 +179,23 @@ class Signer:
                             # save it for future use.
                             cacheHits += 1
                             assert os.path.basename(cachedFile) == basename
-                            logs.append("Copying %s from uncompressed %s" % (basename, cachedFile))
+                            logs.append("Copying %s from uncompressed %s" %
+                                        (basename, cachedFile))
                             # See note above about not copying the file's mode
                             copyfile(cachedFile, f, copymode=False)
                             bzip2(f)
                             if chk:
                                 # If there's a .chk file for this file, copy that out of cache
-                                # It's an error if this file doesn't exist in cache
+                                # It's an error if this file doesn't exist in
+                                # cache
                                 cachedChk = self.getFile(h2, chk)
-                                logs.append("Copying %s from %s" % (os.path.basename(cachedChk), cachedChk))
+                                logs.append("Copying %s from %s" % (
+                                    os.path.basename(cachedChk), cachedChk))
                                 copyfile(cachedChk, chk, copymode=False)
                                 bzip2(chk)
                             if remember:
-                                logs.append("Caching compressed %s as %s" % (f, h))
+                                logs.append(
+                                    "Caching compressed %s as %s" % (f, h))
                                 self.rememberFile(h, f)
                                 # Remember any regenerated chk files
                                 if chk:
@@ -249,7 +261,7 @@ class Signer:
         nfiles = len(files)
 
         # Split the files up into locales
-        locales  = {}
+        locales = {}
         for f in files:
             info = fileInfo(f, product)
             locale = info['locale']
@@ -276,13 +288,15 @@ class Signer:
             now = int(time.time())
             n = len(locales)
             t_per_locale = (now - pool_start) / doneLocales
-            remaining = (n-doneLocales) * t_per_locale
+            remaining = (n - doneLocales) * t_per_locale
             eta_s = remaining % 60
             eta_m = (remaining / 60) % 60
             eta_h = (remaining / 3600)
             percent = 100.0 * doneLocales / float(n)
-            eta_time = time.strftime("%H:%M:%S", time.localtime(int(now + remaining)))
-            log.info("%i/%i (%.2f%%) complete, ETA in %i:%02i:%02i at %s", doneLocales, n, percent, eta_h, eta_m, eta_s, eta_time)
+            eta_time = time.strftime(
+                "%H:%M:%S", time.localtime(int(now + remaining)))
+            log.info("%i/%i (%.2f%%) complete, ETA in %i:%02i:%02i at %s",
+                     doneLocales, n, percent, eta_h, eta_m, eta_s, eta_time)
 
         # Sign the firstLocale first.  If we don't have any firstLocale files,
         # then something is wrong!
@@ -330,12 +344,13 @@ class Signer:
                     shutil.rmtree(signed_dir)
         localeFinished(firstLocale)
 
-        results = [0,0,0]
+        results = [0, 0, 0]
         # We're going to start our pool of children for processing the other
         # locales, so reset our pool_start time to the current time.
         # We do this because the time to sign the firstLocale isn't
         # representative of the time to sign future locales, due to caching and
-        # parallelization.  Using pool_start gives more accurate ETA calculations.
+        # parallelization.  Using pool_start gives more accurate ETA
+        # calculations.
         pool_start = time.time()
 
         # Setup before signing
@@ -347,6 +362,7 @@ class Signer:
             import processing.pool
             pool = processing.pool.Pool(self.concurrency)
             result_list = []
+
             def addLocale(locale):
                 def cb(r):
                     if not r:
@@ -358,10 +374,12 @@ class Signer:
                     localeFinished(locale)
 
                 files = locales[locale]
-                r = pool.apply_async(_signLocale, (self, dstdir, files), callback=cb)
+                r = pool.apply_async(
+                    _signLocale, (self, dstdir, files), callback=cb)
                 result_list.append(r)
         else:
             pool = None
+
             def addLocale(locale):
                 files = locales[locale]
                 r = _signLocale(self, dstdir, files)
@@ -409,11 +427,12 @@ class Signer:
         else:
             hitrate = 0
         if nfiles > 0:
-            time_per_file = (end-start)/float(nfiles)
+            time_per_file = (end - start) / float(nfiles)
         else:
             time_per_file = 0
         log.info("%.2f%% hit rate, %i files signed", hitrate, nSigned)
-        log.info("%s files repacked in %.0f seconds (%.2f seconds per file)", nfiles, end-start, time_per_file)
+        log.info("%s files repacked in %.0f seconds (%.2f seconds per file)",
+                 nfiles, end - start, time_per_file)
 
         if error:
             sys.exit(1)
@@ -422,22 +441,27 @@ if __name__ == "__main__":
     from optparse import OptionParser
     parser = OptionParser()
     parser.set_defaults(
-            dest=None,
-            first_locale="en-US",
-            concurrency=1,
-            keep_cache=False,
-            keydir=None,
-            fake=False,
-            prev=False,
-            product="firefox",
-            unsigned_installers=False,
-            )
-    parser.add_option("-o", "--dest", dest="dest", help="destination directory")
-    parser.add_option("", "--first-locale", dest="first_locale", help="first locale to sign")
-    parser.add_option("-j", "--concurrency", dest="concurrency", help="concurrency", type="int")
+        dest=None,
+        first_locale="en-US",
+        concurrency=1,
+        keep_cache=False,
+        keydir=None,
+        fake=False,
+        prev=False,
+        product="firefox",
+        unsigned_installers=False,
+    )
+    parser.add_option(
+        "-o", "--dest", dest="dest", help="destination directory")
+    parser.add_option("", "--first-locale", dest="first_locale",
+                      help="first locale to sign")
+    parser.add_option("-j", "--concurrency", dest="concurrency",
+                      help="concurrency", type="int")
     parser.add_option("", "--keep-cache", dest="keep_cache", action="store_true", help="don't delete cache of signed files before starting")
-    parser.add_option("", "--keydir", dest="keydir", help="directory where signing keys are located")
-    parser.add_option("", "--fake", dest="fake", action="store_true", help="don't actually sign anything")
+    parser.add_option("", "--keydir", dest="keydir",
+                      help="directory where signing keys are located")
+    parser.add_option("", "--fake", dest="fake", action="store_true",
+                      help="don't actually sign anything")
     parser.add_option("-p", "--previously-signed", dest="prev", action="store_true", help="use a previously signed first locale")
     parser.add_option("", "--product", dest="product", help="product name")
     parser.add_option("", "--unsigned-installers", dest="unsigned_installers", action="store_true", help="don't sign the installer .exes")
@@ -450,7 +474,7 @@ if __name__ == "__main__":
 
     try:
         checkTools()
-    except OSError,e:
+    except OSError, e:
         parser.error(e.message)
 
     if not os.path.exists('checkouts/stubs'):
@@ -459,7 +483,9 @@ if __name__ == "__main__":
     if options.concurrency == 1:
         logging.basicConfig(level=logging.INFO, format="%(message)s")
     else:
-        logging.basicConfig(level=logging.INFO, format="[%(process)d] %(message)s")
+        logging.basicConfig(
+            level=logging.INFO, format="[%(process)d] %(message)s")
 
-    s = Signer(options.keydir, options.concurrency, options.keep_cache, options.fake, options.unsigned_installers)
+    s = Signer(options.keydir, options.concurrency, options.keep_cache,
+               options.fake, options.unsigned_installers)
     s.signFiles(args, options.dest, options.product, firstLocale=options.first_locale, firstLocaleSigned=options.prev)

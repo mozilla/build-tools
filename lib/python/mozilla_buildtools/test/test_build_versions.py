@@ -2,7 +2,8 @@ import re
 import unittest
 
 from build.versions import bumpFile, nextVersion, BuildVersionsException, \
-  ANY_VERSION_REGEX, getPossibleNextVersions
+    ANY_VERSION_REGEX, getPossibleNextVersions
+
 
 class TestAnyVersionRegex(unittest.TestCase):
     avr = '^%s$' % ANY_VERSION_REGEX
@@ -21,6 +22,7 @@ class TestAnyVersionRegex(unittest.TestCase):
 
     def testBad(self):
         self.assertFalse(re.match(self.avr, '3.0c'))
+
 
 class TestBuildVersions(unittest.TestCase):
     def _doTest(self, original, expected):
@@ -182,6 +184,8 @@ MOZ_XULRUNNER=
 MOZ_MORK=
 MOZ_PLACES=1
 fi"""
+
+
 class TestBumpFile(unittest.TestCase):
     def _doTest(self, filename, oldContents, expectedContents, version):
         newContents = bumpFile(filename, oldContents, version)
@@ -201,7 +205,7 @@ class TestBumpFile(unittest.TestCase):
 
     def testBumpMilestoneTxt(self):
         self._doTest("config/milestone.txt", "1.9.2.2", "1.9.2.3", "1.9.2.3")
-    
+
     def testBumpMilestoneTxtPreVersion(self):
         self._doTest("js/src/config/milestone.txt",
                      "1.9.2.4pre", "1.9.2.5pre", "1.9.2.5pre")
@@ -216,6 +220,7 @@ class TestBumpFile(unittest.TestCase):
     def testBumpUnknownFile(self):
         self.assertRaises(BuildVersionsException, bumpFile, "random.txt",
                           "blahblah", "3.4.5")
+
 
 class TestGetPossibleNextVersions(unittest.TestCase):
     def testBeta(self):

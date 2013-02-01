@@ -7,9 +7,11 @@ from fabric.api import env
 from fabric.context_managers import settings
 from Crypto.Random import atfork
 
-site.addsitedir(path.join(path.dirname(path.realpath(__file__)), "../../lib/python"))
+site.addsitedir(
+    path.join(path.dirname(path.realpath(__file__)), "../../lib/python"))
 
 import util.fabric.actions
+
 
 def print_status(remaining, failed_masters):
     if remaining:
@@ -55,12 +57,12 @@ Supported actions:
 %s""" % textwrap.fill(", ".join(util.fabric.actions.get_actions())))
 
     parser.set_defaults(
-            hosts=[],
-            roles=[],
-            concurrency=1,
-            show_list=False,
-            all_masters=False,
-            )
+        hosts=[],
+        roles=[],
+        concurrency=1,
+        show_list=False,
+        all_masters=False,
+    )
     parser.add_option("-f", "--master-file", dest="master_file",
                       help="list/url of masters")
     parser.add_option("-H", "--host", dest="hosts", action="append")
@@ -116,7 +118,7 @@ Supported actions:
 
         fmt = "%(role)-9s %(name)-14s %(hostname)s:%(basedir)s"
         print fmt % dict(role='role', name='name', hostname='hostname',
-                basedir='basedir')
+                         basedir='basedir')
         for m in masters:
             print fmt % m
         sys.exit(0)
@@ -151,7 +153,7 @@ Supported actions:
             while True:
                 for master, result in list(results):
                     if result.ready():
-                        results.remove((master,result))
+                        results.remove((master, result))
                         if not result.get():
                             failed_masters.append(master['name'])
                             print master['name'], "FAILED"
@@ -165,8 +167,9 @@ Supported actions:
                 time.sleep(1)
 
             p.join()
-            # One final print before we exit, to be sure that results are not missed
+            # One final print before we exit, to be sure that results are not
+            # missed
             print_status([m['name'] for (m, r) in results],
-                                 failed_masters)
+                         failed_masters)
             if failed:
                 sys.exit(1)

@@ -13,7 +13,7 @@ sys.path.append(path.join(path.dirname(__file__), "../../lib/python"))
 from release.info import readConfig, readReleaseConfig, getTags
 from util.commands import run_remote_cmd, run_cmd
 from util.hg import make_hg_url, get_repo_name, mercurial, cleanOutgoingRevs, \
-     apply_and_push
+    apply_and_push
 from util.retry import retry
 
 BUMP_SCRIPT = path.join(path.dirname(__file__), "release_config_bumper.py")
@@ -77,7 +77,7 @@ def clone_repo(server, username, sshKey, repo):
     reponame = get_repo_name(repo)
     log.info('Cloning %s to %s' % (repo, reponame))
     retry(run_remote_cmd, args=('clone %s %s' % (reponame, repo),
-                        server, username, sshKey))
+                                server, username, sshKey))
 
 
 def bump_configs(server, username, sshKey, repo, repoPath, configsToBump,
@@ -85,7 +85,7 @@ def bump_configs(server, username, sshKey, repo, repoPath, configsToBump,
     reponame = get_repo_name(repo)
     repo_url = make_hg_url(server, '%s/%s' % (repoPath, reponame))
     pushRepo = make_hg_url(server, '%s/%s' % (repoPath, reponame),
-                               protocol='ssh')
+                           protocol='ssh')
     retry(mercurial, args=(repo_url, reponame))
 
     def bump(repo, configsToBump, configsToOverride):
@@ -100,9 +100,9 @@ def bump_configs(server, username, sshKey, repo, repoPath, configsToBump,
         # Second pass. Append override files to configsToBump and
         # configsToOverride.
         for config, overrides in \
-            configsToBump.items() + configsToOverride.items():
+                configsToBump.items() + configsToOverride.items():
             newContent = cat([path.join(repo, config)] +
-                          [path.join(repo, x) for x in overrides])
+                             [path.join(repo, x) for x in overrides])
             fh = open(path.join(repo, config), 'wb')
             fh.write(newContent)
             fh.close()
@@ -131,7 +131,7 @@ def tag_repo(server, username, sshKey, repo, repoPath, tags):
     reponame = get_repo_name(repo)
     repo_url = make_hg_url(server, '%s/%s' % (repoPath, reponame))
     pushRepo = make_hg_url(server, '%s/%s' % (repoPath, reponame),
-                               protocol='ssh')
+                           protocol='ssh')
     mercurial(repo_url, reponame)
 
     def do_tag(repo, tags):

@@ -5,7 +5,13 @@ Reconfigures the buildbot master in master_dir, waiting for it to finish.
 
 Any errors generated will be printed to stderr.
 """
-import os, sys, time, signal, subprocess, urllib
+import os
+import sys
+import time
+import signal
+import subprocess
+import urllib
+
 
 def graceful_stop(port):
     url = "http://localhost:%s/shutdown" % port
@@ -15,6 +21,7 @@ def graceful_stop(port):
     except IOError:
         pass
 
+
 class Watcher:
     def __init__(self, fname):
         self.fname = fname
@@ -22,15 +29,15 @@ class Watcher:
         self.started = False
 
         if os.path.exists(fname):
-          os.utime(fname, None)
+            os.utime(fname, None)
         else:
-          try:
-            open(fname, 'w').close()
-          except:
-            print "Could not create %s." % fname
-            sys.exit(1)
+            try:
+                open(fname, 'w').close()
+            except:
+                print "Could not create %s." % fname
+                sys.exit(1)
         self.fp = open(fname)
-        self.fp.seek(0, 2) # SEEK_END
+        self.fp.seek(0, 2)  # SEEK_END
         self.current_inode = os.fstat(self.fp.fileno()).st_ino
 
 
@@ -164,7 +171,8 @@ if __name__ == '__main__':
 
         w = ReconfigWatcher(twistd_log)
         null = open(os.devnull, 'w')
-        p = subprocess.Popen(['make', 'start', master_dir], stdout=null, stderr=null)
+        p = subprocess.Popen(
+            ['make', 'start', master_dir], stdout=null, stderr=null)
         w.watch_logfile()
 
     elif action == "stop":
@@ -191,7 +199,8 @@ if __name__ == '__main__':
 
         w = ReconfigWatcher(twistd_log)
         null = open(os.devnull, 'w')
-        p = subprocess.Popen(['make', 'start', master_dir], stdout=null, stderr=null)
+        p = subprocess.Popen(
+            ['make', 'start', master_dir], stdout=null, stderr=null)
         w.watch_logfile()
 
     elif action == "start":
@@ -200,5 +209,6 @@ if __name__ == '__main__':
         else:
             w = ReconfigWatcher(twistd_log)
             null = open(os.devnull, 'w')
-            p = subprocess.Popen(['make', 'start', master_dir], stdout=null, stderr=null)
+            p = subprocess.Popen(
+                ['make', 'start', master_dir], stdout=null, stderr=null)
             w.watch_logfile()

@@ -1,7 +1,10 @@
 from unittest import TestCase
-import subprocess, shutil, tempfile
+import subprocess
+import shutil
+import tempfile
 
 from util.archives import bzip2, bunzip2
+
 
 class TestSigningUtils(TestCase):
     def setUp(self):

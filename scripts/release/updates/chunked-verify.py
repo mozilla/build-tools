@@ -7,7 +7,8 @@ import sys
 from tempfile import mkstemp
 
 sys.path.append(path.join(path.dirname(__file__), "../../../lib/python"))
-logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
+logging.basicConfig(
+    stream=sys.stdout, level=logging.INFO, format="%(message)s")
 log = logging.getLogger(__name__)
 
 from release.info import readReleaseConfig
@@ -15,20 +16,22 @@ from release.updates.verify import UpdateVerifyConfig
 from util.commands import run_cmd
 from util.hg import mercurial, update, make_hg_url
 
-HG="hg.mozilla.org"
-DEFAULT_BUILDBOT_CONFIGS_REPO=make_hg_url(HG, "build/buildbot-configs")
+HG = "hg.mozilla.org"
+DEFAULT_BUILDBOT_CONFIGS_REPO = make_hg_url(HG, "build/buildbot-configs")
 UPDATE_VERIFY_COMMAND = ["bash", "verify.sh", "-c"]
-UPDATE_VERIFY_DIR = path.join(path.dirname(__file__), "../../../release/updates")
+UPDATE_VERIFY_DIR = path.join(
+    path.dirname(__file__), "../../../release/updates")
+
 
 def validate(options, args):
     assert options.chunks and options.thisChunk, \
-      "chunks and this-chunk are required"
+        "chunks and this-chunk are required"
 
     releaseConfigFile = path.join("buildbot-configs", options.releaseConfig)
     releaseConfig = readReleaseConfig(releaseConfigFile,
                                       required=(options.configDict,))
     assert options.platform in releaseConfig[options.configDict], \
-      "%s doesn't exist in %s" % (options.platform, options.configDict)
+        "%s doesn't exist in %s" % (options.platform, options.configDict)
     uvConfig = path.join(UPDATE_VERIFY_DIR,
                          releaseConfig[options.configDict][options.platform])
     assert path.isfile(uvConfig), "Update verify config must exist!"
@@ -64,7 +67,8 @@ if __name__ == "__main__":
     try:
         verifyConfig = UpdateVerifyConfig()
         verifyConfig.read(path.join(UPDATE_VERIFY_DIR, verifyConfigFile))
-        myVerifyConfig = verifyConfig.getChunk(options.chunks, options.thisChunk)
+        myVerifyConfig = verifyConfig.getChunk(
+            options.chunks, options.thisChunk)
         myVerifyConfig.write(fh)
         fh.close()
         run_cmd(["cat", configFile])

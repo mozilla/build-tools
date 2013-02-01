@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 
-import os, sys
-import glob, shutil, zipfile
+import os
+import sys
+import glob
+import shutil
+import zipfile
 from mozdevice import devicemanagerSUT as devicemanager
 
 from sut_lib import getOurIP, calculatePort, clearFlag, setFlag, checkDeviceRoot, \
-                    getDeviceTimestamp, setDeviceTimestamp, \
-                    getResolution, waitForDevice, runCommand, log, soft_reboot_and_verify
+    getDeviceTimestamp, setDeviceTimestamp, \
+    getResolution, waitForDevice, runCommand, log, soft_reboot_and_verify
 
 
 # hwine: minor ugg - the flag files need to be global. Refactoring into
@@ -15,15 +18,15 @@ from sut_lib import getOurIP, calculatePort, clearFlag, setFlag, checkDeviceRoot
 
 def installOneApp(dm, devRoot, app_file_local_path, errorFile, logcat=True):
 
-    source       = app_file_local_path
-    filename     = os.path.basename(source)
-    target       = os.path.join(devRoot, filename)
+    source = app_file_local_path
+    filename = os.path.basename(source)
+    target = os.path.join(devRoot, filename)
 
     log.info("Installing %s" % target)
     if dm.pushFile(source, target):
         status = dm.installApp(target)
         if status is None:
-            log.info('-'*42)
+            log.info('-' * 42)
             log.info('installApp() done - gathering debug info')
             dm.getInfo('process')
             dm.getInfo('memory')
@@ -35,12 +38,14 @@ def installOneApp(dm, devRoot, app_file_local_path, errorFile, logcat=True):
                     setFlag(errorFile, "Remote Device Error: Exception hit while trying to run logcat: %s" % str(e))
                     return 1
         else:
-            setFlag(errorFile, "Remote Device Error: updateApp() call failed - exiting")
+            setFlag(errorFile,
+                    "Remote Device Error: updateApp() call failed - exiting")
             return 1
     else:
         setFlag(errorFile, "Remote Device Error: unable to push %s" % target)
         return 1
     return 0
+
 
 def find_robocop():
     # we hardcode the relative path to robocop.apk for bug 715215
@@ -69,19 +74,23 @@ def find_robocop():
                 apk_info = archive.getinfo('bin/robocop.apk')
                 # it's in the archive, extract to tmp dir - will be created
                 archive.extract(apk_info, 'build/tmp')
-                shutil.move('build/tmp/bin/robocop.apk', self_extracted_location)
+                shutil.move(
+                    'build/tmp/bin/robocop.apk', self_extracted_location)
                 actual_location = self_extracted_location
                 # got it
             except Exception as e:
-                log.warning("(robocop): zip file not as expected: %s (%s)" % (e.message,
-                                                                        str(e.args)))
+                log.warning(
+                    "(robocop): zip file not as expected: %s (%s)" % (e.message,
+                                                                      str(e.args)))
                 log.warning("(robocop): robocop.apk will not be installed")
         else:
-            log.warning("(robocop): Didn't find just one %s; found '%s'" % (expected_zip_location,
-                                                                      str(matches)))
+            log.warning(
+                "(robocop): Didn't find just one %s; found '%s'" % (expected_zip_location,
+                                                                    str(matches)))
             log.warning("(robocop): robocop.apk will not be installed")
 
     return actual_location
+
 
 def one_time_setup(ip_addr, major_source):
     ''' One time setup of state
@@ -97,16 +106,16 @@ def one_time_setup(ip_addr, major_source):
     '''
 
     # set up the flag files, used throughout
-    cwd       = os.getcwd()
+    cwd = os.getcwd()
     global errorFile
     errorFile = os.path.join(cwd, '..', 'error.flg')
     deviceName = os.path.basename(cwd)
 
-    proxyIP   = getOurIP()
+    proxyIP = getOurIP()
     proxyPort = calculatePort()
 
-    workdir      = os.path.dirname(major_source)
-    inifile      = os.path.join(workdir, 'fennec', 'application.ini')
+    workdir = os.path.dirname(major_source)
+    inifile = os.path.join(workdir, 'fennec', 'application.ini')
     remoteappini = os.path.join(workdir, 'talos', 'remoteapp.ini')
     log.info('copying %s to %s' % (inifile, remoteappini))
     runCommand(['cp', inifile, remoteappini])
@@ -116,7 +125,7 @@ def one_time_setup(ip_addr, major_source):
 # Moar data!
     dm.debug = 3
 
-    devRoot  = checkDeviceRoot(dm)
+    devRoot = checkDeviceRoot(dm)
 
     if devRoot is None or devRoot == '/tests':
         setFlag(errorFile, "Remote Device Error: devRoot from devicemanager [%s] is not correct - exiting" % devRoot)
@@ -132,7 +141,8 @@ def one_time_setup(ip_addr, major_source):
         dm.getInfo('uptime')
 
         width, height = getResolution(dm)
-        #adjust resolution down to allow fennec to install without memory issues
+        # adjust resolution down to allow fennec to install without memory
+        # issues
         if (width == 1600 or height == 1200):
             dm.adjustResolution(1024, 768, 'crt')
             log.info('forcing device reboot')
@@ -141,7 +151,7 @@ def one_time_setup(ip_addr, major_source):
 
             width, height = getResolution(dm)
             if width != 1024 and height != 768:
-                setFlag(errorFile, "Remote Device Error: Resolution change failed.  Should be %d/%d but is %d/%d" % (1024,768,width,height))
+                setFlag(errorFile, "Remote Device Error: Resolution change failed.  Should be %d/%d but is %d/%d" % (1024, 768, width, height))
                 return None, None
 
     except devicemanager.AgentError, err:
@@ -150,10 +160,11 @@ def one_time_setup(ip_addr, major_source):
 
     return dm, devRoot
 
+
 def main(argv):
     if (len(argv) < 3):
-      print "usage: installApp.py <ip address> <localfilename> [<processName>]"
-      sys.exit(1)
+        print "usage: installApp.py <ip address> <localfilename> [<processName>]"
+        sys.exit(1)
 
     # N.B. 3rd arg not used anywhere
     if len(argv) > 3:

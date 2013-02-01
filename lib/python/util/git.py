@@ -28,7 +28,8 @@ def _make_absolute(repo):
 def has_revision(dest, revision):
     """Returns True if revision exists in dest"""
     try:
-        get_output(['git', 'log', '--oneline', '-n1', revision], cwd=dest, include_stderr=True)
+        get_output(['git', 'log', '--oneline', '-n1', revision],
+                   cwd=dest, include_stderr=True)
         return True
     except subprocess.CalledProcessError:
         return False
@@ -38,7 +39,8 @@ def has_ref(dest, refname):
     """Returns True if refname exists in dest.
     refname can be a branch or tag name."""
     try:
-        get_output(['git', 'show-ref', '-d', refname], cwd=dest, include_stderr=True)
+        get_output(
+            ['git', 'show-ref', '-d', refname], cwd=dest, include_stderr=True)
         return True
     except subprocess.CalledProcessError:
         return False
@@ -123,7 +125,8 @@ def git(repo, dest, branch=None, revision=None, update_dest=True,
 
         if not os.path.exists(os.path.join(shareBase, ".git")):
             init(shareBase)
-        fetch(repo, shareBase, branch=branch, mirrors=mirrors, remote_name=repo_hash, fetch_tags=False)
+        fetch(repo, shareBase, branch=branch, mirrors=mirrors,
+              remote_name=repo_hash, fetch_tags=False)
 
         log.info("Doing local clone")
         clone(shareBase, dest, update_dest=False, shared=True)
@@ -132,7 +135,8 @@ def git(repo, dest, branch=None, revision=None, update_dest=True,
         # Now fetch new refs
         fetch(repo, dest, branch=branch)
     else:
-        clone(repo, dest, branch=branch, update_dest=update_dest, mirrors=mirrors)
+        clone(repo, dest, branch=branch, update_dest=update_dest,
+              mirrors=mirrors)
 
     if update_dest:
         log.info("Updating local copy")
@@ -234,12 +238,14 @@ def fetch(repo, dest, branch=None, remote_name="origin", mirrors=None, fetch_tag
         # associate those with this remote and can't purge it later.
         # Instead, put remote tag refs into remotes/<remote>/tags
         cmd.append('--no-tags')
-        cmd.append("+refs/tags/*:refs/remotes/{remote_name}/tags/*".format(remote_name=remote_name))
+        cmd.append("+refs/tags/*:refs/remotes/{remote_name}/tags/*".format(
+            remote_name=remote_name))
 
     if branch:
         cmd.append("+refs/heads/{branch}:refs/remotes/{remote_name}/{branch}".format(branch=branch, remote_name=remote_name))
     else:
-        cmd.append("+refs/heads/*:refs/remotes/{remote_name}/*".format(branch=branch, remote_name=remote_name))
+        cmd.append("+refs/heads/*:refs/remotes/{remote_name}/*".format(
+            branch=branch, remote_name=remote_name))
 
     run_cmd(cmd, cwd=dest)
 

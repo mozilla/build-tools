@@ -40,9 +40,11 @@ class UpdateVerifyConfig(object):
         entry = {}
         items = re.findall("\w+=[\"'][^\"']*[\"']", line)
         for i in items:
-            m = re.search("(?P<key>\w+)=[\"'](?P<value>.+)[\"']", i).groupdict()
+            m = re.search(
+                "(?P<key>\w+)=[\"'](?P<value>.+)[\"']", i).groupdict()
             if m["key"] not in self.global_keys and m["key"] not in self.release_keys:
-                raise UpdateVerifyError("Unknown key '%s' found on line:\n%s" % (m["key"], line))
+                raise UpdateVerifyError(
+                    "Unknown key '%s' found on line:\n%s" % (m["key"], line))
             if m["key"] in entry:
                 raise UpdateVerifyError("Multiple values found for key '%s' on line:\n%s" % (m["key"], line))
             entry[m["key"]] = m["value"]

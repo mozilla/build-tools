@@ -8,7 +8,8 @@
 # Assumes Python 2.6
 #
 
-import os, sys
+import os
+import sys
 import time
 import pwd
 import atexit
@@ -26,7 +27,7 @@ from logging.handlers import RotatingFileHandler
 from multiprocessing import Process, Queue, current_process, get_logger, log_to_stderr
 
 from sut_lib import checkSlaveAlive, checkSlaveActive, stopSlave, getOurIP, getIPAddress, \
-                    dumpException, runCommand, loadOptions, getLastLine, setFlag
+    dumpException, runCommand, loadOptions, getLastLine, setFlag
 
 
 """clientproxy.py
@@ -45,35 +46,36 @@ Manage a buildbot client/slave instance for each defined Android device.
 """
 
 
-log             = get_logger()
-eventQueue      = Queue()
-options         = None
-daemon          = None
+log = get_logger()
+eventQueue = Queue()
+options = None
+daemon = None
 
-sutDataPort     = 20700
-sutDialbackPort = 42000 # base - device id # will be added to this
-maxErrors       = 5
+sutDataPort = 20700
+sutDialbackPort = 42000  # base - device id # will be added to this
+maxErrors = 5
 
-ourIP           = None
-ourPath         = os.getcwd()
-ourName         = os.path.splitext(os.path.basename(sys.argv[0]))[0]
+ourIP = None
+ourPath = os.getcwd()
+ourName = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 
 
 defaultOptions = {
-                   'debug':      ('-d', '--debug',      False,    'Enable Debug', 'b'),
-                   'background': ('-b', '--background', False,    'daemonize ourselves', 'b'),
-                   'bbpath':     ('-p', '--bbpath',     ourPath,  'Path where the Device buildbot slave clients can be found'),
-                   'device':     ('',   '--device',     None,     'Device to manage, if not given it will be figured out from environment'),
-                   'deviceIP':   ('',   '--deviceIP',   None,     'IP of Device to manage, if not given it will found via nslookup'),
-                   'logpath':    ('-l', '--logpath',    ourPath,  'Path where log file is to be written'),
-                   'pidpath':    ('',   '--pidpath',    ourPath,  'Path where the pid file is to be created'),
-                   'hangtime':   ('',   '--hangtime',   1200,     'How long (in seconds) a slave can be idle'),
-                 }
+    'debug': ('-d', '--debug', False, 'Enable Debug', 'b'),
+    'background': ('-b', '--background', False, 'daemonize ourselves', 'b'),
+    'bbpath': ('-p', '--bbpath', ourPath, 'Path where the Device buildbot slave clients can be found'),
+    'device': ('', '--device', None, 'Device to manage, if not given it will be figured out from environment'),
+    'deviceIP': ('', '--deviceIP', None, 'IP of Device to manage, if not given it will found via nslookup'),
+    'logpath': ('-l', '--logpath', ourPath, 'Path where log file is to be written'),
+    'pidpath': ('', '--pidpath', ourPath, 'Path where the pid file is to be created'),
+    'hangtime': ('', '--hangtime', 1200, 'How long (in seconds) a slave can be idle'),
+}
 
 
 def initLogs(options):
-    fileHandler   = RotatingFileHandler(os.path.join(options.logpath, '%s.log' % ourName), maxBytes=1000000, backupCount=99)
-    fileFormatter = logging.Formatter('%(asctime)s %(levelname)-7s %(processName)s: %(message)s')
+    fileHandler = RotatingFileHandler(os.path.join(options.logpath, '%s.log' % ourName), maxBytes=1000000, backupCount=99)
+    fileFormatter = logging.Formatter(
+        '%(asctime)s %(levelname)-7s %(processName)s: %(message)s')
 
     fileHandler.setFormatter(fileFormatter)
 
@@ -81,8 +83,9 @@ def initLogs(options):
     log.fileHandler = fileHandler
 
     if not options.background:
-        echoHandler   = logging.StreamHandler()
-        echoFormatter = logging.Formatter('%(levelname)-7s %(processName)s: %(message)s')
+        echoHandler = logging.StreamHandler()
+        echoFormatter = logging.Formatter(
+            '%(levelname)-7s %(processName)s: %(message)s')
 
         echoHandler.setFormatter(echoFormatter)
 
@@ -99,11 +102,12 @@ def initLogs(options):
     import sut_lib
     sut_lib.log = log
 
+
 class Daemon(object):
     def __init__(self, pidfile):
-        self.stdin   = '/dev/null'
-        self.stdout  = '/dev/null'
-        self.stderr  = '/dev/null'
+        self.stdin = '/dev/null'
+        self.stdout = '/dev/null'
+        self.stderr = '/dev/null'
         self.pidfile = pidfile
 
     def handlesigterm(self, signum, frame):
@@ -123,7 +127,8 @@ class Daemon(object):
             if pid > 0:
                 sys.exit(0)
         except OSError, exc:
-            sys.stderr.write("%s: failed to fork from parent: (%d) %s\n" % (sys.argv[0], exc.errno, exc.strerror))
+            sys.stderr.write("%s: failed to fork from parent: (%d) %s\n" %
+                             (sys.argv[0], exc.errno, exc.strerror))
             sys.exit(1)
 
         os.chdir("/")
@@ -136,7 +141,8 @@ class Daemon(object):
                 sys.stdout.close()
                 sys.exit(0)
         except OSError, exc:
-            sys.stderr.write("%s: failed to fork from parent #2: (%d) %s\n" % (sys.argv[0], exc.errno, exc.strerror))
+            sys.stderr.write("%s: failed to fork from parent #2: (%d) %s\n" %
+                             (sys.argv[0], exc.errno, exc.strerror))
             sys.exit(1)
 
         sys.stdout.flush()
@@ -169,6 +175,7 @@ class Daemon(object):
             sys.exit("mangled pidfile %s: %r" % (self.pidfile, data))
         os.kill(pid, signal.SIGTERM)
 
+
 class DialbackHandler(asyncore.dispatcher_with_send):
     def __init__(self, sock, events):
         asyncore.dispatcher_with_send.__init__(self, sock)
@@ -181,8 +188,9 @@ class DialbackHandler(asyncore.dispatcher_with_send):
 
         if data.startswith('register '):
             self.send('OK\n')
-            ip  = self.addr[0].strip()
+            ip = self.addr[0].strip()
             self.events.put(('dialback', ip))
+
 
 class DialbackServer(asyncore.dispatcher):
     def __init__(self, host, port, events):
@@ -203,13 +211,14 @@ class DialbackServer(asyncore.dispatcher):
             log.info('Connection from %s' % repr(addr))
             handle = DialbackHandler(sock, self.events)
 
+
 def handleDialback(port, events):
     """Dialback listener
     The SUTAgent will 'ping' our address/port when it first starts.
-    
+
     This DialbackHandler method will be called for an incoming Device's ping
     when the listener is connected to by SUTAgent.
-    
+
     NOTE: This code should only be run in it's own thread/process
           as it will not return
     """
@@ -220,6 +229,7 @@ def handleDialback(port, events):
         except:
             dumpException('error during dialback loop')
             break
+
 
 def sendReboot(ip, port):
     log.warning('sending rebt to device')
@@ -232,40 +242,41 @@ def sendReboot(ip, port):
     except:
         log.debug('Error sending reboot')
 
+
 def monitorEvents(options, events):
     """This is the main state machine for the Device monitor.
 
     Respond to the events sent via queue and also monitor the
     state of the buildslave if it's been started.
     """
-    pidFile   = os.path.join(options.bbpath, 'twistd.pid')
+    pidFile = os.path.join(options.bbpath, 'twistd.pid')
     errorFile = os.path.join(options.bbpath, 'error.flg')
-    bbEnv     = { 'PATH':     os.getenv('PATH'),
-                  'HOME':     os.getenv('HOME'),
-                  'SUT_NAME': options.device,
-                  'SUT_IP':   options.deviceIP,
-                }
+    bbEnv = {'PATH': os.getenv('PATH'),
+             'HOME': os.getenv('HOME'),
+             'SUT_NAME': options.device,
+             'SUT_IP': options.deviceIP,
+             }
 
-    event         = None
-    bbActive      = False
-    deviceActive   = False
-    connected     = False
-    nChatty       = 0
-    maxChatty     = 10
-    hbFails       = 0
-    maxFails      = 50
-    sleepFails    = 5
-    softCount     = 0    # how many times deviceActive is True
+    event = None
+    bbActive = False
+    deviceActive = False
+    connected = False
+    nChatty = 0
+    maxChatty = 10
+    hbFails = 0
+    maxFails = 50
+    sleepFails = 5
+    softCount = 0    # how many times deviceActive is True
                          # but errorFlag is set
-    softCountMax  = 5    # how many active events to wait bdfore
+    softCountMax = 5    # how many active events to wait bdfore
                          # triggering a soft reset
-    softResets    = 0
-    softResetMax  = 5    # how many soft resets do we try before
+    softResets = 0
+    softResetMax = 5    # how many soft resets do we try before
                          # waiting for a hard reset
-    hardResets    = 0
+    hardResets = 0
     hardResetsMax = 3
     lastHangCheck = time.time()
-    lastNamedEvent = None # Used to determine what our last event was
+    lastNamedEvent = None  # Used to determine what our last event was
 
     log.info('monitoring started (process pid %s)' % current_process().pid)
 
@@ -278,7 +289,7 @@ def monitorEvents(options, events):
                 connected = True
             except:
                 connected = False
-                hbFails  += 1
+                hbFails += 1
                 log.info('Error connecting to data port - sleeping for %d seconds' % sleepFails)
                 time.sleep(sleepFails)
 
@@ -293,7 +304,7 @@ def monitorEvents(options, events):
                 try:
                     hbData = hbSocket.recv(4096)
                 except:
-                    hbData    = ''
+                    hbData = ''
                     connected = False
                     dumpException('hbSocket.recv()')
 
@@ -313,7 +324,7 @@ def monitorEvents(options, events):
                     hbFails += 1
         else:
             state = event[0]
-            s     = 'event %s hbFails %d / %d' % (state, hbFails, maxFails)
+            s = 'event %s hbFails %d / %d' % (state, hbFails, maxFails)
             nChatty += 1
             if nChatty > maxChatty:
                 log.info(s)
@@ -344,7 +355,8 @@ def monitorEvents(options, events):
                                 os.remove(errorFile)
                             else:
                                 hardResets += 1
-                                log.warning('hard reset reboot check [%d/%d]' % (hardResets, hardResetsMax))
+                                log.warning('hard reset reboot check [%d/%d]' %
+                                            (hardResets, hardResetsMax))
                                 if hardResets < hardResetsMax:
                                     sendReboot(options.deviceIP, sutDataPort)
                                 else:
@@ -353,10 +365,11 @@ def monitorEvents(options, events):
                         events.put(('verify',))
             elif state == 'verify':
                 if lastNamedEvent in ("verify", "start"):
-                    continue # race got us recursed, skip back to top
+                    continue  # race got us recursed, skip back to top
                 log.info('Running verify code')
-                proc, output = runCommand(['python', '/builds/sut_tools/verify.py',
-                                           options.device], env=bbEnv)
+                proc, output = runCommand(
+                    ['python', '/builds/sut_tools/verify.py',
+                     options.device], env=bbEnv)
                 if proc.returncode == 0:
                     for i in output:
                         log.debug(i)
@@ -375,11 +388,12 @@ def monitorEvents(options, events):
                 if deviceActive and not bbActive:
                     log.debug('starting buildslave in %s' % options.bbpath)
                     bbProc, output = runCommand(['twistd', '--no_save',
-                                                      '--rundir=%s' % options.bbpath,
-                                                      '--pidfile=%s' % pidFile,
-                                                      '--python=%s' % os.path.join(options.bbpath, 'buildbot.tac')], 
-                                           env=bbEnv)
-                    log.info('buildslave start returned %s' % bbProc.returncode)
+                                                 '--rundir=%s' % options.bbpath,
+                                                 '--pidfile=%s' % pidFile,
+                                                 '--python=%s' % os.path.join(options.bbpath, 'buildbot.tac')],
+                                                env=bbEnv)
+                    log.info(
+                        'buildslave start returned %s' % bbProc.returncode)
                     if bbProc.returncode == 0 or bbProc.returncode == 1:
                         # pause to give twistd a chance to generate the pidfile
                         # before the code that follows goes off killing it because
@@ -389,17 +403,20 @@ def monitorEvents(options, events):
                         while nTries < 20:
                             nTries += 1
                             if os.path.isfile(pidFile):
-                                log.debug('pidfile found, setting bbActive to True')
+                                log.debug(
+                                    'pidfile found, setting bbActive to True')
                                 bbActive = True
                                 break
                             else:
                                 time.sleep(5)
-                        # If we made it this far, we don't see a buildbot pidfile
-                        log.warning("No buildbot pidfile found, as expected...")
+                        # If we made it this far, we don't see a buildbot
+                        # pidfile
+                        log.warning(
+                            "No buildbot pidfile found, as expected...")
                         log.info("See Output of buildslave start:")
                         log.info(output)
             elif state == 'dialback':
-                softCount  = 0
+                softCount = 0
                 softResets = 0
                 hardResets = 0
             elif state == 'terminate':
@@ -409,7 +426,7 @@ def monitorEvents(options, events):
             lastNamedEvent = state
 
         if hbFails > maxFails:
-            hbFails     = 0
+            hbFails = 0
             sleepFails += 5
             if sleepFails > 300:
                 sleepFails = 300
@@ -429,12 +446,13 @@ def monitorEvents(options, events):
             if os.path.isfile(pidFile):
                 n = time.time()
                 if not checkSlaveAlive(options.bbpath):
-                    log.warning('buildslave should be active but pid is not alive')
+                    log.warning(
+                        'buildslave should be active but pid is not alive')
                     if int(n - lastHangCheck) > 300:
                         lastHangCheck = n
                         logTD = checkSlaveActive(options.bbpath)
                         if logTD.days > 0 or (logTD.days == 0 and logTD.seconds > options.hangtime):
-                            log.error('last activity was %d days %d seconds ago - marking as hung slave' % 
+                            log.error('last activity was %d days %d seconds ago - marking as hung slave' %
                                       (logTD.days, logTD.seconds))
                             events.put(('offline',))
             else:
@@ -454,6 +472,7 @@ def monitorEvents(options, events):
 
     log.info('monitor stopped')
 
+
 def handleSigTERM(signum, frame):
     db.close()
     if pidFile is not None:
@@ -465,6 +484,7 @@ def handleSigTERM(signum, frame):
         except Exception:
             pass
     sys.exit(0)
+
 
 def shutdownDialback():
     db.close()
@@ -498,7 +518,8 @@ if __name__ == '__main__':
     sutDialbackPort += n
 
     p = os.getpid()
-    log.info('%s: ourIP %s device %s deviceIP %s bbpath %s' % (p, ourIP, options.device, options.deviceIP, options.bbpath))
+    log.info('%s: ourIP %s device %s deviceIP %s bbpath %s' % (p,
+             ourIP, options.device, options.deviceIP, options.bbpath))
 
     pidFile = os.path.join(ourPath, '%s.pid' % ourName)
 
@@ -506,11 +527,11 @@ if __name__ == '__main__':
         daemon = Daemon(pidFile)
         daemon.start()
 
-    db = Process(name='dialback', target=handleDialback, args=(sutDialbackPort, eventQueue))
+    db = Process(name='dialback', target=handleDialback, args=(
+        sutDialbackPort, eventQueue))
 
     signal.signal(signal.SIGTERM, handleSigTERM)
     atexit.register(shutdownDialback, db)
 
     db.start()
     monitorEvents(options, eventQueue)
-

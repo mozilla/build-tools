@@ -1,6 +1,7 @@
 #!/usr/bin/python
 """%prog [options] format inputfile outputfile inputfilename"""
-import os, site
+import os
+import site
 # Modify our search path to find our modules
 site.addsitedir(os.path.join(os.path.dirname(__file__), "../../lib/python"))
 
@@ -16,34 +17,37 @@ if __name__ == '__main__':
 
     parser = OptionParser(__doc__)
     parser.set_defaults(
-            fake=False,
-            signcode_keydir=None,
-            gpg_homedir=None,
-            loglevel=logging.INFO,
-            configfile=None,
-            mar_cmd=None,
-            b2gmar_cmd=None,
-            signcode_timestamp=None,
-            jar_keystore=None,
-            jar_keyname=None,
-        )
+        fake=False,
+        signcode_keydir=None,
+        gpg_homedir=None,
+        loglevel=logging.INFO,
+        configfile=None,
+        mar_cmd=None,
+        b2gmar_cmd=None,
+        signcode_timestamp=None,
+        jar_keystore=None,
+        jar_keyname=None,
+    )
     parser.add_option("--keydir", dest="signcode_keydir",
-            help="where MozAuthenticode.spc, MozAuthenticode.spk can be found")
+                      help="where MozAuthenticode.spc, MozAuthenticode.spk can be found")
     parser.add_option("--gpgdir", dest="gpg_homedir",
-            help="where the gpg keyrings are")
+                      help="where the gpg keyrings are")
     parser.add_option("--mac_id", dest="mac_id",
-            help="the mac signing identity")
+                      help="the mac signing identity")
     parser.add_option("--dmgkeychain", dest="dmg_keychain",
-            help="the mac signing keydir")
+                      help="the mac signing keydir")
     parser.add_option("--fake", dest="fake", action="store_true",
-            help="do fake signing")
+                      help="do fake signing")
     parser.add_option("-c", "--config", dest="configfile",
-            help="config file to use")
+                      help="config file to use")
     parser.add_option("--signcode_disable_timestamp",
-            dest="signcode_timestamp", action="store_false")
-    parser.add_option("--jar_keystore", dest="jar_keystore", help="keystore for signing jar_")
-    parser.add_option("--jar_keyname", dest="jar_keyname", help="which key to use from jar_keystore")
-    parser.add_option("-v", action="store_const", dest="loglevel", const=logging.DEBUG)
+                      dest="signcode_timestamp", action="store_false")
+    parser.add_option("--jar_keystore", dest="jar_keystore",
+                      help="keystore for signing jar_")
+    parser.add_option("--jar_keyname", dest="jar_keyname",
+                      help="which key to use from jar_keystore")
+    parser.add_option(
+        "-v", action="store_const", dest="loglevel", const=logging.DEBUG)
 
     options, args = parser.parse_args()
 
@@ -59,7 +63,8 @@ if __name__ == '__main__':
     if options.signcode_timestamp is None:
         options.signcode_timestamp = True
 
-    logging.basicConfig(level=options.loglevel, format="%(asctime)s - %(message)s")
+    logging.basicConfig(
+        level=options.loglevel, format="%(asctime)s - %(message)s")
 
     if len(args) != 4:
         parser.error("Incorrect number of arguments")
@@ -78,7 +83,7 @@ if __name__ == '__main__':
         copyfile(inputfile, tmpfile)
         if shouldSign(filename):
             signfile(tmpfile, options.signcode_keydir, options.fake,
-                    passphrase, timestamp=options.signcode_timestamp)
+                     passphrase, timestamp=options.signcode_timestamp)
         else:
             parser.error("Invalid file for signing: %s" % filename)
             sys.exit(1)
@@ -86,17 +91,20 @@ if __name__ == '__main__':
         if not options.gpg_homedir:
             parser.error("gpgdir required when format is gpg")
         safe_unlink(tmpfile)
-        gpg_signfile(inputfile, tmpfile, options.gpg_homedir, options.fake, passphrase)
+        gpg_signfile(
+            inputfile, tmpfile, options.gpg_homedir, options.fake, passphrase)
     elif format_ == "mar":
         if not options.mar_cmd:
             parser.error("mar_cmd is required when format is mar")
         safe_unlink(tmpfile)
-        mar_signfile(inputfile, tmpfile, options.mar_cmd, options.fake, passphrase)
+        mar_signfile(
+            inputfile, tmpfile, options.mar_cmd, options.fake, passphrase)
     elif format_ == "b2gmar":
         if not options.b2gmar_cmd:
             parser.error("b2gmar_cmd is required when format is b2gmar")
         safe_unlink(tmpfile)
-        mar_signfile(inputfile, tmpfile, options.b2gmar_cmd, options.fake, passphrase)
+        mar_signfile(
+            inputfile, tmpfile, options.b2gmar_cmd, options.fake, passphrase)
     elif format_ == "dmg":
         if not options.dmg_keychain:
             parser.error("dmg_keychain required when format is dmg")
@@ -110,6 +118,7 @@ if __name__ == '__main__':
         if not options.jar_keyname:
             parser.error("jar_keyname required when format is jar")
         copyfile(inputfile, tmpfile)
-        jar_signfile(tmpfile, options.jar_keystore, options.jar_keyname, options.fake, passphrase)
+        jar_signfile(tmpfile, options.jar_keystore,
+                     options.jar_keyname, options.fake, passphrase)
 
     os.rename(tmpfile, destfile)

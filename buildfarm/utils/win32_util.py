@@ -18,13 +18,16 @@ def which(prog):
     # Otherwise return as is
     return prog
 
+
 def getChildrenPidsOfPid(pid):
     wmi = win32com.client.GetObject('winmgmts:')
-    children = wmi.ExecQuery('Select * from win32_process where ParentProcessId=%s' % pid)
+    children = wmi.ExecQuery(
+        'Select * from win32_process where ParentProcessId=%s' % pid)
     pids = []
     for proc in children:
         pids.append(proc.Properties_('ProcessId'))
     return pids
+
 
 def kill(pid, graceperiod=5000):
     success = False
@@ -37,7 +40,7 @@ def kill(pid, graceperiod=5000):
         hKernel = win32api.GetModuleHandle("Kernel32")
         procExit = win32api.GetProcAddress(hKernel, "ExitProcess")
         hRemoteT = ctypes.windll.kernel32.CreateRemoteThread(handle.handle,
-                            None, 0, procExit, ctypes.c_void_p(-1), 0, None)
+                                                             None, 0, procExit, ctypes.c_void_p(-1), 0, None)
         if hRemoteT:
             retval = win32event.WaitForSingleObject(handle, graceperiod)
             if retval != win32con.WAIT_OBJECT_0:

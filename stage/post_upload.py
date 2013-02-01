@@ -5,23 +5,29 @@
 ###
 ### Please update the copy in puppet to deploy new changes to
 ### stage.mozilla.org, see
-###   https://wiki.mozilla.org/ReleaseEngineering/How_To/Modify_scripts_on_stage
+# https://wiki.mozilla.org/ReleaseEngineering/How_To/Modify_scripts_on_stage
 
 # This script expects a directory as its first non-option argument,
 # followed by a list of filenames.
 
-import sys, os, os.path, shutil, re, tempfile
+import sys
+import os
+import os.path
+import shutil
+import re
+import tempfile
 from optparse import OptionParser
 from time import mktime, strptime
 from errno import EEXIST
 from ConfigParser import RawConfigParser
 
-# Lets read in the config files.  Because this application is 
+# Lets read in the config files.  Because this application is
 # run once for every upload, we just read the config file once at the beginning
 # of execution.  If this was a longer running app, we'd need to do something
 # to pick up changes in the config file.
 config = RawConfigParser()
-config.read(['post_upload.ini', os.path.expanduser('~/.post_upload.ini'), '/etc/post_upload.ini'])
+config.read(['post_upload.ini', os.path.expanduser('~/.post_upload.ini'),
+            '/etc/post_upload.ini'])
 
 
 # Read in paths that are valid on the stage server
@@ -46,9 +52,9 @@ TRY_URL_PATH = config.get('urls', 'try')
 PARTIAL_MAR_RE = re.compile(config.get('patterns', 'partial_mar'))
 
 
-
 # Cache of original_file to new location on disk
 _linkCache = {}
+
 
 def CopyFileToDir(original_file, source_dir, dest_dir, preserve_dirs=False):
     """ Atomically copy original_file from source_dir into dest_dir,
@@ -102,21 +108,23 @@ def CopyFileToDir(original_file, source_dir, dest_dir, preserve_dirs=False):
     os.rename(tmp_path, new_file)
     _linkCache.setdefault(original_file, []).append(new_file)
 
+
 def BuildIDToDict(buildid):
     """Returns an dict with the year, month, day, hour, minute, and second
        as keys, as parsed from the buildid"""
     buildidDict = {}
     try:
         # strptime is no good here because it strips leading zeros
-        buildidDict['year']   = buildid[0:4]
-        buildidDict['month']  = buildid[4:6]
-        buildidDict['day']    = buildid[6:8]
-        buildidDict['hour']   = buildid[8:10]
+        buildidDict['year'] = buildid[0:4]
+        buildidDict['month'] = buildid[4:6]
+        buildidDict['day'] = buildid[6:8]
+        buildidDict['hour'] = buildid[8:10]
         buildidDict['minute'] = buildid[10:12]
         buildidDict['second'] = buildid[12:14]
     except:
         raise "Could not parse buildid!"
     return buildidDict
+
 
 def BuildIDToUnixTime(buildid):
     """Returns the timestamp the buildid represents in unix time."""
@@ -125,9 +133,10 @@ def BuildIDToUnixTime(buildid):
     except:
         raise "Could not parse buildid!"
 
+
 def ReleaseToDated(options, upload_dir, files):
     values = BuildIDToDict(options.buildid)
-    values['branch']  = options.branch
+    values['branch'] = options.branch
     values['product'] = options.product
     values['nightly_dir'] = options.nightly_dir
     longDir = LONG_DATED_DIR % values
@@ -148,7 +157,8 @@ def ReleaseToDated(options, upload_dir, files):
             CopyFileToDir(f, upload_dir, longDatedPath, preserve_dirs=True)
             filePath = f.replace(upload_dir, "").lstrip("/")
             filePath = os.path.dirname(filePath)
-            sys.stderr.write("%s\n" % os.path.join(url, filePath, os.path.basename(f)))
+            sys.stderr.write(
+                "%s\n" % os.path.join(url, filePath, os.path.basename(f)))
         else:
             CopyFileToDir(f, upload_dir, longDatedPath)
             sys.stderr.write("%s\n" % os.path.join(url, os.path.basename(f)))
@@ -162,6 +172,7 @@ def ReleaseToDated(options, upload_dir, files):
                 os.symlink(longDir, shortDir)
         finally:
             os.chdir(cwd)
+
 
 def ReleaseToLatest(options, upload_dir, files):
     latestDir = LATEST_DIR % {'branch': options.branch}
@@ -182,19 +193,21 @@ def ReleaseToLatest(options, upload_dir, files):
             CopyFileToDir(f, upload_dir, latestPath)
     os.utime(latestPath, None)
 
+
 def ReleaseToBuildDir(builds_dir, builds_url, options, upload_dir, files, dated):
     tinderboxBuildsPath = builds_dir % \
-      {'product': options.product,
-       'tinderbox_builds_dir': options.tinderbox_builds_dir}
+        {'product': options.product,
+         'tinderbox_builds_dir': options.tinderbox_builds_dir}
     tinderboxUrl = builds_url % \
-      {'product': options.product,
-       'tinderbox_builds_dir': options.tinderbox_builds_dir}
+        {'product': options.product,
+         'tinderbox_builds_dir': options.tinderbox_builds_dir}
     if dated:
         buildid = str(BuildIDToUnixTime(options.buildid))
         tinderboxBuildsPath = os.path.join(tinderboxBuildsPath, buildid)
         tinderboxUrl = os.path.join(tinderboxUrl, buildid)
     if options.builddir:
-        tinderboxBuildsPath = os.path.join(tinderboxBuildsPath, options.builddir)
+        tinderboxBuildsPath = os.path.join(
+            tinderboxBuildsPath, options.builddir)
         tinderboxUrl = os.path.join(tinderboxUrl, options.builddir)
 
     for f in files:
@@ -202,24 +215,33 @@ def ReleaseToBuildDir(builds_dir, builds_url, options, upload_dir, files, dated)
         if f.endswith('.mar'):
             continue
         if options.tinderbox_builds_dir.endswith('l10n') and f.endswith('.xpi'):
-            CopyFileToDir(f, upload_dir, tinderboxBuildsPath, preserve_dirs=True)
+            CopyFileToDir(
+                f, upload_dir, tinderboxBuildsPath, preserve_dirs=True)
             filePath = f.replace(upload_dir, "").lstrip("/")
             filePath = os.path.dirname(filePath)
-            sys.stderr.write("%s\n" % os.path.join(tinderboxUrl, filePath, os.path.basename(f)))
+            sys.stderr.write("%s\n" % os.path.join(
+                tinderboxUrl, filePath, os.path.basename(f)))
         else:
             CopyFileToDir(f, upload_dir, tinderboxBuildsPath)
-            sys.stderr.write("%s\n" % os.path.join(tinderboxUrl, os.path.basename(f)))
+            sys.stderr.write(
+                "%s\n" % os.path.join(tinderboxUrl, os.path.basename(f)))
     os.utime(tinderboxBuildsPath, None)
 
+
 def ReleaseToTinderboxBuilds(options, upload_dir, files, dated=True):
-    ReleaseToBuildDir(TINDERBOX_BUILDS_PATH, TINDERBOX_URL_PATH, options, upload_dir, files, dated)
+    ReleaseToBuildDir(TINDERBOX_BUILDS_PATH, TINDERBOX_URL_PATH,
+                      options, upload_dir, files, dated)
+
 
 def ReleaseToShadowCentralBuilds(options, upload_dir, files, dated=True):
     options.product = "shadow-central"
-    ReleaseToBuildDir(PVT_BUILD_DIR, PVT_BUILD_URL_PATH, options, upload_dir, files, dated)
-        
+    ReleaseToBuildDir(
+        PVT_BUILD_DIR, PVT_BUILD_URL_PATH, options, upload_dir, files, dated)
+
+
 def ReleaseToTinderboxBuildsOverwrite(options, upload_dir, files):
     ReleaseToTinderboxBuilds(options, upload_dir, files, dated=False)
+
 
 def rel_symlink(_to, _from):
     _to = os.path.realpath(_to)
@@ -228,9 +250,11 @@ def rel_symlink(_to, _from):
     _to = os.path.relpath(_to, _from_path)
     os.symlink(_to, _from)
 
+
 def symlink_nightly_to_candidates(nightly_path, candidates_full_path, version):
-    _from = ("%(nightly_path)s/" + CANDIDATES_BASE_DIR) % {'nightly_path': nightly_path, 'version': version}
-    _to   = candidates_full_path
+    _from = ("%(nightly_path)s/" + CANDIDATES_BASE_DIR) % {
+        'nightly_path': nightly_path, 'version': version}
+    _to = candidates_full_path
     if not os.path.isdir(_to):
         print >> sys.stderr, "mkdir %s" % _to
         try:
@@ -251,6 +275,7 @@ def symlink_nightly_to_candidates(nightly_path, candidates_full_path, version):
             else:
                 raise
 
+
 def ReleaseToCandidatesDir(options, upload_dir, files):
     candidatesFullPath = CANDIDATES_BASE_DIR % {'version': options.version}
     candidatesFullPath = os.path.join(CANDIDATES_PATH, candidatesFullPath)
@@ -258,13 +283,14 @@ def ReleaseToCandidatesDir(options, upload_dir, files):
                                       'buildnumber': options.build_number}
     candidatesPath = os.path.join(NIGHTLY_PATH, candidatesDir)
     candidatesUrl = CANDIDATES_URL_PATH % {
-            'nightly_dir': options.nightly_dir,
-            'version': options.version,
-            'buildnumber': options.build_number,
-            'product': options.product,
-            }
+        'nightly_dir': options.nightly_dir,
+        'version': options.version,
+        'buildnumber': options.build_number,
+        'product': options.product,
+    }
 
-    symlink_nightly_to_candidates(NIGHTLY_PATH, candidatesFullPath, options.version)
+    symlink_nightly_to_candidates(
+        NIGHTLY_PATH, candidatesFullPath, options.version)
 
     for f in files:
         realCandidatesPath = candidatesPath
@@ -274,7 +300,8 @@ def ReleaseToCandidatesDir(options, upload_dir, files):
         else:
             url = candidatesUrl
         if options.builddir:
-            realCandidatesPath = os.path.join(realCandidatesPath, options.builddir)
+            realCandidatesPath = os.path.join(
+                realCandidatesPath, options.builddir)
             url = os.path.join(url, options.builddir)
 
         CopyFileToDir(f, upload_dir, realCandidatesPath, preserve_dirs=True)
@@ -289,16 +316,17 @@ def ReleaseToCandidatesDir(options, upload_dir, files):
         # the group cannot overwrite them.
         os.chmod(f, 0644)
 
+
 def ReleaseToMobileCandidatesDir(options, upload_dir, files):
     candidatesDir = CANDIDATES_DIR % {'version': options.version,
                                       'buildnumber': options.build_number}
     candidatesPath = os.path.join(NIGHTLY_PATH, candidatesDir)
     candidatesUrl = CANDIDATES_URL_PATH % {
-            'nightly_dir': options.nightly_dir,
-            'version': options.version,
-            'buildnumber': options.build_number,
-            'product': options.product,
-            }
+        'nightly_dir': options.nightly_dir,
+        'version': options.version,
+        'buildnumber': options.build_number,
+        'product': options.product,
+    }
 
     for f in files:
         realCandidatesPath = candidatesPath
@@ -324,29 +352,31 @@ def ReleaseToMobileCandidatesDir(options, upload_dir, files):
         os.chmod(f, 0644)
 
     # Same thing for directories, but 0755
-    for root,dirs,files in os.walk(candidatesPath):
+    for root, dirs, files in os.walk(candidatesPath):
         for d in dirs:
             os.chmod(os.path.join(root, d), 0755)
 
+
 def ReleaseToTryBuilds(options, upload_dir, files):
     tryBuildsPath = TRY_DIR % {'product': options.product,
-                                           'who': options.who,
-                                           'revision': options.revision,
-                                           'builddir': options.builddir}
+                               'who': options.who,
+                               'revision': options.revision,
+                               'builddir': options.builddir}
     tryBuildsUrl = TRY_URL_PATH % {'product': options.product,
-                                               'who': options.who,
-                                               'revision': options.revision,
-                                               'builddir': options.builddir}
+                                   'who': options.who,
+                                   'revision': options.revision,
+                                   'builddir': options.builddir}
     for f in files:
         CopyFileToDir(f, upload_dir, tryBuildsPath)
-        sys.stderr.write("%s\n" % os.path.join(tryBuildsUrl, os.path.basename(f)))
+        sys.stderr.write(
+            "%s\n" % os.path.join(tryBuildsUrl, os.path.basename(f)))
 
 if __name__ == '__main__':
     releaseTo = []
     error = False
 
     print >> sys.stderr, "sys.argv: %s" % sys.argv
-    
+
     parser = OptionParser(usage="usage: %prog [options] <directory> <files>")
     parser.add_option("-p", "--product",
                       action="store", dest="product",
@@ -409,7 +439,7 @@ if __name__ == '__main__':
     parser.add_option("--signed", action="store_true", dest="signed",
                       help="Don't use unsigned directory for uploaded files")
     (options, args) = parser.parse_args()
-    
+
     if len(args) < 2:
         print "Error, you must specify a directory and at least one file."
         error = True
@@ -489,10 +519,10 @@ if __name__ == '__main__':
     # Use the short revision
     if options.revision is not None:
         options.revision = options.revision[:12]
-    
+
     if error:
         sys.exit(1)
-    
+
     NIGHTLY_PATH = NIGHTLY_PATH % {'product': options.product,
                                    'nightly_dir': options.nightly_dir}
     CANDIDATES_PATH = CANDIDATES_PATH % {'product': options.product}
@@ -506,6 +536,6 @@ if __name__ == '__main__':
         if not os.path.isfile(f):
             print "Error, %s is not a file!" % f
             sys.exit(1)
-    
+
     for func in releaseTo:
         func(options, upload_dir, files)

@@ -1,9 +1,11 @@
 import os
 from twisted.web import static
 
+
 def makeRootResource(site):
     # root corresponds to slavealloc/www
-    wwwdir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "www"))
+    wwwdir = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "..", "www"))
     root = static.File(wwwdir)
 
     # serve 'index.html' at the root, with the base_url encoed.

@@ -38,9 +38,10 @@ class API(object):
         url = self.api_root + self.url_template % url_template_vars
         if method != 'GET' and method != 'HEAD':
             if not self.csrf_token or is_csrf_token_expired(self.csrf_token):
-                res = self.session.request(method='HEAD', url=self.api_root + '/csrf_token',
-                                           config=self.config, timeout=self.timeout,
-                                           auth=self.auth)
+                res = self.session.request(
+                    method='HEAD', url=self.api_root + '/csrf_token',
+                    config=self.config, timeout=self.timeout,
+                    auth=self.auth)
                 self.csrf_token = res.headers['X-CSRF-Token']
             data['csrf_token'] = self.csrf_token
         log.debug('Request to %s' % url)

@@ -7,16 +7,18 @@ from os import path
 import sys
 from socket import gethostname
 
-KEY_FILE=path.join("c:\\", "program files", "opsi.org", "preloginloader",
-                   "cfg", "locked.cfg")
-LOG_FILE=path.join("c:\\", "tmp", "key-generator.log")
-REF_PLATFORMS={'build': 'win2k3-ref-img',
-               'build-ix': 'win32-ix-ref',
-               'talos-xp': 'talos-r3-xp-ref',
-               'talos-win7': 'talos-r3-w7-ref'}
+KEY_FILE = path.join("c:\\", "program files", "opsi.org", "preloginloader",
+                     "cfg", "locked.cfg")
+LOG_FILE = path.join("c:\\", "tmp", "key-generator.log")
+REF_PLATFORMS = {'build': 'win2k3-ref-img',
+                 'build-ix': 'win32-ix-ref',
+                 'talos-xp': 'talos-r3-xp-ref',
+                 'talos-win7': 'talos-r3-w7-ref'}
+
 
 def generate_hash(str):
     return md5(str).hexdigest()
+
 
 def get_ref_platform_key(hostname):
     if 'talos' in hostname:
@@ -32,6 +34,7 @@ def get_ref_platform_key(hostname):
         else:
             return generate_hash(REF_PLATFORMS['build'])
 
+
 def write_new_key(host, cp, keyfile):
     newKey = generate_hash(host)
     if not cp.has_section('shareinfo'):
@@ -43,6 +46,7 @@ def write_new_key(host, cp, keyfile):
         f.close()
     except IOError, e:
         raise IOError("Error when writing key to %s: \n%s" % (keyfile, e))
+
 
 def log(msg):
     print '%s - %s' % (datetime.strftime(datetime.now(), "%Y-%m-%d %H:%M"), msg)
@@ -60,8 +64,8 @@ if __name__ == '__main__':
     try:
         sys.stdout = open(options.logfile, "a")
     except IOError:
-        log("WARN: Couldn't open %s, logging to STDOUT instead" % \
-          options.logfile)
+        log("WARN: Couldn't open %s, logging to STDOUT instead" %
+            options.logfile)
 
     # Gather information before evaluating what to do
     hostname = gethostname()

@@ -33,11 +33,11 @@ def action_check(master):
         run('test -d %(tools_dir)s' % master)
 
         assert run('hg -R %(bbcustom_dir)s ident -b' % master) == \
-               master['bbcustom_branch']
+            master['bbcustom_branch']
         assert run('hg -R %(bbconfigs_dir)s ident -b' % master) == \
-               master['bbconfigs_branch']
+            master['bbconfigs_branch']
         assert run('hg -R %(tools_dir)s ident -b' % master) == \
-               master['tools_branch']
+            master['tools_branch']
         print master['name'], date, OK
 
 
@@ -71,13 +71,13 @@ def action_show_revisions(master):
                       master['buildbot_branch'], bb_version, re.M)
         if not m:
             print FAIL, "Failed to parse buildbot --version output:", \
-                  repr(bb_version)
+                repr(bb_version)
             bb_rev = ""
         else:
             bb_rev = m.group(1)
 
         print "%-14s %12s %12s %12s %12s" % (master['name'], bbcustom_rev,
-                                        bbconfigs_rev, tools_rev, bb_rev)
+                                             bbconfigs_rev, tools_rev, bb_rev)
 
 
 def action_reconfig(master):
@@ -112,7 +112,7 @@ def action_graceful_restart(master):
             run('python buildbot-wrangler.py graceful_restart %s %s' %
                 (master['master_dir'], master['http_port']))
     print OK, \
-          "finished gracefully restarting of %(hostname)s:%(basedir)s" % master
+        "finished gracefully restarting of %(hostname)s:%(basedir)s" % master
 
 
 def action_stop(master):

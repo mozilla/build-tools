@@ -4,10 +4,11 @@ from apache_conf_parser import ApacheConfParser
 
 from release.platforms import ftp2bouncer
 from release.updates.snippets import (SCHEMA_2_OPTIONAL_ATTRIBUTES,
-    SCHEMA_2_OPTIONAL_ATTRIBUTES_SINGLE_VALUE,
-    SCHEMA_2_OPTIONAL_ATTRIBUTES_MULTI_VALUE)
+                                      SCHEMA_2_OPTIONAL_ATTRIBUTES_SINGLE_VALUE,
+                                      SCHEMA_2_OPTIONAL_ATTRIBUTES_MULTI_VALUE)
 
 log = logging.getLogger()
+
 
 def substitutePath(path, platform=None, locale=None, version=None):
     """Returns a platform/locale specific path based on a generic one."""
@@ -17,15 +18,17 @@ def substitutePath(path, platform=None, locale=None, version=None):
         'version': version,
         'bouncer-platform': ftp2bouncer(platform)
     }
-    for sub,replacement in subs.items():
+    for sub, replacement in subs.items():
         if '%%%s%%' % sub in path:
             if replacement == None:
                 raise TypeError("No substitution provided for '%s'" % sub)
             path = path.replace('%%%s%%' % sub, replacement)
     return path
 
+
 class PatcherConfigError(ValueError):
     pass
+
 
 class PatcherConfig(dict):
     def __init__(self, cfg=None):
@@ -69,7 +72,8 @@ class PatcherConfig(dict):
             path = self['current-update']['complete']['path']
         else:
             if version not in self['current-update']['partials']:
-                raise PatcherConfigError("Couldn't find partial update path for %s" % version)
+                raise PatcherConfigError(
+                    "Couldn't find partial update path for %s" % version)
             path = self['current-update']['partials'][version]['path']
         return substitutePath(path, platform, locale, version)
 
@@ -86,7 +90,8 @@ class PatcherConfig(dict):
             urls = self['current-update']['complete']
         else:
             if version not in self['current-update']['partials']:
-                raise PatcherConfigError("Couldn't find partial update URL for %s" % version)
+                raise PatcherConfigError(
+                    "Couldn't find partial update URL for %s" % version)
             urls = self['current-update']['partials'][version]
         # Look for a channel-specific one. If that doesn't exist, try the
         # generic one.
@@ -109,7 +114,8 @@ class PatcherConfig(dict):
             return
 
         fromVersions = self.getFromVersions()
-        channels = tuple(self['current-update']['testchannel'] + self['current-update']['channel'])
+        channels = tuple(self['current-update']['testchannel'] +
+                         self['current-update']['channel'])
         toLocales = self['release'][self['current-update']['to']]['locales']
 
         # Now that we know all of the versions that need updates to the latest
@@ -149,7 +155,8 @@ class PatcherConfig(dict):
 
     def addRelease(self, version, value):
         if version in self['release']:
-            raise PatcherConfigError("Found multiple releases with same version: %s" % version)
+            raise PatcherConfigError(
+                "Found multiple releases with same version: %s" % version)
         self['release'][version] = value
 
     def readXml(self, cfg):
@@ -175,45 +182,57 @@ class PatcherConfig(dict):
         for node in app.body.nodes:
             if node.name == 'current-update':
                 if self['current-update']:
-                    raise PatcherConfigError("Found multiple current-update blocks.")
-                self['current-update'] = self.parseCurrentUpdate(node.body.nodes)
+                    raise PatcherConfigError(
+                        "Found multiple current-update blocks.")
+                self['current-update'] = self.parseCurrentUpdate(
+                    node.body.nodes)
             elif node.name == 'past-update':
                 self.addPastUpdate(self.parsePastUpdate(list(node.arguments)))
             elif node.name == 'release':
                 for releaseNode in node.body.nodes:
-                    self.addRelease(releaseNode.name, self.parseRelease(releaseNode.body.nodes))
+                    self.addRelease(releaseNode.name,
+                                    self.parseRelease(releaseNode.body.nodes))
 
         # Now, a bunch of verifications
         # Make sure we have a current-update
         if not self['current-update']:
-            raise PatcherConfigError("Required section current-update is empty")
-        # Make sure required nodes exist in <current-update> and <release> nodes.
+            raise PatcherConfigError(
+                "Required section current-update is empty")
+        # Make sure required nodes exist in <current-update> and <release>
+        # nodes.
         for node in ('channel', 'testchannel', 'complete', 'details', 'from', 'to'):
             if node not in self['current-update']:
-                raise PatcherConfigError("Required node '%s' not found in current-update" % node)
-        for version,releaseNode in self['release'].items():
+                raise PatcherConfigError(
+                    "Required node '%s' not found in current-update" % node)
+        for version, releaseNode in self['release'].items():
             for node in ('locales', 'version', 'platforms'):
                 if node not in releaseNode:
                     raise PatcherConfigError("Required node '%s' not found in release node '%s'" % (node, version))
         # Make sure that versions mentioned have a release block.
         if self['current-update']['to'] not in self['release']:
-            raise PatcherConfigError("No release found for version '%s'" % self['current-update']['to'])
+            raise PatcherConfigError("No release found for version '%s'" %
+                                     self['current-update']['to'])
         if self['current-update']['from'] not in self['release']:
-            raise PatcherConfigError("No release found for version '%s'" % self['current-update']['from'])
+            raise PatcherConfigError("No release found for version '%s'" %
+                                     self['current-update']['from'])
         for version in self['current-update'].get('partials', {}):
             if version not in self['release']:
-                raise PatcherConfigError("No release found for version '%s'" % version)
+                raise PatcherConfigError(
+                    "No release found for version '%s'" % version)
         for version in self['past-update']:
             if version[0] not in self['release']:
-                raise PatcherConfigError("No release found for version '%s'" % version[0])
+                raise PatcherConfigError(
+                    "No release found for version '%s'" % version[0])
             if version[1] not in self['release']:
-                raise PatcherConfigError("No release found for version '%s'" % version[1])
+                raise PatcherConfigError(
+                    "No release found for version '%s'" % version[1])
 
     def parsePastUpdate(self, pastUpdate):
         # A past-update node is a single block of text in the format:
         # past-update from to channel...
         if len(pastUpdate) < 3:
-            raise PatcherConfigError("Too few elements in past-update block: %s" % pastUpdate)
+            raise PatcherConfigError(
+                "Too few elements in past-update block: %s" % pastUpdate)
         return [pastUpdate[0], pastUpdate[1], pastUpdate[2:]]
 
     def parseCurrentUpdate(self, currentUpdate):
@@ -225,11 +244,11 @@ class PatcherConfig(dict):
 
             # These are all single-value nodes.
             if node.name in ('details', 'from', 'to', 'beta-dir') + \
-               SCHEMA_2_OPTIONAL_ATTRIBUTES_SINGLE_VALUE:
+                    SCHEMA_2_OPTIONAL_ATTRIBUTES_SINGLE_VALUE:
                 cu[node.name] = self._stripStringNode(node.content)
             # These are potentially multiple value nodes.
             elif node.name in ('channel', 'testchannel') + \
-                 SCHEMA_2_OPTIONAL_ATTRIBUTES_MULTI_VALUE:
+                    SCHEMA_2_OPTIONAL_ATTRIBUTES_MULTI_VALUE:
                 cu[node.name] = list(node.arguments)
             # Force is weird in that it's a multiple value node, but the
             # patcher config bumping script lists it multiple times rather
@@ -254,7 +273,8 @@ class PatcherConfig(dict):
                             cu[node.name][subNode.name][deepNode.name] = self._stripStringNode(deepNode.content)
                     # The other sections only contain single-value nodes.
                     else:
-                        cu[node.name][subNode.name] = self._stripStringNode(subNode.content)
+                        cu[node.name][subNode.name] = self._stripStringNode(
+                            subNode.content)
         return cu
 
     def parseRelease(self, release):
@@ -280,7 +300,8 @@ class PatcherConfig(dict):
                     # Nodes in this section are comma-separated lists.
                     # (Unlike every other list in this file.)
                     if node.name in ('exceptions',):
-                        r[node.name][subNode.name] = [p.strip(',') for p in subNode.arguments]
+                        r[node.name][subNode.name] = [
+                            p.strip(',') for p in subNode.arguments]
                     # Nodes in this section are space-separated.
                     elif node.name in ('platforms',):
                         r[node.name][subNode.name] = int(subNode.arguments[0])

@@ -5,12 +5,15 @@ from twisted.internet import protocol, defer
 
 # _newclient horks its Failure objects up by putting them in a list,
 # so this errback will unhork them
+
+
 def unhorkNewclientFailure(f):
     f.trap(_newclient.RequestGenerationFailed)
     exc = f.value
     if len(exc.reasons) != 1:
         return f
     return exc.reasons[0]
+
 
 class JsonProducer(object):
     "Produce a JSON-encoded request body"
@@ -29,6 +32,7 @@ class JsonProducer(object):
 
     def stopProducing(self):
         pass
+
 
 class JsonProtocol(protocol.Protocol):
     "Consume JSON data and fire a Deferred with the decoded result"
@@ -54,6 +58,7 @@ class JsonProtocol(protocol.Protocol):
         else:
             self.d.errback(reason)
 
+
 class RestAgent(client.Agent):
     """A wrapper around L{Agent} to make JSON-based REST requests simpler."""
 
@@ -69,12 +74,13 @@ class RestAgent(client.Agent):
         and returned as the value of the Deferred."""
         body_producer = JsonProducer(request_data)
         headers = http_headers.Headers({
-            'User-Agent' : [ 'slavealloc command line' ],
-            'Content-Type' : [ 'application/json' ],
+            'User-Agent': ['slavealloc command line'],
+            'Content-Type': ['application/json'],
         })
         url = self.apiurl + '/' + path
         d = self.request(method, url, headers, body_producer)
         d.addErrback(unhorkNewclientFailure)
+
         def json_to_python(response):
             # TODO: error handling, check content type
             d = defer.Deferred()

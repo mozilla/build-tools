@@ -61,6 +61,7 @@ idlz.setServiceParent(application)
 # get this value once and keep it - getfqdn() can be a *very* expensive call
 genhost = socket.getfqdn()
 
+
 def make_buildbot_tac(allocation):
     info = dict()
 

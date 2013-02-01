@@ -14,7 +14,8 @@ try:
     import json
 except:
     import simplejson as json
-import os, sys
+import os
+import sys
 import urllib2
 import win32api
 import win32con
@@ -25,6 +26,7 @@ from win32api import GetSystemMetrics
 
 default_screen_resolution = {"x": 1024, "y": 768}
 default_mouse_position = {"x": 1010, "y": 10}
+
 
 def wfetch(url, retries=5):
     while retries >= 0:
@@ -45,14 +47,16 @@ def wfetch(url, retries=5):
         time.sleep(60)
     raise Exception("Could not fetch url '%s'" % url)
 
+
 def main():
     '''
     We load the configuration file from:
     http://hg.mozilla.org/mozilla-central/raw-file/default/build/machine-configuration.json
     '''
     parser = OptionParser()
-    parser.add_option("--configuration-url", dest="configuration_url", type="string",
-                      help="It indicates from where to download the configuration file.")
+    parser.add_option(
+        "--configuration-url", dest="configuration_url", type="string",
+        help="It indicates from where to download the configuration file.")
     (options, args) = parser.parse_args()
 
     if options.configuration_url == None:
@@ -93,7 +97,7 @@ def main():
             print "INFRA-ERROR: We have attempted to change the screen resolution but " + \
                   "something went wrong: %s" % str(e)
             return 1
-        time.sleep(5) # just in case
+        time.sleep(5)  # just in case
         current_screen_resolution = queryScreenResolution()
         print "Screen resolution (new): (%(x)s, %(y)s)" % current_screen_resolution
 
@@ -102,27 +106,31 @@ def main():
     current_mouse_position = queryMousePosition()
     print "Mouse position (new): (%(x)s, %(y)s)" % (current_mouse_position)
 
-    if current_screen_resolution != new_screen_resolution or current_mouse_position != new_mouse_position: 
+    if current_screen_resolution != new_screen_resolution or current_mouse_position != new_mouse_position:
         print "INFRA-ERROR: The new screen resolution or mouse positions are not what we expected"
         return 1
     else:
         return 0
 
+
 def queryMousePosition():
     pos = win32api.GetCursorPos()
     return {"x": pos[0], "y": pos[1]}
 
+
 def queryScreenResolution():
-    return {"x": GetSystemMetrics (0), "y": GetSystemMetrics (1)}
+    return {"x": GetSystemMetrics(0), "y": GetSystemMetrics(1)}
+
 
 def queryScreenFrequency():
     try:
-        p=win32api.EnumDisplaySettings(None, win32con.ENUM_CURRENT_SETTINGS)
+        p = win32api.EnumDisplaySettings(None, win32con.ENUM_CURRENT_SETTINGS)
         return p.DisplayFrequency
     except Exception, e:
         print "INFRA-ERROR: We were expecting to get the screen frequency instead we " + \
               "got this exception => %s" % str(e)
         return 1
+
 
 def changeScreenResolution(new):
     # Set new screen resolution
@@ -130,21 +138,21 @@ def changeScreenResolution(new):
     n = 0
     while True:
         try:
-            devmode = win32api.EnumDisplaySettings (None, n)
+            devmode = win32api.EnumDisplaySettings(None, n)
         except pywintypes.error:
             break
         else:
             key = (
-              devmode.BitsPerPel,
-              devmode.PelsWidth,
-              devmode.PelsHeight,
-              devmode.DisplayFrequency
+                devmode.BitsPerPel,
+                devmode.PelsWidth,
+                devmode.PelsHeight,
+                devmode.DisplayFrequency
             )
             display_modes[key] = devmode
             n += 1
     mode_required = (32, new["x"], new["y"], queryScreenFrequency())
     devmode = display_modes[mode_required]
-    win32api.ChangeDisplaySettings (devmode, 0)
+    win32api.ChangeDisplaySettings(devmode, 0)
 
 if __name__ == '__main__':
     sys.exit(main())

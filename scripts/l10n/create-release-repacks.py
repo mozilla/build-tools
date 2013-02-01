@@ -17,14 +17,17 @@ from release.l10n import getReleaseLocalesForChunk
 from util.hg import mercurial, update, make_hg_url
 from util.retry import retry
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
+logging.basicConfig(
+    stream=sys.stdout, level=logging.INFO, format="%(message)s")
 log = logging.getLogger(__name__)
 
-HG="hg.mozilla.org"
-DEFAULT_BUILDBOT_CONFIGS_REPO=make_hg_url(HG, "build/buildbot-configs")
+HG = "hg.mozilla.org"
+DEFAULT_BUILDBOT_CONFIGS_REPO = make_hg_url(HG, "build/buildbot-configs")
+
 
 class RepackError(Exception):
     pass
+
 
 def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                   mozconfigPath, objdir, makeDirs, appName, locales, product,
@@ -66,8 +69,9 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
     build.misc.cleanupObjdir(sourceRepoName, objdir, appName)
     retry(mercurial, args=(sourceRepo, sourceRepoName))
     update(sourceRepoName, revision=revision)
-    l10nRepackPrep(sourceRepoName, objdir, mozconfigPath, l10nRepoDir, makeDirs,
-                   localeSrcDir, env)
+    l10nRepackPrep(
+        sourceRepoName, objdir, mozconfigPath, l10nRepoDir, makeDirs,
+        localeSrcDir, env)
     input_env = retry(downloadReleaseBuilds,
                       args=(stageServer, product, brand, version, buildNumber,
                             platform),
@@ -83,7 +87,7 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                     partialUpdates[oldVersion]['mar'] = retry(
                         downloadUpdateIgnore404,
                         args=(stageServer, product, oldVersion, oldBuildNumber,
-                            platform, l)
+                              platform, l)
                     )
             repackLocale(locale=l, l10nRepoDir=l10nRepoDir,
                          l10nBaseRepo=l10nBaseRepo, revision=revision,
@@ -97,15 +101,17 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
 
     if len(failed) > 0:
         log.error("The following tracebacks were detected during repacks:")
-        for l,e in failed:
+        for l, e in failed:
             log.error("%s:" % l)
             log.error("%s\n" % e)
-        raise Exception("Failed locales: %s" % " ".join([x for x,_ in failed]))
+        raise Exception(
+            "Failed locales: %s" % " ".join([x for x, _ in failed]))
 
 REQUIRED_BRANCH_CONFIG = ("stage_server", "stage_username", "stage_ssh_key",
                           "compare_locales_repo_path", "hghost")
 REQUIRED_RELEASE_CONFIG = ("sourceRepositories", "l10nRepoPath", "appName",
                            "productName", "version", "buildNumber")
+
 
 def validate(options, args):
     if not options.configfile:
@@ -115,16 +121,17 @@ def validate(options, args):
 
     if options.chunks or options.thisChunk:
         assert options.chunks and options.thisChunk, \
-          "chunks and this-chunk are required when one is passed"
+            "chunks and this-chunk are required when one is passed"
         assert not options.locales, \
-          "locale option cannot be used when chunking"
+            "locale option cannot be used when chunking"
     else:
         if len(options.locales) < 1:
             raise Exception('Need at least one locale to repack')
 
     releaseConfig = readReleaseConfig(releaseConfigFile,
                                       required=REQUIRED_RELEASE_CONFIG)
-    sourceRepoName = releaseConfig['sourceRepositories'][options.source_repo_key]['name']
+    sourceRepoName = releaseConfig['sourceRepositories'][
+        options.source_repo_key]['name']
     branchConfig = {
         'stage_ssh_key': options.stage_ssh_key,
         'hghost': options.hghost,
@@ -138,7 +145,8 @@ if __name__ == "__main__":
     from optparse import OptionParser
     parser = OptionParser("")
 
-    makeDirs = ["config", "tier_base", "tier_nspr", path.join("modules", "libmar")]
+    makeDirs = ["config", "tier_base", "tier_nspr", path.join(
+        "modules", "libmar")]
 
     parser.set_defaults(
         buildbotConfigs=os.environ.get("BUILDBOT_CONFIGS",
@@ -165,7 +173,8 @@ if __name__ == "__main__":
     parser.add_option("--hghost", dest="hghost")
     parser.add_option("--stage-server", dest="stage_server")
     parser.add_option("--stage-username", dest="stage_username")
-    parser.add_option("--compare-locales-repo-path", dest="compare_locales_repo_path")
+    parser.add_option(
+        "--compare-locales-repo-path", dest="compare_locales_repo_path")
 
     options, args = parser.parse_args()
     if options.generatePartials:
@@ -177,21 +186,25 @@ if __name__ == "__main__":
     update("buildbot-configs", revision=options.releaseTag)
     sys.path.append(os.getcwd())
     branchConfig, releaseConfig = validate(options, args)
-    sourceRepoInfo = releaseConfig["sourceRepositories"][options.source_repo_key]
+    sourceRepoInfo = releaseConfig["sourceRepositories"][
+        options.source_repo_key]
 
     try:
         brandName = releaseConfig["brandName"]
     except KeyError:
-        brandName =  releaseConfig["productName"].title()
+        brandName = releaseConfig["productName"].title()
     mozconfig = path.join("buildbot-configs", "mozilla2", options.platform,
                           sourceRepoInfo['name'], "release", "l10n-mozconfig")
     if options.chunks:
         locales = retry(getReleaseLocalesForChunk,
-            args=(releaseConfig["productName"], releaseConfig["appName"],
-                  releaseConfig["version"], int(releaseConfig["buildNumber"]),
-                  sourceRepoInfo["path"], options.platform,
-                  options.chunks, options.thisChunk)
-        )
+                        args=(
+                        releaseConfig[
+                        "productName"], releaseConfig["appName"],
+                        releaseConfig[
+                        "version"], int(releaseConfig["buildNumber"]),
+                        sourceRepoInfo["path"], options.platform,
+                        options.chunks, options.thisChunk)
+                        )
     else:
         locales = options.locales
 
@@ -202,10 +215,11 @@ if __name__ == "__main__":
 
     stageSshKey = path.join("~", ".ssh", branchConfig["stage_ssh_key"])
 
-    # If mozilla_dir is defined, extend the paths in makeDirs with the prefix of the mozilla_dir
+    # If mozilla_dir is defined, extend the paths in makeDirs with the prefix
+    # of the mozilla_dir
     if 'mozilla_dir' in releaseConfig:
         for i in range(0, len(makeDirs)):
-          makeDirs[i] = path.join(releaseConfig['mozilla_dir'], makeDirs[i])
+            makeDirs[i] = path.join(releaseConfig['mozilla_dir'], makeDirs[i])
 
     createRepacks(
         sourceRepo=make_hg_url(branchConfig["hghost"], sourceRepoInfo["path"]),
@@ -226,7 +240,8 @@ if __name__ == "__main__":
         stageUsername=branchConfig["stage_username"],
         stageSshKey=stageSshKey,
         compareLocalesRepo=make_hg_url(branchConfig["hghost"],
-                                       branchConfig["compare_locales_repo_path"]),
+                                       branchConfig[
+                                           "compare_locales_repo_path"]),
         merge=releaseConfig["mergeLocales"],
         platform=options.platform,
         brand=brandName,

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import os, sys
+import os
+import sys
 import time
 import socket
 import random
@@ -19,6 +20,7 @@ def calculatePort():
 
     return n
 
+
 def getOurIP():
     try:
         result = os.environ['CP_IP']
@@ -34,6 +36,7 @@ def getOurIP():
 
     return result
 
+
 def checkDeviceRoot():
     dr = dm.getDeviceRoot()
     # checking for /mnt/sdcard/...
@@ -41,6 +44,7 @@ def checkDeviceRoot():
     if not dr or dr == '/tests':
         return None
     return dr
+
 
 def waitForDevice(waitTime=60):
     print "Waiting for tegra to come back..."
@@ -60,26 +64,28 @@ def waitForDevice(waitTime=60):
         sys.exit(1)
 
 
-if (len(sys.argv) <> 3):
+if (len(sys.argv) != 3):
     print "usage: u_apks.py <localdir> <tegra ip>"
     sys.exit(1)
 
-cwd       = os.getcwd()
+cwd = os.getcwd()
 sourceDir = os.path.abspath(sys.argv[1])
-tegraIP   = sys.argv[2]
-proxyIP   = getOurIP()
+tegraIP = sys.argv[2]
+proxyIP = getOurIP()
 proxyPort = calculatePort()
-filelist  = []
+filelist = []
 
 for sourceFile in os.listdir(sourceDir):
     s = sourceFile.lower()
 
     if 'sutagentandroid' in s:
         print 'adding %s to queue' % sourceFile
-        filelist.append((os.path.join(sourceDir, sourceFile), 'SUTAgentAndroid.apk', 'com.mozilla.SUTAgentAndroid'))
+        filelist.append((os.path.join(sourceDir, sourceFile),
+                        'SUTAgentAndroid.apk', 'com.mozilla.SUTAgentAndroid'))
     elif 'watcher' in s:
         print 'adding %s to queue' % sourceFile
-        filelist.append((os.path.join(sourceDir, sourceFile), 'Watcher.apk', 'com.mozilla.watcher'))
+        filelist.append((os.path.join(
+            sourceDir, sourceFile), 'Watcher.apk', 'com.mozilla.watcher'))
     else:
         print 'skipping %s' % sourceFile
 
@@ -88,7 +94,7 @@ if len(filelist) > 0:
     dm = devicemanager.DeviceManagerSUT(tegraIP)
     # Moar data!
     dm.debug = 3
-    devRoot  = checkDeviceRoot()
+    devRoot = checkDeviceRoot()
 
     # checking for /mnt/sdcard/...
     if devRoot is None:
@@ -115,7 +121,8 @@ if len(filelist) > 0:
                     print "%s: installApp() call returned %s" % (tegraIP, status)
             else:
                 print "%s: calling update for %s %s" % (tegraIP, target, process)
-                status = dm.updateApp(target, processName=process) #, ipAddr=proxyIP, port=proxyPort)
+                status = dm.updateApp(target, processName=process)
+                                      #, ipAddr=proxyIP, port=proxyPort)
                 if status is not None and status:
                     print "%s: updateApp() call returned %s" % (tegraIP, status)
 
@@ -124,4 +131,3 @@ if len(filelist) > 0:
             if checkDeviceRoot is None:
                 print "Remote Device Error: %s: devRoot from devicemanager is not correct.  updateApp() call not verified" % tegraIP
                 sys.exit(1)
-

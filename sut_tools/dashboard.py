@@ -4,7 +4,8 @@
 # Assumes Python 2.6
 #
 
-import os, sys
+import os
+import sys
 import json
 import datetime
 
@@ -18,8 +19,8 @@ def calculateLastActive(d, t, dt):
     s += ' (%s %s)' % (d, t)
     return s
 
-htmlDir    = '/var/www/tegras'
-htmlIndex  = 'index.html'
+htmlDir = '/var/www/tegras'
+htmlIndex = 'index.html'
 pageHeader = """<html>
 <head>
     <title>Tegra Dashboard v0.1</title>
@@ -162,26 +163,26 @@ stagingFooter = """</table>
 
 
 oProduction = {}
-oStaging    = {}
+oStaging = {}
 
-dStart   = None
-dEnd     = None
-dToday   = datetime.datetime.today()
+dStart = None
+dEnd = None
+dToday = datetime.datetime.today()
 percDays = 7
-devices   = {}
-events   = {}
-foopies  = {}
+devices = {}
+events = {}
+foopies = {}
 
-nProduction = { 'total':   0,
-                'online':  0,
-                'offline': 0,
-                'active':  0,
-              }
-nStaging =    { 'total':   0,
-                'online':  0,
-                'offline': 0,
-                'active':  0,
-              }
+nProduction = {'total': 0,
+               'online': 0,
+               'offline': 0,
+               'active': 0,
+               }
+nStaging = {'total': 0,
+            'online': 0,
+            'offline': 0,
+            'active': 0,
+            }
 
 # "tegra-138": {
 #     "pdu": "pdu5.df202-1.build.mtv1.mozilla.com",
@@ -196,16 +197,16 @@ for key in devices:
         continue
     o = devices[key]
     if o['foopy'] == "None":
-        continue # This tegra is not assigned to a foopy
+        continue  # This tegra is not assigned to a foopy
 
     if o['foopy'] not in foopies:
         for line in open(os.path.join(htmlDir, 'tegra_events-%s.log' % o['foopy'])).readlines():
             # 20110915142854,tegra-023,stalled
-            l  = line.split(',')
-            d  = datetime.datetime.strptime(l[0], '%Y%m%d%H%M%S')
+            l = line.split(',')
+            d = datetime.datetime.strptime(l[0], '%Y%m%d%H%M%S')
             dt = dToday - d
             if dt.days < percDays:
-                ts    = l[0][:8]
+                ts = l[0][:8]
                 tegra = l[1]
                 event = l[2].strip().lower()
 
@@ -218,16 +219,17 @@ for key in devices:
 
                     events[ts][tegra] += 1
 
-        # {"msg": "", 
-        #  "master": "p", 
-        #  "sClientproxy": "active", 
-        #  "tegra": "tegra-001", 
-        #  "time": "14:40:03", 
-        #  "date": "2011-10-28", 
-        #  "sTegra": "online", 
-        #  "sSlave": "active", 
+        # {"msg": "",
+        #  "master": "p",
+        #  "sClientproxy": "active",
+        #  "tegra": "tegra-001",
+        #  "time": "14:40:03",
+        #  "date": "2011-10-28",
+        #  "sTegra": "online",
+        #  "sSlave": "active",
         #  "hostname": "foopy05.build.mtv1.mozilla.com"}
-        foopies[o['foopy']] = json.load(open(os.path.join(htmlDir, 'tegra_status-%s.txt' % o['foopy'])))
+        foopies[o['foopy']] = json.load(
+            open(os.path.join(htmlDir, 'tegra_status-%s.txt' % o['foopy'])))
 
         for tegra in foopies[o['foopy']]:
             # {
@@ -241,21 +243,25 @@ for key in devices:
             #     "sTegra": "online",
             #     "sSlave": "OFFLINE"
             # },
-            nOnline    = 0
-            nActive    = 0
-            nTotal     = 0.0
-            n          = 0
-            active     = []
+            nOnline = 0
+            nActive = 0
+            nTotal = 0.0
+            n = 0
+            active = []
             lastActive = ''
 
             if 'tegra' in tegra:
-                logName = os.path.join(htmlDir, '%s_status.log' % tegra['tegra'])
+                logName = os.path.join(
+                    htmlDir, '%s_status.log' % tegra['tegra'])
                 if os.path.exists(logName):
                     for line in open(logName).readlines():
-                        #2011-04-21 11:33:41 tegra-090 p  OFFLINE   active  OFFLINE :: error.flg [Remote Device Error: updateApp() call failed - exiting] 
+                        # 2011-04-21 11:33:41 tegra-090 p  OFFLINE   active
+                        # OFFLINE :: error.flg [Remote Device Error:
+                        # updateApp() call failed - exiting]
                         n += 1
-                        l  = line.split()
-                        d  = datetime.datetime.strptime('%s %s' % (l[0], l[1]), '%Y-%m-%d %H:%M:%S')
+                        l = line.split()
+                        d = datetime.datetime.strptime(
+                            '%s %s' % (l[0], l[1]), '%Y-%m-%d %H:%M:%S')
                         dt = dToday - d
                         if dt.days < percDays:
                             nTotal += 1
@@ -273,35 +279,42 @@ for key in devices:
                         if l[6] == 'active':
                             lastActive = calculateLastActive(l[0], l[1], dt)
 
-                    dItem = datetime.datetime.strptime('%s%s' % (tegra['date'], tegra['time']), '%Y-%m-%d%H:%M:%S')
+                    dItem = datetime.datetime.strptime('%s%s' % (
+                        tegra['date'], tegra['time']), '%Y-%m-%d%H:%M:%S')
 
                     if dStart is None or dItem < dStart:
                         dStart = dItem
                     if dEnd is None or dItem > dEnd:
                         dEnd = dItem
 
-                    pdu                 = devices[tegra['tegra']]['pdu']
-                    tegra['pdu']        = 'http://%s/main.html?1,1' % pdu
-                    tegra['pduID']      = pdu.split('.')[0].replace('pdu', '')
-                    tegra['foopy']      = tegra['hostname'].split('.')[0]
-                    tegra['foopyLink']  = '%s:/builds/%s' % (tegra['hostname'], tegra['tegra'])
-                    tegra['activeBar']  = ''.join(active[-18:])
+                    pdu = devices[tegra['tegra']]['pdu']
+                    tegra['pdu'] = 'http://%s/main.html?1,1' % pdu
+                    tegra['pduID'] = pdu.split('.')[0].replace('pdu', '')
+                    tegra['foopy'] = tegra['hostname'].split('.')[0]
+                    tegra['foopyLink'] = '%s:/builds/%s' % (
+                        tegra['hostname'], tegra['tegra'])
+                    tegra['activeBar'] = ''.join(active[-18:])
                     tegra['lastActive'] = lastActive
 
                     if nTotal > 0:
-                        tegra['percOnline']      = '%2.1f' % ((nOnline / nTotal) * 100)
-                        tegra['percOnlineHover'] = '%d Online for %d items' % (nOnline, nTotal)
-                        tegra['percActive']      = '%2.1f' % ((nActive / nTotal) * 100)
-                        tegra['percActiveHover'] = '%d Active for %d items' % (nActive, nTotal)
+                        tegra['percOnline'] = '%2.1f' % (
+                            (nOnline / nTotal) * 100)
+                        tegra['percOnlineHover'] = '%d Online for %d items' % (
+                            nOnline, nTotal)
+                        tegra['percActive'] = '%2.1f' % (
+                            (nActive / nTotal) * 100)
+                        tegra['percActiveHover'] = '%d Active for %d items' % (
+                            nActive, nTotal)
                     else:
-                        tegra['percOnline']      = 'n/a',
+                        tegra['percOnline'] = 'n/a',
                         tegra['percOnlineHover'] = 'no data',
-                        tegra['percActive']      = 'n/a',
+                        tegra['percActive'] = 'n/a',
                         tegra['percActiveHover'] = 'no data',
 
                     if tegra['master'] == 'p':
                         if 'masterHost' not in tegra:
-                            # backfill masterHost key for older data file entries
+                            # backfill masterHost key for older data file
+                            # entries
                             tegra['masterHost'] = 'http://test-master01.build.mozilla.org:8012'
                         oProduction[tegra['tegra']] = productionEntry % tegra
                         nProduction['total'] += 1
@@ -313,7 +326,8 @@ for key in devices:
                             nProduction['offline'] += 1
                     else:
                         if 'masterHost' not in tegra or tegra['masterHost'] == 'localhost':
-                            # backfill masterHost key for older data file entries
+                            # backfill masterHost key for older data file
+                            # entries
                             tegra['masterHost'] = 'http://dev-master01.build.scl1.mozilla.com:8160'
                         oStaging[tegra['tegra']] = stagingEntry % tegra
                         nStaging['total'] += 1
@@ -324,37 +338,37 @@ for key in devices:
                         else:
                             nStaging['offline'] += 1
 
-d = { 'dStart':            dStart,
-      'dEnd':              dEnd,
-      'percDays':          percDays,
-      'productionOnline':  nProduction['online'],
-      'productionOffline': nProduction['offline'],
-      'productionActive':  nProduction['active'],
-      'productionIdle':    nProduction['online'] - nProduction['active'],
-      'productionTotal':   nProduction['total'],
-      'stagingOnline':     nStaging['online'],
-      'stagingOffline':    nStaging['offline'],
-      'stagingActive':     nStaging['active'],
-      'stagingIdle':       nStaging['online'] - nStaging['active'],
-      'stagingTotal':      nStaging['total'],
-      'totalOnline':       nProduction['online']  + nStaging['online'],
-      'totalOffline':      nProduction['offline'] + nStaging['offline'],
-      'totalActive':       nProduction['active']  + nStaging['active'],
-      'totalTotal':        nProduction['total']   + nStaging['total'],
-    }
+d = {'dStart': dStart,
+     'dEnd': dEnd,
+     'percDays': percDays,
+     'productionOnline': nProduction['online'],
+     'productionOffline': nProduction['offline'],
+     'productionActive': nProduction['active'],
+     'productionIdle': nProduction['online'] - nProduction['active'],
+     'productionTotal': nProduction['total'],
+     'stagingOnline': nStaging['online'],
+     'stagingOffline': nStaging['offline'],
+     'stagingActive': nStaging['active'],
+     'stagingIdle': nStaging['online'] - nStaging['active'],
+     'stagingTotal': nStaging['total'],
+     'totalOnline': nProduction['online'] + nStaging['online'],
+     'totalOffline': nProduction['offline'] + nStaging['offline'],
+     'totalActive': nProduction['active'] + nStaging['active'],
+     'totalTotal': nProduction['total'] + nStaging['total'],
+     }
 
-s1   = "<tr><th></th>"
-s2   = "<tr><th>Stalled</th>"
+s1 = "<tr><th></th>"
+s2 = "<tr><th>Stalled</th>"
 keys = events.keys()
 keys.sort(reverse=True)
 
 for ts in keys:
     s1 += "<th>%s</th>" % ts
-    s3  = ""
-    n   = 0
+    s3 = ""
+    n = 0
     for tegra in events[ts]:
         s3 += "%s (%d), " % (tegra, events[ts][tegra])
-        n  += events[ts][tegra]
+        n += events[ts][tegra]
     s2 += '<td><abbr title="%s">%d</abbr></td>' % (s3[:-2], n)
 s1 += "</tr>"
 s2 += "</tr>"
@@ -379,4 +393,3 @@ h.write(stagingFooter % d)
 
 h.write(pageFooter)
 h.close()
-

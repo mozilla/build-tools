@@ -7,7 +7,8 @@ from os import path
 import sys
 
 sys.path.append(path.join(path.dirname(__file__), "../../lib/python"))
-logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
+logging.basicConfig(
+    stream=sys.stdout, level=logging.INFO, format="%(message)s")
 log = logging.getLogger(__name__)
 
 from release.info import readReleaseConfig, readBranchConfig
@@ -24,6 +25,7 @@ DEFAULT_BUILDBOT_CONFIGS_REPO = make_hg_url('hg.mozilla.org',
 REQUIRED_BRANCH_CONFIG = ("stage_server", "stage_username", "stage_ssh_key")
 REQUIRED_RELEASE_CONFIG = ("productName", "version", "buildNumber")
 
+
 def validate(options, args):
     if not options.configfile:
         log.info("Must pass --configfile")
@@ -38,7 +40,8 @@ def validate(options, args):
 
     releaseConfig = readReleaseConfig(releaseConfigFile,
                                       required=REQUIRED_RELEASE_CONFIG)
-    sourceRepoName = releaseConfig['sourceRepositories'][options.sourceRepoKey]['name']
+    sourceRepoName = releaseConfig['sourceRepositories'][
+        options.sourceRepoKey]['name']
     branchConfig = readBranchConfig(branchConfigDir, branchConfigFile,
                                     sourceRepoName,
                                     required=REQUIRED_BRANCH_CONFIG)

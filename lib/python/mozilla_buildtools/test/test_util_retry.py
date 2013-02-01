@@ -5,6 +5,7 @@ from util.retry import retry, retriable
 
 ATTEMPT_N = 1
 
+
 def _succeedOnSecondAttempt(foo=None, exception=Exception):
     global ATTEMPT_N
     if ATTEMPT_N == 2:
@@ -13,25 +14,32 @@ def _succeedOnSecondAttempt(foo=None, exception=Exception):
     ATTEMPT_N += 1
     raise exception("Fail")
 
+
 def _alwaysPass():
     global ATTEMPT_N
     ATTEMPT_N += 1
     return True
 
+
 def _mirrorArgs(*args, **kwargs):
     return args, kwargs
+
 
 def _alwaysFail():
     raise Exception("Fail")
 
+
 class NewError(Exception):
     pass
+
 
 class OtherError(Exception):
     pass
 
+
 def _raiseCustomException():
     return _succeedOnSecondAttempt(exception=NewError)
+
 
 class TestRetry(unittest.TestCase):
     def setUp(self):
@@ -69,7 +77,6 @@ class TestRetry(unittest.TestCase):
         func = retriable(attempts=2, sleeptime=0,
                          retry_exceptions=(NewError,))(_raiseCustomException)
         func()
-
 
     def testRetrySelectiveExceptionFail(self):
         self.assertRaises(NewError, retry, _raiseCustomException, attempts=2,

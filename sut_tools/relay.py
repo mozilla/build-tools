@@ -12,7 +12,8 @@ and when a relay is ON the device is not receiving power.
 """
 
 from __future__ import with_statement
-import socket, sys
+import socket
+import sys
 from contextlib import contextmanager
 
 __all__ = ['get_status',
@@ -27,21 +28,28 @@ COMMAND_OK = chr(85)
 
 # Enter command mode.
 START_COMMAND = chr(254)
+
+
 def READ_RELAY_N_AT_BANK(N):
     """
     Return command code for reading status of relay N in a bank.
     """
     return chr(115 + N)
+
+
 def TURN_ON_RELAY_N_AT_BANK(N):
     """
     Return command code for turning on relay N in a bank.
     """
     return chr(107 + N)
+
+
 def TURN_OFF_RELAY_N_AT_BANK(N):
     """
     Return command code for turning off relay N in a bank.
     """
     return chr(99 + N)
+
 
 @contextmanager
 def connected_socket(hostname, port):
@@ -53,6 +61,7 @@ def connected_socket(hostname, port):
     sock.connect((hostname, port))
     yield sock
     sock.close()
+
 
 def get_status(sock, bank, relay):
     """
@@ -68,6 +77,7 @@ def get_status(sock, bank, relay):
     sock.send(chr(bank))
     # will return 0 or 1 indicating relay state
     return ord(sock.recv(256)) == 1
+
 
 def set_status(sock, bank, relay, status):
     """
@@ -93,7 +103,8 @@ def set_status(sock, bank, relay, status):
     if res != COMMAND_OK:
         raise Exception, "Command did not succeed, status: %d", res
     return get_status(sock, bank, relay)
-    
+
+
 def powercycle(relay_hostname, bank, relay):
     """
     Cycle the power of a device connected to a relay on a specified bank
@@ -117,7 +128,7 @@ def powercycle(relay_hostname, bank, relay):
     except:
         return False
     return True
- 
+
 
 if __name__ == '__main__':
     # Basic commandline interface for testing.

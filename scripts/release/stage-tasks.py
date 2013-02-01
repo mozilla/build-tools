@@ -11,7 +11,8 @@ try:
 except ImportError:
     import simplejson as json
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
+logging.basicConfig(
+    stream=sys.stdout, level=logging.INFO, format="%(message)s")
 log = logging.getLogger(__name__)
 
 sys.path.append(path.join(path.dirname(__file__), "../../lib/python"))
@@ -45,6 +46,7 @@ VIRUS_SCAN_CMD = ['nice', 'ionice', '-c2', '-n7',
                   'extract_and_run_command.py', '-j2', 'clamdscan', '-m',
                   '--no-summary', '--']
 
+
 def validate(options, args):
     if not options.configfile:
         log.info("Must pass --configfile")
@@ -59,7 +61,8 @@ def validate(options, args):
 
     releaseConfig = readReleaseConfig(releaseConfigFile,
                                       required=REQUIRED_RELEASE_CONFIG)
-    sourceRepoName = releaseConfig['sourceRepositories'][options.sourceRepoKey]['name']
+    sourceRepoName = releaseConfig['sourceRepositories'][
+        options.sourceRepoKey]['name']
     branchConfig = readBranchConfig(branchConfigDir, branchConfigFile,
                                     sourceRepoName,
                                     required=REQUIRED_BRANCH_CONFIG)
@@ -70,11 +73,11 @@ def checkStagePermissions(productName, version, buildNumber, stageServer,
                           stageUsername, stageSshKey):
     # The following commands should return 0 lines output and exit code 0
     tests = ["find %%s ! -user %s ! -path '*/contrib*'" % stageUsername,
-              "find %%s ! -group `id -g -n %s` ! -path '*/contrib*'" % stageUsername,
-              "find %s -type f ! -perm 644",
-              "find %s -mindepth 1 -type d ! -perm 755 ! -path '*/contrib*' ! -path '*/partner-repacks*'",
-              "find %s -maxdepth 1 -type d ! -perm 2775 -path '*/contrib*'",
-            ]
+             "find %%s ! -group `id -g -n %s` ! -path '*/contrib*'" % stageUsername,
+             "find %s -type f ! -perm 644",
+             "find %s -mindepth 1 -type d ! -perm 755 ! -path '*/contrib*' ! -path '*/partner-repacks*'",
+             "find %s -maxdepth 1 -type d ! -perm 2775 -path '*/contrib*'",
+             ]
     candidates_dir = makeCandidatesDir(productName, version, buildNumber)
 
     errors = False
@@ -89,6 +92,7 @@ def checkStagePermissions(productName, version, buildNumber, stageServer,
 
     if errors:
         raise
+
 
 def runAntivirusCheck(productName, version, buildNumber, stageServer,
                       stageUsername=None, stageSshKey=None):
@@ -125,9 +129,10 @@ def pushToMirrors(productName, version, buildNumber, stageServer,
     if not dryRun:
         run_remote_cmd(['mkdir', '-p', target_dir], server=stageServer,
                        username=stageUsername, sshKey=stageSshKey)
-        run_remote_cmd(['chmod', 'u=rwx,g=rxs,o=rx', target_dir], server=stageServer,
-                       username=stageUsername, sshKey=stageSshKey)
-    rsync_cmd = ['rsync', '-av' ]
+        run_remote_cmd(
+            ['chmod', 'u=rwx,g=rxs,o=rx', target_dir], server=stageServer,
+            username=stageUsername, sshKey=stageSshKey)
+    rsync_cmd = ['rsync', '-av']
     if dryRun:
         rsync_cmd.append('-n')
     run_remote_cmd(rsync_cmd + excludes + [source_dir, target_dir],
@@ -149,33 +154,41 @@ indexFileTemplate = """\
 </body>
 </html>"""
 
+
 def makeIndexFiles(productName, version, buildNumber, stageServer,
-                     stageUsername, stageSshKey):
+                   stageUsername, stageSshKey):
     candidates_dir = makeCandidatesDir(productName, version, buildNumber)
     indexFile = NamedTemporaryFile()
     indexFile.write(indexFileTemplate % {'version': version})
     indexFile.flush()
 
-    scp(indexFile.name, '%s@%s:%s/index.html' % (stageUsername, stageServer, candidates_dir),
+    scp(
+        indexFile.name, '%s@%s:%s/index.html' % (
+            stageUsername, stageServer, candidates_dir),
         sshKey=stageSshKey)
     run_remote_cmd(['chmod', '644', '%s/index.html' % candidates_dir],
                    server=stageServer, username=stageUsername, sshKey=stageSshKey)
-    run_remote_cmd(['find', candidates_dir, '-mindepth', '1', '-type', 'd', '-not', '-regex', '.*contrib.*', '-exec', 'cp', '-pv', '%s/index.html' % candidates_dir, '{}', '\\;'],
-                   server=stageServer, username=stageUsername, sshKey=stageSshKey)
+    run_remote_cmd(
+        ['find', candidates_dir, '-mindepth', '1', '-type', 'd', '-not', '-regex', '.*contrib.*', '-exec', 'cp', '-pv', '%s/index.html' % candidates_dir, '{}', '\\;'],
+        server=stageServer, username=stageUsername, sshKey=stageSshKey)
+
 
 def deleteIndexFiles(cleanup_dir, stageServer, stageUsername,
                      stageSshKey):
-    run_remote_cmd(['find', cleanup_dir, '-name', 'index.html', '-exec', 'rm', '-v', '{}', '\\;'],
-                   server=stageServer, username=stageUsername, sshKey=stageSshKey)
+    run_remote_cmd(
+        ['find', cleanup_dir, '-name', 'index.html', '-exec', 'rm',
+            '-v', '{}', '\\;'],
+        server=stageServer, username=stageUsername, sshKey=stageSshKey)
+
 
 def updateSymlink(productName, version, stageServer, stageUsername,
                   stageSshKey, target):
     releases_dir = makeReleasesDir(productName)
 
     run_remote_cmd([
-            'cd %(rd)s && rm -f %(target)s && ln -s %(version)s %(target)s' % \
-                dict(rd=releases_dir, version=version, target=target)
-        ],
+        'cd %(rd)s && rm -f %(target)s && ln -s %(version)s %(target)s' %
+        dict(rd=releases_dir, version=version, target=target)
+    ],
         server=stageServer, username=stageUsername, sshKey=stageSshKey)
 
 
@@ -212,7 +225,8 @@ if __name__ == '__main__':
     stageUsername = options.ssh_username or branchConfig['stage_username']
     stageSshKey = options.ssh_key or branchConfig["stage_ssh_key"]
     stageSshKey = path.join(os.path.expanduser("~"), ".ssh", stageSshKey)
-    createIndexFiles = releaseConfig.get('makeIndexFiles', False) and productName != 'xulrunner'
+    createIndexFiles = releaseConfig.get(
+        'makeIndexFiles', False) and productName != 'xulrunner'
     ftpSymlinkName = releaseConfig.get('ftpSymlinkName')
 
     if 'permissions' in args:

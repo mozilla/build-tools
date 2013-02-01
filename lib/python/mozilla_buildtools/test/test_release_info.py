@@ -2,6 +2,7 @@ import unittest
 
 from release.info import getBaseTag, getReleaseConfigName
 
+
 class TestGetBaseTag(unittest.TestCase):
     def testRelease(self):
         self.assertEquals('FIREFOX_16_0_2', getBaseTag('firefox', '16.0.2'))
@@ -10,13 +11,16 @@ class TestGetBaseTag(unittest.TestCase):
         self.assertEquals('FIREFOX_17_0b3', getBaseTag('firefox', '17.0b3'))
 
     def testEsr(self):
-        self.assertEquals('FIREFOX_10_0_9esr', getBaseTag('firefox', '10.0.9esr'))
+        self.assertEquals(
+            'FIREFOX_10_0_9esr', getBaseTag('firefox', '10.0.9esr'))
 
     def testFennec(self):
         self.assertEquals('FENNEC_17_0', getBaseTag('fennec', '17.0'))
 
     def testThunderbird(self):
-        self.assertEquals('THUNDERBIRD_18_0b1', getBaseTag('thunderbird', '18.0b1'))
+        self.assertEquals(
+            'THUNDERBIRD_18_0b1', getBaseTag('thunderbird', '18.0b1'))
+
 
 class TestGetReleaseConfigName(unittest.TestCase):
     def testFennec(self):

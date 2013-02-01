@@ -2,16 +2,21 @@
 """%prog -w <warn_new> -c <crit_new> -t <max_age> queuedir [queuedir...]
 
 nagios plugin to monitor a queuedir"""
-import os, sys, traceback, time
+import os
+import sys
+import traceback
+import time
 
 OK, WARNING, CRITICAL, UNKNOWN = range(4)
+
 
 def check_queuedir(d, options):
     status = OK
     msgs = []
 
     # Check 'dead'
-    num_dead = len([f for f in os.listdir(os.path.join(d, 'dead')) if not f.endswith(".log")])
+    num_dead = len([f for f in os.listdir(
+        os.path.join(d, 'dead')) if not f.endswith(".log")])
     if num_dead > 0:
         status = CRITICAL
         if num_dead == 1:
@@ -24,7 +29,7 @@ def check_queuedir(d, options):
     num_new = len(new_files)
     if num_new > 0:
         oldest_new = min(
-                os.path.getmtime(os.path.join(d, 'new', f)) for f in new_files)
+            os.path.getmtime(os.path.join(d, 'new', f)) for f in new_files)
         if num_new >= options.crit_new:
             status = CRITICAL
             msgs.append("%i new items" % num_new)
@@ -37,23 +42,23 @@ def check_queuedir(d, options):
             status = max(status, WARNING)
             msgs.append("oldest item is %is old" % age)
 
-
     return status, msgs
+
 
 def main():
     from optparse import OptionParser
     parser = OptionParser(__doc__)
     parser.set_defaults(
-            warn_new=5,
-            crit_new=10,
-            max_age=300,
-            )
+        warn_new=5,
+        crit_new=10,
+        max_age=300,
+    )
     parser.add_option("-w", dest="warn_new", type="int",
-            help="warn when there are more than this number of items in new")
+                      help="warn when there are more than this number of items in new")
     parser.add_option("-c", dest="crit_new", type="int",
-            help="critical when there are more than this number of items in new")
+                      help="critical when there are more than this number of items in new")
     parser.add_option("-t", dest="max_age", type="int",
-            help="warn when oldest item in new is more than this many seconds old")
+                      help="warn when oldest item in new is more than this many seconds old")
 
     options, args = parser.parse_args()
 

@@ -18,6 +18,8 @@ testDir = 'test-dir'
 ###
 # Various utility functions for setting up a test case
 ###
+
+
 def createDb():
     """Creates a test DB"""
     db = sqlite3.connect(dbFile)
@@ -47,6 +49,7 @@ def createDb():
     db.close()
     os.chmod(dbFile, 0666)
 
+
 def setupCreds():
     creds_file = os.path.join(os.path.dirname(os.path.dirname(dbFile)),
                               "clobberer_creds.php")
@@ -67,22 +70,25 @@ def setupCreds():
         """ % dbFile))
     os.chmod(creds_file, 0644)
 
+
 def updateBuild(branch, buildername, builddir, slave, master):
     """Send an update to the server to indicate that a slave is doing a build.
     Returns the server's response."""
     params = dict(branch=branch, buildername=buildername, builddir=builddir,
-            slave=slave, master=master)
+                  slave=slave, master=master)
     url = "%s?%s" % (clobberURL, urllib.urlencode(params))
     data = urllib.urlopen(url).read().strip()
     return data
+
 
 def setClobberPage(branch, builddir, slave, master, now):
     """Schedules a clobber by sending a POST request to the server and
        records the response"""
     params = dict(branch=branch, builddir=builddir,
-            slave=slave, master=master, form_submitted=True)
+                  slave=slave, master=master, form_submitted=True)
     data = urllib.urlopen(clobberURL, data=urllib.urlencode(params))
     return data.read().strip()
+
 
 def setClobber(branch, builddir, slave, master, now):
     """Schedules a clobber by inserting data directly into the database."""
@@ -90,8 +96,9 @@ def setClobber(branch, builddir, slave, master, now):
     db.execute("""INSERT INTO clobber_times
             (master, branch, builddir, slave, lastclobber, who)
             VALUES (?, ?, ?, ?, ?, 'testuser')""",
-        (master, branch, builddir, slave, now))
+              (master, branch, builddir, slave, now))
     db.commit()
+
 
 def getClobbers():
     """Returns a list of all entries in the clobber_times table"""
@@ -99,11 +106,13 @@ def getClobbers():
     res = db.execute("SELECT * FROM clobber_times")
     return res.fetchall()
 
+
 def getBuilds():
     """Returns a list of all entries in the builds table"""
     db = sqlite3.connect(dbFile)
     res = db.execute("SELECT * FROM builds")
     return res.fetchall()
+
 
 def makeBuildDir(name, t):
     """Create a fake build directory in our testDir, with last-clobber set to
@@ -113,8 +122,9 @@ def makeBuildDir(name, t):
         os.makedirs(builddir)
     open(os.path.join(builddir, 'last-clobber'), "w").write(str(t))
 
+
 def runClobberer(branch, buildername, builddir, slave, master, periodic=None,
-        dry_run=True):
+                 dry_run=True):
     """Run the clobberer.py script, and return the output"""
     if not os.path.exists(testDir):
         os.makedirs(testDir)
@@ -131,6 +141,8 @@ def runClobberer(branch, buildername, builddir, slave, master, periodic=None,
 ###
 # Test cases
 ###
+
+
 class TestClobber(TestCase):
     def setUp(self):
         if os.path.exists(dbFile):
@@ -150,8 +162,10 @@ class TestClobber(TestCase):
 
     def testUpdateBuild(self):
         # Test that build entries are getting into the DB properly
-        updateBuild("branch1", "My Builder", "mybuilder", "slave01", "master01");
-        updateBuild("branch1", "My Builder 2", "mybuilder2", "slave01", "master01");
+        updateBuild(
+            "branch1", "My Builder", "mybuilder", "slave01", "master01");
+        updateBuild(
+            "branch1", "My Builder 2", "mybuilder2", "slave01", "master01");
 
         builds = getBuilds()
         # Strip out db id and time
@@ -159,18 +173,21 @@ class TestClobber(TestCase):
         builds.sort()
         self.assertEquals(len(builds), 2)
         self.assertEquals(builds[0],
-                ("master01", "branch1", "My Builder", "mybuilder", "slave01"))
+                         ("master01", "branch1", "My Builder", "mybuilder", "slave01"))
         self.assertEquals(builds[1],
-                ("master01", "branch1", "My Builder 2", "mybuilder2", "slave01")
-                )
+                         ("master01", "branch1", "My Builder 2",
+                          "mybuilder2", "slave01")
+                          )
 
     def testUpdateBuildWithClobber(self):
         # Test that build entries are getting into the DB properly
         # this time when a clobber is set
         now = int(time.time())
         setClobber("branch1", "mybuilder", "slave01", None, now)
-        updateBuild("branch1", "My Builder", "mybuilder", "slave01", "master01");
-        updateBuild("branch1", "My Builder 2", "mybuilder2", "slave01", "master01");
+        updateBuild(
+            "branch1", "My Builder", "mybuilder", "slave01", "master01");
+        updateBuild(
+            "branch1", "My Builder 2", "mybuilder2", "slave01", "master01");
 
         builds = getBuilds()
         # Strip out db id and time
@@ -178,10 +195,11 @@ class TestClobber(TestCase):
         builds.sort()
         self.assertEquals(len(builds), 2)
         self.assertEquals(builds[0],
-                ("master01", "branch1", "My Builder", "mybuilder", "slave01"))
+                         ("master01", "branch1", "My Builder", "mybuilder", "slave01"))
         self.assertEquals(builds[1],
-                ("master01", "branch1", "My Builder 2", "mybuilder2", "slave01")
-                )
+                         ("master01", "branch1", "My Builder 2",
+                          "mybuilder2", "slave01")
+                          )
 
     def testSetSlaveClobber(self):
         # Clobber one builder on one slave, regardless of master
@@ -191,17 +209,17 @@ class TestClobber(TestCase):
         # Add a build on another builder, to make sure it's not getting
         # clobbered
         data = updateBuild("branch1", "My Builder 2", "mybuilder2", "slave01",
-                "master01")
+                           "master01")
         self.assert_("mybuilder2" not in data, data)
 
         # Check that build on master01 gets clobbered
         data = updateBuild("branch1", "My Builder", "mybuilder", "slave01",
-                "master01")
+                           "master01")
         self.assertEquals(data, "mybuilder:%s:testuser" % now)
 
         # Check that build on master02 gets clobbered
         data = updateBuild("branch1", "My Builder", "mybuilder", "slave01",
-                "master02")
+                           "master02")
         self.assertEquals(data, "mybuilder:%s:testuser" % now)
 
     def testSetMasterClobber(self):
@@ -212,23 +230,23 @@ class TestClobber(TestCase):
         # Add a build on another builder, to make sure it's not getting
         # clobbered
         data = updateBuild("branch1", "My Builder 2", "mybuilder2", "slave01",
-                "master01")
+                           "master01")
         self.assert_("mybuilder2" not in data, data)
 
         # Check that the build is clobbered on all slaves on master01
         data = updateBuild("branch1", "My Builder", "mybuilder", "slave01",
-                "master01")
+                           "master01")
         self.assertEquals(data, "mybuilder:%s:testuser" % now)
         data = updateBuild("branch1", "My Builder", "mybuilder", "slave02",
-                "master01")
+                           "master01")
         self.assertEquals(data, "mybuilder:%s:testuser" % now)
 
         # But not on master02
         data = updateBuild("branch1", "My Builder", "mybuilder", "slave01",
-                "master02")
+                           "master02")
         self.assertEquals(data, "")
         data = updateBuild("branch1", "My Builder", "mybuilder", "slave02",
-                "master02")
+                           "master02")
         self.assertEquals(data, "")
 
     def testSetSlaveMasterClobber(self):
@@ -239,25 +257,25 @@ class TestClobber(TestCase):
         # Add a build on another builder, to make sure it's not getting
         # clobbered
         data = updateBuild("branch1", "My Builder 2", "mybuilder2", "slave01",
-                "master01")
+                           "master01")
         self.assert_("mybuilder2" not in data, data)
 
         # Check that the build is clobbered on master01
         data = updateBuild("branch1", "My Builder", "mybuilder", "slave01",
-                "master01")
+                           "master01")
         self.assertEquals(data, "mybuilder:%s:testuser" % now)
 
         # But not on the other slave
         data = updateBuild("branch1", "My Builder", "mybuilder", "slave02",
-                "master01")
+                           "master01")
         self.assertEquals(data, "")
 
         # Or on the other master
         data = updateBuild("branch1", "My Builder", "mybuilder", "slave01",
-                "master02")
+                           "master02")
         self.assertEquals(data, "")
         data = updateBuild("branch1", "My Builder", "mybuilder", "slave02",
-                "master02")
+                           "master02")
         self.assertEquals(data, "")
 
     def testSlaveClobber(self):
@@ -265,10 +283,10 @@ class TestClobber(TestCase):
         now = int(time.time())
 
         makeBuildDir('mybuilder', now)
-        setClobber('branch1', 'mybuilder', 'slave01', 'master01', now+1)
+        setClobber('branch1', 'mybuilder', 'slave01', 'master01', now + 1)
 
         data = runClobberer('branch1', 'My Builder', 'mybuilder', 'slave01',
-                'master01')
+                            'master01')
         self.assert_('mybuilder:Server is forcing a clobber' in data, data)
 
     def testSlaveNoClobber(self):
@@ -276,11 +294,11 @@ class TestClobber(TestCase):
         # too old
         now = int(time.time())
 
-        makeBuildDir('mybuilder', now+1)
+        makeBuildDir('mybuilder', now + 1)
         setClobber('branch1', 'mybuilder', 'slave01', 'master01', now)
 
         data = runClobberer('branch1', 'My Builder', 'mybuilder', 'slave01',
-                'master01')
+                            'master01')
         self.assert_('mybuilder:Server is forcing a clobber' not in data, data)
 
     def testSlaveClobberOther(self):
@@ -291,13 +309,13 @@ class TestClobber(TestCase):
         makeBuildDir('mybuilder', now)
         makeBuildDir('linux_build', now)
         updateBuild('branch1', 'linux_build', 'linux_build', 'slave01',
-                'master01')
+                    'master01')
 
-        setClobber('branch1', 'mybuilder', 'slave01', 'master01', now-1)
-        setClobber('branch1', 'linux_build', None, 'master01', now+1)
+        setClobber('branch1', 'mybuilder', 'slave01', 'master01', now - 1)
+        setClobber('branch1', 'linux_build', None, 'master01', now + 1)
 
         data = runClobberer('branch1', 'My Builder', 'mybuilder', 'slave01',
-                'master01')
+                            'master01')
         self.assert_('mybuilder:Server is forcing a clobber' not in data, data)
         self.assert_('linux_build:Server is forcing a clobber' in data, data)
 
@@ -306,10 +324,10 @@ class TestClobber(TestCase):
         # specified time since our last clobber
         now = int(time.time())
 
-        makeBuildDir('mybuilder', now-3601)
+        makeBuildDir('mybuilder', now - 3601)
 
         data = runClobberer('branch1', 'My Builder', 'mybuilder', 'slave01',
-                'master01', 1)
+                            'master01', 1)
         self.assert_('mybuilder:More than' in data, data)
 
     def testSlaveNoPeriodicClobber(self):
@@ -317,10 +335,10 @@ class TestClobber(TestCase):
         # than the specified time since our last clobber
         now = int(time.time())
 
-        makeBuildDir('mybuilder', now-3599)
+        makeBuildDir('mybuilder', now - 3599)
 
         data = runClobberer('branch1', 'My Builder', 'mybuilder', 'slave01',
-                'master01', 1)
+                            'master01', 1)
         self.assert_('mybuilder:More than' not in data, data)
 
     def testSlaveNoPeriodicClobberOther(self):
@@ -328,91 +346,92 @@ class TestClobber(TestCase):
         # 'current' builder
         now = int(time.time())
 
-        makeBuildDir('mybuilder', now-3599)
-        makeBuildDir('mybuilder2', now-3601)
+        makeBuildDir('mybuilder', now - 3599)
+        makeBuildDir('mybuilder2', now - 3601)
 
         data = runClobberer('branch1', 'My Builder', 'mybuilder', 'slave01',
-                'master01', 1)
+                            'master01', 1)
         self.assert_('mybuilder:More than' not in data, data)
         self.assert_('mybuilder2:More than' not in data, data)
 
         data = runClobberer('branch1', 'My Builder', 'mybuilder2', 'slave01',
-                'master01', 1)
+                            'master01', 1)
         self.assert_('mybuilder2:More than' in data, data)
 
     def testSlaveClobberRelease(self):
         # Test that clobbers on release builders work
         now = int(time.time())
-        makeBuildDir('linux_build', now-10)
+        makeBuildDir('linux_build', now - 10)
         updateBuild('branch1', 'linux_build', 'linux_build', 'slave01',
-                'master01')
+                    'master01')
         time.sleep(1)
         updateBuild('branch2', 'linux_build', 'linux_build', 'slave01',
-                'master01')
+                    'master01')
         time.sleep(1)
         now = int(time.time())
         setClobber('branch2', 'linux_build', None, None, now)
 
         data = runClobberer('branch2', 'Linux Release Build', 'linux_build',
-                'slave01', 'master01')
+                            'slave01', 'master01')
         self.assert_('linux_build:Server is forcing' in data, data)
 
     def testSlaveClobberReleaseOtherBranch(self):
         # Test that clobbers on release builders work
         now = int(time.time())
-        makeBuildDir('linux_build', now-10)
+        makeBuildDir('linux_build', now - 10)
         updateBuild('branch1', 'linux_build', 'linux_build', 'slave01',
-                'master01')
+                    'master01')
         time.sleep(1)
         updateBuild('branch2', 'linux_build', 'linux_build', 'slave01',
-                'master01')
+                    'master01')
         time.sleep(1)
         setClobber('branch2', 'linux_build', None, None, now)
 
         # Even though we're running a different branch for _this_ run, our last
         # run was on branch2, so it should be clobbered
         data = runClobberer('branch1', 'Linux Release Build', 'linux_build',
-                'slave01', 'master01')
+                            'slave01', 'master01')
         self.assert_('linux_build:Server is forcing' in data, data)
 
     def testSlaveClobberReleaseNotOtherBranch(self):
         # Test that clobbers on release builders don't clobber builds from
         # other branches
         now = int(time.time())
-        makeBuildDir('linux_build', now-10)
+        makeBuildDir('linux_build', now - 10)
         updateBuild('branch2', 'linux_build', 'linux_build', 'slave01',
-                'master01')
+                    'master01')
         time.sleep(1)
         updateBuild('branch1', 'linux_build', 'linux_build', 'slave01',
-                'master01')
+                    'master01')
         time.sleep(1)
         now = int(time.time())
         setClobber('branch2', 'linux_build', None, None, now)
 
         data = runClobberer('branch1', 'Linux Release Build', 'linux_build',
-                'slave01', 'master01')
+                            'slave01', 'master01')
         self.assert_('linux_build:Server is forcing' not in data, data)
 
     def testSlaveClobberReleaseOtherBranchOtherBuilder(self):
         # Test that clobbers on release builders don't clobber builds from
         # other branches when run from another builder
         now = int(time.time())
-        makeBuildDir('linux_build', now-10)
+        makeBuildDir('linux_build', now - 10)
         updateBuild('branch1', 'linux_build', 'linux_build', 'slave01',
-                'master01')
+                    'master01')
         time.sleep(1)
         updateBuild('branch2', 'linux_build', 'linux_build', 'slave01',
-                'master01')
+                    'master01')
         time.sleep(1)
         now = int(time.time())
         setClobber('branch1', 'linux_build', None, None, now)
 
         data = runClobberer('branch1', 'My Builder', 'mybuilder', 'slave01',
-                'master01')
+                            'master01')
         self.assert_('linux_build:Server is forcing' not in data, data)
 
 if __name__ == '__main__':
-    import unittest, sys
+    import unittest
+    import sys
     if len(sys.argv) == 3:
         clobberURL = sys.argv[1]
         dbFile = sys.argv[2]

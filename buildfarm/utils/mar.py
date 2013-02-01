@@ -8,33 +8,44 @@ Utility for managing mar files"""
 ###
 ### Please update the copy in puppet to deploy new changes to
 ### stage.mozilla.org, see
-###   https://wiki.mozilla.org/ReleaseEngineering/How_To/Modify_scripts_on_stage
+# https://wiki.mozilla.org/ReleaseEngineering/How_To/Modify_scripts_on_stage
 
-import struct, os, bz2, hashlib, tempfile
+import struct
+import os
+import bz2
+import hashlib
+import tempfile
 from subprocess import Popen, PIPE
 
+
 def rsa_sign(digest, keyfile):
-    proc = Popen(['openssl', 'pkeyutl', '-sign', '-inkey', keyfile], stdin=PIPE, stdout=PIPE)
+    proc = Popen(['openssl', 'pkeyutl', '-sign', '-inkey', keyfile],
+                 stdin=PIPE, stdout=PIPE)
     proc.stdin.write(digest)
     proc.stdin.close()
     sig = proc.stdout.read()
     return sig
 
+
 def rsa_verify(digest, signature, keyfile):
     tmp = tempfile.NamedTemporaryFile()
     tmp.write(signature)
     tmp.flush()
-    proc = Popen(['openssl', 'pkeyutl', '-pubin', '-verify', '-sigfile', tmp.name, '-inkey', keyfile], stdin=PIPE, stdout=PIPE)
+    proc = Popen(['openssl', 'pkeyutl', '-pubin', '-verify', '-sigfile',
+                 tmp.name, '-inkey', keyfile], stdin=PIPE, stdout=PIPE)
     proc.stdin.write(digest)
     proc.stdin.close()
     data = proc.stdout.read()
     return "Signature Verified Successfully" in data
 
+
 def packint(i):
     return struct.pack(">L", i)
 
+
 def unpackint(s):
     return struct.unpack(">L", s)[0]
+
 
 def generate_signature(fp, updatefunc):
     fp.seek(0)
@@ -62,10 +73,11 @@ def generate_signature(fp, updatefunc):
 
     # Read the rest of the file
     while True:
-        block = fp.read(512*1024)
+        block = fp.read(512 * 1024)
         if not block:
             break
         updatefunc(block)
+
 
 class MarSignature:
     """Represents a signature"""
@@ -73,8 +85,8 @@ class MarSignature:
     sigsize = None
     algo_id = None
     signature = None
-    _offset = None # where in the file this signature is located
-    keyfile = None # what key to use
+    _offset = None  # where in the file this signature is located
+    keyfile = None  # what key to use
 
     @classmethod
     def from_fileobj(cls, fp):
@@ -118,6 +130,7 @@ class MarSignature:
             self.signature))
         print "wrote signature %s" % self.algo_id
 
+
 class MarInfo:
     """Represents information about a member of a MAR file. The following
     attributes are supported:
@@ -146,7 +159,8 @@ class MarInfo:
             return None
         if len(data) != 12:
             raise ValueError("Malformed mar?")
-        self._offset, self.size, self.flags = struct.unpack(cls._member_fmt, data)
+        self._offset, self.size, self.flags = struct.unpack(
+            cls._member_fmt, data)
         name = ""
         while True:
             c = fp.read(1)
@@ -160,11 +174,12 @@ class MarInfo:
 
     def __repr__(self):
         return "<%s %o %s bytes starting at %i>" % (
-                self.name, self.flags, self.size, self._offset)
+            self.name, self.flags, self.size, self._offset)
 
     def to_bytes(self):
         return struct.pack(self._member_fmt, self._offset, self.size, self.flags) + \
-                self.name + "\x00"
+            self.name + "\x00"
+
 
 class MarFile:
     """Represents a MAR file on disk.
@@ -175,6 +190,7 @@ class MarFile:
     """
 
     _longint_fmt = ">L"
+
     def __init__(self, name, mode="r", signature_versions=[]):
         if mode not in "rw":
             raise ValueError("Mode must be either 'r' or 'w'")
@@ -253,7 +269,7 @@ class MarFile:
             self.members.append(info)
 
         # Sort them by where they are in the file
-        self.members.sort(key=lambda info:info._offset)
+        self.members.sort(key=lambda info: info._offset)
 
         # Read any signatures
         first_offset = self.members[0]._offset
@@ -319,7 +335,7 @@ class MarFile:
             f = open(path, 'rb')
             self.fileobj.seek(self.index_offset)
             while True:
-                block = f.read(512*1024)
+                block = f.read(512 * 1024)
                 if not block:
                     break
                 self.fileobj.write(block)
@@ -331,7 +347,7 @@ class MarFile:
             info._offset = self.index_offset
             self.fileobj.seek(self.index_offset)
             while True:
-                block = fileobj.read(512*1024)
+                block = fileobj.read(512 * 1024)
                 if not block:
                     break
                 info.size += len(block)
@@ -359,7 +375,7 @@ class MarFile:
         self.fileobj.seek(0, 2)
         totalsize = self.fileobj.tell()
         self.fileobj.seek(8)
-        #print "File size is", totalsize, repr(struct.pack(">Q", totalsize))
+        # print "File size is", totalsize, repr(struct.pack(">Q", totalsize))
         self.fileobj.write(struct.pack(">Q", totalsize))
 
         if self.mode == "w" and self.signatures:
@@ -367,7 +383,7 @@ class MarFile:
             fileobj = open(self.name, 'rb')
             generate_signature(fileobj, self._update_signatures)
             for sig in self.signatures:
-                #print sig._offset
+                # print sig._offset
                 sig.write_signature(self.fileobj)
 
         self.fileobj.close()
@@ -380,7 +396,7 @@ class MarFile:
 
     def _write_index(self):
         """Writes the index of all members at the end of the file"""
-        self.fileobj.seek(self.index_offset+4)
+        self.fileobj.seek(self.index_offset + 4)
         index_size = 0
         for m in self.members:
             member_bytes = m.to_bytes()
@@ -416,6 +432,7 @@ class MarFile:
         open(dstpath, "wb").write(self.fileobj.read(member.size))
         os.chmod(dstpath, member.flags)
 
+
 class BZ2MarFile(MarFile):
     """Subclass of MarFile that compresses/decompresses members using BZ2.
 
@@ -433,7 +450,7 @@ class BZ2MarFile(MarFile):
         output = open(dstpath, "wb")
         toread = member.size
         while True:
-            thisblock = min(128*1024, toread)
+            thisblock = min(128 * 1024, toread)
             block = self.fileobj.read(thisblock)
             if not block:
                 break
@@ -475,7 +492,7 @@ class BZ2MarFile(MarFile):
         comp = bz2.BZ2Compressor(9)
         self.fileobj.seek(self.index_offset)
         while True:
-            block = f.read(512*1024)
+            block = f.read(512 * 1024)
             if not block:
                 break
             block = comp.compress(block)
@@ -499,21 +516,21 @@ if __name__ == "__main__":
         chdir=None,
         keyfile=None,
         verify=False,
-        )
+    )
     parser.add_option("-x", "--extract", action="store_const", const="extract",
-            dest="action", help="extract MAR")
+                      dest="action", help="extract MAR")
     parser.add_option("-t", "--list", action="store_const", const="list",
-            dest="action", help="print out MAR contents")
+                      dest="action", help="print out MAR contents")
     parser.add_option("-c", "--create", action="store_const", const="create",
-            dest="action", help="create MAR")
+                      dest="action", help="create MAR")
     parser.add_option("-j", "--bzip2", action="store_true", dest="bz2",
-            help="compress/decompress members with BZ2")
+                      help="compress/decompress members with BZ2")
     parser.add_option("-k", "--keyfile", dest="keyfile",
-            help="sign/verify with given key")
+                      help="sign/verify with given key")
     parser.add_option("-v", "--verify", dest="verify", action="store_true",
-            help="verify the marfile")
+                      help="verify the marfile")
     parser.add_option("-C", "--chdir", dest="chdir",
-            help="chdir to this directory before creating or extracing; location of marfile isn't affected by this option.")
+                      help="chdir to this directory before creating or extracing; location of marfile isn't affected by this option.")
 
     options, args = parser.parse_args()
 
@@ -533,7 +550,7 @@ if __name__ == "__main__":
 
     signatures = []
     if options.keyfile:
-        signatures.append( (1, options.keyfile) )
+        signatures.append((1, options.keyfile))
 
     # Move into the directory requested
     if options.chdir:

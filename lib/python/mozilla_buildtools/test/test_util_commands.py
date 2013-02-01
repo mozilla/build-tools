@@ -1,6 +1,8 @@
-import unittest, subprocess
+import unittest
+import subprocess
 
 from util.commands import run_cmd, get_output, run_cmd_periodic_poll
+
 
 class TestRunCmd(unittest.TestCase):
     def testSimple(self):
@@ -14,7 +16,8 @@ class TestRunCmd(unittest.TestCase):
         self.assertEquals(output, 'hello\n')
 
     def testStdErr(self):
-        output = get_output(['bash', '-c', 'echo hello 1>&2'], include_stderr=True)
+        output = get_output(
+            ['bash', '-c', 'echo hello 1>&2'], include_stderr=True)
         self.assertEquals(output, 'hello\n')
 
     def testNoStdErr(self):

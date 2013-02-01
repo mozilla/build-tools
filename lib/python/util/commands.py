@@ -96,7 +96,7 @@ def run_cmd_periodic_poll(cmd, warning_interval=300, poll_interval=0.25,
             elapsed = now - start_time
             if warning_callback:
                 log.debug("Calling warning_callback function: %s(%s)" %
-                    (warning_callback, start_time))
+                         (warning_callback, start_time))
                 try:
                     warning_callback(start_time, elapsed, proc)
                 except Exception:

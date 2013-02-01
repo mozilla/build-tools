@@ -1,19 +1,21 @@
 #!/usr/bin/env python
 
 
-import os, sys
+import os
+import sys
 from mozdevice import devicemanagerSUT as devicemanager
 import socket
 import random
 import time
 from sut_lib import getOurIP, calculatePort, clearFlag, setFlag, waitForDevice, \
-                    log, soft_reboot_and_verify
+    log, soft_reboot_and_verify
+
 
 def reboot(dm):
-    cwd       = os.getcwd()
+    cwd = os.getcwd()
     deviceName = os.path.basename(cwd)
     errorFile = os.path.join(cwd, '..', 'error.flg')
-    proxyIP   = getOurIP()
+    proxyIP = getOurIP()
     proxyPort = calculatePort()
 
     if 'panda' not in deviceName and 'tegra' not in deviceName:
@@ -27,26 +29,30 @@ def reboot(dm):
     if dm is not None:
         try:
             dm.getInfo('process')
-            log.info(dm._runCmds([{'cmd': 'exec su -c "logcat -d -v time *:W"'}], timeout=10))
+            log.info(dm._runCmds(
+                [{'cmd': 'exec su -c "logcat -d -v time *:W"'}], timeout=10))
         except:
             log.info("Failure trying to run logcat on device")
     else:
-        log.info("We were unable to connect to device %s, skipping logcat" % deviceName)
+        log.info("We were unable to connect to device %s, skipping logcat" %
+                 deviceName)
 
     try:
         log.info('forcing device %s reboot' % deviceName)
-        status = soft_reboot_and_verify(dm=dm, device=deviceName, ipAddr=proxyIP, port=proxyPort)
+        status = soft_reboot_and_verify(
+            dm=dm, device=deviceName, ipAddr=proxyIP, port=proxyPort)
         log.info(status)
     except:
         log.info("Failure while rebooting device")
-        setFlag(errorFile, "Remote Device Error: Device failed to recover after reboot")
+        setFlag(errorFile,
+                "Remote Device Error: Device failed to recover after reboot")
         return 1
 
     sys.stdout.flush()
     return 0
 
 if __name__ == '__main__':
-    if (len(sys.argv) <> 2):
+    if (len(sys.argv) != 2):
         print "usage: reboot.py <ip address>"
         sys.exit(1)
 
@@ -56,8 +62,7 @@ if __name__ == '__main__':
         log.info("connecting to: %s" % deviceIP)
         dm = devicemanager.DeviceManagerSUT(deviceIP)
         dm.debug = 5
-        dm.default_timeout = 30 # Set our timeout lower for deviceManager here
+        dm.default_timeout = 30  # Set our timeout lower for deviceManager here
     except:
         pass
     sys.exit(reboot(dm))
-

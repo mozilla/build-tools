@@ -1,10 +1,12 @@
 #!/usr/bin/python
-import simplejson, sys, os
+import simplejson
+import sys
+import os
 
 fn = sys.argv[1]
 data = simplejson.load(open(sys.argv[1]))
 
-data.sort(key=lambda master:master['name'])
+data.sort(key=lambda master: master['name'])
 
 os.rename(fn, '%s.bak' % fn)
 

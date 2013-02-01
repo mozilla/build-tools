@@ -3,6 +3,7 @@
 import os
 from cPickle import load
 
+
 def maybe_delete(filename, timestamp):
     """Delete filename if it's older than timestamp"""
     try:
@@ -12,6 +13,7 @@ def maybe_delete(filename, timestamp):
         # Ignore this error.  The file may have already been moved.
         # We'll get it next time!
         pass
+
 
 def clean_dir(dirname, timestamp):
     """Delete old twisted log files, and old builder files from dirname"""
@@ -52,8 +54,8 @@ if __name__ == "__main__":
     from optparse import OptionParser
     parser = OptionParser()
     parser.add_option("-t", "--time", dest="time", type="int",
-        help="time, in days, for how old files have to be before being deleted",
-        default=4)
+                      help="time, in days, for how old files have to be before being deleted",
+                      default=4)
 
     options, args = parser.parse_args()
 
@@ -61,4 +63,4 @@ if __name__ == "__main__":
         parser.error("Must specify at least one directory to clean up")
 
     for d in args:
-        clean_dir(d, time.time() - options.time * 24*3600)
+        clean_dir(d, time.time() - options.time * 24 * 3600)

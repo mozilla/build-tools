@@ -77,7 +77,8 @@ samplePatcherConfigObj['release'] = {
         'checksumsurl': 'http://%platform%.%locale%.13.0.checksum',
         'completemarurl': 'http://%platform%.%locale%.13.0.complete.mar',
         'extension-version': '13.0',
-        # Drop "zu" here to make sure that dropping and re-adding a locale works
+        # Drop "zu" here to make sure that dropping and re-adding a locale
+        # works
         'locales': ['de', 'en-US', 'ja', 'ja-JP-mac'],
         'prettyVersion': '13.0',
         'schema': 2,
@@ -124,25 +125,42 @@ class TestPatcherConfig(unittest.TestCase):
 
     def testGetUpdatePaths(self):
         expected = (
-            ('11.0', 'mac', 'en-US', ('betatest', 'releasetest', 'release'), ('complete',)),
-            ('11.0', 'mac', 'ja-JP-mac', ('betatest', 'releasetest', 'release'), ('complete',)),
-            ('11.0', 'mac', 'zu', ('betatest', 'releasetest', 'release'), ('complete',)),
-            ('11.0', 'win32', 'en-US', ('betatest', 'releasetest', 'release'), ('complete',)),
-            ('11.0', 'win32', 'ja', ('betatest', 'releasetest', 'release'), ('complete',)),
-            ('11.0', 'win32', 'zu', ('betatest', 'releasetest', 'release'), ('complete',)),
-            ('12.0', 'mac', 'en-US', ('betatest', 'releasetest', 'release'), ('complete','partial')),
-            ('12.0', 'mac', 'ja-JP-mac', ('betatest', 'releasetest', 'release'), ('complete','partial')),
-            ('12.0', 'mac', 'zu', ('betatest', 'releasetest', 'release'), ('complete','partial')),
-            ('12.0', 'win32', 'en-US', ('betatest', 'releasetest', 'release'), ('complete','partial')),
-            ('12.0', 'win32', 'ja', ('betatest', 'releasetest', 'release'), ('complete','partial')),
-            ('12.0', 'win32', 'zu', ('betatest', 'releasetest', 'release'), ('complete','partial')),
-            ('13.0', 'mac', 'en-US', ('betatest', 'releasetest', 'release'), ('complete','partial')),
-            ('13.0', 'mac', 'ja-JP-mac', ('betatest', 'releasetest', 'release'), ('complete','partial')),
-            ('13.0', 'win32', 'en-US', ('betatest', 'releasetest', 'release'), ('complete','partial')),
-            ('13.0', 'win32', 'ja', ('betatest', 'releasetest', 'release'), ('complete','partial')),
+            ('11.0', 'mac', 'en-US', ('betatest',
+             'releasetest', 'release'), ('complete',)),
+            ('11.0', 'mac', 'ja-JP-mac', ('betatest',
+             'releasetest', 'release'), ('complete',)),
+            ('11.0', 'mac', 'zu', ('betatest', 'releasetest',
+             'release'), ('complete',)),
+            ('11.0', 'win32', 'en-US', ('betatest',
+             'releasetest', 'release'), ('complete',)),
+            ('11.0', 'win32', 'ja', ('betatest', 'releasetest',
+             'release'), ('complete',)),
+            ('11.0', 'win32', 'zu', ('betatest', 'releasetest',
+             'release'), ('complete',)),
+            ('12.0', 'mac', 'en-US', ('betatest',
+             'releasetest', 'release'), ('complete', 'partial')),
+            ('12.0', 'mac', 'ja-JP-mac', ('betatest',
+             'releasetest', 'release'), ('complete', 'partial')),
+            ('12.0', 'mac', 'zu', ('betatest', 'releasetest',
+             'release'), ('complete', 'partial')),
+            ('12.0', 'win32', 'en-US', ('betatest',
+             'releasetest', 'release'), ('complete', 'partial')),
+            ('12.0', 'win32', 'ja', ('betatest', 'releasetest',
+             'release'), ('complete', 'partial')),
+            ('12.0', 'win32', 'zu', ('betatest', 'releasetest',
+             'release'), ('complete', 'partial')),
+            ('13.0', 'mac', 'en-US', ('betatest',
+             'releasetest', 'release'), ('complete', 'partial')),
+            ('13.0', 'mac', 'ja-JP-mac', ('betatest',
+             'releasetest', 'release'), ('complete', 'partial')),
+            ('13.0', 'win32', 'en-US', ('betatest',
+             'releasetest', 'release'), ('complete', 'partial')),
+            ('13.0', 'win32', 'ja', ('betatest', 'releasetest',
+             'release'), ('complete', 'partial')),
         )
         got = []
-        # getUpdatePaths is a generator, so we need to store the results before comparison
+        # getUpdatePaths is a generator, so we need to store the results before
+        # comparison
         for path in samplePatcherConfigObj.getUpdatePaths():
             got.append(path)
         self.assertEquals(sorted(got), sorted(expected))
@@ -163,7 +181,8 @@ class TestPatcherConfig(unittest.TestCase):
 
     def testParsePastUpdate(self):
         expected = ['11.0', '12.0', ['betatest', 'releasetest']]
-        got = self.pc.parsePastUpdate(['11.0', '12.0', 'betatest', 'releasetest'])
+        got = self.pc.parsePastUpdate(
+            ['11.0', '12.0', 'betatest', 'releasetest'])
         self.assertEquals(got, expected)
 
     def testParsePastUpdateOneChannel(self):
@@ -172,7 +191,8 @@ class TestPatcherConfig(unittest.TestCase):
         self.assertEquals(got, expected)
 
     def testParsePastUpdateNoChannels(self):
-        self.assertRaises(PatcherConfigError, self.pc.parsePastUpdate, ['11.0', '12.0'])
+        self.assertRaises(
+            PatcherConfigError, self.pc.parsePastUpdate, ['11.0', '12.0'])
 
     def testParseCurrentUpdate(self):
         dom = self._parse("""\
@@ -204,7 +224,7 @@ class TestPatcherConfig(unittest.TestCase):
             'details': 'https://details',
             'from': '13.0',
             'testchannel': ['betatest', 'releasetest'],
-            'to':   '13.0.1',
+            'to': '13.0.1',
             'complete': {
                 'path': '%platform%.%locale%.complete.mar',
             },
@@ -244,7 +264,7 @@ class TestPatcherConfig(unittest.TestCase):
             'details': 'https://details',
             'from': '13.0',
             'testchannel': ['betatest', 'releasetest'],
-            'to':   '13.0.1',
+            'to': '13.0.1',
             'complete': {
                 'path': '%platform%.%locale%.complete.mar',
             },
@@ -328,18 +348,21 @@ version   12.0
 
     def testAddDuplicatePastUpdate(self):
         self.pc['past-update'] = [['1', '2', ['abc']]]
-        self.assertRaises(PatcherConfigError, self.pc.addPastUpdate, ['1', '2', ['test']])
+        self.assertRaises(
+            PatcherConfigError, self.pc.addPastUpdate, ['1', '2', ['test']])
 
     def testAddDuplicatePastUpdate2(self):
         self.pc['past-update'] = [['1', '2', ['abc']]]
-        self.assertRaises(PatcherConfigError, self.pc.addPastUpdate, ['1', '3', ['test']])
+        self.assertRaises(
+            PatcherConfigError, self.pc.addPastUpdate, ['1', '3', ['test']])
 
     def testAddRelease(self):
         self.pc.addRelease('3.0', {
             'schema': 2,
             'version': '3.0',
         })
-        self.assertEquals(self.pc['release'], {'3.0': {'schema': 2, 'version': '3.0'}})
+        self.assertEquals(
+            self.pc['release'], {'3.0': {'schema': 2, 'version': '3.0'}})
 
     def testAddDuplicateRelease(self):
         self.pc['release']['2.0'] = {}
@@ -363,7 +386,8 @@ version   12.0
 
     def testGetUrlNonExistentPartial(self):
         pc = samplePatcherConfigObj
-        self.assertRaises(PatcherConfigError, pc.getUrl, '15.0', 'p', 'l', 'partial', 'a')
+        self.assertRaises(
+            PatcherConfigError, pc.getUrl, '15.0', 'p', 'l', 'partial', 'a')
 
     def testGetPathComplete(self):
         pc = samplePatcherConfigObj
@@ -385,21 +409,27 @@ version   12.0
 
     def testGetFromVersions(self):
         pc = samplePatcherConfigObj
-        self.assertEquals(sorted(pc.getFromVersions()), ['11.0', '12.0', '13.0'])
+        self.assertEquals(
+            sorted(pc.getFromVersions()), ['11.0', '12.0', '13.0'])
+
 
 class TestSubstitutePath(unittest.TestCase):
     def testNoSubstitutes(self):
-        self.assertEquals(substitutePath('/foo/bar/blah', 'aaa', 'bbb'), '/foo/bar/blah')
+        self.assertEquals(
+            substitutePath('/foo/bar/blah', 'aaa', 'bbb'), '/foo/bar/blah')
 
     def testSubstituteLocale(self):
-        self.assertEquals(substitutePath('/foo/%locale%/blah', 'aaa', 'bbb'), '/foo/bbb/blah')
+        self.assertEquals(substitutePath(
+            '/foo/%locale%/blah', 'aaa', 'bbb'), '/foo/bbb/blah')
 
     def testSubstituteBouncerPlatform(self):
         with mock.patch.dict('release.platforms.ftp_bouncer_platform_map', {'abc': 'xxx'}):
-            self.assertEquals(substitutePath('/%bouncer-platform%/boo', platform='abc'), '/xxx/boo')
+            self.assertEquals(substitutePath(
+                '/%bouncer-platform%/boo', platform='abc'), '/xxx/boo')
 
     def testSubstituteVersion(self):
-        self.assertEquals(substitutePath('/abc/def/%version%', version='123'), '/abc/def/123')
+        self.assertEquals(substitutePath(
+            '/abc/def/%version%', version='123'), '/abc/def/123')
 
     def testNoSubFound(self):
         self.assertRaises(TypeError, substitutePath, '%platform%')

@@ -1,7 +1,12 @@
 """Helper functions to handle file operations"""
-import logging, os, shutil, hashlib, tempfile
+import logging
+import os
+import shutil
+import hashlib
+import tempfile
 from ConfigParser import RawConfigParser
 log = logging.getLogger(__name__)
+
 
 def compare(file1, file2):
     """compares the contents of two files, passed in either as
@@ -15,6 +20,7 @@ def compare(file1, file2):
     file2_contents = file2.read()
     return file1_contents == file2_contents
 
+
 def directoryContains(directory, suffix):
     """ Return true if the given directory contains the provided wildcard
     suffix, similar to `ls foo/*bar` """
@@ -23,6 +29,7 @@ def directoryContains(directory, suffix):
         log.error("Could not find *%s in %s" % (suffix, directory))
     return hit
 
+
 def copyfile(src, dst, copymode=True):
     """Copy src to dst, preserving permissions and times if copymode is True"""
     shutil.copyfile(src, dst)
@@ -30,16 +37,18 @@ def copyfile(src, dst, copymode=True):
         shutil.copymode(src, dst)
         shutil.copystat(src, dst)
 
+
 def sha1sum(f):
     """Return the SHA-1 hash of the contents of file `f`, in hex format"""
     h = hashlib.sha1()
     fp = open(f, 'rb')
     while True:
-        block = fp.read(512*1024)
+        block = fp.read(512 * 1024)
         if not block:
             break
         h.update(block)
     return h.hexdigest()
+
 
 def safe_unlink(filename):
     """unlink filename ignorning errors if the file doesn't exist"""
@@ -58,6 +67,7 @@ def safe_unlink(filename):
             return
         else:
             raise
+
 
 def safe_copyfile(src, dest):
     """safely copy src to dest using a temporary intermediate and then renaming

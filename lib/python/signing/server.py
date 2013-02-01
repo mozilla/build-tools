@@ -1,4 +1,11 @@
-import os, hashlib, hmac, shlex, time, signal, re, tempfile
+import os
+import hashlib
+import hmac
+import shlex
+import time
+import signal
+import re
+import tempfile
 # TODO: use util.command
 from subprocess import Popen, PIPE, STDOUT
 
@@ -15,6 +22,7 @@ from util.file import safe_unlink, sha1sum, safe_copyfile
 import logging
 log = logging.getLogger(__name__)
 
+
 def make_token_data(slave_ip, valid_from, valid_to, chaff_bytes=16):
     """Return a string suitable for using as token data. This string will
     be signed, and the signature passed back to clients as the token
@@ -24,25 +32,29 @@ def make_token_data(slave_ip, valid_from, valid_to, chaff_bytes=16):
             chaff)
     return block
 
+
 def sign_data(data, secret, hsh=hashlib.sha256):
     """Returns b64(hmac(secret, data))"""
     h = hmac.new(secret, data, hsh)
     return b64(h.digest())
+
 
 def verify_token(token_data, token, secret):
     """Returns True if token is the proper signature for
     token_data."""
     return sign_data(token_data, secret) == token
 
+
 def unpack_token_data(token_data):
     """Reverse of make_token_data: takes an encoded string and returns a
     dictionary with token parameters as keys."""
     bits = token_data.split(":")
     return dict(
-            slave_ip=bits[0],
-            valid_from=int(bits[1]),
-            valid_to=int(bits[2]),
-            )
+        slave_ip=bits[0],
+        valid_from=int(bits[1]),
+        valid_to=int(bits[2]),
+    )
+
 
 def run_signscript(cmd, inputfile, outputfile, filename, format_, passphrase=None, max_tries=5):
     """Run the signing script `cmd`, passing the inputfile, outputfile,
@@ -70,9 +82,10 @@ def run_signscript(cmd, inputfile, outputfile, filename, format_, passphrase=Non
         # its own session leader. This means that it will get its own process
         # group, and signals sent to its process group will also be sent to its
         # children. This allows us to kill of any grandchildren processes (e.g.
-        # signmar) in cases where the child process is taking too long to return.
+        # signmar) in cases where the child process is taking too long to
+        # return.
         proc = Popen(cmd, stdout=output, stderr=STDOUT, stdin=PIPE,
-                close_fds=True, preexec_fn=lambda: os.setsid())
+                     close_fds=True, preexec_fn=lambda: os.setsid())
         if passphrase:
             proc.stdin.write(passphrase)
         proc.stdin.close()
@@ -100,10 +113,9 @@ def run_signscript(cmd, inputfile, outputfile, filename, format_, passphrase=Non
                     rc = -1
                     break
 
-
             rc = proc.poll()
             if rc is not None:
-                # if we killed the child, we want to break before we poll, since polling may not give 
+                # if we killed the child, we want to break before we poll, since polling may not give
                 # an error return code.
                 if timeout:
                     rc = -1
@@ -116,12 +128,15 @@ def run_signscript(cmd, inputfile, outputfile, filename, format_, passphrase=Non
             log.debug("%s: Success!", proc.pid)
             return 0
         # Try again it a bit
-        log.info("%s: run_signscript: Failed with rc %i; retrying in a bit", proc.pid, rc)
+        log.info("%s: run_signscript: Failed with rc %i; retrying in a bit",
+                 proc.pid, rc)
         tries += 1
         if tries >= max_tries:
-            log.warning("run_signscript: Exceeded maximum number of retries; exiting")
+            log.warning(
+                "run_signscript: Exceeded maximum number of retries; exiting")
             return 1
         gevent.sleep(5)
+
 
 class Signer(object):
     """
@@ -133,6 +148,7 @@ class Signer(object):
     `concurrency` is how many workers to run
     """
     stopped = False
+
     def __init__(self, app, signcmd, inputdir, outputdir, concurrency, passphrases):
         self.app = app
         self.signcmd = signcmd
@@ -204,17 +220,19 @@ class Signer(object):
                     os.makedirs(os.path.join(self.outputdir, format_))
 
                 retval = run_signscript(self.signcmd, inputfile, outputfile,
-                        filename, format_, self.passphrases.get(format_))
+                                        filename, format_, self.passphrases.get(format_))
 
                 if retval != 0:
                     if os.path.exists(logfile):
                         logoutput = open(logfile).read()
                     else:
                         logoutput = None
-                    log.warning("Signing failed %s (%s - %s)", filename, format_, filehash)
+                    log.warning("Signing failed %s (%s - %s)",
+                                filename, format_, filehash)
                     log.warning("Signing log: %s", logoutput)
                     safe_unlink(outputfile)
-                    self.app.messages.put( ('errors', item, 'signing script returned non-zero') )
+                    self.app.messages.put(
+                        ('errors', item, 'signing script returned non-zero'))
                     continue
 
                 # Copy our signed result into unsigned and signed so if
@@ -225,10 +243,11 @@ class Signer(object):
                 copied_input = os.path.join(self.inputdir, outputhash)
                 if not os.path.exists(copied_input):
                     safe_copyfile(outputfile, copied_input)
-                copied_output = os.path.join(self.outputdir, format_, outputhash)
+                copied_output = os.path.join(
+                    self.outputdir, format_, outputhash)
                 if not os.path.exists(copied_output):
                     safe_copyfile(outputfile, copied_output)
-                self.app.messages.put( ('done', item, outputhash) )
+                self.app.messages.put(('done', item, outputhash))
             except:
                 # Inconceivable! Something went wrong!
                 # Remove our output, it might be corrupted
@@ -237,15 +256,19 @@ class Signer(object):
                     logoutput = open(logfile).read()
                 else:
                     logoutput = None
-                log.exception("Exception signing file %s; output: %s ", item, logoutput)
-                self.app.messages.put( ('errors', item, 'worker hit an exception while signing') )
+                log.exception(
+                    "Exception signing file %s; output: %s ", item, logoutput)
+                self.app.messages.put((
+                    'errors', item, 'worker hit an exception while signing'))
             finally:
                 if e:
                     e.set()
         log.debug("Worker exiting")
 
+
 class SigningServer:
     signer = None
+
     def __init__(self, config, passphrases):
         self.passphrases = passphrases
         ##
@@ -302,24 +325,27 @@ class SigningServer:
             if ':' in host:
                 host, port = host.split(":")
                 port = int(port)
-                self.redis = redis.Redis(host=host, port=port, socket_timeout=30)
+                self.redis = redis.Redis(
+                    host=host, port=port, socket_timeout=30)
             else:
                 self.redis = redis.Redis(host=host, socket_timeout=30)
 
         self.signed_dir = config.get('paths', 'signed_dir')
         self.unsigned_dir = config.get('paths', 'unsigned_dir')
-        self.allowed_ips = [IP(i) for i in \
-                config.get('security', 'allowed_ips').split(',')]
-        self.new_token_allowed_ips = [IP(i) for i in \
-                config.get('security', 'new_token_allowed_ips').split(',')]
-        self.allowed_filenames = [re.compile(e) for e in \
-                config.get('security', 'allowed_filenames').split(',')]
+        self.allowed_ips = [IP(i) for i in
+                            config.get('security', 'allowed_ips').split(',')]
+        self.new_token_allowed_ips = [IP(i) for i in
+                                      config.get('security', 'new_token_allowed_ips').split(',')]
+        self.allowed_filenames = [re.compile(e) for e in
+                                  config.get('security', 'allowed_filenames').split(',')]
         self.min_filesize = config.getint('security', 'min_filesize')
-        self.formats = [f.strip() for f in config.get('signing', 'formats').split(',')]
+        self.formats = [f.strip() for f in config.get('signing',
+                                                      'formats').split(',')]
         self.max_filesize = dict()
         for f in self.formats:
             try:
-                self.max_filesize[f] = config.getint('security', 'max_filesize_%s' % f)
+                self.max_filesize[f] = config.getint(
+                    'security', 'max_filesize_%s' % f)
             except NoOptionError:
                 self.max_filesize[f] = None
         self.max_token_age = config.getint('security', 'max_token_age')
@@ -336,16 +362,16 @@ class SigningServer:
                 os.makedirs(d)
 
         self.signer = Signer(self,
-                config.get('signing', 'signscript'),
-                config.get('paths', 'unsigned_dir'),
-                config.get('paths', 'signed_dir'),
-                config.getint('signing', 'concurrency'),
-                self.passphrases)
+                             config.get('signing', 'signscript'),
+                             config.get('paths', 'unsigned_dir'),
+                             config.get('paths', 'signed_dir'),
+                             config.getint('signing', 'concurrency'),
+                             self.passphrases)
 
     def verify_nonce(self, token, nonce):
         if self.redis:
             next_nonce_digest = self.redis.get(
-                    "%s:nonce:%s" % (self.redis_prefix, b64sha1sum(token)))
+                "%s:nonce:%s" % (self.redis_prefix, b64sha1sum(token)))
         else:
             next_nonce_digest = self.nonces.get(token)
 
@@ -386,7 +412,8 @@ class SigningServer:
                 return False
 
             log.info("couldn't find token data for key %s locally, checking cache", token)
-            token_data = self.redis.get("%s:tokens:%s" % (self.redis_prefix, b64sha1sum(token)))
+            token_data = self.redis.get(
+                "%s:tokens:%s" % (self.redis_prefix, b64sha1sum(token)))
             if not token_data:
                 log.info("not in cache; failing verify_token")
                 return False
@@ -418,8 +445,10 @@ class SigningServer:
         if token in self.nonces:
             del self.nonces[token]
         if self.redis:
-            self.redis.delete("%s:tokens:%s" % (self.redis_prefix, b64sha1sum(token)))
-            self.redis.delete("%s:nonce:%s" % (self.redis_prefix, b64sha1sum(token)))
+            self.redis.delete(
+                "%s:tokens:%s" % (self.redis_prefix, b64sha1sum(token)))
+            self.redis.delete(
+                "%s:nonce:%s" % (self.redis_prefix, b64sha1sum(token)))
 
     def save_token(self, token, token_data):
         self.tokens[token] = token_data
@@ -444,7 +473,8 @@ class SigningServer:
         now = int(time.time())
         valid_from = now
         valid_to = now + duration
-        log.info("request for token for slave %s for %i seconds", slave_ip, duration)
+        log.info("request for token for slave %s for %i seconds",
+                 slave_ip, duration)
         data = make_token_data(slave_ip, valid_from, valid_to)
         token = sign_data(data, self.token_secret)
         self.save_token(token, data)
@@ -460,10 +490,11 @@ class SigningServer:
             gevent.spawn_later(
                 self.cleanup_interval,
                 self.cleanup_loop,
-                )
+            )
 
     def cleanup(self):
-        log.info("Stats: %i hits; %i misses; %i uploads", self.hits, self.misses, self.uploads)
+        log.info("Stats: %i hits; %i misses; %i uploads",
+                 self.hits, self.misses, self.uploads)
         log.debug("Pending: %s", self.pending)
         # Find files in unsigned that have bad hashes and delete them
         log.debug("Cleaning up...")
@@ -471,7 +502,7 @@ class SigningServer:
         for f in os.listdir(self.unsigned_dir):
             unsigned = os.path.join(self.unsigned_dir, f)
             # Clean up old files
-            if os.path.getmtime(unsigned) < now-self.max_file_age:
+            if os.path.getmtime(unsigned) < now - self.max_file_age:
                 log.info("Deleting %s (too old)", unsigned)
                 safe_unlink(unsigned)
                 continue
@@ -587,15 +618,15 @@ class SigningServer:
                 log.debug("Looking for %s", fn)
             checksum = sha1sum(fn)
             headers = [
-                    ('X-SHA1-Digest', checksum),
-                    ('Content-Length', os.path.getsize(fn)),
-                        ]
+                ('X-SHA1-Digest', checksum),
+                ('Content-Length', os.path.getsize(fn)),
+            ]
             fp = open(fn, 'rb')
             os.utime(fn, None)
             log.debug("%s is OK", fn)
             start_response("200 OK", headers)
             while True:
-                data = fp.read(1024**2)
+                data = fp.read(1024 ** 2)
                 if not data:
                     break
                 yield data
@@ -607,7 +638,7 @@ class SigningServer:
             if (filehash, format_) in self.pending:
                 log.info("File is pending, come back soon!")
                 log.debug("Pending: %s", self.pending)
-                headers.append( ('X-Pending', 'True') )
+                headers.append(('X-Pending', 'True'))
 
             # Maybe we have the file, but not for this format
             # If so, queue it up and return a pending response
@@ -617,14 +648,15 @@ class SigningServer:
                 # Validate the file
                 myhash = sha1sum(fn)
                 if myhash != filehash:
-                    log.warning("%s is corrupt; deleting (%s != %s)", fn, filehash, myhash)
+                    log.warning("%s is corrupt; deleting (%s != %s)",
+                                fn, filehash, myhash)
                     safe_unlink(fn)
                 else:
                     filename = self.get_filename(filehash)
                     if filename:
                         self.submit_file(filehash, filename, format_)
                         log.info("File is pending, come back soon!")
-                        headers.append( ('X-Pending', 'True') )
+                        headers.append(('X-Pending', 'True'))
                     else:
                         log.debug("I don't remember the filename; re-submit please!")
             else:
@@ -638,7 +670,8 @@ class SigningServer:
         assert format_ in self.formats
         filehash = values['sha1']
         filename = values['filename']
-        log.info("Request to %s sign %s (%s) from %s", format_, filename, filehash, environ['REMOTE_ADDR'])
+        log.info("Request to %s sign %s (%s) from %s", format_,
+                 filename, filehash, environ['REMOTE_ADDR'])
         fn = os.path.join(self.unsigned_dir, filehash)
         headers = [('X-Nonce', next_nonce)]
         if os.path.exists(fn):
@@ -646,7 +679,8 @@ class SigningServer:
             mydigest = sha1sum(fn)
 
             if mydigest != filehash:
-                log.warning("%s is corrupt; deleting (%s != %s)", fn, mydigest, filehash)
+                log.warning("%s is corrupt; deleting (%s != %s)",
+                            fn, mydigest, filehash)
                 safe_unlink(fn)
 
             elif os.path.exists(os.path.join(self.signed_dir, filehash)):
@@ -664,7 +698,8 @@ class SigningServer:
 
         # Validate filename
         if not any(exp.match(filename) for exp in self.allowed_filenames):
-            log.info("%s forbidden due to invalid filename: %s", environ['REMOTE_ADDR'], filename)
+            log.info("%s forbidden due to invalid filename: %s",
+                     environ['REMOTE_ADDR'], filename)
             start_response("403 Unacceptable filename", headers)
             return ""
 
@@ -675,7 +710,7 @@ class SigningServer:
             h = hashlib.new('sha1')
             s = 0
             while True:
-                data = values['filedata'].file.read(1024**2)
+                data = values['filedata'].file.read(1024 ** 2)
                 if not data:
                     break
                 s += len(data)
@@ -714,9 +749,9 @@ class SigningServer:
             self.delete_token(values['expire'])
         else:
             token = self.get_token(
-                    values['slave_ip'],
-                    values['duration'],
-                    )
+                values['slave_ip'],
+                values['duration'],
+            )
         start_response("200 OK", [])
         return token
 
@@ -737,7 +772,8 @@ class SigningServer:
             if magic == 'token':
                 remote_addr = environ['REMOTE_ADDR']
                 if not any(remote_addr in net for net in self.new_token_allowed_ips):
-                    log.info("%(REMOTE_ADDR)s forbidden based on IP address" % environ)
+                    log.info("%(REMOTE_ADDR)s forbidden based on IP address" %
+                             environ)
                     start_response("403 Forbidden", [])
                     return ""
                 try:
@@ -767,19 +803,21 @@ class SigningServer:
                     start_response("400 Missing nonce", [])
                     return ""
 
-                next_nonce = self.verify_nonce(values['token'], values['nonce'])
+                next_nonce = self.verify_nonce(
+                    values['token'], values['nonce'])
                 if not next_nonce:
                     self.delete_token(values['token'])
                     start_response("400 Invalid nonce", [])
                     return ""
 
-                headers.append( ('X-Nonce', next_nonce) )
+                headers.append(('X-Nonce', next_nonce))
 
                 return self.handle_upload(environ, start_response, values, rest, next_nonce)
         except:
             log.exception("ISE")
             start_response("500 Internal Server Error", headers)
             return ""
+
 
 def create_server(app, listener, config):
     # Simple wrapper so pywsgi uses logging to log instead of writing to stderr
@@ -788,11 +826,10 @@ def create_server(app, listener, config):
             log.info(msg)
 
     server = pywsgi.WSGIServer(
-            listener,
-            app,
-            certfile=config.get('security', 'public_ssl_cert'),
-            keyfile=config.get('security', 'private_ssl_cert'),
-            log=logger(),
-            )
+        listener,
+        app,
+        certfile=config.get('security', 'public_ssl_cert'),
+        keyfile=config.get('security', 'private_ssl_cert'),
+        log=logger(),
+    )
     return server
-

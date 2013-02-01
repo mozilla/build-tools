@@ -4,11 +4,12 @@
 # example usage:
 # python printbuildrev /path/to/appdir
 
-import ConfigParser, sys
+import ConfigParser
+import sys
 
 app_path = sys.argv[1]
 
-#XXX remove once bug 698843 is closed
+# XXX remove once bug 698843 is closed
 if app_path == "thunderbird-test":
     app_path = "thunderbird"
 

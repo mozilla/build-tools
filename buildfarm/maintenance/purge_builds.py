@@ -19,16 +19,19 @@ example:
     python %prog -s 6 /builds/moz2_slave /scratchbox/users/cltbld/home/cltbld/build
 """
 
-import os, shutil, sys
+import os
+import shutil
+import sys
 from fnmatch import fnmatch
 
-DEFAULT_BASE_DIRS=["..", "/scratchbox/users/cltbld/home/cltbld/build"]
+DEFAULT_BASE_DIRS = ["..", "/scratchbox/users/cltbld/home/cltbld/build"]
 
-clobber_suffix='.deleteme'
+clobber_suffix = '.deleteme'
 
 if sys.platform == 'win32':
     # os.statvfs doesn't work on Windows
     import win32file
+
     def freespace(p):
         secsPerClus, bytesPerSec, nFreeClus, totClus = win32file.GetDiskFreeSpace(p)
         return secsPerClus * bytesPerSec * nFreeClus
@@ -38,9 +41,11 @@ else:
         r = os.statvfs(p)
         return r.f_frsize * r.f_bavail
 
+
 def mtime_sort(p1, p2):
     "sorting function for sorting a list of paths by mtime"
     return cmp(os.path.getmtime(p1), os.path.getmtime(p2))
+
 
 def rmdirRecursive(dir):
     """This is a replacement for shutil.rmtree that works better under
@@ -79,6 +84,7 @@ def rmdirRecursive(dir):
             os.remove(full_name)
     os.rmdir(dir)
 
+
 def purge(base_dirs, gigs, ignore, max_age, dry_run=False):
     """Delete directories under `base_dirs` until `gigs` GB are free.
 
@@ -97,7 +103,7 @@ def purge(base_dirs, gigs, ignore, max_age, dry_run=False):
                 if not os.path.isdir(p):
                     continue
                 mtime = os.path.getmtime(p)
-                dirs.append( (mtime, p) )
+                dirs.append((mtime, p))
 
     dirs.sort()
 
@@ -113,9 +119,9 @@ def purge(base_dirs, gigs, ignore, max_age, dry_run=False):
         print "Deleting", d
         if not dry_run:
             try:
-                clobber_path=d+clobber_suffix
+                clobber_path = d + clobber_suffix
                 if os.path.exists(clobber_path):
-                   rmdirRecursive(clobber_path)
+                    rmdirRecursive(clobber_path)
                 # Prevent repeated moving.
                 if d.endswith(clobber_suffix):
                     rmdirRecursive(d)
@@ -124,6 +130,7 @@ def purge(base_dirs, gigs, ignore, max_age, dry_run=False):
                     rmdirRecursive(clobber_path)
             except:
                 print >>sys.stderr, "Couldn't purge %s properly. Skipping." % d
+
 
 def purge_hg_shares(share_dir, gigs, max_age, dry_run=False):
     """Deletes old hg directories under share_dir"""
@@ -165,21 +172,21 @@ if __name__ == '__main__':
     parser.set_defaults(size=5, skip=[cwd], dry_run=False, max_age=max_age)
 
     parser.add_option('-s', '--size',
-            help='free space required (in GB, default 5)', dest='size',
-            type='float')
+                      help='free space required (in GB, default 5)', dest='size',
+                      type='float')
 
     parser.add_option('-n', '--not', help='do not delete this directory',
-            action='append', dest='skip')
+                      action='append', dest='skip')
 
     parser.add_option('', '--dry-run', action='store_true',
-            dest='dry_run',
-            help='''do not delete anything, just print out what would be
+                      dest='dry_run',
+                      help='''do not delete anything, just print out what would be
 deleted.  note that since no directories are deleted, if the amount of free
 disk space in base_dir(s) is less than the required size, then ALL directories
 will be listed in the order in which they would be deleted.''')
 
     parser.add_option('', '--max-age', dest='max_age', type='int',
-            help='''maximum age (in days) for directories.  If any directory
+                      help='''maximum age (in days) for directories.  If any directory
             has an mtime older than this, it will be deleted, regardless of how
             much free space is required.  Set to 0 to disable.''')
 
@@ -195,7 +202,7 @@ will be listed in the order in which they would be deleted.''')
 
     # Figure out the mtime before which we'll start deleting old directories
     if options.max_age:
-        cutoff_time = time.time() - 24*3600*options.max_age
+        cutoff_time = time.time() - 24 * 3600 * options.max_age
     else:
         cutoff_time = None
 
@@ -204,15 +211,17 @@ will be listed in the order in which they would be deleted.''')
     # Try to cleanup shared hg repos. We run here even if we've freed enough
     # space so we can be sure and delete repositories older than max_age
     if 'HG_SHARE_BASE_DIR' in os.environ:
-        purge_hg_shares(os.environ['HG_SHARE_BASE_DIR'], options.size, cutoff_time, options.dry_run)
+        purge_hg_shares(os.environ['HG_SHARE_BASE_DIR'],
+                        options.size, cutoff_time, options.dry_run)
 
-    after = freespace(base_dirs[0])/(1024*1024*1024.0)
+    after = freespace(base_dirs[0]) / (1024 * 1024 * 1024.0)
 
-    # Try to cleanup the current dir if we still need space and it will actually help.
+    # Try to cleanup the current dir if we still need space and it will
+    # actually help.
     if after < options.size:
         # We skip the tools dir here because we've usually just cloned it.
         purge(['.'], options.size, ['tools'], cutoff_time, options.dry_run)
-        after = freespace(base_dirs[0])/(1024*1024*1024.0)
+        after = freespace(base_dirs[0]) / (1024 * 1024 * 1024.0)
 
     if after < options.size:
         print "Error: unable to free %1.2f GB of space. " % options.size + \

@@ -4,7 +4,8 @@ import requests
 import os
 
 CA_BUNDLE = os.path.join(os.path.dirname(__file__),
-                        '../../../../misc/certs/ca-bundle.crt')
+                         '../../../../misc/certs/ca-bundle.crt')
+
 
 def is_csrf_token_expired(token):
     from datetime import datetime
@@ -12,6 +13,7 @@ def is_csrf_token_expired(token):
     if expiry <= datetime.now().strftime('%Y%m%d%H%M%S'):
         return True
     return False
+
 
 class API(object):
     """A class that knows how to make requests to a Balrog server, including
@@ -57,7 +59,7 @@ class API(object):
         self.api_root = api_root.rstrip('/')
         self.verify = ca_certs
         assert isinstance(auth, tuple) or auth == None, \
-               "auth should be set to tuple or None"
+            "auth should be set to tuple or None"
         self.auth = auth
         self.timeout = timeout
         self.config = dict(danger_mode=raise_exceptions)
@@ -66,7 +68,8 @@ class API(object):
 
     def request(self, data=None, method='GET', url_template_vars={}):
         url = self.api_root + self.url_template % url_template_vars
-        prerequest_url = self.api_root + self.prerequest_url_template % url_template_vars
+        prerequest_url = self.api_root + \
+            self.prerequest_url_template % url_template_vars
         # If we'll be modifying things, do a GET first to get a CSRF token
         # and possibly a data_version.
         if method != 'GET' and method != 'HEAD':
@@ -78,7 +81,8 @@ class API(object):
                 # We may already have a non-expired CSRF token, but it's
                 # faster/easier just to set it again even if we do, since
                 # we've already made the request.
-                data['csrf_token'] = self.csrf_token = res.headers['X-CSRF-Token']
+                data['csrf_token'] = self.csrf_token = res.headers[
+                    'X-CSRF-Token']
             except requests.HTTPError, e:
                 # However, if the resource doesn't exist yet we may as well
                 # not bother doing another request solely for a token unless
@@ -86,8 +90,10 @@ class API(object):
                 if e.response.status_code != 404:
                     raise
                 if not self.csrf_token or is_csrf_token_expired(self.csrf_token):
-                    res = self.do_request(self.api_root + '/csrf_token', None, 'HEAD', {})
-                    data['csrf_token'] = self.csrf_token = res.headers['X-CSRF-Token']
+                    res = self.do_request(
+                        self.api_root + '/csrf_token', None, 'HEAD', {})
+                    data['csrf_token'] = self.csrf_token = res.headers[
+                        'X-CSRF-Token']
 
             logging.debug('Got CSRF Token: %s' % self.csrf_token)
         return self.do_request(url, data, method, url_template_vars)

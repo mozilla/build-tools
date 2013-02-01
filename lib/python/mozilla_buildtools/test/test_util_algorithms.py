@@ -5,7 +5,7 @@ from util.algorithms import ChunkingError, getChunk
 
 class TestGetChunk(unittest.TestCase):
     def setUp(self):
-        self.data = [1,2,3,4,5,6,7,8,9,10]
+        self.data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
     def testOneChunk(self):
         self.assertEquals(getChunk(self.data, 1, 1), self.data)

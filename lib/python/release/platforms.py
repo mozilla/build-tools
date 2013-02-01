@@ -50,31 +50,40 @@ ftp_bouncer_platform_map = {
     'win64': 'win64',
 }
 
+
 def buildbot2bouncer(platform):
     return bouncer_platform_map.get(platform, platform)
+
 
 def buildbot2ftp(platform):
     return ftp_platform_map.get(platform, platform)
 
+
 def buildbot2shippedlocales(platform):
     return sl_platform_map.get(platform, platform)
+
 
 def shippedlocales2buildbot(platform):
     matches = []
     try:
-        [matches.append(k) for k, v in sl_platform_map.iteritems() if v == platform][0]
+        [matches.append(
+            k) for k, v in sl_platform_map.iteritems() if v == platform][0]
         return matches
     except IndexError:
         return [platform]
 
+
 def buildbot2updatePlatforms(platform):
     return update_platform_map.get(platform, [platform])
+
 
 def ftp2updatePlatforms(platform):
     return ftp_update_platform_map.get(platform, platform)
 
+
 def ftp2bouncer(platform):
     return ftp_bouncer_platform_map.get(platform, platform)
+
 
 def getPlatformLocales(shipped_locales, platforms):
     platform_locales = {}
@@ -83,7 +92,7 @@ def getPlatformLocales(shipped_locales, platforms):
     for line in shipped_locales.splitlines():
         entry = line.strip().split()
         locale = entry[0]
-        if len(entry)>1:
+        if len(entry) > 1:
             for platform in entry[1:]:
                 for bb_platform in shippedlocales2buildbot(platform):
                     if bb_platform in platforms:
@@ -93,6 +102,7 @@ def getPlatformLocales(shipped_locales, platforms):
                 platform_locales[platform].append(locale)
     return platform_locales
 
+
 def getLocaleListFromShippedLocales(shipped_locales):
     """ return the list of locales in shipped_locales, without platform specific info """
     shipped_locales_list = []
@@ -100,6 +110,7 @@ def getLocaleListFromShippedLocales(shipped_locales):
         entry = line.strip().split()
         shipped_locales_list.append(entry[0])
     return shipped_locales_list
+
 
 def getPlatformLocalesFromJson(json_file, platforms):
     platform_locales = {}
@@ -115,6 +126,7 @@ def getPlatformLocalesFromJson(json_file, platforms):
             platform_locales[platform].append(locale)
     return platform_locales
 
+
 def getAllLocales(shipped_locales):
     locales = []
     f = open(shipped_locales)
@@ -126,8 +138,10 @@ def getAllLocales(shipped_locales):
     f.close()
     return locales
 
+
 def getPlatforms():
     return bouncer_platform_map.keys()
+
 
 def getSupportedPlatforms():
     return ('linux', 'linux64', 'win32', 'win64', 'macosx', 'macosx64')

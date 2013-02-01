@@ -14,20 +14,24 @@ SEVENZIP = os.environ.get('SEVENZIP', '7z')
 MAR = os.environ.get('MAR', 'mar')
 TAR = os.environ.get('TAR', 'tar')
 
+
 def _noumask():
     # Utility function to set a umask of 000
     os.umask(0)
+
 
 def unpackexe(exefile, destdir):
     """Unpack the given exefile into destdir, using 7z"""
     nullfd = open(os.devnull, "w")
     exefile = cygpath(os.path.abspath(exefile))
     try:
-        check_call([SEVENZIP, 'x', exefile], cwd=destdir, stdout=nullfd, preexec_fn=_noumask)
+        check_call([SEVENZIP, 'x', exefile], cwd=destdir,
+                   stdout=nullfd, preexec_fn=_noumask)
     except:
         log.exception("Error unpacking exe %s to %s", exefile, destdir)
         raise
     nullfd.close()
+
 
 def packexe(exefile, srcdir):
     """Pack the files in srcdir into exefile using 7z.
@@ -40,18 +44,18 @@ def packexe(exefile, srcdir):
     # We don't want to risk appending to an existing file
     if os.path.exists(appbundle):
         raise OSError("%s already exists" % appbundle)
-    
+
     files = os.listdir(srcdir)
 
     SEVENZIP_ARGS = ['-r', '-t7z', '-mx', '-m0=BCJ2', '-m1=LZMA:d27',
-            '-m2=LZMA:d19:mf=bt2', '-m3=LZMA:d19:mf=bt2', '-mb0:1', '-mb0s1:2',
-            '-mb0s2:3', '-m1fb=128', '-m1lc=4']
+                     '-m2=LZMA:d19:mf=bt2', '-m3=LZMA:d19:mf=bt2', '-mb0:1', '-mb0s1:2',
+                     '-mb0s2:3', '-m1fb=128', '-m1lc=4']
 
     # First, compress with 7z
     stdout = tempfile.TemporaryFile()
     try:
         check_call([SEVENZIP, 'a'] + SEVENZIP_ARGS + [appbundle] + files,
-                cwd=srcdir, stdout=stdout, preexec_fn=_noumask)
+                   cwd=srcdir, stdout=stdout, preexec_fn=_noumask)
     except:
         stdout.seek(0)
         data = stdout.read()
@@ -63,10 +67,10 @@ def packexe(exefile, srcdir):
     # Then prepend our stubs onto the compressed 7z data
     o = open(exefile, "wb")
     parts = [
-            'checkouts/stubs/7z/7zSD.sfx.compressed',
-            'checkouts/stubs/tagfile/app.tag',
-            appbundle
-            ]
+        'checkouts/stubs/7z/7zSD.sfx.compressed',
+        'checkouts/stubs/tagfile/app.tag',
+        appbundle
+    ]
     for part in parts:
         i = open(part)
         while True:
@@ -78,6 +82,7 @@ def packexe(exefile, srcdir):
     o.close()
     os.unlink(appbundle)
 
+
 def bunzip2(filename):
     """Uncompress `filename` in place"""
     log.debug("Uncompressing %s", filename)
@@ -86,7 +91,7 @@ def bunzip2(filename):
     b = bz2.BZ2File(tmpfile)
     f = open(filename, "wb")
     while True:
-        block = b.read(512*1024)
+        block = b.read(512 * 1024)
         if not block:
             break
         f.write(block)
@@ -96,6 +101,7 @@ def bunzip2(filename):
     shutil.copymode(tmpfile, filename)
     os.unlink(tmpfile)
 
+
 def bzip2(filename):
     """Compress `filename` in place"""
     log.debug("Compressing %s", filename)
@@ -104,7 +110,7 @@ def bzip2(filename):
     b = bz2.BZ2File(filename, "w")
     f = open(tmpfile, 'rb')
     while True:
-        block = f.read(512*1024)
+        block = f.read(512 * 1024)
         if not block:
             break
         b.write(block)
@@ -114,28 +120,33 @@ def bzip2(filename):
     shutil.copymode(tmpfile, filename)
     os.unlink(tmpfile)
 
+
 def unpackmar(marfile, destdir):
     """Unpack marfile into destdir"""
     marfile = cygpath(os.path.abspath(marfile))
     nullfd = open(os.devnull, "w")
     try:
-        check_call([MAR, '-x', marfile], cwd=destdir, stdout=nullfd, preexec_fn=_noumask)
+        check_call([MAR, '-x', marfile], cwd=destdir,
+                   stdout=nullfd, preexec_fn=_noumask)
     except:
         log.exception("Error unpacking mar file %s to %s", marfile, destdir)
         raise
     nullfd.close()
 
+
 def packmar(marfile, srcdir):
     """Create marfile from the contents of srcdir"""
     nullfd = open(os.devnull, "w")
-    files = [f[len(srcdir)+1:] for f in findfiles(srcdir)]
+    files = [f[len(srcdir) + 1:] for f in findfiles(srcdir)]
     marfile = cygpath(os.path.abspath(marfile))
     try:
-        check_call([MAR, '-c', marfile] + files, cwd=srcdir, preexec_fn=_noumask)
+        check_call(
+            [MAR, '-c', marfile] + files, cwd=srcdir, preexec_fn=_noumask)
     except:
         log.exception("Error packing mar file %s from %s", marfile, srcdir)
         raise
     nullfd.close()
+
 
 def unpacktar(tarfile, destdir):
     """ Unpack given tarball into the specified dir """
@@ -143,25 +154,29 @@ def unpacktar(tarfile, destdir):
     tarfile = cygpath(os.path.abspath(tarfile))
     log.debug("unpack tar %s into %s", tarfile, destdir)
     try:
-        check_call([TAR, '-xzf', tarfile], cwd=destdir, stdout=nullfd, preexec_fn=_noumask)
+        check_call([TAR, '-xzf', tarfile], cwd=destdir,
+                   stdout=nullfd, preexec_fn=_noumask)
     except:
         log.exception("Error unpacking tar file %s to %s", tarfile, destdir)
         raise
     nullfd.close()
+
 
 def tar_dir(tarfile, srcdir):
     """ Pack a tar file using all the files in the given srcdir """
     files = os.listdir(srcdir)
     packtar(tarfile, files, srcdir)
 
+
 def packtar(tarfile, files, srcdir):
     """ Pack the given files into a tar, setting cwd = srcdir"""
     nullfd = open(os.devnull, "w")
     tarfile = cygpath(os.path.abspath(tarfile))
-    log.debug("pack tar %s from folder  %s with files " , tarfile, srcdir)
-    log.debug( files)
+    log.debug("pack tar %s from folder  %s with files ", tarfile, srcdir)
+    log.debug(files)
     try:
-        check_call([TAR, '-czf', tarfile] + files, cwd=srcdir, stdout=nullfd, preexec_fn=_noumask)
+        check_call([TAR, '-czf', tarfile] + files, cwd=srcdir,
+                   stdout=nullfd, preexec_fn=_noumask)
     except:
         log.exception("Error packing tar file %s to %s", tarfile, srcdir)
         raise
@@ -179,6 +194,7 @@ def unpackfile(filename, destdir):
     else:
         raise ValueError("Unknown file type: %s" % filename)
 
+
 def packfile(filename, srcdir):
     """Package up srcdir into filename, archived with 7z for exes or mar for
     mar files"""
@@ -190,4 +206,3 @@ def packfile(filename, srcdir):
         return tar_dir(filename, srcdir)
     else:
         raise ValueError("Unknown file type: %s" % filename)
-

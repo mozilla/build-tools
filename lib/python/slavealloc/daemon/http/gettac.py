@@ -3,20 +3,22 @@ from twisted.python import log
 from twisted.web import resource, server, error
 from slavealloc import exceptions
 
+
 class TacSlaveResource(resource.Resource):
     "dynamically created resource for a particular slave's buildbot.tac"
     isLeaf = True
 
     def __init__(self, slave_name):
         resource.Resource.__init__(self)
-        # lowercase the slave name, since some windows systems use the uppercase
+        # lowercase the slave name, since some windows systems use the
+        # uppercase
         self.slave_name = slave_name.lower()
 
     def render_GET(self, request):
         allocator = request.site.allocator
         d = defer.succeed(None)
 
-        d.addCallback(lambda _ : allocator.getBuildbotTac(self.slave_name))
+        d.addCallback(lambda _: allocator.getBuildbotTac(self.slave_name))
 
         def handle_success(buildbot_tac):
             request.setHeader('content-type', 'text/plain')
@@ -55,6 +57,7 @@ class TacResource(resource.Resource):
             return TacSlaveResource(name)
         else:
             return error.NoResource()
+
 
 def makeRootResource():
     return TacResource()

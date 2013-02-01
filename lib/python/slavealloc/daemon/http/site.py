@@ -2,10 +2,12 @@ import textwrap
 from twisted.web import resource, server, util
 from slavealloc.daemon.http import ui, gettac, api
 
+
 def redirectTo(path, request):
     if path[0] == '/':
         path = request.site.base_url + path[1:]
     return util.redirectTo(path, request)
+
 
 class RootResource(resource.Resource):
     "root (/, or base_url) resource for the HTTP service"
@@ -25,6 +27,7 @@ class RootResource(resource.Resource):
 
         Use the URI format /gettac/SLAVENAME to request a TAC file.
         """).strip()
+
 
 class Site(server.Site):
     def __init__(self, allocator, base_url='/', run_allocator=False, run_ui=False):

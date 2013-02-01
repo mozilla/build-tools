@@ -2,11 +2,13 @@ from __future__ import with_statement
 # We don't support python2.5 for the server
 from nose import SkipTest
 import sys
-if sys.version_info < (2,6,0):
+if sys.version_info < (2, 6, 0):
     raise SkipTest
 
 
-import time, shutil, tempfile
+import time
+import shutil
+import tempfile
 from unittest import TestCase
 from StringIO import StringIO
 from ConfigParser import RawConfigParser
@@ -15,16 +17,18 @@ import webob
 
 import signing.server as ss
 
+
 class TestTokens(TestCase):
     def testTokenData(self):
         now = int(time.time())
-        token = ss.make_token_data("1.2.3.4", now, now+300)
+        token = ss.make_token_data("1.2.3.4", now, now + 300)
 
         parts = token.split(":")
-        self.assertEquals(parts[:-1], ["1.2.3.4", str(now), str(now+300)])
+        self.assertEquals(parts[:-1], ["1.2.3.4", str(now), str(now + 300)])
 
         unpacked = ss.unpack_token_data(token)
-        self.assertEquals(unpacked, dict(slave_ip="1.2.3.4", valid_from=now, valid_to=now+300))
+        self.assertEquals(unpacked, dict(
+            slave_ip="1.2.3.4", valid_from=now, valid_to=now + 300))
 
 config_data = """
 [server]
@@ -52,6 +56,7 @@ formats = gpg,signcode,mar,dmg
 signscript = signscript.py
 concurrency = 4
 """
+
 
 class TestSigningServer(TestCase):
     def setUp(self):
@@ -84,7 +89,8 @@ class TestSigningServer(TestCase):
             self.assertEquals(True, self.server.verify_token(token, "1.2.3.4"))
 
             t.return_value = 301
-            self.assertEquals(False, self.server.verify_token(token, "1.2.3.4"))
+            self.assertEquals(
+                False, self.server.verify_token(token, "1.2.3.4"))
 
     def testBadSlaveIp(self):
         token = self.server.get_token("1.2.3.4", 300)

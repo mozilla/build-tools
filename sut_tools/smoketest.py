@@ -3,28 +3,32 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
-import sys, os
+import sys
+import os
 from mozdevice import devicemanagerSUT as devicemanager
-import subprocess, re
+import subprocess
+import re
 from sut_lib import connect, log, getSUTLogger
 from installApp import installOneApp
 from verify import verifyDevice
 import time
+
 
 def runTests(device, proc_name, number):
     numfailed = -1
     log.info("Starting to run tests")
     httpport = 8000 + int(number)
 
-    # TODO: fix the host/port information so we don't have conflicts in parallel runs
-    cmd = ["python", 
-           os.path.join(os.path.dirname( __file__ ), "tests/mochitest/runtestsremote.py"), 
-           "--app=%s" % proc_name, 
-           "--deviceIP=%s" % device, 
-           "--xre-path=%s" % os.path.join(os.path.dirname( __file__ ), "xre"), 
-           "--utility-path=%s" % os.path.join(os.path.dirname( __file__ ), "bin"), 
-#           "--test-path=dom/tests/mochitest/dom-level0", 
-           "--test-path=dom/tests/mochitest", 
+    # TODO: fix the host/port information so we don't have conflicts in
+    # parallel runs
+    cmd = ["python",
+           os.path.join(os.path.dirname(__file__), "tests/mochitest/runtestsremote.py"),
+           "--app=%s" % proc_name,
+           "--deviceIP=%s" % device,
+           "--xre-path=%s" % os.path.join(os.path.dirname(__file__), "xre"),
+           "--utility-path=%s" % os.path.join(os.path.dirname(__file__), "bin"),
+           #           "--test-path=dom/tests/mochitest/dom-level0",
+           "--test-path=dom/tests/mochitest",
            "--http-port=%s" % httpport]
     log.info("Going to run test: %s" % subprocess.list2cmdline(cmd))
     proc = ""
@@ -49,6 +53,7 @@ def runTests(device, proc_name, number):
             return True
     return False
 
+
 def smoketest(device_name, number):
     global dm
     global appFileName, processName
@@ -61,11 +66,11 @@ def smoketest(device_name, number):
     # This does all the steps of verify.py including the cleanup.
     if verifyDevice(device_name, checksut=False, doCheckStalled=False, watcherINI=True) == False:
         log.error("failed to run verify on %s" % (device_name))
-        return 1 # Not ok to proceed
+        return 1  # Not ok to proceed
     log.info("Successfully verified the device")
 
     if dm._sock:
-       dm._sock.close()
+        dm._sock.close()
     time.sleep(30)
     dm = devicemanager.DeviceManagerSUT(device_name, 20701)
     print "in smoketest, going to call installOneApp with dm: %s, %s" % (dm, dm._sock)
@@ -82,11 +87,11 @@ def smoketest(device_name, number):
 
 if __name__ == '__main__':
     global appFileName, processName
-    appFileName = os.path.join(os.path.dirname( __file__ ), "fennec-18.0a1.multi.android-arm.apk")
+    appFileName = os.path.join(os.path.dirname(__file__), "fennec-18.0a1.multi.android-arm.apk")
     processName = "org.mozilla.fennec"
 
     device_name = os.getenv('SUT_NAME')
-    if (len(sys.argv) <> 2):
+    if (len(sys.argv) != 2):
         if device_name in (None, ''):
             print "usage: smoketest.py <device name>"
             print "   Must have $SUT_NAME set in environ to omit device name"
@@ -95,7 +100,7 @@ if __name__ == '__main__':
             print "INFO: Using device '%s' found in env variable" % device_name
     else:
         device_name = sys.argv[1]
-    
+
     num = re.compile('.*([0-9]+)$')
     match = num.match(device_name)
     deviceNum = match.group(1)

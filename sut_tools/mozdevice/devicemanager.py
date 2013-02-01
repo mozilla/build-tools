@@ -8,32 +8,37 @@ import os
 import re
 import StringIO
 
+
 class FileError(Exception):
     " Signifies an error which occurs while doing a file operation."
 
-    def __init__(self, msg = ''):
+    def __init__(self, msg=''):
         self.msg = msg
 
     def __str__(self):
         return self.msg
+
 
 class DMError(Exception):
     "generic devicemanager exception."
 
-    def __init__(self, msg= ''):
+    def __init__(self, msg=''):
         self.msg = msg
 
     def __str__(self):
         return self.msg
 
+
 def abstractmethod(method):
     line = method.func_code.co_firstlineno
     filename = method.func_code.co_filename
+
     def not_implemented(*args, **kwargs):
         raise NotImplementedError('Abstract method %s at File "%s", line %s '
-                                   'should be implemented by a concrete class' %
-                                   (repr(method), filename, line))
+                                  'should be implemented by a concrete class' %
+                                 (repr(method), filename, line))
     return not_implemented
+
 
 class DeviceManager:
 
@@ -66,7 +71,8 @@ class DeviceManager:
         failure: DMError will be raised
         """
         buf = StringIO.StringIO()
-        retval = self.shell(cmd, buf, env=env, cwd=cwd, timeout=timeout, root=root)
+        retval = self.shell(
+            cmd, buf, env=env, cwd=cwd, timeout=timeout, root=root)
         output = str(buf.getvalue()[0:-1]).rstrip()
         buf.close()
         if retval is None:
@@ -200,12 +206,13 @@ class DeviceManager:
 
         pid = None
 
-        #filter out extra spaces
+        # filter out extra spaces
         parts = filter(lambda x: x != '', appname.split(' '))
         appname = ' '.join(parts)
 
-        #filter out the quoted env string if it exists
-        #ex: '"name=value;name2=value2;etc=..." process args' -> 'process args'
+        # filter out the quoted env string if it exists
+        # ex: '"name=value;name2=value2;etc=..." process args' -> 'process
+        # args'
         parts = appname.split('"')
         if (len(parts) > 2):
             appname = ' '.join(parts[2:]).strip()
@@ -224,7 +231,6 @@ class DeviceManager:
                 pid = proc[0]
                 break
         return pid
-
 
     @abstractmethod
     def killProcess(self, appname, forceKill=False):
@@ -258,7 +264,7 @@ class DeviceManager:
         """
 
     @abstractmethod
-    def getFile(self, remoteFile, localFile = ''):
+    def getFile(self, remoteFile, localFile=''):
         """
         Copy file from device (remoteFile) to host (localFile)
 
@@ -407,7 +413,7 @@ class DeviceManager:
         Sends a specific process ID a signal code and action.
         For Example: SIGINT and SIGDFL to process x
         """
-        #currently not implemented in device agent - todo
+        # currently not implemented in device agent - todo
         pass
 
     def getReturnCode(self, processID):
@@ -457,7 +463,7 @@ class DeviceManager:
                 if (parts[1] == ""):
                     remoteRoot = remoteDir
                 remoteName = remoteRoot + '/' + f
-                if (self.validateFile(remoteName, os.path.join(root, f)) <> True):
+                if (self.validateFile(remoteName, os.path.join(root, f)) != True):
                         return False
         return True
 
@@ -550,9 +556,11 @@ class DeviceManager:
         """
         Clears the logcat file making it easier to view specific events
         """
-        #TODO: spawn this off in a separate thread/process so we can collect all the logcat information
+        # TODO: spawn this off in a separate thread/process so we can collect
+        # all the logcat information
 
-        # Right now this is just clearing the logcat so we can only see what happens after this call.
+        # Right now this is just clearing the logcat so we can only see what
+        # happens after this call.
         buf = StringIO.StringIO()
         self.shell(['/system/bin/logcat', '-c'], buf, root=True)
 
@@ -561,7 +569,7 @@ class DeviceManager:
         Returns the contents of the logcat file as a string
 
         returns:
-          success: contents of logcat, string 
+          success: contents of logcat, string
           failure: None
         """
         buf = StringIO.StringIO()
@@ -589,7 +597,7 @@ class DeviceManager:
             arg.replace('&', '\&')
 
             needsQuoting = False
-            for char in [ ' ', '(', ')', '"', '&' ]:
+            for char in [' ', '(', ')', '"', '&']:
                 if arg.find(char) >= 0:
                     needsQuoting = True
                     break
@@ -623,9 +631,11 @@ class NetworkTools:
         try:
             ip = socket.gethostbyname(socket.gethostname())
         except socket.gaierror:
-            ip = socket.gethostbyname(socket.gethostname() + ".local") # for Mac OS X
+            ip = socket.gethostbyname(
+                socket.gethostname() + ".local")  # for Mac OS X
         if ip.startswith("127.") and os.name != "nt":
-            interfaces = ["eth0","eth1","eth2","wlan0","wlan1","wifi0","ath0","ath1","ppp0"]
+            interfaces = ["eth0", "eth1", "eth2", "wlan0",
+                          "wlan1", "wifi0", "ath0", "ath1", "ppp0"]
             for ifname in interfaces:
                 try:
                     ip = self.getInterfaceIp(ifname)
@@ -642,7 +652,8 @@ class NetworkTools:
             connected = False
             if isinstance(seed, basestring):
                 seed = int(seed)
-            maxportnum = seed + 5000 # We will try at most 5000 ports to find an open one
+            maxportnum = seed + \
+                5000  # We will try at most 5000 ports to find an open one
             while not connected:
                 try:
                     s.bind((ip, seed))
@@ -659,6 +670,7 @@ class NetworkTools:
 
         return seed
 
+
 def _pop_last_line(file_obj):
     """
     Utility function to get the last line from a file (shared between ADB and
@@ -669,20 +681,20 @@ def _pop_last_line(file_obj):
     file_obj.seek(0, 2)
     length = file_obj.tell() + 1
     while bytes_from_end < length:
-        file_obj.seek((-1)*bytes_from_end, 2)
+        file_obj.seek((-1) * bytes_from_end, 2)
         data = file_obj.read()
 
-        if bytes_from_end == length-1 and len(data) == 0: # no data, return None
+        if bytes_from_end == length - 1 and len(data) == 0:  # no data, return None
             return None
 
-        if data[0] == '\n' or bytes_from_end == length-1:
+        if data[0] == '\n' or bytes_from_end == length - 1:
             # found the last line, which should have the return value
             if data[0] == '\n':
                 data = data[1:]
 
             # truncate off the return code line
             file_obj.truncate(length - bytes_from_end)
-            file_obj.seek(0,2)
+            file_obj.seek(0, 2)
             file_obj.write('\0')
 
             return data

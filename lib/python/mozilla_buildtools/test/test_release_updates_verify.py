@@ -101,23 +101,23 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         self.uvc.aus_server = "https://aus2.mozilla.org"
         self.uvc.to = "/firefox/4.0rc2.tar.bz2"
         self.uvc.addRelease("4.0", build_id="888",
-                        locales=("af", "de", "en-US", "ja", "zh-TW"),
-                        patch_types=("partial", "complete"),
-                        from_path="/firefox/4.0rc1.tar.bz2",
-                        ftp_server_from=ftp_server_from,
-                        ftp_server_to=ftp_server_to)
+                            locales=("af", "de", "en-US", "ja", "zh-TW"),
+                            patch_types=("partial", "complete"),
+                            from_path="/firefox/4.0rc1.tar.bz2",
+                            ftp_server_from=ftp_server_from,
+                            ftp_server_to=ftp_server_to)
         self.uvc.addRelease("4.0b12", build_id="777",
-                        locales=["af", "en-US"],
-                        from_path="/firefox/4.0b12.tar.bz2",
-                        ftp_server_from=ftp_server_from,
-                        ftp_server_to=ftp_server_to)
+                            locales=["af", "en-US"],
+                            from_path="/firefox/4.0b12.tar.bz2",
+                            ftp_server_from=ftp_server_from,
+                            ftp_server_to=ftp_server_to)
         self.uvc.addRelease("4.0b12", build_id="777",
-                        locales=("de", "ja", "zh-TW"),
-                        ftp_server_from=ftp_server_from,
-                        ftp_server_to=ftp_server_to)
+                            locales=("de", "ja", "zh-TW"),
+                            ftp_server_from=ftp_server_from,
+                            ftp_server_to=ftp_server_to)
         self.uvc.addRelease("3.7a1", build_id="666", locales=("en-US",),
-                        ftp_server_from=ftp_server_from,
-                        ftp_server_to=ftp_server_to)
+                            ftp_server_from=ftp_server_from,
+                            ftp_server_to=ftp_server_to)
 
         self.uvc.write(self.tmpfile)
         self.tmpfile.close()
@@ -192,17 +192,20 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         from_path = "/firefox/4.0rc1.tar.bz2"
         self.uvc.read(self.config)
         self.uvc.addLocaleToRelease("888", "he", from_path)
-        self.assertEquals(self.uvc.getRelease("888", from_path)["locales"], ["af", "de", "en-US", "he", "ja", "zh-TW"])
+        self.assertEquals(self.uvc.getRelease("888", from_path)["locales"],
+                          ["af", "de", "en-US", "he", "ja", "zh-TW"])
 
     def testAddLocaleToReleaseMultipleBuildIDs(self):
         from_path = None
         self.uvc.read(self.config)
         self.uvc.addLocaleToRelease("777", "he", from_path)
-        self.assertEquals(self.uvc.getRelease("777", from_path)["locales"], ["de", "he", "ja", "zh-TW"])
+        self.assertEquals(self.uvc.getRelease(
+            "777", from_path)["locales"], ["de", "he", "ja", "zh-TW"])
 
     def testAddLocaleToNonexistentRelease(self):
         self.uvc.read(self.config)
-        self.assertRaises(UpdateVerifyError, self.uvc.addLocaleToRelease, "123", "he")
+        self.assertRaises(
+            UpdateVerifyError, self.uvc.addLocaleToRelease, "123", "he")
 
     def testGetReleaseNonexistenceRelease(self):
         self.uvc.read(self.config)

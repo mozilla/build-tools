@@ -1,5 +1,10 @@
-import unittest, tempfile, os, hashlib, shutil
+import unittest
+import tempfile
+import os
+import hashlib
+import shutil
 from util.file import compare, sha1sum, copyfile
+
 
 class TestFileOps(unittest.TestCase):
     def setUp(self):
@@ -34,5 +39,5 @@ class TestFileOps(unittest.TestCase):
         copyfile(__file__, tmp)
         self.assertEquals(sha1sum(__file__), sha1sum(tmp))
         self.assertEquals(os.stat(__file__).st_mode, os.stat(tmp).st_mode)
-        self.assertEquals(int(os.stat(__file__).st_mtime), int(os.stat(tmp).st_mtime))
-
+        self.assertEquals(
+            int(os.stat(__file__).st_mtime), int(os.stat(tmp).st_mtime))

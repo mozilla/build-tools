@@ -32,5 +32,5 @@ if __name__ == '__main__':
     execfile(options.credentials_file, credentials)
     auth = (credentials['balrog_username'], credentials['balrog_password'])
     runner = NightlyRunner(options.build_properties, options.api_root, auth,
-                    options.dummy)
+                           options.dummy)
     runner.run()

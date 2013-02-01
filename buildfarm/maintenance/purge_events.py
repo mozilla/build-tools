@@ -3,7 +3,9 @@
 purge old events from the builder files.
 
 NB: The master must be shut down for this to work!"""
-import cPickle, os, shutil
+import cPickle
+import os
+import shutil
 
 for f in os.listdir("."):
     builder_file = os.path.join(f, "builder")

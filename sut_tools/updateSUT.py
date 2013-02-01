@@ -14,7 +14,7 @@ from sut_lib import connect, log
 target_version = "1.16"
 apkfilename = "sutAgentAndroid.apk"
 device_name = os.getenv('SUT_NAME')
-apkFoopyDirPattern =  "/builds/%(device_name)s"
+apkFoopyDirPattern = "/builds/%(device_name)s"
 apkFoopyDir = apkFoopyDirPattern % {'device_name': device_name}
 version_pattern = 'SUTAgentAndroid Version %s'
 
@@ -23,26 +23,31 @@ RETCODE_APK_DL_FAILED = 1
 RETCODE_REVERIFY_FAILED = 2
 RETCODE_REVERIFY_WRONG = 3
 
+
 def isVersionCorrect(dm=None, ver=None):
-    assert ver is not None or dm is not None # We allow only one to be set
+    assert ver is not None or dm is not None  # We allow only one to be set
 
     if not ver:
         ver = version(dm)
 
     return ver == (version_pattern % target_version)
 
+
 def doUpdate(dm):
     _oldDebug = dm.debug
     log.info("updateSUT.py: We're going to try to install SUTAgentAndroid Version %s" % target_version)
     try:
-         data = download_apk()
+        data = download_apk()
     except Exception, e:
-         log.error("Automation Error: updateSUT.py: We have failed to retrieve the SUT Agent. %s" % str(e))
-         return RETCODE_APK_DL_FAILED
-    dm._runCmds([{'cmd': 'push /mnt/sdcard/%s %s' % (apkfilename, str(len(data))), 'data': data}])
+        log.error("Automation Error: updateSUT.py: We have failed to retrieve the SUT Agent. %s" % str(e))
+        return RETCODE_APK_DL_FAILED
+    dm._runCmds([{'cmd': 'push /mnt/sdcard/%s %s' % (apkfilename, str(
+        len(data))), 'data': data}])
     dm.debug = 5
-    dm._runCmds([{'cmd': 'updt com.mozilla.SUTAgentAndroid /mnt/sdcard/%s' % apkfilename}])
-    # XXX devicemanager.py might need to close the sockets so we won't need these 2 steps
+    dm._runCmds([{'cmd': 'updt com.mozilla.SUTAgentAndroid /mnt/sdcard/%s' %
+                apkfilename}])
+    # XXX devicemanager.py might need to close the sockets so we won't need
+    # these 2 steps
     if dm._sock:
         dm._sock.close()
     dm._sock = None
@@ -64,18 +69,19 @@ def doUpdate(dm):
         log.error("Automation Error: updateSUT.py: %s" % e)
         return RETCODE_REVERIFY_FAILED
 
-    dm.debug = _oldDebug # Restore it
+    dm.debug = _oldDebug  # Restore it
 
     if ver == None:
         log.error("Automation Error: updateSUT.py: We should have been able to connect and determine the version.")
         return RETCODE_REVERIFY_FAILED
     elif not isVersionCorrect(ver=ver):
-        log.error("Automation Error: updateSUT.py: We should have had the %s version but instead we have %s" % \
-              (target_version, ver))
+        log.error("Automation Error: updateSUT.py: We should have had the %s version but instead we have %s" %
+                 (target_version, ver))
         return RETCODE_REVERIFY_WRONG
     else:
         log.info("updateSUT.py: We're now running %s" % ver)
         return RETCODE_SUCCESS
+
 
 def main(device):
     dm = connect(device)
@@ -86,10 +92,12 @@ def main(device):
         # The SUT Agent was already up-to-date
         return RETCODE_SUCCESS
 
+
 def version(dm):
     ver = dm._runCmds([{'cmd': 'ver'}]).split("\n")[0]
     log.info("INFO: updateSUT.py: We're running %s" % ver)
     return ver
+
 
 def download_apk():
     url = 'http://build.mozilla.org/talos/mobile/sutAgentAndroid.%s.apk' % target_version
@@ -112,7 +120,7 @@ def download_apk():
     return data
 
 if __name__ == '__main__':
-    if (len(sys.argv) <> 2):
+    if (len(sys.argv) != 2):
         if os.getenv('SUT_NAME') in (None, ''):
             print "usage: updateSUT.py [device name]"
             print "   Must have $SUT_NAME set in environ to omit device name"
@@ -125,11 +133,13 @@ if __name__ == '__main__':
 
     # Exit 5 if an error, for buildbot RETRY
     ret = 0
-    if main(device_name): ret = 5
+    if main(device_name):
+        ret = 5
     sys.stdout.flush()
     sys.exit(ret)
 else:
     if device_name in (None, ''):
         raise ImportError("To use updateSUT.py non-standalone you need SUT_NAME defined in environment")
     else:
-        log.debug("updateSUT: Using device '%s' found in env variable" % device_name)
+        log.debug("updateSUT: Using device '%s' found in env variable" %
+                  device_name)

@@ -6,7 +6,9 @@
 Increments the value in countfile, and reboots the machine once the count
 reaches or exceeds maxcount."""
 
-import os, sys, time
+import os
+import sys
+import time
 
 if sys.platform in ('darwin', 'linux2'):
     def reboot():
@@ -15,17 +17,18 @@ if sys.platform in ('darwin', 'linux2'):
         # This results in sudo not waiting forever for a password.  If sudoers
         # isn't set up properly, this will fail immediately
         os.system("sudo -S reboot < /dev/null")
-	# After starting the shutdown, we go to sleep since the system can
-	# take a few minutes to shut everything down and reboot
-	time.sleep(600)
+        # After starting the shutdown, we go to sleep since the system can
+        # take a few minutes to shut everything down and reboot
+        time.sleep(600)
 
 elif sys.platform == "win32":
     # Windows
     def reboot():
         os.system("shutdown -f -r -t 0")
-	# After starting the shutdown, we go to sleep since the system can
-	# take a few minutes to shut everything down and reboot
-	time.sleep(600)
+        # After starting the shutdown, we go to sleep since the system can
+        # take a few minutes to shut everything down and reboot
+        time.sleep(600)
+
 
 def increment_count(fname):
     try:
@@ -41,14 +44,14 @@ if __name__ == '__main__':
 
     parser = OptionParser(__doc__)
     parser.add_option("-n", "--max-count", dest="maxcount", default=10,
-            help="reboot after <maxcount> runs", type="int")
+                      help="reboot after <maxcount> runs", type="int")
     parser.add_option("-f", "--count-file", dest="countfile", default=None,
-            help="file to record count in")
+                      help="file to record count in")
     parser.add_option("-z", "--zero-count", dest="zero", default=False,
-            action="store_true", help="zero out the counter before rebooting")
+                      action="store_true", help="zero out the counter before rebooting")
 
     options, args = parser.parse_args()
-    
+
     if not options.countfile:
         parser.error("countfile is required")
 

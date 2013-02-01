@@ -1,4 +1,10 @@
-import time, os, tempfile, shlex, shutil, fnmatch, re
+import time
+import os
+import tempfile
+import shlex
+import shutil
+import fnmatch
+import re
 # TODO: Use util.command
 from subprocess import Popen, PIPE, STDOUT, check_call, call
 
@@ -11,6 +17,7 @@ log = logging.getLogger(__name__)
 MAC_DESIGNATED_REQUIREMENTS = """\
 =designated =>  identifier "%(identifier)s" and ( (anchor apple generic and    certificate leaf[field.1.2.840.113635.100.6.1.9] ) or (anchor apple generic and    certificate 1[field.1.2.840.113635.100.6.2.6]  and    certificate leaf[field.1.2.840.113635.100.6.1.13] and    certificate leaf[subject.OU] = "%(subject_ou)s"))
 """
+
 
 def signfile(filename, keydir, fake=False, passphrase=None, timestamp=True):
     """Sign the given file with keys in keydir.
@@ -29,11 +36,12 @@ def signfile(filename, keydir, fake=False, passphrase=None, timestamp=True):
     dirname = os.path.dirname(filename)
     stdout = tempfile.TemporaryFile()
     command = ['signcode',
-        '-spc', '%s/MozAuthenticode.spc' % keydir,
-        '-v', '%s/MozAuthenticode.pvk' % keydir,
-        ]
+               '-spc', '%s/MozAuthenticode.spc' % keydir,
+               '-v', '%s/MozAuthenticode.pvk' % keydir,
+               ]
     if timestamp:
-        command.extend(['-t', 'http://timestamp.verisign.com/scripts/timestamp.dll'])
+        command.extend(
+            ['-t', 'http://timestamp.verisign.com/scripts/timestamp.dll'])
     command.extend([
         '-i', 'http://www.mozilla.com',
         '-a', 'sha1',
@@ -43,7 +51,8 @@ def signfile(filename, keydir, fake=False, passphrase=None, timestamp=True):
         basename])
     try:
         log.debug("Running %s", command)
-        proc = Popen(command, cwd=dirname, stdout=stdout, stderr=STDOUT, stdin=PIPE)
+        proc = Popen(
+            command, cwd=dirname, stdout=stdout, stderr=STDOUT, stdin=PIPE)
         if passphrase:
             proc.stdin.write(passphrase)
         proc.stdin.close()
@@ -78,6 +87,7 @@ def signfile(filename, keydir, fake=False, passphrase=None, timestamp=True):
             log.exception(data)
             raise
 
+
 def gpg_signfile(filename, sigfile, gpgdir, fake=False, passphrase=None):
     """Sign the given file with the default key from gpgdir. The signature is
     written to sigfile.
@@ -96,7 +106,8 @@ I am ur signature!
         time.sleep(1)
         return
 
-    command = ['gpg', '--homedir', gpgdir, '-bsa', '-o', sigfile, '-q', '--batch']
+    command = ['gpg', '--homedir', gpgdir, '-bsa', '-o', sigfile, '-q',
+               '--batch']
     if passphrase:
         command.extend(['--passphrase-fd', '0'])
     command.append(filename)
@@ -116,6 +127,7 @@ I am ur signature!
         data = stdout.read()
         log.exception(data)
         raise
+
 
 def mar_signfile(inputfile, outputfile, mar_cmd, fake=False, passphrase=None):
     # Now sign it
@@ -175,6 +187,7 @@ def jar_unsignfile(filename):
         log.error("zip output: %s", data)
         raise ValueError("Couldn't remove previous signature")
 
+
 def jar_signfile(filename, keystore, keyname, fake=False, passphrase=None):
     """Sign a jar file
     """
@@ -204,6 +217,7 @@ def jar_signfile(filename, keystore, keyname, fake=False, passphrase=None):
         log.exception(data)
         raise
 
+
 def dmg_signfile(filename, keychain, signing_identity, code_resources, identifier, subject_ou, lockfile, fake=False, passphrase=None):
     """ Sign a mac .app folder
     """
@@ -216,14 +230,14 @@ def dmg_signfile(filename, keychain, signing_identity, code_resources, identifie
     stdout = tempfile.TemporaryFile()
 
     sign_command = ['codesign',
-        '-s', signing_identity, '-fv',
-        '--keychain', keychain,
-        '--resource-rules', code_resources,
-        '--requirement', MAC_DESIGNATED_REQUIREMENTS % locals(),
-        basename]
+                    '-s', signing_identity, '-fv',
+                    '--keychain', keychain,
+                    '--resource-rules', code_resources,
+                    '--requirement', MAC_DESIGNATED_REQUIREMENTS % locals(),
+                    basename]
 
     # pexpect requires a string as input
-    unlock_command = 'security unlock-keychain '+keychain
+    unlock_command = 'security unlock-keychain ' + keychain
     lock_command = ['security', 'lock-keychain', keychain]
     try:
         sign_lock = None
@@ -234,11 +248,11 @@ def dmg_signfile(filename, keychain, signing_identity, code_resources, identifie
             log.debug("Try to acquire %s", lockfile)
             sign_lock = Lock(lockfile)
             # Put a 30 second timeout on waiting for the lock.
-            sign_lock.lock(timedelta(0,30))
+            sign_lock.lock(timedelta(0, 30))
 
             # Unlock the keychain so that we do not get a user-interaction prompt to use
             # the keychain for signing. This operation requires a password.
-            child = pexpect.spawn (unlock_command)
+            child = pexpect.spawn(unlock_command)
             child.expect('password to unlock .*')
             child.sendline(passphrase)
             # read output until child exits
@@ -277,6 +291,7 @@ def dmg_signfile(filename, keychain, signing_identity, code_resources, identifie
         log.exception(data)
         raise
 
+
 def get_identifier(appdir):
     """Return the CFBundleIdentifier from a Mac application."""
     import plistlib
@@ -291,7 +306,7 @@ def dmg_signpackage(pkgfile, dstfile, keychain, mac_id, subject_ou, fake=False, 
     # when we're done This is to avoid interleaving the output from
     # multiple processes.
 
-    #TODO: Is it even possible to do 'fake' signing?
+    # TODO: Is it even possible to do 'fake' signing?
     logs = []
     logs.append("Repacking %s to %s" % (pkgfile, dstfile))
 
@@ -309,7 +324,8 @@ def dmg_signpackage(pkgfile, dstfile, keychain, mac_id, subject_ou, fake=False, 
                 log.debug('Signing %s', macdir)
 
                 # Grab the code resources file. Need to find the filename
-                code_resources =  macdir + "/Contents/_CodeSignature/CodeResources"
+                code_resources =  macdir + \
+                    "/Contents/_CodeSignature/CodeResources"
                 lockfile = os.path.join(pkgdir, '.lock')
 
                 dmg_signfile(macdir, keychain, mac_id, code_resources, get_identifier(macdir), subject_ou, lockfile, passphrase=passphrase)
@@ -324,6 +340,7 @@ def dmg_signpackage(pkgfile, dstfile, keychain, mac_id, subject_ou, fake=False, 
         # Clean up after ourselves, and output our logs
         shutil.rmtree(tmpdir)
         log.info("\n  ".join(logs))
+
 
 def filterFiles(files, product):
     """ Filter out files that we can't sign. Right now this means that
@@ -347,6 +364,7 @@ def filterFiles(files, product):
 
     return files
 
+
 def sortFiles(files, product, firstLocale):
     """sort files into a specific ordering using the key function defined
     within"""
@@ -368,6 +386,7 @@ def sortFiles(files, product, firstLocale):
 
     return sorted(files, key=fileKey)
 
+
 def sums_are_equal(base_package, packages):
     """ Check to make sure that the dictionaries of files:checksums are
     exactly equal across a list of packages """
@@ -375,19 +394,20 @@ def sums_are_equal(base_package, packages):
     for signed_file in base_package.keys():
         log.debug("comparing file %s", signed_file)
         if not len([p for p in packages if p[signed_file] ==
-            packages[0][signed_file]]) == len(packages):
+                    packages[0][signed_file]]) == len(packages):
             log.error("%s differs!", signed_file)
             success = False
     return success
+
 
 def shouldSign(filename, platform='win32'):
     """Returns True if filename should be signed."""
     # These should already be signed by Microsoft.
     _dont_sign = [
-            'D3DCompiler_42.dll', 'd3dx9_42.dll',
-            'D3DCompiler_43.dll', 'd3dx9_43.dll',
-            'msvc*.dll',
-            ]
+        'D3DCompiler_42.dll', 'd3dx9_42.dll',
+        'D3DCompiler_43.dll', 'd3dx9_43.dll',
+        'msvc*.dll',
+    ]
     ext = os.path.splitext(filename)[1]
     b = os.path.basename(filename)
     if platform == 'mac':
@@ -397,9 +417,10 @@ def shouldSign(filename, platform='win32'):
         if ext in ('.dll', '.exe') and not any(fnmatch.fnmatch(b, p) for p in _dont_sign):
             return True
     else:
-        #We should never get here.
+        # We should never get here.
         log.debug("Invalid Platform: %s", platform)
     return False
+
 
 def getChkFile(filename):
     _special_files = ['freebl3.dll', 'softokn3.dll', 'nssdbm3.dll']
@@ -409,6 +430,7 @@ def getChkFile(filename):
         f = os.path.splitext(b)[0] + '.chk'
         return os.path.join(d, f)
     return None
+
 
 def checkTools():
     """Returns True if all of the helper commands ($MAR, $SEVENZIP) are

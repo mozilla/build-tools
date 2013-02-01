@@ -2,6 +2,7 @@ import unittest
 
 from release.paths import makeReleasesDir
 
+
 class TestReleasesDir(unittest.TestCase):
     def testBaseReleases(self):
         got = makeReleasesDir('bbb')
@@ -17,4 +18,5 @@ class TestReleasesDir(unittest.TestCase):
 
     def testRemoteAndVersioned(self):
         got = makeReleasesDir('yx', '1.0', protocol='https', server='cee.dee')
-        self.assertEquals('https://cee.dee/pub/mozilla.org/yx/releases/1.0/', got)
+        self.assertEquals(
+            'https://cee.dee/pub/mozilla.org/yx/releases/1.0/', got)

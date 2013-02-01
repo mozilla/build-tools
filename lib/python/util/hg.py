@@ -1,5 +1,7 @@
 """Functions for interacting with hg"""
-import os, re, subprocess
+import os
+import re
+import subprocess
 from urlparse import urlsplit
 from ConfigParser import RawConfigParser
 
@@ -9,12 +11,15 @@ from util.retry import retry
 import logging
 log = logging.getLogger(__name__)
 
+
 class DefaultShareBase:
     pass
 DefaultShareBase = DefaultShareBase()
 
+
 class HgUtilError(Exception):
     pass
+
 
 def _make_absolute(repo):
     if repo.startswith("file://"):
@@ -23,6 +28,7 @@ def _make_absolute(repo):
     elif "://" not in repo:
         repo = os.path.abspath(repo)
     return repo
+
 
 def make_hg_url(hgHost, repoPath, protocol='https', revision=None,
                 filename=None):
@@ -39,28 +45,34 @@ def make_hg_url(hgHost, repoPath, protocol='https', revision=None,
         assert revision
         return '/'.join([p.strip('/') for p in [repo, 'raw-file', revision, filename]])
 
+
 def get_repo_name(repo):
     return repo.rstrip('/').split('/')[-1]
 
+
 def get_repo_path(repo):
-     repo = _make_absolute(repo)
-     if repo.startswith("/"):
-         return repo.lstrip("/")
-     else:
-         return urlsplit(repo).path.lstrip("/")
+    repo = _make_absolute(repo)
+    if repo.startswith("/"):
+        return repo.lstrip("/")
+    else:
+        return urlsplit(repo).path.lstrip("/")
+
 
 def get_revision(path):
     """Returns which revision directory `path` currently has checked out."""
     return get_output(['hg', 'parent', '--template', '{node|short}'], cwd=path)
 
+
 def get_branch(path):
     return get_output(['hg', 'branch'], cwd=path).strip()
+
 
 def get_branches(path):
     branches = []
     for line in get_output(['hg', 'branches', '-c'], cwd=path).splitlines():
         branches.append(line.split()[0])
     return branches
+
 
 def is_hg_cset(rev):
     """Retruns True if passed revision represents a valid HG revision
@@ -70,6 +82,7 @@ def is_hg_cset(rev):
         return True
     except (TypeError, ValueError):
         return False
+
 
 def hg_ver():
     """Returns the current version of hg, as a tuple of
@@ -85,6 +98,7 @@ def hg_ver():
         ver = (0, 0, 0)
     log.debug("Running hg version %s", ver)
     return ver
+
 
 def update(dest, branch=None, revision=None):
     """Updates working copy `dest` to `branch` or `revision`.  If neither is
@@ -107,8 +121,9 @@ def update(dest, branch=None, revision=None):
         run_cmd(cmd, cwd=dest)
     return get_revision(dest)
 
+
 def clone(repo, dest, branch=None, revision=None, update_dest=True,
-        clone_by_rev=False, mirrors=None, bundles=None):
+          clone_by_rev=False, mirrors=None, bundles=None):
     """Clones hg repo and places it at `dest`, replacing whatever else is
     there.  The working copy will be empty.
 
@@ -143,7 +158,7 @@ def clone(repo, dest, branch=None, revision=None, update_dest=True,
                 adjust_paths(dest, default=repo)
                 # Now pull / update
                 return pull(repo, dest, update_dest=update_dest,
-                        mirrors=mirrors, revision=revision, branch=branch)
+                            mirrors=mirrors, revision=revision, branch=branch)
             except:
                 remove_path(dest)
                 log.exception("Problem unbundling/pulling from %s", bundle)
@@ -157,7 +172,7 @@ def clone(repo, dest, branch=None, revision=None, update_dest=True,
             log.info("Cloning from %s", mirror)
             try:
                 retval = clone(mirror, dest, branch, revision,
-                        update_dest=update_dest, clone_by_rev=clone_by_rev)
+                               update_dest=update_dest, clone_by_rev=clone_by_rev)
                 adjust_paths(dest, default=repo)
                 return retval
             except:
@@ -170,7 +185,7 @@ def clone(repo, dest, branch=None, revision=None, update_dest=True,
             if os.path.exists(os.path.join(dest, '.hg')):
                 adjust_paths(dest, default=repo)
             return mercurial(repo, dest, branch, revision,
-                    update_dest=update_dest, clone_by_rev=clone_by_rev)
+                             update_dest=update_dest, clone_by_rev=clone_by_rev)
 
     cmd = ['hg', 'clone']
     if not update_dest:
@@ -191,6 +206,7 @@ def clone(repo, dest, branch=None, revision=None, update_dest=True,
     if update_dest:
         return update(dest, branch, revision)
 
+
 def common_args(revision=None, branch=None, ssh_username=None, ssh_key=None):
     """Fill in common hg arguments, encapsulating logic checks that depend on
        mercurial versions and provided arguments"""
@@ -208,6 +224,7 @@ def common_args(revision=None, branch=None, ssh_username=None, ssh_key=None):
         if hg_ver() >= (1, 6, 0):
             args.extend(['-b', branch])
     return args
+
 
 def pull(repo, dest, update_dest=True, mirrors=None, **kwargs):
     """Pulls changes from hg repo and places it in `dest`.
@@ -257,6 +274,7 @@ def pull(repo, dest, update_dest=True, mirrors=None, **kwargs):
 # Defines the places of attributes in the tuples returned by `out'
 REVISION, BRANCH = 0, 1
 
+
 def out(src, remote, **kwargs):
     """Check for outgoing changesets present in a repo"""
     cmd = ['hg', '-q', 'out', '--template', '{node} {branches}\n']
@@ -282,6 +300,7 @@ def out(src, remote, **kwargs):
                 return []
             raise
 
+
 def push(src, remote, push_new_branches=True, force=False, **kwargs):
     cmd = ['hg', 'push']
     cmd.extend(common_args(**kwargs))
@@ -291,6 +310,7 @@ def push(src, remote, push_new_branches=True, force=False, **kwargs):
         cmd.append('--new-branch')
     cmd.append(remote)
     run_cmd(cmd, cwd=src)
+
 
 def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
               shareBase=DefaultShareBase, allowUnsharedLocalClones=False,
@@ -344,7 +364,8 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
 
         # Make sure that our default path is correct
         if hgpath != _make_absolute(repo):
-            log.info("hg path isn't correct (%s should be %s); clobbering", hgpath, _make_absolute(repo))
+            log.info("hg path isn't correct (%s should be %s); clobbering",
+                     hgpath, _make_absolute(repo))
             remove_path(dest)
 
     # If the working directory already exists and isn't using share we update
@@ -357,8 +378,8 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
         elif not os.path.exists(os.path.join(dest, ".hg", "sharedpath")):
             try:
                 return pull(repo, dest, update_dest=update_dest, branch=branch,
-                        revision=revision,
-                        mirrors=mirrors)
+                            revision=revision,
+                            mirrors=mirrors)
             except subprocess.CalledProcessError:
                 log.warning("Error pulling changes into %s from %s; clobbering", dest, repo)
                 log.debug("Exception:", exc_info=True)
@@ -376,7 +397,8 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
 
             # Make sure that our default path is correct
             if hgpath != _make_absolute(repo):
-                log.info("hg path isn't correct (%s should be %s); clobbering", hgpath, _make_absolute(repo))
+                log.info("hg path isn't correct (%s should be %s); clobbering",
+                         hgpath, _make_absolute(repo))
                 # we need to clobber both the shared checkout and the dest,
                 # since hgrc needs to be in both places
                 remove_path(sharedRepo)
@@ -384,19 +406,19 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
 
         if os.path.exists(dest_sharedPath):
             # Make sure that the sharedpath points to sharedRepo
-            dest_sharedPath_data = os.path.normpath(open(dest_sharedPath).read())
+            dest_sharedPath_data = os.path.normpath(
+                open(dest_sharedPath).read())
             norm_sharedRepo = os.path.normpath(os.path.join(sharedRepo, '.hg'))
             if dest_sharedPath_data != norm_sharedRepo:
                 # Clobber!
                 log.info("We're currently shared from %s, but are being requested to pull from %s (%s); clobbering", dest_sharedPath_data, repo, norm_sharedRepo)
                 remove_path(dest)
 
-
         try:
             log.info("Updating shared repo")
             mercurial(repo, sharedRepo, branch=branch, revision=revision,
-                update_dest=False, shareBase=None, clone_by_rev=clone_by_rev,
-                mirrors=mirrors, bundles=bundles)
+                      update_dest=False, shareBase=None, clone_by_rev=clone_by_rev,
+                      mirrors=mirrors, bundles=bundles)
             if os.path.exists(dest):
                 return update(dest, branch=branch, revision=revision)
 
@@ -417,10 +439,11 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
                 # This lets us use hardlinks for the local clone if the OS
                 # supports it
                 clone(sharedRepo, dest, update_dest=False,
-                        mirrors=mirrors, bundles=bundles)
+                      mirrors=mirrors, bundles=bundles)
                 return update(dest, branch=branch, revision=revision)
         except subprocess.CalledProcessError:
-            log.warning("Error updating %s from sharedRepo (%s): ", dest, sharedRepo)
+            log.warning(
+                "Error updating %s from sharedRepo (%s): ", dest, sharedRepo)
             log.debug("Exception:", exc_info=True)
             remove_path(dest)
     # end if shareBase
@@ -430,8 +453,9 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
 
     # Share isn't available or has failed, clone directly from the source
     return clone(repo, dest, branch, revision,
-            update_dest=update_dest, mirrors=mirrors,
-            bundles=bundles, clone_by_rev=clone_by_rev)
+                 update_dest=update_dest, mirrors=mirrors,
+                 bundles=bundles, clone_by_rev=clone_by_rev)
+
 
 def apply_and_push(localrepo, remote, changer, max_attempts=10,
                    ssh_username=None, ssh_key=None, force=False):
@@ -443,7 +467,7 @@ def apply_and_push(localrepo, remote, changer, max_attempts=10,
     assert callable(changer)
     branch = get_branch(localrepo)
     changer(localrepo, 1)
-    for n in range(1, max_attempts+1):
+    for n in range(1, max_attempts + 1):
         new_revs = []
         try:
             new_revs = out(src=localrepo, remote=remote,
@@ -473,13 +497,15 @@ def apply_and_push(localrepo, remote, changer, max_attempts=10,
                 update(localrepo, branch=branch)
                 for r in reversed(new_revs):
                     run_cmd(['hg', 'strip', '-n', r[REVISION]], cwd=localrepo)
-                changer(localrepo, n+1)
+                changer(localrepo, n + 1)
+
 
 def share(source, dest, branch=None, revision=None):
     """Creates a new working directory in "dest" that shares history with
        "source" using Mercurial's share extension"""
     run_cmd(['hg', 'share', '-U', source, dest])
     return update(dest, branch=branch, revision=revision)
+
 
 def cleanOutgoingRevs(reponame, remote, username, sshKey):
     outgoingRevs = retry(out, kwargs=dict(src=reponame, remote=remote,
@@ -488,6 +514,7 @@ def cleanOutgoingRevs(reponame, remote, username, sshKey):
     for r in reversed(outgoingRevs):
         run_cmd(['hg', 'strip', '-n', r[REVISION]], cwd=reponame)
 
+
 def path(src, name='default'):
     """Returns the remote path associated with "name" """
     try:
@@ -495,15 +522,18 @@ def path(src, name='default'):
     except subprocess.CalledProcessError:
         return None
 
+
 def init(dest):
     """Initializes an empty repo in `dest`"""
     run_cmd(['hg', 'init', dest])
+
 
 def unbundle(bundle, dest):
     """Unbundles the bundle located at `bundle` into `dest`.
 
     `bundle` can be a local file or remote url."""
     run_cmd(['hg', 'unbundle', bundle], cwd=dest)
+
 
 def adjust_paths(dest, **paths):
     """Adjusts paths in `dest`/.hg/hgrc so that names in `paths` are set to
@@ -528,12 +558,14 @@ def adjust_paths(dest, **paths):
     if changed:
         config.write(open(hgrc, 'w'))
 
+
 def commit(dest, msg, user=None):
     cmd = ['hg', 'commit', '-m', msg]
     if user:
         cmd.extend(['-u', user])
     run_cmd(cmd, cwd=dest)
     return get_revision(dest)
+
 
 def tag(dest, tags, user=None, msg=None, rev=None, force=None):
     cmd = ['hg', 'tag']

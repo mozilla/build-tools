@@ -4,7 +4,8 @@
 # Assumes Python 2.6
 #
 
-import os, sys
+import os
+import sys
 import socket
 import signal
 import logging
@@ -12,38 +13,42 @@ import logging
 from sut_lib import loadOptions, getIPAddress, stopProcess, checkSlaveAlive, dumpException
 
 
-options        = None
-log            = logging.getLogger()
+options = None
+log = logging.getLogger()
 defaultOptions = {
-                   'debug':  ('-d', '--debug',  False,     'Enable debug output', 'b'),
-                   'bbpath': ('-p', '--bbpath', '/builds', 'Path where the Device buildbot slave clients can be found'),
-                   'device':  ('',  '--device',  None,     'Device to check, if not given all Devices will be checked'),
-                 }
+    'debug': ('-d', '--debug', False, 'Enable debug output', 'b'),
+    'bbpath': ('-p', '--bbpath', '/builds', 'Path where the Device buildbot slave clients can be found'),
+    'device': ('', '--device', None, 'Device to check, if not given all Devices will be checked'),
+}
 
 
 def initLogs(options):
-  echoHandler   = logging.StreamHandler()
-  echoFormatter = logging.Formatter('%(asctime)s %(message)s')  # not the normal one
+    echoHandler = logging.StreamHandler()
+    echoFormatter = logging.Formatter(
+        '%(asctime)s %(message)s')  # not the normal one
 
-  echoHandler.setFormatter(echoFormatter)
-  log.addHandler(echoHandler)
+    echoHandler.setFormatter(echoFormatter)
+    log.addHandler(echoHandler)
 
-  if options.debug:
-     log.setLevel(logging.DEBUG)
-     log.info('debug level is on')
-  else:
-     log.setLevel(logging.INFO)
+    if options.debug:
+        log.setLevel(logging.DEBUG)
+        log.info('debug level is on')
+    else:
+        log.setLevel(logging.INFO)
+
 
 def stopDevice(device):
-    deviceIP   = getIPAddress(device)
+    deviceIP = getIPAddress(device)
     devicePath = os.path.join(options.bbpath, device)
     errorFile = os.path.join(devicePath, 'error.flg')
 
     log.info('%s: %s - stopping all processes' % (device, deviceIP))
 
     stopProcess(os.path.join(devicePath, 'remotereftest.pid'), 'remotereftest')
-    stopProcess(os.path.join(devicePath, 'runtestsremote.pid'), 'runtestsremote')
-    stopProcess(os.path.join(devicePath, 'remotereftest.pid.xpcshell.pid'), 'xpcshell')
+    stopProcess(
+        os.path.join(devicePath, 'runtestsremote.pid'), 'runtestsremote')
+    stopProcess(os.path.join(
+        devicePath, 'remotereftest.pid.xpcshell.pid'), 'xpcshell')
     stopProcess(os.path.join(devicePath, 'clientproxy.pid'), 'clientproxy')
     stopProcess(os.path.join(devicePath, 'twistd.pid'), 'buildslave')
 
@@ -76,4 +81,3 @@ if __name__ == '__main__':
         sys.exit(2)
 
     stopDevice(options.device)
-

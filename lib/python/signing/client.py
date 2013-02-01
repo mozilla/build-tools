@@ -1,4 +1,11 @@
-import base64, urllib2, os, hashlib, time, socket, httplib, urllib
+import base64
+import urllib2
+import os
+import hashlib
+import time
+import socket
+import httplib
+import urllib
 
 # TODO: Use util.command
 from subprocess import check_call
@@ -10,11 +17,13 @@ from util.file import sha1sum, copyfile
 import logging
 log = logging.getLogger(__name__)
 
+
 def getfile(baseurl, filehash, format_):
     url = "%s/sign/%s/%s" % (baseurl, format_, filehash)
     log.debug("%s: GET %s", filehash, url)
     r = urllib2.Request(url)
     return urllib2.urlopen(r)
+
 
 def get_token(baseurl, username, password, slave_ip, duration):
     auth = base64.encodestring('%s:%s' % (username, password)).rstrip('\n')
@@ -29,6 +38,7 @@ def get_token(baseurl, username, password, slave_ip, duration):
     }
     r = urllib2.Request(url, data, headers)
     return urllib2.urlopen(r).read()
+
 
 def remote_signfile(options, urls, filename, fmt, token, dest=None):
     filehash = sha1sum(filename)
@@ -54,7 +64,7 @@ def remote_signfile(options, urls, filename, fmt, token, dest=None):
             fp = open(tmpfile, 'wb')
             hsh = hashlib.new('sha1')
             while True:
-                data = cached_fp.read(1024**2)
+                data = cached_fp.read(1024 ** 2)
                 if not data:
                     break
                 hsh.update(data)
@@ -94,14 +104,15 @@ def remote_signfile(options, urls, filename, fmt, token, dest=None):
             tmpfile = dest + '.tmp'
             fp = open(tmpfile, 'wb')
             while True:
-                data = req.read(1024**2)
+                data = req.read(1024 ** 2)
                 if not data:
                     break
                 fp.write(data)
             fp.close()
             newhash = sha1sum(tmpfile)
             if newhash != responsehash:
-                log.warn("%s: hash mismatch; trying to download again", filehash)
+                log.warn(
+                    "%s: hash mismatch; trying to download again", filehash)
                 os.unlink(tmpfile)
                 errors += 1
                 continue
@@ -155,7 +166,8 @@ def remote_signfile(options, urls, filename, fmt, token, dest=None):
                     nonce = e.headers['X-Nonce']
                     open(options.noncefile, 'wb').write(nonce)
                 if e.code != 202:
-                    log.info("%s: error uploading file for signing: %s", filehash, e.msg)
+                    log.info("%s: error uploading file for signing: %s",
+                             filehash, e.msg)
             except (urllib2.URLError, socket.error, httplib.BadStatusLine):
                 # Try again in a little while
                 log.info("%s: connection error; trying again soon", filehash)
@@ -175,6 +187,7 @@ def remote_signfile(options, urls, filename, fmt, token, dest=None):
             continue
     return True
 
+
 def buildValidatingOpener(ca_certs):
     """Build and register an HTTPS connection handler that validates that we're
     talking to a host matching ca_certs (a file containing a list of
@@ -184,9 +197,9 @@ def buildValidatingOpener(ca_certs):
     """
     try:
         from poster.streaminghttp import StreamingHTTPSHandler as HTTPSHandler, \
-                StreamingHTTPSConnection as HTTPSConnection
-        assert HTTPSHandler # pyflakes
-        assert HTTPSConnection # pyflakes
+            StreamingHTTPSConnection as HTTPSConnection
+        assert HTTPSHandler  # pyflakes
+        assert HTTPSConnection  # pyflakes
     except ImportError:
         from httplib import HTTPSConnection
         from urllib2 import HTTPSHandler
@@ -197,11 +210,11 @@ def buildValidatingOpener(ca_certs):
         def connect(self):
             # overrides the version in httplib so that we do
             #    certificate verification
-            #sock = socket.create_connection((self.host, self.port),
-                                            #self.timeout)
-            #if self._tunnel_host:
-                #self.sock = sock
-                #self._tunnel()
+            # sock = socket.create_connection((self.host, self.port),
+                                            # self.timeout)
+            # if self._tunnel_host:
+                # self.sock = sock
+                # self._tunnel()
 
             sock = socket.socket()
             sock.connect((self.host, self.port))
@@ -228,6 +241,7 @@ def buildValidatingOpener(ca_certs):
     opener = urllib2.build_opener(https_handler)
     urllib2.install_opener(opener)
 
+
 def uploadfile(baseurl, filename, format_, token, nonce):
     """Uploads file (given by `filename`) to server at `baseurl`.
 
@@ -241,16 +255,16 @@ def uploadfile(baseurl, filename, format_, token, nonce):
         fp = open(filename, 'rb')
 
         params = {
-                'filedata': fp,
-                'sha1': filehash,
-                'filename': os.path.basename(filename),
-                'token': token,
-                'nonce': nonce,
-                }
+            'filedata': fp,
+            'sha1': filehash,
+            'filename': os.path.basename(filename),
+            'token': token,
+            'nonce': nonce,
+        }
 
         datagen, headers = multipart_encode(params)
-        r = urllib2.Request("%s/sign/%s" % (baseurl, format_), datagen, headers)
+        r = urllib2.Request(
+            "%s/sign/%s" % (baseurl, format_), datagen, headers)
         return urllib2.urlopen(r)
     finally:
         fp.close()
-

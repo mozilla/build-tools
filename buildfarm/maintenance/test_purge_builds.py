@@ -1,5 +1,6 @@
-from  unittest import TestCase
+from unittest import TestCase
 from purge_builds import isImportant
+
 
 class TestPurge(TestCase):
 
@@ -23,8 +24,8 @@ class TestPurge(TestCase):
 
     def testImportantDirs(self):
         for d in self.importantDirs:
-            self.assertTrue(isImportant(d,self.importantDirsPattern))
+            self.assertTrue(isImportant(d, self.importantDirsPattern))
 
     def testNotImportantDirs(self):
         for d in self.notImportantDirs:
-            self.assertFalse(isImportant(d,self.importantDirsPattern))
+            self.assertFalse(isImportant(d, self.importantDirsPattern))

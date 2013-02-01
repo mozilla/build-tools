@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
-import os, sys
+import os
+import sys
 import time
 import random
 import socket
 from mozdevice import devicemanagerSUT as devicemanager
 from sut_lib import soft_reboot_and_verify
+
 
 def setFlag(flagfile, contents=None):
     print flagfile
@@ -16,9 +18,11 @@ def setFlag(flagfile, contents=None):
     h.close()
     time.sleep(30)
 
+
 def clearFlag(flagfile):
     if os.path.exists(flagfile):
         os.remove(flagfile)
+
 
 def calculatePort():
     s = os.environ['SUT_NAME']
@@ -27,6 +31,7 @@ def calculatePort():
     except:
         n = random.randint(40000, 50000)
     return n
+
 
 def getOurIP():
     try:
@@ -43,11 +48,13 @@ def getOurIP():
 
     return result
 
+
 def getResolution(dm):
     parts = dm.getInfo('screen')['screen'][0].split()
     width = int(parts[0].split(':')[1])
     height = int(parts[1].split(':')[1])
     return width, height
+
 
 def checkDeviceRoot():
     dr = dm.getDeviceRoot()
@@ -56,6 +63,7 @@ def checkDeviceRoot():
     if not dr or dr == '/tests':
         return None
     return dr
+
 
 def waitForDevice(waitTime=60):
     print "Waiting for device to come back..."
@@ -77,17 +85,17 @@ def waitForDevice(waitTime=60):
 # Stop buffering!
 sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
 
-if (len(sys.argv) <> 3):
-  print "usage: config.py <ip address> <testname>"
-  sys.exit(1)
+if (len(sys.argv) != 3):
+    print "usage: config.py <ip address> <testname>"
+    sys.exit(1)
 
-cwd       = os.getcwd()
-testname  = sys.argv[2]
+cwd = os.getcwd()
+testname = sys.argv[2]
 errorFile = os.path.join(cwd, '..', 'error.flg')
-proxyIP   = getOurIP()
+proxyIP = getOurIP()
 proxyPort = calculatePort()
-refWidth  = 1600 # x
-refHeight = 1200 # y
+refWidth = 1600  # x
+refHeight = 1200  # y
 deviceName = os.path.basename(cwd)
 deviceIP = sys.argv[1]
 
@@ -95,7 +103,7 @@ print "connecting to: %s" % deviceIP
 dm = devicemanager.DeviceManagerSUT(deviceIP)
 # Moar data!
 dm.debug = 3
-devRoot  = dm.getDeviceRoot()
+devRoot = dm.getDeviceRoot()
 
 # checking for /mnt/sdcard/...
 print "devroot %s" % devRoot
@@ -113,11 +121,8 @@ if (testname == 'reftest') and width < refWidth:
             print("Remote Device Error: Timed out while waiting for device to come back after resolution change.")
             sys.exit(1)
 
-
         width, height = getResolution(dm)
         print("current resolution X:%d Y:%d" % (width, height))
         if width != refWidth and height != refHeight:
             setFlag(errorFile, "Remote Device Error: current resolution X:%d Y:%d does not match what was set X:%d Y:%d" % (width, height, refWidth, refHeight))
             sys.exit(1)
-
-

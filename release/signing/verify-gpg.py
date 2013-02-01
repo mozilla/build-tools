@@ -24,6 +24,7 @@ supported_files_re = re.compile(r"""
                                    ) $
                                 """, re.VERBOSE)
 
+
 class GnuPG(object):
 
     def __init__(self, gpg_bin="gpg", homedir=None, args=None, verbose=False):

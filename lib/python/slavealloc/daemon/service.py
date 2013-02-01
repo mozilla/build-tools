@@ -4,8 +4,9 @@ from twisted.application import service
 from slavealloc.logic import allocate, buildbottac
 from slavealloc import exceptions
 
+
 class AllocatorService(service.Service):
-    
+
     def startService(self):
         log.msg("starting AllocatorService")
         service.Service.startService(self)
@@ -21,6 +22,7 @@ class AllocatorService(service.Service):
         # slaves are not simultaneously reassigned.  This should be revisited
         # later.
         d = defer.succeed(None)
+
         def gettac(_):
             try:
                 allocation = allocate.Allocation(slave_name)
@@ -33,11 +35,12 @@ class AllocatorService(service.Service):
             allocation.commit()
             if allocation.enabled:
                 log.msg("allocated '%s' to '%s' (%s:%s)" % (slave_name,
-                    allocation.master_nickname,
-                    allocation.master_fqdn,
-                    allocation.master_pb_port))
+                                                            allocation.master_nickname,
+                                                            allocation.master_fqdn,
+                                                            allocation.master_pb_port))
             else:
-                log.msg("slave '%s' is disabled; no allocation made" % slave_name)
+                log.msg(
+                    "slave '%s' is disabled; no allocation made" % slave_name)
 
             return tac
         d.addCallback(gettac)

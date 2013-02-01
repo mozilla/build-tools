@@ -11,16 +11,18 @@ try:
 except ImportError:
     import StringIO
 
+
 class FlasherFailedException(Exception):
     pass
+
 
 class Throbber:
 
     def __init__(self, length=50, throbber=None):
-        self.length=50
+        self.length = 50
         if throbber is None:
             self.throbber = []
-            for i in range(0,self.length + 1):
+            for i in range(0, self.length + 1):
                 line = '=' * i
                 line += '0'
                 line += '-' * (self.length - i)
@@ -42,7 +44,7 @@ class Throbber:
                     i = 0
                 time.sleep(0.1)
                 sys.stdout.flush()
-                sys.stdout.write('\b'*len(self.throbber[i - 1]))
+                sys.stdout.write('\b' * len(self.throbber[i - 1]))
 
     def kill(self):
         if self.pid:
@@ -68,8 +70,8 @@ class Flasher:
                 'no-charging',
                 'force-power-key']
 
-    waiting_pattern='Suitable USB device not found, waiting.'
-    underway_pattern='Sending and flashing'
+    waiting_pattern = 'Suitable USB device not found, waiting.'
+    underway_pattern = 'Sending and flashing'
 
     def __init__(self, flasher_bin='flasher-3.5', debug=False):
         self.flasher_bin = flasher_bin
@@ -80,31 +82,32 @@ class Flasher:
             print 'Executing: ', [self.flasher_bin] + args
         p = subprocess.Popen([self.flasher_bin] + args,
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout=p.stdout
-        stderr=p.stderr
-        re_dict={}
+        stdout = p.stdout
+        stderr = p.stderr
+        re_dict = {}
         command_output = StringIO.StringIO()
         if not self.debug:
             throbber = Throbber(20)
             throbber.run()
         while p.poll() == None:
-            r,w,x = select.select([stdout,stderr],[],[],0.5)
+            r, w, x = select.select([stdout, stderr], [], [], 0.5)
             for f in r:
                 data = f.readline()
                 if data == '':
                     continue
                 if self.debug:
                     if f is stdout:
-                        stream='stdout'
+                        stream = 'stdout'
                     elif f is stderr:
-                        stream='stderr'
+                        stream = 'stderr'
                     else:
-                        stream='???'
+                        stream = '???'
                     print 'DEBUG(%s): "%s"' % (stream, data[:-1].replace('\b', ''))
-                command_output.write('%s: %s' % ('STDOUT' if f is stdout else 'STDERR',
-                                                 data))
+                command_output.write(
+                    '%s: %s' % ('STDOUT' if f is stdout else 'STDERR',
+                                data))
             for r in regex:
-                m=r.search(data)
+                m = r.search(data)
                 if m:
                     re_dict.update(m.groupdict())
 
@@ -125,17 +128,17 @@ class Flasher:
                 else:
                     print 'DEBUG: %s' % data[:-1]
         command_output.close()
-        if rc!= 0:
-            if Flasher.error_codes.has_key(rc):
+        if rc != 0:
+            if rc in Flasher.error_codes:
                 raise FlasherFailedException(Flasher.error_codes[rc])
             else:
-                raise FlasherFailedException('%s failed for an unknown reason (rc:%s)' % (self.flasher_bin,str(rc)))
+                raise FlasherFailedException('%s failed for an unknown reason (rc:%s)' % (self.flasher_bin, str(rc)))
         return re_dict
 
-
     def fiasco_flash(self, fiasco_file, cold_flash=False, h_rev=None, serial='usb'):
-        assert os.path.exists(fiasco_file), 'missing fiasco file %s' % fiasco_file
-        args=['-F', fiasco_file, '-f']
+        assert os.path.exists(
+            fiasco_file), 'missing fiasco file %s' % fiasco_file
+        args = ['-F', fiasco_file, '-f']
         if cold_flash:
             assert serial and h_rev, 'coldflashing requires a hardware revision and serial device'
             args += ['-c', '-h', h_rev, '-S', serial]
@@ -145,58 +148,59 @@ class Flasher:
     def query_h_rev(self):
         args = ['-i']
         regex = re.compile('Found device (?P<model>.*?), hardware revision (?P<rev>[0-9]{4})')
-        info=self.execute(args, regex=[regex])
+        info = self.execute(args, regex=[regex])
         if info is None:
             return None
         if '0000' == info.get('rev'):
-            raise ValueError('The device attached does not have a valid hardware revision')
+            raise ValueError(
+                'The device attached does not have a valid hardware revision')
         return info
-
 
     def rootfs_flash(self, rootfs_file):
         assert os.path.exists(rootfs_file), 'missing rootfs file'
-        args=['--rootfs', rootfs_file, '-f']
+        args = ['--rootfs', rootfs_file, '-f']
         print 'Flashing: "%s"' % rootfs_file
         self.execute(args)
 
     def set_rd(self):
-        args=['--enable-rd-mode']
+        args = ['--enable-rd-mode']
         self.execute(args)
 
     def set_rd_flags(self, flags=[]):
         if len(flags) == 0:
-            flags=self.rd_flags
+            flags = self.rd_flags
         self.execute(['--set-rd-flags=%s' % ','.join(flags)])
 
     def clear_rd_flags(self, flags=[]):
         if len(flags) == 0:
-            flags=self.rd_flags
+            flags = self.rd_flags
         self.execute(['--clear-rd-flags=%s' % ','.join(flags)])
 
     def reboot_device(self):
         self.execute(['--reboot'])
-        time.sleep(5) # ensure no other flasher command puts device into firmware update mode
+        time.sleep(5)  # ensure no other flasher command puts device into firmware update mode
 
     def flasher_custom(self, args=[]):
         assert type(args) is list, 'arguments must be in a list'
         self.execute(args)
 
+
 class USBBlocker:
 
-    cmds={
+    cmds = {
         'Darwin': ['ioreg', '-c', 'IOUSBDevice'],
         'Linux': ['lsusb'],
     }
 
-    patterns={
+    patterns = {
         'Darwin': [],
         'Linux': [],
     }
 
-    timeout=1
+    timeout = 1
 
     def __init__(self):
-        self.platform=os.uname()[0]
+        self.platform = os.uname()[0]
 
     def substr_in_list(self, substr, list):
         for i in list:
@@ -222,9 +226,9 @@ class USBBlocker:
         print '\b.... Done!'
 
     def _block_once(self):
-        p=subprocess.Popen(self.__class__.cmds[self.platform],
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        output=p.stdout.readlines()
+        p = subprocess.Popen(self.__class__.cmds[self.platform],
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output = p.stdout.readlines()
         output.extend(p.stderr.readlines())
         p.wait()
         return self.substrs_in_list(self.__class__.patterns[self.platform],
@@ -232,7 +236,7 @@ class USBBlocker:
 
 
 class ReadyToFlashBlocker(USBBlocker):
-    patterns={
+    patterns = {
         'Darwin': [
             'N900 (Update mode)',
         ],
@@ -242,8 +246,9 @@ class ReadyToFlashBlocker(USBBlocker):
     def block(self):
         USBBlocker.block(self, mode='until')
 
+
 class UnplugDeviceBlocker(USBBlocker):
-    patterns={
+    patterns = {
         'Darwin': [
             'N900 (Storage Mode)',
             'N900 (PC-Suite Mode)',
@@ -252,17 +257,16 @@ class UnplugDeviceBlocker(USBBlocker):
     }
 
 
-
 def flash_n900(main, emmc, rootfs=None, cold_flash=False, debug=False):
     try:
-        rv=True
-        f=Flasher(debug=debug)
-        ready_to_flash=ReadyToFlashBlocker()
-        unplug_device=UnplugDeviceBlocker()
+        rv = True
+        f = Flasher(debug=debug)
+        ready_to_flash = ReadyToFlashBlocker()
+        unplug_device = UnplugDeviceBlocker()
         print 'Waiting for all N900s to be unplugged',
         unplug_device.block()
         print 'Please perform the following steps:'
-        print '='*80
+        print '=' * 80
         print '  1) remove battery'
         print '  2) plug in MicroUSB cable'
         print '  3) press and hold "u" on N900 keyboard until the screen shows "Nokia"'
@@ -287,7 +291,7 @@ def flash_n900(main, emmc, rootfs=None, cold_flash=False, debug=False):
         unplug_device.block()
     except FlasherFailedException, ffe:
         print 'Flashing failed with the message: "%s"' % ffe.args[0]
-        rv=False
+        rv = False
     except KeyboardInterrupt:
         print '\n\nFlashing cancelled'
         exit(1)

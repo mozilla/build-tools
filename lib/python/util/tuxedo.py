@@ -19,7 +19,8 @@ def generateBouncerProduct(bouncerProductName, version, previousVersion=None,
         ret = '%s-%s-Complete' % (bouncerProductName, version)
     elif productType == PRODUCT_PARTIAL_MAR:
         assert previousVersion, "previousVersion paramter is required for partial MARs"
-        ret = '%s-%s-Partial-%s' % (bouncerProductName, version, previousVersion)
+        ret = '%s-%s-Partial-%s' % (
+            bouncerProductName, version, previousVersion)
 
     return ret
 
@@ -51,7 +52,7 @@ def get_product_uptake(tuxedoServerUrl, bouncerProductName, os,
         for element in doc.getElementsByTagName('available'):
             for node in element.childNodes:
                 if node.nodeType == xml.dom.minidom.Node.TEXT_NODE and \
-                  node.data.isdigit():
+                        node.data.isdigit():
                     uptake_values.append(int(node.data))
         if not uptake_values:
             uptake_values = [0]
@@ -81,9 +82,9 @@ def get_release_uptake(tuxedoServerUrl, bouncerProductName, version,
 
     for os in [buildbot2bouncer(x) for x in platforms]:
         dl.append(get_product_uptake(tuxedoServerUrl=tuxedoServerUrl,
-                            bouncerProductName=bouncerProduct,
-                            username=username, os=os,
-                            password=password))
+                                     bouncerProductName=bouncerProduct,
+                                     username=username, os=os,
+                                     password=password))
         if checkMARs:
             dl.append(get_product_uptake(
                 tuxedoServerUrl=tuxedoServerUrl,

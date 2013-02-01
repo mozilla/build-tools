@@ -1,15 +1,19 @@
-#http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/146306
+# http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/146306
 #   Submitter: Wade Leftwich
 # Licensing:
 #   according to http://aspn.activestate.com/ASPN/Cookbook/Python
 #   "Except where otherwise noted, recipes in the Python Cookbook are published under the Python license ."
-#   This recipe is covered under the Python license: http://www.python.org/license
+# This recipe is covered under the Python license:
+# http://www.python.org/license
 
-import httplib, mimetypes, urllib2
+import httplib
+import mimetypes
+import urllib2
 import socket
 from socket import error, herror, gaierror, timeout
 socket.setdefaulttimeout(None)
 import urlparse
+
 
 def post_multipart(host, selector, fields, files):
     """
@@ -19,29 +23,30 @@ def post_multipart(host, selector, fields, files):
     Return the server's response page.
     """
     try:
-      host = host.replace('http://', '')
-      index = host.find('/')
-      if index > 0:
-          selector = '/'.join([host[index:], selector.lstrip('/')])
-          host = host[0:index]
-      content_type, body = encode_multipart_formdata(fields, files)
-      h = httplib.HTTP(host)
-      h.putrequest('POST', selector)
-      h.putheader('Host', host)
-      h.putheader('Content-Length', str(len(body)))
-      h.putheader('Content-Type', content_type)
-      h.putheader('connection', 'close')
-      h.endheaders()
-      h.send(body)
-      errcode, errmsg, headers = h.getreply()
-      return h.file.read()
+        host = host.replace('http://', '')
+        index = host.find('/')
+        if index > 0:
+            selector = '/'.join([host[index:], selector.lstrip('/')])
+            host = host[0:index]
+        content_type, body = encode_multipart_formdata(fields, files)
+        h = httplib.HTTP(host)
+        h.putrequest('POST', selector)
+        h.putheader('Host', host)
+        h.putheader('Content-Length', str(len(body)))
+        h.putheader('Content-Type', content_type)
+        h.putheader('connection', 'close')
+        h.endheaders()
+        h.send(body)
+        errcode, errmsg, headers = h.getreply()
+        return h.file.read()
     except (httplib.HTTPException, error, herror, gaierror, timeout), e:
-      print "FAIL: graph server unreachable"
-      print "FAIL: " + str(e)
-      raise
+        print "FAIL: graph server unreachable"
+        print "FAIL: " + str(e)
+        raise
     except:
-      print "FAIL: graph server unreachable"
-      raise
+        print "FAIL: graph server unreachable"
+        raise
+
 
 def encode_multipart_formdata(fields, files):
     """
@@ -59,7 +64,8 @@ def encode_multipart_formdata(fields, files):
         L.append(value)
     for (key, filename, value) in files:
         L.append('--' + BOUNDARY)
-        L.append('Content-Disposition: form-data; name="%s"; filename="%s"' % (key, filename))
+        L.append('Content-Disposition: form-data; name="%s"; filename="%s"' %
+                 (key, filename))
         L.append('Content-Type: %s' % get_content_type(filename))
         L.append('')
         L.append(value)
@@ -68,6 +74,7 @@ def encode_multipart_formdata(fields, files):
     body = CRLF.join(L)
     content_type = 'multipart/form-data; boundary=%s' % BOUNDARY
     return content_type, body
+
 
 def get_content_type(filename):
     return mimetypes.guess_type(filename)[0] or 'application/octet-stream'

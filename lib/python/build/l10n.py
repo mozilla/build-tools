@@ -14,10 +14,11 @@ from util.retry import retry
 import logging
 log = logging.getLogger(__name__)
 
+
 def getAllLocales(appName, sourceRepo, rev="default",
                   hg="http://hg.mozilla.org"):
     localeFile = "%s/raw-file/%s/%s/locales/all-locales" % \
-      (sourceRepo, rev, appName)
+        (sourceRepo, rev, appName)
     url = urljoin(hg, localeFile)
     try:
         sl = urlopen(url).read()
@@ -25,6 +26,7 @@ def getAllLocales(appName, sourceRepo, rev="default",
         log.error("Failed to retrieve %s", url)
         raise
     return sl
+
 
 def compareLocales(repo, locale, l10nRepoDir, localeSrcDir, l10nIni,
                    revision="default", merge=True):
@@ -39,7 +41,8 @@ def compareLocales(repo, locale, l10nRepoDir, localeSrcDir, l10nIni,
              "-m", mergeDir,
              l10nIni,
              l10nRepoDir, locale],
-             env={"PYTHONPATH": path.join("compare-locales", "lib")})
+            env={"PYTHONPATH": path.join("compare-locales", "lib")})
+
 
 def l10nRepackPrep(sourceRepoName, objdir, mozconfigPath,
                    l10nBaseRepoName, makeDirs, localeSrcDir, env):
@@ -56,9 +59,10 @@ def l10nRepackPrep(sourceRepoName, objdir, mozconfigPath,
                     cwd=path.join(sourceRepoName, objdir, path.dirname(dir)),
                     env=env)
         else:
-            run_cmd(["make"], 
+            run_cmd(["make"],
                     cwd=path.join(sourceRepoName, objdir, dir),
                     env=env)
+
 
 def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
                  l10nIni, compareLocalesRepo, env, merge=True,
@@ -92,7 +96,8 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
     previous = '%s/previous' % posixDistDir
     updateDir = 'update/%s/%s' % (buildbot2ftp(platform), locale)
     updateAbsDir = '%s/%s' % (posixDistDir, updateDir)
-    current_mar = '%s/%s-%s.complete.mar' % (updateAbsDir, productName, version)
+    current_mar = '%s/%s-%s.complete.mar' % (
+        updateAbsDir, productName, version)
     unwrap_full_update = '../../../tools/update-packaging/unwrap_full_update.pl'
     make_incremental_update = '../../tools/update-packaging/make_incremental_update.sh'
     prevMarDir = '../../../../'
@@ -111,13 +116,14 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
         prevMar = partialUpdates[oldVersion]['mar']
         if prevMar:
             partial_mar_name = '%s-%s-%s.partial.mar' % (productName, oldVersion,
-                                                        version)
+                                                         version)
             partial_mar = '%s/%s' % (updateAbsDir, partial_mar_name)
             UPLOAD_EXTRA_FILES.append('%s/%s' % (updateDir, partial_mar_name))
             run_cmd(['rm', '-rf', previous])
             run_cmd(['mkdir', previous])
-            run_cmd(['perl', unwrap_full_update, '%s/%s' % (prevMarDir, prevMar)],
-                    cwd=path.join(nativeDistDir, 'previous'), env=env)
+            run_cmd(
+                ['perl', unwrap_full_update, '%s/%s' % (prevMarDir, prevMar)],
+                cwd=path.join(nativeDistDir, 'previous'), env=env)
             run_cmd(['bash', make_incremental_update, partial_mar, previous,
                     current], cwd=nativeDistDir, env=env)
             if os.environ.get('MOZ_SIGN_CMD'):
@@ -125,22 +131,25 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
                         '%s -f mar -f gpg "%s"' %
                         (os.environ['MOZ_SIGN_CMD'], partial_mar)],
                         env=env)
-                UPLOAD_EXTRA_FILES.append('%s/%s.asc' % (updateDir, partial_mar_name))
+                UPLOAD_EXTRA_FILES.append(
+                    '%s/%s.asc' % (updateDir, partial_mar_name))
         else:
-            log.warning("Skipping partial MAR creation for %s %s" % (oldVersion,
-                       locale))
+            log.warning(
+                "Skipping partial MAR creation for %s %s" % (oldVersion,
+                                                             locale))
 
     env['UPLOAD_EXTRA_FILES'] = ' '.join(UPLOAD_EXTRA_FILES)
     retry(run_cmd,
           args=(["make", "upload", "AB_CD=%s" % locale],),
           kwargs={'cwd': localeSrcDir, 'env': env})
 
+
 def getLocalesForChunk(possibleLocales, chunks, thisChunk):
     if 'en-US' in possibleLocales:
         possibleLocales.remove('en-US')
     possibleLocales = sorted(possibleLocales)
     nLocales = len(possibleLocales)
-    for c in range(1, chunks+1):
+    for c in range(1, chunks + 1):
         n = nLocales / chunks
         # If the total number of locales isn't evenly divisible by the number
         # of chunks we need to append one more onto some chunks
@@ -149,6 +158,7 @@ def getLocalesForChunk(possibleLocales, chunks, thisChunk):
         if c == thisChunk:
             return possibleLocales[0:n]
         del possibleLocales[0:n]
+
 
 def getNightlyLocalesForChunk(appName, sourceRepo, platform, chunks, thisChunk,
                               hg="http://hg.mozilla.org"):

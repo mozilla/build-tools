@@ -1,4 +1,7 @@
-import signal, os, time
+import signal
+import os
+import time
+
 
 def kill(pid):
     """Kill process pid with progressively more agressive signals."""
@@ -15,4 +18,3 @@ def kill(pid):
             os.kill(pid, 0)
         except OSError:
             return rc[1]
-

@@ -5,10 +5,13 @@
 
 Scans directories for exceptions in twistd.log files"""
 
-import os, re, time
+import os
+import re
+import time
 from smtplib import SMTP
 from email.mime.text import MIMEText
 import email.utils
+
 
 def find_files(dirs, lasttime):
     """Return a list of twisted log files in directories `dirs` that have been
@@ -27,12 +30,14 @@ def find_files(dirs, lasttime):
     retval.sort()
     return [r[1] for r in retval]
 
+
 def send_msg(fromaddr, emails, hostname, excs, name):
     """Send an email to each address in `emails`, from `fromaddr`
 
     The message will contain the hostname and list of exceptions `excs`"""
-    msg = "The following exceptions (total %i) were detected on %s %s:\n\n" % (len(excs), hostname, name)
-    msg += ("\n" + "-"*80 +"\n").join(excs)
+    msg = "The following exceptions (total %i) were detected on %s %s:\n\n" % (
+        len(excs), hostname, name)
+    msg += ("\n" + "-" * 80 + "\n").join(excs)
 
     s = SMTP()
     s.connect()
@@ -46,6 +51,7 @@ def send_msg(fromaddr, emails, hostname, excs, name):
 
     s.quit()
 
+
 def parse_time(line):
     """Returns a timestamp from a datestring in the given line"""
     m = re.search("(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})", line)
@@ -57,17 +63,18 @@ def parse_time(line):
 
 class Scanner:
     ignore_patterns = [
-            re.compile(re.escape("Failure: twisted.spread.pb.PBConnectionLost: [Failure instance: Traceback (failure with no frames): <class 'twisted.internet.error.ConnectionLost'>: Connection to the other side was lost in a non-clean fashion.")),
-            re.compile("schedulers/triggerable.py\", line \d+, in run.*d = self.parent.db.runInteraction\(self._run\).*exceptions.AttributeError: 'NoneType' object has no attribute 'db'", re.M + re.S),
-            # Ignore errors caused by older buildbot versions on the masters.
-            re.compile(re.escape("exceptions.AttributeError: BuildSlave instance has no attribute 'perspective_shutdown'")),
-            # Ignore users cancelling try runs
-            re.compile(re.escape("Failure: exceptions.RuntimeError")),
-            # Ignore clean-close "errors" from tegras
-            re.compile(re.escape("Failure: twisted.spread.pb.PBConnectionLost: [Failure instance: Traceback (failure with no frames): <class 'twisted.internet.error.ConnectionDone'>: Connection was closed cleanly")),
-            # Ignore stale broker refs we can't do anything about.
-            re.compile("twisted.spread.pb.DeadReferenceError: Calling Stale Broker"),
-            ]
+        re.compile(re.escape("Failure: twisted.spread.pb.PBConnectionLost: [Failure instance: Traceback (failure with no frames): <class 'twisted.internet.error.ConnectionLost'>: Connection to the other side was lost in a non-clean fashion.")),
+        re.compile("schedulers/triggerable.py\", line \d+, in run.*d = self.parent.db.runInteraction\(self._run\).*exceptions.AttributeError: 'NoneType' object has no attribute 'db'", re.M + re.S),
+        # Ignore errors caused by older buildbot versions on the masters.
+        re.compile(re.escape("exceptions.AttributeError: BuildSlave instance has no attribute 'perspective_shutdown'")),
+        # Ignore users cancelling try runs
+        re.compile(re.escape("Failure: exceptions.RuntimeError")),
+        # Ignore clean-close "errors" from tegras
+        re.compile(re.escape("Failure: twisted.spread.pb.PBConnectionLost: [Failure instance: Traceback (failure with no frames): <class 'twisted.internet.error.ConnectionDone'>: Connection was closed cleanly")),
+        # Ignore stale broker refs we can't do anything about.
+        re.compile(
+        "twisted.spread.pb.DeadReferenceError: Calling Stale Broker"),
+    ]
 
     def __init__(self, lasttime=0):
         # Buffer of unhandled lines
@@ -133,14 +140,17 @@ class Scanner:
 if __name__ == '__main__':
     from optparse import OptionParser
     parser = OptionParser()
-    parser.add_option("-t", "--timefile", dest="timefile", help="where to save time of last handled file")
-    parser.add_option("-e", "--email", dest="emails", action="append", help="email address to send exceptions to")
-    parser.add_option("-f", "--fromaddr", dest="fromaddr", help="From address for email notifications")
+    parser.add_option("-t", "--timefile", dest="timefile",
+                      help="where to save time of last handled file")
+    parser.add_option("-e", "--email", dest="emails", action="append",
+                      help="email address to send exceptions to")
+    parser.add_option("-f", "--fromaddr", dest="fromaddr",
+                      help="From address for email notifications")
     parser.add_option("-n", "--name", dest="name", help="Short description")
 
     parser.set_defaults(
-            emails=[],
-            fromaddr="reply@not.possible",
+        emails=[],
+        fromaddr="reply@not.possible",
     )
 
     options, args = parser.parse_args()
@@ -163,7 +173,8 @@ if __name__ == '__main__':
     if exceptions:
         if options.emails:
             hostname = os.uname()[1]
-            send_msg(options.fromaddr, options.emails, hostname, exceptions, options.name)
+            send_msg(options.fromaddr, options.emails,
+                     hostname, exceptions, options.name)
         else:
             print "\n".join(exceptions)
 

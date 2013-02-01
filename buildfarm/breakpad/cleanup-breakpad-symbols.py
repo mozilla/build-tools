@@ -10,9 +10,10 @@
 # $BUILDID_EXTRA is an optional identifier for feature branches, etc.
 #
 # This script, given a path to a symbol store, removes symbols
-# for the oldest builds there.  
+# for the oldest builds there.
 
-import os, os.path
+import os
+import os.path
 import sys
 import re
 from datetime import datetime, timedelta
@@ -44,6 +45,8 @@ symbolPath = args[0]
 # multiple times.
 atoms = []
 atomdict = {}
+
+
 def atomize(s):
     if s in atomdict:
         return atomdict[s]
@@ -52,13 +55,16 @@ def atomize(s):
     atomdict[s] = a
     return a
 
+
 def sortByBuildID(x, y):
     "Sort two symbol index filenames by the Build IDs contained within"
     (a, b) = (os.path.basename(x).split('-')[3],
               os.path.basename(y).split('-')[3])
-    return cmp(a,b)
+    return cmp(a, b)
 
 buildidRE = re.compile("(\d\d\d\d)(\d\d)(\d\d)(\d\d)")
+
+
 def datetimefrombuildid(f):
     """Given a symbol index filename, return a datetime representing the
     Build ID contained within it."""
@@ -68,10 +74,12 @@ def datetimefrombuildid(f):
     # punt
     return datetime.now()
 
+
 def adddefault(d, key, default):
     "If d[key] does not exist, set d[key] = default."
     if key not in d:
         d[key] = default
+
 
 def addFiles(symbolindex, filesDict):
     """Return a list of atoms representing the symbols in this index file.
@@ -89,10 +97,12 @@ Also add 1 to filesDict[atom] for each symbol."""
         pass
     return l
 
+
 def markDeleteSymbols(symbols, filesDict):
     "Decrement reference count by one for each symbol in this symbol index."
     for a in symbols:
         filesDict[a] -= 1
+
 
 def deletefile(f):
     if options.dry_run:
@@ -107,7 +117,7 @@ def deletefile(f):
 builds = {}
 allfiles = {}
 buildfiles = {}
-print  "[1/4] Reading symbol index files..."
+print "[1/4] Reading symbol index files..."
 # get symbol index files, there's one per build
 for f in os.listdir(symbolPath):
     if not (os.path.isfile(os.path.join(symbolPath, f)) and
@@ -115,7 +125,7 @@ for f in os.listdir(symbolPath):
         continue
     # increment reference count of all symbol files listed in the index
     # and also keep a list of files from that index
-    buildfiles[f] = addFiles(os.path.join(symbolPath,f), allfiles)
+    buildfiles[f] = addFiles(os.path.join(symbolPath, f), allfiles)
     # drop -symbols.txt
     parts = f.split("-")[:-1]
     (product, version, osName, buildId) = parts[:4]
@@ -137,12 +147,12 @@ for f in os.listdir(symbolPath):
             branch = version
     # group into bins by product-branch-os[-featurebranch]
     identifier = "%s-%s-%s" % (product, branch, osName)
-    if len(parts) > 4: # extra buildid, probably
+    if len(parts) > 4:  # extra buildid, probably
         identifier += "-" + "-".join(parts[4:])
     adddefault(builds, identifier, [])
     builds[identifier].append(f)
 
-print  "[2/4] Looking for symbols to delete..."
+print "[2/4] Looking for symbols to delete..."
 oldestdate = datetime.now() - maxNightlyAge
 for bin in builds:
     builds[bin].sort(sortByBuildID)
@@ -150,21 +160,21 @@ for bin in builds:
         # delete the oldest builds if there are too many
         for f in builds[bin][:-nightliesPerBin]:
             markDeleteSymbols(buildfiles[f], allfiles)
-            deletefile(os.path.join(symbolPath,f))
+            deletefile(os.path.join(symbolPath, f))
         builds[bin] = builds[bin][-nightliesPerBin:]
     # now look for really old symbol files
     for f in builds[bin]:
         if datetimefrombuildid(f) < oldestdate:
             markDeleteSymbols(buildfiles[f], allfiles)
-            deletefile(os.path.join(symbolPath,f))
+            deletefile(os.path.join(symbolPath, f))
 
-print  "[3/4] Deleting symbols..."
+print "[3/4] Deleting symbols..."
 # now delete all files marked for deletion
 for a, refcnt in allfiles.iteritems():
     if refcnt == 0:
-        deletefile(os.path.join(symbolPath,atoms[a]))
+        deletefile(os.path.join(symbolPath, atoms[a]))
 
-print  "[4/4] Pruning empty directories..."
+print "[4/4] Pruning empty directories..."
 sys.exit(0)
 # now delete empty directories.
 for root, dirs, files in os.walk(symbolPath, topdown=False):
@@ -175,4 +185,4 @@ for root, dirs, files in os.walk(symbolPath, topdown=False):
                 print "rm -rf ", fullpath
             else:
                 os.rmdir(fullpath)
-print  "Done!"
+print "Done!"

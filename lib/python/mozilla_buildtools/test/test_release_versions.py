@@ -2,6 +2,7 @@ import unittest
 
 from release.versions import getL10nDashboardVersion, getAppVersion
 
+
 class TestBuildVersions(unittest.TestCase):
     def _doTest(self, expected, version):
         self.assertEquals(expected,
@@ -12,6 +13,7 @@ class TestBuildVersions(unittest.TestCase):
 
     def testBeta(self):
         self._doTest("fx5_beta_b3", "5.0b3")
+
 
 class TestGetAppVersion(unittest.TestCase):
     def testFinal(self):

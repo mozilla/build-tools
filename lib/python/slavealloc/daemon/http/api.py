@@ -44,6 +44,7 @@ either {success=False} or {success=True, tac='content of buildbot.tac'}.</p>
 
 # base classes
 
+
 class Instance(resource.Resource):
     isLeaf = True
     okResponse = simplejson.dumps(dict(success=True))
@@ -95,7 +96,7 @@ class Instance(resource.Resource):
 
         sets = dict((k, json[k]) for k in self.update_keys if k in json)
         if not sets:
-            return # nothing to do!
+            return  # nothing to do!
 
         log.msg("%s: updating id %s from %r" %
                 (self.table.name, self.id, sets))
@@ -105,6 +106,7 @@ class Instance(resource.Resource):
         self.table.update(wc).execute(args)
 
         return self.okResponse
+
 
 class Collection(resource.Resource):
     addSlash = True
@@ -131,7 +133,7 @@ class Collection(resource.Resource):
         res = query.execute()
 
         request.setHeader('content-type', 'application/json')
-        return simplejson.dumps([ dict(r.items()) for r in res.fetchall() ])
+        return simplejson.dumps([dict(r.items()) for r in res.fetchall()])
 
 
 # concrete classes
@@ -145,11 +147,14 @@ class SlaveResource(Instance):
                    'envid', 'poolid', 'basedir', 'locked_masterid', 'notes',
                    'enabled', 'custom_tplid')
 
+
 class SlavesResource(Collection):
     instance_class = SlaveResource
     query = queries.denormalized_slaves
 
 # masters
+
+
 class MasterResource(Instance):
     table = model.masters
     id_column = model.masters.c.masterid
@@ -157,21 +162,27 @@ class MasterResource(Instance):
     update_keys = ('nickname', 'fqdn', 'pb_port', 'http_port', 'poolid',
                    'dcid', 'notes', 'enabled')
 
+
 class MastersResource(Collection):
     instance_class = MasterResource
     query = queries.denormalized_masters
 
 # TAC templates
+
+
 class TACTemplateResource(Instance):
     table = model.tac_templates
     id_column = model.tac_templates.c.tplid
     name_column = model.tac_templates.c.name
-    update_keys = () # view only via API
+    update_keys = ()  # view only via API
+
 
 class TACTemplatesResource(Collection):
     instance_class = TACTemplateResource
 
 # simple
+
+
 def simple_table_resource(tbl, id_column_name, name_column_name='name'):
     "make instance and collection classes for a simple id/name table"
     class SimpleInstance(Instance):
@@ -196,6 +207,7 @@ PoolsResource = simple_table_resource(model.pools, 'poolid')
 
 # allocator
 
+
 class BuildbotTacResource(resource.Resource):
     isLeaf = True
 
@@ -218,6 +230,7 @@ class BuildbotTacResource(resource.Resource):
                 success=True,
                 tac=buildbottac.make_buildbot_tac(alloc)))
 
+
 class BuildbotTacRootResource(resource.Resource):
     "A JSON-style allocator that will get a TAC file, but not record it"
     isLeaf = False
@@ -226,6 +239,7 @@ class BuildbotTacRootResource(resource.Resource):
         return BuildbotTacResource(path_component)
 
 # root URI
+
 
 class ApiRoot(resource.Resource):
     addSlash = True
@@ -258,8 +272,9 @@ class ApiRoot(resource.Resource):
             return self
 
     def render_GET(self, request):
-        tables_list = '\n'.join([ '<li>%s</li>' % t for t in self.tables ])
+        tables_list = '\n'.join(['<li>%s</li>' % t for t in self.tables])
         return docs_tpl % dict(tables=tables_list)
+
 
 def makeRootResource():
     return ApiRoot()

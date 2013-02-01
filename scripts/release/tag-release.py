@@ -7,33 +7,37 @@ import subprocess
 import sys
 
 sys.path.append(path.join(path.dirname(__file__), "../../lib/python"))
-logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
+logging.basicConfig(
+    stream=sys.stdout, level=logging.INFO, format="%(message)s")
 log = logging.getLogger(__name__)
 
 from util.commands import run_cmd, get_output
 from util.hg import mercurial, apply_and_push, update, get_revision, \
-  make_hg_url, out, BRANCH, get_branches, cleanOutgoingRevs
+    make_hg_url, out, BRANCH, get_branches, cleanOutgoingRevs
 from util.retry import retry
 from build.versions import bumpFile
 from release.info import readReleaseConfig, getTags, generateRelbranchName
 from release.l10n import getL10nRepositories
 
-HG="hg.mozilla.org"
-DEFAULT_BUILDBOT_CONFIGS_REPO=make_hg_url(HG, 'build/buildbot-configs')
-DEFAULT_MAX_PUSH_ATTEMPTS=10
+HG = "hg.mozilla.org"
+DEFAULT_BUILDBOT_CONFIGS_REPO = make_hg_url(HG, 'build/buildbot-configs')
+DEFAULT_MAX_PUSH_ATTEMPTS = 10
 REQUIRED_CONFIG = ('version', 'appVersion', 'appName', 'productName',
                    'milestone', 'buildNumber', 'hgUsername', 'hgSshKey',
                    'baseTag', 'l10nRepoPath', 'sourceRepositories',
                    'l10nRevisionFile')
 REQUIRED_SOURCE_REPO_KEYS = ('path', 'revision')
 
+
 def getBumpCommitMessage(productName, version):
     return 'Automated checkin: version bump for ' + productName + ' ' + \
            version + ' release. DONTBUILD CLOSED TREE a=release'
 
+
 def getTagCommitMessage(revision, tags):
     return "Added " +  " ".join(tags) + " tag(s) for changeset " + revision + \
            ". DONTBUILD CLOSED TREE a=release"
+
 
 def bump(repo, bumpFiles, versionKey):
     for f, info in bumpFiles.iteritems():
@@ -45,11 +49,13 @@ def bump(repo, bumpFiles, versionKey):
             fh.write(newContents)
             fh.close()
 
+
 def tag(repo, revision, tags, username):
     cmd = ['hg', 'tag', '-u', username, '-r', revision,
            '-m', getTagCommitMessage(revision, tags), '-f']
     cmd.extend(tags)
     run_cmd(cmd, cwd=repo)
+
 
 def tagRepo(config, repo, reponame, revision, tags, bumpFiles, relbranch,
             pushAttempts, defaultBranch='default'):
@@ -114,15 +120,18 @@ def tagRepo(config, repo, reponame, revision, tags, bumpFiles, relbranch,
                            ssh_key=config['hgSshKey'])
 
         if len([r for r in outgoingRevs if r[BRANCH] == "default"]) != defaultBranchChangesets:
-            raise Exception("Incorrect number of revisions on 'default' branch")
+            raise Exception(
+                "Incorrect number of revisions on 'default' branch")
         if len([r for r in outgoingRevs if r[BRANCH] == relbranch]) != relbranchChangesets:
             raise Exception("Incorrect number of revisions on %s" % relbranch)
         if len(outgoingRevs) != (relbranchChangesets + defaultBranchChangesets):
             raise Exception("Wrong number of outgoing revisions")
 
     pushRepo = make_hg_url(HG, repo, protocol='ssh')
+
     def bump_and_tag_wrapper(r, n):
         bump_and_tag(r, n, config, relbranch, revision, tags, defaultBranch)
+
     def cleanup_wrapper():
         cleanOutgoingRevs(reponame, pushRepo, config['hgUsername'],
                           config['hgSshKey'])
@@ -130,6 +139,7 @@ def tagRepo(config, repo, reponame, revision, tags, bumpFiles, relbranch,
           args=(reponame, pushRepo, bump_and_tag_wrapper, pushAttempts),
           kwargs=dict(ssh_username=config['hgUsername'],
                       ssh_key=config['hgSshKey']))
+
 
 def tagOtherRepo(config, repo, reponame, revision, pushAttempts):
     remote = make_hg_url(HG, repo)
@@ -140,14 +150,17 @@ def tagOtherRepo(config, repo, reponame, revision, pushAttempts):
         totalChangesets = 1
         tag(repo, revision, tags, config['hgUsername'])
         outgoingRevs = retry(out, kwargs=dict(src=reponame, remote=remote,
-                                              ssh_username=config['hgUsername'],
+                                              ssh_username=config[
+                                                  'hgUsername'],
                                               ssh_key=config['hgSshKey']))
         if len(outgoingRevs) != totalChangesets:
             raise Exception("Wrong number of outgoing revisions")
-    
+
     pushRepo = make_hg_url(HG, repo, protocol='ssh')
+
     def tag_wrapper(r, n):
         tagRepo(r, n, config, revision, tags)
+
     def cleanup_wrapper():
         cleanOutgoingRevs(reponame, pushRepo, config['hgUsername'],
                           config['hgSshKey'])
@@ -155,6 +168,7 @@ def tagOtherRepo(config, repo, reponame, revision, pushAttempts):
           args=(reponame, pushRepo, tag_wrapper, pushAttempts),
           kwargs=dict(ssh_username=config['hgUsername'],
                       ssh_key=config['hgSshKey']))
+
 
 def validate(options, args):
     err = False
@@ -166,7 +180,8 @@ def validate(options, args):
         log.info("%s does not exist!" % options.configfile)
         sys.exit(1)
 
-    config = readReleaseConfig(path.join('buildbot-configs', options.configfile))
+    config = readReleaseConfig(
+        path.join('buildbot-configs', options.configfile))
     for key in REQUIRED_CONFIG:
         if key not in config:
             err = True
@@ -177,7 +192,7 @@ def validate(options, args):
             if key not in r:
                 err = True
                 log.info("Missing required key '%s' for '%s'" % (key, r))
-            
+
     if 'otherReposToTag' in config:
         if not callable(getattr(config['otherReposToTag'], 'iteritems')):
             err = True
@@ -189,10 +204,11 @@ def validate(options, args):
 if __name__ == '__main__':
     from optparse import OptionParser
     import os
-    
+
     parser = OptionParser(__doc__)
     parser.set_defaults(
-        attempts=os.environ.get('MAX_PUSH_ATTEMPTS', DEFAULT_MAX_PUSH_ATTEMPTS),
+        attempts=os.environ.get(
+            'MAX_PUSH_ATTEMPTS', DEFAULT_MAX_PUSH_ATTEMPTS),
         buildbot_configs=os.environ.get('BUILDBOT_CONFIGS_REPO',
                                         DEFAULT_BUILDBOT_CONFIGS_REPO),
     )
@@ -210,7 +226,7 @@ if __name__ == '__main__':
     update('buildbot-configs', revision=options.release_tag)
     config = validate(options, args)
     configDir = path.dirname(options.configfile)
-    
+
     # We generate this upfront to ensure that it's consistent throughout all
     # repositories that use it. However, in cases where a relbranch is provided
     # for all repositories, it will not be used
@@ -219,8 +235,10 @@ if __name__ == '__main__':
         generatedRelbranch = generateRelbranchName(
             config['milestone'], prefix=config['relbranchPrefix'])
     tags = getTags(config['baseTag'], config['buildNumber'])
-    l10nRevisionFile = path.join('buildbot-configs', configDir, config['l10nRevisionFile'])
-    l10nRepos = getL10nRepositories(open(l10nRevisionFile).read(), config['l10nRepoPath'])
+    l10nRevisionFile = path.join(
+        'buildbot-configs', configDir, config['l10nRevisionFile'])
+    l10nRepos = getL10nRepositories(
+        open(l10nRevisionFile).read(), config['l10nRepoPath'])
 
     for repo in config['sourceRepositories'].values():
         relbranch = repo['relbranch'] or generatedRelbranch
@@ -246,7 +264,7 @@ if __name__ == '__main__':
                 failed.append((repo, format_exc()))
     if len(failed) > 0:
         log.info("The following locales failed to tag:")
-        for l,e in failed:
+        for l, e in failed:
             log.info("  %s" % l)
             log.info("%s\n" % e)
         sys.exit(1)

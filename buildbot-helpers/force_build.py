@@ -4,6 +4,7 @@ from urllib import urlencode
 from urllib2 import urlopen
 from urlparse import urljoin
 
+
 class Forcer:
     maxProperties = 3
     """A Forcer knows how to force a build through the Buildbot web interface
@@ -27,7 +28,7 @@ class Forcer:
         if revision:
             args['revision'] = revision
         i = 1
-        for key,value in properties.iteritems():
+        for key, value in properties.iteritems():
             p = "property%d" % i
             args['%sname' % p] = key
             args['%svalue' % p] = value

@@ -1,10 +1,15 @@
 #!/usr/bin/python
-import simplejson, sys, os, re
+import simplejson
+import sys
+import os
+import re
+
 
 def new_master(hostname, type_, instance=1):
     assert type_ in ('build', 'tests', 'try')
     localname = "%s%i" % (type_, instance)
-    hostname_data = re.match("buildbot-master(\d{2})\.build\.(\w+)\.mozilla\.com", hostname)
+    hostname_data = re.match(
+        "buildbot-master(\d{2})\.build\.(\w+)\.mozilla\.com", hostname)
     assert hostname_data
     host_abbrev = "bm%s" % hostname_data.group(1)
     datacentre = hostname_data.group(2)

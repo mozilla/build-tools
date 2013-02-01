@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 
-import os, sys, time
+import os
+import sys
+import time
 
-MAX_UPTIME = 10*60*60 # 10hours
+MAX_UPTIME = 10 * 60 * 60  # 10hours
 OFFSET_FILE = '/builds/uptime-offset'
 REBOOT_CMD = '/bin/reboot-user'
 LOG_FILE = '/var/log/uptime.log'
+
 
 def main():
     log = open(LOG_FILE, 'a+')
@@ -25,20 +28,20 @@ def main():
             off_time = 0
         if (up_t - off_time) > MAX_UPTIME:
             print >> log, '%s - i have been up too long -- rebooting' % \
-                    time.asctime(time.localtime())
+                time.asctime(time.localtime())
             log.flush()
             os.execv(REBOOT_CMD, [REBOOT_CMD])
             print >> log, 'Wow, i am really messed up!'
             log.flush()
         time.sleep(60)
 
-if __name__=="__main__":
+if __name__ == "__main__":
     try:
         pid = os.fork()
         if pid > 0:
             sys.exit(0)
     except OSError, e:
-        print >>sys.stderr, 'first fork failed %d %s' %(e.errno, e.strerror)
+        print >>sys.stderr, 'first fork failed %d %s' % (e.errno, e.strerror)
         sys.exit(1)
 
     os.chdir("/")
@@ -50,5 +53,5 @@ if __name__=="__main__":
         else:
             main()
     except OSError, e:
-        print >>sys.stderr, 'second fork failed %d %s' %(e.errno, e.strerror)
+        print >>sys.stderr, 'second fork failed %d %s' % (e.errno, e.strerror)
         sys.exit(1)

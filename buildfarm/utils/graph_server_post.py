@@ -7,6 +7,7 @@ try:
 except ImportError:
     import simplejson as json
 
+
 class GraphPost(object):
 
     def __init__(self, server, selector, branch, resultsname, testresult,
@@ -25,11 +26,11 @@ class GraphPost(object):
         lines = contents.split('\n')
         found = False
         for line in lines:
-            if "RETURN" in line :
+            if "RETURN" in line:
                 tboxPrint =  'TinderboxPrint: ' + \
-                  '<a title="%s" href=\'http://%s/%s\'>%s:%s</a>\n' % \
-                  (testlongname, self.server, line.split("\t")[3],
-                  testname, prettyval)
+                    '<a title="%s" href=\'http://%s/%s\'>%s:%s</a>\n' % \
+                    (testlongname, self.server, line.split("\t")[3],
+                    testname, prettyval)
                 print tboxPrint
                 found = True
         if not found:
@@ -52,9 +53,10 @@ class GraphPost(object):
         testval = str(testval).strip(string.letters)
         data = self.constructString(testlongname, testval)
         content = post_multipart(self.server, self.selector,
-                                           [("key","value")],
-                                           [("filename", "data", data)])
+                                 [("key", "value")],
+                                 [("filename", "data", data)])
         self.doTinderboxPrint(content, testlongname, testname, prettyval)
+
 
 def main():
     from optparse import OptionParser
@@ -71,7 +73,7 @@ def main():
 
     options, args = parser.parse_args()
 
-    #TODO: check params
+    # TODO: check params
     properties = json.load(open(options.propertiesFile))
     testresults = properties['properties']['testresults']
 

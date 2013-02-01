@@ -5,6 +5,7 @@ from subprocess import CalledProcessError
 
 log = logging.getLogger(__name__)
 
+
 def check_buildbot():
     """check if buildbot command works"""
     try:

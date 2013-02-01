@@ -9,9 +9,9 @@ if __name__ == '__main__':
     from optparse import OptionParser
     parser = OptionParser(usage=__doc__)
     parser.add_option("-k", "--key", dest="key",
-            help="Name of key to retrieve. If multiple levels deep, full path to the key, delimited by the specified delimiter.")
+                      help="Name of key to retrieve. If multiple levels deep, full path to the key, delimited by the specified delimiter.")
     parser.add_option("-d", "--delimiter", dest="delimiter",
-            help="Delimiter used in key when retrieving a value multiple levels deep")
+                      help="Delimiter used in key when retrieving a value multiple levels deep")
     parser.set_defaults(delimiter=".")
 
     options, args = parser.parse_args()

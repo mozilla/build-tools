@@ -9,12 +9,14 @@ import re
 
 log = logging.getLogger(__name__)
 
+
 def check_masters(masters):
     retval = True
     for master in masters:
         if not check_master(master):
             retval = False
     return retval
+
 
 def load_masters(url):
     if 'http' in url:
@@ -23,14 +25,15 @@ def load_masters(url):
         fp = open(url)
     return json.load(fp)
 
+
 def check_master(master):
     # Check required keys
     name = master['name']
     required_keys = ('hostname', 'enabled', 'master_dir', 'name', 'role',
-            'basedir', 'bbconfigs_dir', 'db_name', 'bbcustom_dir',
-            'bbcustom_branch', 'bbconfigs_branch', 'tools_dir',
-            'tools_branch', 'datacentre', 'buildbot_bin', 'buildbot_branch',
-            'buildbot_python', 'buildbot_setup', 'environment')
+                     'basedir', 'bbconfigs_dir', 'db_name', 'bbcustom_dir',
+                     'bbcustom_branch', 'bbconfigs_branch', 'tools_dir',
+                     'tools_branch', 'datacentre', 'buildbot_bin', 'buildbot_branch',
+                     'buildbot_python', 'buildbot_setup', 'environment')
     opt_keys = ('http_port', 'ssh_port', 'pb_port', 'buildbot_version',
                 'limit_fx_platforms', 'limit_tb_platforms', 'limit_b2g_platforms',
                 'release_branches', 'thunderbird_release_branches', 'mobile_release_branches')
@@ -95,20 +98,22 @@ def check_master(master):
         return False
 
     ports = {
-            "ssh": 7000 + role_offset + instance_num,
-            "http": 8000 + role_offset + instance_num,
-            "pb": 9000 + role_offset + instance_num,
-            }
+        "ssh": 7000 + role_offset + instance_num,
+        "http": 8000 + role_offset + instance_num,
+        "pb": 9000 + role_offset + instance_num,
+    }
     for proto in required_ports:
         master_port = master.get("%s_port" % proto)
         if master_port != ports[proto]:
-            log.error("%s - bad %s port (got %i, expected %i)", name, proto, master_port, ports[proto])
+            log.error("%s - bad %s port (got %i, expected %i)",
+                      name, proto, master_port, ports[proto])
             return False
 
     # Check master_dir
     if master['master_dir'] != "/builds/buildbot/%s/master" % instance:
         # TODO this needs tweaking for tests
-        log.error("%s - bad master_dir %s" % (name, master.get('master_dir', 'None')))
+        log.error("%s - bad master_dir %s" % (name, master.get(
+            'master_dir', 'None')))
         return False
 
     # Check basedir

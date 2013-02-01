@@ -1,9 +1,11 @@
-import os, sys
+import os
+import sys
 sys.path.append('..')
 import graphserver
 import unittest
 import tempfile
 import json
+
 
 class GraphserverTestCase(unittest.TestCase):
 

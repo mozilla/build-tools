@@ -2,13 +2,14 @@ import unittest
 
 from release.l10n import parsePlainL10nChangesets, getL10nRepositories
 
+
 class TestParsePlainL10nChangesets(unittest.TestCase):
     def testSimple(self):
         contents = """\
 af abc123
 zh-TW blah"""
         expected = {
-            'af':    'abc123',
+            'af': 'abc123',
             'zh-TW': 'blah',
         }
         got = parsePlainL10nChangesets(contents)

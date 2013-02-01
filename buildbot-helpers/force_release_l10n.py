@@ -12,8 +12,9 @@ from force_build import Forcer
 
 ALL_PLATFORMS = getSupportedPlatforms()
 
+
 class L10nForcer:
-    ignoredLocales = ('en-US') # locales that are _always_ to be skipped
+    ignoredLocales = ('en-US')  # locales that are _always_ to be skipped
 
     def __init__(self, masterUrl, toForce, releaseTag, name="Unknown",
                  comments="Unknown", delay=2, loud=True):
@@ -24,7 +25,7 @@ class L10nForcer:
         assert isinstance(toForce, dict), "toForce must be a dict!"
         for value in toForce.itervalues():
             assert isinstance(value, (tuple, list)), \
-              "toForce values must be a list or tuple"
+                "toForce values must be a list or tuple"
         for platform in toForce.iterkeys():
             forcer = Forcer(masterUrl, '%s_repack' % platform, loud)
             self.forcers[platform] = forcer
@@ -42,7 +43,7 @@ class L10nForcer:
 
     def forceBuilds(self):
         errors = []
-        for platform,locales in self.toForce.iteritems():
+        for platform, locales in self.toForce.iteritems():
             forcer = self.forcers[platform]
             for locale in sorted(locales):
                 if locale in self.ignoredLocales:
@@ -60,14 +61,14 @@ class L10nForcer:
                                       branch=locale, properties=properties)
                     sleep(self.delay)
                 except:
-                    errors.append((platform,locale))
+                    errors.append((platform, locale))
                     if self.loud:
                         "*** Error when forcing %s %s" % (platform, locale)
                     # Don't raise the exception, keep going
         if self.loud:
             if len(errors) > 0:
                 print "ERROR SUMMARY:"
-            for platform,locale in map(lambda x: (x[0], x[1]), errors):
+            for platform, locale in map(lambda x: (x[0], x[1]), errors):
                 print "  %s - %s" % (platform, locale)
 
 
@@ -77,7 +78,7 @@ def getShippedLocales(shippedLocales):
     properlyParsed = {}
     for p in ALL_PLATFORMS:
         properlyParsed[p] = []
-    for locale,platforms in parsed.iteritems():
+    for locale, platforms in parsed.iteritems():
         if platforms:
             for p in platforms:
                 # map the bouncer/shipped-locales platforms to automation ones
@@ -131,7 +132,7 @@ echo "zh-TW win32 osx" >> my-locales
                       default="Unknown",
                       help="Name to use when submitting.")
     parser.add_option("-m", "--master", action="store", dest="master",
-                      help="The base url of the master to submit to. " + \
+                      help="The base url of the master to submit to. " +
                            "Eg, http://localhost:8010")
     parser.add_option("-t", "--release-tag", action="store", dest="releaseTag",
                       help="The tag to build with. Eg, FIREFOX_3_5_3_RELEASE")
@@ -139,19 +140,19 @@ echo "zh-TW win32 osx" >> my-locales
                       default="Unknown")
     parser.add_option("-d", "--delay", action="store", dest="delay",
                       default=2,
-                      help="Amount of time (in seconds) to wait between each" +\
+                      help="Amount of time (in seconds) to wait between each" +
                            "POST. Defaults to 2 seconds")
     parser.add_option("-v", "--verbose", action="store_true", dest="loud",
                       default=False)
     parser.add_option("-g", "--hg", action="store", dest="hg",
                       default="http://hg.mozilla.org",
-                      help="Root of the HG server. Defaults to " + \
-                           "http://hg.mozilla.org. Only used when -s " + \
+                      help="Root of the HG server. Defaults to " +
+                           "http://hg.mozilla.org. Only used when -s " +
                            "isn't specified.")
     parser.add_option("-b", "--branch", action="store", dest="branch",
-                      help="The branch, relative to the HG server, to " + \
-                           "locate shipped locales on. " + \
-                           "Eg, releases/mozilla-1.9.1. Only used when " + \
+                      help="The branch, relative to the HG server, to " +
+                           "locate shipped locales on. " +
+                           "Eg, releases/mozilla-1.9.1. Only used when " +
                            "-s isn't specified.")
     parser.add_option("-s", "--shipped-locales-file", action="store",
                       dest="shippedLocales", default=None,
@@ -169,10 +170,10 @@ echo "zh-TW win32 osx" >> my-locales
                       help="When specified, only platforms passed with -p will "
                            "have builds forced. By default, builds will be "
                            "forced for all platforms %s for " %
-                             str(ALL_PLATFORMS) +
-                           "locales without exceptions. Platform exceptions "
-                           "will be obeyed regardless of -p options used. See "
-                           "example usage for further details.")
+                      str(ALL_PLATFORMS) +
+                      "locales without exceptions. Platform exceptions "
+                      "will be obeyed regardless of -p options used. See "
+                      "example usage for further details.")
 
     (options, args) = parser.parse_args()
 
@@ -183,7 +184,7 @@ echo "zh-TW win32 osx" >> my-locales
         f.close()
     else:
         file = '%s/raw-file/%s/browser/locales/shipped-locales' % \
-          (options.branch, options.releaseTag)
+            (options.branch, options.releaseTag)
         url = urljoin(options.hg, file)
         shippedLocales = urlopen(url).read()
 

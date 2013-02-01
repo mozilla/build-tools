@@ -5,8 +5,10 @@ import traceback
 import logging
 log = logging.getLogger(__name__)
 
-def retry(action, attempts=5, sleeptime=60, max_sleeptime=5*60, retry_exceptions=(Exception,),
-          cleanup=None, args=(), kwargs={}):
+
+def retry(
+    action, attempts=5, sleeptime=60, max_sleeptime=5 * 60, retry_exceptions=(Exception,),
+        cleanup=None, args=(), kwargs={}):
     """Call `action' a maximum of `attempts' times until it succeeds,
         defaulting to 5. `sleeptime' is the number of seconds to wait
         between attempts, defaulting to 60 and doubling each retry attempt, to
@@ -22,12 +24,13 @@ def retry(action, attempts=5, sleeptime=60, max_sleeptime=5*60, retry_exceptions
     assert callable(action)
     assert not cleanup or callable(cleanup)
     if max_sleeptime < sleeptime:
-        log.debug("max_sleeptime %d less than sleeptime %d" % (max_sleeptime, sleeptime))
+        log.debug("max_sleeptime %d less than sleeptime %d" % (
+            max_sleeptime, sleeptime))
     n = 1
     while n <= attempts:
         try:
-            log.info("retry: Calling %s with args: %s, kwargs: %s, attempt #%d" % \
-              (action, str(args), str(kwargs), n))
+            log.info("retry: Calling %s with args: %s, kwargs: %s, attempt #%d" %
+                    (action, str(args), str(kwargs), n))
             return action(*args, **kwargs)
         except retry_exceptions:
             log.debug("retry: Caught exception: ", exc_info=True)
@@ -37,7 +40,8 @@ def retry(action, attempts=5, sleeptime=60, max_sleeptime=5*60, retry_exceptions
                 log.info("retry: Giving up on %s" % action)
                 raise
             if sleeptime > 0:
-                log.info("retry: Failed, sleeping %d seconds before retrying" % sleeptime)
+                log.info("retry: Failed, sleeping %d seconds before retrying" %
+                         sleeptime)
                 time.sleep(sleeptime)
                 sleeptime = sleeptime * 2
                 if sleeptime > max_sleeptime:
@@ -45,6 +49,7 @@ def retry(action, attempts=5, sleeptime=60, max_sleeptime=5*60, retry_exceptions
             continue
         finally:
             n += 1
+
 
 def retriable(*retry_args, **retry_kwargs):
     ''' A decorator for retry(). Example usage:

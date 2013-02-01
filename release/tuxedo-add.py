@@ -9,8 +9,9 @@ import sys
 import os
 import traceback
 from release.platforms import buildbot2bouncer, buildbot2ftp, \
-        getAllLocales, getPlatforms
+    getAllLocales, getPlatforms
 from release.versions import getPrettyVersion
+
 
 class TuxedoOption(Option):
     ATTRS = Option.ATTRS + ['required']
@@ -19,14 +20,15 @@ class TuxedoOption(Option):
         if self.required and not self.takes_value():
             raise OptionError(
                 "required flag set for option that doesn't take a value",
-                 self)
+                self)
 
     # Make sure _check_required() is called from the constructor!
     CHECK_METHODS = Option.CHECK_METHODS + [_check_required]
 
-    def process (self, opt, value, values, parser):
+    def process(self, opt, value, values, parser):
         Option.process(self, opt, value, values, parser)
         parser.option_seen[self] = 1
+
 
 class TuxedoOptionParser(OptionParser):
 
@@ -38,11 +40,12 @@ class TuxedoOptionParser(OptionParser):
         for option in self.option_list:
             if (isinstance(option, Option) and
                 option.required and
-                not self.option_seen.has_key(option)):
+                    option not in self.option_seen):
                 self.print_help()
                 self.set_usage(optparse.SUPPRESS_USAGE)
                 self.error("%s not supplied" % option)
         return (values, args)
+
 
 class TuxedoEntrySubmitter(object):
 
@@ -61,7 +64,8 @@ class TuxedoEntrySubmitter(object):
         self.milestone = milestone
         self.tuxedoServerUrl = tuxedoServerUrl
         self.brandName = brandName or productName.capitalize()
-        self.bouncerProductName = bouncerProductName or productName.capitalize()
+        self.bouncerProductName = bouncerProductName or productName.capitalize(
+        )
         self.shippedLocales = shippedLocales
         self.partialVersions = partialVersions
         self.username = username
@@ -129,12 +133,12 @@ full_product_template = /%(product)s/releases/%(version)s/%(ftp_platform)s/%(loc
             self.partial_mar_template[platform] = cfg.get(platform,
                                                           'partial_mar_template')
 
-
     def tuxedoRequest(self, url, postdata=None):
         full_url = self.tuxedoServerUrl + url
         request = urllib2.Request(full_url)
         if self.username and self.password:
-            basicAuth = base64.encodestring('%s:%s' % (self.username, self.password))
+            basicAuth = base64.encodestring(
+                '%s:%s' % (self.username, self.password))
             request.add_header("Authorization", "Basic %s" % basicAuth.strip())
         if postdata:
             if isinstance(postdata, dict):
@@ -173,7 +177,7 @@ full_product_template = /%(product)s/releases/%(version)s/%(ftp_platform)s/%(loc
         path = path.replace(' ', '%20')
         if self.verbose:
             print "Adding location for %s, %s: %s" % \
-                    (product, buildbot2bouncer(platform), path)
+                (product, buildbot2bouncer(platform), path)
         self.tuxedoRequest("location_add/",
                            {'product': product,
                             'os': buildbot2bouncer(platform),
@@ -211,12 +215,14 @@ full_product_template = /%(product)s/releases/%(version)s/%(ftp_platform)s/%(loc
                 for previousVersion in self.partialVersions:
                     template_dict['previous_version'] = previousVersion
                     path = self.partial_mar_template[platform] % template_dict
-                    name = self.partial_mar_bouncer_product_names[previousVersion]
+                    name = self.partial_mar_bouncer_product_names[
+                        previousVersion]
                     self.location_add(name, platform, path)
 
     def submit(self):
         self.add_products()
         self.add_locations()
+
 
 def getOptions():
     parser = TuxedoOptionParser(option_class=TuxedoOption)
@@ -236,14 +242,16 @@ def getOptions():
                       help="Bouncer/Tuxedo API URL")
     parser.add_option("-r", "--brand-name", dest="brandName",
                       help="Brand name")
-    parser.add_option("-b", "--bouncer-product-name", dest="bouncerProductName",
-                      help="Bouncer product name")
+    parser.add_option(
+        "-b", "--bouncer-product-name", dest="bouncerProductName",
+        help="Bouncer product name")
     parser.add_option("--bouncer-product-suffix", dest="bouncerProductSuffix",
                       help="Bouncer product suffix")
     parser.add_option("-l", "--shipped-locales", dest="shippedLocales",
                       help="shipped-locales file location")
-    parser.add_option("--partial-version", dest="partialVersions", action="append",
-                      default=[], help="Old product version")
+    parser.add_option(
+        "--partial-version", dest="partialVersions", action="append",
+        default=[], help="Old product version")
     parser.add_option("--platform", action="append",
                       dest="platforms",
                       help="Platform(s) to be processed")
@@ -261,6 +269,7 @@ def getOptions():
                       help="Don't print status messages to stdout")
     return parser.parse_args()
 
+
 def credentials_from_file(credentials_file):
     try:
         module, _ = os.path.splitext(credentials_file)
@@ -270,12 +279,13 @@ def credentials_from_file(credentials_file):
         return (username, password)
     except ImportError:
         print >> sys.stderr, \
-                "Cannot open credentials file: %s" % credentials_file
+            "Cannot open credentials file: %s" % credentials_file
         sys.exit(3)
     except AttributeError:
         print >> sys.stderr, \
-                "Cannot retrieve credentials file: %s" % credentials_file
+            "Cannot retrieve credentials file: %s" % credentials_file
         sys.exit(4)
+
 
 def main():
     (options, args) = getOptions()
@@ -300,10 +310,9 @@ def main():
                                   dryRun=options.dryRun,
                                   platforms=options.platforms,
                                   bouncerProductSuffix=options.bouncerProductSuffix,
-                                 )
+                                  )
     tuxedo.submit()
 
 
 if __name__ == '__main__':
     main()
-

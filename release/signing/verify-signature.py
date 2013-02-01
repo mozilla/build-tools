@@ -7,8 +7,9 @@ from subprocess import call
 
 from signing import *
 
+
 def check_repack(unsigned, signed, binary_checksums, fake_signatures=False,
-        product="firefox"):
+                 product="firefox"):
     """Check that files `unsigned` and `signed` match.  They will both be
     unpacked and their contents compared.
 
@@ -34,11 +35,15 @@ def check_repack(unsigned, signed, binary_checksums, fake_signatures=False,
         unpackfile(unsigned, unsigned_dir)
         unpackfile(signed, signed_dir)
 
-        unsigned_files = sorted([f[len(unsigned_dir)+1:] for f in findfiles(unsigned_dir)])
-        signed_files = sorted([f[len(signed_dir)+1:] for f in findfiles(signed_dir)])
+        unsigned_files = sorted(
+            [f[len(unsigned_dir) + 1:] for f in findfiles(unsigned_dir)])
+        signed_files = sorted(
+            [f[len(signed_dir) + 1:] for f in findfiles(signed_dir)])
 
-        unsigned_dirs = sorted([d[len(unsigned_dir)+1:] for d in finddirs(unsigned_dir)])
-        signed_dirs = sorted([d[len(signed_dir)+1:] for d in finddirs(signed_dir)])
+        unsigned_dirs = sorted(
+            [d[len(unsigned_dir) + 1:] for d in finddirs(unsigned_dir)])
+        signed_dirs = sorted(
+            [d[len(signed_dir) + 1:] for d in finddirs(signed_dir)])
 
         # Make sure the list of files are the same
         if signed_files != unsigned_files:
@@ -129,6 +134,7 @@ Missing: %(removed_dirs)s""" % locals()
         shutil.rmtree(unsigned_dir)
         shutil.rmtree(signed_dir)
 
+
 def verify_checksums(sums):
     """ Verify checksums for signed binaries across installer/MAR pairs """
     valid_checksum = True
@@ -150,6 +156,7 @@ def verify_checksums(sums):
             valid_checksum = False
     return valid_checksum
 
+
 def setup_checksums(checksums, unsigned_file, product):
     """ Set up dictionary nesting to uniquely identify the file being
     examined."""
@@ -163,9 +170,11 @@ def setup_checksums(checksums, unsigned_file, product):
     # container
     return pkg_checksums
 
+
 def random_locale(choices, product):
     """ Select a random locale from a list of product packages """
     return fileInfo(random.choice(choices), product)['locale']
+
 
 def random_partner(choices, locale, product):
     """ Select a random partner name from a list of product packages """
@@ -174,6 +183,7 @@ def random_partner(choices, locale, product):
             [f for f in choices if locale == fileInfo(f, product)['locale']]
         ),
         product)['leading_path']
+
 
 def filter_unsigned(choices, product, locales, partners=None):
     """ filter unsigned packages list by locale and partner names """
@@ -185,21 +195,24 @@ def filter_unsigned(choices, product, locales, partners=None):
         """ match plain packages or ones matching the given partner names """
         if partners:
             return not fileInfo(f, product)['leading_path'] or \
-                [p for p in partners if p == fileInfo(f, product)['leading_path']]
+                [p for p in partners if p == fileInfo(
+                    f, product)['leading_path']]
         else:
             return not fileInfo(f, product)['leading_path']
     return [f for f in choices if filter_locales(f) and filter_partners(f)]
+
 
 def get_valid_packages(choices, first_locale, product):
     """ Get a list of packages that we can randomly select from without
     collisions (first_locale), or missing items (locales with no partners """
     valid_choices = [f for f in choices if first_locale not in f and
-        fileInfo(f, product)['leading_path']]
+                     fileInfo(f, product)['leading_path']]
     if valid_choices:
         return valid_choices, False
 
     log.info("No partner-repacks found, skipping...")
     return [f for f in choices if first_locale not in f], True
+
 
 def filter_quick(unsigned_packages, first_locale, product):
     """ Trim down the list of files to verify to only the firstLocale (en-US
@@ -209,51 +222,57 @@ def filter_quick(unsigned_packages, first_locale, product):
     # Select a locale at random that is not the first_locale, and has at
     # least one available partner repack built
     valid_choices, skip_partners = get_valid_packages(unsigned_packages,
-        first_locale, product)
+                                                      first_locale, product)
 
     rand_locale = random_locale(valid_choices, product)
 
     if skip_partners:
         return filter_unsigned(unsigned_packages, product, (first_locale, rand_locale))
 
-    rand_first_partner = random_partner(unsigned_packages, first_locale, product)
+    rand_first_partner = random_partner(
+        unsigned_packages, first_locale, product)
     rand_locale_partner = random_partner(valid_choices, rand_locale, product)
-    return filter_unsigned(unsigned_packages, product, [first_locale, rand_locale],
+    return filter_unsigned(
+        unsigned_packages, product, [first_locale, rand_locale],
         [rand_first_partner, rand_locale_partner])
 
 if __name__ == "__main__":
-    import sys, os, logging
+    import sys
+    import os
+    import logging
     from optparse import OptionParser
 
-    parser = OptionParser("%prog [--fake] [--product <product>] unsigned-dir signed-dir")
+    parser = OptionParser(
+        "%prog [--fake] [--product <product>] unsigned-dir signed-dir")
     parser.set_defaults(
-            fake=False,
-            abortOnFail=False,
-            product="firefox",
-            first_locale='en-US',
-            quick=False,
-            loglevel=logging.INFO,
-            )
+        fake=False,
+        abortOnFail=False,
+        product="firefox",
+        first_locale='en-US',
+        quick=False,
+        loglevel=logging.INFO,
+    )
     parser.add_option("", "--fake", dest="fake", action="store_true", help="Don't verify signatures, just compare file hashes")
     parser.add_option("", "--abort-on-fail", dest="abortOnFail", action="store_true", help="Stop processing after the first error")
     parser.add_option("", "--product", dest="product", help="product name")
     parser.add_option("", "--first-locale", dest="first_locale",
-        help="first locale to check")
+                      help="first locale to check")
     parser.add_option("", "--quick-verify", dest="quick", action="store_true",
-        help="Verify only first locale and one random additional locale")
+                      help="Verify only first locale and one random additional locale")
     parser.add_option("-q", "--quiet", dest="loglevel", action="store_const",
-        const=logging.WARNING, help="be quiet")
+                      const=logging.WARNING, help="be quiet")
     parser.add_option("-v", "--verbose", dest="loglevel", action="store_const",
-        const=logging.DEBUG, help="be verbose")
+                      const=logging.DEBUG, help="be verbose")
 
     try:
         checkTools()
-    except OSError,e:
+    except OSError, e:
         parser.error(e.message)
 
     options, args = parser.parse_args()
     if len(args) != 2:
-        parser.error("Must specify two arguments: unsigned-dir, and signed-dir")
+        parser.error(
+            "Must specify two arguments: unsigned-dir, and signed-dir")
 
     logging.basicConfig(level=options.loglevel, format="%(message)s")
 
@@ -262,11 +281,11 @@ if __name__ == "__main__":
     signed_dir = args[1]
     unsigned_files = findfiles(unsigned_dir)
     unsigned_files = sortFiles(filterFiles(unsigned_files, options.product),
-        options.product, options.first_locale)
+                               options.product, options.first_locale)
     # Perform a partial verification
     if options.quick:
         unsigned_files = filter_quick(unsigned_files, options.first_locale,
-            options.product)
+                                      options.product)
 
     failed = False
     all_checksums = {}
@@ -278,7 +297,7 @@ if __name__ == "__main__":
         # the checksums of the package internals for the current file,
         # all_checksums gets populated
         result, msg = check_repack(uf, sf, repack_checksums, options.fake,
-            options.product)
+                                   options.product)
         print sf, result, msg
         if not result:
             failed = True

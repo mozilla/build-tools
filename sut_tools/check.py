@@ -5,7 +5,8 @@
 # Assumes Python 2.6
 #
 
-import os, sys
+import os
+import sys
 import time
 import json
 import socket
@@ -15,65 +16,67 @@ import datetime
 
 # from multiprocessing import get_logger, log_to_stderr
 from sut_lib import checkSlaveAlive, checkSlaveActive, getIPAddress, dumpException, loadOptions, \
-                    checkCPAlive, checkCPActive, getLastLine, stopProcess, runCommand, pingDevice, \
-                    reboot_device, stopDevice, getMaster
+    checkCPAlive, checkCPActive, getLastLine, stopProcess, runCommand, pingDevice, \
+    reboot_device, stopDevice, getMaster
 
 
-log            = logging.getLogger()
-options        = None
-oSummary       = None
+log = logging.getLogger()
+options = None
+oSummary = None
 defaultOptions = {
-                   'debug':  ('-d', '--debug',  False,     'Enable Debug', 'b'),
-                   'bbpath': ('-p', '--bbpath', '/builds', 'Path where the Tegra buildbot slave clients can be found'),
-                   'tegra':  ('-t', '--tegra',  None,      'Tegra to check, if not given all Tegras will be checked'),
-                   'reset':  ('-r', '--reset',  False,     'Reset error.flg if Tegra active', 'b'),
-                   'reboot': ('-c', '--cycle',  False,     'Power cycle the Tegra', 'b'),
-                   'master': ('-m', '--master', 'sp',      'master type to check "p" for production or "s" for staging'),
-                   'export': ('-e', '--export', True,      'export summary stats (disabled if -t present)', 'b'),
-                 }
+    'debug': ('-d', '--debug', False, 'Enable Debug', 'b'),
+    'bbpath': ('-p', '--bbpath', '/builds', 'Path where the Tegra buildbot slave clients can be found'),
+    'tegra': ('-t', '--tegra', None, 'Tegra to check, if not given all Tegras will be checked'),
+    'reset': ('-r', '--reset', False, 'Reset error.flg if Tegra active', 'b'),
+    'reboot': ('-c', '--cycle', False, 'Power cycle the Tegra', 'b'),
+    'master': ('-m', '--master', 'sp', 'master type to check "p" for production or "s" for staging'),
+    'export': ('-e', '--export', True, 'export summary stats (disabled if -t present)', 'b'),
+}
 
 
 def summary(tegra, master, sTegra, sCP, sBS, msg, timestamp, masterHost):
     if options.export:
         ts = timestamp.split()  # assumes "yyyy-mm-dd hh:mm:ss"
-        d = { 'tegra':        tegra,
-              'master':       master,
-              'masterHost':   masterHost,
-              'hostname':     options.hostname,
-              'date':         ts[0],
-              'time':         ts[1],
-              'sTegra':       sTegra,
-              'sClientproxy': sCP,
-              'sSlave':       sBS,
-              'msg':          msg,
-            }
+        d = {'tegra': tegra,
+             'master': master,
+             'masterHost': masterHost,
+             'hostname': options.hostname,
+             'date': ts[0],
+             'time': ts[1],
+             'sTegra': sTegra,
+             'sClientproxy': sCP,
+             'sSlave': sBS,
+             'msg': msg,
+             }
         oSummary.append(d)
 
-def checkTegra(master, tegra):
-    tegraIP    = getIPAddress(tegra)
-    tegraPath  = os.path.join(options.bbpath, tegra)
-    exportFile = os.path.join(tegraPath, '%s_status.log' % tegra)
-    errorFile  = os.path.join(tegraPath, 'error.flg')
-    errorFlag  = os.path.isfile(errorFile)
-    sTegra     = 'OFFLINE'
-    sutFound   = False
-    logTD      = None
 
-    status = { 'tegra':  tegra,
-               'active': False,
-               'cp':     'OFFLINE',
-               'bs':     'OFFLINE',
-               'msg':    '',
-             }
+def checkTegra(master, tegra):
+    tegraIP = getIPAddress(tegra)
+    tegraPath = os.path.join(options.bbpath, tegra)
+    exportFile = os.path.join(tegraPath, '%s_status.log' % tegra)
+    errorFile = os.path.join(tegraPath, 'error.flg')
+    errorFlag = os.path.isfile(errorFile)
+    sTegra = 'OFFLINE'
+    sutFound = False
+    logTD = None
+
+    status = {'tegra': tegra,
+              'active': False,
+              'cp': 'OFFLINE',
+              'bs': 'OFFLINE',
+              'msg': '',
+              }
 
     log.debug('%s: %s' % (tegra, tegraIP))
 
     if master is None:
         status['environment'] = 's'
-        status['master']      = 'localhost'
+        status['master'] = 'localhost'
     else:
         status['environment'] = master['environment'][0]
-        status['master']      = 'http://%s:%s' % (master['hostname'], master['http_port'])
+        status['master'] = 'http://%s:%s' % (
+            master['hostname'], master['http_port'])
 
     fPing, lPing = pingDevice(tegra)
     if fPing:
@@ -114,7 +117,7 @@ def checkTegra(master, tegra):
         logTD = checkCPActive(tegraPath)
         if logTD is not None:
             if (logTD.days > 0) or (logTD.days == 0 and logTD.seconds > 300):
-                status['cp']   = 'INACTIVE'
+                status['cp'] = 'INACTIVE'
                 status['msg'] += 'CP %dd %ds;' % (logTD.days, logTD.seconds)
             else:
                 status['cp'] = 'active'
@@ -128,7 +131,7 @@ def checkTegra(master, tegra):
         logTD = checkSlaveActive(tegraPath)
         if logTD is not None:
             if (logTD.days > 0) or (logTD.days == 0 and logTD.seconds > 3600):
-                status['bs']   = 'INACTIVE'
+                status['bs'] = 'INACTIVE'
                 status['msg'] += 'BS %dd %ds;' % (logTD.days, logTD.seconds)
             else:
                 status['bs'] = 'active'
@@ -136,7 +139,8 @@ def checkTegra(master, tegra):
             status['bs'] = 'INACTIVE'
     else:
         # scan thru tegra-### dir and see if any buildbot.tac.bug#### files exist
-        # but ignore buildbot.tac file itself (except to note that it is missing)
+        # but ignore buildbot.tac file itself (except to note that it is
+        # missing)
         files = os.listdir(tegraPath)
         found = False
         for f in files:
@@ -150,11 +154,12 @@ def checkTegra(master, tegra):
     if errorFlag:
         status['msg'] += 'error.flg [%s] ' % getLastLine(errorFile)
 
-    s  = '%s %s %9s %8s %8s :: %s' % (status['tegra'], status['environment'], sTegra, status['cp'], status['bs'], status['msg'])
+    s = '%s %s %9s %8s %8s :: %s' % (status['tegra'], status['environment'], sTegra, status['cp'], status['bs'], status['msg'])
     ts = time.strftime('%Y-%m-%d %H:%M:%S')
     log.info(s)
     open(exportFile, 'a+').write('%s %s\n' % (ts, s))
-    summary(status['tegra'], status['environment'], sTegra, status['cp'], status['bs'], status['msg'], ts, status['master'])
+    summary(status['tegra'], status['environment'], sTegra, status[
+            'cp'], status['bs'], status['msg'], ts, status['master'])
 
     if errorFlag and options.reset:
         stopProcess(os.path.join(tegraPath, 'twistd.pid'), 'buildslave')
@@ -195,32 +200,36 @@ def checkTegra(master, tegra):
         os.chdir(tegraPath)
         runCommand(['python', 'clientproxy.py', '-b', '--device=%s' % tegra])
 
+
 def findMaster(tegra):
-    result  = None
+    result = None
     tacFile = os.path.join(options.bbpath, tegra, 'buildbot.tac')
 
     if os.path.isfile(tacFile):
         lines = open(tacFile).readlines()
         for line in lines:
-            #buildmaster_host = 'dev-master01.build.scl1.mozilla.com'
+            # buildmaster_host = 'dev-master01.build.scl1.mozilla.com'
             if line.startswith('buildmaster_host = '):
-                v, h  = line.split('=')
-                h     = h.strip().replace("'", "").replace('"', '')
+                v, h = line.split('=')
+                h = h.strip().replace("'", "").replace('"', '')
                 result = getMaster(h)
                 break
 
     return result
 
+
 def getHostname():
     result = 'unknown'
-    p, o   = runCommand(['hostname',], logEcho=False)
+    p, o = runCommand(['hostname', ], logEcho=False)
     if len(o) > 0:
         result = o[0]
     return result
 
+
 def initLogs(options):
-    echoHandler   = logging.StreamHandler()
-    echoFormatter = logging.Formatter('%(asctime)s %(message)s')  # not the normal one
+    echoHandler = logging.StreamHandler()
+    echoFormatter = logging.Formatter(
+        '%(asctime)s %(message)s')  # not the normal one
 
     echoHandler.setFormatter(echoFormatter)
     log.addHandler(echoHandler)
@@ -235,9 +244,9 @@ if __name__ == '__main__':
     options = loadOptions(defaultOptions)
     initLogs(options)
 
-    tegras           = []
-    options.bbpath   = os.path.abspath(options.bbpath)
-    options.master   = options.master.lower()
+    tegras = []
+    options.bbpath = os.path.abspath(options.bbpath)
+    options.master = options.master.lower()
     options.hostname = getHostname()
 
     if options.tegra is None:
@@ -259,7 +268,8 @@ if __name__ == '__main__':
             if f:
                 if options.export:
                     oSummary = []
-                log.info('%9s %s %8s %8s %8s :: %s' % ('Tegra ID', 'M', 'Tegra', 'CP', 'Slave', 'Msg'))
+                log.info('%9s %s %8s %8s %8s :: %s' % (
+                    'Tegra ID', 'M', 'Tegra', 'CP', 'Slave', 'Msg'))
                 f = False
 
             checkTegra(o, tegra)
@@ -268,4 +278,3 @@ if __name__ == '__main__':
         h = open(os.path.join(options.bbpath, 'tegra_status.txt'), 'w+')
         h.write(json.dumps(oSummary))
         h.close()
-

@@ -7,4 +7,4 @@
 # to convert symbols to a different format in the very near future.
 
 if __name__ == '__main__':
-  pass
+    pass

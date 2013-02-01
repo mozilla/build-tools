@@ -7,13 +7,16 @@ OK = green('[OK]  ')
 FAIL = red('[FAIL]')
 INFO = yellow('[INFO]')
 
+
 def per_host(fn):
     fn.per_host = True
     return fn
 
+
 def per_device(fn):
     fn.per_device = True
     return fn
+
 
 @per_host
 def show_revision(foopy):
@@ -22,6 +25,7 @@ def show_revision(foopy):
 
         print "%-14s %12s" % (foopy, tools_rev)
 
+
 @per_host
 def update(foopy):
     with show('running'):
@@ -29,8 +33,9 @@ def update(foopy):
             run('hg pull && hg update -C')
             with hide('stdout', 'stderr', 'running'):
                 tools_rev = run('hg ident -i')
-    
+
     print OK, "updated %s tools to %12s" % (foopy, tools_rev)
+
 
 @per_device
 def stop_cp(device):
@@ -38,6 +43,7 @@ def stop_cp(device):
         with cd('/builds'):
             run('./stop_cp.sh %s' % device)
         print OK, "Stopped clientproxy for %s" % (device)
+
 
 @per_device
 def what_master(device):
@@ -65,4 +71,4 @@ actions = [
     'show_revision',
     'update',
     'stop_cp',
-    ]
+]

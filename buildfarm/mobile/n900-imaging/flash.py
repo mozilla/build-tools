@@ -6,7 +6,8 @@ from optparse import OptionParser
 
 from flasher_wrapper import flash_n900
 
-def hash_file(filename, chunk_size=2**10, algorithm='sha1'):
+
+def hash_file(filename, chunk_size=2 ** 10, algorithm='sha1'):
     if not filename:
         return None
     if not os.path.exists(filename):
@@ -23,8 +24,9 @@ def hash_file(filename, chunk_size=2**10, algorithm='sha1'):
         hash_obj.update(data)
     return hash_obj.hexdigest()
 
+
 def validate_file(filename, good_hash, algorithm='sha1'):
-    current_hash=hash_file(filename, algorithm=algorithm)
+    current_hash = hash_file(filename, algorithm=algorithm)
     if current_hash != good_hash:
         return False
     else:
@@ -33,7 +35,7 @@ def validate_file(filename, good_hash, algorithm='sha1'):
 if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option('-d', '--debug', help='Be noisy', action='store_true',
-                        dest='debug', default=False)
+                      dest='debug', default=False)
     options, args = parser.parse_args()
 
     main_file = 'RX-51_2009SE_10.2010.19-1.002_PR_COMBINED_002_ARM.bin'
@@ -57,7 +59,6 @@ if __name__ == '__main__':
         print '\nInvalid root file'
         exit(1)
     print "Image OK"
-
 
     flash_n900(
         main=main_file,

@@ -4,7 +4,8 @@
 # Assumes Python 2.6
 #
 
-import os, sys
+import os
+import sys
 import sut_lib
 
 if len(sut_lib.tegras) == 0:
@@ -22,4 +23,3 @@ for tegra in sys.argv[1:]:
         print "ERROR: %s not found in devices.json" % tegra
 
     sut_lib.reboot_device(tegra, debug=True)
-

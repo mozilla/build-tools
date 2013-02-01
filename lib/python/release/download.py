@@ -15,18 +15,20 @@ import logging
 log = logging.getLogger(__name__)
 
 installer_ext_map = {
-    'win32' : ".exe",
-    'win64' : ".exe",
-    'macosx' : ".dmg",
-    'macosx64' : ".dmg",
-    'linux' : ".tar.bz2",
-    'linux64' : ".tar.bz2",
+    'win32': ".exe",
+    'win64': ".exe",
+    'macosx': ".dmg",
+    'macosx64': ".dmg",
+    'linux': ".tar.bz2",
+    'linux64': ".tar.bz2",
 }
+
 
 def getInstallerExt(platform):
     """ Return the file extension of the installer file on a given platform,
     raising a KeyError if the platform is not found """
     return installer_ext_map[platform]
+
 
 def downloadReleaseBuilds(stageServer, productName, brandName, version,
                           buildNumber, platform, candidatesDir=None,
@@ -54,6 +56,7 @@ def downloadReleaseBuilds(stageServer, productName, brandName, version,
 
     return env
 
+
 def downloadUpdate(stageServer, productName, version, buildNumber,
                    platform, locale, candidatesDir=None):
     if candidatesDir is None:
@@ -71,6 +74,7 @@ def downloadUpdate(stageServer, productName, version, buildNumber,
     local_f.close()
     return destFileName
 
+
 def downloadUpdateIgnore404(*args, **kwargs):
     try:
         return downloadUpdate(*args, **kwargs)
@@ -82,6 +86,7 @@ def downloadUpdateIgnore404(*args, **kwargs):
         else:
             raise
 
+
 def rsyncFilesByPattern(server, userName, sshKey, source_dir, target_dir,
                         pattern):
     cmd = ['rsync', '-e',
@@ -89,6 +94,7 @@ def rsyncFilesByPattern(server, userName, sshKey, source_dir, target_dir,
            '-av', '--include=%s' % pattern, '--include=*/', '--exclude=*',
            '%s:%s' % (server, source_dir), target_dir]
     run_cmd(cmd)
+
 
 def rsyncFiles(files, server, userName, sshKey, target_dir):
     cmd = ['rsync', '-e',

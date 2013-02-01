@@ -1,5 +1,6 @@
 import telnetlib
 
+
 class SentryPDU(object):
     """
     Class to interact with a Sentry CDU
@@ -37,12 +38,12 @@ class SentryPDU(object):
 
         result = ''
         while 1:
-            found, mo, text = t.expect([ 'More .Y/es N/o.:', 'Switched CDU:' ])
+            found, mo, text = t.expect(['More .Y/es N/o.:', 'Switched CDU:'])
             result += text
             if found == 1:
                 break
             elif found == -1:
-                raise EOFError # uhoh..
+                raise EOFError  # uhoh..
             t.write('y\n')
 
         return result
@@ -70,7 +71,7 @@ class SentryPDU(object):
             if not name.startswith('tegra-'):
                 continue
             status[name] = dict(id=line[0], name=line[1],
-                               status=line[2], state=line[3])
+                                status=line[2], state=line[3])
         return status
 
     def _op(self, op, tegra):
@@ -94,7 +95,7 @@ class SentryPDU(object):
         """
         Reboot the given tegra.  Returns True if successful.
         """
-        id     = None
+        id = None
         status = self.status(tegra)
         if tegra in status:
             id = status[tegra]['id']

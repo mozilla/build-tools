@@ -4,7 +4,8 @@
 If no include patterns are specified, all files will be considered. -i/-x only
 have effect when signing entire directories."""
 import os
-import sys, site
+import sys
+import site
 # Modify our search path to find our modules
 site.addsitedir(os.path.join(os.path.dirname(__file__), "../../lib/python"))
 
@@ -17,12 +18,14 @@ log = logging.getLogger(__name__)
 
 import pefile
 
+
 def is_authenticode_signed(filename):
     """Returns True if the file is signed with authenticode"""
     p = None
     try:
         p = pefile.PE(filename)
-        # Look for a 'IMAGE_DIRECTORY_ENTRY_SECURITY' entry in the optinal data directory
+        # Look for a 'IMAGE_DIRECTORY_ENTRY_SECURITY' entry in the optinal data
+        # directory
         for d in p.OPTIONAL_HEADER.DATA_DIRECTORY:
             if d.name == 'IMAGE_DIRECTORY_ENTRY_SECURITY' and d.VirtualAddress != 0:
                 return True
@@ -34,53 +37,59 @@ def is_authenticode_signed(filename):
         if p:
             p.close()
 
+
 def main():
     from optparse import OptionParser
     import random
     parser = OptionParser(__doc__)
     parser.set_defaults(
-            hosts=[],
-            cert=None,
-            log_level=logging.INFO,
-            output_dir=None,
-            output_file=None,
-            formats=[],
-            includes=[],
-            excludes=[],
-            nsscmd=None,
-            tokenfile=None,
-            noncefile=None,
-            cachedir=None,
-            )
+        hosts=[],
+        cert=None,
+        log_level=logging.INFO,
+        output_dir=None,
+        output_file=None,
+        formats=[],
+        includes=[],
+        excludes=[],
+        nsscmd=None,
+        tokenfile=None,
+        noncefile=None,
+        cachedir=None,
+    )
 
-    parser.add_option("-H", "--host", dest="hosts", action="append", help="hostname[:port]")
+    parser.add_option(
+        "-H", "--host", dest="hosts", action="append", help="hostname[:port]")
     parser.add_option("-c", "--server-cert", dest="cert")
-    parser.add_option("-t", "--token-file", dest="tokenfile", help="file where token is stored")
-    parser.add_option("-n", "--nonce-file", dest="noncefile", help="file where nonce is stored")
+    parser.add_option("-t", "--token-file", dest="tokenfile",
+                      help="file where token is stored")
+    parser.add_option("-n", "--nonce-file", dest="noncefile",
+                      help="file where nonce is stored")
     parser.add_option("-d", "--output-dir", dest="output_dir",
-            help="output directory; if not set then files are replaced with signed copies")
+                      help="output directory; if not set then files are replaced with signed copies")
     parser.add_option("-o", "--output-file", dest="output_file",
-            help="output file; if not set then files are replaced with signed copies. This can only be used when signing a single file")
+                      help="output file; if not set then files are replaced with signed copies. This can only be used when signing a single file")
     parser.add_option("-f", "--formats", dest="formats", action="append",
-            help="signing formats (one or more of \"signcode\", \"gpg\", or \"osx\")")
+                      help="signing formats (one or more of \"signcode\", \"gpg\", or \"osx\")")
     parser.add_option("-q", "--quiet", dest="log_level", action="store_const",
-            const=logging.WARN)
-    parser.add_option("-v", "--verbose", dest="log_level", action="store_const",
-            const=logging.DEBUG)
+                      const=logging.WARN)
+    parser.add_option(
+        "-v", "--verbose", dest="log_level", action="store_const",
+        const=logging.DEBUG)
     parser.add_option("-i", "--include", dest="includes", action="append",
-            help="add to include patterns")
+                      help="add to include patterns")
     parser.add_option("-x", "--exclude", dest="excludes", action="append",
-            help="add to exclude patterns")
+                      help="add to exclude patterns")
     parser.add_option("--nsscmd", dest="nsscmd",
-            help="command to re-sign nss libraries, if required")
+                      help="command to re-sign nss libraries, if required")
     parser.add_option("--cachedir", dest="cachedir",
-            help="local cache directory")
+                      help="local cache directory")
     # TODO: Concurrency?
     # TODO: Different certs per server?
 
     options, args = parser.parse_args()
 
-    logging.basicConfig(level=options.log_level, format="%(asctime)s - %(message)s")
+    logging.basicConfig(
+        level=options.log_level, format="%(asctime)s - %(message)s")
 
     if not options.hosts:
         parser.error("at least one host is required")
@@ -119,12 +128,14 @@ def main():
             formats.append(fmt)
 
     if options.output_file and (len(args) > 1 or os.path.isdir(args[0])):
-        parser.error("-o / --output-file can only be used when signing a single file")
+        parser.error(
+            "-o / --output-file can only be used when signing a single file")
 
     if options.output_dir:
         if os.path.exists(options.output_dir):
             if not os.path.isdir(options.output_dir):
-                parser.error("output_dir (%s) must be a directory", options.output_dir)
+                parser.error(
+                    "output_dir (%s) must be a directory", options.output_dir)
         else:
             os.makedirs(options.output_dir)
 
@@ -151,8 +162,8 @@ def main():
         # We want to package the ".app" file in a tar for mac signing.
         if fmt == "dmg":
             for fd in args:
-                packtar(fd+'.tar.gz', [fd], os.getcwd())
-                files.append(fd+'.tar.gz')
+                packtar(fd + '.tar.gz', [fd], os.getcwd())
+                files.append(fd + '.tar.gz')
         # For other platforms we sign all of the files individually.
         else:
             files = findfiles(args, options.includes, options.excludes)
@@ -175,8 +186,8 @@ def main():
         if fmt == "dmg":
             for fd in args:
                 log.debug("unpacking %s", fd)
-                unpacktar(fd+'.tar.gz', os.getcwd())
-                os.unlink(fd+'.tar.gz')
+                unpacktar(fd + '.tar.gz', os.getcwd())
+                os.unlink(fd + '.tar.gz')
 
 
 if __name__ == '__main__':

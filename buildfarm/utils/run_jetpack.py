@@ -93,8 +93,9 @@ if __name__ == '__main__':
                       help="Extension to match in the builds directory for downloading the build")
     parser.add_option("-f", "--ftp-url", dest="ftp_url", default="",
                       help="Url for ftp latest-builds directory where the build to download lives")
-    parser.add_option("-s", "--sdk-location", dest="sdk_location", default='jetpack-location.txt',
-                      help="Text file or url to use to download the current addonsdk tarball")
+    parser.add_option(
+        "-s", "--sdk-location", dest="sdk_location", default='jetpack-location.txt',
+        help="Text file or url to use to download the current addonsdk tarball")
     parser.add_option("-p", "--platform", dest="platform",
                       help="Platform of the build to download and to test")
     parser.add_option("-t", "--tarball-url", dest="tarball_url", default="",
@@ -104,7 +105,8 @@ if __name__ == '__main__':
 
     (options, args) = parser.parse_args()
 
-    # Handling method of running tests (branch checkin vs. poller on addon-sdk repo)
+    # Handling method of running tests (branch checkin vs. poller on addon-sdk
+    # repo)
     if options.ftp_url == "":
         # Branch change triggered test suite
         # 'jetpack' dir must exist the build's tests package
@@ -164,7 +166,8 @@ if __name__ == '__main__':
         for line in lines:
             if line.startswith('d') or line.startswith('l'):
                 parts = line.split(" ")
-                # For a symlink, the last three parts are '1332439584', '->', '../old/etc.'
+                # For a symlink, the last three parts are '1332439584', '->',
+                # '../old/etc.'
                 if line.startswith('l'):
                     parts[-1] = parts[-3]
                 if not parts[-1].isdigit():
@@ -183,18 +186,21 @@ if __name__ == '__main__':
             f = filename.split(" ")[-1]
             if pat.match(f):
                 executables.append(f)
-        # Only grab the most recent build (in case there's more than one in the dir)
+        # Only grab the most recent build (in case there's more than one in the
+        # dir)
         if len(executables) > 0:
             exe = sorted(executables, reverse=True)[0]
         else:
             print "Error: missing Firefox executable"
             sys.exit(4)
-        info_file = exe.replace(options.ext, "%s.txt" % options.ext.split('.')[0])
+        info_file = exe.replace(
+            options.ext, "%s.txt" % options.ext.split('.')[0])
         # Now get the branch revision
         for filename in filenames:
             if info_file in filename:
                 info = filename.split(" ")[-1]
-                urllib.urlretrieve("%s/%s/%s" % (ftp_url, directory, info), info)
+                urllib.urlretrieve(
+                    "%s/%s/%s" % (ftp_url, directory, info), info)
                 f = open(info, 'r')
                 for line in f.readlines():
                     if "hg.mozilla.org" in line:
@@ -218,7 +224,8 @@ if __name__ == '__main__':
     elif options.platform in ('win32', 'win7', 'win64', 'win764', 'w764', 'xp'):
         app_path = "%s/firefox/firefox.exe" % basepath
         # The --exclude=*.app is here to avoid extracting a symlink on win32 that is only
-        # relevant to OS X. It would be nice if we could just tell tar to ignore symlinks...
+        # relevant to OS X. It would be nice if we could just tell tar to
+        # ignore symlinks...
         untar_args = "--exclude=*.app"
         poller_cmd = 'unzip -o *%s' % options.ext
     else:
@@ -239,7 +246,8 @@ if __name__ == '__main__':
         os.system(poller_cmd)
 
     # Find the sdk dir and Mac .app file to run tests with
-    # Must happen after poller_cmd is run or Mac has no executable yet in addonsdk checkin runs
+    # Must happen after poller_cmd is run or Mac has no executable yet in
+    # addonsdk checkin runs
     dirs = os.listdir('.')
     for d in dirs:
         if 'addon-sdk' in d:

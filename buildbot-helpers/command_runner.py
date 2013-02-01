@@ -2,12 +2,15 @@
 """
 Runs commands from a queue!
 """
-import subprocess, os, signal
+import subprocess
+import os
+import signal
 import time
 from mozilla_buildtools.queuedir import QueueDir
 from buildbot.util import json
 import logging
 log = logging.getLogger(__name__)
+
 
 class Job(object):
     def __init__(self, cmd, item_id, log_fp):
@@ -24,7 +27,8 @@ class Job(object):
         devnull = open(os.devnull, 'r')
         self.log.write("Running %s\n" % self.cmd)
         self.log.flush()
-        self.proc = subprocess.Popen(self.cmd, close_fds=True, stdin=devnull, stdout=self.log, stderr=self.log)
+        self.proc = subprocess.Popen(self.cmd, close_fds=True, stdin=devnull,
+                                     stdout=self.log, stderr=self.log)
         self.started = time.time()
 
     def check(self):
@@ -32,7 +36,8 @@ class Job(object):
         if now - self.started > self.max_time:
             # Kill stuff off
             if now - self.last_signal_time > 60:
-                s = {None: signal.SIGINT, signal.SIGINT: signal.SIGTERM}.get(self.last_signal, signal.SIGKILL)
+                s = {None: signal.SIGINT, signal.SIGINT:
+                     signal.SIGTERM}.get(self.last_signal, signal.SIGKILL)
                 log.info("Killing %i with %i", self.proc.pid, s)
                 try:
                     self.log.write("Killing with %s\n" % s)
@@ -49,6 +54,7 @@ class Job(object):
             self.log.write("\nResult: %s\n" % result)
             self.log.close()
         return result
+
 
 class CommandRunner(object):
     def __init__(self, options):
@@ -73,7 +79,8 @@ class CommandRunner(object):
             job.start()
             self.active.append(job)
         except OSError:
-            job.log.write("\nFailed with OSError; requeuing in %i seconds\n" % self.retry_time)
+            job.log.write("\nFailed with OSError; requeuing in %i seconds\n" %
+                          self.retry_time)
             # Wait to requeue it
             # If we die, then it's still in cur, and will be moved back into
             # 'new' eventually
@@ -94,7 +101,8 @@ class CommandRunner(object):
                 else:
                     log.warn("%s failed; requeuing", job.item_id)
                     # Requeue it!
-                    self.q.requeue(job.item_id, self.retry_time, self.max_retries)
+                    self.q.requeue(
+                        job.item_id, self.retry_time, self.max_retries)
 
     def loop(self):
         """
@@ -132,25 +140,32 @@ class CommandRunner(object):
                 finally:
                     fp.close()
 
+
 def main():
     from optparse import OptionParser
     import logging.handlers
     parser = OptionParser()
     parser.set_defaults(
-            concurrency=1,
-            max_retries=1,
-            retry_time=0,
-            verbosity=0,
-            logfile=None,
-            max_time=60,
-            )
+        concurrency=1,
+        max_retries=1,
+        retry_time=0,
+        verbosity=0,
+        logfile=None,
+        max_time=60,
+    )
     parser.add_option("-q", "--queuedir", dest="queuedir")
-    parser.add_option("-j", "--jobs", dest="concurrency", type="int", help="number of commands to run at once")
-    parser.add_option("-r", "--max_retries", dest="max_retries", type="int", help="number of times to retry commands")
-    parser.add_option("-t", "--retry_time", dest="retry_time", type="int", help="seconds to wait between retries")
-    parser.add_option("-v", "--verbose", dest="verbosity", action="count", help="increase verbosity")
-    parser.add_option("-l", "--logfile", dest="logfile", help="where to send logs")
-    parser.add_option("-m", "--max_time", dest="max_time", type="int", help="maximum time for a command to run")
+    parser.add_option("-j", "--jobs", dest="concurrency", type="int",
+                      help="number of commands to run at once")
+    parser.add_option("-r", "--max_retries", dest="max_retries",
+                      type="int", help="number of times to retry commands")
+    parser.add_option("-t", "--retry_time", dest="retry_time",
+                      type="int", help="seconds to wait between retries")
+    parser.add_option("-v", "--verbose", dest="verbosity",
+                      action="count", help="increase verbosity")
+    parser.add_option(
+        "-l", "--logfile", dest="logfile", help="where to send logs")
+    parser.add_option("-m", "--max_time", dest="max_time", type="int",
+                      help="maximum time for a command to run")
 
     options, args = parser.parse_args()
 
@@ -163,12 +178,13 @@ def main():
         log_level = logging.DEBUG
 
     if not options.logfile:
-        logging.basicConfig(level=log_level, format="%(asctime)s - %(message)s")
+        logging.basicConfig(
+            level=log_level, format="%(asctime)s - %(message)s")
     else:
         logger = logging.getLogger()
         logger.setLevel(log_level)
         handler = logging.handlers.RotatingFileHandler(
-                    options.logfile, maxBytes=1024**2, backupCount=5)
+            options.logfile, maxBytes=1024 ** 2, backupCount=5)
         formatter = logging.Formatter("%(asctime)s - %(message)s")
         handler.setFormatter(formatter)
         logger.addHandler(handler)

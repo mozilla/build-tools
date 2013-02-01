@@ -25,9 +25,11 @@ HOUR = timedelta(hours=1)
 skip_exps = [
     # Skip step events, they cause too much load
     re.compile("^build\.\S+\.\d+\.step\."),
-    ]
+]
 
 # A UTC class.
+
+
 class UTC(tzinfo):
     """UTC"""
 
@@ -40,6 +42,7 @@ class UTC(tzinfo):
     def dst(self, dt):
         return ZERO
 
+
 def transform_time(t):
     """Transform an epoch time to a string representation of the form
     YYYY-mm-ddTHH:MM:SS+0000"""
@@ -50,6 +53,7 @@ def transform_time(t):
 
     dt = datetime.fromtimestamp(t, UTC())
     return dt.strftime('%Y-%m-%dT%H:%M:%S%z')
+
 
 def transform_times(event):
     """Replace epoch times in event with string representations of the time"""
@@ -63,6 +67,7 @@ def transform_times(event):
     else:
         retval = event
     return retval
+
 
 class PulsePusher(object):
     """
@@ -85,7 +90,7 @@ class PulsePusher(object):
     `max_retries`      - how many times to retry
     """
     def __init__(self, queuedir, publisher, max_idle_time=300,
-            max_connect_time=600, retry_time=60, max_retries=5):
+                 max_connect_time=600, retry_time=60, max_retries=5):
         self.queuedir = QueueDir('pulse', queuedir)
         self.publisher = publisher
         self.max_idle_time = max_idle_time
@@ -111,7 +116,7 @@ class PulsePusher(object):
         log.debug("Sending %i messages", len(events))
         start = time.time()
         skipped = 0
-        sent =  0
+        sent = 0
         for e in events:
             routing_key = e['event']
             if any(exp.search(routing_key) for exp in skip_exps):
@@ -124,7 +129,8 @@ class PulsePusher(object):
             self.publisher.publish(msg)
             sent += 1
         end = time.time()
-        log.info("Sent %i messages in %.2fs (skipped %i)", sent, end-start, skipped)
+        log.info("Sent %i messages in %.2fs (skipped %i)", sent,
+                 end - start, skipped)
         self._last_activity = time.time()
 
         # Update our timers
@@ -194,7 +200,8 @@ class PulsePusher(object):
                 # Don't try again soon, something has gone horribly wrong!
                 come_back_soon = False
                 for item_id in item_ids:
-                    self.queuedir.requeue(item_id, self.retry_time, self.max_retries)
+                    self.queuedir.requeue(
+                        item_id, self.retry_time, self.max_retries)
 
             if come_back_soon:
                 # Let's do more right now!
@@ -212,6 +219,7 @@ class PulsePusher(object):
             log.info("Waiting for %s", to_wait)
             self.queuedir.wait(to_wait)
 
+
 def main():
     from optparse import OptionParser
     from mozillapulse.publishers import GenericPublisher
@@ -219,21 +227,21 @@ def main():
     import logging.handlers
     parser = OptionParser()
     parser.set_defaults(
-            verbosity=0,
-            logfile=None,
-            max_retries=5,
-            retry_time=60,
-            )
+        verbosity=0,
+        logfile=None,
+        max_retries=5,
+        retry_time=60,
+    )
     parser.add_option("--passwords", dest="passwords")
     parser.add_option("-q", "--queuedir", dest="queuedir")
     parser.add_option("-v", "--verbose", dest="verbosity", action="count",
-            help="increase verbosity")
+                      help="increase verbosity")
     parser.add_option("-l", "--logfile", dest="logfile",
-            help="where to send logs")
+                      help="where to send logs")
     parser.add_option("-r", "--max_retries", dest="max_retries", type="int",
-            help="number of times to retry")
+                      help="number of times to retry")
     parser.add_option("-t", "--retry_time", dest="retry_time", type="int",
-            help="seconds to wait between retries")
+                      help="seconds to wait between retries")
 
     options, args = parser.parse_args()
 
@@ -246,12 +254,13 @@ def main():
         log_level = logging.DEBUG
 
     if not options.logfile:
-        logging.basicConfig(level=log_level, format="%(asctime)s - %(message)s")
+        logging.basicConfig(
+            level=log_level, format="%(asctime)s - %(message)s")
     else:
         logger = logging.getLogger()
         logger.setLevel(log_level)
         handler = logging.handlers.RotatingFileHandler(
-                    options.logfile, maxBytes=1024**2, backupCount=5)
+            options.logfile, maxBytes=1024 ** 2, backupCount=5)
         formatter = logging.Formatter("%(asctime)s - %(message)s")
         handler.setFormatter(formatter)
         logger.addHandler(handler)
@@ -265,14 +274,14 @@ def main():
     execfile(options.passwords, passwords, passwords)
 
     publisher = GenericPublisher(
-            PulseConfiguration(
-                user=passwords['PULSE_USERNAME'],
-                password=passwords['PULSE_PASSWORD'],
-            ),
-            exchange=passwords['PULSE_EXCHANGE'])
+        PulseConfiguration(
+            user=passwords['PULSE_USERNAME'],
+            password=passwords['PULSE_PASSWORD'],
+        ),
+        exchange=passwords['PULSE_EXCHANGE'])
 
     pusher = PulsePusher(options.queuedir, publisher,
-            max_retries=options.max_retries, retry_time=options.retry_time)
+                         max_retries=options.max_retries, retry_time=options.retry_time)
     pusher.loop()
 
 if __name__ == '__main__':

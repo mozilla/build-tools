@@ -13,52 +13,57 @@ dirtyProfiles = ['places_generated_med/places.sqlite',
 
 maxDirtyProfile = ['places_generated_max/places.sqlite']
 
-updateCmd = ['/usr/local/bin/python', '/home/anodelman/generator/places/builddb/increment_dates.py']
+updateCmd = ['/usr/local/bin/python',
+             '/home/anodelman/generator/places/builddb/increment_dates.py']
 
-profilesList = [['dirtyDBs.zip', dirtyProfiles], 
+profilesList = [['dirtyDBs.zip', dirtyProfiles],
                 ['dirtyMaxDBs.zip', maxDirtyProfile]]
 
+
 def setEnvironmentVar(key, val):
-  global SAVED_ENV
-  env = os.environ
-  if key in env:
-    SAVED_ENV[key] = env[key]
-  else:
-    SAVED_ENV[key] = ''
-  env[key] = val
+    global SAVED_ENV
+    env = os.environ
+    if key in env:
+        SAVED_ENV[key] = env[key]
+    else:
+        SAVED_ENV[key] = ''
+    env[key] = val
+
 
 def restoreEnvironment():
-  global SAVED_ENV
-  for var in SAVED_ENV:
-    os.environ[var] = SAVED_ENV[var]
-  SAVED_ENV = {}
+    global SAVED_ENV
+    for var in SAVED_ENV:
+        os.environ[var] = SAVED_ENV[var]
+    SAVED_ENV = {}
+
 
 def runCmd(cmd):
-  subprocess.call(cmd)
+    subprocess.call(cmd)
+
 
 def removeZip():
-  os.remove(zipName)
+    os.remove(zipName)
+
 
 def createZip(zipName):
-  zip = zipfile.ZipFile(basePath + zipName, 'w')
-  for val in profiles:
-    zip.write(basePath + val, val, compress_type=zipfile.ZIP_DEFLATED)
-  zip.close()
-  
+    zip = zipfile.ZipFile(basePath + zipName, 'w')
+    for val in profiles:
+        zip.write(basePath + val, val, compress_type=zipfile.ZIP_DEFLATED)
+    zip.close()
+
 
 def updateProfiles(profiles):
-  key = 'PLACES_DB_PATH'
-  for val in profiles:
-    setEnvironmentVar('PYTHONPATH', '$PYTHONPATH:/usr/local/bin:/home/anodelman/generator')
-    setEnvironmentVar('DJANGO_SETTINGS_MODULE', 'places.settings')
-    setEnvironmentVar(key, basePath + val)
-    print "\nUpdating " + val + "\n"
-    runCmd(updateCmd)
-    restoreEnvironment()
+    key = 'PLACES_DB_PATH'
+    for val in profiles:
+        setEnvironmentVar('PYTHONPATH', '$PYTHONPATH:/usr/local/bin:/home/anodelman/generator')
+        setEnvironmentVar('DJANGO_SETTINGS_MODULE', 'places.settings')
+        setEnvironmentVar(key, basePath + val)
+        print "\nUpdating " + val + "\n"
+        runCmd(updateCmd)
+        restoreEnvironment()
 
 
-if __name__=='__main__':
-  for name, profiles  in profilesList:
-    updateProfiles(profiles)
-    createZip(name)
-
+if __name__ == '__main__':
+    for name, profiles in profilesList:
+        updateProfiles(profiles)
+        createZip(name)

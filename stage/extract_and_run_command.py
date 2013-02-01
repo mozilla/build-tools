@@ -14,7 +14,7 @@ WARNING: This script does NOT respond to SIGINT. You must use SIGQUIT or SIGKILL
 ###
 ### Please update the copy in puppet to deploy new changes to
 ### stage.mozilla.org, see
-###   https://wiki.mozilla.org/ReleaseEngineering/How_To/Modify_scripts_on_stage
+# https://wiki.mozilla.org/ReleaseEngineering/How_To/Modify_scripts_on_stage
 
 import logging
 import os
@@ -28,17 +28,21 @@ from threading import Thread
 import time
 
 # Add mar.py's location to the path.
-sys.path.append(path.join(path.dirname(path.realpath(__file__)), "../buildfarm/utils"))
-logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(message)s")
+sys.path.append(
+    path.join(path.dirname(path.realpath(__file__)), "../buildfarm/utils"))
+logging.basicConfig(
+    stream=sys.stdout, level=logging.INFO, format="%(message)s")
 log = logging.getLogger(__name__)
 
 from mar import BZ2MarFile
 
-SEVENZIP="7za"
+SEVENZIP = "7za"
+
 
 def extractMar(filename, tempdir):
     m = BZ2MarFile(filename)
     m.extractall(path=tempdir)
+
 
 def extractExe(filename, tempdir):
     try:
@@ -46,7 +50,7 @@ def extractExe(filename, tempdir):
         # to avoid deadlocking in wait() when stdout=PIPE
         fd = tempfile.TemporaryFile()
         proc = subprocess.Popen([SEVENZIP, 'x', '-o%s' % tempdir, filename],
-          stdout=fd, stderr=subprocess.STDOUT)
+                                stdout=fd, stderr=subprocess.STDOUT)
         proc.wait()
     except subprocess.CalledProcessError:
         # Not all EXEs are 7-zip files, so we have to ignore extraction errors
@@ -59,11 +63,13 @@ EXTRACTORS = {
     '.exe': extractExe,
 }
 
+
 def find_files(d):
     """yields all of the files in `d'"""
     for root, dirs, files in os.walk(d):
         for f in files:
             yield path.abspath(path.join(root, f))
+
 
 def rchmod(d, mode=0755):
     """chmods everything in `d' to `mode', including `d' itself"""
@@ -73,6 +79,7 @@ def rchmod(d, mode=0755):
             os.chmod(path.join(root, item), mode)
         for item in files:
             os.chmod(path.join(root, item), mode)
+
 
 def maybe_extract(filename):
     """If an extractor is found for `filename', extracts it to a temporary
@@ -89,6 +96,7 @@ def maybe_extract(filename):
     rchmod(tempdir_root)
     return tempdir_root
 
+
 def process(item, command):
     def format_time(t):
         return time.strftime("%H:%M:%S", time.localtime(t))
@@ -103,7 +111,7 @@ def process(item, command):
     if tempdir:
         for f in find_files(tempdir):
             args.append(f)
-    
+
     try:
         fd = tempfile.TemporaryFile()
         proc = subprocess.Popen(command + args, stdout=fd)
@@ -118,11 +126,13 @@ def process(item, command):
         logs.append(fd.read().rstrip())
         end = time.time()
         elapsed = end - start
-        logs.append("END %s (%d seconds elapsed): %s\n" % (format_time(end), elapsed, item))
+        logs.append("END %s (%d seconds elapsed): %s\n" % (
+            format_time(end), elapsed, item))
         # Now that we've got all of our output, print it. It's important that
         # the logging module is used for this, because "print" is not
         # thread-safe.
         log.info("\n".join(logs))
+
 
 def worker(command, errors):
     item = q.get()
@@ -180,7 +190,7 @@ if __name__ == '__main__':
     # as an item.
     for i in range(concurrency):
         q.put(None)
-    
+
     for t in threads:
         t.join()
 

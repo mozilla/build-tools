@@ -1,4 +1,9 @@
-import cPickle, os, re, math, time
+import cPickle
+import os
+import re
+import math
+import time
+
 
 def format_hist(h, units=1):
     retval = []
@@ -9,16 +14,17 @@ def format_hist(h, units=1):
     min_key = min(keys)
     max_key = max(keys)
 
-    for i in range(min_key, max_key+1):
+    for i in range(min_key, max_key + 1):
         n = h.get(i, 0)
         if total > 0:
-            percentage = " %8.2f%%" % (n*100./total)
+            percentage = " %8.2f%%" % (n * 100. / total)
         else:
             percentage = ''
 
         retval.append("%3i: %8i%s"
-                       % (i*units, n, percentage))
+                      % (i * units, n, percentage))
     return "\n".join(retval)
+
 
 def scan_builder(builder, starttime, endtime, minutes_per_block, times, change_as_submittime=True):
     """Scans the build pickle files in the builder directory, and updates the dictionary `times`."""
@@ -43,21 +49,22 @@ def scan_builder(builder, starttime, endtime, minutes_per_block, times, change_a
                 submittime = b.requests[0].submittedAt
 
             if starttime < submittime < endtime:
-                w = int(math.floor((b.started - submittime)/(minutes_per_block*60.0)))
+                w = int(math.floor(
+                    (b.started - submittime) / (minutes_per_block * 60.0)))
                 times[w] = times.get(w, 0) + 1
 
 if __name__ == "__main__":
     from optparse import OptionParser
     parser = OptionParser()
     parser.set_defaults(
-            minutes_per_block=15,
-            change_as_submittime=True,
-            name=os.uname()[1],
-            builders={},
-            directory=None,
-            starttime=time.time()-24*3600,
-            endtime=time.time(),
-            )
+        minutes_per_block=15,
+        change_as_submittime=True,
+        name=os.uname()[1],
+        builders={},
+        directory=None,
+        starttime=time.time() - 24 * 3600,
+        endtime=time.time(),
+    )
 
     def add_builder(option, opt_str, value, parser, *args, **kwargs):
         if ":" in value:
@@ -73,7 +80,8 @@ if __name__ == "__main__":
         parser.values.builders[platform].extend(builders)
 
     parser.add_option("-m", "--minutes-per-block", type="int", help="How many minutes per block", dest="minutes_per_block")
-    parser.add_option("-r", "--request-as-submittime", action="store_false", dest="change_as_submittime")
+    parser.add_option("-r", "--request-as-submittime",
+                      action="store_false", dest="change_as_submittime")
     parser.add_option("-n", "--name", dest="name")
     parser.add_option("-b", "--builders", dest="builders", action="callback", nargs=1, type="string", callback=add_builder, help="platform:builder1,builder2,...")
     parser.add_option("-d", "--directory", dest="directory")
@@ -91,8 +99,8 @@ if __name__ == "__main__":
     if options.directory:
         os.chdir(options.directory)
 
-    text =[]
-    text.append("Wait time report for %s for jobs submitted since %s\n" 
+    text = []
+    text.append("Wait time report for %s for jobs submitted since %s\n"
                 % (options.name, time.ctime(options.starttime)))
 
     hist = {}
@@ -100,12 +108,12 @@ if __name__ == "__main__":
         hist[platform] = {}
         for builder in builders:
             scan_builder(builder, options.starttime, options.endtime,
-                         options.minutes_per_block, hist[platform], 
+                         options.minutes_per_block, hist[platform],
                          options.change_as_submittime)
 
     allhist = {}
     for i in set([x for y in hist.keys() for x in hist[y]]):
-        allhist[i] = sum([p.get(i,0) for p in hist.values()])
+        allhist[i] = sum([p.get(i, 0) for p in hist.values()])
     total = sum(allhist.values())
     text.append("Total Jobs: %i\n" % total)
     text.append("Wait Times")
@@ -123,10 +131,10 @@ if __name__ == "__main__":
     else:
         import smtplib
         import sys
-        
+
         zero_wait = 0
         if total > 0:
-            zero_wait = allhist.get(0,0)*100./total
+            zero_wait = allhist.get(0, 0) * 100. / total
 
         subject = "Wait: %i/%.2f%% (%s)" % (total, zero_wait, options.name)
         server = options.smtp or 'localhost'

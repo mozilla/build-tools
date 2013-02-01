@@ -7,7 +7,8 @@ Tool to do safe operations with hg.
 revision/branch on commandline will override those in props-file"""
 
 # Import snippet to find tools lib
-import os, sys
+import os
+import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../lib/python"))
 
 from util.hg import mercurial, out, remove_path
@@ -18,32 +19,35 @@ if __name__ == '__main__':
 
     parser = OptionParser(__doc__)
     parser.set_defaults(
-            revision=os.environ.get('HG_REV'),
-            branch=os.environ.get('HG_BRANCH', None),
-            outgoing=False,
-            propsfile=os.environ.get('PROPERTIES_FILE'),
-            loglevel=logging.INFO,
-            shared_dir=os.environ.get('HG_SHARE_BASE_DIR'),
-            clone_by_rev=False,
-            mirrors=None,
-            bundles=None,
-            )
-    parser.add_option("-r", "--rev", dest="revision", help="which revision to update to")
-    parser.add_option("-b", "--branch", dest="branch", help="which branch to update to")
+        revision=os.environ.get('HG_REV'),
+        branch=os.environ.get('HG_BRANCH', None),
+        outgoing=False,
+        propsfile=os.environ.get('PROPERTIES_FILE'),
+        loglevel=logging.INFO,
+        shared_dir=os.environ.get('HG_SHARE_BASE_DIR'),
+        clone_by_rev=False,
+        mirrors=None,
+        bundles=None,
+    )
+    parser.add_option(
+        "-r", "--rev", dest="revision", help="which revision to update to")
+    parser.add_option(
+        "-b", "--branch", dest="branch", help="which branch to update to")
     parser.add_option("-p", "--props-file", dest="propsfile",
-        help="build json file containing revision information")
+                      help="build json file containing revision information")
     parser.add_option("-s", "--shared-dir", dest="shared_dir",
-        help="clone to a shared directory")
+                      help="clone to a shared directory")
     parser.add_option("--check-outgoing", dest="outgoing", action="store_true",
-        help="check for and clobber outgoing changesets")
-    parser.add_option("--clone-by-revision", dest="clone_by_rev", action="store_true",
+                      help="check for and clobber outgoing changesets")
+    parser.add_option(
+        "--clone-by-revision", dest="clone_by_rev", action="store_true",
         help="do initial clone with -r <rev> instead of cloning the entire repo. "
              "This is slower but is useful when cloning repositories with many "
              "heads which may timeout otherwise.")
     parser.add_option("--mirror", dest="mirrors", action="append",
-        help="add a mirror to try cloning/pulling from before repo")
+                      help="add a mirror to try cloning/pulling from before repo")
     parser.add_option("--bundle", dest="bundles", action="append",
-        help="add a bundle to try downloading/unbundling from before doing a full clone")
+                      help="add a bundle to try downloading/unbundling from before doing a full clone")
 
     options, args = parser.parse_args()
 
@@ -70,7 +74,7 @@ if __name__ == '__main__':
         if options.branch is None:
             options.branch = js['sourcestamp']['branch']
 
-    #look for and clobber outgoing changesets
+    # look for and clobber outgoing changesets
     if options.outgoing:
         if out(dest, repo):
             remove_path(dest)

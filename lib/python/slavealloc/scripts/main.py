@@ -6,15 +6,16 @@ from slavealloc import exceptions
 
 # subcommands
 from slavealloc.scripts import dbinit, gettac, lock, disable, enable, dbdump, dbimport, notes
-subcommands = [ dbinit, gettac, lock, disable, enable, dbdump, dbimport, notes ]
+subcommands = [dbinit, gettac, lock, disable, enable, dbdump, dbimport, notes]
+
 
 def parse_options():
     parser = argparse.ArgumentParser(description="Runs slavealloc subcommands")
     parser.set_defaults(_module=None)
 
     parser.add_argument('-A', '--api', dest='apiurl',
-            default='http://slavealloc.build.mozilla.org/api',
-            help="""URL of the REST API to use for most subcommands""")
+                        default='http://slavealloc.build.mozilla.org/api',
+                        help="""URL of the REST API to use for most subcommands""")
 
     subparsers = parser.add_subparsers(title='subcommands')
 
@@ -35,6 +36,7 @@ def parse_options():
     # and return the results
     return args.module.main, args
 
+
 def main():
     errors = []
 
@@ -53,7 +55,7 @@ def main():
         d.addErrback(log.err, "while executing subcommand")
 
         # before unconditionally stopping the reactor
-        d.addBoth(lambda _ : reactor.stop())
+        d.addBoth(lambda _: reactor.stop())
     reactor.callWhenRunning(do_command)
     reactor.run()
 

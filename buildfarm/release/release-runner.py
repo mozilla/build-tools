@@ -51,7 +51,8 @@ def reconfig_warning(from_, to, smtp_server, rr, start_time, elapsed,
     - release-runner""" % dict(start_time=started, elapsed=elapsed))
     try:
         for release in rr.new_releases:
-            rr.update_status(release, "Waiting on reconfig for %d seconds" % elapsed)
+            rr.update_status(
+                release, "Waiting on reconfig for %d seconds" % elapsed)
         sendmail(from_=from_, to=to, subject=subject, body=body,
                  smtp_server=smtp_server)
     except SMTPException:
@@ -103,7 +104,8 @@ class ReleaseRunner(object):
 
     def mark_as_completed(self, release):
         log.info('mark as completed %s' % release['name'])
-        self.release_api.update(release['name'], complete=True, status='Started')
+        self.release_api.update(
+            release['name'], complete=True, status='Started')
 
     def mark_as_failed(self, release, why):
         log.info('mark as failed %s' % release['name'])

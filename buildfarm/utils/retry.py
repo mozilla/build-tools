@@ -6,7 +6,12 @@ Retries cmd and args with configurable timeouts and delays between retries.
 Return code is 0 if cmd succeeds, and is 1 if cmd fails after all the retries.
 """
 
-import time, subprocess, logging, os, sys, re
+import time
+import subprocess
+import logging
+import os
+import sys
+import re
 from tempfile import TemporaryFile
 from operator import xor
 log = logging.getLogger()
@@ -20,18 +25,22 @@ if sys.platform.startswith('win'):
 else:
     from unix_util import kill
 
+
 def read_file(f):
     f.seek(0)
     return f.read()
+
 
 def search_output(f, regexp, fail_if_match):
     res = re.search(regexp, read_file(f))
     return xor(bool(res), fail_if_match)
 
+
 class RunWithTimeoutException(Exception):
     def __init__(self, rc, **kwargs):
         Exception.__init__(self, **kwargs)
         self.rc = rc
+
 
 def run_with_timeout(cmd, timeout, stdout_regexp=None, stderr_regexp=None,
                      fail_if_match=False, print_output=True):
@@ -56,11 +65,13 @@ def run_with_timeout(cmd, timeout, stdout_regexp=None, stderr_regexp=None,
                 print "Process stderr:\n%s" % read_file(stderr)
             if rc == 0:
                 if stdout_regexp and not \
-                   search_output(stdout, stdout_regexp, fail_if_match):
-                    raise RunWithTimeoutException("%s found in stdout, failing" % fail_if_match, -1)
+                        search_output(stdout, stdout_regexp, fail_if_match):
+                    raise RunWithTimeoutException(
+                        "%s found in stdout, failing" % fail_if_match, -1)
                 if stderr_regexp and not \
-                   search_output(stderr, stderr_regexp, fail_if_match):
-                    raise RunWithTimeoutException("%s found in stderr, failing" % fail_if_match, -1)
+                        search_output(stderr, stderr_regexp, fail_if_match):
+                    raise RunWithTimeoutException(
+                        "%s found in stderr, failing" % fail_if_match, -1)
                 return rc
             else:
                 raise RunWithTimeoutException("command exited with non-zero return code %d, failing" % rc, rc)
@@ -70,7 +81,8 @@ def run_with_timeout(cmd, timeout, stdout_regexp=None, stderr_regexp=None,
                      timeout, proc.pid)
             rc = kill(proc.pid)
             log.debug("Process returned %s", rc)
-            raise RunWithTimeoutException("Timeout (%i) exceeded" % timeout, rc)
+            raise RunWithTimeoutException(
+                "Timeout (%i) exceeded" % timeout, rc)
 
         # Check again in a sec...
         time.sleep(0.25)
@@ -108,11 +120,11 @@ if __name__ == "__main__":
                       help="Don't print stdout/stderr output")
 
     parser.set_defaults(
-            retries=10,
-            timeout=300,
-            sleeptime=30,
-            maxsleeptime=300,
-            )
+        retries=10,
+        timeout=300,
+        sleeptime=30,
+        maxsleeptime=300,
+    )
 
     options, args = parser.parse_args()
 
@@ -122,7 +134,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     # Another dirty hack... :(
     # Special care for programs w/o extensions on Windows
-    if sys.platform.startswith('win') and  not os.path.splitext(args[0])[1]:
+    if sys.platform.startswith('win') and not os.path.splitext(args[0])[1]:
         args[0] = which(args[0])
 
     try:
@@ -135,8 +147,8 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         sys.exit(1)
     except Exception, e:
-        log.info("Unable to successfully run %s after %d attempts" % \
-          (args, options.retries))
+        log.info("Unable to successfully run %s after %d attempts" %
+                (args, options.retries))
         # If we caught a RunWithTimeoutException we can exit with the same
         # rc as the command. If something else was hit, just exit with 1
         rc = getattr(e, 'rc', 1)

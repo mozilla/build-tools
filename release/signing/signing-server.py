@@ -29,10 +29,14 @@ log = logging.getLogger(__name__)
 
 # We need to ignore SIGINT (KeyboardInterrupt) in the children so that the
 # parent exits properly.
+
+
 def init_worker():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 _sha1sum_worker_pool = None
+
+
 def sha1sum(fn):
     "Non-blocking sha1sum. Will calculate sha1sum of fn in a subprocess"
     result = _sha1sum_worker_pool.apply_async(sync_sha1sum, args=(fn,))
@@ -42,8 +46,9 @@ def sha1sum(fn):
     while not result.ready():
         gevent.sleep(sleep_time)
         # Increase the time we sleep next time, up to a maximum of 5 seconds
-        sleep_time = min(5, sleep_time*2)
+        sleep_time = min(5, sleep_time * 2)
     return result.get()
+
 
 def run(config_filename, passphrases):
     log.info("Running with pid %i", os.getpid())
@@ -68,10 +73,12 @@ def run(config_filename, passphrases):
         else:
             app.load_config(config)
 
-        listen_addr = (config.get('server', 'listen'), config.getint('server', 'port'))
+        listen_addr = (
+            config.get('server', 'listen'), config.getint('server', 'port'))
         if not listener or listen_addr != listener.getsockname():
             if listener and server:
-                log.info("Listening address has changed, stopping old wsgi server")
+                log.info(
+                    "Listening address has changed, stopping old wsgi server")
                 log.debug("Old address: %s", listener.getsockname())
                 log.debug("New address: %s", listen_addr)
                 server.stop()
@@ -89,12 +96,13 @@ def run(config_filename, passphrases):
             backdoor_port = config.getint('server', 'backdoor_port')
             if not backdoor or backdoor.server_port != backdoor_port:
                 if backdoor:
-                    log.info("Stopping old backdoor on port %i", backdoor.server_port)
+                    log.info("Stopping old backdoor on port %i",
+                             backdoor.server_port)
                     backdoor.stop()
                 log.info("Starting backdoor on port %i", backdoor_port)
                 backdoor = gevent.backdoor.BackdoorServer(
-                        ('127.0.0.1', backdoor_port),
-                        locals=backdoor_state)
+                    ('127.0.0.1', backdoor_port),
+                    locals=backdoor_state)
                 gevent.spawn(backdoor.serve_forever)
 
         # Handle SIGHUP
@@ -168,13 +176,17 @@ if __name__ == '__main__':
                       const=logging.DEBUG, help="be verbose")
     parser.add_option("-q", dest="loglevel", action="store_const",
                       const=logging.WARNING, help="be quiet")
-    parser.add_option("-l", dest="logfile", help="log to this file instead of stderr")
+    parser.add_option(
+        "-l", dest="logfile", help="log to this file instead of stderr")
     parser.add_option("-d", dest="daemonize", action="store_true",
                       help="daemonize process")
     parser.add_option("--pidfile", dest="pidfile")
-    parser.add_option("--stop", dest="action", action="store_const", const="stop")
-    parser.add_option("--reload", dest="action", action="store_const", const="reload")
-    parser.add_option("--restart", dest="action", action="store_const", const="restart")
+    parser.add_option(
+        "--stop", dest="action", action="store_const", const="stop")
+    parser.add_option(
+        "--reload", dest="action", action="store_const", const="reload")
+    parser.add_option(
+        "--restart", dest="action", action="store_const", const="restart")
 
     options, args = parser.parse_args()
 
@@ -204,12 +216,15 @@ if __name__ == '__main__':
         loglevel = get_config(config, "logging", "loglevel", "INFO")
         options.loglevel = getattr(logging, loglevel)
     if options.log_maxfiles is None:
-        options.log_maxfiles = get_config_int(config, "logging", "log_maxfiles", 50)
+        options.log_maxfiles = get_config_int(
+            config, "logging", "log_maxfiles", 50)
     if options.log_maxsize is None:
         # 10 MB log size by default
-        options.log_maxsize = get_config_int(config, "logging", "log_maxsize", 10 * (1024 ** 2))
+        options.log_maxsize = get_config_int(
+            config, "logging", "log_maxsize", 10 * (1024 ** 2))
     if options.daemonize is None:
-        options.daemonize = get_config_bool(config, "server", "daemonize", False)
+        options.daemonize = get_config_bool(
+            config, "server", "daemonize", False)
     os.umask(0o077)
     setup_logging(logfile=options.logfile,
                   loglevel=options.loglevel,

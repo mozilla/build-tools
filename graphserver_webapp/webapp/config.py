@@ -4,6 +4,7 @@ class Config(object):
     DATABASE_URI = 'sqlite:///:memory:'
     VERSION = 'Default'
 
+
 class TestConfig(object):
     DEBUG = True
     TESTING = True
@@ -11,11 +12,13 @@ class TestConfig(object):
     VERSION = 'Test'
     LOGFILE = 'test.log'
 
+
 class ProductionConfig(Config):
     DATABASE_URI = 'mysql://user@localhost/foo'
     VERSION = 'Production'
     SECRET_KEY = 'FILLMEIN'
     LOGFILE = 'graphserver_webapp.log'
+
 
 class DevelopmentConfig(Config):
     DATABASE_URI = 'mysql://root:password@localhost/graphserver_staging'

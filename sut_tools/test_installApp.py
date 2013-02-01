@@ -11,8 +11,12 @@ import os
 from mock import Mock
 
 # fake the DM, since it doesn't exist in repo land
-# taken from http://code.activestate.com/recipes/82234-importing-a-dynamically-generated-module/
-import sys, imp
+# taken from http://code.activestate.com/recipes/82234-importing-a
+# -dynamically-generated-module/
+import sys
+import imp
+
+
 def make_fake_module(name):
     module = imp.new_module(name)
     exec '' in module.__dict__
@@ -50,7 +54,9 @@ sut_lib.runCommand = Mock()
 
 import time
 
-import installApp 
+import installApp
+
+
 class InstallAppTestCase(unittest.TestCase):
     def setUp(self):
         # every test should reset the counts
@@ -62,14 +68,17 @@ class InstallAppTestCase(unittest.TestCase):
         # we don't really want to wait during testing
         time.sleep = Mock()
 
+
 class CheckBasicExecution(InstallAppTestCase):
     def setUp(self):
         super(CheckBasicExecution, self).setUp()
         os.environ['SUT_NAME'] = 'fred'
+
     def test_errors_no_args(self):
         # TypeError is a side effect of being run in
         # not-the-normal-foopy environment.
-        self.assertRaises(TypeError,installApp.main)
+        self.assertRaises(TypeError, installApp.main)
+
     def test_error_short_args(self):
         # we expect the script to exit via sys.exit(1)
         try:
@@ -77,15 +86,18 @@ class CheckBasicExecution(InstallAppTestCase):
             # we need to catch the exception, and inspect the return
             # code (i.e.  we can't use the normal "assertRaises"
             # approach)
-            installApp.main(['app',1])
+            installApp.main(['app', 1])
         except SystemExit as e:
             self.assertEqual(1, e.code)
         else:
             self.fail('should have exited via sys.exit(1)')
+
     def test_two_args_okay(self):
-        installApp.main(['app',1,'/path/to/source_file'])
+        installApp.main(['app', 1, '/path/to/source_file'])
+
     def test_three_args_okay(self):
-        installApp.main(['app',1,'/path/to/source_file',3])
+        installApp.main(['app', 1, '/path/to/source_file', 3])
+
 
 class CheckArguementHandling(InstallAppTestCase):
     # N.B. the 3rd arguement to installApp.py is never used, so can
@@ -102,8 +114,10 @@ class CheckArguementHandling(InstallAppTestCase):
             src_path = os.path.join('/path/to', source_file)
             installed_path = os.path.join(root_path, source_file)
             expected_args = ((installed_path,), {})
-            installApp.main(['app',1,src_path])
-            self.assertTrue(expected_args in the_mock.installApp.call_args_list)
+            installApp.main(['app', 1, src_path])
+            self.assertTrue(
+                expected_args in the_mock.installApp.call_args_list)
+
 
 class CheckOriginalContract(InstallAppTestCase):
     def setUp(self):
@@ -119,8 +133,9 @@ class CheckOriginalContract(InstallAppTestCase):
         source_path = os.path.join('/path/to', source_file)
         installed_path = os.path.join(root_path, source_file)
         installApp.main(['app', 1, source_path])
-        the_mock.pushFile.assert_called_once_with(source_path, installed_path) 
+        the_mock.pushFile.assert_called_once_with(source_path, installed_path)
         the_mock.installApp.assert_called_once_with(installed_path)
+
 
 class CheckNewContract(InstallAppTestCase):
 
@@ -152,8 +167,8 @@ class CheckNewContract(InstallAppTestCase):
         robocop_source_path = os.path.join('build/tests/bin', robocop_file)
         installed_path = os.path.join(root_path, source_file)
         robocop_installed_path = os.path.join(root_path, robocop_file)
-        expected_pushFile_calls = [((source_path, installed_path), {}),]
-        expected_installApp_calls = [((installed_path,), {}),]
+        expected_pushFile_calls = [((source_path, installed_path), {}), ]
+        expected_installApp_calls = [((installed_path,), {}), ]
 
         # simulate not finding robocop.apk - should not attempt install
         # then
@@ -164,6 +179,7 @@ class CheckNewContract(InstallAppTestCase):
                          expected_installApp_calls)
         self.assertEqual(the_mock.pushFile.call_args_list,
                          expected_pushFile_calls)
+
 
 class CheckRobocopFind(InstallAppTestCase):
 
@@ -177,7 +193,7 @@ class CheckRobocopFind(InstallAppTestCase):
         os.path.exists.return_value = True
         found_path = installApp.find_robocop()
         self.assertTrue(found_path,
-                         "Should have found robocop.apk")
+                        "Should have found robocop.apk")
 
 if __name__ == '__main__':
     unittest.main()

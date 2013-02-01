@@ -6,9 +6,10 @@ import subprocess
 
 import util.hg as hg
 from util.hg import clone, pull, update, hg_ver, mercurial, _make_absolute, \
-  share, push, apply_and_push, HgUtilError, make_hg_url, get_branch, \
-  get_branches, path, init, unbundle, adjust_paths, is_hg_cset, commit, tag
+    share, push, apply_and_push, HgUtilError, make_hg_url, get_branch, \
+    get_branches, path, init, unbundle, adjust_paths, is_hg_cset, commit, tag
 from util.commands import run_cmd, get_output
+
 
 def getRevisions(dest):
     retval = []
@@ -19,8 +20,10 @@ def getRevisions(dest):
         retval.append(rev)
     return retval
 
+
 def getRevInfo(dest, rev):
-    output = get_output(['hg', 'log', '-R', dest, '-r', rev, '--template', '{author}\n{desc}\n{tags}']).splitlines()
+    output = get_output(['hg', 'log', '-R', dest, '-r', rev, '--template',
+                        '{author}\n{desc}\n{tags}']).splitlines()
     info = {
         'user': output[0],
         'msg': output[1],
@@ -30,18 +33,21 @@ def getRevInfo(dest, rev):
         info['tags'] = output[2].split()
     return info
 
+
 def getTags(dest):
     tags = []
     for tag in get_output(['hg', 'tags', '-R', dest]).splitlines():
         tags.append(tag.split()[0])
     return tags
 
+
 class TestMakeAbsolute(unittest.TestCase):
     def testAbsolutePath(self):
         self.assertEquals(_make_absolute("/foo/bar"), "/foo/bar")
 
     def testRelativePath(self):
-        self.assertEquals(_make_absolute("foo/bar"), os.path.abspath("foo/bar"))
+        self.assertEquals(
+            _make_absolute("foo/bar"), os.path.abspath("foo/bar"))
 
     def testHTTPPaths(self):
         self.assertEquals(_make_absolute("http://foo/bar"), "http://foo/bar")
@@ -50,7 +56,8 @@ class TestMakeAbsolute(unittest.TestCase):
         self.assertEquals(_make_absolute("file:///foo/bar"), "file:///foo/bar")
 
     def testRelativeFilePath(self):
-        self.assertEquals(_make_absolute("file://foo/bar"), "file://%s/foo/bar" % os.getcwd())
+        self.assertEquals(_make_absolute(
+            "file://foo/bar"), "file://%s/foo/bar" % os.getcwd())
 
 
 class TestIsHgCset(unittest.TestCase):
@@ -123,27 +130,27 @@ class TestHg(unittest.TestCase):
 
     def testCloneBranch(self):
         clone(self.repodir, self.wc, branch='branch2',
-                update_dest=False, clone_by_rev=True)
+              update_dest=False, clone_by_rev=True)
         # On hg 1.6, we should only have a subset of the revisions
-        if hg_ver() >= (1,6,0):
+        if hg_ver() >= (1, 6, 0):
             self.assertEquals(self.revisions[1:],
-                    getRevisions(self.wc))
+                              getRevisions(self.wc))
         else:
             self.assertEquals(self.revisions,
-                    getRevisions(self.wc))
+                              getRevisions(self.wc))
 
     def testCloneUpdateBranch(self):
         rev = clone(self.repodir, os.path.join(self.tmpdir, 'wc'),
-                branch="branch2", update_dest=True, clone_by_rev=True)
+                    branch="branch2", update_dest=True, clone_by_rev=True)
         self.assertEquals(rev, self.revisions[1], self.revisions)
 
     def testCloneRevision(self):
         clone(self.repodir, self.wc,
-                revision=self.revisions[0], update_dest=False,
-                clone_by_rev=True)
+              revision=self.revisions[0], update_dest=False,
+              clone_by_rev=True)
         # We'll only get a subset of the revisions
         self.assertEquals(self.revisions[:1] + self.revisions[2:],
-                getRevisions(self.wc))
+                          getRevisions(self.wc))
 
     def testUpdateRevision(self):
         rev = clone(self.repodir, self.wc, update_dest=False)
@@ -155,7 +162,7 @@ class TestHg(unittest.TestCase):
     def testPull(self):
         # Clone just the first rev
         clone(self.repodir, self.wc, revision=self.revisions[-1],
-                update_dest=False, clone_by_rev=True)
+              update_dest=False, clone_by_rev=True)
         self.assertEquals(getRevisions(self.wc), self.revisions[-1:])
 
         # Now pull in new changes
@@ -166,20 +173,22 @@ class TestHg(unittest.TestCase):
     def testPullRevision(self):
         # Clone just the first rev
         clone(self.repodir, self.wc, revision=self.revisions[-1],
-                update_dest=False, clone_by_rev=True)
+              update_dest=False, clone_by_rev=True)
         self.assertEquals(getRevisions(self.wc), self.revisions[-1:])
 
         # Now pull in just the last revision
-        rev = pull(self.repodir, self.wc, revision=self.revisions[0], update_dest=False)
+        rev = pull(self.repodir, self.wc, revision=self.revisions[
+                   0], update_dest=False)
         self.assertEquals(rev, None)
 
         # We'll be missing the middle revision (on another branch)
-        self.assertEquals(getRevisions(self.wc), self.revisions[:1] + self.revisions[2:])
+        self.assertEquals(
+            getRevisions(self.wc), self.revisions[:1] + self.revisions[2:])
 
     def testPullBranch(self):
         # Clone just the first rev
         clone(self.repodir, self.wc, revision=self.revisions[-1],
-                update_dest=False, clone_by_rev=True)
+              update_dest=False, clone_by_rev=True)
         self.assertEquals(getRevisions(self.wc), self.revisions[-1:])
 
         # Now pull in the other branch
@@ -187,7 +196,7 @@ class TestHg(unittest.TestCase):
         self.assertEquals(rev, None)
 
         # On hg 1.6, we'll be missing the last revision (on another branch)
-        if hg_ver() >= (1,6,0):
+        if hg_ver() >= (1, 6, 0):
             self.assertEquals(getRevisions(self.wc), self.revisions[1:])
         else:
             self.assertEquals(getRevisions(self.wc), self.revisions)
@@ -230,7 +239,8 @@ class TestHg(unittest.TestCase):
         clone(self.repodir, self.wc, update_dest=False)
 
         # Try and pull in changes from the new repo
-        self.assertRaises(subprocess.CalledProcessError, pull, repo2, self.wc, update_dest=False)
+        self.assertRaises(subprocess.CalledProcessError, pull,
+                          repo2, self.wc, update_dest=False)
 
     def testShareUnrelated(self):
         # Create a new repo
@@ -258,7 +268,8 @@ class TestHg(unittest.TestCase):
         old_revs = self.revisions[:]
 
         # Reset the repo
-        run_cmd(['%s/init_hgrepo.sh' % os.path.dirname(__file__), self.repodir])
+        run_cmd(
+            ['%s/init_hgrepo.sh' % os.path.dirname(__file__), self.repodir])
 
         self.assertNotEqual(old_revs, getRevisions(self.repodir))
 
@@ -269,18 +280,21 @@ class TestHg(unittest.TestCase):
         self.assertNotEqual(old_revs, getRevisions(self.wc))
 
     def testPush(self):
-        clone(self.repodir, self.wc, revision=self.revisions[-2], clone_by_rev=True)
+        clone(self.repodir, self.wc, revision=self.revisions[-2],
+              clone_by_rev=True)
         push(src=self.repodir, remote=self.wc)
         self.assertEquals(getRevisions(self.wc), self.revisions)
 
     def testPushWithBranch(self):
-        clone(self.repodir, self.wc, revision=self.revisions[-1], clone_by_rev=True)
+        clone(self.repodir, self.wc, revision=self.revisions[-1],
+              clone_by_rev=True)
         push(src=self.repodir, remote=self.wc, branch='branch2')
         push(src=self.repodir, remote=self.wc, branch='default')
         self.assertEquals(getRevisions(self.wc), self.revisions)
 
     def testPushWithRevision(self):
-        clone(self.repodir, self.wc, revision=self.revisions[-2], clone_by_rev=True)
+        clone(self.repodir, self.wc, revision=self.revisions[-2],
+              clone_by_rev=True)
         push(src=self.repodir, remote=self.wc, revision=self.revisions[-1])
         self.assertEquals(getRevisions(self.wc), self.revisions[-2:])
 
@@ -289,24 +303,27 @@ class TestHg(unittest.TestCase):
         self.assertEquals(rev, self.revisions[0])
 
     def testPushNewBranchesNotAllowed(self):
-        clone(self.repodir, self.wc, revision=self.revisions[0], clone_by_rev=True)
+        clone(self.repodir, self.wc, revision=self.revisions[0],
+              clone_by_rev=True)
         self.assertRaises(Exception, push, self.repodir, self.wc,
                           push_new_branches=False)
 
     def testPushWithForce(self):
-        clone(self.repodir, self.wc, revision=self.revisions[0], clone_by_rev=True)
+        clone(self.repodir, self.wc, revision=self.revisions[0],
+              clone_by_rev=True)
         run_cmd(['touch', 'newfile'], cwd=self.wc)
         run_cmd(['hg', 'add', 'newfile'], cwd=self.wc)
         run_cmd(['hg', 'commit', '-m', '"re-add newfile"'], cwd=self.wc)
         push(self.repodir, self.wc, push_new_branches=False, force=True)
 
     def testPushForceFail(self):
-        clone(self.repodir, self.wc, revision=self.revisions[0], clone_by_rev=True)
+        clone(self.repodir, self.wc, revision=self.revisions[0],
+              clone_by_rev=True)
         run_cmd(['touch', 'newfile'], cwd=self.wc)
         run_cmd(['hg', 'add', 'newfile'], cwd=self.wc)
         run_cmd(['hg', 'commit', '-m', '"add newfile"'], cwd=self.wc)
         self.assertRaises(Exception, push, self.repodir, self.wc,
-                push_new_branches=False, force=False)
+                          push_new_branches=False, force=False)
 
     def testMercurialWithNewShare(self):
         shareBase = os.path.join(self.tmpdir, 'share')
@@ -323,8 +340,10 @@ class TestHg(unittest.TestCase):
         try:
             os.environ['HG_SHARE_BASE_DIR'] = shareBase
             mercurial(self.repodir, self.wc)
-            self.assertEquals(getRevisions(self.repodir), getRevisions(self.wc))
-            self.assertEquals(getRevisions(self.repodir), getRevisions(sharerepo))
+            self.assertEquals(
+                getRevisions(self.repodir), getRevisions(self.wc))
+            self.assertEquals(
+                getRevisions(self.repodir), getRevisions(sharerepo))
         finally:
             del os.environ['HG_SHARE_BASE_DIR']
 
@@ -339,7 +358,6 @@ class TestHg(unittest.TestCase):
         mercurial(self.repodir, self.wc, shareBase=shareBase)
         self.assertEquals(getRevisions(self.repodir), getRevisions(self.wc))
         self.assertEquals(getRevisions(self.repodir), getRevisions(sharerepo))
-
 
     def testMercurialRelativeDir(self):
         os.chdir(os.path.dirname(self.repodir))
@@ -399,44 +417,46 @@ class TestHg(unittest.TestCase):
             mercurial(repo2, self.wc)
             self.assertEquals(getRevisions(self.wc), getRevisions(repo2))
             # Make sure our local file went away
-            self.failUnless(not os.path.exists(os.path.join(self.wc, 'test.txt')))
+            self.failUnless(
+                not os.path.exists(os.path.join(self.wc, 'test.txt')))
         finally:
             os.environ.clear()
             os.environ.update(old_env)
 
     def testMakeHGUrl(self):
-        #construct an hg url specific to revision, branch and filename and try to pull it down
+        # construct an hg url specific to revision, branch and filename and try
+        # to pull it down
         file_url = make_hg_url(
-                "hg.mozilla.org",
-                '//build/tools/',
-                revision='FIREFOX_3_6_12_RELEASE',
-                filename="/lib/python/util/hg.py"
-                )
+            "hg.mozilla.org",
+            '//build/tools/',
+            revision='FIREFOX_3_6_12_RELEASE',
+            filename="/lib/python/util/hg.py"
+        )
         expected_url = "https://hg.mozilla.org/build/tools/raw-file/FIREFOX_3_6_12_RELEASE/lib/python/util/hg.py"
         self.assertEquals(file_url, expected_url)
 
     def testMakeHGUrlNoFilename(self):
         file_url = make_hg_url(
-                "hg.mozilla.org",
-                "/build/tools",
-                revision="default"
+            "hg.mozilla.org",
+            "/build/tools",
+            revision="default"
         )
         expected_url = "https://hg.mozilla.org/build/tools/rev/default"
         self.assertEquals(file_url, expected_url)
 
     def testMakeHGUrlNoRevisionNoFilename(self):
         repo_url = make_hg_url(
-                "hg.mozilla.org",
-                "/build/tools"
+            "hg.mozilla.org",
+            "/build/tools"
         )
         expected_url = "https://hg.mozilla.org/build/tools"
         self.assertEquals(repo_url, expected_url)
 
     def testMakeHGUrlDifferentProtocol(self):
         repo_url = make_hg_url(
-                "hg.mozilla.org",
-                "/build/tools",
-                protocol='ssh'
+            "hg.mozilla.org",
+            "/build/tools",
+            protocol='ssh'
         )
         expected_url = "ssh://hg.mozilla.org/build/tools"
         self.assertEquals(repo_url, expected_url)
@@ -448,7 +468,8 @@ class TestHg(unittest.TestCase):
         self.assertEquals(self.revisions, getRevisions(repo3))
 
     def testMercurialShareOutgoing(self):
-        # ensure that outgoing changesets in a shared clone affect the shared history
+        # ensure that outgoing changesets in a shared clone affect the shared
+        # history
         repo5 = os.path.join(self.tmpdir, 'repo5')
         repo6 = os.path.join(self.tmpdir, 'repo6')
         mercurial(self.repodir, repo5)
@@ -463,6 +484,7 @@ class TestHg(unittest.TestCase):
 
     def testApplyAndPush(self):
         clone(self.repodir, self.wc)
+
         def c(repo, attempt):
             run_cmd(['hg', 'tag', '-f', 'TEST'], cwd=repo)
         apply_and_push(self.wc, self.repodir, c)
@@ -470,6 +492,7 @@ class TestHg(unittest.TestCase):
 
     def testApplyAndPushFail(self):
         clone(self.repodir, self.wc)
+
         def c(repo, attempt, remote):
             run_cmd(['hg', 'tag', '-f', 'TEST'], cwd=repo)
             run_cmd(['hg', 'tag', '-f', 'CONFLICTING_TAG'], cwd=remote)
@@ -478,6 +501,7 @@ class TestHg(unittest.TestCase):
 
     def testApplyAndPushWithRebase(self):
         clone(self.repodir, self.wc)
+
         def c(repo, attempt, remote):
             run_cmd(['hg', 'tag', '-f', 'TEST'], cwd=repo)
             if attempt == 1:
@@ -489,9 +513,10 @@ class TestHg(unittest.TestCase):
 
     def testApplyAndPushRebaseFails(self):
         clone(self.repodir, self.wc)
+
         def c(repo, attempt, remote):
             run_cmd(['hg', 'tag', '-f', 'TEST'], cwd=repo)
-            if attempt in (1,2):
+            if attempt in (1, 2):
                 run_cmd(['hg', 'tag', '-f', 'CONFLICTING_TAG'], cwd=remote)
         apply_and_push(self.wc, self.repodir,
                        lambda r, a: c(r, a, self.repodir), max_attempts=3)
@@ -499,6 +524,7 @@ class TestHg(unittest.TestCase):
 
     def testApplyAndPushOnBranch(self):
         clone(self.repodir, self.wc)
+
         def c(repo, attempt):
             run_cmd(['hg', 'branch', 'branch3'], cwd=repo)
             run_cmd(['hg', 'tag', '-f', 'TEST'], cwd=repo)
@@ -507,12 +533,15 @@ class TestHg(unittest.TestCase):
 
     def testApplyAndPushWithNoChange(self):
         clone(self.repodir, self.wc)
-        def c(r,a):
+
+        def c(r, a):
             pass
-        self.assertRaises(HgUtilError, apply_and_push, self.wc, self.repodir, c)
+        self.assertRaises(
+            HgUtilError, apply_and_push, self.wc, self.repodir, c)
 
     def testApplyAndPushForce(self):
         clone(self.repodir, self.wc)
+
         def c(repo, attempt, remote, local):
             run_cmd(['touch', 'newfile'], cwd=remote)
             run_cmd(['hg', 'add', 'newfile'], cwd=remote)
@@ -521,10 +550,11 @@ class TestHg(unittest.TestCase):
             run_cmd(['hg', 'add', 'newfile'], cwd=local)
             run_cmd(['hg', 'commit', '-m', '"re-add newfile"'], cwd=local)
         apply_and_push(self.wc, self.repodir,
-                (lambda r, a: c(r, a, self.repodir, self.wc)), force=True)
+                      (lambda r, a: c(r, a, self.repodir, self.wc)), force=True)
 
     def testApplyAndPushForceFail(self):
         clone(self.repodir, self.wc)
+
         def c(repo, attempt, remote, local):
             run_cmd(['touch', 'newfile'], cwd=remote)
             run_cmd(['hg', 'add', 'newfile'], cwd=remote)
@@ -533,8 +563,8 @@ class TestHg(unittest.TestCase):
             run_cmd(['hg', 'add', 'newfile'], cwd=local)
             run_cmd(['hg', 'commit', '-m', '"re-add newfile"'], cwd=local)
         self.assertRaises(HgUtilError,
-            apply_and_push, self.wc, self.repodir,
-                (lambda r, a: c(r, a, self.repodir, self.wc)), force=False)
+                          apply_and_push, self.wc, self.repodir,
+                         (lambda r, a: c(r, a, self.repodir, self.wc)), force=False)
 
     def testPath(self):
         clone(self.repodir, self.wc)
@@ -608,6 +638,7 @@ class TestHg(unittest.TestCase):
         orig_unbundle = unbundle
         try:
             called = []
+
             def new_unbundle(*args, **kwargs):
                 called.append(True)
                 return orig_unbundle(*args, **kwargs)
@@ -629,7 +660,7 @@ class TestHg(unittest.TestCase):
         # Create an unrelated repo
         repo2 = os.path.join(self.tmpdir, 'repo2')
         run_cmd(['%s/init_hgrepo.sh' % os.path.dirname(__file__),
-            repo2])
+                 repo2])
 
         self.assertNotEqual(self.revisions, getRevisions(repo2))
 
@@ -639,7 +670,7 @@ class TestHg(unittest.TestCase):
         # Make sure we don't have unrelated revisions
         self.assertEquals(getRevisions(repo2), getRevisions(self.wc))
         self.assertEquals(set(),
-                set(getRevisions(self.repodir)).intersection(set(getRevisions(self.wc))))
+                          set(getRevisions(self.repodir)).intersection(set(getRevisions(self.wc))))
 
     def testCloneWithBadBundle(self):
         # First create the bad bundle
@@ -650,6 +681,7 @@ class TestHg(unittest.TestCase):
         orig_unbundle = unbundle
         try:
             called = []
+
             def new_unbundle(*args, **kwargs):
                 called.append(True)
                 return orig_unbundle(*args, **kwargs)
@@ -676,6 +708,7 @@ class TestHg(unittest.TestCase):
         orig_unbundle = unbundle
         try:
             called = []
+
             def new_unbundle(*args, **kwargs):
                 called.append(True)
                 return orig_unbundle(*args, **kwargs)
@@ -683,7 +716,8 @@ class TestHg(unittest.TestCase):
 
             # Now clone it using the bundle
             clone(self.repodir, self.wc, bundles=[bundle])
-            self.assertEquals(getRevisions(self.repodir), getRevisions(self.wc))
+            self.assertEquals(
+                getRevisions(self.repodir), getRevisions(self.wc))
             self.assertEquals(called, [True])
         finally:
             hg.unbundle = orig_unbundle
@@ -751,7 +785,7 @@ class TestHg(unittest.TestCase):
         # Now clone from the mirror
         revisions = getRevisions(self.repodir)
         clone(self.repodir, self.wc, revision=revisions[0],
-                mirrors=[mirror], clone_by_rev=True)
+              mirrors=[mirror], clone_by_rev=True)
 
         # We'll be missing the middle revision (on another branch)
         self.assertEquals(revisions[:2] + revisions[3:], getRevisions(self.wc))
@@ -817,7 +851,7 @@ class TestHg(unittest.TestCase):
         self.assertEquals(getRevisions(self.wc), getRevisions(self.repodir))
         # We shouldn't have anything from the unrelated mirror
         self.assertEquals(set(),
-                set(getRevisions(mirror)).intersection(set(getRevisions(self.wc))))
+                          set(getRevisions(mirror)).intersection(set(getRevisions(self.wc))))
 
         # Our default path should point to the original repo
         self.assertEquals(self.repodir, path(self.wc))
@@ -836,6 +870,7 @@ class TestHg(unittest.TestCase):
         orig_unbundle = unbundle
         try:
             called = []
+
             def new_unbundle(*args, **kwargs):
                 called.append(True)
                 return orig_unbundle(*args, **kwargs)
@@ -844,11 +879,14 @@ class TestHg(unittest.TestCase):
             shareBase = os.path.join(self.tmpdir, 'share')
             sharerepo = os.path.join(shareBase, self.repodir.lstrip("/"))
             os.mkdir(shareBase)
-            mercurial(self.repodir, self.wc, shareBase=shareBase, bundles=[bundle])
+            mercurial(
+                self.repodir, self.wc, shareBase=shareBase, bundles=[bundle])
 
             self.assertEquals(called, [True])
-            self.assertEquals(getRevisions(self.repodir), getRevisions(self.wc))
-            self.assertEquals(getRevisions(self.repodir), getRevisions(sharerepo))
+            self.assertEquals(
+                getRevisions(self.repodir), getRevisions(self.wc))
+            self.assertEquals(
+                getRevisions(self.repodir), getRevisions(sharerepo))
         finally:
             hg.unbundle = orig_unbundle
 
@@ -869,7 +907,8 @@ class TestHg(unittest.TestCase):
 
         # Since we used the mirror, we should be missing a commit
         self.assertNotEquals(getRevisions(self.repodir), getRevisions(self.wc))
-        self.assertNotEquals(getRevisions(self.repodir), getRevisions(sharerepo))
+        self.assertNotEquals(
+            getRevisions(self.repodir), getRevisions(sharerepo))
         self.assertEquals(getRevisions(mirror), getRevisions(self.wc))
 
     def testMercurialByRevWithShareAndMirror(self):
@@ -880,7 +919,8 @@ class TestHg(unittest.TestCase):
         shareBase = os.path.join(self.tmpdir, 'share')
         sharerepo = os.path.join(shareBase, self.repodir.lstrip("/"))
         os.mkdir(shareBase)
-        mercurial(self.repodir, self.wc, shareBase=shareBase, mirrors=[mirror], clone_by_rev=True, revision=self.revisions[-1])
+        mercurial(self.repodir, self.wc, shareBase=shareBase, mirrors=[
+                  mirror], clone_by_rev=True, revision=self.revisions[-1])
 
         # We should only have the one revision
         self.assertEquals(getRevisions(sharerepo), self.revisions[-1:])
@@ -926,8 +966,9 @@ class TestHg(unittest.TestCase):
         # Try and update to a non-existent revision using our mirror and
         # bundle, with the master failing. We should fail
         self.assertRaises(subprocess.CalledProcessError, mercurial,
-                self.repodir, self.wc, shareBase=shareBase, mirrors=[mirror], bundles=[bundle],
-                revision="1234567890")
+                          self.repodir, self.wc, shareBase=shareBase, mirrors=[
+                          mirror], bundles=[bundle],
+                          revision="1234567890")
 
     def testCommit(self):
         run_cmd(['touch', 'newfile'], cwd=self.repodir)
@@ -977,7 +1018,8 @@ class TestHg(unittest.TestCase):
 
     def testTagFailsIfExists(self):
         run_cmd(['hg', 'tag', '-R', self.repodir, 'tagg'])
-        self.assertRaises(subprocess.CalledProcessError, tag, self.repodir, 'tagg')
+        self.assertRaises(
+            subprocess.CalledProcessError, tag, self.repodir, 'tagg')
 
     def testForcedTag(self):
         run_cmd(['hg', 'tag', '-R', self.repodir, 'tag'])
