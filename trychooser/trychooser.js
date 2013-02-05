@@ -129,5 +129,12 @@ function setresult() {
         value = value + ' --post-to-bugzilla Bug ' + document.getElementById("bugnumber").value;
     }
 
+    if (value.match(/-p none/)) {
+        value = "(NO JOBS CHOSEN)";
+        $('#platforms-none').addClass('attention');
+    } else {
+        $('#platforms-none').removeClass('attention');
+    }
+
     $('.result_value').val(value);
 }

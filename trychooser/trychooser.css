@@ -19,6 +19,24 @@ ul {
     border-style: inset;
 }
 
+.attention {
+    color: red;
+    font-style: italic;
+    animation-iteration-count: infinite;
+    animation-duration: 0.3s;
+    animation-direction: alternate;
+    animation-name: pulse;
+}
+
+@keyframes pulse {
+    from {
+        color: black;
+    }
+    to {
+        color: red;
+    }
+}
+
 .desktop_note {
     margin-left: 3em;
 }
