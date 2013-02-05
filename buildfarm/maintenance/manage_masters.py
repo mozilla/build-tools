@@ -33,7 +33,6 @@ def columnize(array, extra_buff=1):
             print piece % val
 
 
-
 def print_status(remaining, failed_masters):
     if remaining:
         print "=" * 30, "Remaining masters", "=" * 30
