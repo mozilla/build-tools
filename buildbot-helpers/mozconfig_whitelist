@@ -143,7 +143,9 @@ for branch in ('mozilla-esr17', 'comm-esr17'):
         whitelist[branch][platform]         = ['ac_add_options --enable-official-branding',
                                                'mk_add_options MOZ_PGO=1',
                                                'mk_add_options MOZ_MAKE_FLAGS="-j4"',
-                                               'export MOZ_ESR=1']
+                                               'export MOZ_ESR=1',
+                                               'if [ "${MOZ_UPDATE_CHANNEL}" = "esr" ]; then',
+                                               'fi']
 
 
 if __name__ == '__main__':
