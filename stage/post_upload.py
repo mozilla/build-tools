@@ -330,15 +330,9 @@ def ReleaseToMobileCandidatesDir(options, upload_dir, files):
 
     for f in files:
         realCandidatesPath = candidatesPath
-        if not options.signed and 'android' in options.builddir:
-            realCandidatesPath = os.path.join(realCandidatesPath, 'unsigned',
-                                              options.builddir)
-            url = os.path.join(candidatesUrl, 'unsigned',
-                               options.builddir)
-        else:
-            realCandidatesPath = os.path.join(realCandidatesPath,
-                                              options.builddir)
-            url = os.path.join(candidatesUrl, options.builddir)
+        realCandidatesPath = os.path.join(realCandidatesPath,
+                                          options.builddir)
+        url = os.path.join(candidatesUrl, options.builddir)
         CopyFileToDir(f, upload_dir, realCandidatesPath, preserve_dirs=True)
         # Output the URL to the candidate build
         if f.startswith(upload_dir):
