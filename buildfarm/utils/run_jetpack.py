@@ -50,8 +50,7 @@ def runCommand(cmd, env=None, logEcho=True):
     try:
         for item in p.stdout:
             o.append(item[:-1])
-            if logEcho:
-                log.debug(item[:-1])
+            print item[:-1]
         p.wait()
     except KeyboardInterrupt:
         p.kill()
@@ -270,7 +269,6 @@ if __name__ == '__main__':
         args = ['python', 'bin/cfx', '--verbose', 'testall', '-a', 'firefox',
                 '-b', app_path]
         process, output = runCommand(args)
-        print '\n'.join(output)
         if is_poller:
             print summarizeJetpackTestLog("Jetpack", output)
         sys.exit(process.returncode)
