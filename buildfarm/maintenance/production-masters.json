@@ -20,6 +20,7 @@
         "macosx",
         "macosx64"
     ],
+    "limit_mobile_platforms": [],
     "limit_tb_platforms": [
         "macosx",
         "macosx64"
@@ -54,6 +55,7 @@
         "macosx",
         "macosx64"
     ],
+    "limit_mobile_platforms": [],
     "limit_tb_platforms": [
         "macosx",
         "macosx64"
@@ -139,6 +141,7 @@
         "macosx",
         "macosx64"
     ],
+    "limit_mobile_platforms": [],
     "limit_tb_platforms": [
         "macosx",
         "macosx64"
@@ -253,6 +256,7 @@
     "limit_fx_platforms": [
       "win32"
     ],
+    "limit_mobile_platforms": [],
     "limit_tb_platforms": [
       "win32"
     ],
@@ -285,6 +289,7 @@
     "limit_fx_platforms": [
       "win32"
     ],
+    "limit_mobile_platforms": [],
     "limit_tb_platforms": [
       "win32"
     ],
@@ -318,6 +323,7 @@
       "linux",
       "linux64"
     ],
+    "limit_mobile_platforms": [],
     "limit_tb_platforms": [
       "linux",
       "linux64"
@@ -354,6 +360,7 @@
       "linux",
       "linux64"
     ],
+    "limit_mobile_platforms": [],
     "limit_tb_platforms": [
       "linux",
       "linux64"
@@ -386,7 +393,8 @@
     "environment": "production",
     "hostname": "buildbot-master19.build.mtv1.mozilla.com",
     "http_port": 8201,
-    "limit_fx_platforms": [
+    "limit_fx_platforms": [],
+    "limit_mobile_platforms": [
       "android",
       "android-armv6",
       "android-noion"
@@ -418,7 +426,8 @@
     "environment": "production",
     "hostname": "buildbot-master20.build.mtv1.mozilla.com",
     "http_port": 8201,
-    "limit_fx_platforms": [
+    "limit_fx_platforms": [],
+    "limit_mobile_platforms": [
       "android",
       "android-armv6",
       "android-noion"
@@ -454,6 +463,7 @@
         "macosx",
         "macosx64"
     ],
+    "limit_mobile_platforms": [],
     "limit_tb_platforms": [
         "macosx",
         "macosx64"
@@ -484,7 +494,8 @@
     "environment": "production",
     "hostname": "buildbot-master22.build.mtv1.mozilla.com",
     "http_port": 8201,
-    "limit_fx_platforms": [
+    "limit_fx_platforms": [],
+    "limit_mobile_platforms": [
       "android",
       "android-armv6",
       "android-noion"
@@ -516,7 +527,8 @@
     "environment": "production",
     "hostname": "buildbot-master10.build.mtv1.mozilla.com",
     "http_port": 8201,
-    "limit_fx_platforms": [
+    "limit_fx_platforms": [],
+    "limit_mobile_platforms": [
       "android",
       "android-armv6",
       "android-noion"
@@ -551,6 +563,7 @@
     "limit_fx_platforms": [
       "win32"
     ],
+    "limit_mobile_platforms": [],
     "limit_tb_platforms": [
       "win32"
     ],
@@ -584,6 +597,7 @@
       "linux",
       "linux64"
     ],
+    "limit_mobile_platforms": [],
     "limit_tb_platforms": [
       "linux",
       "linux64"
@@ -644,7 +658,8 @@
     "environment": "production",
     "hostname": "buildbot-master29.build.scl1.mozilla.com",
     "http_port": 8201,
-    "limit_fx_platforms": [
+    "limit_fx_platforms": [],
+    "limit_mobile_platforms": [
         "android"
     ],
     "limit_tb_platforms": [],
@@ -868,6 +883,7 @@
         "macosx",
         "macosx64"
     ],
+    "limit_mobile_platforms": [],
     "limit_tb_platforms": [
         "macosx",
         "macosx64"
@@ -902,6 +918,7 @@
         "macosx",
         "macosx64"
     ],
+    "limit_mobile_platforms": [],
     "limit_tb_platforms": [
         "macosx",
         "macosx64"
@@ -932,7 +949,8 @@
     "environment": "production",
     "hostname": "buildbot-master39.build.scl1.mozilla.com",
     "http_port": 8201,
-    "limit_fx_platforms": [
+    "limit_fx_platforms": [],
+    "limit_mobile_platforms": [
         "android"
     ],
     "limit_tb_platforms": [],
@@ -962,7 +980,8 @@
     "environment": "production",
     "hostname": "buildbot-master40.build.scl1.mozilla.com",
     "http_port": 8201,
-    "limit_fx_platforms": [
+    "limit_fx_platforms": [],
+    "limit_mobile_platforms": [
         "android"
     ],
     "limit_tb_platforms": [],
@@ -992,7 +1011,8 @@
     "environment": "production",
     "hostname": "buildbot-master41.build.scl1.mozilla.com",
     "http_port": 8201,
-    "limit_fx_platforms": [
+    "limit_fx_platforms": [],
+    "limit_mobile_platforms": [
         "android"
     ],
     "limit_tb_platforms": [],
@@ -1022,7 +1042,8 @@
     "environment": "production",
     "hostname": "buildbot-master42.build.scl1.mozilla.com",
     "http_port": 8201,
-    "limit_fx_platforms": [
+    "limit_fx_platforms": [],
+    "limit_mobile_platforms": [
         "android"
     ],
     "limit_tb_platforms": [],
@@ -1052,7 +1073,8 @@
     "environment": "production",
     "hostname": "buildbot-master43.build.scl1.mozilla.com",
     "http_port": 8201,
-    "limit_fx_platforms": [
+    "limit_fx_platforms": [],
+    "limit_mobile_platforms": [
         "android"
     ],
     "limit_tb_platforms": [],
@@ -1082,7 +1104,8 @@
     "environment": "production",
     "hostname": "buildbot-master44.build.scl1.mozilla.com",
     "http_port": 8201,
-    "limit_fx_platforms": [
+    "limit_fx_platforms": [],
+    "limit_mobile_platforms": [
         "android"
     ],
     "limit_tb_platforms": [],
@@ -1112,7 +1135,8 @@
     "environment": "production",
     "hostname": "buildbot-master45.build.scl1.mozilla.com",
     "http_port": 8201,
-    "limit_fx_platforms": [
+    "limit_fx_platforms": [],
+    "limit_mobile_platforms": [
         "android"
     ],
     "limit_tb_platforms": [],
@@ -1142,7 +1166,8 @@
     "environment": "production",
     "hostname": "buildbot-master46.build.scl1.mozilla.com",
     "http_port": 8201,
-    "limit_fx_platforms": [
+    "limit_fx_platforms": [],
+    "limit_mobile_platforms": [
         "android"
     ],
     "limit_tb_platforms": [],
@@ -1172,7 +1197,8 @@
     "environment": "production",
     "hostname": "buildbot-master47.build.scl1.mozilla.com",
     "http_port": 8201,
-    "limit_fx_platforms": [
+    "limit_fx_platforms": [],
+    "limit_mobile_platforms": [
         "android"
     ],
     "limit_tb_platforms": [],
@@ -1202,7 +1228,8 @@
     "environment": "production",
     "hostname": "buildbot-master48.build.scl1.mozilla.com",
     "http_port": 8201,
-    "limit_fx_platforms": [
+    "limit_fx_platforms": [],
+    "limit_mobile_platforms": [
         "android"
     ],
     "limit_tb_platforms": [],
