@@ -215,7 +215,8 @@ if __name__ == '__main__':
         sys.exit(4)
 
     # Custom paths/args for each platform's executable
-    if options.platform in ('linux', 'linux64', 'fedora', 'fedora64'):
+    if options.platform in ('linux', 'linux64', 'fedora', 'fedora64',
+                            'ubuntu32', 'ubuntu64'):
         app_path = "%s/firefox/firefox" % basepath
         poller_cmd = 'tar -xjvf *%s' % options.ext
     elif options.platform in ('macosx', 'macosx64', 'leopard', 'snowleopard', 'lion', 'mountainlion'):
