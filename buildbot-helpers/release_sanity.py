@@ -241,6 +241,11 @@ def verify_options(cmd_options, config):
         log.error("branch passed in does not exist in release config")
         success = False
         error_tally.add('verify_options')
+    if not cmd_options.skip_reconfig:
+        if not cmd_options.masters_json_file:
+            log.error("masters json file is required when not skipping reconfig")
+            success = False
+            error_tally.add('masters_json_file')
     return success
 
 
@@ -262,9 +267,6 @@ if __name__ == '__main__':
         skip_reconfig=False,
         configs_repo_url='build/buildbot-configs',
         configs_branch='production',
-        masters_json_file=path.abspath(path.join(
-            path.dirname(__file__),
-            "../buildfarm/maintenance/production-masters.json")),
         concurrency=8,
         skip_verify_configs=False,
     )
