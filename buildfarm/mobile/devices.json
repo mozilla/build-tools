@@ -743,7 +743,7 @@
     "tegra-179": {
         "foopy": "foopy17", 
         "pdu": "pdu5.df202-1.build.mtv1.mozilla.com", 
-        "pduid": ".AA2"
+        "pduid": ".AA10"
     },
     "tegra-181": {
         "foopy": "foopy17", 
