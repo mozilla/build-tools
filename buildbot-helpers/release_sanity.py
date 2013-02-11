@@ -41,7 +41,6 @@ from release.l10n import getShippedLocales
 from release.platforms import getLocaleListFromShippedLocales
 from release.sanity import check_buildbot, find_version, locale_diff, \
     sendchange, verify_mozconfigs
-from util.fabric.common import check_fabric, FabricHelper
 from util.retry import retry
 
 log = logging.getLogger(__name__)
@@ -338,7 +337,9 @@ if __name__ == '__main__':
     products = []
 
     check_buildbot()
-    check_fabric()
+    if not options.dryrun and not options.skip_reconfig:
+        from util.fabric.common import check_fabric, FabricHelper
+        check_fabric()
 
     if options.configs_dir:
         configs_dir = options.configs_dir
