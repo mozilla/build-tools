@@ -1,11 +1,4 @@
 {
-  "accessibility": {
-    "repo": "http://hg.mozilla.org/projects/accessibility",
-    "graph_branches": [
-      "Accessibility"
-    ],
-    "repo_type": "hg"
-  },
   "ionmonkey": {
     "repo": "http://hg.mozilla.org/projects/ionmonkey",
     "graph_branches": [
