@@ -27,7 +27,7 @@ function log_output_to() {
   # $2 (if present) is "hide output to invoker"
   if [ ! -z "${2:-}" ]; then
     # Redirect all output
-    exec &>>$1
+    exec >>$1 2>&1
   else
     # Tee all output instead
     exec > >(tee -a $1) 2>&1
