@@ -108,7 +108,10 @@ set +e
 echo "ac_add_options --enable-stdcxx-compat" > src/.mozconfig
 mock_mozilla -r mozilla-centos6-x86_64 --cwd=$PWD --shell --unpriv /bin/env \
   PATH=$MOCK_PATH LD_LIBRARY_PATH=$PWD/dxr/trilite \
-  "dxr/dxr-build.py -j6 -f dxr.config -s -t $branch" 2>&1 \
+  "dxr/dxr-build.py -j6 -f dxr.config -s"
+mock_mozilla -r mozilla-centos6-x86_64 --cwd=$PWD --shell --unpriv /bin/env \
+  PATH=$MOCK_PATH LD_LIBRARY_PATH=$PWD/dxr/trilite \
+  "dxr/dxr-build.py -j6 -f dxr.config -t $branch" 2>&1 \
   | grep -v 'Unprocessed kind'
 retval=${PIPESTATUS[0]}
 
