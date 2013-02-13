@@ -182,13 +182,21 @@ def ReleaseToLatest(options, upload_dir, files):
         latestDir += "/%s" % options.builddir
         latestPath += "/%s" % options.builddir
 
+    marToolsPath = "%s/mar-tools" % latestPath
+
     for f in files:
+        filename = os.path.basename(f)
         if f.endswith('crashreporter-symbols.zip'):
             continue
         if PARTIAL_MAR_RE.search(f):
             continue
         if options.branch.endswith('l10n') and f.endswith('.xpi'):
             CopyFileToDir(f, upload_dir, latestPath, preserve_dirs=True)
+        elif filename in ('mar', 'mar.exe', 'mbsdiff', 'mbsdiff.exe'):
+            if options.tinderbox_builds_dir:
+                platform = options.tinderbox_builds_dir.split('-')[-1]
+                if platform in ('win32', 'macosx64', 'linux', 'linux64'):
+                    CopyFileToDir(f, upload_dir, '%s/%s' % (marToolsPath, platform))
         else:
             CopyFileToDir(f, upload_dir, latestPath)
     os.utime(latestPath, None)
