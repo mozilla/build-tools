@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -e -x
 SCRIPTS_DIR="$(readlink -f $(dirname $0)/../..)"
 
 if [ -z "$REVISION" ]; then
@@ -44,7 +44,15 @@ fi
 echo "Setting up mock environment"
 mock_mozilla -r mozilla-centos6-x86_64 --init || exit 2
 
-mock_mozilla -r mozilla-centos6-x86_64 --install mpfr autoconf213 zip pyxdg gtk2-devel libnotify-devel alsa-lib-devel libcurl-devel wireless-tools-devel libX11-devel libXt-devel mesa-libGL-devel python-devel mozilla-python27-mercurial || exit 2
+# Copied from a linux x86-64 try-debug, modified slightly
+mock_mozilla -v -r mozilla-centos6-x86_64 --install autoconf213 python zip \
+  mozilla-python27-mercurial git ccache glibc-static libstdc++-static \
+  perl-Test-Simple perl-Config-General gtk2-devel libnotify-devel \
+  alsa-lib-devel libcurl-devel wireless-tools-devel libX11-devel libXt-devel \
+  mesa-libGL-devel gnome-vfs2-devel GConf2-devel wget mpfr xorg-x11-font* \
+  imake gcc45_0moz3 yasm pulseaudio-libs-devel pyxdg python-devel \
+  python-jinja2 python-pygments sqlite-devel || exit 2
+
 # Put our short revisions into the properties directory for consumption by buildbot.
 if [ ! -d properties ]; then
     mkdir properties
@@ -54,32 +62,54 @@ echo "Downloading/unpacking dxr build env"
 rm -rf dxr-build-env
 mkdir -p dxr-build-env
 python /tools/tooltool.py -m $(dirname $0)/dxr.manifest -o --url http://runtime-binaries.pvt.build.mozilla.org/tooltool fetch
-(cd dxr-build-env; tar xf ../dxr-build-env-r8.tar.gz) || exit 2
+tar xf clang.tar.bz2 -C dxr-build-env || exit 2
+tar xf dxr-build-env.tar.gz -C dxr-build-env || exit 2
+# Expected layout of dxr-build-env:
+# trilite -> source directory of dxr/trilite repository
+
+MOCK_PATH=/usr/local/bin:$PWD/dxr-build-env/clang/bin:$PATH
 
 echo "Checking out sources"
 cd dxr-build-env
-$PYTHON $SCRIPTS_DIR/buildfarm/utils/hgtool.py --rev $REVISION -b default $HG_REPO src || exit 2
 
+# Build and make DXR
 # TODO: support dxr/dxr-stable here
-$PYTHON $SCRIPTS_DIR/buildfarm/utils/hgtool.py --rev $REVISION -b default http://hg.mozilla.org/projects/dxr dxr || exit 2
+DXR_REPO=http://hg.mozilla.org/projects/dxr
+$PYTHON $SCRIPTS_DIR/buildfarm/utils/hgtool.py --rev $REVISION -b default $DXR_REPO dxr || exit 2
 
+# Unpack trilite
+mv trilite dxr/trilite
+
+# Build DXR binary plugins
+mock_mozilla -r mozilla-centos6-x86_64 --cwd=$PWD --shell --unpriv /bin/env \
+  PATH=$MOCK_PATH CC=clang CXX=clang++ "make -C dxr"
+
+# Pull the repository...
+$PYTHON $SCRIPTS_DIR/buildfarm/utils/hgtool.py -b default $HG_REPO src || exit 2
+
+# ... and record its revision
 pushd src; GOT_REVISION=`hg parent --template={node} | cut -c1-12`; popd
 echo "revision: $GOT_REVISION" > ../properties/revision
 echo "got_revision: $GOT_REVISION" > ../properties/got_revision
 
 # Create our config file
-sed "s?PWD?$PWD?g" dxr.config.in | sed "s?^sourcedir=.*?sourcedir=$PWD/src?" | sed "s?NB_JOBS?6?g" > dxr.config
+cp -f ../scripts/scripts/dxr/dxr.config .
 
 echo "dxr.config:"
 cat dxr.config
 
+# Clean up the old build directories
 rm -rf www; mkdir www
 rm -rf objdir-mc-opt; mkdir objdir-mc-opt
 
 echo "Starting build"
 set +e
-mock_mozilla -r mozilla-centos6-x86_64 --cwd=$PWD --shell --unpriv /bin/env PATH=/usr/local/bin:$PATH make
-mock_mozilla -r mozilla-centos6-x86_64 --cwd=$PWD --shell --unpriv /bin/env PATH=/usr/local/bin:$PATH ./build.sh 2>&1 | grep -v '^Unprocessed kind'
+# XXX: compile-build hack
+echo "ac_add_options --enable-stdcxx-compat" > src/.mozconfig
+mock_mozilla -r mozilla-centos6-x86_64 --cwd=$PWD --shell --unpriv /bin/env \
+  PATH=$MOCK_PATH LD_LIBRARY_PATH=$PWD/dxr/trilite \
+  "dxr/dxr-build.py -j6 -f dxr.config -s -t $branch" 2>&1 \
+  | grep -v 'Unprocessed kind'
 retval=${PIPESTATUS[0]}
 
 set -e
