@@ -4,6 +4,7 @@
 /* overall layout */
 
 body {
+    font-size: 12px;
     margin: 0;
 }
 
@@ -38,7 +39,19 @@ div.dashboard {
 }
 
 /* table views */
+h1 {
+    font-size: 24px;
+    font-weight: bold;
+}
 
+dl dt {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+th, td, dl {
+    font-size: 12px;
+}
 td.edit-row {
     padding: 0px !important;
 }

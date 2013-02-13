@@ -25,7 +25,8 @@ def denormalized_slaves():
         (model.datacenters.c.dcid == model.slaves.c.dcid) &
         (model.trustlevels.c.trustid == model.slaves.c.trustid) &
         (model.environments.c.envid == model.slaves.c.envid) &
-        (model.pools.c.poolid == model.slaves.c.poolid)
+        (model.pools.c.poolid == model.slaves.c.poolid) &
+        (model.slaves.c.envid != 5)
     ), from_obj=[
         # note that the other tables will be joined automatically
         model.slaves.outerjoin(
