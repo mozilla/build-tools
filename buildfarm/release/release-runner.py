@@ -43,16 +43,16 @@ def reconfig_warning(from_, to, smtp_server, rr, start_time, elapsed,
     started = time.strftime("%a, %d %b %Y %H:%M:%S %Z",
                             time.localtime(start_time))
     elapsed = datetime.timedelta(seconds=elapsed)
-    subject = "[release-runner] WARNING: Reconfig exceeded %s seconds" % elapsed
+    subject = "[release-runner] WARNING: Reconfig exceeded %s" % elapsed
     body = textwrap.dedent("""
     A buildbot master reconfig started at %(start_time)s has been running for
-    %(elapsed)s seconds without completing.
+    %(elapsed)s without completing.
 
     - release-runner""" % dict(start_time=started, elapsed=elapsed))
     try:
         for release in rr.new_releases:
             rr.update_status(
-                release, "Waiting on reconfig for %d seconds" % elapsed)
+                release, "Waiting on reconfig for %s" % elapsed)
         sendmail(from_=from_, to=to, subject=subject, body=body,
                  smtp_server=smtp_server)
     except SMTPException:
