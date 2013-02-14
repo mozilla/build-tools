@@ -8,7 +8,7 @@ import sys
 
 site.addsitedir(os.path.join(os.path.dirname(__file__), "../../lib/python"))
 
-from balrog.client.cli import NightlyRunner
+from balrog.submitter.cli import NightlyRunner
 
 
 if __name__ == '__main__':
