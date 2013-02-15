@@ -267,7 +267,7 @@ if __name__ == '__main__':
     # Run it!
     if sdkdir:
         os.chdir(sdkdir)
-        args = ['python', 'bin/cfx', '--verbose', 'testall', '-a', 'firefox',
+        args = ['python', 'bin/cfx', '--parseable', 'testall', '-a', 'firefox',
                 '-b', app_path]
         process, output = runCommand(args)
         if is_poller:
