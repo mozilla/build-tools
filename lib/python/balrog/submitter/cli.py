@@ -4,7 +4,7 @@ except ImportError:
     import json
 
 from release.platforms import buildbot2updatePlatforms
-from balrog.client.api import SingleLocale
+from balrog.submitter.api import SingleLocale
 
 
 def get_nightly_blob_name(appName, branch, build_type, suffix, dummy=False):
