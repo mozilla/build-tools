@@ -1909,11 +1909,6 @@
         "relayhost": "panda-relay-006.p10.releng.scl1.mozilla.com",
         "relayid": "2:7"
     },
-    "panda-0081": {
-        "foopy": "foopy35",
-        "relayhost": "panda-relay-005.build.scl1.mozilla.com",
-        "relayid": "1:4"
-    },
     "panda-0082": {
         "foopy": "foopy39"
     },
@@ -3475,10 +3470,9 @@
         "foopy": "foopy77",
         "relayhost": "panda-relay-051.p6.releng.scl1.mozilla.com",
         "relayid": "1:4"
-    },
-    "panda-0570": {
-        "_comment": "Bug 836857 - To be replaced",
-        "foopy": "None",
+    },    
+    "panda-0057": {
+        "foopy": "foopy77",
         "relayhost": "panda-relay-051.p6.releng.scl1.mozilla.com",
         "relayid": "2:1"
     },
@@ -3497,9 +3491,8 @@
         "relayhost": "panda-relay-051.p6.releng.scl1.mozilla.com",
         "relayid": "2:4"
     },
-    "panda-0574": {
-        "_comment": "Bug 836857 - To be replaced",
-        "foopy": "None",
+    "panda-0069": {
+        "foopy": "foopy78",
         "relayhost": "panda-relay-051.p6.releng.scl1.mozilla.com",
         "relayid": "2:5"
     },
@@ -3933,13 +3926,12 @@
         "relayhost": "panda-relay-059.p7.releng.scl1.mozilla.com",
         "relayid": "2:4"
     },
-    "panda-0662": {
-        "_comment": "Bug 836857 - To be replaced",
-        "foopy": "None",
+    "panda-0081": {
+        "foopy": "foopy85",
         "relayhost": "panda-relay-059.p7.releng.scl1.mozilla.com",
         "relayid": "2:5"
     },
-     "panda-0663": {
+    "panda-0663": {
         "foopy": "foopy85",
         "relayhost": "panda-relay-059.p7.releng.scl1.mozilla.com",
         "relayid": "2:6"
@@ -4529,9 +4521,8 @@
         "relayhost": "panda-relay-070.p8.releng.scl1.mozilla.com",
         "relayid": "2:2"
     },
-    "panda-0781": {
-        "_comment": "Bug 836857 - To be replaced",
-        "foopy": "None",
+    "panda-0885": {
+        "foopy": "foopy94",
         "relayhost": "panda-relay-070.p8.releng.scl1.mozilla.com",
         "relayid": "2:3"
     },
@@ -4590,9 +4581,8 @@
         "relayhost": "panda-relay-071.p9.releng.scl1.mozilla.com",
         "relayid": "2:3"
     },
-    "panda-0793": {
-        "_comment": "Bug 836857 - To be replaced",
-        "foopy": "None",
+    "panda-0886": {
+        "foopy": "foopy95",
         "relayhost": "panda-relay-071.p9.releng.scl1.mozilla.com",
         "relayid": "2:4"
     },
