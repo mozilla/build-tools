@@ -55,20 +55,6 @@
     ],
     "repo_type": "hg"
   },
-  "mozilla-esr10": {
-    "repo": "http://hg.mozilla.org/releases/mozilla-esr10",
-    "graph_branches": [
-      "Mozilla-Esr10"
-    ],
-    "repo_type": "hg"
-  },
-  "comm-esr10": {
-    "repo": "http://hg.mozilla.org/releases/comm-esr10",
-    "graph_branches": [
-      "Thunderbird-Esr10"
-    ],
-    "repo_type": "hg"
-  },
   "mozilla-esr17": {
     "repo": "http://hg.mozilla.org/releases/mozilla-esr17",
     "graph_branches": [
