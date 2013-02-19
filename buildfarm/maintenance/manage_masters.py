@@ -153,6 +153,13 @@ Supported actions:
         else:
             masters = selected_masters
 
+        try:
+            action_header = getattr(action_module, action + "_header")
+            action_header()
+        except AttributeError:
+            # we don't care if there's no header to print
+            pass
+
         if options.concurrency == 1:
             for master in masters:
                 run_action_on_master(action, master)
@@ -188,4 +195,10 @@ Supported actions:
             print_status([m['name'] for (m, r) in results],
                          failed_masters)
             if failed:
+                # failure info may have scrolled, so repeat here
+                print "Action '%s' failed on %d masters:\n%s\n" \
+                    % (action, len(failed_masters),
+                       textwrap.TextWrapper(initial_indent='  ',
+                                            subsequent_indent='  ').fill(", ".join(
+                                                                         failed_masters)))
                 sys.exit(1)

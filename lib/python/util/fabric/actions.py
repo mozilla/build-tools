@@ -76,8 +76,19 @@ def action_show_revisions(master):
         else:
             bb_rev = m.group(1)
 
-        print "%-25s %12s %12s %12s %12s" % (master['name'], bbcustom_rev,
-                                             bbconfigs_rev, tools_rev, bb_rev)
+        show_revisions_detail(master['name'], bbcustom_rev, bbconfigs_rev,
+                              tools_rev, bb_rev)
+
+
+def show_revisions_detail(master, bbcustom_rev, bbconfigs_rev,
+                          tools_rev, buildbot_rev):
+    print "%-25s %12s %12s %12s %12s" % (master, bbcustom_rev, bbconfigs_rev,
+                                         tools_rev, buildbot_rev)
+
+
+def show_revisions_header():
+    show_revisions_detail("master", "bbcustom", "bbconfigs", "tools",
+                          "buildbot")
 
 
 def action_reconfig(master):
