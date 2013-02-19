@@ -51,10 +51,26 @@ if __name__ == '__main__':
     except ImportError:
         import json
 
+    actions = []
+    action_module = util.fabric.actions
+    for a in action_module.get_actions():
+        actions.append(a)
+    actions.sort()
+    actions_with_help = '\n'.join(["  %s\n    %s" % (a,
+                                                     action_module.__dict__['action_%s' % a].__doc__)
+                                   for a in actions if
+                                   action_module.__dict__['action_%s' % a].__doc__])
+    action_without_help = ", ".join([a for a in actions if not
+                                     action_module.__dict__['action_%s' %
+                                                            a].__doc__])
+    action_help = actions_with_help
+    if action_without_help:
+        action_help += "\nOther supported actions:\n" + \
+            textwrap.TextWrapper(initial_indent='  ', subsequent_indent='    ').fill(action_without_help)
     parser = OptionParser("""%%prog [options] action [action ...]
 
 Supported actions:
-%s""" % textwrap.fill(", ".join(util.fabric.actions.get_actions())))
+%s""" % action_help)
 
     parser.set_defaults(
         hosts=[],

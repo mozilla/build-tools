@@ -55,7 +55,7 @@ def action_checkconfig(master):
 
 
 def action_show_revisions(master):
-    """Reports the revisions of buildbotcustom, buildbot-configs"""
+    """Reports the revisions of: buildbotcustom, buildbot-configs, tools, buildbot"""
     with hide('stdout', 'stderr', 'running'):
         bbcustom_rev = run('hg -R %(bbcustom_dir)s ident -i' % master)
         bbconfigs_rev = run('hg -R %(bbconfigs_dir)s ident -i' % master)
@@ -76,11 +76,12 @@ def action_show_revisions(master):
         else:
             bb_rev = m.group(1)
 
-        print "%-14s %12s %12s %12s %12s" % (master['name'], bbcustom_rev,
+        print "%-25s %12s %12s %12s %12s" % (master['name'], bbcustom_rev,
                                              bbconfigs_rev, tools_rev, bb_rev)
 
 
 def action_reconfig(master):
+    """Performs a reconfig (only - no update or checkconfig)"""
     print "starting reconfig of %(hostname)s:%(basedir)s" % master
     with show('running'):
         with cd(master['basedir']):
