@@ -17,10 +17,12 @@
     "hostname": "buildbot-master04.build.scl1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
+        "macosx",
         "macosx64"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
+        "macosx",
         "macosx64"
     ],
     "limit_b2g_platforms": [],
@@ -50,10 +52,12 @@
     "hostname": "buildbot-master06.build.scl1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
+        "macosx",
         "macosx64"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
+        "macosx",
         "macosx64"
     ],
     "limit_b2g_platforms": [],
@@ -134,10 +138,12 @@
     "hostname": "buildbot-master11.build.scl1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
+        "macosx",
         "macosx64"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
+        "macosx",
         "macosx64"
     ],
     "limit_b2g_platforms": [],
@@ -454,10 +460,12 @@
     "hostname": "buildbot-master21.build.scl1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
+        "macosx",
         "macosx64"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
+        "macosx",
         "macosx64"
     ],
     "limit_b2g_platforms": [],
@@ -872,10 +880,12 @@
     "hostname": "buildbot-master37.srv.releng.scl3.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
+        "macosx",
         "macosx64"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
+        "macosx",
         "macosx64"
     ],
     "limit_b2g_platforms": [],
@@ -905,10 +915,12 @@
     "hostname": "buildbot-master38.srv.releng.scl3.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
+        "macosx",
         "macosx64"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
+        "macosx",
         "macosx64"
     ],
     "limit_b2g_platforms": [],
