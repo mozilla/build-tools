@@ -127,7 +127,6 @@ sub updateMachineListFromWeb($$$) {
 	$line =~ /mac[^h]/i or
 	$line =~ /darwin/i or
 	$line =~ /tiger/i or
-	$line =~ /leopard/i or
 	$line =~ /snow/i or
 	$line =~ /osx/i) {
       $machine_list->{$line}->{'platform'} = 'mac';
