@@ -262,8 +262,8 @@ if __name__ == '__main__':
     # Run it!
     if sdkdir:
         os.chdir(sdkdir)
-        args = ['python', 'bin/cfx', '--parseable', 'testall', '-a', 'firefox',
-                '-b', app_path]
+        args = ['python', 'bin/cfx', '--parseable', '--overload-modules',
+                'testall', '-a', 'firefox', '-b', app_path]
         process, output = runCommand(args)
         if is_poller:
             print summarizeJetpackTestLog("Jetpack", output)
