@@ -274,7 +274,7 @@ if (array_get($_POST, 'form_submitted')) {
       $slave = $t[1];
       $buildername = $v;
       // Find which builddir this is
-      $s = $dbh->prepare("SELECT * FROM builds WHERE "
+      $s = $dbh->prepare("SELECT builddir, branch FROM builds WHERE "
         ."slave = :slave AND "
         ."buildername = :buildername "
         ."ORDER BY last_build_time DESC LIMIT 1")
