@@ -320,7 +320,7 @@ if __name__ == '__main__':
             update(configs_workdir, revision='default')
             cfgFile = getReleaseConfigName(
                 release['product'], path.basename(release['branch']),
-                staging)
+                release['version'], staging)
             bump_configs(release=release, cfgFile=cfgFile,
                          l10nContents=l10nContents, workdir=configs_workdir,
                          hg_username=hg_username,
