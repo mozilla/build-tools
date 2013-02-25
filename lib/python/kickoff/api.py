@@ -51,7 +51,7 @@ class API(object):
                                         config=self.config, timeout=self.timeout,
                                         auth=self.auth, params=params)
         except requests.HTTPError, e:
-            log.error('Caught HTTPError: %d %s' % (e.response.status_code, e.response.content)
+            log.error('Caught HTTPError: %d %s' % (e.response.status_code, e.response.content))
             raise
 
 
