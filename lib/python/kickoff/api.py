@@ -51,7 +51,7 @@ class API(object):
                                         config=self.config, timeout=self.timeout,
                                         auth=self.auth, params=params)
         except requests.HTTPError, e:
-            log.error('Caught HTTPError: %s' % e.response.content)
+            log.error('Caught HTTPError: %d %s' % (e.response.status_code, e.response.content)
             raise
 
 
@@ -66,7 +66,13 @@ class Release(API):
     url_template = '/releases/%(name)s'
 
     def getRelease(self, name):
-        return json.loads(self.request(url_template_vars={'name': name}).content)
+        try:
+            resp = self.request(url_template_vars={'name': name}).content
+            return json.loads(resp)
+        except json.JSONDecodeError:
+            log.debug('Caught JSONDecodeError while parsing the following:')
+            log.debug(resp)
+            raise
 
     def update(self, name, **data):
         url_template_vars = {'name': name}
