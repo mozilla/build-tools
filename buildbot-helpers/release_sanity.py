@@ -145,7 +145,7 @@ def verify_l10n_changesets(hgHost, l10n_changesets):
     """Checks for the existance of all l10n changesets"""
     success = True
     locales = query_locale_revisions(l10n_changesets)
-    for locale in locales.keys():
+    for locale in sorted(locales.keys()):
         revision = locales[locale]
         localePath = '%(repoPath)s/%(locale)s/file/%(revision)s' % {
             'repoPath': releaseConfig['l10nRepoPath'].strip('/'),
@@ -157,9 +157,8 @@ def verify_l10n_changesets(hgHost, l10n_changesets):
                  % (locale, revision, locale_url))
         try:
             urllib2.urlopen(locale_url)
-        except urllib2.HTTPError:
-            log.error("cannot find l10n locale %s in repo %s" % (locale,
-                                                                 locale_url))
+        except urllib2.HTTPError, e:
+            log.error("error checking l10n changeset %s: %d %s" % (locale_url, e.code, e.reason))
             success = False
             error_tally.add('verify_l10n')
     return success
