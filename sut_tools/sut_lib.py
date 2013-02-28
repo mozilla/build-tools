@@ -535,8 +535,9 @@ def _waitForDevice(dm, waitTime=120, silent=False):
             deviceIsBack = True
             break
         time.sleep(waitTime)
-    if not deviceIsBack and not silent:
-        log.error("Remote Device Error: waiting for device timed out.")
+    if not deviceIsBack:
+        if not silent:
+            log.error("Remote Device Error: waiting for device timed out.")
         return False
     return True
 
