@@ -165,6 +165,8 @@ def bump_configs(release, cfgFile, l10nContents, workdir,
         f.write(releaseConfig)
     with open(l10nChangesetsFile, 'w') as f:
         f.write(l10nContents)
+    commit(workdir, 'Update release config for %s' % release['name'],
+           user=hg_username)
 
 
 def tag_repo(workdir, branch, tags, force, pushRepo, hg_username,
