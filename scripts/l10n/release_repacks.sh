@@ -49,7 +49,7 @@ $PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s scripts -s buildprops.json \
   $CLOBBERER_URL $branch $builder $slavebuilddir $slavename $master
 cd $SCRIPTS_DIR/..
 $PYTHON $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
-  -s 7 -n info -n 'rel-*' -n $slavebuilddir
+  -s 7 -n info -n 'rel-*' -n 'tb-rel-*' -n $slavebuilddir
 cd $workdir
 
 LOCALE_OPT=
