@@ -41,7 +41,7 @@ try:
                              maxRotatedFiles=maxRotatedFiles)
     application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
 except ImportError:
-    pass # old Twisted install - mostly on geriatric slaves
+    pass
 s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
                keepalive, usepty, umask=umask, maxdelay=maxdelay)
 s.setServiceParent(application)
