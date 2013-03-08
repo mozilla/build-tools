@@ -386,6 +386,6 @@ if __name__ == '__main__':
             # with the right code, though.
             rc = 1
             rr.update_status(release, 'Sendchange failed')
-            log.error('Sendchange failed for %s: ' % release, exc_Info=True)
+            log.error('Sendchange failed for %s: ' % release, exc_info=True)
 
     sys.exit(rc)
