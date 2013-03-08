@@ -2,7 +2,6 @@
 
 import site
 import time
-import datetime
 import logging
 import sys
 import os
@@ -42,11 +41,11 @@ def reconfig_warning(from_, to, smtp_server, rr, start_time, elapsed,
     """Called when the buildbot master reconfigs are taking a long time."""
     started = time.strftime("%a, %d %b %Y %H:%M:%S %Z",
                             time.localtime(start_time))
-    elapsed = datetime.timedelta(seconds=elapsed)
     subject = "[release-runner] WARNING: Reconfig exceeded %s" % elapsed
     body = textwrap.dedent("""
     A buildbot master reconfig started at %(start_time)s has been running for
-    %(elapsed)s without completing.
+    %(elapsed)d seconds without completing. If it has been longer than
+    1,800 seconds, manual intervention is probably necessary.
 
     - release-runner""" % dict(start_time=started, elapsed=elapsed))
     try:
@@ -185,7 +184,7 @@ def update_and_reconfig(masters_json, callback=None, username=None,
     fabric_helper = FabricHelper(masters_json_file=masters_json,
                                  roles=['scheduler', 'build'], subprocess=True,
                                  callback=callback, username=username,
-                                 ssh_key=ssh_key)
+                                 ssh_key=ssh_key, warning_interval=900)
     fabric_helper.update_and_reconfig()
 
 
