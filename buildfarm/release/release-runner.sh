@@ -3,8 +3,8 @@
 # XXX: TODO: remove the following hack
 . /home/cltbld/release-runner/venv/bin/activate
 
-# Sleep 3 days in case of failure
-SLEEP_TIME=259200
+# Sleep time after a failure, in seconds.
+SLEEP_TIME=60
 NOTIFY_TO=release@mozilla.com
 CONFIG=/home/cltbld/.release-runner.ini
 LOGFILE=/var/log/supervisor/release-runner.log
