@@ -1312,5 +1312,153 @@
     "ssh_port": 7001,
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build1/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-linux",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-linux/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-linux/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-linux/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-linux/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-linux/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "aws-us-east-1",
+    "db_name": "buildbot-master51.srv.releng.use1.mozilla.com:/builds/buildbot/tests1-linux/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master51.srv.releng.use1.mozilla.com",
+    "http_port": 8201,
+    "limit_fx_platforms": [
+      "linux",
+      "linux64"
+    ],
+    "limit_mobile_platforms": [],
+    "limit_tb_platforms": [
+      "linux",
+      "linux64"
+    ],
+    "limit_b2g_platforms": [
+      "ics_armv7a_gecko"
+    ],
+    "master_dir": "/builds/buildbot/tests1-linux/master",
+    "name": "bm51-tests1-linux",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-linux/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-linux",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-linux/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-linux/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-linux/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-linux/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-linux/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "aws-us-east-1",
+    "db_name": "buildbot-master52.srv.releng.use1.mozilla.com:/builds/buildbot/tests1-linux/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master52.srv.releng.use1.mozilla.com",
+    "http_port": 8201,
+    "limit_fx_platforms": [
+      "linux",
+      "linux64"
+    ],
+    "limit_mobile_platforms": [],
+    "limit_tb_platforms": [
+      "linux",
+      "linux64"
+    ],
+    "limit_b2g_platforms": [
+      "ics_armv7a_gecko"
+    ],
+    "master_dir": "/builds/buildbot/tests1-linux/master",
+    "name": "bm52-tests1-linux",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-linux/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-linux",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-linux/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-linux/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-linux/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-linux/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-linux/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "aws-us-west-2",
+    "db_name": "buildbot-master53.srv.releng.usw2.mozilla.com:/builds/buildbot/tests1-linux/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master53.srv.releng.usw2.mozilla.com",
+    "http_port": 8201,
+    "limit_fx_platforms": [
+      "linux",
+      "linux64"
+    ],
+    "limit_mobile_platforms": [],
+    "limit_tb_platforms": [
+      "linux",
+      "linux64"
+    ],
+    "limit_b2g_platforms": [
+      "ics_armv7a_gecko"
+    ],
+    "master_dir": "/builds/buildbot/tests1-linux/master",
+    "name": "bm53-tests1-linux",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-linux/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-linux",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-linux/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-linux/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-linux/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-linux/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-linux/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "aws-us-west-2",
+    "db_name": "buildbot-master54.srv.releng.usw2.mozilla.com:/builds/buildbot/tests1-linux/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master54.srv.releng.usw2.mozilla.com",
+    "http_port": 8201,
+    "limit_fx_platforms": [
+      "linux",
+      "linux64"
+    ],
+    "limit_mobile_platforms": [],
+    "limit_tb_platforms": [
+      "linux",
+      "linux64"
+    ],
+    "limit_b2g_platforms": [
+      "ics_armv7a_gecko"
+    ],
+    "master_dir": "/builds/buildbot/tests1-linux/master",
+    "name": "bm54-tests1-linux",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-linux/tools"
   }
 ]
