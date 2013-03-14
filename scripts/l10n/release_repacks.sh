@@ -13,6 +13,7 @@ if [ ! -x $PYTHON ]; then
 fi
 JSONTOOL="$PYTHON $SCRIPTS_DIR/buildfarm/utils/jsontool.py"
 workdir=`pwd`
+outputPropertiesDir=$SCRIPTS_DIR/../properties
 
 platform=$1
 branchConfig=$2
@@ -27,6 +28,10 @@ master=$($JSONTOOL -k properties.master $PROPERTIES_FILE)
 releaseConfig=$($JSONTOOL -k properties.release_config $PROPERTIES_FILE)
 releaseTag=$($JSONTOOL -k properties.script_repo_revision $PROPERTIES_FILE)
 product=$($JSONTOOL -k properties.product $PROPERTIES_FILE)
+
+if [ ! -e $outputPropertiesDir ]; then
+    mkdir $outputPropertiesDir
+fi
 
 if [ -z "$BUILDBOT_CONFIGS" ]; then
     export BUILDBOT_CONFIGS="http://hg.mozilla.org/build/buildbot-configs"
@@ -65,4 +70,4 @@ fi
 
 $PYTHON $MY_DIR/create-release-repacks.py -c $branchConfig -r $releaseConfig \
   -b $BUILDBOT_CONFIGS -t $releaseTag -p $platform \
-  $SOURCE_REPO_KEY $LOCALE_OPT $@
+  --properties-dir $outputPropertiesDir $SOURCE_REPO_KEY $LOCALE_OPT $@

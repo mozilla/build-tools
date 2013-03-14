@@ -175,6 +175,7 @@ if __name__ == "__main__":
     parser.add_option("--stage-username", dest="stage_username")
     parser.add_option(
         "--compare-locales-repo-path", dest="compare_locales_repo_path")
+    parser.add_option("--properties-dir", dest="properties_dir")
 
     options, args = parser.parse_args()
     if options.generatePartials:
@@ -207,6 +208,14 @@ if __name__ == "__main__":
                         )
     else:
         locales = options.locales
+
+    if options.properties_dir:
+        # Output a list of the locales into the properties directory. This will
+        # allow consumers of the Buildbot JSON to know which locales were built
+        # in a particular repack chunk.
+        localeProps = path.normpath(path.join(options.properties_dir, 'locales'))
+        with open(localeProps, 'w+') as f:
+            f.write('locales:%s' % ','.join(locales))
 
     try:
         l10nRepoDir = path.split(releaseConfig["l10nRepoClonePath"])[-1]
