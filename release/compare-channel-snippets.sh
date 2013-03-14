@@ -15,6 +15,7 @@ fi
 
 pushd $adir >/dev/null
 for asnippet in `find . -type f -iwholename "*/$achannel/*"`; do
+    echo "Processing: $asnippet"
     asnippet=${asnippet#./}
     bsnippet=`echo $asnippet | sed -e "s/$achannel/$bchannel/"`
     if [[ ! -e "$bdir/$bsnippet" ]]; then
@@ -30,6 +31,7 @@ done
 popd $adir >/dev/null
 pushd $bdir >/dev/null
 for bsnippet in `find . -type f -iwholename "*/$bchannel/*"`; do
+    echo "Processing: $bsnippet"
     bsnippet=${bsnippet#./}
     asnippet=`echo $bsnippet | sed -e "s/$bchannel/$achannel/"`
     if [[ ! -e "$adir/$asnippet" ]]; then
