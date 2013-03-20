@@ -29,10 +29,6 @@ releaseConfig=$($JSONTOOL -k properties.release_config $PROPERTIES_FILE)
 releaseTag=$($JSONTOOL -k properties.script_repo_revision $PROPERTIES_FILE)
 product=$($JSONTOOL -k properties.product $PROPERTIES_FILE)
 
-if [ ! -e $outputPropertiesDir ]; then
-    mkdir $outputPropertiesDir
-fi
-
 if [ -z "$BUILDBOT_CONFIGS" ]; then
     export BUILDBOT_CONFIGS="http://hg.mozilla.org/build/buildbot-configs"
 fi
@@ -56,6 +52,10 @@ cd $SCRIPTS_DIR/..
 $PYTHON $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
   -s 7 -n info -n 'rel-*' -n 'tb-rel-*' -n $slavebuilddir
 cd $workdir
+
+if [ ! -e $outputPropertiesDir ]; then
+    mkdir $outputPropertiesDir
+fi
 
 LOCALE_OPT=
 if $JSONTOOL -k properties.locale $PROPERTIES_FILE; then
