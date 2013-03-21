@@ -59,7 +59,14 @@ class Releases(API):
     url_template = '/releases'
 
     def getReleases(self, ready=1, complete=0):
-        return json.loads(self.request(params={'ready': ready, 'complete': complete}).content)
+        try:
+            resp = self.request(params={'ready': ready, 'complete': complete})
+            return json.loads(resp.content)
+        except json.JSONDecodeError:
+            log.debug('Caught JSONDecodeError while parsing the following:')
+            log.debug(resp.content)
+            log.debug('Response code: %d' % resp.status_code)
+            raise
 
 
 class Release(API):
@@ -67,11 +74,12 @@ class Release(API):
 
     def getRelease(self, name):
         try:
-            resp = self.request(url_template_vars={'name': name}).content
-            return json.loads(resp)
+            resp = self.request(url_template_vars={'name': name})
+            return json.loads(resp.content)
         except json.JSONDecodeError:
             log.debug('Caught JSONDecodeError while parsing the following:')
-            log.debug(resp)
+            log.debug(resp.content)
+            log.debug('Response code: %d' % resp.status_code)
             raise
 
     def update(self, name, **data):
