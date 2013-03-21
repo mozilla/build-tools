@@ -213,7 +213,7 @@ if __name__ == '__main__':
 
     # Custom paths/args for each platform's executable
     if options.platform in ('linux', 'linux64', 'fedora', 'fedora64',
-                            'ubuntu32', 'ubuntu64'):
+                            'ubuntu32', 'ubuntu64',
                             'ubuntu32_vm', 'ubuntu64_vm'):
         app_path = "%s/firefox/firefox" % basepath
         poller_cmd = 'tar -xjvf *%s' % options.ext
