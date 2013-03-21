@@ -62,7 +62,7 @@ class Releases(API):
         try:
             resp = self.request(params={'ready': ready, 'complete': complete})
             return json.loads(resp.content)
-        except json.JSONDecodeError:
+        except:
             log.debug('Caught JSONDecodeError while parsing the following:')
             log.debug(resp.content)
             log.debug('Response code: %d' % resp.status_code)
@@ -76,7 +76,7 @@ class Release(API):
         try:
             resp = self.request(url_template_vars={'name': name})
             return json.loads(resp.content)
-        except json.JSONDecodeError:
+        except:
             log.debug('Caught JSONDecodeError while parsing the following:')
             log.debug(resp.content)
             log.debug('Response code: %d' % resp.status_code)
