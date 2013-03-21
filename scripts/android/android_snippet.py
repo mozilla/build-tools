@@ -205,7 +205,7 @@ def uploadSnippets(aus_host, aus_user, aus_key, aus_base,
 def main():
     parser = optparse.OptionParser()
     # These defaults are set for android
-    parser.add_option('--hash', dest='hash_type', default='sha512')
+    parser.add_option('--hash', dest='hash_type', default='SHA512')
     parser.add_option('--distdir', dest='distdir', default='obj-firefox/dist')
     parser.add_option('--srcdir', dest='topsrcdir', default='.')
     parser.add_option('--abi', dest='abi')

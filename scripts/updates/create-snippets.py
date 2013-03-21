@@ -20,7 +20,7 @@ if __name__ == "__main__":
     parser.add_option("--snippet-dir", dest="snippet_dir", default="aus2")
     parser.add_option(
         "--test-snippet-dir", dest="test_snippet_dir", default="aus2.test")
-    parser.add_option("--hash-type", dest="hashType", default="sha512")
+    parser.add_option("--hash-type", dest="hashType", default="SHA512")
     parser.add_option(
         "--checksums-dir", dest="checksumsDir", default="checksums")
     parser.add_option(
