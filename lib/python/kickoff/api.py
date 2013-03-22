@@ -5,6 +5,8 @@ try:
 except ImportError:
     import json
 
+from util.retry import retry
+
 CA_BUNDLE = os.path.join(os.path.dirname(__file__),
                          '../../../../misc/certs/ca-bundle.crt')
 
@@ -25,14 +27,15 @@ class API(object):
     url_template = None
 
     def __init__(self, auth, api_root, ca_certs=CA_BUNDLE, timeout=60,
-                 raise_exceptions=True):
+                 raise_exceptions=True, retry_attempts=5):
         self.api_root = api_root.rstrip('/')
         self.auth = auth
         self.verify = ca_certs
         self.timeout = timeout
-        self.config = dict(danger_mode=raise_exceptions, max_retries=10)
+        self.config = dict(danger_mode=raise_exceptions)
         self.session = requests.session()
         self.csrf_token = None
+        self.retries = retry_attempts
 
     def request(self, params=None, data=None, method='GET', url_template_vars={}):
         url = self.api_root + self.url_template % url_template_vars
@@ -47,10 +50,14 @@ class API(object):
         log.debug('Request to %s' % url)
         log.debug('Data sent: %s' % data)
         try:
-            return self.session.request(method=method, url=url, data=data,
-                                        config=self.config, timeout=self.timeout,
-                                        auth=self.auth, params=params)
-        except requests.HTTPError, e:
+            return retry(self.session.request, sleeptime=5, max_sleeptime=15,
+                         retry_exceptions=(requests.HTTPError, requests.ConnectionError),
+                         attempts=self.retries,
+                         kwargs=dict(method=method, url=url, data=data,
+                                     config=self.config, timeout=self.timeout,
+                                     auth=self.auth, params=params)
+            )
+        except (requests.HTTPError, requests.ConnectionError), e:
             log.error('Caught HTTPError: %d %s' % (e.response.status_code, e.response.content), exc_info=True)
             raise
 
