@@ -59,13 +59,15 @@ class Releases(API):
     url_template = '/releases'
 
     def getReleases(self, ready=1, complete=0):
+        resp = None
         try:
             resp = self.request(params={'ready': ready, 'complete': complete})
             return json.loads(resp.content)
         except:
-            log.debug('Caught JSONDecodeError while parsing the following:')
-            log.debug(resp.content)
-            log.debug('Response code: %d' % resp.status_code)
+            log.error('Caught error while retrieving releases.', exc_info=True)
+            if resp:
+                log.error(resp.content)
+                log.error('Response code: %d' % resp.status_code)
             raise
 
 
@@ -73,13 +75,15 @@ class Release(API):
     url_template = '/releases/%(name)s'
 
     def getRelease(self, name):
+        resp = None
         try:
             resp = self.request(url_template_vars={'name': name})
             return json.loads(resp.content)
         except:
-            log.debug('Caught JSONDecodeError while parsing the following:')
-            log.debug(resp.content)
-            log.debug('Response code: %d' % resp.status_code)
+            log.error('Caught error while getting release', exc_info=True)
+            if resp:
+                log.error(resp.content)
+                log.error('Response code: %d' % resp.status_code)
             raise
 
     def update(self, name, **data):
