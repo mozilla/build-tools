@@ -6,9 +6,9 @@ trap "ssh-agent -k" EXIT
 
 SCRIPTS_DIR="$(dirname $0)/../.."
 
-# Call the Python 2.7 package in Win32 machines prior to bug 780291 getting fixed.
-if [ $OS = "Windows_NT" ] && [ -e "/d/mozilla-build/python27/python.exe" ]; then
-    PYBIN="/d/mozilla-build/python27/python.exe"
+# Call the Python 2.7 package in Win64 machines.
+if [ $OS = "Windows_NT" ] && [ -e "/c/mozilla_build/python27/python.exe" ]; then
+    PYBIN="/c/mozilla_build/python27/python.exe"
 else
     PYBIN="python"
 fi
