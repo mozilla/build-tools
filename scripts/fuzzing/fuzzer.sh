@@ -7,8 +7,8 @@ trap "ssh-agent -k" EXIT
 SCRIPTS_DIR="$(dirname $0)/../.."
 
 # Call the Python 2.7 package in Win64 machines.
-if [ $OS = "Windows_NT" ] && [ -e "/c/mozilla_build/python27/python.exe" ]; then
-    PYBIN="/c/mozilla_build/python27/python.exe"
+if [ $OS = "Windows_NT" ] && [ -e "/c/mozilla-build/python27/python.exe" ]; then
+    PYBIN="/c/mozilla-build/python27/python.exe"
 else
     PYBIN="python"
 fi
