@@ -214,8 +214,9 @@ if __name__ == "__main__":
         # allow consumers of the Buildbot JSON to know which locales were built
         # in a particular repack chunk.
         localeProps = path.normpath(path.join(options.properties_dir, 'locales'))
-        with open(localeProps, 'w+') as f:
-            f.write('locales:%s' % ','.join(locales))
+        f = open(localeProps, 'w+')
+        f.write('locales:%s' % ','.join(locales))
+        f.close()
 
     try:
         l10nRepoDir = path.split(releaseConfig["l10nRepoClonePath"])[-1]
