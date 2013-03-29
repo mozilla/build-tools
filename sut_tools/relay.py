@@ -72,9 +72,7 @@ def get_status(sock, bank, relay):
     """
     assert(bank >= 1 and bank <= 4)
     assert(relay >= 1 and relay <= 8)
-    sock.send(START_COMMAND)
-    sock.send(READ_RELAY_N_AT_BANK(relay))
-    sock.send(chr(bank))
+    sock.send(START_COMMAND + READ_RELAY_N_AT_BANK(relay) + chr(bank))
     # will return 0 or 1 indicating relay state
     return ord(sock.recv(256)) == 1
 
@@ -96,9 +94,7 @@ def set_status(sock, bank, relay, status):
         cmd = TURN_ON_RELAY_N_AT_BANK(relay)
     else:
         cmd = TURN_OFF_RELAY_N_AT_BANK(relay)
-    sock.send(START_COMMAND)
-    sock.send(cmd)
-    sock.send(chr(bank))
+    sock.send(START_COMMAND + cmd + chr(bank))
     res = sock.recv(256)
     if res != COMMAND_OK:
         raise Exception, "Command did not succeed, status: %d", res
