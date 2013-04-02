@@ -84,11 +84,31 @@ $(document).ready(function() {
     setresult();
 });
 
+function resolveFilters(filters) {
+    // The linux32 hack requires cancelling out mutually-exclusive options
+    var want = {};
+    for (var i in filters) {
+        if (filters[i].charAt(0) != '-') {
+            want[filters[i]] = true;
+        }
+    }
+    for (var i in filters) {
+        if (filters[i].charAt(0) == '-') {
+            var name = filters[i].substring(1);
+            if (name in want)
+                delete want[name];
+            else
+                want[filters[i]] = true;
+        }
+    }
+    return Object.keys(want);
+}
+
 function setresult() {
     var value = 'try: ';
     var args = [];
 
-    $('.option-radio').each(function() {
+    $('.option-radio[try-section]').each(function() {
         var arg = '-' + $(this).attr('try-section') + ' ';
         arg += $(this).find(':checked').attr('value');
         args.push(arg);
@@ -100,12 +120,15 @@ function setresult() {
             args.push(arg);
     });
 
-    $('.option-group').each(function() {
-        var arg = '-' + $(this).attr('try-section') + ' ';
+    var have_projects = {};
+    $('.option-group[try-section]').each(function() {
+        var tryopt = $(this).attr('try-section');
+        var arg = '-' + tryopt + ' ';
+        var names = [];
         if ($(this).find('.none-selector:checked').length > 0) {
-            arg += 'none';
+            names = ['none'];
         } else if ($(this).find('.all-selector:checked').length > 0) {
-            arg += 'all';
+            names = ['all'];
         } else {
             var group = $(this).closest('.option-group');
             var options;
@@ -116,10 +139,30 @@ function setresult() {
             } else {
                 options = group.find(':checked:not(.group-selector):not(.subgroup-all-selector)');
             }
-            var names = [];
-            options.each(function(i,elt){ names.push($(elt).attr('value')) });
-            arg += names.join(',');
+            options.each(function(i,elt){
+              names.push($(elt).attr('value'));
+              var project = $(elt).attr('data-project');
+              if (project)
+                have_projects[project] = true;
+            });
         }
+
+        // If you specifically request a b2g or android build platform, then
+        // disable the filtering. This does not apply when you just pick 'all'.
+        var disable_filters = ("b2g" in have_projects) || ("android" in have_projects);
+        $('[try-filter=' + tryopt + ']').prop('disabled', disable_filters);
+        $('[try-filter=' + tryopt + ']').fadeTo(0, disable_filters ? 0.5 : 1.0);
+
+        var filters = [];
+        $('[try-filter=' + tryopt + '] :checked').each(function () {
+          filters.push.apply(filters, $(this).attr('value').split(','));
+        });
+        if (filters.length > 0 && !disable_filters) {
+          filters = resolveFilters(filters).join(',');
+          names = names.map(function (n) { return n + '[' + filters + ']'; });
+        }
+
+        arg += names.join(',');
         args.push(arg);
     });
 

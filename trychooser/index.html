@@ -67,40 +67,79 @@
                 <span id="build_win64" class="build_queue">N/A</span>
             </li>
             <li>
-                <label><input type="checkbox" name="platform" value="android">android (Android 2.2 & 4.0)</label>
+                <label><input type="checkbox" name="platform" value="android" data-project="android">android (Android 2.2 & 4.0)</label>
                 <span id="test_android" class="test_queue">N/A</span>
                 <span id="build_android" class="build_queue">N/A</span>
             </li>
             <li>
-                <label><input type="checkbox" name="platform" value="android-armv6">android-armv6 (Android 2.2)</label>
+                <label><input type="checkbox" name="platform" value="android-armv6" data-project="android">android-armv6 (Android 2.2)</label>
                 <span id="test_android-armv6" class="test_queue">N/A</span>
                 <span id="build_android-armv6" class="build_queue">N/A</span>
             </li>
             <li>
-                <label><input type="checkbox" name="platform" value="android-noion">android-noion (Android 2.2)</label>
+                <label><input type="checkbox" name="platform" value="android-noion" data-project="android">android-noion (Android 2.2)</label>
                 <span id="test_android-noion" class="test_queue">N/A</span>
                 <span id="build_android-noion" class="build_queue">N/A</span>
             </li>
             <li>
-                <label><input type="checkbox" name="platform" value="ics_armv7a_gecko">ics_armv7a_gecko (B2G emulator)</label>
+                <label><input type="checkbox" name="platform" value="ics_armv7a_gecko" data-project="b2g">ics_armv7a_gecko (B2G emulator)</label>
                 <span id="test_ics_armv7a_gecko" class="test_queue">N/A</span>
                 <span id="build_ics_armv7a_gecko" class="build_queue">N/A</span>
             </li>
             <li>
-                <label><input type="checkbox" name="platform" value="panda">panda (B2G automation board)</label>
+                <label><input type="checkbox" name="platform" value="panda" data-project="b2g">panda (B2G automation board)</label>
                 <span id="test_panda" class="test_queue">N/A</span>
                 <span id="build_panda" class="build_queue">N/A</span>
             </li>
             <li>
-                <label><input type="checkbox" name="platform" value="otoro">otoro (B2G device image)</label>
+                <label><input type="checkbox" name="platform" value="otoro" data-project="b2g">otoro (B2G device image)</label>
                 <span id="test_otoro" class="test_queue">N/A</span>
                 <span id="build_otoro" class="build_queue">N/A</span>
             </li>
             <li>
-                <label><input type="checkbox" name="platform" value="unagi">unagi (B2G device image)</label>
+                <label><input type="checkbox" name="platform" value="unagi" data-project="b2g">unagi (B2G device image)</label>
                 <span id="test_unagi" class="test_queue">N/A</span>
                 <span id="build_unagi" class="build_queue">N/A</span>
             </li>
+            </ul>
+            </span>
+
+            <span class='option-group' id='tee-platforms' try-filter='u'>
+            <label>Restrict tests to platform(s)</label>
+            <ul>
+
+            <li>
+              <label><input type="checkbox" value="x64">linux64</input></label>
+            </li>
+
+            <li>
+              <label><input type="checkbox" value="Fedora,Ubuntu,-x64">linux32</input></label>
+            </li>
+
+            <li>
+              <label><input type="checkbox" value="10.6">OSX 10.6</input></label>
+            </li>
+
+            <li>
+              <label><input type="checkbox" value="10.7">OSX 10.7</input></label>
+            </li>
+
+            <li>
+              <label><input type="checkbox" value="10.8">OSX 10.8</input></label>
+            </li>
+
+            <li>
+              <label><input type="checkbox" value="5.1">WinXP</input></label>
+            </li>
+
+            <li>
+              <label><input type="checkbox" value="6.1">Win7</input></label>
+            </li>
+
+            <li>
+              <label><input type="checkbox" value="6.2">Win8</input></label>
+            </li>
+
             </ul>
             </span>
 
