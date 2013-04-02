@@ -21,6 +21,9 @@ sl_platform_map = {'win32': 'win32', 'win64': 'win64', 'macosx': 'osx',
                    'linux': 'linux', 'linux64': 'linux', 'macosx64': 'osx'}
 # buildbot -> update platform mapping
 update_platform_map = {
+    'android': ['Android_arm-eabi-gcc3'],
+    'android-armv6': ['Android_arm-eabi-gcc3-armv6'],
+    'android-x86': ['Android_x86-gcc3'],
     'linux': ['Linux_x86-gcc3'],
     'linux64': ['Linux_x86_64-gcc3'],
     'macosx64': ['Darwin_x86-gcc3-u-i386-x86_64', 'Darwin_x86_64-gcc3-u-i386-x86_64'],

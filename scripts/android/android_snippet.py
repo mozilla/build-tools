@@ -131,13 +131,14 @@ def generateCompleteSnippet(apk_filename, buildid, version, hash_type,
     dateddir = '%s/%s/%s-%s-%s-%s-%s-%s' % (year, month,
                                             year, month, day,
                                             hour, minute, second)
+    url = '%s/nightly/%s-%s/%s' % \
+        (download_base_url.rstrip('/'), dateddir,
+         download_subdir, os.path.basename(apk_filename.rstrip('/')))
 
     # Could probably implement this more cleanly
     print >>output_file, 'version=1'
     print >>output_file, 'type=complete'
-    print >>output_file, 'url=%s/nightly/%s-%s/%s' % \
-        (download_base_url.rstrip('/'), dateddir,
-         download_subdir, os.path.basename(apk_filename.rstrip('/')))
+    print >>output_file, 'url=%s' % url
     print >>output_file, 'hashFunction=%s' % hash_type
     print >>output_file, 'hashValue=%s' % hash
     print >>output_file, 'size=%s' % filesize
@@ -150,6 +151,9 @@ def generateCompleteSnippet(apk_filename, buildid, version, hash_type,
              for x in f.readlines()]))
     f.close()
     assert os.path.exists(output_filename)
+    return {'completeMarSize': filesize,
+            'completeMarHash': hash,
+            'completeMarUrl':  url}
 
 
 def generatePartialSnippet(apk_filename, buildid, version, hash_type,
@@ -217,6 +221,7 @@ def main():
     parser.add_option('--download-base-url', dest='download_base_url')
     parser.add_option('--download-subdir', dest='download_subdir',
                       help='something like mozilla-central-android')
+    parser.add_option('--properties-dir', dest='properties_dir')
     parser.add_option('-v', '--verbose', dest='verbose', action='store_true')
     (options, args) = parser.parse_args()
     assert options.download_base_url
@@ -240,7 +245,7 @@ def main():
     new_buildid, version = parseApk(args[0])
     old_buildid = getPreviousBuildID(options.download_base_url,
                                      options.download_subdir)
-    generateCompleteSnippet(args[0], new_buildid, version, options.hash_type,
+    properties = generateCompleteSnippet(args[0], new_buildid, version, options.hash_type,
                             options.download_base_url, options.download_subdir, options.distdir,
                             options.topsrcdir, 'complete.txt')
     generatePartialSnippet(args[0], new_buildid, version, options.hash_type,
@@ -250,6 +255,12 @@ def main():
                    options.aus_base, options.abi, options.locale, old_buildid,
                    new_buildid, ['complete.txt', 'partial.txt'])
 
+    if options.properties_dir:
+        if not path.exists(options.properties_dir):
+            os.mkdir(options.properties_dir)
+        with open(path.join(options.properties_dir, 'props'), 'w+') as f:
+            for prop, value in properties.items():
+                f.write('%s:%s\n' % (prop, value))
 
 if __name__ == '__main__':
     main()
