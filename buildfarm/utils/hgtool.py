@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """%prog [-p|--props-file] [-r|--rev revision] [-b|--branch branch]
          [-s|--shared-dir shared_dir] [--check-outgoing] repo [dest]
 
