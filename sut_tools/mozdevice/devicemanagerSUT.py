@@ -388,9 +388,7 @@ class DeviceManagerSUT(DeviceManager):
                 print "files are validated"
             return True
 
-        if self.mkDirs(destname) == None:
-            print "Automation Error: unable to make dirs: " + destname
-            return False
+        self.mkDirs(destname)
 
         if (self.debug >= 3):
             print "sending: push " + destname
