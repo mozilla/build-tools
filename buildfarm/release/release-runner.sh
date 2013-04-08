@@ -16,7 +16,13 @@ cd $CURR_DIR
 
 python release-runner.py -c $CONFIG
 RETVAL=$?
-if [[ $RETVAL != 0 ]]; then
+# Exit code 5 is a failure during polling. We don't want to send mail about
+# this, because it will just try again after sleeping.
+if [[ $RETVAL == 5 ]]; then
+    sleep $SLEEP_TIME;
+# Any other non-zero exit code is some other issue, and we should send mail
+# about it.
+elif [[ $RETVAL != 0 ]]; then
     (
         echo "Release runner encountered a runtime error: "
         tail -n20 $LOGFILE

@@ -267,16 +267,20 @@ if __name__ == '__main__':
 
     # Main loop waits for new releases, processes them and exits.
     while True:
-        log.debug('Fetching release requests')
-        new_releases = rr.get_release_requests()
-        if rr.new_releases:
-            for release in rr.new_releases:
-                log.info('Got a new release request: %s' % release)
-            break
-        else:
-            log.debug('Sleeping for %d seconds before polling again' %
-                      sleeptime)
-            time.sleep(sleeptime)
+        try:
+            log.debug('Fetching release requests')
+            new_releases = rr.get_release_requests()
+            if rr.new_releases:
+                for release in rr.new_releases:
+                    log.info('Got a new release request: %s' % release)
+                break
+            else:
+                log.debug('Sleeping for %d seconds before polling again' %
+                        sleeptime)
+                time.sleep(sleeptime)
+        except Exception, e:
+            log.error("Caught exception when polling:", exc_info=True)
+            sys.exit(5)
 
     # Clean up after any potential previous attempts before starting.
     # Not doing this could end up with multiple heads on the same branch.
@@ -384,7 +388,7 @@ if __name__ == '__main__':
             # reason not to start other releases if the sendchange fails for
             # another one. We _do_ need to set this in order to exit
             # with the right code, though.
-            rc = 1
+            rc = 2
             rr.update_status(release, 'Sendchange failed')
             log.error('Sendchange failed for %s: ' % release, exc_info=True)
 
