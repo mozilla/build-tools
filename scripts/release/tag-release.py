@@ -23,7 +23,7 @@ HG = "hg.mozilla.org"
 DEFAULT_BUILDBOT_CONFIGS_REPO = make_hg_url(HG, 'build/buildbot-configs')
 DEFAULT_MAX_PUSH_ATTEMPTS = 10
 REQUIRED_CONFIG = ('version', 'appVersion', 'appName', 'productName',
-                   'milestone', 'buildNumber', 'hgUsername', 'hgSshKey',
+                   'buildNumber', 'hgUsername', 'hgSshKey',
                    'baseTag', 'l10nRepoPath', 'sourceRepositories',
                    'l10nRevisionFile')
 REQUIRED_SOURCE_REPO_KEYS = ('path', 'revision')
@@ -230,10 +230,10 @@ if __name__ == '__main__':
     # We generate this upfront to ensure that it's consistent throughout all
     # repositories that use it. However, in cases where a relbranch is provided
     # for all repositories, it will not be used
-    generatedRelbranch = generateRelbranchName(config['milestone'])
+    generatedRelbranch = generateRelbranchName(config['version'])
     if config.get('relbranchPrefix'):
         generatedRelbranch = generateRelbranchName(
-            config['milestone'], prefix=config['relbranchPrefix'])
+            config['version'], prefix=config['relbranchPrefix'])
     tags = getTags(config['baseTag'], config['buildNumber'])
     l10nRevisionFile = path.join(
         'buildbot-configs', configDir, config['l10nRevisionFile'])

@@ -35,7 +35,7 @@ if [ -f "$PROPERTIES_FILE" ]; then
     # Purging
     cd $SCRIPTS_DIR/..
     python $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
-        -s 8 -n info -n 'rel-*' -n $builddir
+        -s 8 -n info -n 'rel-*' -n 'tb-rel-*' -n $builddir
 fi
 
 python $SCRIPTS_DIR/buildfarm/utils/hgtool.py --rev $REVISION $HG_REPO src || exit 2
@@ -78,6 +78,6 @@ if [ -f $suppression_file ]; then
 fi
 
 export OBJDIR=.
-export JARLOG_DIR=./jarlog/en-US
+export JARLOG_FILE=./jarlog/en-US.log
 export XPCOM_CC_RUN_DURING_SHUTDOWN=1
-python _profile/pgo/profileserver.py --debugger=valgrind --debugger-args="$debugger_args" || exit 1
+make pgo-profile-run EXTRA_TEST_ARGS="--debugger=valgrind --debugger-args='$debugger_args'" || exit 1

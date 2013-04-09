@@ -25,11 +25,14 @@ PLATFORMS = {
     'mountainlion': 'macosx64',
     'xp': 'win32',
     'win7': 'win32',
+    'win8': 'win32',
     'w764': 'win64',
     'fedora': 'linux',
     'fedora64': 'linux64',
     'ubuntu32': 'linux',
     'ubuntu64': 'linux64',
+    'ubuntu32_vm': 'linux',
+    'ubuntu64_vm': 'linux64',
 }
 
 log = logging.getLogger()
@@ -211,12 +214,13 @@ if __name__ == '__main__':
 
     # Custom paths/args for each platform's executable
     if options.platform in ('linux', 'linux64', 'fedora', 'fedora64',
-                            'ubuntu32', 'ubuntu64'):
+                            'ubuntu32', 'ubuntu64',
+                            'ubuntu32_vm', 'ubuntu64_vm'):
         app_path = "%s/firefox/firefox" % basepath
         poller_cmd = 'tar -xjvf *%s' % options.ext
     elif options.platform in ('macosx', 'macosx64', 'snowleopard', 'lion', 'mountainlion'):
         poller_cmd = '../scripts/buildfarm/utils/installdmg.sh *.dmg'
-    elif options.platform in ('win32', 'win7', 'win64', 'win764', 'w764', 'xp'):
+    elif options.platform in ('win32', 'win7', 'win8', 'win64', 'win764', 'w764', 'xp'):
         app_path = "%s/firefox/firefox.exe" % basepath
         # The --exclude=*.app is here to avoid extracting a symlink on win32 that is only
         # relevant to OS X. It would be nice if we could just tell tar to

@@ -13,6 +13,7 @@ if [ ! -x $PYTHON ]; then
 fi
 JSONTOOL="$PYTHON $SCRIPTS_DIR/buildfarm/utils/jsontool.py"
 workdir=`pwd`
+outputPropertiesDir=$SCRIPTS_DIR/../properties
 
 platform=$1
 branchConfig=$2
@@ -49,8 +50,12 @@ $PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s scripts -s buildprops.json \
   $CLOBBERER_URL $branch $builder $slavebuilddir $slavename $master
 cd $SCRIPTS_DIR/..
 $PYTHON $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
-  -s 7 -n info -n 'rel-*' -n $slavebuilddir
+  -s 7 -n info -n 'rel-*' -n 'tb-rel-*' -n $slavebuilddir
 cd $workdir
+
+if [ ! -e $outputPropertiesDir ]; then
+    mkdir $outputPropertiesDir
+fi
 
 LOCALE_OPT=
 if $JSONTOOL -k properties.locale $PROPERTIES_FILE; then
@@ -65,4 +70,4 @@ fi
 
 $PYTHON $MY_DIR/create-release-repacks.py -c $branchConfig -r $releaseConfig \
   -b $BUILDBOT_CONFIGS -t $releaseTag -p $platform \
-  $SOURCE_REPO_KEY $LOCALE_OPT $@
+  --properties-dir $outputPropertiesDir $SOURCE_REPO_KEY $LOCALE_OPT $@

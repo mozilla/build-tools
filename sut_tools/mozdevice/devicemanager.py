@@ -103,25 +103,21 @@ class DeviceManager:
 
     def mkDirs(self, filename):
         """
-        Make directory structure on the device
-        WARNING: does not create last part of the path
+        Make directory structure on the device.
 
-        returns:
-          success: directory structure that we created
-          failure: None
+        WARNING: does not create last part of the path. For example, if asked to
+        create `/mnt/sdcard/foo/bar/baz`, it will only create `/mnt/sdcard/foo/bar`
         """
-        parts = filename.split('/')
-        name = ""
-        for part in parts:
-            if (part == parts[-1]):
-                break
-            if (part != ""):
-                name += '/' + part
-                if (not self.dirExists(name)):
-                    if (self.mkDir(name) == None):
-                        print "Automation Error: failed making directory: " + str(name)
-                        return None
-        return name
+        dirParts = filename.rsplit('/', 1)
+        if not self.dirExists(dirParts[0]):
+            parts = filename.split('/')
+            name = ""
+            for i, part in enumerate(parts):
+                if i is len(parts)-1:
+                    break
+                if part != "":
+                    name += '/' + part
+                    self.mkDir(name)  # mkDir will check previous existence
 
     @abstractmethod
     def pushDir(self, localDir, remoteDir):

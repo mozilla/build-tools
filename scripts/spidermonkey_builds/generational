@@ -1,0 +1,4 @@
+--enable-optimize
+--enable-debug
+--enable-exact-rooting
+--enable-gcgenerational

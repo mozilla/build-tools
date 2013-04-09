@@ -2,7 +2,6 @@
 
 import site
 import time
-import datetime
 import logging
 import sys
 import os
@@ -42,11 +41,11 @@ def reconfig_warning(from_, to, smtp_server, rr, start_time, elapsed,
     """Called when the buildbot master reconfigs are taking a long time."""
     started = time.strftime("%a, %d %b %Y %H:%M:%S %Z",
                             time.localtime(start_time))
-    elapsed = datetime.timedelta(seconds=elapsed)
     subject = "[release-runner] WARNING: Reconfig exceeded %s" % elapsed
     body = textwrap.dedent("""
     A buildbot master reconfig started at %(start_time)s has been running for
-    %(elapsed)s without completing.
+    %(elapsed)d seconds without completing. If it has been longer than
+    1,800 seconds, manual intervention is probably necessary.
 
     - release-runner""" % dict(start_time=started, elapsed=elapsed))
     try:
@@ -165,6 +164,8 @@ def bump_configs(release, cfgFile, l10nContents, workdir,
         f.write(releaseConfig)
     with open(l10nChangesetsFile, 'w') as f:
         f.write(l10nContents)
+    commit(workdir, 'Update release config for %s' % release['name'],
+           user=hg_username)
 
 
 def tag_repo(workdir, branch, tags, force, pushRepo, hg_username,
@@ -183,7 +184,7 @@ def update_and_reconfig(masters_json, callback=None, username=None,
     fabric_helper = FabricHelper(masters_json_file=masters_json,
                                  roles=['scheduler', 'build'], subprocess=True,
                                  callback=callback, username=username,
-                                 ssh_key=ssh_key)
+                                 ssh_key=ssh_key, warning_interval=900)
     fabric_helper.update_and_reconfig()
 
 
@@ -266,16 +267,20 @@ if __name__ == '__main__':
 
     # Main loop waits for new releases, processes them and exits.
     while True:
-        log.debug('Fetching release requests')
-        new_releases = rr.get_release_requests()
-        if rr.new_releases:
-            for release in rr.new_releases:
-                log.info('Got a new release request: %s' % release)
-            break
-        else:
-            log.debug('Sleeping for %d seconds before polling again' %
-                      sleeptime)
-            time.sleep(sleeptime)
+        try:
+            log.debug('Fetching release requests')
+            new_releases = rr.get_release_requests()
+            if rr.new_releases:
+                for release in rr.new_releases:
+                    log.info('Got a new release request: %s' % release)
+                break
+            else:
+                log.debug('Sleeping for %d seconds before polling again' %
+                        sleeptime)
+                time.sleep(sleeptime)
+        except Exception, e:
+            log.error("Caught exception when polling:", exc_info=True)
+            sys.exit(5)
 
     # Clean up after any potential previous attempts before starting.
     # Not doing this could end up with multiple heads on the same branch.
@@ -320,7 +325,7 @@ if __name__ == '__main__':
             update(configs_workdir, revision='default')
             cfgFile = getReleaseConfigName(
                 release['product'], path.basename(release['branch']),
-                staging)
+                release['version'], staging)
             bump_configs(release=release, cfgFile=cfgFile,
                          l10nContents=l10nContents, workdir=configs_workdir,
                          hg_username=hg_username,
@@ -383,8 +388,8 @@ if __name__ == '__main__':
             # reason not to start other releases if the sendchange fails for
             # another one. We _do_ need to set this in order to exit
             # with the right code, though.
-            rc = 1
+            rc = 2
             rr.update_status(release, 'Sendchange failed')
-            log.error('Sendchange failed for %s: ' % release, exc_Info=True)
+            log.error('Sendchange failed for %s: ' % release, exc_info=True)
 
     sys.exit(rc)

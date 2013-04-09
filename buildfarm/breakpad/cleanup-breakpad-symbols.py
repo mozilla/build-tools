@@ -30,16 +30,26 @@ maxNightlyAge = timedelta(45)
 # RE to get the version number without alpha/beta designation
 versionRE = re.compile("^(\d+\.\d+)")
 
-parser = OptionParser(usage="usage: %prog [options] <symbol path>")
+parser = OptionParser(usage="usage: %prog [options] <symbol path> [symbol indexes to remove]")
 parser.add_option("-d", "--dry-run",
                   action="store_true", dest="dry_run", default=False,
                   help="Don't delete anything, just print a list of actions")
+parser.add_option("-r", "--remove-these-symbols",
+                  action="store_true", dest="remove_symbols",
+                  help="Remove specified symbol indexes and their contained symbols")
 (options, args) = parser.parse_args()
 
-if len(args) != 1:
-    print >>sys.stderr, "Must specify one symbol path!"
+if not args:
+    print >>sys.stderr, "Must specify a symbol path!"
     sys.exit(1)
 symbolPath = args[0]
+if (options.remove_symbols and len(args) < 2) or (not options.remove_symbols and len(args) > 1):
+    print >>sys.stderr, "Bad commandline"
+    sys.exit(1)
+
+symbols_to_remove = set()
+if options.remove_symbols:
+    symbols_to_remove = set(os.path.basename(a) for a in args[1:])
 
 # Cheezy atom implementation, so we don't have to store symbol filenames
 # multiple times.
@@ -129,44 +139,50 @@ for f in os.listdir(symbolPath):
     # drop -symbols.txt
     parts = f.split("-")[:-1]
     (product, version, osName, buildId) = parts[:4]
-    # skip release builds for now
+    # extract branch
     # nightly build versions end with "pre" (older branches)
     # or "a1" (new mozilla-central) or "a2" (aurora)
-    if not (version.endswith("pre") or version.endswith("a1") or version.endswith("a2")):
-        continue
-    # extract branch
     if version.endswith("a1"):
         branch = "nightly"
     elif version.endswith("a2"):
         branch = "aurora"
-    else:
+    elif version.endswith("pre"):
         m = versionRE.match(version)
         if m:
             branch = m.group(0)
         else:
             branch = version
-    # group into bins by product-branch-os[-featurebranch]
-    identifier = "%s-%s-%s" % (product, branch, osName)
+    else:
+	branch = "release"
+    # group into bins by branch-product-os[-featurebranch]
+    identifier = "%s-%s-%s" % (branch, product, osName)
     if len(parts) > 4:  # extra buildid, probably
         identifier += "-" + "-".join(parts[4:])
     adddefault(builds, identifier, [])
     builds[identifier].append(f)
+    if f in symbols_to_remove:
+        markDeleteSymbols(buildfiles[f], allfiles)
+        deletefile(os.path.join(symbolPath,f))
 
 print "[2/4] Looking for symbols to delete..."
-oldestdate = datetime.now() - maxNightlyAge
-for bin in builds:
-    builds[bin].sort(sortByBuildID)
-    if len(builds[bin]) > nightliesPerBin:
-        # delete the oldest builds if there are too many
-        for f in builds[bin][:-nightliesPerBin]:
-            markDeleteSymbols(buildfiles[f], allfiles)
-            deletefile(os.path.join(symbolPath, f))
-        builds[bin] = builds[bin][-nightliesPerBin:]
-    # now look for really old symbol files
-    for f in builds[bin]:
-        if datetimefrombuildid(f) < oldestdate:
-            markDeleteSymbols(buildfiles[f], allfiles)
-            deletefile(os.path.join(symbolPath, f))
+if not symbols_to_remove:
+    oldestdate = datetime.now() - maxNightlyAge
+    for bin in builds:
+	if bin.startswith("release"):
+	    # Skip release builds for now
+	    continue
+        builds[bin].sort(sortByBuildID)
+        if len(builds[bin]) > nightliesPerBin:
+            # delete the oldest builds if there are too many
+            for f in builds[bin][:-nightliesPerBin]:
+                markDeleteSymbols(buildfiles[f], allfiles)
+                deletefile(os.path.join(symbolPath,f))
+            builds[bin] = builds[bin][-nightliesPerBin:]
+        # now look for really old symbol files
+        for f in builds[bin]:
+            if datetimefrombuildid(f) < oldestdate:
+                markDeleteSymbols(buildfiles[f], allfiles)
+                deletefile(os.path.join(symbolPath,f))
 
 print "[3/4] Deleting symbols..."
 # now delete all files marked for deletion

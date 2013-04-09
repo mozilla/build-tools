@@ -6,13 +6,6 @@
     ],
     "repo_type": "hg"
   },
-  "private-browsing": {
-    "repo": "http://hg.mozilla.org/projects/private-browsing",
-    "graph_branches": [
-      "Private-Browsing"
-    ],
-    "repo_type": "hg"
-  },
   "profiling": {
     "repo": "http://hg.mozilla.org/projects/profiling",
     "graph_branches": [
@@ -296,6 +289,13 @@
     "repo": "http://hg.mozilla.org/integration/jamun",
     "graph_branches": [
       "Jamun"
+    ],
+    "repo_type": "hg"
+  },
+  "graphics": {
+    "repo": "http://hg.mozilla.org/projects/graphics",
+    "graph_branches": [
+      "Graphics"
     ],
     "repo_type": "hg"
   }

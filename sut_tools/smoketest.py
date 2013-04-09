@@ -87,7 +87,7 @@ def smoketest(device_name, number):
 
 if __name__ == '__main__':
     global appFileName, processName
-    appFileName = os.path.join(os.path.dirname(__file__), "fennec-18.0a1.multi.android-arm.apk")
+    appFileName = os.path.join(os.path.dirname(__file__), "fennec-19.0a1.multi.android-arm.apk")
     processName = "org.mozilla.fennec"
 
     device_name = os.getenv('SUT_NAME')

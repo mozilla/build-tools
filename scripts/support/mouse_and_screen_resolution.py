@@ -7,9 +7,10 @@
 # Script name:   mouse_and_screen_resolution.py
 # Purpose:       Sets mouse position and screen resolution for Windows 7 32-bit slaves
 # Author(s):     Zambrano Gasparnian, Armen <armenzg@mozilla.com>
-# Target:        Python 2.5
+# Target:        Python 2.5 or newer
 #
 from optparse import OptionParser
+from ctypes import windll, Structure, c_ulong, byref
 try:
     import json
 except:
@@ -17,16 +18,11 @@ except:
 import os
 import sys
 import urllib2
-import win32api
-import win32con
-import pywintypes
 import platform
 import time
-from win32api import GetSystemMetrics
 
 default_screen_resolution = {"x": 1024, "y": 768}
 default_mouse_position = {"x": 1010, "y": 10}
-
 
 def wfetch(url, retries=5):
     while retries >= 0:
@@ -46,7 +42,6 @@ def wfetch(url, retries=5):
             retries = retries - 1
         time.sleep(60)
     raise Exception("Could not fetch url '%s'" % url)
-
 
 def main():
     '''
@@ -92,17 +87,17 @@ def main():
     else:
         print "Changing the screen resolution..."
         try:
-            changeScreenResolution(new_screen_resolution)
+            changeScreenResolution(new_screen_resolution["x"], new_screen_resolution["y"])
         except Exception, e:
             print "INFRA-ERROR: We have attempted to change the screen resolution but " + \
                   "something went wrong: %s" % str(e)
             return 1
-        time.sleep(5)  # just in case
+        time.sleep(3)  # just in case
         current_screen_resolution = queryScreenResolution()
         print "Screen resolution (new): (%(x)s, %(y)s)" % current_screen_resolution
 
     print "Mouse position (current): (%(x)s, %(y)s)" % (queryMousePosition())
-    win32api.SetCursorPos((new_mouse_position["x"], new_mouse_position["y"]))
+    setCursorPos(new_mouse_position["x"], new_mouse_position["y"])
     current_mouse_position = queryMousePosition()
     print "Mouse position (new): (%(x)s, %(y)s)" % (current_mouse_position)
 
@@ -112,47 +107,40 @@ def main():
     else:
         return 0
 
+class POINT(Structure):
+    _fields_ = [("x", c_ulong), ("y", c_ulong)]
 
 def queryMousePosition():
-    pos = win32api.GetCursorPos()
-    return {"x": pos[0], "y": pos[1]}
+    pt = POINT()
+    windll.user32.GetCursorPos(byref(pt))
+    return { "x": pt.x, "y": pt.y}
 
+def setCursorPos(x, y):
+    windll.user32.SetCursorPos(x, y)
 
 def queryScreenResolution():
-    return {"x": GetSystemMetrics(0), "y": GetSystemMetrics(1)}
+    return {"x": windll.user32.GetSystemMetrics(0),
+            "y": windll.user32.GetSystemMetrics(1)}
 
+def changeScreenResolution(xres = None, yres = None, BitsPerPixel = None):
+    import struct
 
-def queryScreenFrequency():
-    try:
-        p = win32api.EnumDisplaySettings(None, win32con.ENUM_CURRENT_SETTINGS)
-        return p.DisplayFrequency
-    except Exception, e:
-        print "INFRA-ERROR: We were expecting to get the screen frequency instead we " + \
-              "got this exception => %s" % str(e)
-        return 1
+    DM_BITSPERPEL = 0x00040000
+    DM_PELSWIDTH = 0x00080000
+    DM_PELSHEIGHT = 0x00100000
+    CDS_FULLSCREEN = 0x00000004
+    SIZEOF_DEVMODE = 148
 
+    DevModeData = struct.calcsize("32BHH") * '\x00'
+    DevModeData += struct.pack("H", SIZEOF_DEVMODE)
+    DevModeData += struct.calcsize("H") * '\x00'
+    dwFields = (xres and DM_PELSWIDTH or 0) | (yres and DM_PELSHEIGHT or 0) | (BitsPerPixel and DM_BITSPERPEL or 0)
+    DevModeData += struct.pack("L", dwFields)
+    DevModeData += struct.calcsize("l9h32BHL") * '\x00'
+    DevModeData += struct.pack("LLL", BitsPerPixel or 0, xres or 0, yres or 0)
+    DevModeData += struct.calcsize("8L") * '\x00'
 
-def changeScreenResolution(new):
-    # Set new screen resolution
-    display_modes = {}
-    n = 0
-    while True:
-        try:
-            devmode = win32api.EnumDisplaySettings(None, n)
-        except pywintypes.error:
-            break
-        else:
-            key = (
-                devmode.BitsPerPel,
-                devmode.PelsWidth,
-                devmode.PelsHeight,
-                devmode.DisplayFrequency
-            )
-            display_modes[key] = devmode
-            n += 1
-    mode_required = (32, new["x"], new["y"], queryScreenFrequency())
-    devmode = display_modes[mode_required]
-    win32api.ChangeDisplaySettings(devmode, 0)
+    return windll.user32.ChangeDisplaySettingsA(DevModeData, 0)
 
 if __name__ == '__main__':
     sys.exit(main())
