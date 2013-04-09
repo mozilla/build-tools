@@ -101,13 +101,13 @@ function getBuilders($slave)
 $getReleaseBuildersCache = array();
 function getReleaseBuilders()
 {
+  global $RELEASE_PREFIX;
   global $getReleaseBuildersCache;
   $key = "$RELEASE_PREFIX%";
   if (array_key_exists($key, $getReleaseBuildersCache)) {
     return $getReleaseBuildersCache[$key];
   }
   global $dbh;
-  global $RELEASE_PREFIX;
   $ret = array();
   $rp = e("$RELEASE_PREFIX%");
   $builders = $dbh->query("SELECT DISTINCT buildername, builddir FROM builds WHERE builddir LIKE $rp");
@@ -199,6 +199,7 @@ if (array_get($_POST, 'form_submitted')) {
   $now = time();
   foreach ($_POST as $k => $v) {
     if ($k == "master") {
+      /* Handle clobbering whole masters */
       if (isSpecial($user)) {
         $branch = array_get($_POST, 'branch');
         if ($branch != '') {
@@ -247,10 +248,10 @@ if (array_get($_POST, 'form_submitted')) {
       continue;
     }
     $t = explode('-', $k, 2);
-    // We only care about bld-<$row_id>
-    // This corresponds to a row that specifies which branch/builder to clobber
-    // Build slave IDs are passed in via hidden form.
     if ($t[0] == 'bld') {
+      // We only care about bld-<$row_id>
+      // This corresponds to a row in the builds table that specifies which branch/builder to clobber
+      // Build slave IDs are passed in via hidden form.
       $builder_id = $t[1];
       $builder_slaves = explode('|', $_POST["${builder_id}_slaves"]);
       foreach ($builder_slaves as $row_id) {
@@ -266,6 +267,29 @@ if (array_get($_POST, 'form_submitted')) {
                 ."(master, branch, builddir, slave, who, lastclobber) VALUES "
                 ."(NULL, $branch, $builddir, $slave, $e_user, $now)") or die(print_r($dbh->errorInfo(), TRUE));
           }
+        }
+      }
+    } else if ($t[0] == 'slave') {
+      // Clobber a build directory on a specific slave given the slavename / buildername
+      $slave = $t[1];
+      $buildername = $v;
+      // Find which builddir this is
+      $s = $dbh->prepare("SELECT builddir, branch FROM builds WHERE "
+        ."slave = :slave AND "
+        ."buildername = :buildername "
+        ."ORDER BY last_build_time DESC LIMIT 1")
+        or die(print_r($dbh->errorInfo(), TRUE));
+      $s->execute(array(':slave'=>$slave, ':buildername'=>$buildername));
+      $r = $s->fetch(PDO::FETCH_ASSOC);
+      if ($r) {
+        $builddir = $r['builddir'];
+        $branch = $r['branch'];
+        if (canSee($builddir, $user)) {
+          $s = $dbh->prepare("INSERT INTO clobber_times "
+              ."(master, branch, builddir, slave, who, lastclobber) VALUES "
+              ."(NULL, :branch, :builddir, :slave, :user, :now)");
+          $s->execute(array(':branch'=>$branch, ':builddir'=>$builddir, ':slave'=>$slave, ':user'=>$user, ':now'=>$now))
+            or die(print_r($dbh->errorInfo(), TRUE));
         }
       }
     }
