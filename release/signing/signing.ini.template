@@ -28,7 +28,7 @@ allowed_filenames = .*
 # Minimum filesize that we'll sign
 min_filesize = 10
 # Maximum filesize, per format. 52428800 = 50MB, 524288000 = 500MB
-max_filesize_gpg = 576716800
+max_filesize_gpg = 524288000
 max_filesize_dmg = 52428800
 max_filesize_mar = 52428800
 max_filesize_signcode = 52428800
