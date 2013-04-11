@@ -149,17 +149,20 @@ def clone(repo, dest, branch=None, revision=None, update_dest=True,
 
     if bundles:
         log.info("Attempting to initialize clone with bundles")
-        init(dest)
-
         for bundle in bundles:
+            if os.path.exists(dest):
+                remove_path(dest)
+            init(dest)
             log.info("Trying to use bundle %s", bundle)
             try:
-                unbundle(bundle, dest)
+                if not unbundle(bundle, dest):
+                    remove_path(dest)
+                    continue
                 adjust_paths(dest, default=repo)
                 # Now pull / update
                 return pull(repo, dest, update_dest=update_dest,
                             mirrors=mirrors, revision=revision, branch=branch)
-            except:
+            except Exception:
                 remove_path(dest)
                 log.exception("Problem unbundling/pulling from %s", bundle)
                 continue
@@ -535,7 +538,11 @@ def unbundle(bundle, dest):
     """Unbundles the bundle located at `bundle` into `dest`.
 
     `bundle` can be a local file or remote url."""
-    run_cmd(['hg', 'unbundle', bundle], cwd=dest)
+    try:
+        get_output(['hg', 'unbundle', bundle], cwd=dest, include_stderr=True)
+        return True
+    except subprocess.CalledProcessError:
+        return False
 
 
 def adjust_paths(dest, **paths):
