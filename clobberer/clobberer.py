@@ -10,7 +10,7 @@ import time
 if os.name == 'nt':
     from win32file import RemoveDirectory, DeleteFile, \
         GetFileAttributesW, SetFileAttributesW, \
-        FILE_ATTRIBUTE_ARCHIVE, FILE_ATTRIBUTE_DIRECTORY
+        FILE_ATTRIBUTE_NORMAL, FILE_ATTRIBUTE_DIRECTORY
     from win32api import FindFiles
 
 clobber_suffix = '.deleteme'
@@ -46,9 +46,9 @@ def rmdirRecursiveWindows(dir):
 
     dir = os.path.realpath(dir)
     # Make sure directory is writable
-    SetFileAttributesW('\\\\?\\' + dir, FILE_ATTRIBUTE_ARCHIVE)
+    SetFileAttributesW('\\\\?\\' + dir, FILE_ATTRIBUTE_NORMAL)
 
-    for ffrec in FindFiles('\\\\?\\' + dir + '\*.*'):
+    for ffrec in FindFiles('\\\\?\\' + dir + '\\*.*'):
         file_attr = ffrec[0]
         name = ffrec[8]
         if name == '.' or name == '..':
@@ -58,7 +58,7 @@ def rmdirRecursiveWindows(dir):
         if file_attr & FILE_ATTRIBUTE_DIRECTORY:
             rmdirRecursiveWindows(full_name)
         else:
-            SetFileAttributesW('\\\\?\\' + dir, FILE_ATTRIBUTE_ARCHIVE)
+            SetFileAttributesW('\\\\?\\' + full_name, FILE_ATTRIBUTE_NORMAL)
             DeleteFile('\\\\?\\' + full_name)
     RemoveDirectory('\\\\?\\' + dir)
 
