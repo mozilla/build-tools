@@ -7,6 +7,11 @@ import urllib
 import os
 import traceback
 import time
+if os.name == 'nt':
+    from win32file import RemoveDirectory, DeleteFile, \
+        GetFileAttributesW, SetFileAttributesW, \
+        FILE_ATTRIBUTE_ARCHIVE, FILE_ATTRIBUTE_DIRECTORY
+    from win32api import FindFiles
 
 clobber_suffix = '.deleteme'
 
@@ -34,11 +39,37 @@ def read_file(fn):
     except ValueError:
         return None
 
+def rmdirRecursiveWindows(dir):
+    """Windows-specific version of rmdirRecursive that handles
+    path lengths longer than MAX_PATH.
+    """
+
+    dir = os.path.realpath(dir)
+    # Make sure directory is writable
+    SetFileAttributesW('\\\\?\\' + dir, FILE_ATTRIBUTE_ARCHIVE)
+
+    for ffrec in FindFiles('\\\\?\\' + dir + '\*.*'):
+        file_attr = ffrec[0]
+        name = ffrec[8]
+        if name == '.' or name == '..':
+            continue
+        full_name = os.path.join(dir, name)
+
+        if file_attr & FILE_ATTRIBUTE_DIRECTORY:
+            rmdirRecursiveWindows(full_name)
+        else:
+            SetFileAttributesW('\\\\?\\' + dir, FILE_ATTRIBUTE_ARCHIVE)
+            DeleteFile('\\\\?\\' + full_name)
+    RemoveDirectory('\\\\?\\' + dir)
 
 def rmdirRecursive(dir):
     """This is a replacement for shutil.rmtree that works better under
     windows. Thanks to Bear at the OSAF for the code.
     (Borrowed from buildbot.slave.commands)"""
+    if os.name == 'nt':
+        rmdirRecursiveWindows(dir)
+        return
+
     if not os.path.exists(dir):
         # This handles broken links
         if os.path.islink(dir):
