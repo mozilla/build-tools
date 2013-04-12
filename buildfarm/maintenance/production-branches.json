@@ -175,6 +175,13 @@
     ],
     "repo_type": "hg"
   },
+  "cypress": {
+    "repo": "http://hg.mozilla.org/projects/cypress",
+    "graph_branches": [
+      "Cypress"
+    ],
+    "repo_type": "hg"
+  },
   "mozilla-aurora": {
     "repo": "http://hg.mozilla.org/releases/mozilla-aurora",
     "graph_branches": [
