@@ -20,6 +20,7 @@ function initLoad() {
     "ics_armv7a_gecko": 0,
     "android-armv6": 0,
     "android-noion": 0,
+    "android-x86": 0,
     "tegra": 0,
     "panda": 0,
     "otoro": 0,
@@ -61,6 +62,7 @@ function getTryLoads(callback) {
         totalBuildLoad["android"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
         totalBuildLoad["android-armv6"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
         totalBuildLoad["android-noion"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
+        totalBuildLoad["android-x86"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
         totalBuildLoad["ics_armv7a_gecko"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
         totalBuildLoad["panda"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
         totalBuildLoad["otoro"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
