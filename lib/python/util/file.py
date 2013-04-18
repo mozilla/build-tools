@@ -60,7 +60,8 @@ def safe_unlink(filename):
                     safe_unlink(fp)
                 os.rmdir(root)
         else:
-            os.unlink(filename)
+            if os.path.exists(filename):
+                os.unlink(filename)
     except OSError, e:
         # Ignore "No such file or directory"
         if e.errno == 2:

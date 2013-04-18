@@ -17,7 +17,6 @@ def log_cmd(cmd, **kwargs):
     log.info("command: %s" % subprocess.list2cmdline(cmd))
     for key, value in kwargs.iteritems():
         log.info("command: %s: %s", key, str(value))
-    log.info("command: output:")
 
 
 def merge_env(env):
@@ -37,6 +36,7 @@ def run_cmd(cmd, **kwargs):
         kwargs['env'] = merge_env(kwargs['env'])
     try:
         t = time.time()
+        log.info("command: output:")
         return subprocess.check_call(cmd, **kwargs)
     except subprocess.CalledProcessError:
         log.info('command: ERROR', exc_info=True)
@@ -44,6 +44,11 @@ def run_cmd(cmd, **kwargs):
     finally:
         elapsed = time.time() - t
         log.info("command: END (%.2fs elapsed)\n", elapsed)
+
+
+def run_quiet_cmd(cmd, **kwargs):
+    devnull = open(os.devnull, 'w')
+    return subprocess.check_call(cmd, stdout=devnull, stderr=devnull, **kwargs)
 
 
 def run_remote_cmd(cmd, server, username=None, sshKey=None, ssh='ssh',
@@ -73,6 +78,7 @@ def run_cmd_periodic_poll(cmd, warning_interval=300, poll_interval=0.25,
     # env vars muddling up the output
     if 'env' in kwargs:
         kwargs['env'] = merge_env(kwargs['env'])
+    log.info("command: output:")
     proc = subprocess.Popen(cmd, **kwargs)
     start_time = time.time()
     last_check = start_time
@@ -96,7 +102,7 @@ def run_cmd_periodic_poll(cmd, warning_interval=300, poll_interval=0.25,
             elapsed = now - start_time
             if warning_callback:
                 log.debug("Calling warning_callback function: %s(%s)" %
-                         (warning_callback, start_time))
+                          (warning_callback, start_time))
                 try:
                     warning_callback(start_time, elapsed, proc)
                 except Exception:
@@ -138,6 +144,7 @@ def get_output(cmd, include_stderr=False, dont_log=False, **kwargs):
         if proc.returncode != 0:
             raise subprocess.CalledProcessError(proc.returncode, cmd)
         if not dont_log:
+            log.info("command: output:")
             log.info(output)
         return output
     except subprocess.CalledProcessError, e:

@@ -1,9 +1,10 @@
 """Functions for interacting with hg"""
 import os
 import subprocess
-import hashlib
+import urlparse
+import urllib
 
-from util.commands import run_cmd, get_output, remove_path
+from util.commands import run_cmd, remove_path, run_quiet_cmd
 from util.file import safe_unlink
 
 import logging
@@ -25,11 +26,17 @@ def _make_absolute(repo):
     return repo
 
 
+def get_repo_name(repo):
+    bits = urlparse.urlsplit(repo)
+    host = urllib.quote(bits.netloc, "")
+    path = urllib.quote(bits.path.lstrip("/"), "")
+    return os.path.join(host, path)
+
+
 def has_revision(dest, revision):
     """Returns True if revision exists in dest"""
     try:
-        get_output(['git', 'log', '--oneline', '-n1', revision],
-                   cwd=dest, include_stderr=True)
+        run_quiet_cmd(['git', 'log', '--oneline', '-n1', revision], cwd=dest)
         return True
     except subprocess.CalledProcessError:
         return False
@@ -39,26 +46,83 @@ def has_ref(dest, refname):
     """Returns True if refname exists in dest.
     refname can be a branch or tag name."""
     try:
-        get_output(
-            ['git', 'show-ref', '-d', refname], cwd=dest, include_stderr=True)
+        run_quiet_cmd(['git', 'show-ref', '-d', refname], cwd=dest)
         return True
     except subprocess.CalledProcessError:
         return False
 
 
-def init(dest):
-    """Initializes an empty repository at dest. If dest exists and isn't empty, it will be removed."""
+def init(dest, bare=False):
+    """Initializes an empty repository at dest. If dest exists and isn't empty, it will be removed.
+    If `bare` is True, then a bare repo will be created."""
     if not os.path.isdir(dest):
+        log.info("removing %s", dest)
         safe_unlink(dest)
     else:
         for f in os.listdir(dest):
+            log.info("removing %s", os.path.join(dest, f))
             safe_unlink(os.path.join(dest, f))
-    run_cmd(['git', 'init', '-q', dest])
+
+    # Git will freak out if it tries to create intermediate directories for
+    # dest, and then they exist. We can hit this when pulling in multiple repos
+    # in parallel to shared repo paths that contain common parent directories
+    # Let's create all the directories first
+    try:
+        os.makedirs(dest)
+    except OSError, e:
+        if e.errno == 20:
+            # Not a directory error...one of the parents of dest isn't a
+            # directory
+            raise
+
+    if bare:
+        cmd = ['git', 'init', '--bare', '-q', dest]
+    else:
+        cmd = ['git', 'init', '-q', dest]
+
+    log.info(" ".join(cmd))
+    run_quiet_cmd(cmd)
 
 
-def git(repo, dest, branch=None, revision=None, update_dest=True,
+def is_git_repo(dest):
+    """Returns True if dest is a valid git repo"""
+    if not os.path.isdir(dest):
+        return False
+
+    try:
+        run_quiet_cmd(["git", "rev-parse"], cwd=dest)
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+
+def get_git_dir(dest):
+    """Returns the path to the git directory for dest. For bare repos this is
+    dest itself, for regular repos this is dest/.git"""
+    assert is_git_repo(dest)
+    cmd = ['git', 'config', '--bool', '--get', 'core.bare']
+    proc = subprocess.Popen(cmd, cwd=dest, stdout=subprocess.PIPE)
+    proc.wait()
+    is_bare = proc.stdout.read().strip()
+    if is_bare == "false":
+        d = os.path.join(dest, ".git")
+    else:
+        d = dest
+    assert os.path.exists(d)
+    return d
+
+
+def set_share(repo, share):
+    alternates = os.path.join(get_git_dir(repo), 'objects', 'info', 'alternates')
+    share_objects = os.path.join(get_git_dir(share), 'objects')
+
+    with open(alternates, 'w') as f:
+        f.write("%s\n" % share_objects)
+
+
+def git(repo, dest, refname=None, revision=None, update_dest=True,
         shareBase=DefaultShareBase, mirrors=None):
-    """Makes sure that `dest` is has `revision` or `branch` checked out from
+    """Makes sure that `dest` is has `revision` or `refname` checked out from
     `repo`.
 
     Do what it takes to make that happen, including possibly clobbering
@@ -70,80 +134,108 @@ def git(repo, dest, branch=None, revision=None, update_dest=True,
     if shareBase is DefaultShareBase:
         shareBase = os.environ.get("GIT_SHARE_BASE_DIR", None)
 
+    if shareBase is not None:
+        repo_name = get_repo_name(repo)
+        share_dir = os.path.join(shareBase, repo_name)
+    else:
+        share_dir = None
+
+    if share_dir is not None and not is_git_repo(share_dir):
+        log.info("creating bare repo %s", share_dir)
+        try:
+            init(share_dir, bare=True)
+            os.utime(share_dir, None)
+        except Exception:
+            log.warning("couldn't create shared repo %s; disabling sharing", share_dir)
+            shareBase = None
+            share_dir = None
+
     dest = os.path.abspath(dest)
-    repo_hash = hashlib.md5(repo).hexdigest()
 
-    # TODO: Touch something in shareBase/$repo_hash so we know which remotes
-    # are being used
-
-    # Update an existing working copy if we've already got one
-    if os.path.exists(dest):
-        if not os.path.exists(os.path.join(dest, ".git")):
+    if not is_git_repo(dest):
+        if os.path.exists(dest):
             log.warning("%s doesn't appear to be a valid git directory; clobbering", dest)
             remove_path(dest)
+
+        if share_dir is not None:
+            # Initialize the repo and set up the share
+            init(dest)
+            set_share(dest, share_dir)
+        else:
+            # Otherwise clone into dest
+            clone(repo, dest, refname=refname, mirrors=mirrors, update_dest=False)
+
+    # Make sure our share is pointing to the right place
+    if share_dir is not None:
+        lock_file = os.path.join(get_git_dir(share_dir), "index.lock")
+        if os.path.exists(lock_file):
+            log.info("removing %s", lock_file)
+            safe_unlink(lock_file)
+        set_share(dest, share_dir)
+
+    # If we're supposed to be updating to a revision, check if we
+    # have that revision already. If so, then there's no need to
+    # fetch anything.
+    do_fetch = False
+    if revision is None:
+        # we don't have a revision specified, so pull in everything
+        do_fetch = True
+    elif has_ref(dest, revision):
+        # revision is actually a ref name, so we need to run fetch
+        # to make sure we update the ref
+        do_fetch = True
+    elif not has_revision(dest, revision):
+        # we don't have this revision, so need to fetch it
+        do_fetch = True
+
+    if do_fetch:
+        if share_dir:
+            # Fetch our refs into our share
+            try:
+                # TODO: Handle fetching refnames like refs/tags/XXXX
+                if refname is None:
+                    fetch(repo, share_dir, mirrors=mirrors)
+                else:
+                    fetch(repo, share_dir, mirrors=mirrors, refname=refname)
+            except subprocess.CalledProcessError:
+                # Something went wrong!
+                # Clobber share_dir and re-raise
+                log.info("error fetching into %s - clobbering", share_dir)
+                remove_path(share_dir)
+                raise
+
+            try:
+                if refname is None:
+                    fetch(share_dir, dest, fetch_remote="origin")
+                else:
+                    fetch(share_dir, dest, fetch_remote="origin", refname=refname)
+            except subprocess.CalledProcessError:
+                log.info("clobbering %s", share_dir)
+                remove_path(share_dir)
+                log.info("error fetching into %s - clobbering", dest)
+                remove_path(dest)
+                raise
+
         else:
             try:
-                # If we're supposed to be updating to a revision, check if we
-                # have that revision already. If so, then there's no need to
-                # fetch anything.
-                do_fetch = False
-                if revision is None:
-                    # we don't have a revision specified, so pull in everything
-                    do_fetch = True
-                elif has_ref(dest, revision):
-                    # revision is actually a ref name, so we need to run fetch
-                    # to make sure we update the ref
-                    do_fetch = True
-                elif not has_revision(dest, revision):
-                    # we don't have this revision, so need to fetch it
-                    do_fetch = True
-
-                if do_fetch:
-                    fetch(repo, dest, mirrors=mirrors, branch=branch)
-                    if shareBase:
-                        # If we're using a share, fetch new refs into the share too
-                        # Don't fetch tags
-                        fetch(repo, shareBase, mirrors=mirrors, branch=branch,
-                              remote_name=repo_hash, fetch_tags=False)
-                # can purge old remotes later
-                if update_dest:
-                    return update(dest, branch=branch, revision=revision)
-                return
-            except subprocess.CalledProcessError:
-                log.warning("Error fetching changes into %s from %s; clobbering", dest, repo)
-                log.debug("Exception:", exc_info=True)
+                fetch(repo, dest, mirrors=mirrors, refname=refname)
+            except Exception:
+                log.info("error fetching into %s - clobbering", dest)
                 remove_path(dest)
-
-    if not os.path.exists(os.path.dirname(dest)):
-        os.makedirs(os.path.dirname(dest))
-
-    if shareBase is not None:
-        # Clone into our shared repo
-        log.info("Updating our share")
-        if not os.path.exists(shareBase):
-            os.makedirs(shareBase)
-
-        if not os.path.exists(os.path.join(shareBase, ".git")):
-            init(shareBase)
-        fetch(repo, shareBase, branch=branch, mirrors=mirrors,
-              remote_name=repo_hash, fetch_tags=False)
-
-        log.info("Doing local clone")
-        clone(shareBase, dest, update_dest=False, shared=True)
-        # Fix up our remote name
-        run_cmd(["git", "remote", "set-url", "origin", repo], cwd=dest)
-        # Now fetch new refs
-        fetch(repo, dest, branch=branch)
-    else:
-        clone(repo, dest, branch=branch, update_dest=update_dest,
-              mirrors=mirrors)
+                raise
 
     if update_dest:
-        log.info("Updating local copy")
-        return update(dest, branch=branch, revision=revision)
+        log.info("Updating local copy refname: %s; revision: %s", refname, revision)
+        # Sometimes refname is passed in as a revision
+        if revision:
+            if not has_revision(dest, revision) and has_ref(dest, 'origin/%s' % revision):
+                log.info("Using %s as ref name instead of revision", revision)
+                refname = revision
+                revision = None
+        return update(dest, refname=refname, revision=revision)
 
 
-def clone(repo, dest, branch=None, mirrors=None, shared=False, update_dest=True):
+def clone(repo, dest, refname=None, mirrors=None, shared=False, update_dest=True):
     """Clones git repo and places it at `dest`, replacing whatever else is
     there.  The working copy will be empty.
 
@@ -162,11 +254,11 @@ def clone(repo, dest, branch=None, mirrors=None, shared=False, update_dest=True)
         for mirror in mirrors:
             log.info("Cloning from %s", mirror)
             try:
-                retval = clone(mirror, dest, branch, update_dest=update_dest)
+                retval = clone(mirror, dest, refname, update_dest=update_dest)
                 return retval
             except KeyboardInterrupt:
                 raise
-            except:
+            except Exception:
                 log.exception("Problem cloning from mirror %s", mirror)
                 continue
         else:
@@ -177,11 +269,11 @@ def clone(repo, dest, branch=None, mirrors=None, shared=False, update_dest=True)
         # TODO: Use --bare/--mirror here?
         cmd.append('--no-checkout')
 
+    if refname:
+        cmd.extend(['--branch', refname])
+
     if shared:
         cmd.append('--shared')
-
-    if branch:
-        cmd.extend(['-b', branch])
 
     cmd.extend([repo, dest])
     run_cmd(cmd)
@@ -189,12 +281,12 @@ def clone(repo, dest, branch=None, mirrors=None, shared=False, update_dest=True)
         return get_revision(dest)
 
 
-def update(dest, branch=None, revision=None, remote_name="origin"):
-    """Updates working copy `dest` to `branch` or `revision`.  If neither is
+def update(dest, refname=None, revision=None, remote_name="origin"):
+    """Updates working copy `dest` to `refname` or `revision`.  If neither is
     set then the working copy will be updated to the latest revision on the
-    current branch.  Local changes will be discarded."""
+    current refname.  Local changes will be discarded."""
     # If we have a revision, switch to that
-    # We use revision^0 (and branch^0 below) to force the names to be
+    # We use revision^0 (and refname^0 below) to force the names to be
     # dereferenced into commit ids, which makes git check them out in a
     # detached state. This is equivalent to 'git checkout --detach', except is
     # supported by older versions of git
@@ -202,17 +294,17 @@ def update(dest, branch=None, revision=None, remote_name="origin"):
         cmd = ['git', 'checkout', '-q', '-f', revision + '^0']
         run_cmd(cmd, cwd=dest)
     else:
-        if not branch:
-            branch = '%s/master' % remote_name
+        if not refname:
+            refname = '%s/master' % remote_name
         else:
-            branch = '%s/%s' % (remote_name, branch)
-        cmd = ['git', 'checkout', '-q', '-f', branch + '^0']
+            refname = '%s/%s' % (remote_name, refname)
+        cmd = ['git', 'checkout', '-q', '-f', refname + '^0']
 
         run_cmd(cmd, cwd=dest)
     return get_revision(dest)
 
 
-def fetch(repo, dest, branch=None, remote_name="origin", mirrors=None, fetch_tags=True):
+def fetch(repo, dest, refname=None, remote_name="origin", fetch_remote=None, mirrors=None, fetch_tags=True):
     """Fetches changes from git repo and places it in `dest`.
 
     If `mirrors` is set, will try and fetch from the mirrors first before
@@ -221,10 +313,10 @@ def fetch(repo, dest, branch=None, remote_name="origin", mirrors=None, fetch_tag
     if mirrors:
         for mirror in mirrors:
             try:
-                return fetch(mirror, dest, branch=branch)
+                return fetch(mirror, dest, refname=refname)
             except KeyboardInterrupt:
                 raise
-            except:
+            except Exception:
                 log.exception("Problem fetching from mirror %s", mirror)
                 continue
         else:
@@ -236,20 +328,23 @@ def fetch(repo, dest, branch=None, remote_name="origin", mirrors=None, fetch_tag
     if not fetch_tags:
         # Don't fetch tags into our local tags/ refs since we have no way to
         # associate those with this remote and can't purge it later.
-        # Instead, put remote tag refs into remotes/<remote>/tags
         cmd.append('--no-tags')
-        cmd.append("+refs/tags/*:refs/remotes/{remote_name}/tags/*".format(
-            remote_name=remote_name))
-
-    if branch:
-        cmd.append("+refs/heads/{branch}:refs/remotes/{remote_name}/{branch}".format(branch=branch, remote_name=remote_name))
+    if refname:
+        if fetch_remote:
+            cmd.append("+refs/remotes/{fetch_remote}/{refname}:refs/remotes/{remote_name}/{refname}".format(refname=refname, remote_name=remote_name, fetch_remote=fetch_remote))
+        else:
+            cmd.append("+refs/heads/{refname}:refs/remotes/{remote_name}/{refname}".format(refname=refname, remote_name=remote_name))
     else:
-        cmd.append("+refs/heads/*:refs/remotes/{remote_name}/*".format(
-            branch=branch, remote_name=remote_name))
+        if fetch_remote:
+            cmd.append("+refs/remotes/{fetch_remote}/*:refs/remotes/{remote_name}/*".format(remote_name=remote_name, fetch_remote=fetch_remote))
+        else:
+            cmd.append("+refs/heads/*:refs/remotes/{remote_name}/*".format(remote_name=remote_name))
 
     run_cmd(cmd, cwd=dest)
 
 
 def get_revision(path):
     """Returns which revision directory `path` currently has checked out."""
-    return get_output(['git', 'rev-parse', 'HEAD'], cwd=path).strip()
+    proc = subprocess.Popen(['git', 'rev-parse', 'HEAD'], cwd=path, stdout=subprocess.PIPE)
+    proc.wait()
+    return proc.stdout.read().strip()

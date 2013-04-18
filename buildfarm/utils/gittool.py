@@ -9,14 +9,21 @@ revision/branch on commandline will override those in props-file"""
 # Import snippet to find tools lib
 import os
 import site
+import logging
 site.addsitedir(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                              "../../lib/python"))
 
+try:
+    import simplejson as json
+    assert json
+except ImportError:
+    import json
+
 from util.git import git
+
 
 if __name__ == '__main__':
     from optparse import OptionParser
-    import logging
 
     parser = OptionParser(__doc__)
     parser.set_defaults(
@@ -56,12 +63,6 @@ if __name__ == '__main__':
 
     # Parse propsfile
     if options.propsfile:
-        try:
-            import json
-            assert json
-        except ImportError:
-            import simplejson as json
-
         js = json.load(open(options.propsfile))
         if options.revision is None:
             options.revision = js['sourcestamp']['revision']

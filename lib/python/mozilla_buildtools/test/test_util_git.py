@@ -2,7 +2,6 @@ import unittest
 import tempfile
 import shutil
 import os
-import hashlib
 import subprocess
 from util.commands import run_cmd, get_output
 
@@ -26,6 +25,16 @@ def getRevisions(dest, branches=None):
             retval.append(rev)
     retval.reverse()
     return retval
+
+
+class TestGitFunctions(unittest.TestCase):
+    def test_get_repo_name(self):
+        self.assertEquals(git.get_repo_name("https://git.mozilla.org/releases/gecko.git"),
+                          "git.mozilla.org/releases%2Fgecko.git")
+        self.assertEquals(git.get_repo_name("git://git.mozilla.org/releases/gecko.git"),
+                          "git.mozilla.org/releases%2Fgecko.git")
+        self.assertEquals(git.get_repo_name("http://git.mozilla.org/releases/gecko.git"),
+                          "git.mozilla.org/releases%2Fgecko.git")
 
 
 class TestGit(unittest.TestCase):
@@ -72,7 +81,7 @@ class TestGit(unittest.TestCase):
         self.assertEquals(rev, self.revisions[-1])
 
     def testCloneBranch(self):
-        git.clone(self.repodir, self.wc, branch='branch2', update_dest=False)
+        git.clone(self.repodir, self.wc, refname='branch2', update_dest=False)
         # This should have just the 1st and 2nd commit
         self.assertEquals(
             [self.revisions[0], self.revisions[1]], getRevisions(self.wc))
@@ -90,7 +99,7 @@ class TestGit(unittest.TestCase):
         rev = git.clone(self.repodir, self.wc, update_dest=False)
         self.assertEquals(rev, None)
 
-        rev = git.update(self.wc, branch='branch2')
+        rev = git.update(self.wc, refname='branch2')
         self.assertEquals(rev, self.revisions[1])
 
     def testUpdateBranchDefault(self):
@@ -102,12 +111,12 @@ class TestGit(unittest.TestCase):
 
     def testFetchBranch(self):
         # Clone just the main branch
-        git.clone(self.repodir, self.wc, branch='master', update_dest=False)
+        git.clone(self.repodir, self.wc, refname='master', update_dest=False)
         self.assertEquals(
             [self.revisions[0], self.revisions[2]], getRevisions(self.wc))
 
         # Now pull in branch2
-        git.fetch(self.repodir, self.wc, branch='branch2')
+        git.fetch(self.repodir, self.wc, refname='branch2')
 
         self.assertEquals(getRevisions(self.wc, branches=[
                           'origin/master', 'origin/branch2']), self.revisions)
@@ -116,7 +125,7 @@ class TestGit(unittest.TestCase):
         # Clone just the main branch
         git.clone(self.repodir, self.wc, update_dest=False)
         # Now pull in branch2
-        git.fetch(self.repodir, self.wc, branch='branch2')
+        git.fetch(self.repodir, self.wc, refname='branch2')
 
         # Change the original repo
         run_cmd(['touch', 'newfile'], cwd=self.repodir)
@@ -124,7 +133,7 @@ class TestGit(unittest.TestCase):
         run_cmd(['git', 'commit', '-q', '-m', 'add newfile'], cwd=self.repodir)
 
         # Now pull in everything from master branch
-        git.fetch(self.repodir, self.wc, branch='master')
+        git.fetch(self.repodir, self.wc, refname='master')
 
         for branch in 'master', 'branch2':
             self.assertEquals(getRevisions(self.wc, branches=['origin/%s' % branch]), getRevisions(self.repodir, branches=[branch]))
@@ -143,7 +152,7 @@ class TestGit(unittest.TestCase):
             os.path.join(self.wc, 'hello.txt')).read())
 
         # Switch branches, make sure we get the right content
-        rev = git.git(self.repodir, self.wc, branch='branch2')
+        rev = git.git(self.repodir, self.wc, refname='branch2')
         self.assertEquals(rev, self.revisions[1])
         self.assertFalse("Is this thing on" in open(
             os.path.join(self.wc, 'hello.txt')).read())
@@ -167,7 +176,7 @@ class TestGit(unittest.TestCase):
         self.assertEquals(new_rev, rev)
 
     def testGitBranch(self):
-        rev = git.git(self.repodir, self.wc, branch='branch2')
+        rev = git.git(self.repodir, self.wc, refname='branch2')
         self.assertEquals(rev, self.revisions[1])
         self.assertEquals(getRevisions(self.wc, branches=['origin/branch2']
                                        ), getRevisions(self.repodir, branches=['branch2']))
@@ -176,7 +185,7 @@ class TestGit(unittest.TestCase):
             os.path.join(self.wc, 'hello.txt')).read())
 
         # Switch branches, make sure we get all the revisions
-        rev = git.git(self.repodir, self.wc, branch='master')
+        rev = git.git(self.repodir, self.wc, refname='master')
         self.assertEquals(rev, self.revisions[-1])
         self.assertEquals(getRevisions(self.wc, branches=[
                           'origin/master', 'origin/branch2']), self.revisions)
@@ -186,14 +195,14 @@ class TestGit(unittest.TestCase):
     def testGitShare(self):
         shareBase = os.path.join(self.tmpdir, 'git-repos')
         rev = git.git(self.repodir, self.wc, shareBase=shareBase)
+        shareDir = os.path.join(shareBase, git.get_repo_name(self.repodir))
         self.assertEquals(rev, self.revisions[-1])
 
         # We should see all the revisions
         revs = getRevisions(
             self.wc, branches=['origin/master', 'origin/branch2'])
-        h = hashlib.md5(self.repodir).hexdigest()
         shared_revs = getRevisions(
-            shareBase, branches=['%s/master' % h, '%s/branch2' % h])
+            shareDir, branches=['origin/master', 'origin/branch2'])
 
         self.assertEquals(revs, shared_revs)
         self.assertEquals(revs, self.revisions)
@@ -266,3 +275,5 @@ class TestGit(unittest.TestCase):
         # Now try and update to a tag
         rev = git.git(self.repodir, self.wc, revision="TAG1")
         self.assertEquals(rev, self.revisions[0])
+
+# TODO: Test blowing away shared repo and then updating working copy
