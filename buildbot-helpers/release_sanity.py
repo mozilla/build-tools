@@ -268,6 +268,7 @@ if __name__ == '__main__':
         configs_branch='production',
         concurrency=8,
         skip_verify_configs=False,
+        checkMultiLocale=True,
     )
     parser.add_option(
         "-b", "--bypass-check", dest="check", action="store_false",
@@ -319,6 +320,9 @@ if __name__ == '__main__':
     parser.add_option("--skip-verify-configs", dest="skip_verify_configs",
                       action="store_true",
                       help="Do not verify configs agains remote repos")
+    parser.add_option("--bypass-multilocale-check", dest="checkMultiLocale",
+                      action="store_false",
+                      help="Do not verify that multilocale is enabled for Fennec")
 
     options, args = parser.parse_args()
     if not options.dryrun and not args:
@@ -443,6 +447,14 @@ if __name__ == '__main__':
                             options.l10n_dashboard_version):
                         test_success = False
                         log.error("Error verifying l10n dashboard changesets")
+
+                if options.checkMultiLocale:
+                    if releaseConfig.get('enableMultiLocale'):
+                        f = open(l10nRevisionFile)
+                        if 'multilocale' not in f.read():
+                            test_success = False
+                            log.error("MultiLocale enabled but not present in l10n changesets")
+                        f.close()
 
                 # verify that l10n changesets match the shipped locales
                 if releaseConfig.get('shippedLocalesPath'):
