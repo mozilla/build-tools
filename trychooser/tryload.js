@@ -15,6 +15,7 @@ function initLoad() {
     "win32": 0,
     "winxp": 0,
     "win7": 0,
+    "win7-ix": 0,
     "win64": 0,
     "android": 0,
     "ics_armv7a_gecko": 0,
@@ -78,7 +79,8 @@ function getTryLoads(callback) {
                                     , load_try_test["mac10.8"] + load_nontry_test["mac10.8"]);
         totalTestLoad["win32"] = Math.max(
                                    load_try_test["winxp"] + load_nontry_test["winxp"],
-                                   load_try_test["win7"] + load_nontry_test["win7"]);
+                                   load_try_test["win7"] + load_nontry_test["win7"],
+                                   load_try_test["win7"] + load_nontry_test["win7-ix"]);
         totalTestLoad["android"] = Math.max(
                                      load_try_test["tegra"] + load_nontry_test["tegra"],
                                      load_try_test["panda"] + load_nontry_test["panda"]);
