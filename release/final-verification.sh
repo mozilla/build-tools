@@ -200,8 +200,8 @@ log 'Stopping stopwatch...'
 STOP_TIME="$(date +%s)"
 
 number_of_failures="$(cat "${failures}" | wc -l | sed 's/ //g')"
-number_of_update_xml_urls="$(cat "${update_xml_urls}" | wc -l | sed 's/ //g')"
-number_of_mar_urls="$(cat "${mar_urls}" | wc -l | sed 's/ //g')"
+number_of_update_xml_urls="$(cat "${update_xml_urls}" | cut -f1-2 -d' ' | sort -u | wc -l | sed 's/ //g')"
+number_of_mar_urls="$(cat "${mar_urls}" | sort -u | wc -l | sed 's/ //g')"
 
 if [ "${number_of_failures}" -eq 0 ]
 then
@@ -355,7 +355,7 @@ log '===================================='
 log ''
 log "Config files scanned:                       ${#@}"
 log "Update xml files downloaded and parsed:     ${number_of_update_xml_urls}"
-log "Mar files found:                            ${number_of_mar_urls}"
+log "Unique mar urls found:                      ${number_of_mar_urls}"
 log "Failures:                                   ${number_of_failures}"
 log "Parallel processes used (maximum limit):    ${MAX_PROCS}"
 log "Execution time:                             $((STOP_TIME-START_TIME)) seconds"
