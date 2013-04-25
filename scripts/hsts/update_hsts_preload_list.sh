@@ -129,7 +129,7 @@ compare_preload_lists()
     # Run the script to get an updated preload list.
     echo "INFO: Generating new HSTS preload list..."
     cd  ${PRODUCT}
-    rm -rf ${PRELOAD_ERRORS} ${PRELOAD_INC}
+    rm -rf ${PRELOAD_ERRORS}
     echo INFO: Running \"LD_LIBRARY_PATH=. ./xpcshell ../${PRELOAD_SCRIPT} ${PWD}/${PRELOAD_INC}\"
     LD_LIBRARY_PATH=. ./xpcshell ../${PRELOAD_SCRIPT} ${PWD}/${PRELOAD_INC}
 
