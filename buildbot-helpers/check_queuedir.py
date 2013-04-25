@@ -49,9 +49,9 @@ def main():
     from optparse import OptionParser
     parser = OptionParser(__doc__)
     parser.set_defaults(
-        warn_new=5,
-        crit_new=10,
-        max_age=300,
+        warn_new=50,
+        crit_new=100,
+        max_age=900,
     )
     parser.add_option("-w", dest="warn_new", type="int",
                       help="warn when there are more than this number of items in new")
