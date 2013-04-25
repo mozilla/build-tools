@@ -41,6 +41,7 @@ DIFF="diff -up"
 PRELOAD_SCRIPT="getHSTSPreloadList.js"
 PRELOAD_ERRORS="nsSTSPreloadList.errors"
 PRELOAD_INC="nsSTSPreloadList.inc"
+BASEDIR=`pwd`
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -123,15 +124,15 @@ compare_preload_lists()
     ${UNPACK_CMD} ${BROWSER_ARCHIVE}
     mkdir tests && cd tests
     ${UNZIP} ../${TESTS_ARCHIVE}
-    cd ..
+    cd ${BASEDIR}
     cp tests/bin/xpcshell ${PRODUCT}
 
     # Run the script to get an updated preload list.
     echo "INFO: Generating new HSTS preload list..."
-    cd  ${PRODUCT}
+    cd ${PRODUCT}
     rm -rf ${PRELOAD_ERRORS}
-    echo INFO: Running \"LD_LIBRARY_PATH=. ./xpcshell ../${PRELOAD_SCRIPT} ${PWD}/${PRELOAD_INC}\"
-    LD_LIBRARY_PATH=. ./xpcshell ../${PRELOAD_SCRIPT} ${PWD}/${PRELOAD_INC}
+    echo INFO: Running \"LD_LIBRARY_PATH=. ./xpcshell ${BASEDIR}/${PRELOAD_SCRIPT} ${BASEDIR}/${PRELOAD_INC}\"
+    LD_LIBRARY_PATH=. ./xpcshell ${BASEDIR}/${PRELOAD_SCRIPT} ${BASEDIR}/${PRELOAD_INC}
 
     # The created files should be non-empty.
     echo "INFO: Checking whether new HSTS preload list is valid..."
@@ -142,7 +143,7 @@ compare_preload_lists()
         echo "New HSTS preload list is empty. That's less good."
         exit 1
     fi
-    cd ..
+    cd ${BASEDIR}
 
     # Check for differences
     echo "INFO: diffing old/new HSTS preload lists..."
