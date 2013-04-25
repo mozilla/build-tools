@@ -130,7 +130,8 @@ compare_preload_lists()
     echo "INFO: Generating new HSTS preload list..."
     cd  ${PRODUCT}
     rm -rf ${PRELOAD_ERRORS} ${PRELOAD_INC}
-    LD_LIBRARY_PATH=. ./xpcshell ../${PRELOAD_SCRIPT}
+    echo INFO: Running \"LD_LIBRARY_PATH=. ./xpcshell ../${PRELOAD_SCRIPT} ${PWD}/${PRELOAD_INC}\"
+    LD_LIBRARY_PATH=. ./xpcshell ../${PRELOAD_SCRIPT} ${PWD}/${PRELOAD_INC}
 
     # The created files should be non-empty.
     echo "INFO: Checking whether new HSTS preload list is valid..."
