@@ -130,7 +130,6 @@ compare_preload_lists()
     # Run the script to get an updated preload list.
     echo "INFO: Generating new HSTS preload list..."
     cd ${PRODUCT}
-    rm -rf ${PRELOAD_ERRORS}
     echo INFO: Running \"LD_LIBRARY_PATH=. ./xpcshell ${BASEDIR}/${PRELOAD_SCRIPT} ${BASEDIR}/${PRELOAD_INC}\"
     LD_LIBRARY_PATH=. ./xpcshell ${BASEDIR}/${PRELOAD_SCRIPT} ${BASEDIR}/${PRELOAD_INC}
 
@@ -146,6 +145,15 @@ compare_preload_lists()
     cd ${BASEDIR}
 
     # Check for differences
+    echo "INFO: diffing old/new HSTS error lists..."
+    ${DIFF} ${PRELOAD_ERRORS} ${PRODUCT}/${PRELOAD_ERRORS}
+    DIFF_STATUS=$?
+    case "${DIFF_STATUS}" in
+        0|1) ;;
+        *) echo "ERROR: diff exited with exit code: ${DIFF_STATUS}"
+           exit ${DIFF_STATUS}
+    esac
+
     echo "INFO: diffing old/new HSTS preload lists..."
     ${DIFF} ${PRELOAD_INC} ${PRODUCT}/${PRELOAD_INC}
     DIFF_STATUS=$?
@@ -217,7 +225,7 @@ update_preload_list_in_hg()
     echo ${HG} -R ${REPODIR} commit -u \"${HG_SSH_USER}\" -m \"${COMMIT_MESSAGE}\"
     ${HG} -R ${REPODIR} commit -u "${HG_SSH_USER}" -m "${COMMIT_MESSAGE}"
     echo ${HG} -R ${REPODIR} push -e \"ssh -l ${HG_SSH_USER} -i ${HG_SSH_KEY}\" ${HGPUSHREPO}
-    #${HG} -R ${REPODIR} push -e "ssh -l ${HG_SSH_USER} -i ${HG_SSH_KEY}" ${HGPUSHREPO}
+    ${HG} -R ${REPODIR} push -e "ssh -l ${HG_SSH_USER} -i ${HG_SSH_KEY}" ${HGPUSHREPO}
     PUSH_STATUS=$?
     if [ ${PUSH_STATUS} != 0 ]; then
         echo "ERROR: hg push exited with exit code: ${PUSH_STATUS}, probably raced another changeset"
