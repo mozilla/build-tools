@@ -11,7 +11,7 @@ import os
 from sut_lib import connect, log
 
 # Constants
-target_version = "1.17"
+target_version = "1.16"
 apkfilename = "sutAgentAndroid.apk"
 device_name = os.getenv('SUT_NAME')
 apkFoopyDirPattern = "/builds/%(device_name)s"
