@@ -51,7 +51,7 @@ class Job(object):
 
         result = self.proc.poll()
         if result is not None:
-            self.log.write("\nResult: %s\n" % result)
+            self.log.write("\nResult: %s, Elapsed: %1.1f seconds\n" % (result, time.time() - self.started))
             self.log.close()
         return result
 
