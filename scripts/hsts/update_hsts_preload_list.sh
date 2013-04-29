@@ -18,6 +18,7 @@ EOF
 DRY_RUN=false
 PRODUCT="firefox"
 BRANCH=""
+LATEST_DIR=""
 PLATFORM="linux-x86_64"
 PLATFORM_EXT="tar.bz2"
 UNPACK_CMD="tar jxf"
@@ -67,6 +68,8 @@ done
 if [ "$BRANCH" == "" ]; then
     USAGE
     exit 1
+else
+    LATEST_DIR=latest-`basename ${BRANCH}`
 fi
 
 HGREPO="http://${HGHOST}/${BRANCH}"
@@ -86,17 +89,18 @@ compare_preload_lists()
     WGET_STATUS=$?
     if [ ${WGET_STATUS} != 0 ]; then
         echo "ERROR: wget exited with a non-zero exit code: $WGET_STATUS"
-        return ${WGET_STATUS}
+        exit ${WGET_STATUS}
     fi
     VERSION=`cat version.txt | sed 's/[^.0-9]*$//'`
     if [ "${VERSION}" == "" ]; then
         echo "ERROR: Unable to parse version from version.txt"
+	exit 1
     fi
 
     BROWSER_ARCHIVE="${PRODUCT}-${VERSION}.en-US.${PLATFORM}.${PLATFORM_EXT}"
-    BROWSER_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/nightly/latest-${BRANCH}/${BROWSER_ARCHIVE}"
+    BROWSER_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/nightly/${LATEST_DIR}/${BROWSER_ARCHIVE}"
     TESTS_ARCHIVE="${PRODUCT}-${VERSION}.en-US.${PLATFORM}.tests.zip"
-    TESTS_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/nightly/latest-${BRANCH}/${TESTS_ARCHIVE}"
+    TESTS_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/nightly/${LATEST_DIR}/${TESTS_ARCHIVE}"
     PRELOAD_SCRIPT_HG="${HGREPO}/raw-file/default/security/manager/tools/${PRELOAD_SCRIPT}"
     PRELOAD_ERRORS_HG="${HGREPO}/raw-file/default/security/manager/boot/src/${PRELOAD_ERRORS}"
     PRELOAD_INC_HG="${HGREPO}/raw-file/default/security/manager/boot/src/${PRELOAD_INC}"
@@ -109,13 +113,13 @@ compare_preload_lists()
 	WGET_STATUS=$?
 	if [ ${WGET_STATUS} != 0 ]; then
             echo "ERROR: wget exited with a non-zero exit code: ${WGET_STATUS}"
-            return ${WGET_STATUS}
+            exit ${WGET_STATUS}
 	fi
     done
     for F in ${BROWSER_ARCHIVE} ${TESTS_ARCHIVE} ${PRELOAD_SCRIPT} ${PRELOAD_ERRORS} ${PRELOAD_INC}; do
 	if [ ! -f ${F} ]; then
 	    echo "Downloaded file ${F} not found."
-	    return 1
+	    exit 1
 	fi
     done
 
