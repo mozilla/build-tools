@@ -345,7 +345,7 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
 
     log.info("Reporting hg version in use")
     cmd = ['hg', '-q', 'version']
-    run_cmd(cmd, cwd=dest)
+    run_cmd(cmd, cwd='.')
 
     if shareBase:
         # Check that 'hg share' works
