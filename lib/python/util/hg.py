@@ -343,6 +343,10 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
     if shareBase is DefaultShareBase:
         shareBase = os.environ.get("HG_SHARE_BASE_DIR", None)
 
+    log.info("Reporting hg version in use")
+    cmd = ['hg', '-q', 'version']
+    run_cmd(cmd, cwd=dest)
+
     if shareBase:
         # Check that 'hg share' works
         try:
