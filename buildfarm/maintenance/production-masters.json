@@ -323,7 +323,9 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "ics_armv7a_gecko"
+      "ics_armv7a_gecko",
+      "linux32_gecko",
+      "linux64_gecko"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm17-tests1-linux",
@@ -360,7 +362,9 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "ics_armv7a_gecko"
+      "ics_armv7a_gecko",
+      "linux32_gecko",
+      "linux64_gecko"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm18-tests1-linux",
@@ -595,7 +599,9 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "ics_armv7a_gecko"
+      "ics_armv7a_gecko",
+      "linux32_gecko",
+      "linux64_gecko"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm24-tests1-linux",
@@ -1337,7 +1343,9 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "ics_armv7a_gecko"
+      "ics_armv7a_gecko",
+      "linux32_gecko",
+      "linux64_gecko"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm51-tests1-linux",
@@ -1374,7 +1382,9 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "ics_armv7a_gecko"
+      "ics_armv7a_gecko",
+      "linux32_gecko",
+      "linux64_gecko"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm52-tests1-linux",
@@ -1411,7 +1421,9 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "ics_armv7a_gecko"
+      "ics_armv7a_gecko",
+      "linux32_gecko",
+      "linux64_gecko"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm53-tests1-linux",
@@ -1448,7 +1460,9 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "ics_armv7a_gecko"
+      "ics_armv7a_gecko",
+      "linux32_gecko",
+      "linux64_gecko"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm54-tests1-linux",
@@ -1809,7 +1823,9 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "ics_armv7a_gecko"
+      "ics_armv7a_gecko",
+      "linux32_gecko",
+      "linux64_gecko"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm67-tests1-linux",
@@ -1846,7 +1862,9 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "ics_armv7a_gecko"
+      "ics_armv7a_gecko",
+      "linux32_gecko",
+      "linux64_gecko"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm68-tests1-linux",
