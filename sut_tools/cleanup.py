@@ -68,6 +68,8 @@ def cleanupDevice(device=None, dm=None):
                 except devicemanager.DMError, err:
                     setFlag(errorFile, "Remote Device Error: Unable to uninstall %s and reboot: %s" % (package_basename, err))
                     return RETCODE_ERROR
+                finally:
+                    break  # Don't try this proc again, since we already matched
 
     if reboot_needed:
         if not soft_reboot_and_verify(device, dm):
