@@ -2,10 +2,16 @@
 import subprocess
 import os
 import time
-
+import platform
 import logging
 log = logging.getLogger(__name__)
 
+try:
+    import win32file
+    import win32api
+    PYWIN32 = True
+except ImportError:
+    PYWIN32 = False
 
 def log_cmd(cmd, **kwargs):
     # cwd is special in that we always want it printed, even if it's not
@@ -161,6 +167,11 @@ def remove_path(path):
     windows. Thanks to Bear at the OSAF for the code.
     (Borrowed from buildbot.slave.commands)"""
     log.debug("Removing %s", path)
+
+    if _is_windows():
+        _rmtree_windows(path)
+        return
+
     if not os.path.exists(path):
         # This handles broken links
         if os.path.islink(path):
@@ -193,3 +204,51 @@ def remove_path(path):
                 os.chmod(full_name, 0700)
             os.remove(full_name)
     os.rmdir(path)
+
+
+# _is_windows and _rmtree_windows taken
+# from mozharness
+
+def _is_windows():
+    system = platform.system()
+    if system in ("Windows", "Microsoft"):
+        return True
+    if system.startswith("CYGWIN"):
+        return True
+    if os.name == 'nt':
+        return True
+
+def _rmtree_windows(path):
+    """ Windows-specific rmtree that handles path lengths longer than MAX_PATH.
+        Ported from clobberer.py.
+    """
+    log.info("Using _rmtree_windows ...")
+    assert _is_windows()
+    path = os.path.realpath(path)
+    full_path = '\\\\?\\' + path
+    if not os.path.exists(full_path):
+        return
+    if not PYWIN32:
+        if not os.path.isdir(path):
+            return run_cmd('del /F /Q "%s"' % path)
+        else:
+            return run_cmd('rmdir /S /Q "%s"' % path)
+    # Make sure directory is writable
+    win32file.SetFileAttributesW('\\\\?\\' + path, win32file.FILE_ATTRIBUTE_NORMAL)
+    # Since we call rmtree() with a file, sometimes
+    if not os.path.isdir('\\\\?\\' + path):
+        return win32file.DeleteFile('\\\\?\\' + path)
+
+    for ffrec in win32api.FindFiles('\\\\?\\' + path + '\\*.*'):
+        file_attr = ffrec[0]
+        name = ffrec[8]
+        if name == '.' or name == '..':
+            continue
+        full_name = os.path.join(path, name)
+
+        if file_attr & win32file.FILE_ATTRIBUTE_DIRECTORY:
+            _rmtree_windows(full_name)
+        else:
+            win32file.SetFileAttributesW('\\\\?\\' + full_name, win32file.FILE_ATTRIBUTE_NORMAL)
+            win32file.DeleteFile('\\\\?\\' + full_name)
+    win32file.RemoveDirectory('\\\\?\\' + path)

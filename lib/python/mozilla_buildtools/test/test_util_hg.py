@@ -6,7 +6,7 @@ import subprocess
 
 import util.hg as hg
 from util.hg import clone, pull, update, hg_ver, mercurial, _make_absolute, \
-    share, push, apply_and_push, HgUtilError, make_hg_url, get_branch, \
+    share, push, apply_and_push, HgUtilError, make_hg_url, get_branch, purge, \
     get_branches, path, init, unbundle, adjust_paths, is_hg_cset, commit, tag
 from util.commands import run_cmd, get_output
 
@@ -36,8 +36,8 @@ def getRevInfo(dest, rev):
 
 def getTags(dest):
     tags = []
-    for tag in get_output(['hg', 'tags', '-R', dest]).splitlines():
-        tags.append(tag.split()[0])
+    for t in get_output(['hg', 'tags', '-R', dest]).splitlines():
+        tags.append(t.split()[0])
     return tags
 
 
@@ -297,6 +297,77 @@ class TestHg(unittest.TestCase):
               clone_by_rev=True)
         push(src=self.repodir, remote=self.wc, revision=self.revisions[-1])
         self.assertEquals(getRevisions(self.wc), self.revisions[-2:])
+
+    def testPurgeUntrackedFile(self):
+        rev = clone(self.repodir, self.wc, update_dest=False)
+        self.assertEquals(rev, None)
+        fileToPurge=os.path.join(self.wc, 'fileToPurge')
+        with file(fileToPurge, 'a') as f:
+            f.write('purgeme')
+        purge(self.wc)
+        self.assertFalse(os.path.exists(fileToPurge))
+
+    def testPurgeUntrackedDirectory(self):
+        rev = clone(self.repodir, self.wc, update_dest=False)
+        self.assertEquals(rev, None)
+        directoryToPurge = os.path.join(self.wc, 'directoryToPurge')
+        os.makedirs(directoryToPurge)
+        purge(self.wc)
+        self.assertFalse(os.path.isdir(directoryToPurge))
+
+    def testPurgeTrackedFile(self):
+        rev = clone(self.repodir, self.wc, update_dest=False)
+        self.assertEquals(rev, None)
+        fileToModify = os.path.join(self.wc, 'purgetest.txt')
+        open(fileToModify, 'w').write('hello!')
+        run_cmd(['hg', 'add', 'purgetest.txt'], cwd=self.wc)
+        run_cmd(['hg', 'commit', '-m', 'adding changeset'], cwd=self.wc)
+        with open(fileToModify, 'w') as f:
+            f.write('just a test')
+        purge(self.wc)
+        content = open(fileToModify).read()
+        self.assertEqual(content, 'just a test')
+
+    def testPurgeUntrackedFile(self):
+        clone(self.repodir, self.wc)
+        fileToPurge=os.path.join(self.wc, 'fileToPurge')
+        with file(fileToPurge, 'a') as f:
+            f.write('purgeme')
+        purge(self.wc)
+        self.assertFalse(os.path.exists(fileToPurge))
+
+    def testPurgeUntrackedDirectory(self):
+        clone(self.repodir, self.wc)
+        directoryToPurge = os.path.join(self.wc, 'directoryTopPurge')
+        os.makedirs(directoryToPurge)
+        purge(directoryToPurge)
+        self.assertFalse(os.path.isdir(directoryToPurge))
+
+    def testPurgeVeryLongPath(self):
+        clone(self.repodir, self.wc)
+        # now create a very long path name
+        longPath = self.wc
+        for new_dir in xrange(1,64):
+            longPath = os.path.join(longPath, str(new_dir))
+        os.makedirs(longPath)
+        self.assertTrue(os.path.isdir(longPath))
+        purge(self.wc)
+        self.assertFalse(os.path.isdir(longPath))
+
+    def testPurgeAFreshClone(self):
+        clone(self.repodir, self.wc)
+        purge(self.wc)
+        self.assertTrue(os.path.exists(os.path.join(self.wc, 'hello.txt')))
+
+    def testPurgeTrackedFile(self):
+        clone(self.repodir, self.wc)
+        fileToModify = os.path.join(self.wc, 'hello.txt')
+        with open(fileToModify, 'w') as f:
+            f.write('hello!')
+        purge(self.wc)
+        with open(fileToModify, 'r') as f:
+            content = f.read()
+        self.assertEqual(content, 'hello!')
 
     def testMercurial(self):
         rev = mercurial(self.repodir, self.wc)

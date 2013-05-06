@@ -78,7 +78,7 @@ def is_hg_cset(rev):
     """Retruns True if passed revision represents a valid HG revision
     (long or short(er) 40 bit hex)"""
     try:
-        _ = int(rev, 16)
+        int(rev, 16)
         return True
     except (TypeError, ValueError):
         return False
@@ -99,6 +99,14 @@ def hg_ver():
     log.debug("Running hg version %s", ver)
     return ver
 
+def purge(dest):
+    """Purge the repository of all untracked and ignored files."""
+    try:
+        run_cmd(['hg', '--config', 'extensions.purge=', 'purge', '-a', '--all',
+                  dest], cwd=os.path.normpath(os.path.join(dest, '..')))
+    except subprocess.CalledProcessError as e:
+        log.debug('purge failed: %s' %e)
+        raise
 
 def update(dest, branch=None, revision=None):
     """Updates working copy `dest` to `branch` or `revision`.  If neither is
@@ -187,7 +195,7 @@ def clone(repo, dest, branch=None, revision=None, update_dest=True,
             # We need to make sure our paths are correct though
             if os.path.exists(os.path.join(dest, '.hg')):
                 adjust_paths(dest, default=repo)
-            return mercurial(repo, dest, branch, revision,
+            return mercurial(repo, dest, branch, revision, autoPurge=True,
                              update_dest=update_dest, clone_by_rev=clone_by_rev)
 
     cmd = ['hg', 'clone']
@@ -317,7 +325,7 @@ def push(src, remote, push_new_branches=True, force=False, **kwargs):
 
 def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
               shareBase=DefaultShareBase, allowUnsharedLocalClones=False,
-              clone_by_rev=False, mirrors=None, bundles=None):
+              clone_by_rev=False, mirrors=None, bundles=None, autoPurge=False):
     """Makes sure that `dest` is has `revision` or `branch` checked out from
     `repo`.
 
@@ -384,6 +392,8 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
             remove_path(dest)
         elif not os.path.exists(os.path.join(dest, ".hg", "sharedpath")):
             try:
+                if autoPurge:
+                    purge(dest)
                 return pull(repo, dest, update_dest=update_dest, branch=branch,
                             revision=revision,
                             mirrors=mirrors)
@@ -425,8 +435,10 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
             log.info("Updating shared repo")
             mercurial(repo, sharedRepo, branch=branch, revision=revision,
                       update_dest=False, shareBase=None, clone_by_rev=clone_by_rev,
-                      mirrors=mirrors, bundles=bundles)
+                      mirrors=mirrors, bundles=bundles, autoPurge=False)
             if os.path.exists(dest):
+                if autoPurge:
+                    purge(dest)
                 return update(dest, branch=branch, revision=revision)
 
             try:

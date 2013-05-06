@@ -14,3 +14,9 @@ slavealloc.log
 release-runner.ini
 lib/python/slavealloc/www/icons
 lib/python/slavealloc/www/js/bugzilla.js
+.coverage
+.tox
+coverage.xml
+lib/python/buildtools.egg-info/
+nosetests.xml
+
