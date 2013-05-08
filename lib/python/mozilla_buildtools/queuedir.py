@@ -301,9 +301,6 @@ class QueueDir(object):
                 else:
                     timeout = reque_time
 
-            if timeout:
-                timeout *= 1000
-
             log.debug("Sleeping for %s", timeout)
 
             start = time.time()
