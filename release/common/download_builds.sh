@@ -24,7 +24,7 @@ download_builds() {
     #PARAMS="--user=user --password=pass"
     cd downloads 
     if [ -f "$source_file" ]; then rm "$source_file"; fi
-    $retry wget --progress=dot:mega --server-response --no-check-certificate $PARAMS "$url" 2>&1
+    $retry wget -O "$source_file" --progress=dot:mega --server-response --no-check-certificate $PARAMS "$url" 2>&1
     status=$?
     if [ $status != 0 ]; then
       echo "FAIL: Could not download source $source_file from $url"
