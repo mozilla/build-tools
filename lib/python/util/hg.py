@@ -104,7 +104,7 @@ def purge(dest):
     try:
         run_cmd(['hg', '--config', 'extensions.purge=', 'purge', '-a', '--all',
                   dest], cwd=dest)
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError, e:
         log.debug('purge failed: %s' %e)
         raise
 
