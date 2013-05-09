@@ -80,7 +80,7 @@ function getTryLoads(callback) {
         totalTestLoad["win32"] = Math.max(
                                    load_try_test["winxp"] + load_nontry_test["winxp"],
                                    load_try_test["win7"] + load_nontry_test["win7"],
-                                   load_try_test["win7"] + load_nontry_test["win7-ix"]);
+                                   load_try_test["win7-ix"] + load_nontry_test["win7-ix"]);
         totalTestLoad["android"] = Math.max(
                                      load_try_test["tegra"] + load_nontry_test["tegra"],
                                      load_try_test["panda"] + load_nontry_test["panda"]);
