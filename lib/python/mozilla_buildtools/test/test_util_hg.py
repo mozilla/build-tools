@@ -293,9 +293,9 @@ class TestHg(unittest.TestCase):
         self.assertEquals(getRevisions(self.wc), self.revisions)
 
     def testPushWithRevision(self):
-        clone(self.repodir, self.wc, revision=self.revisions[-2],
+        clone(self.repodir, self.wc, revision=self.revisions[-1],
               clone_by_rev=True)
-        push(src=self.repodir, remote=self.wc, revision=self.revisions[-1])
+        push(src=self.repodir, remote=self.wc, revision=self.revisions[-2])
         self.assertEquals(getRevisions(self.wc), self.revisions[-2:])
 
     def testPurgeUntrackedFile(self):
