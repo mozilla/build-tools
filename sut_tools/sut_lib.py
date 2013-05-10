@@ -439,13 +439,14 @@ def checkCPActive(bbClient):
 # and buildslave steps
 
 
-def setFlag(flagfile, contents=None):
+def setFlag(flagfile, contents=None, silent=False):
     log.info(flagfile)
     h = open(flagfile, 'a+')
     if contents is not None:
         # TODO: log.error output wasn't appearing in the logs, so using print
         # for now
-        print contents
+        if not silent:
+            print contents
         h.write('%s\n' % contents)
     h.close()
     time.sleep(30)
@@ -509,10 +510,11 @@ def checkDeviceRoot(dm):
     return dr
 
 
-def waitForDevice(dm, waitTime=120):
-    retVal = _waitForDevice(dm, waitTime)
+def waitForDevice(dm, waitTime=120, silent=False):
+    retVal = _waitForDevice(dm, waitTime, silent)
     if not retVal:
-        log.error("Remote Device Error: waiting for device timed out.")
+        if not silent:
+            log.error("Remote Device Error: waiting for device timed out.")
         sys.exit(1)
     return retVal
 
@@ -542,11 +544,11 @@ def _waitForDevice(dm, waitTime=120, silent=False):
     return True
 
 
-def soft_reboot_and_verify(device, dm, waitTime=90, max_attempts=5, *args, **kwargs):
+def soft_reboot_and_verify(device, dm, waitTime=90, max_attempts=5, silent=False, *args, **kwargs):
     attempt = 0
     while attempt < max_attempts:
         attempt += 1
-        retVal = soft_reboot(device, dm, *args, **kwargs)
+        retVal = soft_reboot(device, dm, *args, silent, **kwargs)
         if not retVal:
             continue
 
@@ -555,7 +557,7 @@ def soft_reboot_and_verify(device, dm, waitTime=90, max_attempts=5, *args, **kwa
     return False
 
 
-def soft_reboot(device, dm, *args, **kwargs):
+def soft_reboot(device, dm, silent=False, *args, **kwargs):
     """
     Use the softest/kindest reboot method we think we should use.
 
@@ -566,8 +568,9 @@ def soft_reboot(device, dm, *args, **kwargs):
         if reboot_relay(device):
             return True
         else:
-            log.warn("Automation Error: Unable to reboot %s via Relay Board." %
-                     device)
+            if not silent:
+                log.warn("Automation Error: Unable to reboot %s via Relay Board." %
+                         device)
 
     # If this panda doesn't successfully relay-reboot fall through to
     # devicemanager

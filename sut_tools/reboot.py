@@ -40,12 +40,12 @@ def reboot(dm):
     try:
         log.info('forcing device %s reboot' % deviceName)
         status = soft_reboot_and_verify(
-            dm=dm, device=deviceName, ipAddr=proxyIP, port=proxyPort)
+            dm=dm, device=deviceName, ipAddr=proxyIP, port=proxyPort, silent=True)
         log.info(status)
     except:
         log.info("Failure while rebooting device")
         setFlag(errorFile,
-                "Remote Device Error: Device failed to recover after reboot")
+                "Remote Device Error: Device failed to recover after reboot", silent)
         return 1
 
     sys.stdout.flush()
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     try:
         log.info("connecting to: %s" % deviceIP)
         dm = devicemanager.DeviceManagerSUT(deviceIP)
-        dm.debug = 5
+        dm.debug = 0
         dm.default_timeout = 30  # Set our timeout lower for deviceManager here
     except:
         pass
