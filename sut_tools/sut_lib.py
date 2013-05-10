@@ -548,7 +548,7 @@ def soft_reboot_and_verify(device, dm, waitTime=90, max_attempts=5, silent=False
     attempt = 0
     while attempt < max_attempts:
         attempt += 1
-        retVal = soft_reboot(device, dm, *args, silent, **kwargs)
+        retVal = soft_reboot(device, dm, silent, *args, **kwargs)
         if not retVal:
             continue
 
