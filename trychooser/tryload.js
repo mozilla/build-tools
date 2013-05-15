@@ -14,6 +14,7 @@ function initLoad() {
     "macosx64": 0,
     "win32": 0,
     "winxp": 0,
+    "winxp-ix": 0,
     "win7": 0,
     "win7-ix": 0,
     "win64": 0,
@@ -79,6 +80,7 @@ function getTryLoads(callback) {
                                     , load_try_test["mac10.8"] + load_nontry_test["mac10.8"]);
         totalTestLoad["win32"] = Math.max(
                                    load_try_test["winxp"] + load_nontry_test["winxp"],
+                                   load_try_test["winxp-ix"] + load_nontry_test["winxp-ix"],
                                    load_try_test["win7"] + load_nontry_test["win7"],
                                    load_try_test["win7-ix"] + load_nontry_test["win7-ix"]);
         totalTestLoad["android"] = Math.max(
