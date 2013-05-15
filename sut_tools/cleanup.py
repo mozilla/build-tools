@@ -100,6 +100,18 @@ def cleanupDevice(device=None, dm=None):
             setFlag(errorFile, "Remote Device Error: Unable to properly remove %s" % devRoot)
             return RETCODE_ERROR
 
+    # cleanup xpcshell tests binaries directory
+    xpcbDir = '/data/local/xpcb'
+    if dm.dirExists(xpcbDir):
+        status = dm.removeDir(xpcbDir)
+        log.info("removeDir(%s) returned [%s]" % (xpcbDir, status))
+        if status is None or not status:
+            setFlag(errorFile, "Remote Device Error: call to removeDir(%s) returned [%s]" % (xpcbDir, status))
+            return RETCODE_ERROR
+        if dm.dirExists(xpcbDir):
+            setFlag(errorFile, "Remote Device Error: Unable to properly remove %s" % xpcbDir)
+            return RETCODE_ERROR
+
     if not dm.fileExists('/system/etc/hosts'):
         log.info("restoring /system/etc/hosts file")
         try:
