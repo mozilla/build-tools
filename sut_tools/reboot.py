@@ -45,7 +45,7 @@ def reboot(dm):
     except:
         log.info("Failure while rebooting device")
         setFlag(errorFile,
-                "Remote Device Error: Device failed to recover after reboot", silent)
+                "Remote Device Error: Device failed to recover after reboot", True)
         return 1
 
     sys.stdout.flush()
