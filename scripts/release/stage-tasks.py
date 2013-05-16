@@ -105,7 +105,7 @@ def runAntivirusCheck(productName, version, buildNumber, stageServer,
 
 def pushToMirrors(productName, version, buildNumber, stageServer,
                   stageUsername=None, stageSshKey=None, excludes=None,
-                  extra_excludes=None, dryRun=False):
+                  extra_excludes=None, dryRun=False, overwrite=False):
     """ excludes overrides DEFAULT_RSYNC_EXCLUDES, extra_exludes will be
     appended to DEFAULT_RSYNC_EXCLUDES. """
 
@@ -122,10 +122,12 @@ def pushToMirrors(productName, version, buildNumber, stageServer,
         run_remote_cmd(['test', '!', '-d', target_dir], server=stageServer,
                        username=stageUsername, sshKey=stageSshKey)
     except CalledProcessError:
-        if not dryRun:
-            raise
-        else:
+        if overwrite:
+            log.info('target directory %s exists, but overwriting files as requested' % target_dir)
+        elif dryRun:
             log.warning('WARN: target directory %s exists', target_dir)
+        else:
+            raise
 
     if not dryRun:
         run_remote_cmd(['mkdir', '-p', target_dir], server=stageServer,
@@ -210,6 +212,7 @@ if __name__ == '__main__':
     parser.add_option("--product", dest="product")
     parser.add_option("--ssh-user", dest="ssh_username")
     parser.add_option("--ssh-key", dest="ssh_key")
+    parser.add_option("--overwrite", dest="overwrite", default=False, action="store_true")
     parser.add_option("--extra-excludes", dest="extra_excludes",
                       action="append")
 
@@ -270,7 +273,8 @@ if __name__ == '__main__':
                       productName=productName,
                       version=version,
                       extra_excludes=options.extra_excludes,
-                      buildNumber=buildNumber)
+                      buildNumber=buildNumber,
+                      overwrite=options.overwrite)
         if createIndexFiles:
             deleteIndexFiles(stageServer=stageServer,
                              stageUsername=stageUsername,
