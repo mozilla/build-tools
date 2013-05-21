@@ -9,6 +9,8 @@ SCRIPTS_DIR="$(dirname $0)/../.."
 # Call the Python 2.7 package in Win64 machines.
 if [ "$OS" = "Windows_NT" ] && [ -e "/c/mozilla-build/python27/python.exe" ]; then
     PYBIN="/c/mozilla-build/python27/python.exe"
+elif [ "$TERM" = "linux" ] && [ -e "/tools/python-2.6.5/bin/python" ]; then
+    PYBIN="/tools/python-2.6.5/bin/python"
 else
     PYBIN="python"
 fi
