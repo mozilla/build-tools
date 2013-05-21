@@ -85,7 +85,9 @@ else
   CONFIGURE_ARGS=$(cat $SPIDERDIR/$VARIANT)
 fi
 
-test -d objdir || mkdir objdir
+# Always do clobber builds. They're fast.
+[ -d objdir ] && rm -rf objdir
+mkdir objdir
 cd objdir
 
 OBJDIR=$PWD
