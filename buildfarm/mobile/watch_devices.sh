@@ -1,4 +1,5 @@
 #!/bin/bash -eu
+export PATH='/usr/local/bin:/usr/local/bin:/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/home/cltbld/bin'
 PYTHON=`which python`
 
 # MAGIC NUMBERS (global)
