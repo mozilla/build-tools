@@ -99,14 +99,16 @@ def hg_ver():
     log.debug("Running hg version %s", ver)
     return ver
 
+
 def purge(dest):
     """Purge the repository of all untracked and ignored files."""
     try:
-        run_cmd(['hg', '--config', 'extensions.purge=', 'purge', '-a', '--all',
-                  dest], cwd=dest)
+        run_cmd(['hg', '--config', 'extensions.purge=', 'purge',
+                 '-a', '--all', dest], cwd=dest)
     except subprocess.CalledProcessError, e:
-        log.debug('purge failed: %s' %e)
+        log.debug('purge failed: %s' % e)
         raise
+
 
 def update(dest, branch=None, revision=None):
     """Updates working copy `dest` to `branch` or `revision`.  If neither is
@@ -428,7 +430,8 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
             norm_sharedRepo = os.path.normpath(os.path.join(sharedRepo, '.hg'))
             if dest_sharedPath_data != norm_sharedRepo:
                 # Clobber!
-                log.info("We're currently shared from %s, but are being requested to pull from %s (%s); clobbering", dest_sharedPath_data, repo, norm_sharedRepo)
+                log.info("We're currently shared from %s, but are being requested to pull from %s (%s); clobbering",
+                         dest_sharedPath_data, repo, norm_sharedRepo)
                 remove_path(dest)
 
         try:

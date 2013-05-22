@@ -13,6 +13,7 @@ try:
 except ImportError:
     PYWIN32 = False
 
+
 def log_cmd(cmd, **kwargs):
     # cwd is special in that we always want it printed, even if it's not
     # explicitly chosen
@@ -217,6 +218,7 @@ def _is_windows():
         return True
     if os.name == 'nt':
         return True
+
 
 def _rmtree_windows(path):
     """ Windows-specific rmtree that handles path lengths longer than MAX_PATH.

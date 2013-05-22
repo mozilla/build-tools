@@ -299,38 +299,8 @@ class TestHg(unittest.TestCase):
         self.assertEquals(getRevisions(self.wc), self.revisions[-2:])
 
     def testPurgeUntrackedFile(self):
-        rev = clone(self.repodir, self.wc, update_dest=False)
-        self.assertEquals(rev, None)
-        fileToPurge=os.path.join(self.wc, 'fileToPurge')
-        with file(fileToPurge, 'a') as f:
-            f.write('purgeme')
-        purge(self.wc)
-        self.assertFalse(os.path.exists(fileToPurge))
-
-    def testPurgeUntrackedDirectory(self):
-        rev = clone(self.repodir, self.wc, update_dest=False)
-        self.assertEquals(rev, None)
-        directoryToPurge = os.path.join(self.wc, 'directoryToPurge')
-        os.makedirs(directoryToPurge)
-        purge(self.wc)
-        self.assertFalse(os.path.isdir(directoryToPurge))
-
-    def testPurgeTrackedFile(self):
-        rev = clone(self.repodir, self.wc, update_dest=False)
-        self.assertEquals(rev, None)
-        fileToModify = os.path.join(self.wc, 'purgetest.txt')
-        open(fileToModify, 'w').write('hello!')
-        run_cmd(['hg', 'add', 'purgetest.txt'], cwd=self.wc)
-        run_cmd(['hg', 'commit', '-m', 'adding changeset'], cwd=self.wc)
-        with open(fileToModify, 'w') as f:
-            f.write('just a test')
-        purge(self.wc)
-        content = open(fileToModify).read()
-        self.assertEqual(content, 'just a test')
-
-    def testPurgeUntrackedFile(self):
         clone(self.repodir, self.wc)
-        fileToPurge=os.path.join(self.wc, 'fileToPurge')
+        fileToPurge = os.path.join(self.wc, 'fileToPurge')
         with file(fileToPurge, 'a') as f:
             f.write('purgeme')
         purge(self.wc)
@@ -347,7 +317,7 @@ class TestHg(unittest.TestCase):
         clone(self.repodir, self.wc)
         # now create a very long path name
         longPath = self.wc
-        for new_dir in xrange(1,64):
+        for new_dir in xrange(1, 64):
             longPath = os.path.join(longPath, str(new_dir))
         os.makedirs(longPath)
         self.assertTrue(os.path.isdir(longPath))
