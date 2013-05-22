@@ -3,7 +3,6 @@ PYTHON=`which python`
 
 # MAGIC NUMBERS (global)
 # used to determine how long we sleep when...
-CYCLE_WAIT=300 # 5 minutes between cycling of watches for our devices
 SUCCESS_WAIT=200 # ... seconds after we startup buildbot
 FAIL_WAIT=500 # ... seconds after we stop buildbot due to error.flg
 
@@ -122,17 +121,11 @@ function device_check() {
 function watch_launcher(){
   echo "STARTING Watcher"
   log_output_to /builds/watcher.log
-  # get full abs path to our script for nested call
-  local script_abs_path=$(cd $(dirname $0);/bin/pwd)/${0##*/}
-  while true; do
-    log "Watcher is still alive"
-    for d in `ls -d tegra-*[0-9] panda-*[0-9] 2> /dev/null`; do
-      log "..checking $d"
-      $script_abs_path $d &
-    done
-    log "..done next run in ${CYCLE_WAIT} seconds."
-    sleep ${CYCLE_WAIT}
+  ls -d /builds/{tegra-*[0-9],panda-*[0-9]} 2>/dev/null | sed 's:.*/::' | while read device; do
+    log "..checking $device"
+    "${0}" "${device}" &
   done
+  log "Watcher completed."
 }
 
 if [ "$#" -eq 0 ]; then
