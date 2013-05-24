@@ -134,7 +134,7 @@ else
 fi
 ../../src/js/src/configure $CONFIGURE_ARGS --with-dist-dir=$OBJDIR/dist --prefix=$OBJDIR/dist --with-nspr-prefix=$OBJDIR/dist --with-nspr-cflags="$NSPR_CFLAGS" --with-nspr-libs="$NSPR_LIBS" || exit 2
 
-make -s -w || exit 2
+make -s -w -j4 || exit 2
 cp -p ../../src/build/unix/run-mozilla.sh $OBJDIR/dist/bin
 
 # The Root Analysis tests run in a special GC Zeal mode and disable ASLR to
