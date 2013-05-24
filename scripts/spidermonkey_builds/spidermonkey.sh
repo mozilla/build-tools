@@ -137,8 +137,16 @@ fi
 make -s -w || exit 2
 cp -p ../../src/build/unix/run-mozilla.sh $OBJDIR/dist/bin
 
-# The Root Analysis tests run in a special GC Zeal mode.
+# The Root Analysis tests run in a special GC Zeal mode and disable ASLR to
+# make tests reproducible.
+COMMAND_PREFIX=''
 if [[ "$VARIANT" = "rootanalysis" ]]; then
     export JS_GC_ZEAL=6
+
+    # rootanalysis builds are currently only done on Linux, which should have
+    # setarch, but just in case we enable them on another platform:
+    if type setarch >/dev/null 2>&1; then
+        COMMAND_PREFIX="setarch $(uname -m) -R "
+    fi
 fi
-make check || exit 1
+$COMMAND_PREFIX make check || exit 1
