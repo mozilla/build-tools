@@ -141,6 +141,4 @@ cp -p ../../src/build/unix/run-mozilla.sh $OBJDIR/dist/bin
 if [[ "$VARIANT" = "rootanalysis" ]]; then
     export JS_GC_ZEAL=6
 fi
-
-# Disable ASLR to make tests more reproducible
-setarch $(uname -m) -R make check || exit 1
+make check || exit 1
