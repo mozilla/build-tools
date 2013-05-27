@@ -271,10 +271,7 @@
         "android"
     ],
     "limit_tb_platforms": [],
-    "limit_b2g_platforms": [
-        "b2g_panda",
-        "b2g_panda_gaia_central"
-    ],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-panda/master",
     "name": "bm29-tests1-panda",
     "pb_port": 9201,
@@ -424,10 +421,7 @@
         "android"
     ],
     "limit_tb_platforms": [],
-    "limit_b2g_platforms": [
-        "b2g_panda",
-        "b2g_panda_gaia_central"
-    ],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-panda/master",
     "name": "bm42-tests1-panda",
     "pb_port": 9201,
@@ -458,10 +452,7 @@
         "android"
     ],
     "limit_tb_platforms": [],
-    "limit_b2g_platforms": [
-        "b2g_panda",
-        "b2g_panda_gaia_central"
-    ],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-panda/master",
     "name": "bm43-tests1-panda",
     "pb_port": 9201,
@@ -492,10 +483,7 @@
         "android"
     ],
     "limit_tb_platforms": [],
-    "limit_b2g_platforms": [
-        "b2g_panda",
-        "b2g_panda_gaia_central"
-    ],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-panda/master",
     "name": "bm44-tests1-panda",
     "pb_port": 9201,
@@ -526,10 +514,7 @@
         "android"
     ],
     "limit_tb_platforms": [],
-    "limit_b2g_platforms": [
-        "b2g_panda",
-        "b2g_panda_gaia_central"
-    ],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-panda/master",
     "name": "bm45-tests1-panda",
     "pb_port": 9201,
@@ -1633,10 +1618,7 @@
         "android"
     ],
     "limit_tb_platforms": [],
-    "limit_b2g_platforms": [
-        "b2g_panda",
-        "b2g_panda_gaia_central"
-    ],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-panda/master",
     "name": "bm90-tests1-panda",
     "pb_port": 9201,
@@ -1667,10 +1649,7 @@
         "android"
     ],
     "limit_tb_platforms": [],
-    "limit_b2g_platforms": [
-        "b2g_panda",
-        "b2g_panda_gaia_central"
-    ],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-panda/master",
     "name": "bm91-tests1-panda",
     "pb_port": 9201,
@@ -1701,10 +1680,7 @@
         "android"
     ],
     "limit_tb_platforms": [],
-    "limit_b2g_platforms": [
-        "b2g_panda",
-        "b2g_panda_gaia_central"
-    ],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-panda/master",
     "name": "bm92-tests1-panda",
     "pb_port": 9201,
@@ -1735,10 +1711,7 @@
         "android"
     ],
     "limit_tb_platforms": [],
-    "limit_b2g_platforms": [
-        "b2g_panda",
-        "b2g_panda_gaia_central"
-    ],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-panda/master",
     "name": "bm93-tests1-panda",
     "pb_port": 9201,
@@ -1769,10 +1742,7 @@
         "android"
     ],
     "limit_tb_platforms": [],
-    "limit_b2g_platforms": [
-        "b2g_panda",
-        "b2g_panda_gaia_central"
-    ],
+    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-panda/master",
     "name": "bm94-tests1-panda",
     "pb_port": 9201,
