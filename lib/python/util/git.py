@@ -120,8 +120,12 @@ def set_share(repo, share):
         f.write("%s\n" % share_objects)
 
 
+def clean(repo):
+    subprocess.check_call(['git', 'clean', '-f', '-d'], cwd=repo, stdout=subprocess.PIPE)
+
+
 def git(repo, dest, refname=None, revision=None, update_dest=True,
-        shareBase=DefaultShareBase, mirrors=None):
+        shareBase=DefaultShareBase, mirrors=None, clean_dest=False):
     """Makes sure that `dest` is has `revision` or `refname` checked out from
     `repo`.
 
@@ -232,7 +236,14 @@ def git(repo, dest, refname=None, revision=None, update_dest=True,
                 log.info("Using %s as ref name instead of revision", revision)
                 refname = revision
                 revision = None
-        return update(dest, refname=refname, revision=revision)
+
+        rev = update(dest, refname=refname, revision=revision)
+        if clean_dest:
+            clean(dest)
+        return rev
+
+    if clean_dest:
+        clean(dest)
 
 
 def clone(repo, dest, refname=None, mirrors=None, shared=False, update_dest=True):

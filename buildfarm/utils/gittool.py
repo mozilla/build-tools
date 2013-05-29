@@ -33,6 +33,7 @@ if __name__ == '__main__':
         loglevel=logging.INFO,
         shared_dir=os.environ.get('GIT_SHARE_BASE_DIR'),
         mirrors=None,
+        clean=False,
     )
     parser.add_option(
         "-r", "--rev", dest="revision", help="which revision to update to")
@@ -44,6 +45,8 @@ if __name__ == '__main__':
                       help="clone to a shared directory")
     parser.add_option("--mirror", dest="mirrors", action="append",
                       help="add a mirror to try cloning/pulling from before repo")
+    parser.add_option("--clean", dest="clean",
+                      help="run 'git clean' after updating the local repository")
     parser.add_option("-v", "--verbose", dest="loglevel",
                       action="store_const", const=logging.DEBUG)
 
@@ -72,6 +75,7 @@ if __name__ == '__main__':
     got_revision = git(repo, dest, options.branch, options.revision,
                        shareBase=options.shared_dir,
                        mirrors=options.mirrors,
+                       clean_dest=options.clean,
                        )
 
     print "Got revision %s" % got_revision

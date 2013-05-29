@@ -61,6 +61,20 @@ class TestGit(unittest.TestCase):
         self.assertTrue(git.has_revision(self.repodir, self.revisions[0]))
         self.assertFalse(git.has_revision(self.repodir, "foooooooooooooooo"))
 
+    def testClean(self):
+        rev = git.git(self.repodir, self.wc)
+        try:
+            f = open(os.path.join(self.wc, 'blaaah'), 'w')
+            f.write('blah')
+        finally:
+            if not f.closed:
+                f.close()
+        git.clean(self.wc)
+        self.assertFalse(os.path.exists(os.path.join(self.wc, 'blaaah')))
+
+    def testCleanFail(self):
+        self.assertRaises(subprocess.CalledProcessError, git.clean, '/tmp')
+
     def testClone(self):
         rev = git.clone(self.repodir, self.wc, update_dest=False)
         self.assertEquals(rev, None)
@@ -156,6 +170,17 @@ class TestGit(unittest.TestCase):
         self.assertEquals(rev, self.revisions[1])
         self.assertFalse("Is this thing on" in open(
             os.path.join(self.wc, 'hello.txt')).read())
+
+    def testGitCleanDest(self):
+        rev = git.git(self.repodir, self.wc)
+        try:
+            f = open(os.path.join(self.wc, 'blaaah'), 'w')
+            f.write('blah')
+        finally:
+            if not f.closed:
+                f.close()
+        rev = git.git(self.repodir, self.wc, clean_dest=True)
+        self.assertFalse(os.path.exists(os.path.join(self.wc, 'blaaah')))
 
     def testGitRev(self):
         rev = git.git(self.repodir, self.wc)
