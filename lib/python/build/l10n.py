@@ -44,11 +44,17 @@ def compareLocales(repo, locale, l10nRepoDir, localeSrcDir, l10nIni,
             env={"PYTHONPATH": path.join("compare-locales", "lib")})
 
 
-def l10nRepackPrep(sourceRepoName, objdir, mozconfigPath,
+def l10nRepackPrep(sourceRepoName, objdir, mozconfigPath, srcMozconfigPath,
                    l10nBaseRepoName, makeDirs, localeSrcDir, env):
     if not path.exists(l10nBaseRepoName):
         os.mkdir(l10nBaseRepoName)
-    shutil.copy(mozconfigPath, path.join(sourceRepoName, ".mozconfig"))
+
+    if srcMozconfigPath:
+      shutil.copy(path.join(sourceRepoName, srcMozconfigPath),
+                  path.join(sourceRepoName, ".mozconfig"))
+    else
+      shutil.copy(mozconfigPath, path.join(sourceRepoName, ".mozconfig"))
+
     run_cmd(["make", "-f", "client.mk", "configure"], cwd=sourceRepoName,
             env=env)
     # we'll get things like (config, tier_base) for Firefox releases

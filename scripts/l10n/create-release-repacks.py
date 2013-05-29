@@ -30,8 +30,9 @@ class RepackError(Exception):
 
 
 def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
-                  mozconfigPath, objdir, makeDirs, appName, locales, product,
-                  version, buildNumber, stageServer, stageUsername, stageSshKey,
+                  mozconfigPath, srcMozconfigPath, objdir, makeDirs, appName,
+                  locales, product, version, buildNumber,
+                  stageServer, stageUsername, stageSshKey,
                   compareLocalesRepo, merge, platform, brand,
                   generatePartials=False, partialUpdates=None,
                   appVersion=None):
@@ -70,8 +71,8 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
     retry(mercurial, args=(sourceRepo, sourceRepoName))
     update(sourceRepoName, revision=revision)
     l10nRepackPrep(
-        sourceRepoName, objdir, mozconfigPath, l10nRepoDir, makeDirs,
-        localeSrcDir, env)
+        sourceRepoName, objdir, mozconfigPath, srcMozconfigPath, l10nRepoDir,
+        makeDirs, localeSrcDir, env)
     input_env = retry(downloadReleaseBuilds,
                       args=(stageServer, product, brand, version, buildNumber,
                             platform),
@@ -238,6 +239,7 @@ if __name__ == "__main__":
         l10nBaseRepo=make_hg_url(branchConfig["hghost"],
                                  releaseConfig["l10nRepoPath"]),
         mozconfigPath=mozconfig,
+        srcMozconfigPath=releaseConfig.get('l10n_mozconfigs', {}).get(options.platform),
         objdir=options.objdir,
         makeDirs=makeDirs,
         appName=releaseConfig["appName"],
