@@ -21,23 +21,28 @@ function usage() {
 # --bundle and/or --mirror.
 hgtool_args=()
 while [ $# -gt 1 ]; do
-  if [ "$1" = "-m" ]; then
-    shift
-    hgtool_args+=(--mirror "$1")
-    shift
-  elif [ "$1" = "-b" ]; then
-    shift
-    hgtool_args+=(--bundle "$1")
-    shift
-  elif [ "$1" = "-r" ]; then
-    shift
-    hgtool_args+=(--clone-by-revision -r "$1")
-    shift
-  else
-    echo "Invalid arguments" >&2
-    usage
-    exit 1
-  fi
+    case "$1" in
+        -m|--mirror)
+            shift
+            hgtool_args+=(--mirror "$1")
+            shift
+            ;;
+        -b|--bundle)
+            shift
+            hgtool_args+=(--bundle "$1")
+            shift
+            ;;
+        -r|--rev)
+            shift
+            hgtool_args+=(--clone-by-revision -r "$1")
+            shift
+            ;;
+        *)
+            echo "Invalid arguments" >&2
+            usage
+            exit 1
+            ;;
+    esac
 done
 
 VARIANT=$1
