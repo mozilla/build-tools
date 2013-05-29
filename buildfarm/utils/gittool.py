@@ -45,7 +45,7 @@ if __name__ == '__main__':
                       help="clone to a shared directory")
     parser.add_option("--mirror", dest="mirrors", action="append",
                       help="add a mirror to try cloning/pulling from before repo")
-    parser.add_option("--clean", dest="clean",
+    parser.add_option("--clean", dest="clean", action="store_true", default=False,
                       help="run 'git clean' after updating the local repository")
     parser.add_option("-v", "--verbose", dest="loglevel",
                       action="store_const", const=logging.DEBUG)
