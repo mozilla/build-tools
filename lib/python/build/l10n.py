@@ -52,7 +52,7 @@ def l10nRepackPrep(sourceRepoName, objdir, mozconfigPath, srcMozconfigPath,
     if srcMozconfigPath:
       shutil.copy(path.join(sourceRepoName, srcMozconfigPath),
                   path.join(sourceRepoName, ".mozconfig"))
-    else
+    else:
       shutil.copy(mozconfigPath, path.join(sourceRepoName, ".mozconfig"))
 
     run_cmd(["make", "-f", "client.mk", "configure"], cwd=sourceRepoName,
