@@ -94,14 +94,14 @@
                 <span id="build_ics_armv7a_gecko" class="build_queue">N/A</span>
             </li>
             <li>
+                <label><input type="checkbox" name="platform" value="emulator" data-project="b2g">emulator (No tests yet)</label>
+                <span id="test_emulator" class="test_queue">N/A</span>
+                <span id="build_emulator" class="build_queue">N/A</span>
+            </li>
+            <li>
                 <label><input type="checkbox" name="platform" value="panda" data-project="b2g">panda (B2G automation board)</label>
                 <span id="test_panda" class="test_queue">N/A</span>
                 <span id="build_panda" class="build_queue">N/A</span>
-            </li>
-            <li>
-                <label><input type="checkbox" name="platform" value="otoro" data-project="b2g">otoro (B2G device image)</label>
-                <span id="test_otoro" class="test_queue">N/A</span>
-                <span id="build_otoro" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="unagi" data-project="b2g">unagi (B2G device image)</label>
@@ -212,22 +212,28 @@
             <li><label><input type="checkbox" value="jsreftest-1">jsreftest-1</label></li>
             <li><label><input type="checkbox" value="jsreftest-2">jsreftest-2</label></li>
             <li><label><input type="checkbox" value="jsreftest-3">jsreftest-3</label></li>
-            <li><label><input type="checkbox" value="crashtest-2">crashtest-2</label></li>
-            <li><label><input type="checkbox" value="crashtest-3">crashtest-3</label></li>
             <li><label><input type="checkbox" value="mochitest-6">mochitest-6</label></li>
             <li><label><input type="checkbox" value="mochitest-7">mochitest-7</label></li>
             <li><label><input type="checkbox" value="mochitest-8">mochitest-8</label></li>
+            <li><label><input type="checkbox" value="mochitest-gl">mochitest-gl</label></li>
             <li><label><input type="checkbox" value="robocop-1">robocop-1</label></li>
             <li><label><input type="checkbox" value="robocop-2">robocop-2</label></li>
             </ul>
             <h4>B2G-Only Unittest Suites</h4>
             <ul>
+            <li><label><input type="checkbox" value="crashtest-1">crashtest-1</label></li>
+            <li><label><input type="checkbox" value="crashtest-2">crashtest-2</label></li>
+            <li><label><input type="checkbox" value="crashtest-3">crashtest-3</label></li>
             <li><label><input type="checkbox" value="reftest-1">reftest-1</label></li>
             <li><label><input type="checkbox" value="reftest-2">reftest-2</label></li>
             <li><label><input type="checkbox" value="reftest-3">reftest-3</label></li>
             <li><label><input type="checkbox" value="reftest-4">reftest-4</label></li>
             <li><label><input type="checkbox" value="reftest-5">reftest-5</label></li>
             <li><label><input type="checkbox" value="reftest-6">reftest-6</label></li>
+            <li><label><input type="checkbox" value="reftest-7">reftest-7</label></li>
+            <li><label><input type="checkbox" value="reftest-8">reftest-8</label></li>
+            <li><label><input type="checkbox" value="reftest-9">reftest-9</label></li>
+            <li><label><input type="checkbox" value="reftest-10">reftest-10</label></li>
             <li><label><input type="checkbox" value="marionette-webapi">marionette-webapi</label></li>
             </ul>
             </div>
@@ -248,15 +254,13 @@
             </ul>
             <h4>Android-Only Talos Suites:</h4>
             <ul>
-                <li><label><input type="checkbox" name="talos_suite" value="remote-ts">remote-ts</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="remote-tdhtml">remote-tdhtml</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="remote-tsvg">remote-tsvg</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="remote-tpan">remote-tpan</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="remote-trobopan">remote-trobopan</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="remote-trobocheck">remote-trobocheck</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="remote-troboprovider">remote-troboprovider</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="remote-trobocheck2">remote-trobocheck2</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="remote-trobopan">remote-trobopan</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="remote-troboprovider">remote-troboprovider</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="remote-tsvg">remote-tsvg</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="remote-tp4m_nochrome">remote-tp4m_nochrome</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="remote-ts">remote-ts</label></li>
             </ul>
             </div>
 

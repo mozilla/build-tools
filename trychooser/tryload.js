@@ -20,12 +20,12 @@ function initLoad() {
     "win64": 0,
     "android": 0,
     "ics_armv7a_gecko": 0,
+    "emulator": 0,
     "android-armv6": 0,
     "android-noion": 0,
     "android-x86": 0,
     "tegra": 0,
     "panda": 0,
-    "otoro": 0,
     "unagi": 0,
   };
 }
@@ -66,8 +66,8 @@ function getTryLoads(callback) {
         totalBuildLoad["android-noion"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
         totalBuildLoad["android-x86"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
         totalBuildLoad["ics_armv7a_gecko"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
+        totalBuildLoad["emulator"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
         totalBuildLoad["panda"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
-        totalBuildLoad["otoro"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
         totalBuildLoad["unagi"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
 
         var totalTestLoad = {};
@@ -90,7 +90,7 @@ function getTryLoads(callback) {
         totalTestLoad["android-noion"] = load_try_test["tegra"] + load_nontry_test["tegra"];
         totalTestLoad["ics_armv7a_gecko"] = load_try_test["linux"] + load_nontry_test["linux"];
         totalTestLoad["panda"] = load_try_test["panda"] + load_nontry_test["panda"];
-        // otoro / unagi: N/A
+        // emulator / unagi: N/A
         callback(totalBuildLoad, totalTestLoad);
       });
     });
