@@ -121,7 +121,8 @@ def set_share(repo, share):
 
 
 def clean(repo):
-    subprocess.check_call(['git', 'clean', '-f', '-d'], cwd=repo, stdout=subprocess.PIPE)
+    # Two '-f's means "clean submodules", which is what we want so far.
+    run_cmd(['git', 'clean', '-f', '-f', '-d'], cwd=repo, stdout=subprocess.PIPE)
 
 
 def git(repo, dest, refname=None, revision=None, update_dest=True,
