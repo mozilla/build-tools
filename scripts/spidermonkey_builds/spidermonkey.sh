@@ -105,7 +105,7 @@ if [[ "$OSTYPE" == darwin* ]]; then
 fi
 
 if [ "$OSTYPE" = "linux-gnu" ]; then
-    GCCDIR=/tools/gcc-4.5-0moz3
+    GCCDIR=/tools/gcc-4.7.2-0moz1
     CONFIGURE_ARGS="$CONFIGURE_ARGS --with-ccache"
     UNAME_M=$(uname -m)
     MAKEFLAGS=-j4
