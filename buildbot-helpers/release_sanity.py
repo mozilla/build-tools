@@ -406,6 +406,9 @@ if __name__ == '__main__':
                             'sourceRepositories']['mobile']['revision']
                 except KeyError:
                     log.error("Can't determine sourceRepo for mozconfigs")
+            nightly_mozconfigs = {}
+            for p in releaseConfig['mozconfigs']:
+                nightly_mozconfigs[p] = branchConfig['platforms'][p]['src_mozconfig']
             if options.checkMozconfigs and \
                     not verify_mozconfigs(
                         repo_path,
@@ -413,6 +416,7 @@ if __name__ == '__main__':
                         branchConfig['hghost'],
                         releaseConfig['productName'],
                         releaseConfig['mozconfigs'],
+                        nightly_mozconfigs,
                         options.whitelist):
                 test_success = False
                 error_tally.add('verify_mozconfig')

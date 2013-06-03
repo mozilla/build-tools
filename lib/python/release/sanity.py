@@ -67,7 +67,7 @@ def sendchange(branch, revision, username, master, products):
 
 
 def verify_mozconfigs(branch, revision, hghost, product, mozconfigs,
-                      whitelist=None):
+                      nightly_mozconfigs, whitelist=None):
     """Compare nightly mozconfigs for branch to release mozconfigs and
     compare to whitelist of known differences"""
     branch_name = get_repo_name(branch)
@@ -80,13 +80,13 @@ def verify_mozconfigs(branch, revision, hghost, product, mozconfigs,
     for platform, mozconfig in mozconfigs.items():
         urls = []
         mozconfigs = []
-        mozconfig_paths = [mozconfig, mozconfig.rstrip('release') + 'nightly']
+        nightly_mozconfig = nightly_mozconfigs[platform]
+        mozconfig_paths = [mozconfig, nightly_mozconfig]
         # Create links to the two mozconfigs.
         releaseConfig = make_hg_url(hghost, branch, 'http', revision,
                                     mozconfig)
-        urls.append(releaseConfig)
-        # The nightly one is the exact same URL, with the file part changed.
-        urls.append(releaseConfig.rstrip('release') + 'nightly')
+        for c in mozconfig, nightly_mozconfig:
+            urls.append(make_hg_url(hghost, branch, 'http', revision, c))
         for url in urls:
             try:
                 mozconfigs.append(urllib2.urlopen(url).readlines())
