@@ -99,10 +99,12 @@ class API(object):
 
     def do_request(self, url, data, method, url_template_vars):
         logging.debug('Balrog request to %s' % url)
-        sanitised_data = data.copy()
-        if 'csrf_token' in sanitised_data:
+        if data is not None and 'csrf_token' in data:
+            sanitised_data = data.copy()
             del sanitised_data['csrf_token']
-        logging.debug('Data sent: %s' % sanitised_data)
+            logging.debug('Data sent: %s' % sanitised_data)
+        else:
+            logging.debug('Data sent: %s' % data)
         try:
             return self.session.request(method=method, url=url, data=data,
                                         config=self.config, timeout=self.timeout,
