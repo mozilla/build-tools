@@ -95,12 +95,14 @@ class API(object):
                     data['csrf_token'] = self.csrf_token = res.headers[
                         'X-CSRF-Token']
 
-            logging.debug('Got CSRF Token: %s' % self.csrf_token)
         return self.do_request(url, data, method, url_template_vars)
 
     def do_request(self, url, data, method, url_template_vars):
         logging.debug('Balrog request to %s' % url)
-        logging.debug('Data sent: %s' % data)
+        sanitised_data = data.copy()
+        if 'csrf_token' in sanitised_data:
+            del sanitised_data['csrf_token']
+        logging.debug('Data sent: %s' % sanitised_data)
         try:
             return self.session.request(method=method, url=url, data=data,
                                         config=self.config, timeout=self.timeout,
