@@ -78,6 +78,7 @@ Supported actions:
         concurrency=1,
         show_list=False,
         all_masters=False,
+        ignored_roles=[],
     )
     parser.add_option("-f", "--master-file", dest="master_file",
                       help="list/url of masters")
@@ -96,6 +97,8 @@ Supported actions:
                       help="Username passed to Fabric")
     parser.add_option("-k", "--ssh-key", dest="ssh_key",
                       help="SSH key passed to Fabric")
+    parser.add_option("--ignore-role", dest="ignored_roles", action="append",
+                      help="Ignore masters with this role. May be passed multiple times.")
 
     options, actions = parser.parse_args()
 
@@ -108,6 +111,8 @@ Supported actions:
     if not actions and not options.show_list:
         parser.error("at least one action is required")
 
+    ignored_roles = args.ignored_roles or ["servo"]
+
     # Load master data
     all_masters = json.load(urllib.urlopen(options.master_file))
 
@@ -115,6 +120,8 @@ Supported actions:
 
     for m in all_masters:
         if not m['enabled'] and not options.all_masters:
+            continue
+        if ignored_roles and m['role'] in ignored_roles:
             continue
         if m['name'] in options.hosts:
             masters.append(m)
