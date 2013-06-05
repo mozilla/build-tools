@@ -13,13 +13,6 @@
     ],
     "repo_type": "hg"
   },
-  "devtools": {
-    "repo": "http://hg.mozilla.org/projects/devtools",
-    "graph_branches": [
-      "Devtools"
-    ],
-    "repo_type": "hg"
-  },
   "maple": {
     "repo": "http://hg.mozilla.org/projects/maple",
     "graph_branches": [
@@ -154,13 +147,6 @@
     ],
     "repo_type": "hg"
   },
-  "jaegermonkey": {
-    "repo": "http://hg.mozilla.org/projects/jaegermonkey",
-    "graph_branches": [
-      "Jaegermonkey"
-    ],
-    "repo_type": "hg"
-  },
   "cedar": {
     "repo": "http://hg.mozilla.org/projects/cedar",
     "graph_branches": [
@@ -196,31 +182,10 @@
     ],
     "repo_type": "hg"
   },
-  "mozilla-1.9.2": {
-    "repo": "http://hg.mozilla.org/releases/mozilla-1.9.2",
-    "graph_branches": [
-      "Firefox3.6"
-    ],
-    "repo_type": "hg"
-  },
-  "electrolysis": {
-    "repo": "http://hg.mozilla.org/projects/electrolysis",
-    "graph_branches": [
-      "Electrolysis"
-    ],
-    "repo_type": "hg"
-  },
   "ux": {
     "repo": "http://hg.mozilla.org/projects/ux",
     "graph_branches": [
       "UX"
-    ],
-    "repo_type": "hg"
-  },
-  "places": {
-    "repo": "http://hg.mozilla.org/projects/places",
-    "graph_branches": [
-      "Places"
     ],
     "repo_type": "hg"
   },
