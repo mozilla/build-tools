@@ -111,7 +111,7 @@ Supported actions:
     if not actions and not options.show_list:
         parser.error("at least one action is required")
 
-    ignored_roles = args.ignored_roles or ["servo"]
+    ignored_roles = options.ignored_roles or ["servo"]
 
     # Load master data
     all_masters = json.load(urllib.urlopen(options.master_file))
