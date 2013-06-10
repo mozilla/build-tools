@@ -232,6 +232,14 @@ class TestGetPossibleNextVersions(unittest.TestCase):
         self.assertEquals(set(['5.0.1', '6.0']), got)
 
     def testEsr(self):
+        got = getPossibleNextVersions('24.2.0esr')
+        self.assertEquals(set(['24.2.1esr', '24.3.0esr']), got)
+
+    def testEsrResetLastDigit(self):
+        got = getPossibleNextVersions('24.4.1esr')
+        self.assertEquals(set(['24.4.2esr', '24.5.0esr']), got)
+
+    def testEsrDeprecatedStyle(self):
         got = getPossibleNextVersions('10.0.4esr')
         self.assertEquals(set(['10.0.5esr']), got)
 

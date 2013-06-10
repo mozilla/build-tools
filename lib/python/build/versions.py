@@ -98,8 +98,16 @@ def getPossibleNextVersions(version):
     # The next major version is used in a couple of places, so we figure it out
     # ahead of time. Eg: 17.0 -> 18.0 or 15.0.3 -> 16.0
     nextMajorVersion = increment(base.split('.')[0]) + '.0'
-    # ESRs are easy, just increment the version to get the next minor version.
+    # Modern ESRs have two possibilities:
+    # 1) Bump the second digit for a planned release and reset the third digit
+    #    to 0.
+    # 2) Bump the last digit for an unexpected release
+    #
+    # Prior to ESR 24 we did #2 for all types of releases.
     if esr:
+        first, second, _ = version.split('.', 2)
+        if int(first) >= 24:
+            ret.add('%s.%s.0esr' % (first, increment(second)))
         ret.add(increment(version))
     # Betas are similar, except we need the next major version's beta 1, too.
     elif beta:
