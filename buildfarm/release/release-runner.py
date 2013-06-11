@@ -32,8 +32,6 @@ logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s")
 log = logging.getLogger(__name__)
 
 HG = 'hg.mozilla.org'
-RELEASE_SANITY_SCRIPT = path.join(path.dirname(__file__),
-                                  "../../buildbot-helpers/release_sanity.py")
 
 
 def reconfig_warning(from_, to, smtp_server, rr, start_time, elapsed,
@@ -334,7 +332,8 @@ if __name__ == '__main__':
             rs_args = get_release_sanity_args(configs_workdir, release,
                                               cfgFile, masters_json,
                                               buildbot_configs_branch)
-            run_cmd(['python', RELEASE_SANITY_SCRIPT] + rs_args +
+            release_sanity_script = "%s/buildbot-helpers/release_sanity.py" % tools_workdir
+            run_cmd(['python', release_sanity_script] + rs_args +
                     ['--dry-run'])
             rr.update_status(
                 release, 'Waiting for other releases to run release sanity'
