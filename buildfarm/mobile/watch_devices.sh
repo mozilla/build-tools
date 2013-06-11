@@ -79,16 +79,17 @@ function device_check() {
     sleep ${SUCCESS_WAIT} # wait a bit before checking for an error flag or otherwise
   else # buildbot running
     log "(heartbeat) buildbot is running"
-    if [ -f /builds/$device/error.flg -o -f /builds/$device/disabled.flg ]; then
-        log "Something wants us to kill buildbot (either error.flg or disabled.flg exists)..."
+    if [ -f /builds/$device/error.flg ]; then
+        log "Found an error.flg, expecting buildbot to self-kill after this job"
+    fi
+    if [ -f /builds/$device/disabled.flg ]; then
+        log "disabled.flg wants us to kill buildbot..."
         set +e # These steps are ok to fail, not a great thing but not critical
-        cp /builds/$device/error.flg /builds/$device/error.flg.bak # stop.py will remove error flag o_O
         log "Stopping device $device..."
         "${PYTHON}" /builds/sut_tools/stop.py --device $device
         # Stop.py should really do foopy cleanups and not touch device
         log "Attempting cleanup of device $device..."
         SUT_NAME=$device python /builds/sut_tools/cleanup.py $device
-        mv /builds/$device/error.flg.bak /builds/$device/error.flg # Restore it
         set -e
         log "sleeping for ${FAIL_WAIT} seconds after killing, to prevent startup before master notices"
         sleep ${FAIL_WAIT} # Wait a while before allowing us to turn buildbot back on
