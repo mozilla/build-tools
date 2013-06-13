@@ -300,9 +300,7 @@
     }, 
     "tegra-077": {
         "_comment": "Bug 736630, pulled for clint",
-        "foopy": "None", 
-        "pdu": "pdu1.df201-4.build.mtv1.mozilla.com", 
-        "pduid": ".AA12"
+        "foopy": "None"
     }, 
     "tegra-078": {
         "foopy": "foopy111", 
@@ -838,7 +836,7 @@
         "_comment": "Bug 749637: Assigned to Sec-Team",
         "foopy": "None", 
         "pdu": "pdu1.df201-4.build.mtv1.mozilla.com", 
-        "pduid": ".AA10"
+        "pduid": ".AA12"
     },
     "tegra-204": {
         "_comment": "Bug 749637: Assigned to Sec-Team",
@@ -1128,7 +1126,7 @@
     }, 
     "tegra-264": {
         "foopy": "foopy126",
-        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com ", 
+        "pdu": "pdu3.df202-1.build.mtv1.mozilla.com", 
         "pduid": ".AB2"
     }, 
     "tegra-265": {
@@ -1526,11 +1524,6 @@
         "foopy": "foopy31",
         "pdu": "pdu2.dcops.build.mtv1.mozilla.com",
         "pduid": ".AA14"
-    },
-    "tegra-349": {
-        "foopy": "foopy30",
-        "pdu": "pdu2.dcops.build.mtv1.mozilla.com",
-        "pduid": ".AA15"
     },
     "tegra-350": {
         "foopy": "foopy32",
