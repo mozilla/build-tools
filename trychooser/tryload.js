@@ -1,6 +1,6 @@
-var TRY_BUILD_LOAD_URL =  "http://build.mozilla.org/builds/pending/pending_compile_try.txt";
-var TRY_TEST_LOAD_URL =  "http://build.mozilla.org/builds/pending/pending_test_try.txt";
-var NONTRY_TEST_LOAD_URL =  "http://build.mozilla.org/builds/pending/pending_test_nontry.txt";
+var TRY_BUILD_LOAD_URL =  "http://builddata.pub.build.mozilla.org/reports/pending/pending_compile_try.txt";
+var TRY_TEST_LOAD_URL =  "http://builddata.pub.build.mozilla.org/reports/pending/pending_test_try.txt";
+var NONTRY_TEST_LOAD_URL =  "http://builddata.pub.build.mozilla.org/reports/pending/pending_test_nontry.txt";
 
 function initLoad() {
   return {
