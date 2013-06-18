@@ -50,8 +50,8 @@ mock_mozilla -v -r mozilla-centos6-x86_64 --install autoconf213 python zip \
   perl-Test-Simple perl-Config-General gtk2-devel libnotify-devel \
   alsa-lib-devel libcurl-devel wireless-tools-devel libX11-devel libXt-devel \
   mesa-libGL-devel gnome-vfs2-devel GConf2-devel wget mpfr xorg-x11-font* \
-  imake gcc45_0moz3 yasm pulseaudio-libs-devel pyxdg python-devel \
-  python-jinja2 python-pygments sqlite-devel || exit 2
+  imake gcc45_0moz3 gcc472_0moz1 yasm pulseaudio-libs-devel pyxdg python-devel \
+  python-jinja2 python-pygments sqlite-devel mozilla-python27-virtualenv || exit 2
 
 # Put our short revisions into the properties directory for consumption by buildbot.
 if [ ! -d properties ]; then
@@ -84,6 +84,14 @@ mv trilite dxr/trilite
 mock_mozilla -r mozilla-centos6-x86_64 --cwd=$PWD --shell --unpriv /bin/env \
   PATH=$MOCK_PATH CC=clang CXX=clang++ "make -C dxr"
 
+# Build a virtualenv for dxr
+mock_mozilla -r mozilla-centos6-x86_64 --cwd=$PWD --shell --unpriv /bin/env \
+  PATH=$MOCK_PATH "virtualenv --no-site-packages dxr-venv"
+mock_mozilla -r mozilla-centos6-x86_64 --cwd=$PWD/dxr --shell --unpriv \
+  /bin/env PATH=$MOCK_PATH "../dxr-venv/bin/pip install -r requirements.txt"
+mock_mozilla -r mozilla-centos6-x86_64 --cwd=$PWD/dxr --shell --unpriv \
+  /bin/env PATH=$MOCK_PATH "../dxr-venv/bin/python setup.py install"
+
 # Pull the repository...
 $PYTHON $SCRIPTS_DIR/buildfarm/utils/hgtool.py -b default $HG_REPO src || exit 2
 
@@ -108,11 +116,8 @@ set +e
 echo "ac_add_options --enable-stdcxx-compat" > src/.mozconfig
 mock_mozilla -r mozilla-centos6-x86_64 --cwd=$PWD --shell --unpriv /bin/env \
   PATH=$MOCK_PATH LD_LIBRARY_PATH=$PWD/dxr/trilite \
-  "dxr/dxr-build.py -j6 -f dxr.config -s"
-mock_mozilla -r mozilla-centos6-x86_64 --cwd=$PWD --shell --unpriv /bin/env \
-  PATH=$MOCK_PATH LD_LIBRARY_PATH=$PWD/dxr/trilite \
-  "dxr/dxr-build.py -j6 -f dxr.config -t $branch" 2>&1 \
-  | grep -v 'Unprocessed kind'
+  "dxr-venv/bin/python dxr/bin/dxr-build.py -j6 -f dxr.config -t $branch -v"
+  2>&1 | grep -v 'Unprocessed kind'
 retval=${PIPESTATUS[0]}
 
 set -e
