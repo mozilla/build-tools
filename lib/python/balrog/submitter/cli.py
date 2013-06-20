@@ -35,7 +35,11 @@ class NightlyRunner(object):
         fp.close()
 
         props = bp['properties']
-        self.build_target = buildbot2updatePlatforms(props['platform'])[0]
+        targets = buildbot2updatePlatforms(props['platform'])
+        self.build_target = targets[0]
+        self.alias = None
+        if len(targets) > 1:
+            self.alias = targets[1:]
         buildID = props['buildid']
 
         self.appName = props['appName']
@@ -44,6 +48,7 @@ class NightlyRunner(object):
         self.name = get_nightly_blob_name(self.appName, self.branch,
                                           self.build_type, buildID, self.dummy)
         self.locale = props.get('locale', 'en-US')
+        self.hashFunction = props['hashType']
         data = {
             'appv': self.appVersion,
             'extv': props.get('extVersion', self.appVersion),
@@ -74,7 +79,9 @@ class NightlyRunner(object):
         copyTo = [get_nightly_blob_name(
             self.appName, self.branch, self.build_type, 'latest', self.dummy)]
         copyTo = json.dumps(copyTo)
+        alias = json.dumps(self.alias)
         api.update_build(name=self.name, product=self.appName,
                          build_target=self.build_target,
                          version=self.appVersion, locale=self.locale,
-                         buildData=data, copyTo=copyTo)
+                         hashFunction=self.hashFunction,
+                         buildData=data, copyTo=copyTo, alias=alias)

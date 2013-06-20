@@ -119,13 +119,15 @@ class SingleLocale(API):
     prerequest_url_template = '/releases/%(name)s'
 
     def update_build(self, name, product, version, build_target, locale,
-                     buildData, copyTo=None):
+                     hashFunction, buildData, copyTo=None, alias=None):
         url_template_vars = dict(api_root=self.api_root, name=name,
                                  locale=locale, build_target=build_target)
         data = dict(product=product, version=version,
-                    data=buildData)
+                    data=buildData, hashFunction=hashFunction)
         if copyTo:
             data['copyTo'] = copyTo
+        if alias:
+            data['alias'] = alias
 
         return self.request(method='PUT', data=data,
                             url_template_vars=url_template_vars)
