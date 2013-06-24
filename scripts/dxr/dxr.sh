@@ -51,7 +51,8 @@ mock_mozilla -v -r mozilla-centos6-x86_64 --install autoconf213 python zip \
   alsa-lib-devel libcurl-devel wireless-tools-devel libX11-devel libXt-devel \
   mesa-libGL-devel gnome-vfs2-devel GConf2-devel wget mpfr xorg-x11-font* \
   imake gcc45_0moz3 gcc472_0moz1 yasm pulseaudio-libs-devel pyxdg python-devel \
-  python-jinja2 python-pygments sqlite-devel mozilla-python27-virtualenv || exit 2
+  python-jinja2 python-pygments sqlite-devel mozilla-python27-virtualenv \
+  gstreamer-devel gstreamer-plugins-base-devel || exit 2
 
 # Put our short revisions into the properties directory for consumption by buildbot.
 if [ ! -d properties ]; then
