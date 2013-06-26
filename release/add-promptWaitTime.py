@@ -37,12 +37,13 @@ for root, dirs, files in os.walk(options.basepath):
       if 'version=1' in content[0]:
           continue
 
-      if 'promptWaitTime' not in content:
-          content.append('promptWaitTime=%i' % options.wait)
-          mod_count += 1
+      new_content = [c for c in content if 'promptWaitTime' not in c]
+      new_content.append('promptWaitTime=%i' % options.wait)
 
+      if new_content != content:
           fd = open(fullpath,'w')
-          fd.writelines(content)
+          fd.writelines(new_content)
           fd.close
+          mod_count += 1
 
 print "modified %s of %s files" % (mod_count, total_count)
