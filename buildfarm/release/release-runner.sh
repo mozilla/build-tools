@@ -1,13 +1,21 @@
 #!/bin/bash
 
-# XXX: TODO: remove the following hack
-. /home/cltbld/release-runner/venv/bin/activate
+VENV=$1
+LOGFILE=$2
+
+if [ -z "$VENV" ]; then
+    VENV=/home/cltbld/release-runner/venv
+fi
+if [ -z "$LOGFILE" ]; then
+    LOGFILE=/var/log/supervisor/release-runner.log
+fi
+
+. $VENV/bin/activate
 
 # Sleep time after a failure, in seconds.
 SLEEP_TIME=60
 NOTIFY_TO=release@mozilla.com
 CONFIG=/home/cltbld/.release-runner.ini
-LOGFILE=/var/log/supervisor/release-runner.log
 
 CURR_DIR=$(cd $(dirname $0); pwd)
 HOSTNAME=`hostname -s`
