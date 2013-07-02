@@ -781,12 +781,12 @@
         "pduid": ".AA4"
     }, 
     "tegra-191": {
-        "foopy": "foopy127", 
+        "foopy": "foopy128", 
         "pdu": "pdu3.df202-1.build.mtv1.mozilla.com", 
         "pduid": ".AB4"
     }, 
     "tegra-192": {
-        "foopy": "foopy127", 
+        "foopy": "foopy128", 
         "pdu": "pdu3.df202-1.build.mtv1.mozilla.com", 
         "pduid": ".AA5"
     }, 
@@ -822,7 +822,7 @@
         "pduid": ".AB1"
     },
     "tegra-201": {
-        "foopy": "foopy127", 
+        "foopy": "foopy128", 
         "pdu": "pdu2.df201-4.build.mtv1.mozilla.com", 
         "pduid": ".AA3"
     },
@@ -1185,52 +1185,52 @@
         "pduid": ".AB7"
     }, 
     "tegra-276": {
-        "foopy": "foopy127", 
+        "foopy": "foopy128", 
         "pdu": "pdu7.df202-2.build.mtv1.mozilla.com", 
         "pduid": ".AA12"
     }, 
     "tegra-277": {
-        "foopy": "foopy127", 
+        "foopy": "foopy128", 
         "pdu": "pdu7.df202-2.build.mtv1.mozilla.com", 
         "pduid": ".AB6"
     }, 
     "tegra-278": {
-        "foopy": "foopy127", 
+        "foopy": "foopy128", 
         "pdu": "pdu7.df202-2.build.mtv1.mozilla.com", 
         "pduid": ".AA5"
     }, 
     "tegra-279": {
-        "foopy": "foopy127", 
+        "foopy": "foopy128", 
         "pdu": "pdu7.df202-2.build.mtv1.mozilla.com", 
         "pduid": ".AB5"
     }, 
     "tegra-280": {
-        "foopy": "foopy127", 
+        "foopy": "foopy128", 
         "pdu": "pdu7.df202-2.build.mtv1.mozilla.com", 
         "pduid": ".AA4"
     }, 
     "tegra-281": {
-        "foopy": "foopy127", 
+        "foopy": "foopy128", 
         "pdu": "pdu7.df202-2.build.mtv1.mozilla.com", 
         "pduid": ".AB4"
     }, 
     "tegra-282": {
-        "foopy": "foopy127", 
+        "foopy": "foopy128", 
         "pdu": "pdu7.df202-2.build.mtv1.mozilla.com", 
         "pduid": ".AA3"
     }, 
     "tegra-283": {
-        "foopy": "foopy127", 
+        "foopy": "foopy128", 
         "pdu": "pdu7.df202-2.build.mtv1.mozilla.com", 
         "pduid": ".AB3"
     }, 
     "tegra-284": {
-        "foopy": "foopy127", 
+        "foopy": "foopy128", 
         "pdu": "pdu7.df202-2.build.mtv1.mozilla.com", 
         "pduid": ".AA2"
     }, 
     "tegra-285": {
-        "foopy": "foopy127", 
+        "foopy": "foopy128", 
         "pdu": "pdu7.df202-2.build.mtv1.mozilla.com", 
         "pduid": ".AB2"
     },
