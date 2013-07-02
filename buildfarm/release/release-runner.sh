@@ -2,6 +2,7 @@
 
 VENV=$1
 LOGFILE=$2
+CONFIG=$3
 
 if [ -z "$VENV" ]; then
     VENV=/home/cltbld/release-runner/venv
@@ -9,13 +10,15 @@ fi
 if [ -z "$LOGFILE" ]; then
     LOGFILE=/var/log/supervisor/release-runner.log
 fi
+if [ -z "$CONFIG" ]; then
+    CONFIG=/home/cltbld/.release-runner.ini
+fi
 
 . $VENV/bin/activate
 
 # Sleep time after a failure, in seconds.
 SLEEP_TIME=60
 NOTIFY_TO=release@mozilla.com
-CONFIG=/home/cltbld/.release-runner.ini
 
 CURR_DIR=$(cd $(dirname $0); pwd)
 HOSTNAME=`hostname -s`
