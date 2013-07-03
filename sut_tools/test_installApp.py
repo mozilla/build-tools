@@ -109,7 +109,7 @@ class CheckArguementHandling(InstallAppTestCase):
             devicemanagerSUT.DeviceManagerSUT.assert_called_with(ip)
 
     def testSourceFileName(self):
-        root_path = sut_lib.checkDeviceRoot.return_value
+        root_path = sut_lib.checkDeviceRoot()
         for source_file in ['test_1', 'test_2']:
             src_path = os.path.join('/path/to', source_file)
             installed_path = os.path.join(root_path, source_file)
@@ -128,7 +128,7 @@ class CheckOriginalContract(InstallAppTestCase):
     # unittest, so just disable the test
     # @unittest.expectedFailure
     def XXXtestOneSetOfCalls(self):
-        root_path = sut_lib.checkDeviceRoot.return_value
+        root_path = sut_lib.checkDeviceRoot()
         source_file = 'testing'
         source_path = os.path.join('/path/to', source_file)
         installed_path = os.path.join(root_path, source_file)
@@ -140,7 +140,7 @@ class CheckOriginalContract(InstallAppTestCase):
 class CheckNewContract(InstallAppTestCase):
 
     def test_robocop_found(self):
-        root_path = sut_lib.checkDeviceRoot.return_value
+        root_path = sut_lib.checkDeviceRoot()
         source_file = 'fennec.eggs.arm.apk'
         robocop_file = 'robocop.apk'
         source_path = os.path.join('build/', source_file)
@@ -160,13 +160,10 @@ class CheckNewContract(InstallAppTestCase):
                          expected_pushFile_calls)
 
     def test_robocop_not_found(self):
-        root_path = sut_lib.checkDeviceRoot.return_value
+        root_path = sut_lib.checkDeviceRoot()
         source_file = 'fennec.eggs.arm.apk'
-        robocop_file = 'robocop.apk'
         source_path = os.path.join('build/', source_file)
-        robocop_source_path = os.path.join('build/tests/bin', robocop_file)
         installed_path = os.path.join(root_path, source_file)
-        robocop_installed_path = os.path.join(root_path, robocop_file)
         expected_pushFile_calls = [((source_path, installed_path), {}), ]
         expected_installApp_calls = [((installed_path,), {}), ]
 

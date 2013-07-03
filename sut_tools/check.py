@@ -5,19 +5,32 @@
 # Assumes Python 2.6
 #
 
+# This script is used for checking tegras. It is designed to be run on a foopy.
+# If you call it with no options, it will check the status of all tegras on the
+# foopy (/builds/tegra-*) by connecting to them each on port 20700 and sending message
+# 'info\n', which prompts the SUT Agent to give an info string back. This is logged
+# in the output of this script.
+#
+# There are various options that can be passed to this script, to see them, call
+# ./check.py -h|--help
+#
+# For example, you can reset error.flg if the tegra is working ok, reboot the tegra,
+# or export results to e.g. /builds/tegra-*/tegra_status.txt
+
 import os
-import sys
 import time
 import json
 import socket
-import signal
 import logging
-import datetime
 
-# from multiprocessing import get_logger, log_to_stderr
-from sut_lib import checkSlaveAlive, checkSlaveActive, getIPAddress, dumpException, loadOptions, \
-    checkCPAlive, checkCPActive, getLastLine, stopProcess, runCommand, pingDevice, \
-    reboot_device, stopDevice, getMaster
+import site
+site.addsitedir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../lib/python"))
+
+from sut_lib import checkSlaveAlive, checkSlaveActive, getIPAddress, \
+    dumpException, loadOptions, getLastLine, stopProcess, runCommand, \
+    pingDevice, stopDevice, getMaster
+
+from sut_lib.powermanagement import reboot_device
 
 
 log = logging.getLogger()
@@ -25,12 +38,19 @@ options = None
 oSummary = None
 defaultOptions = {
     'debug': ('-d', '--debug', False, 'Enable Debug', 'b'),
-    'bbpath': ('-p', '--bbpath', '/builds', 'Path where the Tegra buildbot slave clients can be found'),
-    'tegra': ('-t', '--tegra', None, 'Tegra to check, if not given all Tegras will be checked'),
-    'reset': ('-r', '--reset', False, 'Reset error.flg if Tegra active', 'b'),
-    'reboot': ('-c', '--cycle', False, 'Power cycle the Tegra', 'b'),
-    'master': ('-m', '--master', 'sp', 'master type to check "p" for production or "s" for staging'),
-    'export': ('-e', '--export', True, 'export summary stats (disabled if -t present)', 'b'),
+    'bbpath': ('-p', '--bbpath', '/builds',
+               'Path where the Tegra buildbot slave clients can be found'),
+    'tegra': ('-t', '--tegra', None,
+              'Tegra to check, if not given all Tegras will be checked'),
+    'reset': ('-r', '--reset', False,
+              'Reset error.flg if Tegra active', 'b'),
+    'reboot': ('-c', '--cycle', False,
+               'Power cycle the Tegra', 'b'),
+    'master': ('-m', '--master', 'sp',
+               'Master type to check: "p" for production or "s" for staging'),
+    'export': ('-e', '--export', True,
+               'Export summary stats (disabled if -t present)', 'b'),
+
 }
 
 
@@ -114,7 +134,7 @@ def checkTegra(master, tegra):
         status['msg'] += '%s %s;' % (lPing[0], lPing[1])
 
     # Cheat until we have a better check solution for new watch_devices.sh
-    status['cp'] = 'active' # pretend all is well
+    status['cp'] = 'active'  # pretend all is well
 
     if checkSlaveAlive(tegraPath):
         logTD = checkSlaveActive(tegraPath)
@@ -127,8 +147,8 @@ def checkTegra(master, tegra):
         else:
             status['bs'] = 'INACTIVE'
     else:
-        # scan thru tegra-### dir and see if any buildbot.tac.bug#### files exist
-        # but ignore buildbot.tac file itself (except to note that it is
+        # scan thru tegra-### dir and see if any buildbot.tac.bug#### files
+        # exist but ignore buildbot.tac file itself (except to note that it is
         # missing)
         files = os.listdir(tegraPath)
         found = False
@@ -143,7 +163,9 @@ def checkTegra(master, tegra):
     if errorFlag:
         status['msg'] += 'error.flg [%s] ' % getLastLine(errorFile)
 
-    s = '%s %s %9s %8s %8s :: %s' % (status['tegra'], status['environment'], sTegra, status['cp'], status['bs'], status['msg'])
+    s = '%s %s %9s %8s %8s :: %s' % (status['tegra'], status['environment'],
+                                     sTegra, status['cp'], status['bs'],
+                                     status['msg'])
     ts = time.strftime('%Y-%m-%d %H:%M:%S')
     log.info(s)
     open(exportFile, 'a+').write('%s %s\n' % (ts, s))
@@ -168,10 +190,13 @@ def checkTegra(master, tegra):
             log.info('clearing error.flg')
             os.remove(errorFile)
 
-        # here we try to catch the state where sutagent and cp are inactive
-        # that is determined by : sTegra == 'INACTIVE' and status['cp'] == 'INACTIVE'
-        # status['cp'] will be set to INACTIVE only if logTD.seconds (last time clientproxy
-        # updated it's log file) is > 3600
+    # Here we try to catch the state where sutagent and cp are inactive that
+    # is determined by:
+    #     sTegra == 'INACTIVE' and
+    #     status['cp'] == 'INACTIVE'
+    # status['cp'] will be set to INACTIVE only if logTD.seconds (last time
+    # clientproxy updated it's log file) is > 3600
+
     if options.reboot:
         if not sutFound and status['bs'] != 'active':
             log.info('power cycling tegra')
@@ -240,7 +265,8 @@ if __name__ == '__main__':
 
     if options.tegra is None:
         for f in os.listdir(options.bbpath):
-            if os.path.isdir(os.path.join(options.bbpath, f)) and 'tegra-' in f.lower():
+            if os.path.isdir(os.path.join(options.bbpath, f)) \
+               and 'tegra-' in f.lower():
                 tegras.append(f)
     else:
         options.export = False

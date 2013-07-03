@@ -6,8 +6,11 @@
 
 import urllib2
 import sys
-import time
 import os
+
+import site
+site.addsitedir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../lib/python"))
+
 from sut_lib import connect, log
 
 # Constants
@@ -71,7 +74,7 @@ def doUpdate(dm):
 
     dm.debug = _oldDebug  # Restore it
 
-    if ver == None:
+    if ver is None:
         log.error("Automation Error: updateSUT.py: We should have been able to connect and determine the version.")
         return RETCODE_REVERIFY_FAILED
     elif not isVersionCorrect(ver=ver):

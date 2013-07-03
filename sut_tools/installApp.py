@@ -5,11 +5,14 @@ import sys
 import glob
 import shutil
 import zipfile
-from mozdevice import devicemanagerSUT as devicemanager
 
-from sut_lib import getOurIP, calculatePort, clearFlag, setFlag, checkDeviceRoot, \
+import site
+site.addsitedir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../lib/python"))
+
+from mozdevice import devicemanagerSUT as devicemanager
+from sut_lib import getOurIP, calculatePort, setFlag, checkDeviceRoot, \
     getDeviceTimestamp, setDeviceTimestamp, \
-    getResolution, waitForDevice, runCommand, log, soft_reboot_and_verify
+    getResolution, waitForDevice, runCommand, log, powermanagement
 
 
 # hwine: minor ugg - the flag files need to be global. Refactoring into
@@ -146,7 +149,7 @@ def one_time_setup(ip_addr, major_source):
         if (width == 1600 or height == 1200):
             dm.adjustResolution(1024, 768, 'crt')
             log.info('forcing device reboot')
-            if not soft_reboot_and_verify(device=deviceName, dm=dm, ipAddr=proxyIP, port=proxyPort):
+            if not powermanagement.soft_reboot_and_verify(device=deviceName, dm=dm, ipAddr=proxyIP, port=proxyPort):
                 return None, None
 
             width, height = getResolution(dm)
@@ -167,10 +170,6 @@ def main(argv):
         sys.exit(1)
 
     # N.B. 3rd arg not used anywhere
-    if len(argv) > 3:
-        processName = argv[3]
-    else:
-        processName = 'org.mozilla.fennec'
 
     ip_addr = argv[1]
     path_to_main_apk = argv[2]
@@ -178,6 +177,7 @@ def main(argv):
     if not dm:
         return 1
 
+    # errorFile is already created globally in one_time_setup call above
     if installOneApp(dm, devRoot, path_to_main_apk, errorFile):
         return 1
 
@@ -185,6 +185,7 @@ def main(argv):
     robocop_to_use = find_robocop()
     if robocop_to_use is not None:
         waitForDevice(dm)
+        # errorFile is already created globally in one_time_setup call above
         if installOneApp(dm, devRoot, robocop_to_use, errorFile):
             return 1
 

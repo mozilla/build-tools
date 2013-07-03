@@ -18,8 +18,8 @@ import datetime
 import traceback
 import subprocess
 import random
-import relay as relayModule
 from mozdevice import devicemanagerSUT as devicemanager
+import powermanagement
 
 from optparse import OptionParser
 import json
@@ -55,31 +55,10 @@ def getSUTLogger(filename=None, loggername=None):
 
 log = getSUTLogger()
 
-
-def loadDevicesData(filepath):
-    result = {}
-    tFile = os.path.join(filepath, 'devices.json')
-    if os.path.isfile(tFile):
-        try:
-            result = json.load(open(tFile, 'r'))
-        except:
-            result = {}
-    return result
-
 # look for devices.json where foopies have it
 # if not loaded, then try relative to sut_lib.py's path
 # as that is where it would be if run from tools repo
-allDevices = loadDevicesData('/builds/tools/buildfarm/mobile')
-if len(allDevices) == 0:
-    allDevices = loadDevicesData(
-        os.path.join(os.path.dirname(__file__), '../buildfarm/mobile'))
-tegras = dict()
-pandas = dict()
-for x in allDevices:
-    if x.startswith('tegra-'):
-        tegras[x] = allDevices[x]
-    if x.startswith('panda-'):
-        pandas[x] = allDevices[x]
+
 
 try:
     masters = json.load(open(
@@ -90,10 +69,10 @@ except:
 
 def connect(deviceIP, sleep=False):
     if sleep:
-        log.info("updateSUT.py: We're going to sleep for 90 seconds")
+        log.info("We're going to sleep for 90 seconds")
         time.sleep(90)
 
-    log.info("updateSUT.py: Connecting to: " + deviceIP)
+    log.info("Connecting to: " + deviceIP)
     return devicemanager.DeviceManagerSUT(deviceIP)
 
 
@@ -544,111 +523,6 @@ def _waitForDevice(dm, waitTime=120, silent=False):
     return True
 
 
-def soft_reboot_and_verify(device, dm, waitTime=90, max_attempts=5, silent=False, *args, **kwargs):
-    attempt = 0
-    while attempt < max_attempts:
-        attempt += 1
-        retVal = soft_reboot(device, dm, silent, *args, **kwargs)
-        if not retVal:
-            continue
-
-        if _waitForDevice(dm, waitTime, silent=True):
-            return True
-    return False
-
-
-def soft_reboot(device, dm, silent=False, *args, **kwargs):
-    """
-    Use the softest/kindest reboot method we think we should use.
-
-    This does a reboot over devicemanager* in some cases, and a relay/pdu reboot in others
-    """
-    if 'panda-' in device:
-        # Using devicemanager for reboots on pandas doesn't work reliably
-        if reboot_relay(device):
-            return True
-        else:
-            if not silent:
-                log.warn("Automation Error: Unable to reboot %s via Relay Board." %
-                         device)
-
-    # If this panda doesn't successfully relay-reboot fall through to
-    # devicemanager
-    return dm.reboot(*args, **kwargs)
-
-
-def reboot_relay(device):
-    if device in pandas and pandas[device]['relayhost']:
-        relay_host = pandas[device]['relayhost']
-        bank, relay = map(int, pandas[device]['relayid'].split(":"))
-        log.info("Calling PDU powercycle for %s, %s:%s:%s" % (
-            device, relay_host, bank, relay))
-        maxTries = 15
-        curTry = 1
-        while not relayModule.powercycle(relay_host, bank, relay):
-            log.info("Was not able to powercycle, attempt %s of %s" %
-                     (curTry, maxTries))
-            curTry += 1
-            if curTry > maxTries:
-                log.error(
-                    "Failed to powercycle %s times, giving up" % maxTries)
-                return False  # Stop Trying
-            time.sleep(1)  # Give us a chance to get a free socket next time
-        return True
-    return False
-
-
-def reboot_device(device, debug=False):
-    """
-    Try to reboot the given device, returning True if successful.
-
-    snmpset -c private pdu4.build.mozilla.org 1.3.6.1.4.1.1718.3.2.3.1.11.1.1.13 i 3
-    1.3.6.1.4.1.1718.3.2.3.1.11.a.b.c
-                                ^^^^^ outlet id
-                             ^^       control action
-                           ^          outlet entry
-                         ^            outlet tables
-                       ^              system tables
-                     ^                sentry
-    ^^^^^^^^^^^^^^^^                  serverTech enterprises
-    a   Sentry enclosure ID: 1 master 2 expansion
-    b   Input Power Feed: 1 infeed-A 2 infeed-B
-    c   Outlet ID (1 - 16)
-    y   command: 1 turn on, 2 turn off, 3 reboot
-
-    a and b are determined by the DeviceID we get from the devices.json file
-
-       .AB14
-          ^^ Outlet ID
-         ^   InFeed code
-        ^    Enclosure ID (we are assuming 1 (or A) below)
-    """
-    result = False
-    if device in tegras:
-        pdu = tegras[device]['pdu']
-        deviceID = tegras[device]['pduid']
-        if deviceID.startswith('.'):
-            if deviceID[2] == 'B':
-                b = 2
-            else:
-                b = 1
-            try:
-                c = int(deviceID[3:])
-                s = '3.2.3.1.11.1.%d.%d' % (b, c)
-                oib = '1.3.6.1.4.1.1718.%s' % s
-                cmd = '/usr/bin/snmpset -v 1 -c private %s %s i 3' % (pdu, oib)
-                if debug:
-                    log.debug(
-                        'rebooting %s at %s %s' % (device, pdu, deviceID))
-                if os.system(cmd) == 0:
-                    result = True
-            except:
-                dumpException('error running [%s]' % cmd)
-                result = False
-
-    return result
-
-
 def stopStalled(device):
     deviceIP = getIPAddress(device)
     devicePath = os.path.join('/builds', device)
@@ -689,26 +563,6 @@ def stopStalled(device):
     return result
 
 
-def stopDevice(device):
-    deviceIP = getIPAddress(device)
-    devicePath = os.path.join('/builds', device)
-    errorFile = os.path.join(devicePath, 'error.flg')
-
-    log.info('%s: %s - stopping all processes' % (device, deviceIP))
-
-    stopStalled(device)
-    stopProcess(os.path.join(devicePath, 'clientproxy.pid'), 'clientproxy')
-    stopProcess(os.path.join(devicePath, 'twistd.pid'), 'buildslave')
-
-    log.debug('  clearing flag files')
-
-    if os.path.isfile(errorFile):
-        log.info('  error.flg cleared')
-        os.remove(errorFile)
-
-    reboot_device(device, debug=True)
-
-
 def loadOptions(defaults=None):
     """Parse command line parameters and populate the options object.
     """
@@ -734,3 +588,23 @@ def loadOptions(defaults=None):
     options.args = args
 
     return options
+
+
+def stopDevice(device):
+    deviceIP = getIPAddress(device)
+    devicePath = os.path.join('/builds', device)
+    errorFile = os.path.join(devicePath, 'error.flg')
+
+    log.info('%s: %s - stopping all processes' % (device, deviceIP))
+
+    stopStalled(device)
+    stopProcess(os.path.join(devicePath, 'clientproxy.pid'), 'clientproxy')
+    stopProcess(os.path.join(devicePath, 'twistd.pid'), 'buildslave')
+
+    log.debug('  clearing flag files')
+
+    if os.path.isfile(errorFile):
+        log.info('  error.flg cleared')
+        os.remove(errorFile)
+
+    powermanagement.reboot_device(device, debug=True)

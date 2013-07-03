@@ -8,4 +8,4 @@ tools
 coverage.xml
 lib/python/buildtools.egg-info/
 nosetests.xml
-
+*.pyc
