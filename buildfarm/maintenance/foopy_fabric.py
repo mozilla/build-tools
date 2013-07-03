@@ -31,6 +31,7 @@ def update(foopy):
     with show('running'):
         with cd('/builds/tools'):
             run('hg pull && hg update -C')
+            run('find /builds/tools -name \*.pyc -exec rm {} \;')
             with hide('stdout', 'stderr', 'running'):
                 tools_rev = run('hg ident -i')
 
