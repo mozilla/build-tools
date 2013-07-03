@@ -23,6 +23,7 @@ import os
 import shutil
 import sys
 from fnmatch import fnmatch
+import re
 
 DEFAULT_BASE_DIRS = ["..", "/scratchbox/users/cltbld/home/cltbld/build"]
 
@@ -116,24 +117,59 @@ def rmdirRecursive(dir):
     os.rmdir(dir)
 
 
+def str2seconds(s):
+    """ Accepts time intervals resembling:
+         30d  (30 days)
+         10h  (10 hours)
+        Returns the specified interval as a positive integer in seconds.
+    """
+    m = re.match(r'^(\d+)([dh])$', s)
+    if (m):
+        mul = {'d': 24*60*60, 'h': 60*60}
+        n = int(m.group(1))
+        unit = m.group(2)
+        return n * mul[unit]
+    else:
+        raise ValueError("Unhandled time format '%s'" % s)
+
+
 def purge(base_dirs, gigs, ignore, max_age, dry_run=False):
     """Delete directories under `base_dirs` until `gigs` GB are free.
 
     Delete any directories older than max_age.
 
-    Will not delete directories listed in the ignore list."""
+    Will not delete directories listed in the ignore list except
+    those tagged with an expiry threshold.  Example:
+
+      rel-*:40d
+
+    Will not delete rel-* directories until they are over 40 days old.
+    """
     gigs *= 1024 * 1024 * 1024
+
+    # convert 'ignore' to a dict resembling { directory: cutoff_time }
+    # where a cutoff time of -1 means 'never expire'.
+    ignore = dict(map(lambda x: x.split(':')[0:2] if len(x.split(':')) > 1 else [x, -1], ignore))
+    ignore = dict(map(lambda key: [key, time.time() - str2seconds(ignore[key])] if ignore[key] != -1 else [key, ignore[key]], ignore))
 
     dirs = []
     for base_dir in base_dirs:
         if os.path.exists(base_dir):
             for d in os.listdir(base_dir):
-                if any([fnmatch(d, pattern) for pattern in ignore]):
-                    continue
                 p = os.path.join(base_dir, d)
                 if not os.path.isdir(p):
                     continue
                 mtime = os.path.getmtime(p)
+                skip = False
+                for pattern, cutoff_time in ignore.iteritems():
+                    if (fnmatch(d, pattern)):
+                        if cutoff_time == -1 or mtime > cutoff_time:
+                            skip = True
+                            break
+                        else:
+                            print("Ignored directory '%s' exceeds cutoff time" % d)
+                if skip:
+                    continue
                 dirs.append((mtime, p))
 
     dirs.sort()
@@ -206,7 +242,7 @@ if __name__ == '__main__':
                       help='free space required (in GB, default 5)', dest='size',
                       type='float')
 
-    parser.add_option('-n', '--not', help='do not delete this directory',
+    parser.add_option('-n', '--not', help='do not delete this directory. Append :30d to skip for up to 30 days, or :30h to skip for up to 30 hours',
                       action='append', dest='skip')
 
     parser.add_option('', '--dry-run', action='store_true',
