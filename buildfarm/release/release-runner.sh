@@ -14,6 +14,9 @@ if [ -z "$CONFIG" ]; then
     CONFIG=/home/cltbld/.release-runner.ini
 fi
 
+# Mozilla hg is symlinked as /usr/local/bin/hg
+export PATH=/usr/local/bin:$PATH
+
 . $VENV/bin/activate
 
 # Sleep time after a failure, in seconds.
