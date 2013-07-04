@@ -10,6 +10,7 @@ from optparse import OptionParser
 from smtplib import SMTPException
 from functools import partial
 import textwrap
+from twisted.python.lockfile import FilesystemLock
 
 site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 
@@ -203,15 +204,8 @@ def get_release_sanity_args(configs_workdir, release, cfgFile, masters_json,
         args.append('--bypass-l10n-dashboard-check')
     return args
 
-if __name__ == '__main__':
-    parser = OptionParser(__doc__)
-    parser.add_option('-c', '--config', dest='config',
-                      help='Configuration file')
 
-    options = parser.parse_args()[0]
-
-    if not options.config:
-        parser.error('Need to pass a config')
+def main(options):
     log.info('Loading config from %s' % options.config)
     config = load_config(options.config)
 
@@ -223,11 +217,8 @@ if __name__ == '__main__':
     check_buildbot()
     check_fabric()
 
-    sendchange_master = config.get('release-runner', 'sendchange_master')
-    if not sendchange_master:
-        parser.error('Need to pass sendchange_master')
-
     # Shorthand
+    sendchange_master = config.get('release-runner', 'sendchange_master')
     api_root = config.get('api', 'api_root')
     username = config.get('api', 'username')
     password = config.get('api', 'password')
@@ -267,14 +258,14 @@ if __name__ == '__main__':
     while True:
         try:
             log.debug('Fetching release requests')
-            new_releases = rr.get_release_requests()
+            rr.get_release_requests()
             if rr.new_releases:
                 for release in rr.new_releases:
                     log.info('Got a new release request: %s' % release)
                 break
             else:
                 log.debug('Sleeping for %d seconds before polling again' %
-                        sleeptime)
+                          sleeptime)
                 time.sleep(sleeptime)
         except Exception, e:
             log.error("Caught exception when polling:", exc_info=True)
@@ -391,4 +382,31 @@ if __name__ == '__main__':
             rr.update_status(release, 'Sendchange failed')
             log.error('Sendchange failed for %s: ' % release, exc_info=True)
 
-    sys.exit(rc)
+    if rc != 0:
+        sys.exit(rc)
+
+if __name__ == '__main__':
+    parser = OptionParser(__doc__)
+    parser.add_option('-l', '--lockfile', dest='lockfile',
+                      default=path.join(os.getcwd(), ".release-runner.lock"))
+    parser.add_option('-c', '--config', dest='config',
+                      help='Configuration file')
+
+    options = parser.parse_args()[0]
+
+    if not options.config:
+        parser.error('Need to pass a config')
+
+    lockfile = options.lockfile
+    log.debug("Using lock file %s", lockfile)
+    lock = FilesystemLock(lockfile)
+    if not lock.lock():
+        raise Exception("Cannot acquire lock: %s" % lockfile)
+    log.debug("Lock acquired: %s", lockfile)
+    if not lock.clean:
+        log.warning("Previous run did not properly exit")
+    try:
+        main(options)
+    finally:
+        log.debug("Releasing lock: %s", lockfile)
+        lock.unlock()
