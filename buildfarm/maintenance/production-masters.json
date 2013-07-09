@@ -240,7 +240,7 @@
       "ics_armv7a_gecko",
       "linux32_gecko",
       "linux64_gecko",
-      "b2g_emulator"
+      "emulator"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm24-tests1-linux",
@@ -673,7 +673,7 @@
       "ics_armv7a_gecko",
       "linux32_gecko",
       "linux64_gecko",
-      "b2g_emulator"
+      "emulator"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm51-tests1-linux",
@@ -713,7 +713,7 @@
       "ics_armv7a_gecko",
       "linux32_gecko",
       "linux64_gecko",
-      "b2g_emulator"
+      "emulator"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm52-tests1-linux",
@@ -753,7 +753,7 @@
       "ics_armv7a_gecko",
       "linux32_gecko",
       "linux64_gecko",
-      "b2g_emulator"
+      "emulator"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm53-tests1-linux",
@@ -793,7 +793,7 @@
       "ics_armv7a_gecko",
       "linux32_gecko",
       "linux64_gecko",
-      "b2g_emulator"
+      "emulator"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm54-tests1-linux",
@@ -1157,7 +1157,7 @@
       "ics_armv7a_gecko",
       "linux32_gecko",
       "linux64_gecko",
-      "b2g_emulator"
+      "emulator"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm67-tests1-linux",
@@ -1197,7 +1197,7 @@
       "ics_armv7a_gecko",
       "linux32_gecko",
       "linux64_gecko",
-      "b2g_emulator"
+      "emulator"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm68-tests1-linux",
