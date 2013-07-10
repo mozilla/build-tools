@@ -3,7 +3,7 @@ mar_url="${1}"
 mar_required_size="${2}"
 
 mar_headers_file="$(mktemp -t mar_headers.XXXXXXXXXX)"
-curl --retry 5 --retry-max-time 30 -k -s -I -L "${mar_url}" > "${mar_headers_file}" 2>&1
+curl --retry 50 --retry-max-time 300 -k -s -I -L "${mar_url}" > "${mar_headers_file}" 2>&1
 mar_file_curl_exit_code=$?
 
 # check file size matches what was written in update.xml

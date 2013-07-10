@@ -4,7 +4,7 @@ update_xml_url="${1}"
 patch_types="${2}"
 update_xml="$(mktemp -t update.xml.XXXXXXXXXX)"
 update_xml_headers="$(mktemp -t update.xml.headers.XXXXXXXXXX)"
-curl --retry 5 --retry-max-time 30 -k -s -D "${update_xml_headers}" -L "${update_xml_url}" > "${update_xml}"
+curl --retry 50 --retry-max-time 300 -k -s -D "${update_xml_headers}" -L "${update_xml_url}" > "${update_xml}"
 update_xml_curl_exit_code=$?
 if [ "${update_xml_curl_exit_code}" == 0 ]
 then
