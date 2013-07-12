@@ -542,7 +542,8 @@
     "hostname": "buildbot-master47.build.scl1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-      "win32"
+      "win32",
+      "win64"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -575,7 +576,8 @@
     "hostname": "buildbot-master48.build.scl1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-      "win32"
+      "win32",
+      "win64"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -1225,7 +1227,8 @@
     "hostname": "buildbot-master69.srv.releng.use1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-      "win32"
+      "win32",
+      "win64"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -1258,7 +1261,8 @@
     "hostname": "buildbot-master70.srv.releng.use1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-      "win32"
+      "win32",
+      "win64"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -1291,7 +1295,8 @@
     "hostname": "buildbot-master71.srv.releng.use1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-      "win32"
+      "win32",
+      "win64"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -1324,7 +1329,8 @@
     "hostname": "buildbot-master72.srv.releng.usw2.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-      "win32"
+      "win32",
+      "win64"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -1357,7 +1363,8 @@
     "hostname": "buildbot-master73.srv.releng.usw2.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-      "win32"
+      "win32",
+      "win64"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -1390,7 +1397,8 @@
     "hostname": "buildbot-master74.srv.releng.usw2.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-      "win32"
+      "win32",
+      "win64"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
