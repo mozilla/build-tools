@@ -41,6 +41,7 @@ DEFAULT_RSYNC_EXCLUDES = ['--exclude=*tests*',
                           '--exclude=logs',
                           '--exclude=jsshell*',
                           '--exclude=host',
+                          '--exclude=*.json',
                           ]
 
 VIRUS_SCAN_CMD = ['nice', 'ionice', '-c2', '-n7',
