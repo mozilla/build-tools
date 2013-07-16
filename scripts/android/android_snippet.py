@@ -6,7 +6,6 @@
 
 import hashlib
 import ConfigParser
-import urllib2
 import optparse
 import os
 import os.path as path
@@ -100,8 +99,6 @@ def parseApk(apk_filename):
     except:
         log.error('Automation Error: Unable to parse application.ini from %s!' % apk_filename)
         raise
-
-    info = {}
 
     buildid = config.get('App', 'BuildID')
     version = config.get('App', 'Version')
