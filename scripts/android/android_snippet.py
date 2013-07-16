@@ -93,9 +93,13 @@ def parseApk(apk_filename):
     # the ZipFile.open call depends on py2.6 but removes the dependency
     # on StringIO
     # appini = zipfile.ZipFile(apk_filename).open('application.ini', 'r')
-    appini = StringIO(zipfile.ZipFile(apk_filename).read('application.ini'))
-    config = ConfigParser.ConfigParser()
-    config.readfp(appini)
+    try:
+        appini = StringIO(zipfile.ZipFile(apk_filename).read('application.ini'))
+        config = ConfigParser.ConfigParser()
+        config.readfp(appini)
+    except:
+        log.error('Automation Error: Unable to parse application.ini from %s!' % apk_filename)
+        raise
 
     info = {}
 
