@@ -22,10 +22,7 @@ def clean_dir(dirname, timestamp):
     # Look for twistd.log files
     for f in files:
         p = os.path.join(dirname, f)
-        if f.startswith("twistd.log."):
-            maybe_delete(p, timestamp)
-
-        elif os.path.isdir(p):
+        if os.path.isdir(p):
             builder_file = os.path.join(p, "builder")
             # Don't clean out non-builder directories
             if not os.path.exists(builder_file):
