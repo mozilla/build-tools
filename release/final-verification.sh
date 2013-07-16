@@ -74,8 +74,8 @@ log "From directory: '$(pwd)'"
 log ''
 log "Parsing arguments..."
 
-# default is 128 parallel processes
-MAX_PROCS=128
+# Max procs lowered in bug 894368 to try to avoid spurious failures
+MAX_PROCS=96
 BAD_ARG=0
 BAD_FILE=0
 while getopts p:h OPT
