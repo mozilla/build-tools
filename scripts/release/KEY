@@ -8,7 +8,8 @@ an out-of-band manner.
 Mozilla users: pgp < KEY
 
 pub   4096R/3A06537A 2013-07-16
-uid                  Mozilla Software Releases <releases@mozilla.org>
+      Key fingerprint = 2B90 598A 745E 992F 315E  22C5 8AB1 3296 3A06 537A
+      uid                  Mozilla Software Releases <releases@mozilla.org>
 
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 Version: GnuPG v2.0.14 (GNU/Linux)
