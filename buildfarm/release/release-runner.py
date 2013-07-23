@@ -150,12 +150,9 @@ def bump_configs(release, cfgFile, l10nContents, workdir,
         f.write(l10nContents)
     prodRev = commit(workdir, 'Update release config for %s' % release['name'],
                      user=hg_username)
-    # Write out the tags now too, because we want them on the production
-    # branch.
-    forceTag = False
-    if release['buildNumber'] > 1:
-        forceTag = True
-    tag(workdir, tags, rev=prodRev, force=forceTag, user=hg_username)
+    # We always force tagging, because it makes it easier to retrigger a
+    # release that fails for infrastructure reasons.
+    tag(workdir, tags, rev=prodRev, force=True, user=hg_username)
 
     # And then write the same files to the default branch
     update(workdir, defaultBranch)
@@ -167,11 +164,11 @@ def bump_configs(release, cfgFile, l10nContents, workdir,
            user=hg_username)
 
 
-def tag_repo(workdir, branch, tags, force, pushRepo, hg_username,
+def tag_repo(workdir, branch, tags, pushRepo, hg_username,
              hg_ssh_key):
     def tag_and_push(repo, attempt):
         update(workdir, branch)
-        tag(workdir, tags, rev=branch, force=force, user=hg_username)
+        tag(workdir, tags, rev=branch, force=True, user=hg_username)
         log.info("Tagged %s, attempt #%s" % (repo, attempt))
 
     apply_and_push(workdir, pushRepo, tag_and_push,
@@ -296,9 +293,6 @@ def main(options):
                 os.symlink(target, symlink)
 
     tags = []
-    # For safety's sake, we shouldn't force any tagging
-    # unless we know we need to.
-    force_tag = bool([r for r in rr.new_releases if r['buildNumber'] > 1])
 
     def process_configs(repo, attempt):
         """Helper method that encapsulates all of the things necessary
@@ -343,10 +337,10 @@ def main(options):
         for release in rr.new_releases:
             rr.update_status(release, 'Tagging other repositories')
         tag_repo(workdir=custom_workdir, branch=buildbotcustom_branch,
-                 tags=tags, force=force_tag, pushRepo=custom_pushRepo,
+                 tags=tags, pushRepo=custom_pushRepo,
                  hg_username=hg_username, hg_ssh_key=hg_ssh_key)
         tag_repo(workdir=tools_workdir, branch=tools_branch, tags=tags,
-                 force=force_tag, pushRepo=tools_pushRepo,
+                 pushRepo=tools_pushRepo,
                  hg_username=hg_username, hg_ssh_key=hg_ssh_key)
         for release in rr.new_releases:
             rr.update_status(release, 'Reconfiging masters')
