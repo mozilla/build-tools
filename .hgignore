@@ -12,8 +12,6 @@ twistd\.pid
 dist/
 slavealloc.log
 release-runner.ini
-lib/python/slavealloc/www/icons
-lib/python/slavealloc/www/js/bugzilla.js
 .coverage
 .tox
 coverage.xml
