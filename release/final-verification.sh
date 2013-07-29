@@ -75,7 +75,7 @@ log ''
 log "Parsing arguments..."
 
 # Max procs lowered in bug 894368 to try to avoid spurious failures
-MAX_PROCS=96
+MAX_PROCS=48
 BAD_ARG=0
 BAD_FILE=0
 while getopts p:h OPT
@@ -196,7 +196,7 @@ update_xml_urls="$(mktemp -t update_xml_urls.XXXXXXXXXX)"
 #
 # 5) mktemp -t update.xml.headers.XXXXXXXXXX
 #
-# We can a copy of the update.xml http headers retrieved in one file per update.xml url.
+# We keep a copy of the update.xml http headers retrieved in one file per update.xml url.
 #
 # 6) mktemp -t update.xml.XXXXXXXXXX
 #
