@@ -48,10 +48,12 @@ function device_check() {
   # Trap here, not earlier so that if lockfile fails, we don't clear the lock
   # From another process
   trap "device_check_exit $device" EXIT
+  log "contacting slavealloc"
   if ! check_buildbot_running "${device}"; then
     log "Buildbot is not running"
-    if [ -f /builds/$device/disabled.flg ]; then
-       death "Not Starting due to disabled.flg" 64
+    /builds/tools/buildfarm/mobile/manage_buildslave.sh gettac $device
+    if grep -q "SLAVE DISABLED" /builds/$device/buildbot.tac; then
+       death "Not Starting, slavealloc says we're disabled" 64
     fi
     if [ -f /builds/$device/error.flg ]; then
       log "error.flg file detected"
@@ -83,7 +85,7 @@ function device_check() {
         log "Found an error.flg, expecting buildbot to self-kill after this job"
     fi
     if [ -f /builds/$device/disabled.flg ]; then
-        log "disabled.flg wants us to kill buildbot..."
+        log "disabled.flg wants us to force kill buildbot..."
         set +e # These steps are ok to fail, not a great thing but not critical
         log "Stopping device $device..."
         "${PYTHON}" /builds/sut_tools/stop.py --device $device
@@ -95,7 +97,9 @@ function device_check() {
         sleep ${FAIL_WAIT} # Wait a while before allowing us to turn buildbot back on
     fi
   fi
-  log "Cycle for our device ($device) complete"
+  # Force disable only once. If we got this far, then we did all that we must.
+  # Don't act on it next cycle.
+  rm -f "/builds/${device}/disabled.flg"
 }
 
 

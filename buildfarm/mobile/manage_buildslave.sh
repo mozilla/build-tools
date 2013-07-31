@@ -1,4 +1,9 @@
 #!/bin/bash
+pushd `dirname $0` &> /dev/null
+MY_DIR="$(pwd)"
+popd &> /dev/null
+retry=("$MY_DIR/../utils/retry.py" -s 1 -r 2 -t 30 -m 20)
+
 if [ -d "/tools/buildbot/bin" ]; then
   BB_PATH=/tools/buildbot/bin/buildslave
   BB_PYTHON=/tools/buildbot/bin/python2.7
@@ -34,8 +39,15 @@ fi
 
 case "${opt}" in
     gettac)
-        rm $DEVICE_PATH/buildbot.tac
-        wget -q "-O${DEVICE_PATH}/buildbot.tac" "http://slavealloc.build.mozilla.org/gettac/${DEVICE}"
+        ${retry} --stderr-regexp 'ERROR 404: Not Found' --fail-if-match \
+                wget -q "-O${DEVICE_PATH}/buildbot.tac.new" "http://slavealloc.pvt.build.mozilla.org/gettac/${DEVICE}"
+        if [ -s "${DEVICE_PATH}/buildbot.tac.new" ]; then
+            rm -f "${DEVICE_PATH}/buildbot.tac"
+            mv "${DEVICE_PATH}/buildbot.tac.new" "${DEVICE_PATH}/buildbot.tac"
+        else
+            rm -f "${DEVICE_PATH}/buildbot.tac.new"
+            echo "Failed to get buildbot.tac" >&2
+        fi
         ;;
     stop)
         "${BB_PATH}" stop "${DEVICE_PATH}"
