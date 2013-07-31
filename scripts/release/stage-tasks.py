@@ -52,6 +52,7 @@ VIRUS_SCAN_CMD = ['nice', 'ionice', '-c2', '-n7',
                   'extract_and_run_command.py', '-j2', 'clamdscan', '-m',
                   '--no-summary', '--']
 
+PARTNER_BUNDLE_DIR = '/mnt/netapp/stage/releases.mozilla.com/bundles'
 
 def validate(options, args):
     if not options.configfile:
@@ -195,9 +196,50 @@ def updateSymlink(productName, version, stageServer, stageUsername,
 
     run_remote_cmd([
         'cd %(rd)s && rm -f %(target)s && ln -s %(version)s %(target)s' %
-        dict(rd=releases_dir, version=version, target=target)
-    ],
+        dict(rd=releases_dir, version=version, target=target)],
         server=stageServer, username=stageUsername, sshKey=stageSshKey)
+
+
+def doSyncPartnerBundles(productName, version, buildNumber, stageServer,
+                         stageUsername, stageSshKey):
+    candidates_dir = makeCandidatesDir(productName, version, buildNumber)
+
+    # Sync the Bing packages...
+    bing_dir = '%s/partner-repacks/bing' % candidates_dir
+    mac_bing_src = '%s/mac/en-US/Firefox\\ %s.dmg' % (bing_dir, version)
+    mac_bing_dst = '%s/bing/mac/en-US/Firefox-Bing.dmg' % PARTNER_BUNDLE_DIR
+    win32_bing_src = '%s/win32/en-US/Firefox\\ Setup\\ %s.exe' % (bing_dir, version)
+    win32_bing_dst = '%s/bing/win32/en-US/Firefox-Bing\\ Setup.exe' % PARTNER_BUNDLE_DIR
+    run_remote_cmd(['cp', '-f', mac_bing_src, mac_bing_dst],
+        server=stageServer, username=stageUsername, sshKey=stageSshKey
+    )
+    run_remote_cmd(['cp', '-f', win32_bing_src, win32_bing_dst],
+        server=stageServer, username=stageUsername, sshKey=stageSshKey
+    )
+
+    # Sync the MSN packages...
+    run_remote_cmd(
+        ['rsync', '-av', '%s/partner-repacks/msn*' % candidates_dir,
+         PARTNER_BUNDLE_DIR],
+        server=stageServer, username=stageUsername, sshKey=stageSshKey
+    )
+
+    # And fix the permissions...
+    run_remote_cmd(
+        ['find', PARTNER_BUNDLE_DIR, '-type', 'd',
+         '-exec', 'chmod', '775', '{}', '\\;'],
+        server=stageServer, username=stageUsername, sshKey=stageSshKey
+    )
+    run_remote_cmd(
+        ['find', PARTNER_BUNDLE_DIR, '-name', '"*.exe"',
+         '-exec', 'chmod', '775', '{}', '\\;'],
+        server=stageServer, username=stageUsername, sshKey=stageSshKey
+    )
+    run_remote_cmd(
+        ['find', PARTNER_BUNDLE_DIR, '-name', '"*.dmg"',
+         '-exec', 'chmod', '775', '{}', '\\;'],
+        server=stageServer, username=stageUsername, sshKey=stageSshKey
+    )
 
 
 if __name__ == '__main__':
@@ -234,8 +276,10 @@ if __name__ == '__main__':
     stageUsername = options.ssh_username or branchConfig['stage_username']
     stageSshKey = options.ssh_key or branchConfig["stage_ssh_key"]
     stageSshKey = path.join(os.path.expanduser("~"), ".ssh", stageSshKey)
-    createIndexFiles = releaseConfig.get(
-        'makeIndexFiles', False) and productName != 'xulrunner'
+    createIndexFiles = releaseConfig.get('makeIndexFiles', False) \
+        and productName != 'xulrunner'
+    syncPartnerBundles = releaseConfig.get('syncPartnerBundles', False) \
+        and productName != 'xulrunner'
     ftpSymlinkName = releaseConfig.get('ftpSymlinkName')
 
     if 'permissions' in args:
@@ -299,3 +343,10 @@ if __name__ == '__main__':
                           productName=productName,
                           version=version,
                           target=ftpSymlinkName)
+        if syncPartnerBundles:
+            doSyncPartnerBundles(stageServer=stageServer,
+                                 stageUsername=stageUsername,
+                                 stageSshKey=stageSshKey,
+                                 productName=productName,
+                                 version=version,
+                                 buildNumber=buildNumber)

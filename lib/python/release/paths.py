@@ -1,21 +1,19 @@
 from urlparse import urlunsplit
 
+product_ftp_map = {
+    'fennec': 'mobile',
+}
 
-def makeCandidatesDir(product, version, buildNumber, nightlyDir=None,
+def product2ftp(product):
+    return product_ftp_map.get(product, product)
+
+
+def makeCandidatesDir(product, version, buildNumber, nightlyDir='candidates',
                       protocol=None, server=None, ftp_root='/pub/mozilla.org/'):
     if protocol:
         assert server is not None, "server is required with protocol"
 
-    # Fennec files are uploaded to mobile/candidates instead of
-    # fennec/nightly
-    if product == 'fennec':
-        product = 'mobile'
-        if not nightlyDir:
-            nightlyDir = 'candidates'
-
-    if not nightlyDir:
-        nightlyDir = 'nightly'
-
+    product = product2ftp(product)
     directory = ftp_root + product + '/' + nightlyDir + '/' + \
         str(version) + '-candidates/build' + str(buildNumber) + '/'
 
