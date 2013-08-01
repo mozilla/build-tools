@@ -79,7 +79,10 @@ def run_action_on_devices(action, foopy_dict):
     try:
         with settings(host_string="%s.build.mozilla.org" % foopy_dict['host']):
             for device in foopy_dict['devices']:
-                action_func(device)
+                if hasattr(action_func, "needs_device_dict"):
+                    action_func(device, _devices_map[device])
+                else:
+                    action_func(device)
             return True
         return False
     except AttributeError:

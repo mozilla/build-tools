@@ -18,6 +18,11 @@ def per_device(fn):
     return fn
 
 
+def use_json(fn):
+    fn.needs_device_dict = True
+    return fn
+
+
 @per_host
 def show_revision(foopy):
     with hide('stdout', 'stderr', 'running'):
@@ -26,24 +31,79 @@ def show_revision(foopy):
         print "%-14s %12s" % (foopy, tools_rev)
 
 
+@per_device
+def status(device):
+   device_dir = '/builds/%s' % device
+   stat_buildbot = "not running"
+   stat_disabled = "enabled"
+   stat_error = ""
+   with hide('stdout', 'stderr', 'running'):
+       with cd(device_dir):
+            with settings(hide('everything'), warn_only=True):
+                pid_exists = not run('test -e "$(echo %s/twistd.pid)"' % device_dir).failed
+                if pid_exists:
+                    if not run('kill -0 `cat %s/twistd.pid`' % device_dir).failed:
+                        stat_buildbot = "running"
+                if not run('test -e "$(echo %s/disabled.flg)"' % device_dir).failed:
+                    stat_disabled = "disabled"
+                    stat_error = run('cat %s/disabled.flg' % device_dir)
+                if not run('test -e "$(echo %s/error.flg)"' % device_dir).failed:
+                    stat_error = run('cat %s/error.flg' % device_dir)
+
+   print "%s - %12s - %10s - %s" % (device, stat_buildbot, stat_disabled, repr(stat_error[:65].replace('\r\n', '--')))
+
+@per_device
+@use_json
+def reboot(device, json):
+  if 'tegra' in device:
+      run("SUT_NAME=%s python /builds/sut_tools/tegra_powercycle.py %s && sleep 1" % (device, device))
+  else:
+      bank, relay = json['relayid'].split(":")
+      run("python /builds/sut_tools/relay.py powercycle %s %s %s ; sleep 5" % (json['relayhost'], bank, relay))
+  print OK, "Powercycled %s" % device
+
+
+
 @per_host
 def update(foopy):
     with show('running'):
         with cd('/builds/tools'):
-            run('hg pull && hg update -C')
-            run('find /builds/tools -name \*.pyc -exec rm {} \;')
+            run('hg pull && hg update')
+            run('find /builds/tools -name \\*.pyc -exec rm {} \\;')
             with hide('stdout', 'stderr', 'running'):
                 tools_rev = run('hg ident -i')
 
     print OK, "updated %s tools to %12s" % (foopy, tools_rev)
 
-
 @per_device
-def stop_cp(device):
+def create_error(device):
     with show('running'):
         with cd('/builds'):
-            run('./stop_cp.sh %s' % device)
-        print OK, "Stopped clientproxy for %s" % (device)
+            run('touch /builds/%s/error.flg' % device)
+    print OK, "ran on %s" % device
+
+
+@per_device
+def stop(device):
+    with show('running'):
+        with cd('/builds/%s' % device):
+            run('echo "disable please" > ./disabled.flg')
+        print OK, "Stopped %s" % (device)
+
+@per_device
+def enable(device):
+    with show('running'):
+        with cd('/builds/%s' % device):
+            run('rm -f ./disabled.flg')
+            remove_error(device)
+        print OK, "enabled %s" % device
+
+@per_device
+def remove_error(device):
+    with show('running'):
+        with cd('/builds/%s' % device):
+            run('rm -f ./error.flg')
+        print OK, "Removed error flag for %s" % (device)
 
 
 @per_device
