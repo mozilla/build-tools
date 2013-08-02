@@ -1725,6 +1725,11 @@
         "relayhost": "panda-relay-003.p10.releng.scl1.mozilla.com",
         "relayid": "2:6"
     },
+    "panda-0044": {
+        "foopy": "foopy103",
+        "relayhost": "panda-relay-003.p10.releng.scl1.mozilla.com",
+        "relayid": "2:7"
+    },
     "panda-0046": {
         "foopy": "foopy103",
         "relayhost": "panda-relay-004.p10.releng.scl1.mozilla.com",
