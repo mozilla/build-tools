@@ -43,6 +43,7 @@ def _calc_selected(hosts, devices):
             selected[f] = deepcopy(_foopy_map[f])
     for d in devices:
         if d not in _devices_map:
+            sys.stderr.write("Warning: device '%s' not found in device map\n" % d)
             continue
         if 'foopy' not in _devices_map[d]:
             continue
