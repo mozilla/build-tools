@@ -297,11 +297,14 @@ def ReleaseToCandidatesDir(options, upload_dir, files):
         'product': options.product,
     }
 
+    marToolsPath = "%s/mar-tools" % candidatesPath
+
     symlink_nightly_to_candidates(
         NIGHTLY_PATH, candidatesFullPath, options.version)
 
     for f in files:
         realCandidatesPath = candidatesPath
+        filename = os.path.basename(f)
         if not options.signed and 'win32' in f and '/logs/' not in f:
             realCandidatesPath = os.path.join(realCandidatesPath, 'unsigned')
             url = os.path.join(candidatesUrl, 'unsigned')
@@ -311,8 +314,13 @@ def ReleaseToCandidatesDir(options, upload_dir, files):
             realCandidatesPath = os.path.join(
                 realCandidatesPath, options.builddir)
             url = os.path.join(url, options.builddir)
-
-        CopyFileToDir(f, upload_dir, realCandidatesPath, preserve_dirs=True)
+        if filename in ('mar', 'mar.exe', 'mbsdiff', 'mbsdiff.exe'):
+            if options.tinderbox_builds_dir:
+                platform = options.tinderbox_builds_dir.split('-')[-1]
+                if platform in ('win32', 'macosx64', 'linux', 'linux64'):
+                    CopyFileToDir(f, upload_dir, '%s/%s' % (marToolsPath, platform))
+        else:
+            CopyFileToDir(f, upload_dir, realCandidatesPath, preserve_dirs=True)
         # Output the URL to the candidate build
         if f.startswith(upload_dir):
             relpath = f[len(upload_dir):].lstrip("/")
