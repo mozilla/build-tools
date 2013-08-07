@@ -15,6 +15,12 @@ import logging
 log = logging.getLogger(__name__)
 
 
+def getMakeCommand(usePymake, absSourceRepoPath):
+    if usePymake:
+        return [sys.executable, "%s/build/pymake/make.py" % absSourceRepoPath]
+    return ["make"]
+
+
 def getAllLocales(appName, sourceRepo, rev="default",
                   hg="http://hg.mozilla.org"):
     localeFile = "%s/raw-file/%s/%s/locales/all-locales" % \
@@ -51,10 +57,10 @@ def l10nRepackPrep(sourceRepoName, objdir, mozconfigPath, srcMozconfigPath,
         os.mkdir(l10nBaseRepoName)
 
     if srcMozconfigPath:
-      shutil.copy(path.join(sourceRepoName, srcMozconfigPath),
-                  path.join(sourceRepoName, ".mozconfig"))
+        shutil.copy(path.join(sourceRepoName, srcMozconfigPath),
+                    path.join(sourceRepoName, ".mozconfig"))
     else:
-      shutil.copy(mozconfigPath, path.join(sourceRepoName, ".mozconfig"))
+        shutil.copy(mozconfigPath, path.join(sourceRepoName, ".mozconfig"))
 
     if tooltoolManifest:
         run_cmd(['scripts/scripts/tooltool/fetch_and_unpack.sh',
@@ -62,17 +68,19 @@ def l10nRepackPrep(sourceRepoName, objdir, mozconfigPath, srcMozconfigPath,
                  'http://runtime-binaries.pvt.build.mozilla.org/tooltool',
                  '/tools/tooltool.py', 'setup.sh'])
 
-    run_cmd(["make", "-f", "client.mk", "configure"], cwd=sourceRepoName,
+    absSourceRepoPath = os.path.join(os.getcwd(), sourceRepoName)
+    make = getMakeCommand(env.get("USE_PYMAKE"), absSourceRepoPath)
+    run_cmd(make + ["-f", "client.mk", "configure"], cwd=sourceRepoName,
             env=env)
     # we'll get things like (config, tier_base) for Firefox releases
     # and (mozilla/config, mozilla/tier_base) for Thunderbird releases
     for dir in makeDirs:
         if path.basename(dir).startswith("tier"):
-            run_cmd(["make", path.basename(dir)],
+            run_cmd(make + [path.basename(dir)],
                     cwd=path.join(sourceRepoName, objdir, path.dirname(dir)),
                     env=env)
         else:
-            run_cmd(["make"],
+            run_cmd(make,
                     cwd=path.join(sourceRepoName, objdir, dir),
                     env=env)
 
@@ -90,6 +98,11 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
     if 'thunderbird' in productName:
         mozillaDir = 'mozilla/'
 
+    # split on \\ since we care about the absSourceRepoPath for pymake, which
+    # is windows.
+    absSourceRepoPath = os.path.join(os.getcwd(), localeSrcDir.split("\\")[0])
+    make = getMakeCommand(env.get("USE_PYMAKE"), absSourceRepoPath)
+
     compareLocales(compareLocalesRepo, locale, l10nRepoDir, localeSrcDir,
                    l10nIni, revision=revision, merge=merge)
     env["AB_CD"] = locale
@@ -98,7 +111,7 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
         env["LOCALE_MERGEDIR"] = windows2msys(env["LOCALE_MERGEDIR"])
     if sys.platform.startswith('darwin'):
         env["MOZ_PKG_PLATFORM"] = "mac"
-    run_cmd(["make", "installers-%s" % locale], cwd=localeSrcDir, env=env)
+    run_cmd(make + ["installers-%s" % locale], cwd=localeSrcDir, env=env)
     UPLOAD_EXTRA_FILES = []
     nativeDistDir = path.normpath(path.abspath(
         path.join(localeSrcDir, '../../%sdist' % mozillaDir)))
@@ -153,7 +166,7 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
 
     env['UPLOAD_EXTRA_FILES'] = ' '.join(UPLOAD_EXTRA_FILES)
     retry(run_cmd,
-          args=(["make", "upload", "AB_CD=%s" % locale],),
+          args=(make + ["upload", "AB_CD=%s" % locale], ),
           kwargs={'cwd': localeSrcDir, 'env': env})
 
 

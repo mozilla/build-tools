@@ -12,7 +12,7 @@ from build.l10n import repackLocale, l10nRepackPrep
 import build.misc
 from build.upload import postUploadCmdPrefix
 from release.download import downloadReleaseBuilds, downloadUpdateIgnore404
-from release.info import readReleaseConfig, readBranchConfig
+from release.info import readReleaseConfig
 from release.l10n import getReleaseLocalesForChunk
 from util.hg import mercurial, update, make_hg_url
 from util.retry import retry
@@ -131,8 +131,6 @@ def validate(options, args):
 
     releaseConfig = readReleaseConfig(releaseConfigFile,
                                       required=REQUIRED_RELEASE_CONFIG)
-    sourceRepoName = releaseConfig['sourceRepositories'][
-        options.source_repo_key]['name']
     branchConfig = {
         'stage_ssh_key': options.stage_ssh_key,
         'hghost': options.hghost,
