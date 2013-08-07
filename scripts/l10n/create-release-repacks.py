@@ -35,7 +35,7 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                   stageServer, stageUsername, stageSshKey,
                   compareLocalesRepo, merge, platform, brand,
                   generatePartials=False, partialUpdates=None,
-                  appVersion=None, tooltoolManifest=None):
+                  appVersion=None, usePymake=False, tooltoolManifest=None):
     sourceRepoName = path.split(sourceRepo)[-1]
     localeSrcDir = path.join(sourceRepoName, objdir, appName, "locales")
     # Even on Windows we need to use "/" as a separator for this because
@@ -67,6 +67,14 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
         buildNumber=buildNumber,
         signed=signed,
     )
+    if usePymake:
+        env['USE_PYMAKE'] = "1"
+        # HACK!! We need to get rid of this script, ideally by 25.0b1
+        env["INCLUDE"] = "d:\\msvs10\\vc\\include;d:\\msvs10\\vc\\atlmfc\\include;d:\\sdks\\v7.0\\include;d:\\sdks\\v7.0\\include\\atl;d:\\msvs8\\VC\\PlatformSDK\\include;d:\\sdks\\dx10\\include"
+        env["LIBPATH"] = "d:\\msvs10\\vc\\lib;d:\\msvs10\\vc\\atlmfc\\lib;\\c\\WINDOWS\\Microsoft.NET\\Framework\\v2.0.50727"
+        env["LIB"] = "d:\\msvs10\\vc\\lib;d:\\msvs10\\vc\\atlmfc\\lib;d:\\sdks\\v7.0\\lib;d:\\msvs8\\VC\\PlatformSDK\\lib;d:\\msvs8\\SDK\\v2.0\\lib;d:\\mozilla-build\\atlthunk_compat;d:\\sdks\\dx10\\lib\\x86"
+        env["PATH"] = "d:\\msvs10\\VSTSDB\\Deploy;d:\\msvs10\\Common7\\IDE\\;d:\\msvs10\\VC\\BIN;d:\\msvs10\\Common7\\Tools;d:\\msvs10\\VC\\VCPackages;%s" % os.environ["PATH"]
+        env["WIN32_REDIST_DIR"] = "d:\\msvs10\\VC\\redist\\x86\\Microsoft.VC100.CRT"
     build.misc.cleanupObjdir(sourceRepoName, objdir, appName)
     retry(mercurial, args=(sourceRepo, sourceRepoName))
     update(sourceRepoName, revision=revision)
@@ -176,6 +184,8 @@ if __name__ == "__main__":
         "--compare-locales-repo-path", dest="compare_locales_repo_path")
     parser.add_option("--properties-dir", dest="properties_dir")
     parser.add_option("--tooltool-manifest", dest="tooltool_manifest")
+    parser.add_option("--use-pymake", dest="use_pymake",
+                      action="store_true", default=False)
 
     options, args = parser.parse_args()
     if options.generatePartials:
@@ -258,5 +268,6 @@ if __name__ == "__main__":
         brand=brandName,
         generatePartials=options.generatePartials,
         partialUpdates=releaseConfig["partialUpdates"],
+        usePymake=options.use_pymake,
         tooltoolManifest=options.tooltool_manifest,
     )
