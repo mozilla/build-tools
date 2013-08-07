@@ -35,7 +35,7 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                   stageServer, stageUsername, stageSshKey,
                   compareLocalesRepo, merge, platform, brand,
                   generatePartials=False, partialUpdates=None,
-                  appVersion=None):
+                  appVersion=None, tooltoolManifest=None):
     sourceRepoName = path.split(sourceRepo)[-1]
     localeSrcDir = path.join(sourceRepoName, objdir, appName, "locales")
     # Even on Windows we need to use "/" as a separator for this because
@@ -72,7 +72,7 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
     update(sourceRepoName, revision=revision)
     l10nRepackPrep(
         sourceRepoName, objdir, mozconfigPath, srcMozconfigPath, l10nRepoDir,
-        makeDirs, localeSrcDir, env)
+        makeDirs, localeSrcDir, env, tooltoolManifest)
     input_env = retry(downloadReleaseBuilds,
                       args=(stageServer, product, brand, version, buildNumber,
                             platform),
@@ -177,6 +177,7 @@ if __name__ == "__main__":
     parser.add_option(
         "--compare-locales-repo-path", dest="compare_locales_repo_path")
     parser.add_option("--properties-dir", dest="properties_dir")
+    parser.add_option("--tooltool-manifest", dest="tooltool_manifest")
 
     options, args = parser.parse_args()
     if options.generatePartials:
@@ -259,4 +260,5 @@ if __name__ == "__main__":
         brand=brandName,
         generatePartials=options.generatePartials,
         partialUpdates=releaseConfig["partialUpdates"],
+        tooltoolManifest=options.tooltool_manifest,
     )

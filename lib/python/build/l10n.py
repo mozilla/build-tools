@@ -45,7 +45,8 @@ def compareLocales(repo, locale, l10nRepoDir, localeSrcDir, l10nIni,
 
 
 def l10nRepackPrep(sourceRepoName, objdir, mozconfigPath, srcMozconfigPath,
-                   l10nBaseRepoName, makeDirs, localeSrcDir, env):
+                   l10nBaseRepoName, makeDirs, localeSrcDir, env,
+                   tooltoolManifest=None):
     if not path.exists(l10nBaseRepoName):
         os.mkdir(l10nBaseRepoName)
 
@@ -54,6 +55,12 @@ def l10nRepackPrep(sourceRepoName, objdir, mozconfigPath, srcMozconfigPath,
                   path.join(sourceRepoName, ".mozconfig"))
     else:
       shutil.copy(mozconfigPath, path.join(sourceRepoName, ".mozconfig"))
+
+    if tooltoolManifest:
+        run_cmd(['scripts/scripts/tooltool/fetch_and_unpack.sh',
+                 os.path.join(sourceRepoName, tooltoolManifest),
+                 'http://runtime-binaries.pvt.build.mozilla.org/tooltool',
+                 '/tools/tooltool.py', 'setup.sh'])
 
     run_cmd(["make", "-f", "client.mk", "configure"], cwd=sourceRepoName,
             env=env)
