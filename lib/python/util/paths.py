@@ -12,10 +12,21 @@ def windows2msys(path):
     """Translate a Windows pathname to an MSYS pathname.
     Necessary because we call out to ssh/scp, which are MSYS binaries
     and expect MSYS paths."""
-    if not sys.platform.startswith('win32'):
+    if not sys.platform.startswith('win'):
         return path
     (drive, path) = os.path.splitdrive(os.path.abspath(path))
     return "/" + drive[0] + path.replace('\\', '/')
+
+
+def msys2windows(msyspath):
+    if not sys.platform.startswith('win'):
+        return msyspath
+    strippedpath = msyspath.lstrip('/').rstrip('/')
+    subdirs = strippedpath.split('/')
+    # Check if first dir of msyspath is the drive letter
+    if len(subdirs[0]) != 1:
+        return msyspath
+    return subdirs[0].upper() + ':\\' + '\\'.join(subdirs[1:])
 
 
 def cygpath(filename):

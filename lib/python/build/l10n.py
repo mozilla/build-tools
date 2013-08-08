@@ -1,14 +1,17 @@
 import os
 from os import path
+import re
 import shutil
 import sys
+from urllib import urlretrieve
 from urllib2 import urlopen
 from urlparse import urljoin
 
 from release.platforms import getPlatformLocales, buildbot2ftp
+from release.paths import makeCandidatesDir
 from util.commands import run_cmd
 from util.hg import mercurial, update
-from util.paths import windows2msys
+from util.paths import windows2msys, msys2windows
 from util.retry import retry
 
 import logging
@@ -52,7 +55,8 @@ def compareLocales(repo, locale, l10nRepoDir, localeSrcDir, l10nIni,
 
 def l10nRepackPrep(sourceRepoName, objdir, mozconfigPath, srcMozconfigPath,
                    l10nBaseRepoName, makeDirs, localeSrcDir, env,
-                   tooltoolManifest=None):
+                   tooltoolManifest=None, tooltool_script=None,
+                   tooltool_urls=None):
     if not path.exists(l10nBaseRepoName):
         os.mkdir(l10nBaseRepoName)
 
@@ -61,12 +65,17 @@ def l10nRepackPrep(sourceRepoName, objdir, mozconfigPath, srcMozconfigPath,
                     path.join(sourceRepoName, ".mozconfig"))
     else:
         shutil.copy(mozconfigPath, path.join(sourceRepoName, ".mozconfig"))
+    with open(path.join(sourceRepoName, ".mozconfig"), "a") as mozconfig:
+        mozconfig.write("ac_add_options --enable-official-branding")
+
+    run_cmd(["mkdir", "-p", "l10n"])
 
     if tooltoolManifest:
-        run_cmd(['scripts/scripts/tooltool/fetch_and_unpack.sh',
-                 os.path.join(sourceRepoName, tooltoolManifest),
-                 'http://runtime-binaries.pvt.build.mozilla.org/tooltool',
-                 '/tools/tooltool.py', 'setup.sh'])
+        cmd = ['scripts/scripts/tooltool/fetch_and_unpack.sh',
+               os.path.join(sourceRepoName, tooltoolManifest),
+               tooltool_urls[0],  # TODO: pass all urls when tooltool ready
+               tooltool_script, 'setup.sh']
+        run_cmd(cmd)
 
     absSourceRepoPath = os.path.join(os.getcwd(), sourceRepoName)
     make = getMakeCommand(env.get("USE_PYMAKE"), absSourceRepoPath)
@@ -88,7 +97,8 @@ def l10nRepackPrep(sourceRepoName, objdir, mozconfigPath, srcMozconfigPath,
 def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
                  l10nIni, compareLocalesRepo, env, merge=True,
                  productName=None, platform=None,
-                 version=None, partialUpdates=None):
+                 version=None, partialUpdates=None,
+                 buildNumber=None, stageServer=None):
     repo = "/".join([l10nBaseRepo, locale])
     localeDir = path.join(l10nRepoDir, locale)
     retry(mercurial, args=(repo, localeDir))
@@ -103,21 +113,21 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
     absSourceRepoPath = os.path.join(os.getcwd(), localeSrcDir.split("\\")[0])
     make = getMakeCommand(env.get("USE_PYMAKE"), absSourceRepoPath)
 
-    compareLocales(compareLocalesRepo, locale, l10nRepoDir, localeSrcDir,
-                   l10nIni, revision=revision, merge=merge)
     env["AB_CD"] = locale
     env["LOCALE_MERGEDIR"] = path.abspath(path.join(localeSrcDir, "merged"))
     if sys.platform.startswith('win'):
         env["LOCALE_MERGEDIR"] = windows2msys(env["LOCALE_MERGEDIR"])
     if sys.platform.startswith('darwin'):
         env["MOZ_PKG_PLATFORM"] = "mac"
-    run_cmd(make + ["installers-%s" % locale], cwd=localeSrcDir, env=env)
     UPLOAD_EXTRA_FILES = []
     nativeDistDir = path.normpath(path.abspath(
         path.join(localeSrcDir, '../../%sdist' % mozillaDir)))
     posixDistDir = windows2msys(nativeDistDir)
     mar = '%s/host/bin/mar' % posixDistDir
     mbsdiff = '%s/host/bin/mbsdiff' % posixDistDir
+    if platform.startswith('win'):
+        mar += ".exe"
+        mbsdiff += ".exe"
     current = '%s/current' % posixDistDir
     previous = '%s/previous' % posixDistDir
     updateDir = 'update/%s/%s' % (buildbot2ftp(platform), locale)
@@ -133,6 +143,35 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
         prevMarDir = '../../../../../'
     env['MAR'] = mar
     env['MBSDIFF'] = mbsdiff
+
+    log.info("Download mar tools")
+    if stageServer:
+        candidates_dir = makeCandidatesDir(productName, version, buildNumber,
+                                           protocol="http", server=stageServer)
+        if not path.isfile(msys2windows(mar)):
+            marUrl = "%(c_dir)s/mar-tools/%(platform)s/%(mar)s" % \
+                dict(c_dir=candidates_dir, platform=platform,
+                     mar=path.basename(mar))
+            run_cmd(['mkdir', '-p', path.dirname(mar)])
+            log.info("Downloading %s to %s", marUrl, mar)
+            urlretrieve(marUrl, msys2windows(mar))
+            if not sys.platform.startswith('win'):
+                run_cmd(['chmod', '755', mar])
+        if not path.isfile(msys2windows(mbsdiff)):
+            mbsdiffUrl = "%(c_dir)s/mar-tools/%(platform)s/%(mbsdiff)s" % \
+                dict(c_dir=candidates_dir, platform=platform,
+                     mbsdiff=path.basename(mbsdiff))
+            run_cmd(['mkdir', '-p', path.dirname(mbsdiff)])
+            log.info("Downloading %s to %s", mbsdiffUrl, mbsdiff)
+            urlretrieve(mbsdiffUrl, msys2windows(mbsdiff))
+            if not sys.platform.startswith('win'):
+                run_cmd(['chmod', '755', mbsdiff])
+    else:
+        log.warning('stageServer not set. mar tools will *not* be downloaded.')
+
+    compareLocales(compareLocalesRepo, locale, l10nRepoDir, localeSrcDir,
+                   l10nIni, revision=revision, merge=merge)
+    run_cmd(make + ["installers-%s" % locale], cwd=localeSrcDir, env=env)
 
     run_cmd(['rm', '-rf', current])
     run_cmd(['mkdir', current])

@@ -35,7 +35,8 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                   stageServer, stageUsername, stageSshKey,
                   compareLocalesRepo, merge, platform, brand,
                   generatePartials=False, partialUpdates=None,
-                  appVersion=None, usePymake=False, tooltoolManifest=None):
+                  appVersion=None, usePymake=False, tooltoolManifest=None,
+                  tooltool_script=None, tooltool_urls=None):
     sourceRepoName = path.split(sourceRepo)[-1]
     localeSrcDir = path.join(sourceRepoName, objdir, appName, "locales")
     # Even on Windows we need to use "/" as a separator for this because
@@ -80,7 +81,7 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
     update(sourceRepoName, revision=revision)
     l10nRepackPrep(
         sourceRepoName, objdir, mozconfigPath, srcMozconfigPath, l10nRepoDir,
-        makeDirs, localeSrcDir, env, tooltoolManifest)
+        makeDirs, localeSrcDir, env, tooltoolManifest, tooltool_script, tooltool_urls)
     input_env = retry(downloadReleaseBuilds,
                       args=(stageServer, product, brand, version, buildNumber,
                             platform),
@@ -104,7 +105,8 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                          compareLocalesRepo=compareLocalesRepo, env=env,
                          merge=merge,
                          productName=product, platform=platform,
-                         version=version, partialUpdates=partialUpdates)
+                         version=version, partialUpdates=partialUpdates,
+                         buildNumber=buildNumber, stageServer=stageServer)
         except Exception, e:
             failed.append((l, format_exc()))
 
@@ -126,7 +128,7 @@ def validate(options, args):
     if not options.configfile:
         log.info("Must pass --configfile")
         sys.exit(1)
-    releaseConfigFile = path.join("buildbot-configs", options.releaseConfig)
+    releaseConfigFile = "/".join(["buildbot-configs", options.releaseConfig])
 
     if options.chunks or options.thisChunk:
         assert options.chunks and options.thisChunk, \
@@ -152,8 +154,7 @@ if __name__ == "__main__":
     from optparse import OptionParser
     parser = OptionParser("")
 
-    makeDirs = ["config", "tier_base", "tier_nspr", path.join(
-        "modules", "libmar")]
+    makeDirs = ["config"]
 
     parser.set_defaults(
         buildbotConfigs=os.environ.get("BUILDBOT_CONFIGS",
@@ -184,15 +185,13 @@ if __name__ == "__main__":
         "--compare-locales-repo-path", dest="compare_locales_repo_path")
     parser.add_option("--properties-dir", dest="properties_dir")
     parser.add_option("--tooltool-manifest", dest="tooltool_manifest")
+    parser.add_option("--tooltool-script", dest="tooltool_script",
+                      default="/tools/tooltool.py")
+    parser.add_option("--tooltool-url", dest="tooltool_urls", action="append")
     parser.add_option("--use-pymake", dest="use_pymake",
                       action="store_true", default=False)
 
     options, args = parser.parse_args()
-    if options.generatePartials:
-        makeDirs.extend([
-            path.join("modules", "libbz2"),
-            path.join("other-licenses", "bsdiff")
-        ])
     retry(mercurial, args=(options.buildbotConfigs, "buildbot-configs"))
     update("buildbot-configs", revision=options.releaseTag)
     sys.path.append(os.getcwd())
@@ -204,8 +203,13 @@ if __name__ == "__main__":
         brandName = releaseConfig["brandName"]
     except KeyError:
         brandName = releaseConfig["productName"].title()
-    mozconfig = path.join("buildbot-configs", "mozilla2", options.platform,
-                          sourceRepoInfo['name'], "release", "l10n-mozconfig")
+    platform = options.platform
+    if platform == "linux":
+        platform = "linux32"
+    mozconfig = path.join(sourceRepoInfo['name'], releaseConfig["appName"],
+                          "config", "mozconfigs", platform,
+                          "l10n-mozconfig")
+
     if options.chunks:
         locales = retry(getReleaseLocalesForChunk,
                         args=(
@@ -244,7 +248,7 @@ if __name__ == "__main__":
     createRepacks(
         sourceRepo=make_hg_url(branchConfig["hghost"], sourceRepoInfo["path"]),
         revision=options.releaseTag,
-        l10nRepoDir=l10nRepoDir,
+        l10nRepoDir='l10n',
         l10nBaseRepo=make_hg_url(branchConfig["hghost"],
                                  releaseConfig["l10nRepoPath"]),
         mozconfigPath=mozconfig,
@@ -270,4 +274,6 @@ if __name__ == "__main__":
         partialUpdates=releaseConfig["partialUpdates"],
         usePymake=options.use_pymake,
         tooltoolManifest=options.tooltool_manifest,
+        tooltool_script=options.tooltool_script,
+        tooltool_urls=options.tooltool_urls,
     )
