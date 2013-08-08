@@ -6,6 +6,9 @@ import re
 import os
 import sys
 import inspect
+import time
+
+from util.retry import retry
 
 OK = green('[OK]')
 FAIL = red('[FAIL]')
@@ -158,9 +161,13 @@ def start(master):
 
 
 def action_update(master):
+    print "sleeping 5 seconds to make sure that hg.m.o syncs NFS... ",
+    time.sleep(5)
+    print OK
     with show('running'):
         with cd(master['basedir']):
-            run('source bin/activate && make update')
+            retry(run, args=('source bin/activate && make update',),
+                  sleeptime=10, retry_exceptions=(SystemExit,))
     print OK, "updated %(hostname)s:%(basedir)s" % master
 
 
