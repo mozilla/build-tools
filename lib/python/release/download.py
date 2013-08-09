@@ -7,7 +7,7 @@ from urllib2 import urlopen, HTTPError
 from release.platforms import ftp_platform_map, buildbot2ftp
 from release.l10n import makeReleaseRepackUrls
 from release.paths import makeCandidatesDir
-from util.paths import windows2msys
+from util.paths import windows2msys, msys2windows
 from util.file import directoryContains
 from util.commands import run_cmd
 
@@ -32,7 +32,7 @@ def getInstallerExt(platform):
 
 def downloadReleaseBuilds(stageServer, productName, brandName, version,
                           buildNumber, platform, candidatesDir=None,
-                          signed=False):
+                          signed=False, usePymake=False):
     if candidatesDir is None:
         candidatesDir = makeCandidatesDir(productName, version, buildNumber,
                                           protocol='http', server=stageServer)
@@ -46,13 +46,17 @@ def downloadReleaseBuilds(stageServer, productName, brandName, version,
         log.info("Downloading %s to %s", url, fileName)
         urlretrieve(url, fileName)
         if fileName.endswith('exe'):
-            env['WIN32_INSTALLER_IN'] = windows2msys(path.join(os.getcwd(),
-                                                     fileName))
+            if usePymake:
+                env['WIN32_INSTALLER_IN'] = msys2windows(path.join(os.getcwd(),
+                                                         fileName))
+            else:
+                env['WIN32_INSTALLER_IN'] = windows2msys(path.join(os.getcwd(),
+                                                         fileName))
         else:
-            if platform.startswith('win'):
+            if platform.startswith('win') and not usePymake:
                 env['ZIP_IN'] = windows2msys(path.join(os.getcwd(), fileName))
             else:
-                env['ZIP_IN'] = path.join(os.getcwd(), fileName)
+                env['ZIP_IN'] = msys2windows(path.join(os.getcwd(), fileName))
 
     return env
 

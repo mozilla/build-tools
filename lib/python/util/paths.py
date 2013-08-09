@@ -18,15 +18,19 @@ def windows2msys(path):
     return "/" + drive[0] + path.replace('\\', '/')
 
 
-def msys2windows(msyspath):
+def msys2windows(path):
+    """ Translate an MSYS pathname to Windows.
+        Possibly needed for pymake. """
     if not sys.platform.startswith('win'):
-        return msyspath
-    strippedpath = msyspath.lstrip('/').rstrip('/')
+        return path
+    if '/' not in path:
+        return path.replace('\\', '\\\\\\\\')
+    strippedpath = path.lstrip('/').rstrip('/')
     subdirs = strippedpath.split('/')
     # Check if first dir of msyspath is the drive letter
     if len(subdirs[0]) != 1:
-        return msyspath
-    return subdirs[0].upper() + ':\\' + '\\'.join(subdirs[1:])
+        return path.replace('\\', '\\\\\\\\')
+    return subdirs[0].upper() + ':\\' + '\\'.join(subdirs[1:]).replace('\\', '\\\\\\\\')
 
 
 def cygpath(filename):
