@@ -376,10 +376,31 @@ else
                     log ""
                     ;;
 
+                BAD_HTTP_RESPONSE_CODE_FOR_MAR)
+                    mar_url="${entry1}"
+                    mar_headers_file="${entry2}"
+                    mar_file_curl_exit_code="${entry3}"
+                    mar_actual_url="${entry4}"
+                    http_response_code="$(sed -e "s/$(printf '\r')//" -n -e '/^HTTP\//p' "${mar_headers_file}" | tail -1)"
+                    log "FAILURE $((++failure)): '${http_response_code}' for mar file"
+                    log ""
+                    log "    Mar file url: ${mar_url}"
+                    [ -n "${mar_actual_url}" ] && log "    This redirected to: ${mar_actual_url}"
+                    log ""
+                    log "    These are the update xml file(s) that referenced this mar:"
+                    show_update_xml_entries "${mar_url}"
+                    log ""
+                    log "    Curl returned exit code: ${mar_file_curl_exit_code}"
+                    log ""
+                    log "    The HTTP headers were:"
+                    sed -e "s/$(printf '\r')//" -e "s/^/$(date):          /" -e '$a\' "${mar_headers_file}"
+                    log ""
+                    ;;
+
                 *)
                     log "ERROR: Unknown failure code - '${failure_code}'"
                     log "ERROR: This is a serious bug in this script."
-                    log "ERROR: Only known failure codes are: UPDATE_XML_UNAVAILABLE, UPDATE_XML_REDIRECT_FAILED, PATCH_TYPE_MISSING, NO_MAR_FILE, MAR_FILE_WRONG_SIZE"
+                    log "ERROR: Only known failure codes are: UPDATE_XML_UNAVAILABLE, UPDATE_XML_REDIRECT_FAILED, PATCH_TYPE_MISSING, NO_MAR_FILE, MAR_FILE_WRONG_SIZE, BAD_HTTP_RESPONSE_CODE_FOR_MAR"
                     log ""
                     log "FAILURE $((++failure)): Data from failure is: ${entry1} ${entry2} ${entry3} ${entry4} ${entry5} ${entry6}"
                     log ""
