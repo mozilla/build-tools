@@ -123,6 +123,12 @@ if __name__ == "__main__":
                              channel=options.channel,
                              aus_server=aus_server_url, to=to_path)
     to_locales = pc['release'][to_version]['locales']
+    # remove exceptions for to build, e.g. "ja" for mac
+    for locale, platforms in pc['release'][to_version]['exceptions'].iteritems():
+        if ftp_platform not in platforms and locale in to_locales:
+            log.info("Removing %s locale from %s platform for %s" % (
+                     locale, ftp_platform, to_version))
+            to_locales.remove(locale)
     # Drop locales which are in full_check_locales but not in to_locales
     for locale in list(full_check_locales):
         if locale not in to_locales:
@@ -141,7 +147,7 @@ if __name__ == "__main__":
                 log.warn("Not generating updates for %s locale because it is"
                          " dropped in %s" % (locale, to_version))
                 locales.remove(locale)
-        # remove exceptions, e.g. "ja" form mac
+        # remove exceptions, e.g. "ja" for mac
         for locale, platforms in pc['release'][v]['exceptions'].iteritems():
             if ftp_platform not in platforms and locale in locales:
                 log.info("Removing %s locale from %s platform for %s" % (
@@ -162,24 +168,27 @@ if __name__ == "__main__":
             # Full test for all locales
             # "from" and "to" to be downloaded from the same staging
             # server in dev environment
-            log.info("Generating configs for partial update checks for %s" % v)
-            uvc.addRelease(release=appVersion, build_id=build_id,
-                           locales=locales,
-                           patch_types=['complete', 'partial'],
-                           from_path=from_path, ftp_server_from=staging_server,
-                           ftp_server_to=staging_server)
+            if len(locales) > 0:
+                log.info("Generating configs for partial update checks for %s" % v)
+                uvc.addRelease(release=appVersion, build_id=build_id,
+                               locales=locales,
+                               patch_types=['complete', 'partial'],
+                               from_path=from_path, ftp_server_from=staging_server,
+                               ftp_server_to=staging_server)
         else:
             # Full test for limited locales
             # "from" and "to" to be downloaded from different staging
             # server in dev environment
-            log.info("Generating full check configs for %s" % v)
-            uvc.addRelease(release=appVersion, build_id=build_id,
-                           locales=full_check_locales, from_path=from_path,
-                           ftp_server_from=previous_releases_staging_server,
-                           ftp_server_to=staging_server)
+            if len(full_check_locales) > 0:
+                log.info("Generating full check configs for %s" % v)
+                uvc.addRelease(release=appVersion, build_id=build_id,
+                               locales=full_check_locales, from_path=from_path,
+                               ftp_server_from=previous_releases_staging_server,
+                               ftp_server_to=staging_server)
             # Quick test for other locales, no download
-            log.info("Generating quick check configs for %s" % v)
-            uvc.addRelease(release=appVersion, build_id=build_id,
-                           locales=quick_check_locales)
+            if len(quick_check_locales) > 0:
+                log.info("Generating quick check configs for %s" % v)
+                uvc.addRelease(release=appVersion, build_id=build_id,
+                               locales=quick_check_locales)
     f = open(options.output, 'w')
     uvc.write(f)
