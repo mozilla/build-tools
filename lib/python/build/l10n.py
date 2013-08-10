@@ -173,37 +173,35 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
                    l10nIni, revision=revision, merge=merge)
     run_cmd(make + ["installers-%s" % locale], cwd=localeSrcDir, env=env)
 
-    if not sys.platform.startswith('win'):
-        # HACK ALERT: mar cannot be generated on windows
-        run_cmd(['rm', '-rf', current])
-        run_cmd(['mkdir', current])
-        run_cmd(['perl', unwrap_full_update, current_mar],
-                cwd=path.join(nativeDistDir, 'current'), env=env)
-        for oldVersion in partialUpdates:
-            prevMar = partialUpdates[oldVersion]['mar']
-            if prevMar:
-                partial_mar_name = '%s-%s-%s.partial.mar' % (productName, oldVersion,
-                                                             version)
-                partial_mar = '%s/%s' % (updateAbsDir, partial_mar_name)
-                UPLOAD_EXTRA_FILES.append('%s/%s' % (updateDir, partial_mar_name))
-                run_cmd(['rm', '-rf', previous])
-                run_cmd(['mkdir', previous])
-                run_cmd(
-                    ['perl', unwrap_full_update, '%s/%s' % (prevMarDir, prevMar)],
-                    cwd=path.join(nativeDistDir, 'previous'), env=env)
-                run_cmd(['bash', make_incremental_update, partial_mar, previous,
-                        current], cwd=nativeDistDir, env=env)
-                if os.environ.get('MOZ_SIGN_CMD'):
-                    run_cmd(['bash', '-c',
-                            '%s -f mar -f gpg "%s"' %
-                            (os.environ['MOZ_SIGN_CMD'], partial_mar)],
-                            env=env)
-                    UPLOAD_EXTRA_FILES.append(
-                        '%s/%s.asc' % (updateDir, partial_mar_name))
-            else:
-                log.warning(
-                    "Skipping partial MAR creation for %s %s" % (oldVersion,
-                                                                locale))
+    run_cmd(['rm', '-rf', current])
+    run_cmd(['mkdir', current])
+    run_cmd(['perl', unwrap_full_update, current_mar],
+            cwd=path.join(nativeDistDir, 'current'), env=env)
+    for oldVersion in partialUpdates:
+        prevMar = partialUpdates[oldVersion]['mar']
+        if prevMar:
+            partial_mar_name = '%s-%s-%s.partial.mar' % (productName, oldVersion,
+                                                         version)
+            partial_mar = '%s/%s' % (updateAbsDir, partial_mar_name)
+            UPLOAD_EXTRA_FILES.append('%s/%s' % (updateDir, partial_mar_name))
+            run_cmd(['rm', '-rf', previous])
+            run_cmd(['mkdir', previous])
+            run_cmd(
+                ['perl', unwrap_full_update, '%s/%s' % (prevMarDir, prevMar)],
+                cwd=path.join(nativeDistDir, 'previous'), env=env)
+            run_cmd(['bash', make_incremental_update, partial_mar, previous,
+                    current], cwd=nativeDistDir, env=env)
+            if os.environ.get('MOZ_SIGN_CMD'):
+                run_cmd(['bash', '-c',
+                        '%s -f mar -f gpg "%s"' %
+                        (os.environ['MOZ_SIGN_CMD'], partial_mar)],
+                        env=env)
+                UPLOAD_EXTRA_FILES.append(
+                    '%s/%s.asc' % (updateDir, partial_mar_name))
+        else:
+            log.warning(
+                "Skipping partial MAR creation for %s %s" % (oldVersion,
+                                                             locale))
 
     env['UPLOAD_EXTRA_FILES'] = ' '.join(UPLOAD_EXTRA_FILES)
     retry(run_cmd,
