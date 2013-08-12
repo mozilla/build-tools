@@ -112,19 +112,12 @@ rm -rf www; mkdir www
 rm -rf objdir-mc-opt; mkdir objdir-mc-opt
 
 echo "Starting build"
-set +e
 # XXX: compile-build hack
 echo "ac_add_options --enable-stdcxx-compat" > src/.mozconfig
 mock_mozilla -r mozilla-centos6-x86_64 --cwd=$PWD --shell --unpriv /bin/env \
   PATH=$MOCK_PATH LD_LIBRARY_PATH=$PWD/dxr/trilite \
   "dxr-venv/bin/python dxr/bin/dxr-build.py -j6 -f dxr.config -t $branch -v"
-  2>&1 | grep -v 'Unprocessed kind'
-retval=${PIPESTATUS[0]}
-
-set -e
-if [ $retval != 0 ]; then
-    exit $retval
-fi
+  2>&1 || exit 2
 
 fn=dxr-$branch.tar.gz
 
