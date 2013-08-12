@@ -111,12 +111,16 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
     # split on \\ since we care about the absSourceRepoPath for pymake, which
     # is windows.
     absSourceRepoPath = os.path.join(os.getcwd(), localeSrcDir.split("\\")[0])
-    make = getMakeCommand(env.get("USE_PYMAKE"), absSourceRepoPath)
+    use_pymake = env.get("USE_PYMAKE", False)
+    make = getMakeCommand(use_pymake, absSourceRepoPath)
 
     env["AB_CD"] = locale
     env["LOCALE_MERGEDIR"] = path.abspath(path.join(localeSrcDir, "merged"))
     if sys.platform.startswith('win'):
-        env["LOCALE_MERGEDIR"] = windows2msys(env["LOCALE_MERGEDIR"])
+        if use_pymake:
+            env["LOCALE_MERGEDIR"] = msys2windows(env["LOCALE_MERGEDIR"])
+        else:
+            env["LOCALE_MERGEDIR"] = windows2msys(env["LOCALE_MERGEDIR"])
     if sys.platform.startswith('darwin'):
         env["MOZ_PKG_PLATFORM"] = "mac"
     UPLOAD_EXTRA_FILES = []
