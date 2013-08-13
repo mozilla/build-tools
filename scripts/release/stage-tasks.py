@@ -42,10 +42,6 @@ DEFAULT_RSYNC_EXCLUDES = ['--exclude=*tests*',
                           '--exclude=jsshell*',
                           '--exclude=host',
                           '--exclude=*.json',
-                          # bug 882032: Don't push partner builds to releases/
-                          # for betas
-                          '--exclude=win32-EUballot**b[0-9]*.exe',
-                          '--exclude=win32-EUballot**b[0-9]*.exe.asc',
                           ]
 
 VIRUS_SCAN_CMD = ['nice', 'ionice', '-c2', '-n7',
@@ -141,7 +137,7 @@ def pushToMirrors(productName, version, buildNumber, stageServer,
         run_remote_cmd(
             ['chmod', 'u=rwx,g=rxs,o=rx', target_dir], server=stageServer,
             username=stageUsername, sshKey=stageSshKey)
-    rsync_cmd = ['rsync', '-avm']
+    rsync_cmd = ['rsync', '-av']
     if dryRun:
         rsync_cmd.append('-n')
     run_remote_cmd(rsync_cmd + excludes + [source_dir, target_dir],
