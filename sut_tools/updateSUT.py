@@ -103,7 +103,7 @@ def version(dm):
 
 
 def download_apk():
-    url = 'http://build.mozilla.org/talos/mobile/sutAgentAndroid.%s.apk' % target_version
+    url = 'http://talos-bundles.pvt.build.mozilla.org/mobile/sutAgentAndroid.%s.apk' % target_version
     log.info("INFO: updateSUT.py: We're downloading the apk: %s" % url)
     req = urllib2.Request(url)
     try:
