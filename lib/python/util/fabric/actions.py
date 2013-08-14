@@ -161,8 +161,8 @@ def start(master):
 
 
 def action_update(master):
-    print "sleeping 5 seconds to make sure that hg.m.o syncs NFS... ",
-    time.sleep(5)
+    print "sleeping 30 seconds to make sure that hg.m.o syncs NFS... ",
+    time.sleep(30)
     print OK
     with show('running'):
         with cd(master['basedir']):
