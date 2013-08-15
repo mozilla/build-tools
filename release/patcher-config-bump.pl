@@ -141,7 +141,10 @@ sub BumpPatcherConfig {
     my $brand = $config{'brand'};
     my $version = $config{'version'};
     my $oldVersion = $config{'old-version'};
-    my @partialVersions = @{$config{'partial-version'}};
+    my @partialVersions = ();
+    if (defined($config{'partial-version'})){
+        @partialVersions = @{$config{'partial-version'}};
+    }
     my $appVersion = $config{'app-version'};
     my $build = $config{'build-number'};
     my $patcherConfig = $config{'patcher-config'};
