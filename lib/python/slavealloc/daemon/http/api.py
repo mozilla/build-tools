@@ -83,6 +83,7 @@ class Instance(resource.Resource):
         res.close()
 
         request.setHeader('content-type', 'application/json')
+        request.setHeader('Cache-control', 'no-cache')
 
         # handle nonexistent rows
         if not row:
@@ -133,6 +134,7 @@ class Collection(resource.Resource):
         res = query.execute()
 
         request.setHeader('content-type', 'application/json')
+        request.setHeader('Cache-control', 'no-cache')
         return simplejson.dumps([dict(r.items()) for r in res.fetchall()])
 
 
@@ -221,6 +223,7 @@ class BuildbotTacResource(resource.Resource):
             alloc = None
 
         request.setHeader('content-type', 'application/json')
+        request.setHeader('Cache-control', 'no-cache')
 
         if not alloc:
             request.setResponseCode(404)
