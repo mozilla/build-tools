@@ -156,6 +156,9 @@ if __name__ == "__main__":
         # Exclude locales being full checked
         quick_check_locales = [l for l in locales
                                if l not in full_check_locales]
+        # Get the intersection of from and to full_check_locales
+        this_full_check_locales = [l for l in full_check_locales
+                                   if l in locales]
 
         from_ = makeReleaseRepackUrls(
             product_name, app_name, v, options.platform,
@@ -179,10 +182,10 @@ if __name__ == "__main__":
             # Full test for limited locales
             # "from" and "to" to be downloaded from different staging
             # server in dev environment
-            if len(full_check_locales) > 0:
+            if len(this_full_check_locales) > 0:
                 log.info("Generating full check configs for %s" % v)
                 uvc.addRelease(release=appVersion, build_id=build_id,
-                               locales=full_check_locales, from_path=from_path,
+                               locales=this_full_check_locales, from_path=from_path,
                                ftp_server_from=previous_releases_staging_server,
                                ftp_server_to=staging_server)
             # Quick test for other locales, no download
