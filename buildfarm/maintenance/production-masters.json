@@ -313,7 +313,6 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "ics_armv7a_gecko",
       "linux32_gecko",
       "linux64_gecko",
       "emulator"
@@ -353,7 +352,6 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "ics_armv7a_gecko",
       "linux32_gecko",
       "linux64_gecko",
       "emulator"
@@ -393,7 +391,6 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "ics_armv7a_gecko",
       "linux32_gecko",
       "linux64_gecko",
       "emulator"
@@ -433,7 +430,6 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "ics_armv7a_gecko",
       "linux32_gecko",
       "linux64_gecko",
       "emulator"
@@ -797,7 +793,6 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "ics_armv7a_gecko",
       "linux32_gecko",
       "linux64_gecko",
       "emulator"
@@ -837,7 +832,6 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "ics_armv7a_gecko",
       "linux32_gecko",
       "linux64_gecko",
       "emulator"
