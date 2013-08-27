@@ -19,7 +19,6 @@ function initLoad() {
     "win7-ix": 0,
     "win64": 0,
     "android": 0,
-    "ics_armv7a_gecko": 0,
     "emulator": 0,
     "android-armv6": 0,
     "android-noion": 0,
@@ -65,7 +64,6 @@ function getTryLoads(callback) {
         totalBuildLoad["android-armv6"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
         totalBuildLoad["android-noion"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
         totalBuildLoad["android-x86"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
-        totalBuildLoad["ics_armv7a_gecko"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
         totalBuildLoad["emulator"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
         totalBuildLoad["panda"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
         totalBuildLoad["unagi"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
@@ -88,7 +86,6 @@ function getTryLoads(callback) {
                                      load_try_test["panda"] + load_nontry_test["panda"]);
         totalTestLoad["android-armv6"] = load_try_test["tegra"] + load_nontry_test["tegra"];
         totalTestLoad["android-noion"] = load_try_test["tegra"] + load_nontry_test["tegra"];
-        totalTestLoad["ics_armv7a_gecko"] = load_try_test["linux"] + load_nontry_test["linux"];
         totalTestLoad["panda"] = load_try_test["panda"] + load_nontry_test["panda"];
         // emulator / unagi: N/A
         callback(totalBuildLoad, totalTestLoad);
