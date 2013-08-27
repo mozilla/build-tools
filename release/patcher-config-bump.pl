@@ -167,7 +167,7 @@ sub BumpPatcherConfig {
         die "Could not load locale manifest";
     }
 
-    my $patcherConfigObj = new Config::General(-ConfigFile => $patcherConfig);
+    my $patcherConfigObj = new Config::General(-ConfigFile => $patcherConfig, -SaveSorted => 1);
 
     my %rawConfig = $patcherConfigObj->getall();
     die "ASSERT: BumpPatcherConfig(): null rawConfig" 
