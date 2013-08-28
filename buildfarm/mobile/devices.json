@@ -1611,9 +1611,8 @@
         "pduid": ".AA1"
     },
     "tegra-368": {
-        "foopy": "foopy32",
-        "pdu": "pdu4.dcops.build.mtv1.mozilla.com",
-        "pduid": ".AA2"
+        "foopy": "None",
+        "_comment": "decommissioned in bug 900507",
     },
     "tegra-369": {
         "foopy": "foopy32",
