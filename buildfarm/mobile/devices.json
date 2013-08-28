@@ -1612,7 +1612,7 @@
     },
     "tegra-368": {
         "foopy": "None",
-        "_comment": "decommissioned in bug 900507",
+        "_comment": "decommissioned in bug 900507"
     },
     "tegra-369": {
         "foopy": "foopy32",
