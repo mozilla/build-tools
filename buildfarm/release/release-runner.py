@@ -29,7 +29,6 @@ from util.fabric.common import check_fabric, FabricHelper
 from util.sendmail import sendmail
 from util.file import load_config, get_config
 
-logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s")
 log = logging.getLogger(__name__)
 
 HG = 'hg.mozilla.org'
@@ -207,9 +206,11 @@ def main(options):
     config = load_config(options.config)
 
     if config.getboolean('release-runner', 'verbose'):
-        log.setLevel(logging.DEBUG)
+        log_level=logging.DEBUG
     else:
-        log.setLevel(logging.INFO)
+        top_level=logging.INFO
+    logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
+                        level=log_level)
 
     check_buildbot()
     check_fabric()
