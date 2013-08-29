@@ -255,7 +255,14 @@ sub BumpPatcherConfig {
 
     my $buildStr = 'build' . $build;
     my @oldPartialVersions = keys(%{$currentUpdateObj->{'partials'}});
-    my $oldPaths = $currentUpdateObj->{'partials'}->{$oldPartialVersions[0]};
+    my $oldPaths;
+    if ($#oldPartialVersions > 0) {
+        $oldPaths = $currentUpdateObj->{'partials'}->{$oldPartialVersions[0]};
+    } else {
+        print "WARNING: No old partials, using default values\n";
+        $oldPaths = {path => "update/%platform%/%locale%/${product}-doesnotexist.partial.mar"};
+        $oldPaths->{"betatest-url"} = $oldPaths->{"path"};
+    }
 
     $currentUpdateObj->{'partials'} = {};
     for my $partialVersion (@partialVersions) {
