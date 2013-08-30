@@ -143,7 +143,7 @@ def getClobberDates(clobberURL, branch, buildername, builddir, slave, master):
                   builddir=builddir, slave=slave, master=master)
     url = "%s?%s" % (clobberURL, urllib.urlencode(params))
     print "Checking clobber URL: %s" % url
-    data = urllib2.urlopen(url).read().strip()
+    data = urllib2.urlopen(url, timeout=30).read().strip()
 
     retval = {}
     try:
