@@ -305,7 +305,8 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "linux",
-      "linux64"
+      "linux64",
+      "linux64-asan"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -344,7 +345,8 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "linux",
-      "linux64"
+      "linux64",
+      "linux64-asan"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -383,7 +385,8 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "linux",
-      "linux64"
+      "linux64",
+      "linux64-asan"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -422,7 +425,8 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "linux",
-      "linux64"
+      "linux64",
+      "linux64-asan"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -785,7 +789,8 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "linux",
-      "linux64"
+      "linux64",
+      "linux64-asan"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -824,7 +829,8 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "linux",
-      "linux64"
+      "linux64",
+      "linux64-asan"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
