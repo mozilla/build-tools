@@ -65,30 +65,6 @@ def verify_repo(branch, revision, hghost):
     return success
 
 
-def verify_build(sourceRepo, hghost):
-    """ Ensure that the bumpFiles match what the release config wants them to
-    be"""
-    success = True
-    for filename, versions in sourceRepo['bumpFiles'].iteritems():
-        try:
-            url = make_hg_url(hghost, sourceRepo['path'],
-                              revision=sourceRepo['revision'],
-                              filename=filename)
-            found_version = urllib2.urlopen(url).read()
-            if not find_version(found_version, versions['version']):
-                log.error("%s has incorrect version '%s' (expected '%s')" %
-                          (filename, found_version, versions['version']))
-                success = False
-                error_tally.add('verify_build')
-        except urllib2.HTTPError, inst:
-            log.error("cannot find %s. Check again, or -b to bypass" %
-                      inst.geturl())
-            success = False
-            error_tally.add('verify_build')
-
-    return success
-
-
 def verify_configs(configs_dir, revision, hghost, configs_repo, changesets,
                    filename):
     """Check the release_configs and l10n-changesets against tagged
@@ -491,13 +467,6 @@ if __name__ == '__main__':
                                    branchConfig['hghost']):
                     test_success = False
                     log.error("Error verifying repos")
-
-            # if this is a respin, verify that the version/milestone files
-            # have been bumped
-            if buildNumber > 1:
-                for sr in releaseConfig['sourceRepositories'].values():
-                    if not verify_build(sr, branchConfig['hghost']):
-                        test_success = False
 
     if test_success:
         if not options.dryrun:
