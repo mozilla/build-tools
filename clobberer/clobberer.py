@@ -217,6 +217,7 @@ if __name__ == "__main__":
         our_clobber_date = read_file("last-clobber")
 
         clobber = False
+        clobberType = None
 
         print "%s:Our last clobber date: " % builddir, ts_to_str(our_clobber_date)
         print "%s:Server clobber date:   " % builddir, ts_to_str(server_clobber_date)
@@ -231,6 +232,7 @@ if __name__ == "__main__":
                 # If the server's clobber date is greater than our last clobber date,
                 # then we should clobber.
                 clobber = True
+                clobberType = "forced"
                 # We should also update our clobber date to match the server's
                 our_clobber_date = server_clobber_date
                 if who:
@@ -249,11 +251,13 @@ if __name__ == "__main__":
                 # We've never been clobbered
                 # Set our last clobber time to now, so that we'll clobber
                 # properly after periodicClobberTime
+                clobberType = "purged"
                 our_clobber_date = now
                 write_file(our_clobber_date, "last-clobber")
             elif periodicClobberTime and now > our_clobber_date + periodicClobberTime:
                 # periodicClobberTime has passed since our last clobber
                 clobber = True
+                clobberType = "periodic"
                 # Update our clobber date to now
                 our_clobber_date = now
                 print "%s:More than %s seconds have passed since our last clobber" % (builddir, periodicClobberTime)
@@ -263,3 +267,9 @@ if __name__ == "__main__":
             print "%s:Clobbering..." % builddir
             do_clobber(builder_dir, options.dryrun, options.skip)
             write_file(our_clobber_date, "last-clobber")
+
+        # If this is the build dir for the current job, display the clobber type in TBPL.
+        # Note in the case of purged clobber, we output the clobber type even though no
+        # clobber was performed this time.
+        if clobberType and builddir == my_builddir:
+            print "TinderboxPrint: %s clobber" % clobberType
