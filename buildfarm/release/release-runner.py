@@ -208,7 +208,7 @@ def main(options):
     if config.getboolean('release-runner', 'verbose'):
         log_level=logging.DEBUG
     else:
-        top_level=logging.INFO
+        log_level=logging.INFO
     logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
                         level=log_level)
 
