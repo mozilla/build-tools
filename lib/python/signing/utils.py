@@ -326,7 +326,7 @@ def dmg_signpackage(pkgfile, dstfile, keychain, mac_id, subject_ou, fake=False, 
                 # Grab the code resources file. Need to find the filename
                 code_resources =  macdir + \
                     "/Contents/_CodeSignature/CodeResources"
-                lockfile = os.path.join(pkgdir, '.lock')
+                lockfile = os.path.join(os.path.dirname(keychain), '.lock')
 
                 dmg_signfile(macdir, keychain, mac_id, code_resources, get_identifier(macdir), subject_ou, lockfile, passphrase=passphrase)
 
