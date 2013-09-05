@@ -7,6 +7,8 @@ function initLoad() {
     "linux": 0,
     "linux64": 0,
     "linux-hp": 0,
+    "ubuntu32-vm": 0,
+    "ubuntu64-vm": 0,
     "macosx64": 0,
     "mac10.6-rev4": 0,
     "mac10.7": 0,
@@ -57,20 +59,22 @@ function getTryLoads(callback) {
       getTryLoad(NONTRY_TEST_LOAD_URL, function(load_nontry_test) {
         var totalBuildLoad = {};
         totalBuildLoad["linux"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
-        totalBuildLoad["linux64"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
+        totalBuildLoad["linux64"] = totalBuildLoad["linux"];
         totalBuildLoad["macosx64"] = load_try_build["macosx64"];
         totalBuildLoad["win32"] = load_try_build["win32"] + load_try_build["win64"];
-        totalBuildLoad["android"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
-        totalBuildLoad["android-armv6"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
-        totalBuildLoad["android-noion"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
-        totalBuildLoad["android-x86"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
-        totalBuildLoad["emulator"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
-        totalBuildLoad["panda"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
-        totalBuildLoad["unagi"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
+        totalBuildLoad["android"] = totalBuildLoad["linux"];
+        totalBuildLoad["android-armv6"] = totalBuildLoad["linux"];
+        totalBuildLoad["android-noion"] = totalBuildLoad["linux"];
+        totalBuildLoad["android-x86"] = totalBuildLoad["linux"];
+        totalBuildLoad["emulator"] = totalBuildLoad["linux"];
+        totalBuildLoad["panda"] = totalBuildLoad["linux"];
+        totalBuildLoad["unagi"] = totalBuildLoad["linux"];
 
         var totalTestLoad = {};
-        totalTestLoad["linux"] = load_try_test["linux"] + load_nontry_test["linux"];
-        totalTestLoad["linux64"] = load_try_test["linux64"] + load_nontry_test["linux64"];
+        totalTestLoad["linux"] = load_try_test["linux"] + load_nontry_test["linux"] +
+                                 load_try_test["ubuntu32-vm"] + load_nontry_test["ubuntu32-vm"];
+        totalTestLoad["linux64"] = load_try_test["linux64"] + load_nontry_test["linux64"] +
+                                   load_try_test["ubuntu64-vm"] + load_nontry_test["ubuntu64-vm"];
         totalTestLoad["macosx64"] = Math.max(
                                      Math.max(
                                       load_try_test["mac10.6-rev4"] + load_nontry_test["mac10.6-rev4"],
