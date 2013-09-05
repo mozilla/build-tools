@@ -68,6 +68,9 @@ function getTryLoads(callback) {
         totalBuildLoad["android-x86"] = totalBuildLoad["linux"];
         totalBuildLoad["emulator"] = totalBuildLoad["linux"];
         totalBuildLoad["unagi"] = totalBuildLoad["linux"];
+        totalBuildLoad["linux_gecko"] = totalBuildLoad["linux"];
+        totalBuildLoad["linux64_gecko"] = totalBuildLoad["linux"];
+        totalBuildLoad["macosx64_gecko"] = totalBuildLoad["macosx64"];
 
         var totalTestLoad = {};
         totalTestLoad["linux"] = load_try_test["linux"] + load_nontry_test["linux"] +
