@@ -148,6 +148,10 @@ def tagOtherRepo(config, repo, reponame, revision, pushAttempts):
     def tagRepo(repo, attempt, config, revision, tags):
         # set totalChangesets=1 because tag() generates exactly 1 commit
         totalChangesets = 1
+        # update to the desired revision first, then to the tip of revision's
+        # branch to avoid new head creation
+        update(repo, revision=revision)
+        update(repo)
         tag(repo, revision, tags, config['hgUsername'])
         outgoingRevs = retry(out, kwargs=dict(src=reponame, remote=remote,
                                               ssh_username=config[
