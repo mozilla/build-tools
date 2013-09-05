@@ -7,6 +7,7 @@ function initLoad() {
     "linux": 0,
     "linux64": 0,
     "linux64-asan": 0,
+    "linux64-st-an": 0,
     "linux-hp": 0,
     "ubuntu32-vm": 0,
     "ubuntu64-vm": 0,
@@ -64,6 +65,7 @@ function getTryLoads(callback) {
         totalBuildLoad["linux"] = load_try_build["linux"] + load_try_build["linux64"] + load_try_build["linux-hp"];
         totalBuildLoad["linux64"] = totalBuildLoad["linux"];
         totalBuildLoad["linux64-asan"] = totalBuildLoad["linux"];
+        totalBuildLoad["linux64-st-an"] = totalBuildLoad["linux"];
         totalBuildLoad["macosx64"] = load_try_build["macosx64"];
         totalBuildLoad["win32"] = load_try_build["win32"] + load_try_build["win64"];
         totalBuildLoad["win64"] = load_try_build["win64"];
@@ -83,6 +85,7 @@ function getTryLoads(callback) {
         totalTestLoad["linux64"] = load_try_test["linux64"] + load_nontry_test["linux64"] +
                                    load_try_test["ubuntu64-vm"] + load_nontry_test["ubuntu64-vm"];
         totalTestLoad["linux64-asan"] = totalTestLoad["linux64"];
+        // linux64-st-an: N/A
         totalTestLoad["macosx64"] = Math.max(
                                      Math.max(
                                       load_try_test["mac10.6-rev4"] + load_nontry_test["mac10.6-rev4"],
