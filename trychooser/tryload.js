@@ -91,7 +91,8 @@ function getTryLoads(callback) {
         totalTestLoad["android-armv6"] = load_try_test["tegra"] + load_nontry_test["tegra"];
         totalTestLoad["android-noion"] = load_try_test["tegra"] + load_nontry_test["tegra"];
         totalTestLoad["panda"] = load_try_test["panda"] + load_nontry_test["panda"];
-        // emulator / unagi: N/A
+        totalTestLoad["emulator"] = totalTestLoad["linux64"];
+        // unagi: N/A
         callback(totalBuildLoad, totalTestLoad);
       });
     });
