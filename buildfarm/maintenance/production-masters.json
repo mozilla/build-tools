@@ -308,7 +308,9 @@
       "linux64",
       "linux64-asan"
     ],
-    "limit_mobile_platforms": [],
+    "limit_mobile_platforms": [
+      "android-x86"
+    ],
     "limit_tb_platforms": [
       "linux",
       "linux64"
@@ -348,7 +350,9 @@
       "linux64",
       "linux64-asan"
     ],
-    "limit_mobile_platforms": [],
+    "limit_mobile_platforms": [
+      "android-x86"
+    ],
     "limit_tb_platforms": [
       "linux",
       "linux64"
@@ -388,7 +392,9 @@
       "linux64",
       "linux64-asan"
     ],
-    "limit_mobile_platforms": [],
+    "limit_mobile_platforms": [
+      "android-x86"
+    ],
     "limit_tb_platforms": [
       "linux",
       "linux64"
@@ -428,7 +434,9 @@
       "linux64",
       "linux64-asan"
     ],
-    "limit_mobile_platforms": [],
+    "limit_mobile_platforms": [
+      "android-x86"
+    ],
     "limit_tb_platforms": [
       "linux",
       "linux64"
@@ -792,7 +800,9 @@
       "linux64",
       "linux64-asan"
     ],
-    "limit_mobile_platforms": [],
+    "limit_mobile_platforms": [
+      "android-x86"
+    ],
     "limit_tb_platforms": [
       "linux",
       "linux64"
@@ -832,7 +842,9 @@
       "linux64",
       "linux64-asan"
     ],
-    "limit_mobile_platforms": [],
+    "limit_mobile_platforms": [
+      "android-x86"
+    ],
     "limit_tb_platforms": [
       "linux",
       "linux64"
