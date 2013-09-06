@@ -1316,9 +1316,10 @@
         "pduid": ".AA1"
     },
     "tegra-307": {
-        "foopy": "foopy28", 
+        "foopy": "None", 
         "pdu": "pdu2.df201-2.build.mtv1.mozilla.com", 
-        "pduid": ".AA2"
+        "pduid": ".AA2",
+        "_comment": "decommissioned in bug 786366"
     },
     "tegra-308": {
         "foopy": "foopy30", 
