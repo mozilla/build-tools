@@ -168,10 +168,6 @@ function setresult() {
 
     value = 'try: ' + args.join(' ');
 
-    if ($('#post_to_bugzilla').attr('checked')) {
-        value = value + ' --post-to-bugzilla Bug ' + document.getElementById("bugnumber").value;
-    }
-
     if (value.match(/-p none/)) {
         value = "(NO JOBS CHOSEN)";
         $('#platforms-none').addClass('attention');
