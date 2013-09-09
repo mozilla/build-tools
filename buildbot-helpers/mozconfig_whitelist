@@ -3,6 +3,7 @@
 whitelist = {
     'mozilla-release': {},
     'mozilla-esr17': {},
+    'mozilla-esr24': {},
     'mozilla-beta': {},
     'comm-release': {},
     'comm-esr17': {},
@@ -146,6 +147,13 @@ for branch in ('mozilla-esr17', 'comm-esr17'):
             'fi',
         ]
 
+for branch in ('mozilla-esr24',):
+    for platform in all_platforms:
+        whitelist[branch][platform] = [
+            'ac_add_options --enable-official-branding',
+            'mk_add_options MOZ_PGO=1',
+            'export BUILDING_RELEASE=1',
+        ]
 
 if __name__ == '__main__':
     import pprint

@@ -55,6 +55,13 @@
     ],
     "repo_type": "hg"
   },
+  "mozilla-esr24": {
+    "repo": "http://hg.mozilla.org/releases/mozilla-esr24",
+    "graph_branches": [
+      "Mozilla-Esr24"
+    ],
+    "repo_type": "hg"
+  },
   "mozilla-b2g18": {
     "repo": "http://hg.mozilla.org/releases/mozilla-b2g18",
     "graph_branches": [
