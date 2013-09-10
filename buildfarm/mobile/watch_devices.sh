@@ -50,10 +50,11 @@ function device_check() {
   trap "device_check_exit $device" EXIT
   log "contacting slavealloc"
   if ! check_buildbot_running "${device}"; then
+    rm -f "/builds/${device}/disabled.flg"
     log "Buildbot is not running"
     /builds/tools/buildfarm/mobile/manage_buildslave.sh gettac $device
     if grep -q "SLAVE DISABLED" /builds/$device/buildbot.tac; then
-       death "Not Starting, slavealloc says we're disabled" 64
+      death "Not Starting, slavealloc says we're disabled" 64
     fi
     if [ -f /builds/$device/error.flg ]; then
       log "error.flg file detected"
@@ -68,12 +69,12 @@ function device_check() {
     export SUT_NAME=$device
     export SUT_IP=$deviceIP
     if ! "${PYTHON}" /builds/sut_tools/verify.py $device; then
-       log "Verify procedure failed"
-       if [ ! -f /builds/$device/error.flg ]; then
-           log "error.flg file does not exist, so creating it..."
-           echo "Unknown verify failure" | tee "/builds/$device/error.flg"
-       fi
-       death "Exiting due to verify failure" 66
+      log "Verify procedure failed"
+      if [ ! -f /builds/$device/error.flg ]; then
+        log "error.flg file does not exist, so creating it..."
+        echo "Unknown verify failure" | tee "/builds/$device/error.flg"
+      fi
+      death "Exiting due to verify failure" 66
     fi
     log "starting buildbot slave"
     /builds/tools/buildfarm/mobile/manage_buildslave.sh start $device
@@ -82,19 +83,19 @@ function device_check() {
   else # buildbot running
     log "(heartbeat) buildbot is running"
     if [ -f /builds/$device/error.flg ]; then
-        log "Found an error.flg, expecting buildbot to self-kill after this job"
+      log "Found an error.flg, expecting buildbot to self-kill after this job"
     fi
     if [ -f /builds/$device/disabled.flg ]; then
-        log "disabled.flg wants us to force kill buildbot..."
-        set +e # These steps are ok to fail, not a great thing but not critical
-        log "Stopping device $device..."
-        "${PYTHON}" /builds/sut_tools/stop.py --device $device
-        # Stop.py should really do foopy cleanups and not touch device
-        log "Attempting cleanup of device $device..."
-        SUT_NAME=$device python /builds/sut_tools/cleanup.py $device
-        set -e
-        log "sleeping for ${FAIL_WAIT} seconds after killing, to prevent startup before master notices"
-        sleep ${FAIL_WAIT} # Wait a while before allowing us to turn buildbot back on
+      log "disabled.flg wants us to force kill buildbot..."
+      set +e # These steps are ok to fail, not a great thing but not critical
+      log "Stopping device $device..."
+      "${PYTHON}" /builds/sut_tools/stop.py --device $device
+      # Stop.py should really do foopy cleanups and not touch device
+      log "Attempting cleanup of device $device..."
+      SUT_NAME=$device python /builds/sut_tools/cleanup.py $device
+      set -e
+      log "sleeping for ${FAIL_WAIT} seconds after killing, to prevent startup before master notices"
+      sleep ${FAIL_WAIT} # Wait a while before allowing us to turn buildbot back on
     fi
   fi
   # Force disable only once. If we got this far, then we did all that we must.
