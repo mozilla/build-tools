@@ -5,9 +5,9 @@ whitelist = {
     'mozilla-esr17': {},
     'mozilla-esr24': {},
     'mozilla-beta': {},
-    'comm-release': {},
     'comm-esr17': {},
     'comm-beta': {},
+    'comm-esr24': {},
     'nightly': {},
     }
 
@@ -110,7 +110,7 @@ for branch in ('mozilla-beta', 'comm-beta'):
     whitelist[branch]['android-x86'] += ['ac_add_options --enable-updater']
 
 
-for branch in ('mozilla-release', 'comm-release'):
+for branch in ('mozilla-release', 'comm-esr24'):
     for platform in all_platforms:
         whitelist[branch][platform] = [
             'ac_add_options --enable-update-channel=release',

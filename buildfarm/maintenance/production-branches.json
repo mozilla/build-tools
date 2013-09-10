@@ -34,13 +34,6 @@
     ],
     "repo_type": "hg"
   },
-  "comm-release": {
-    "repo": "http://hg.mozilla.org/releases/comm-release",
-    "graph_branches": [
-      "Thunderbird-Release"
-    ],
-    "repo_type": "hg"
-  },
   "mozilla-esr17": {
     "repo": "http://hg.mozilla.org/releases/mozilla-esr17",
     "graph_branches": [
@@ -59,6 +52,13 @@
     "repo": "http://hg.mozilla.org/releases/mozilla-esr24",
     "graph_branches": [
       "Mozilla-Esr24"
+    ],
+    "repo_type": "hg"
+  },
+  "comm-esr24": {
+    "repo": "http://hg.mozilla.org/releases/comm-esr24",
+    "graph_branches": [
+      "Thunderbird-Esr24"
     ],
     "repo_type": "hg"
   },
