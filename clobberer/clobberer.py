@@ -143,7 +143,12 @@ def getClobberDates(clobberURL, branch, buildername, builddir, slave, master):
                   builddir=builddir, slave=slave, master=master)
     url = "%s?%s" % (clobberURL, urllib.urlencode(params))
     print "Checking clobber URL: %s" % url
-    data = urllib2.urlopen(url, timeout=30).read().strip()
+    # The timeout arg was added to urlopen() at Python 2.6
+    # Deprecate this test when esr17 reaches EOL
+    if sys.version_info[:2] < (2, 6):
+        data = urllib2.urlopen(url).read().strip()
+    else:
+        data = urllib2.urlopen(url, timeout=30).read().strip()
 
     retval = {}
     try:
