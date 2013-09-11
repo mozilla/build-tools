@@ -217,12 +217,24 @@ if __name__ == "__main__":
         brandName = releaseConfig["brandName"]
     except KeyError:
         brandName = releaseConfig["productName"].title()
+
     platform = options.platform
     if platform == "linux":
         platform = "linux32"
     mozconfig = path.join(sourceRepoInfo['name'], releaseConfig["appName"],
                           "config", "mozconfigs", platform,
                           "l10n-mozconfig")
+    # FIXME: please kill the following block when ESR17 is dead
+    if releaseConfig["appVersion"].startswith("17.0"):
+        mozconfig = path.join("buildbot-configs", "mozilla2", options.platform,
+                              sourceRepoInfo['name'], "release",
+                              "l10n-mozconfig")
+        makeDirs.extend(["tier_base", "tier_nspr", path.join("modules", "libmar")])
+        if options.generatePartials:
+            makeDirs.extend([
+                path.join("modules", "libbz2"),
+                path.join("other-licenses", "bsdiff")
+            ])
 
     if options.chunks:
         locales = retry(getReleaseLocalesForChunk,
@@ -246,10 +258,13 @@ if __name__ == "__main__":
         f.write('locales:%s' % ','.join(locales))
         f.close()
 
-    try:
-        l10nRepoDir = path.split(releaseConfig["l10nRepoClonePath"])[-1]
-    except KeyError:
-        l10nRepoDir = path.split(releaseConfig["l10nRepoPath"])[-1]
+    l10nRepoDir = 'l10n'
+    # FIXME: please kill the following block when ESR17 is dead
+    if releaseConfig["appVersion"].startswith("17.0"):
+        try:
+            l10nRepoDir = path.split(releaseConfig["l10nRepoClonePath"])[-1]
+        except KeyError:
+            l10nRepoDir = path.split(releaseConfig["l10nRepoPath"])[-1]
 
     stageSshKey = path.join("~", ".ssh", branchConfig["stage_ssh_key"])
 
@@ -262,7 +277,7 @@ if __name__ == "__main__":
     createRepacks(
         sourceRepo=make_hg_url(branchConfig["hghost"], sourceRepoInfo["path"]),
         revision=options.releaseTag,
-        l10nRepoDir='l10n',
+        l10nRepoDir=l10nRepoDir,
         l10nBaseRepo=make_hg_url(branchConfig["hghost"],
                                  releaseConfig["l10nRepoPath"]),
         mozconfigPath=mozconfig,
