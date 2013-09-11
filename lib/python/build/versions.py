@@ -105,6 +105,9 @@ def getPossibleNextVersions(version):
     #
     # Prior to ESR 24 we did #2 for all types of releases.
     if esr:
+        # if version is like N.0esr, add an extra 0 to make it bump properly
+        if version.count('.') < 2:
+            version = version.replace('esr', '.0esr')
         first, second, _ = version.split('.', 2)
         if int(first) >= 24:
             ret.add('%s.%s.0esr' % (first, increment(second)))

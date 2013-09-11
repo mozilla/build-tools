@@ -231,6 +231,10 @@ class TestGetPossibleNextVersions(unittest.TestCase):
         got = getPossibleNextVersions('5.0')
         self.assertEquals(set(['5.0.1', '6.0']), got)
 
+    def testFirstEsr(self):
+        got = getPossibleNextVersions('24.0esr')
+        self.assertEquals(set(['24.1.0esr', '24.0.1esr']), got)
+
     def testEsr(self):
         got = getPossibleNextVersions('24.2.0esr')
         self.assertEquals(set(['24.2.1esr', '24.3.0esr']), got)
