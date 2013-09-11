@@ -5,7 +5,6 @@ from os import path
 from traceback import format_exc
 import subprocess
 import sys
-from __future__ import with_statement
 
 sys.path.append(path.join(path.dirname(__file__), "../../lib/python"))
 logging.basicConfig(
