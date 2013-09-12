@@ -167,7 +167,13 @@ sub BumpPatcherConfig {
         die "Could not load locale manifest";
     }
 
-    my $patcherConfigObj = new Config::General(-ConfigFile => $patcherConfig, -SaveSorted => 1);
+    my $patcherConfigObj;
+    if (Config::General->VERSION ge '2.40') {
+        $patcherConfigObj = new Config::General(-ConfigFile => $patcherConfig, -SaveSorted => 1);
+    } else {
+        # remove this branch when ESR17 reaches EOL
+        $patcherConfigObj = new Config::General(-ConfigFile => $patcherConfig);
+    }
 
     my %rawConfig = $patcherConfigObj->getall();
     die "ASSERT: BumpPatcherConfig(): null rawConfig" 
