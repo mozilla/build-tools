@@ -154,26 +154,65 @@ function updateBuildTime($master, $branch, $buildername, $builddir, $slave)
   return false;
 }
 
+$getClobberTimeCache = array();
+$getClobberTimeBasekeyCache = array();
 function getClobberTime($master, $branch, $builddir, $slave)
 {
+  global $getClobberTimeCache;
+  global $getClobberTimeBasekeyCache;
+  $basekey = join('|', array($master, $branch, $builddir));
+  $key = join('|', array($basekey, $slave));
+  // return cached value
+  if (array_key_exists($key, $getClobberTimeCache)) {
+    return $getClobberTimeCache[$key];
+  }
+  // avoid looking up slaves that we didn't find in a previous run
+  if (array_key_exists($basekey, $getClobberTimeBasekeyCache)) {
+    return null;
+  }
+  $getClobberTimeBasekeyCache[$basekey] = 1;
   global $dbh;
   $master = e($master);
   $branch = e($branch);
   $builddir = e($builddir);
   $slave = e($slave);
-  $q = "SELECT id, who, lastclobber FROM clobber_times WHERE "
-      ."builddir = $builddir AND (branch IS NULL OR branch = $branch) AND "
-      ."(master IS NULL OR master = $master) AND (slave IS NULL OR slave = $slave) "
-      ."ORDER BY lastclobber DESC LIMIT 1";
+  // populate cache for all slaves matching builddir/branch/master
+  $q = "SELECT DISTINCT ctimes.slave, ctimes.who, ctimes.lastclobber "
+      ."FROM clobber_times AS ctimes "
+      ."JOIN ( "
+      ." SELECT slave, MAX(lastclobber) AS mx_lastclobber "
+      ." FROM clobber_times "
+      ." WHERE  "
+      ."      builddir = $builddir AND (branch IS NULL OR branch = $branch) AND  "
+      ."      (master IS NULL OR master = $master) "
+      ." GROUP BY slave "
+      .") AS mx "
+      ."ON ctimes.slave = mx.slave "
+      ."   AND ctimes.lastclobber = mx.mx_lastclobber "
+      ."   AND builddir = $builddir AND (branch IS NULL OR branch = $branch) AND  "
+      ."      (master IS NULL OR master = $master) "
+      ."ORDER BY ctimes.slave";
+
+  error_log("Executing query: $q");
   $s = $dbh->query($q);
-  $r = $s->fetch(PDO::FETCH_ASSOC);
-  if (!$r) {
-    return null;
+  while ($s && $r = $s->fetch(PDO::FETCH_ASSOC)) {
+    $_slave = $r['slave'];
+    $_who = $r['who'];
+    $_lastclobber = $r['lastclobber'];
+    $_key = join('|', array($basekey, $_slave));
+    $getClobberTimeCache[$_key] = array('who' => $_who, 'lastclobber' => $_lastclobber);
   }
-  else
-  {
-    return $r;
+
+  $ret;
+  if (array_key_exists($key, $getClobberTimeCache)) {
+    // return newly-cached result
+    $ret = $getClobberTimeCache[$key];
   }
+  else {
+    // slave not found
+    $ret = null;
+  }
+  return $ret;
 }
 
 function array_get($array, $key, $default='')
