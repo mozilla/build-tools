@@ -318,7 +318,7 @@
     "limit_b2g_platforms": [
       "linux32_gecko",
       "linux64_gecko",
-      "emulator"
+      "emulator-ics"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm51-tests1-linux",
@@ -360,7 +360,7 @@
     "limit_b2g_platforms": [
       "linux32_gecko",
       "linux64_gecko",
-      "emulator"
+      "emulator-ics"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm52-tests1-linux",
@@ -402,7 +402,7 @@
     "limit_b2g_platforms": [
       "linux32_gecko",
       "linux64_gecko",
-      "emulator"
+      "emulator-ics"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm53-tests1-linux",
@@ -444,7 +444,7 @@
     "limit_b2g_platforms": [
       "linux32_gecko",
       "linux64_gecko",
-      "emulator"
+      "emulator-ics"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm54-tests1-linux",
@@ -810,7 +810,7 @@
     "limit_b2g_platforms": [
       "linux32_gecko",
       "linux64_gecko",
-      "emulator"
+      "emulator-ics"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm67-tests1-linux",
@@ -852,7 +852,7 @@
     "limit_b2g_platforms": [
       "linux32_gecko",
       "linux64_gecko",
-      "emulator"
+      "emulator-ics"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm68-tests1-linux",
