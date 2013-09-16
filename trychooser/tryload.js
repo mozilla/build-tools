@@ -25,7 +25,7 @@ function initLoad() {
     "win64": 0,
     "win2012x64": 0,
     "android": 0,
-    "emulator-ics": 0,
+    "emulator": 0,
     "emulator-jb": 0,
     "android-armv6": 0,
     "android-noion": 0,
@@ -74,7 +74,7 @@ function getTryLoads(callback) {
         totalBuildLoad["android-armv6"] = totalBuildLoad["linux"];
         totalBuildLoad["android-noion"] = totalBuildLoad["linux"];
         totalBuildLoad["android-x86"] = totalBuildLoad["linux"];
-        totalBuildLoad["emulator-ics"] = totalBuildLoad["linux"];
+        totalBuildLoad["emulator"] = totalBuildLoad["linux"];
         totalBuildLoad["emulator-jb"] = totalBuildLoad["linux"];
         totalBuildLoad["unagi"] = totalBuildLoad["linux"];
         totalBuildLoad["linux_gecko"] = totalBuildLoad["linux"];
@@ -105,7 +105,7 @@ function getTryLoads(callback) {
                                      load_try_test["panda"] + load_nontry_test["panda"]);
         totalTestLoad["android-armv6"] = load_try_test["tegra"] + load_nontry_test["tegra"];
         totalTestLoad["android-noion"] = load_try_test["tegra"] + load_nontry_test["tegra"];
-        totalTestLoad["emulator-ics"] = totalTestLoad["linux64"];
+        totalTestLoad["emulator"] = totalTestLoad["linux64"];
         // emulator-jb, unagi: N/A
         callback(totalBuildLoad, totalTestLoad);
       });
