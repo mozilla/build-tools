@@ -19,6 +19,11 @@ for platform in all_platforms:
         'mk_add_options CLIENT_PY_ARGS="--hg-options=\'--verbose --time\' --hgtool=../tools/buildfarm/utils/hgtool.py --skip-chatzilla --skip-comm --skip-inspector --skip-venkman --tinderbox-print"'
     ]
 
+for platform in ['linux', 'linux64']:
+    whitelist['nightly'][platform] += [
+        'ac_add_options --disable-elf-hack # --enable-elf-hack',
+    ]
+
 for platform in ['linux', 'linux64', 'macosx64']:
     whitelist['nightly'][platform] += [
         'ac_add_options --enable-codesighs',
