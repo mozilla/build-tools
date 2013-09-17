@@ -98,56 +98,6 @@ whitelist['nightly']['android-x86'] += [
     'ac_add_options --enable-profiling',
 ]
 
-whitelist['mozilla-beta']['android-armv6'] = [
-    'ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',
-    'ac_add_options --with-android-sdk="/tools/android-sdk-r16/platforms/android-16"',
-    'ac_add_options --with-system-zlib',
-    'export MOZ_PKG_SPECIAL=armv6',
-    'ac_add_options --with-android-version=9',
-    'ac_add_options --with-branding=mobile/android/branding/beta',
-    'ac_add_options --with-android-sdk="$topsrcdir/android-sdk-linux/platforms/android-16"',
-    """if test `uname -m` = 'x86_64'; then""",
-    'ac_add_options --enable-application=mobile/android',
-    'ac_add_options --with-android-ndk="$topsrcdir/android-ndk"',
-    'else',
-    'ac_add_options --with-android-ndk="/tools/android-ndk-r8c"',
-    'ac_add_options --with-android-gnu-compiler-version=4.7',
-    'fi',
-]
-
-whitelist['mozilla-beta']['android'] = [
-    'ac_add_options --with-system-zlib',
-    'ac_add_options --with-android-sdk="/tools/android-sdk-r16/platforms/android-16"',
-    'ac_add_options --with-android-ndk="/tools/android-ndk-r8c"',
-    'ac_add_options --with-android-version=9',
-    'ac_add_options --with-branding=mobile/android/branding/beta',
-    'ac_add_options --with-android-sdk="$topsrcdir/android-sdk-linux/platforms/android-16"',
-    """if test `uname -m` = 'x86_64'; then""",
-    'ac_add_options --enable-application=mobile/android',
-    'ac_add_options --with-android-ndk="$topsrcdir/android-ndk"',
-    'else',
-    'ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',
-    'ac_add_options --target=arm-linux-androideabi',
-    'ac_add_options --with-android-gnu-compiler-version=4.7',
-    'fi',
-]
-
-whitelist['mozilla-beta']['android-x86'] = [
-    'ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',
-    'ac_add_options --with-android-sdk="/tools/android-sdk-r16/platforms/android-16"',
-    'ac_add_options --with-system-zlib',
-    'ac_add_options --with-android-version=9',
-    'ac_add_options --with-branding=mobile/android/branding/beta',
-    'ac_add_options --with-android-sdk="$topsrcdir/android-sdk-linux/platforms/android-16"',
-    """if test `uname -m` = 'x86_64'; then""",
-    'ac_add_options --enable-application=mobile/android',
-    'ac_add_options --with-android-ndk="$topsrcdir/android-ndk"',
-    'else',
-    'ac_add_options --with-android-ndk="/tools/android-ndk-r8c"',
-    'ac_add_options --with-android-gnu-compiler-version=4.7',
-    'fi',
-]
-
 for branch in ('mozilla-beta', 'comm-beta'):
     for platform in all_platforms:
         whitelist[branch][platform] = [
@@ -172,6 +122,55 @@ for branch in ('mozilla-beta', 'comm-beta'):
     whitelist[branch]['android-armv6'] += ['ac_add_options --enable-updater']
     whitelist[branch]['android-x86'] += ['ac_add_options --enable-updater']
 
+whitelist['mozilla-beta']['android-armv6'] += [
+    'ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',
+    'ac_add_options --with-android-sdk="/tools/android-sdk-r16/platforms/android-16"',
+    'ac_add_options --with-system-zlib',
+    'export MOZ_PKG_SPECIAL=armv6',
+    'ac_add_options --with-android-version=9',
+    'ac_add_options --with-branding=mobile/android/branding/beta',
+    'ac_add_options --with-android-sdk="$topsrcdir/android-sdk-linux/platforms/android-16"',
+    """if test `uname -m` = 'x86_64'; then""",
+    'ac_add_options --enable-application=mobile/android',
+    'ac_add_options --with-android-ndk="$topsrcdir/android-ndk"',
+    'else',
+    'ac_add_options --with-android-ndk="/tools/android-ndk-r8c"',
+    'ac_add_options --with-android-gnu-compiler-version=4.7',
+    'fi',
+]
+
+whitelist['mozilla-beta']['android'] += [
+    'ac_add_options --with-system-zlib',
+    'ac_add_options --with-android-sdk="/tools/android-sdk-r16/platforms/android-16"',
+    'ac_add_options --with-android-ndk="/tools/android-ndk-r8c"',
+    'ac_add_options --with-android-version=9',
+    'ac_add_options --with-branding=mobile/android/branding/beta',
+    'ac_add_options --with-android-sdk="$topsrcdir/android-sdk-linux/platforms/android-16"',
+    """if test `uname -m` = 'x86_64'; then""",
+    'ac_add_options --enable-application=mobile/android',
+    'ac_add_options --with-android-ndk="$topsrcdir/android-ndk"',
+    'else',
+    'ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',
+    'ac_add_options --target=arm-linux-androideabi',
+    'ac_add_options --with-android-gnu-compiler-version=4.7',
+    'fi',
+]
+
+whitelist['mozilla-beta']['android-x86'] += [
+    'ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',
+    'ac_add_options --with-android-sdk="/tools/android-sdk-r16/platforms/android-16"',
+    'ac_add_options --with-system-zlib',
+    'ac_add_options --with-android-version=9',
+    'ac_add_options --with-branding=mobile/android/branding/beta',
+    'ac_add_options --with-android-sdk="$topsrcdir/android-sdk-linux/platforms/android-16"',
+    """if test `uname -m` = 'x86_64'; then""",
+    'ac_add_options --enable-application=mobile/android',
+    'ac_add_options --with-android-ndk="$topsrcdir/android-ndk"',
+    'else',
+    'ac_add_options --with-android-ndk="/tools/android-ndk-r8c"',
+    'ac_add_options --with-android-gnu-compiler-version=4.7',
+    'fi',
+]
 
 for branch in ('mozilla-release', 'comm-esr24'):
     for platform in all_platforms:
