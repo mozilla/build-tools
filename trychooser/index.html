@@ -54,7 +54,7 @@
                 <span id="build_linux64" class="build_queue">N/A</span>
             </li>
             <li>
-                <label><input type="checkbox" name="platform" value="linux64-asan">linux64-asan</label>
+                <label><input type="checkbox" name="platform" value="linux64-asan" class="nondefault">linux64-asan</label>
                 <span id="test_linux64-asan" class="test_queue">N/A</span>
                 <span id="build_linux64-asan" class="build_queue">N/A</span>
             </li>
@@ -74,7 +74,7 @@
                 <span id="build_win32" class="build_queue">N/A</span>
             </li>
             <li>
-                <label><input type="checkbox" name="platform" value="win64">win64 (not run by default)</label>
+                <label><input type="checkbox" name="platform" value="win64" class="nondefault">win64</label>
                 <span id="test_win64" class="test_queue">N/A</span>
                 <span id="build_win64" class="build_queue">N/A</span>
             </li>
@@ -186,17 +186,17 @@
             <label><input type="checkbox" class="group-selector none-selector" CHECKED>None</label>
             <ul>
                 <li><label><input type="checkbox" value="reftest">reftest</label></li>
-                <li><label><input type="checkbox" value="reftest-ipc">reftest-ipc <span style="color: red">(linux opt only)</span></label></li>
-                <li><label><input type="checkbox" value="reftest-no-accel">reftest-no-accel <span style="color: red">(linux/win7 only)</span></label></li>
+                <li><label><input type="checkbox" value="reftest-ipc">reftest-ipc <span class="info">(linux opt only)</span></label></li>
+                <li><label><input type="checkbox" value="reftest-no-accel">reftest-no-accel <span class="info">(linux/win7 only)</span></label></li>
                 <li><label><input type="checkbox" value="crashtest">crashtest</label></li>
-                <li><label><input type="checkbox" value="crashtest-ipc">crashtest-ipc <span style="color: red">(linux opt only)</span></label></li>
+                <li><label><input type="checkbox" value="crashtest-ipc">crashtest-ipc <span class="info">(linux opt only)</span></label></li>
                 <li><label><input type="checkbox" value="xpcshell">xpcshell</label></li>
                 <li><label><input type="checkbox" value="jsreftest">jsreftest</label></li>
                 <li><label><input type="checkbox" value="jetpack">jetpack</label></li>
                 <li><label><input type="checkbox" value="marionette">marionette</label></li>
-                <li><label><input type="checkbox" value="mozmill">mozmill <span style="color: red">(thunderbird only)</span></label></li>
+                <li><label><input type="checkbox" value="mozmill">mozmill <span class="info">(thunderbird only)</span></label></li>
                 <div class='option-subgroup'>
-                <li><label><input type="checkbox" class="subgroup-all-selector" value="mochitests">mochitests (all)</label></li>
+                <li><label><input type="checkbox" class="subgroup-selector subgroup-all-selector" value="mochitests">mochitests (all)</label></li>
                     <ul>OR
                     <li><label><input type="checkbox" value="mochitest-1">mochitest-1</label></li>
                     <li><label><input type="checkbox" value="mochitest-2">mochitest-2</label></li>
@@ -205,7 +205,7 @@
                     <li><label><input type="checkbox" value="mochitest-5">mochitest-5</label></li>
                     <li><label><input type="checkbox" value="mochitest-bc">mochitest-bc</label></li>
                     <li><label><input type="checkbox" value="mochitest-o">mochitest-o</label></li>
-                    <li><label><input type="checkbox" value="mochitest-metro-chrome">mochitest-metro-chrome <span style="color: red">(win8 only)</span></label></li>
+                    <li><label><input type="checkbox" value="mochitest-metro-chrome">mochitest-metro-chrome <span class="info">(win8 only)</span></label></li>
                     </ul>
                 </div>
             </ul>
@@ -259,7 +259,7 @@
                 <li><label><input type="checkbox" name="talos_suite" value="dirtypaint">dirtypaint</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="svgr">svgr</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="tp5o">tp5o</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="xperf">xperf <span style="color: red">(win7 only)</span></label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="xperf">xperf <span class="info">(win7 only)</span></label></li>
             </ul>
             <h4>Android-Only Talos Suites:</h4>
             <ul>
@@ -279,5 +279,6 @@
     </div> <!--- try-options div -->
 </form>
 </div> <!-- wrapper div-->
+
 </body>
 </html>

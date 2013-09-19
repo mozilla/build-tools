@@ -28,6 +28,10 @@ ul {
     animation-name: pulse;
 }
 
+.info {
+    color: #a00;
+}
+
 @keyframes pulse {
     from {
         color: black;
