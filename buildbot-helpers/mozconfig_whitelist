@@ -88,6 +88,9 @@ whitelist['nightly']['android-x86'] += [
     'ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',
     'ac_add_options --enable-warnings-as-errors',
     'ac_add_options --with-ccache=/usr/bin/ccache',
+    'ac_add_options --enable-profiling',
+    'ac_add_options --disable-elf-hack # --enable-elf-hack conflicts with --enable-profiling',
+    'STRIP_FLAGS="--strip-debug"',
 ]
 
 for branch in ('mozilla-beta', 'comm-beta'):
