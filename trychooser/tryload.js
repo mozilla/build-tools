@@ -73,7 +73,7 @@ function getTryLoads(callback) {
         totalBuildLoad["android"] = totalBuildLoad["linux"];
         totalBuildLoad["android-armv6"] = totalBuildLoad["linux"];
         totalBuildLoad["android-noion"] = totalBuildLoad["linux"];
-        totalBuildLoad["android-x86"] = totalBuildLoad["linux"];
+        totalBuildLoad["android-x86"] = totalBuildLoad["linux64"];
         totalBuildLoad["emulator"] = totalBuildLoad["linux"];
         totalBuildLoad["emulator-jb"] = totalBuildLoad["linux"];
         totalBuildLoad["unagi"] = totalBuildLoad["linux"];
