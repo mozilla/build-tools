@@ -1090,7 +1090,9 @@
     "limit_tb_platforms": [
         "macosx64"
     ],
-    "limit_b2g_platforms": [],
+    "limit_b2g_platforms": [
+        "macosx64_gecko"
+    ],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm75-tests1-macosx",
     "pb_port": 9201,
@@ -1123,7 +1125,9 @@
     "limit_tb_platforms": [
         "macosx64"
     ],
-    "limit_b2g_platforms": [],
+    "limit_b2g_platforms": [
+        "macosx64_gecko"
+    ],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm76-tests1-macosx",
     "pb_port": 9201,
@@ -1156,7 +1160,9 @@
     "limit_tb_platforms": [
         "macosx64"
     ],
-    "limit_b2g_platforms": [],
+    "limit_b2g_platforms": [
+        "macosx64_gecko"
+    ],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm77-tests1-macosx",
     "pb_port": 9201,
@@ -1189,7 +1195,9 @@
     "limit_tb_platforms": [
         "macosx64"
     ],
-    "limit_b2g_platforms": [],
+    "limit_b2g_platforms": [
+        "macosx64_gecko"
+    ],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm78-tests1-macosx",
     "pb_port": 9201,
@@ -1222,7 +1230,9 @@
     "limit_tb_platforms": [
         "macosx64"
     ],
-    "limit_b2g_platforms": [],
+    "limit_b2g_platforms": [
+        "macosx64_gecko"
+    ],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm79-tests1-macosx",
     "pb_port": 9201,
@@ -1255,7 +1265,9 @@
     "limit_tb_platforms": [
         "macosx64"
     ],
-    "limit_b2g_platforms": [],
+    "limit_b2g_platforms": [
+        "macosx64_gecko"
+    ],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm80-tests1-macosx",
     "pb_port": 9201,
