@@ -38,7 +38,7 @@ function device_check() {
   local device=$1
   export PYTHONPATH=/builds/sut_tools
   deviceIP="$(nslookup "${device}" 2>/dev/null | sed -n '/^Name/,$s/^Address: *//p')"
-  if ! lockfile -r0 "/builds/${device}/watcher.lock" >/dev/null 2>&1; then
+  if ! lockfile -l 3600 -r0 "/builds/${device}/watcher.lock" >/dev/null 2>&1; then
     death "failed to aquire lockfile" 67
   fi
   log_message="Starting cycle for our device ($device = $deviceIP) now"
