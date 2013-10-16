@@ -2,3 +2,4 @@
 --enable-debug
 --enable-gczeal
 --enable-root-analysis
+--disable-threadsafe
