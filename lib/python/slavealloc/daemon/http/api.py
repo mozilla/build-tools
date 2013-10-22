@@ -152,7 +152,16 @@ class SlaveResource(Instance):
 
 class SlavesResource(Collection):
     instance_class = SlaveResource
-    query = queries.denormalized_slaves
+    # set in render_GET
+    query = None
+
+    def render_GET(self, request):
+        environments = request.args.get('environment')
+        purposes = request.args.get('purpose')
+        pools = request.args.get('pool')
+        enabled = request.args.get('enabled', [None])[0]
+        self.query = queries.denormalized_slaves(environments, purposes, pools, enabled)
+        return Collection.render_GET(self, request)
 
 # masters
 
