@@ -90,6 +90,13 @@
     ],
     "repo_type": "hg"
   },
+  "mozilla-b2g26_v1_2": {
+    "repo": "http://hg.mozilla.org/releases/mozilla-b2g26_v1_2",
+    "graph_branches": [
+      "Mozilla-B2g26-v1.2"
+    ],
+    "repo_type": "hg"
+  },
   "oak": {
     "repo": "http://hg.mozilla.org/projects/oak",
     "graph_branches": [
