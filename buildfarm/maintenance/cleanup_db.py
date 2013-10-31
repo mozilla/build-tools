@@ -154,11 +154,16 @@ if __name__ == '__main__':
     from optparse import OptionParser
     parser = OptionParser()
     parser.set_defaults(
+        filename=None,
         loglevel=logging.INFO,
+        logfile=None,
         skip_orphans=False,
     )
+    parser.add_option("-l", "--logfile", dest="logfile")
     parser.add_option("--status-db", dest="status_db")
-    parser.add_option("--cutoff", dest="cutoff")
+    parser.add_option("--cutoff", dest="cutoff",
+                      help="cutoff date, prior to which we'll delete data. "
+                      "format is YYYY-MM-DD")
     parser.add_option("--skip-orphans", dest="skip_orphans",
                       action="store_true")
     parser.add_option("-v", "--verbose", dest="loglevel", action="store_const",
@@ -167,11 +172,24 @@ if __name__ == '__main__':
                       const=logging.WARNING, help="run quietly")
     options, args = parser.parse_args()
 
-    logging.basicConfig(level=options.loglevel,
-                        format="%(asctime)s - %(message)s")
+    # Configure logging
+    root_log = logging.getLogger()
+    log_formatter = logging.Formatter("%(asctime)s - %(message)s")
+
+    if options.logfile:
+        import logging.handlers
+        # Week one log file per week for 4 weeks
+        handler = logging.handlers.TimedRotatingFileHandler(options.logfile,
+                                                            when='W6',
+                                                            backupCount=4)
+    else:
+        handler = logging.StreamHandler()
+    handler.setFormatter(log_formatter)
+    root_log.setLevel(options.loglevel)
+    root_log.addHandler(handler)
 
     if not options.cutoff:
-        parser.error("status_db and cutoff are both required")
+        parser.error("cutoff date is required")
 
     # Clean up statusdb
     if options.status_db:
