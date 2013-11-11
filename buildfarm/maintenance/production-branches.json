@@ -6,13 +6,6 @@
     ],
     "repo_type": "hg"
   },
-  "profiling": {
-    "repo": "http://hg.mozilla.org/projects/profiling",
-    "graph_branches": [
-      "Profiling"
-    ],
-    "repo_type": "hg"
-  },
   "maple": {
     "repo": "http://hg.mozilla.org/projects/maple",
     "graph_branches": [
