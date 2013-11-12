@@ -69,7 +69,7 @@ function device_check() {
     fi
     export SUT_NAME=$device
     export SUT_IP=$deviceIP
-    if ! "${PYTHON}" /builds/sut_tools/verify.py $device; then
+    if ! "${PYTHON}" /builds/sut_tools/verify.py --success-if-mozpool-ready $device; then
       log "Verify procedure failed"
       if [ ! -f /builds/$device/error.flg ]; then
         log "error.flg file does not exist, so creating it..."

@@ -15,10 +15,18 @@ from sut_lib import pingDevice, setFlag, connect, log
 from sut_lib.powermanagement import soft_reboot
 from mozdevice import devicemanagerSUT as devicemanager
 import updateSUT
+from mozpoolclient import MozpoolException, MozpoolHandler
 
 MAX_RETRIES = 5
 EXPECTED_DEVICE_SCREEN = 'X:1024 Y:768'
 EXPECTED_DEVICE_SCREEN_ARGS = {'width': 1024, 'height': 768, 'type': 'crt'}
+
+MOZPOOL_CNAME = "mobile-imaging"
+# CONSTS corresponding to mozpool check return codes.
+MOZPOOL_STATE_READY = 1
+MOZPOOL_STATE_UNKNOWN = 0
+MOZPOOL_STATE_ERROR = -1
+MOZPOOL_STATE_MISSING = -2
 
 errorFile = None
 dm = None
@@ -62,6 +70,41 @@ def canPing(device):
         else:
             break  # we're done here
     return True
+
+
+def isMozpoolReady(device):
+    """ Checks if the mozpool server is available and the device is in 'ready' state
+
+    Returns MOZPOOL_STATE_READY if Mozpool is indeed listing device as ready
+    Returns MOZPOOL_STATE_UNKNOWN if Mozpool claims the device is in a non-ready state
+    Returns MOZPOOL_STATE_ERROR if Mozpool reports some other error.
+    Returns MOZPOOL_STATE_MISSING if there is no Mozpool server found in DNS.
+    """
+    import socket
+    default_timeout = socket.getdefaulttimeout()
+    socket.setdefaulttimeout(5)  # Don't let networking delay us too long
+    try:
+        socket.gethostbyname(MOZPOOL_CNAME)
+    except:
+        log.info("No mozpool server in this VLAN")
+        return MOZPOOL_STATE_MISSING
+    finally:
+        # Set socket timeout back
+        socket.setdefaulttimeout(default_timeout)
+
+    mpc = MozpoolHandler("http://%s" % MOZPOOL_CNAME, log)
+    try:
+        result = mpc.query_device_state(device)
+    except MozpoolException as e:
+        log.error("Unable to get mozpool state, mozpool returned error: %s" % sys.exc_info()[1])
+        return MOZPOOL_STATE_ERROR
+
+    if result['state'] == "ready":
+        log.debug("Mozpool state is 'ready'")
+        return MOZPOOL_STATE_READY
+    else:
+        log.error("Mozpool state is '%s'" % result['state'])
+        return MOZPOOL_STATE_UNKNOWN
 
 
 def canTelnet(device):
@@ -293,7 +336,8 @@ def setWatcherINI(dm):
     return False
 
 
-def verifyDevice(device, checksut=True, doCheckStalled=True, watcherINI=False):
+def verifyDevice(device, checksut=True, doCheckStalled=True, watcherINI=False,
+                 skipWhenMozpoolReady=False):
     # Returns False on failure, True on Success
     global dm, errorFile
     devicePath = os.path.join('/builds', device)
@@ -303,6 +347,21 @@ def verifyDevice(device, checksut=True, doCheckStalled=True, watcherINI=False):
         if not cleanupFoopy(device):
             log.info("verifyDevice: failing to cleanup foopy")
             return False
+
+    mozpool_state = isMozpoolReady(device)
+    if skipWhenMozpoolReady and mozpool_state is MOZPOOL_STATE_READY:
+        log.info("Mozpool State is ready skipping device checks")
+        return True
+    elif mozpool_state is MOZPOOL_STATE_READY:
+        log.info("Mozpool claims device is ready, continuing to verify device...")
+    elif mozpool_state is MOZPOOL_STATE_UNKNOWN:
+        log.info("Mozpool knows about device, but claims we're not safe to continue")
+        return False
+    elif mozpool_state in (MOZPOOL_STATE_ERROR, MOZPOOL_STATE_MISSING):
+        log.info("Unable to determine state from Mozpool, falling back to device checks")
+    else:
+        log.info("Unexpected Mozpool State returned, hard stop.")
+        return False
 
     if not canPing(device):
         # TODO Reboot via PDU if ping fails
@@ -340,21 +399,29 @@ def verifyDevice(device, checksut=True, doCheckStalled=True, watcherINI=False):
 
 if __name__ == '__main__':
     device_name = os.getenv('SUT_NAME')
-    if (len(sys.argv) != 2):
+    from optparse import OptionParser
+    parser = OptionParser(usage="usage: %prog [options] [device_name]")
+    parser.add_option("--success-if-mozpool-ready",
+                      action="store_true", dest="skipWhenMozpoolReady", default=False,
+                      help="if mozpool reports device is 'ready' skip all device checks")
+    (options, args) = parser.parse_args()
+    if (len(args) != 2):
         if device_name in (None, ''):
-            print "usage: verify.py [device name]"
+            parser.print_help()
             print "   Must have $SUT_NAME set in environ to omit device name"
             sys.exit(1)
         else:
             log.info(
                 "INFO: Using device '%s' found in env variable" % device_name)
     else:
-        device_name = sys.argv[1]
+        device_name = args[0]
 
-    # Only attempt updating the watcher if we run against a tegra.
+    # Only attempt updating the watcher INI if we run against a tegra.
     doWatcherUpdate = 'tegra' in device_name
 
-    if verifyDevice(device_name, watcherINI=doWatcherUpdate) is False:
+    if verifyDevice(device_name,
+                    watcherINI=doWatcherUpdate,
+                    skipWhenMozpoolReady=options.skipWhenMozpoolReady) is False:
         sys.exit(1)  # Not ok to proceed
 
     sys.exit(0)
