@@ -56,13 +56,7 @@ def findOldBuildIDs(product, version, buildNumber, platforms,
 
 
 def getReleaseConfigName(product, branch, version=None, staging=False):
-    # XXX: Horrible hack for bug 842741. Because Thunderbird release
-    # and esr both build out of esr17 repositories we'll bump the wrong
-    # config for release without this.
-    if product == 'thunderbird' and 'esr17' in branch and version and 'esr' not in version:
-        cfg = 'release-thunderbird-comm-release.py'
-    else:
-        cfg = 'release-%s-%s.py' % (product, branch)
+    cfg = 'release-%s-%s.py' % (product, branch)
     if staging:
         cfg = 'staging_%s' % cfg
     return cfg

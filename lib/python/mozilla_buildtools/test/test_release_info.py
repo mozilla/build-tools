@@ -38,7 +38,3 @@ class TestGetReleaseConfigName(unittest.TestCase):
     def testStaging(self):
         got = getReleaseConfigName('fennec', 'mozilla-release', staging=True)
         self.assertEquals('staging_release-fennec-mozilla-release.py', got)
-
-    def testThunderbirdCommReleaseSpecialCase(self):
-        got = getReleaseConfigName('thunderbird', 'comm-esr17', version='17.0.3')
-        self.assertEquals('release-thunderbird-comm-release.py', got)
