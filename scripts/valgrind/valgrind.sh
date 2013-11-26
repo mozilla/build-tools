@@ -80,4 +80,11 @@ fi
 export OBJDIR=.
 export JARLOG_FILE=./jarlog/en-US.log
 export XPCOM_CC_RUN_DURING_SHUTDOWN=1
+
+# XXX: temporary debugging stuff
+echo $DBUS_SESSION_BUS_ADDRESS
+printenv
+pstree
+ps aux
+
 make pgo-profile-run EXTRA_TEST_ARGS="--debugger=valgrind --debugger-args='$debugger_args'" || exit 1
