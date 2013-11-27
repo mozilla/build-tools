@@ -13,75 +13,101 @@ def get_nightly_blob_name(appName, branch, build_type, suffix, dummy=False):
     return '%s-%s-%s-%s' % (appName, branch, build_type, suffix)
 
 
-class NightlyRunner(object):
+def get_release_blob_name(appName, version, build_number, dummy=False):
+    name = '%s-%s-build%s' % (appName, version, build_number)
+    if dummy:
+        name += '-dummy'
+    return name
+
+
+class NightlySubmitter(object):
 
     build_type = 'nightly'
-    appName = None
-    branch = None
-    build_target = None
-    appVersion = None
-    name = None
-    locale = None
 
-    def __init__(self, buildprops_file, api_root, auth, dummy=False):
-        self.buildbprops_file = buildprops_file
+    def __init__(self, api_root, auth, dummy=False):
         self.api_root = api_root
         self.auth = auth
         self.dummy = dummy
 
-    def generate_data(self):
-        fp = open(self.buildbprops_file)
-        bp = json.load(fp)
-        fp.close()
-
-        props = bp['properties']
-        targets = buildbot2updatePlatforms(props['platform'])
-        self.build_target = targets[0]
-        self.alias = None
+    def run(self, platform, buildID, appName, branch, appVersion, locale,
+            hashFunction, extVersion, completeMarSize, completeMarHash,
+            completeMarUrl, partialMarSize, partialMarHash=None,
+            partialMarUrl=None, previous_buildid=None):
+        targets = buildbot2updatePlatforms(platform)
+        build_target = targets[0]
+        alias = None
         if len(targets) > 1:
-            self.alias = targets[1:]
-        buildID = props['buildid']
+            alias = targets[1:]
 
-        self.appName = props['appName']
-        self.branch = props['branch']
-        self.appVersion = props['appVersion']
-        self.name = get_nightly_blob_name(self.appName, self.branch,
-                                          self.build_type, buildID, self.dummy)
-        self.locale = props.get('locale', 'en-US')
-        self.hashFunction = props['hashType']
+        name = get_nightly_blob_name(appName, branch, self.build_type, buildID, self.dummy)
         data = {
-            'appv': self.appVersion,
-            'extv': props.get('extVersion', self.appVersion),
-            'buildID': props['buildid'],
+            'appv': appVersion,
+            'extv': extVersion,
+            'buildID': buildID,
         }
         data['complete'] = {
             'from': '*',
-            'filesize': props['completeMarSize'],
-            'hashValue': props['completeMarHash'],
-            'fileUrl': props['completeMarUrl']
+            'filesize': completeMarSize,
+            'hashValue': completeMarHash,
+            'fileUrl': completeMarUrl
         }
-        if props.get('partialMarFilename'):
+        if partialMarSize:
             data['partial'] = {
-                'from': get_nightly_blob_name(self.appName, self.branch,
+                'from': get_nightly_blob_name(appName, branch,
                                               self.build_type,
-                                              props['previous_buildid'],
+                                              previous_buildid,
                                               self.dummy),
-                'filesize': props['partialMarSize'],
-                'hashValue': props['partialMarHash'],
-                'fileUrl': props['partialMarUrl']
+                'filesize': partialMarSize,
+                'hashValue': partialMarHash,
+                'fileUrl': partialMarUrl
             }
-        return data
 
-    def run(self):
-        data = self.generate_data()
         data = json.dumps(data)
         api = SingleLocale(auth=self.auth, api_root=self.api_root)
         copyTo = [get_nightly_blob_name(
-            self.appName, self.branch, self.build_type, 'latest', self.dummy)]
+            appName, branch, self.build_type, 'latest', self.dummy)]
         copyTo = json.dumps(copyTo)
-        alias = json.dumps(self.alias)
-        api.update_build(name=self.name, product=self.appName,
-                         build_target=self.build_target,
-                         version=self.appVersion, locale=self.locale,
-                         hashFunction=self.hashFunction,
+        alias = json.dumps(alias)
+        api.update_build(name=name, product=appName,
+                         build_target=build_target,
+                         version=appVersion, locale=locale,
+                         hashFunction=hashFunction,
                          buildData=data, copyTo=copyTo, alias=alias)
+
+
+class ReleaseSubmitter(object):
+    def __init__(self, api_root, auth, dummy=False):
+        self.api_root = api_root
+        self.auth = auth
+        self.dummy = dummy
+
+    def run(self, platform, appName, appVersion, version, build_number, locale,
+            hashFunction, extVersion, buildID, completeMarSize, completeMarHash):
+        targets = buildbot2updatePlatforms(platform)
+        # Some platforms may have alias', but those are set-up elsewhere
+        # for release blobs.
+        build_target = targets[0]
+
+        appName = appName
+        appVersion = appVersion
+        version = version
+        build_number = build_number
+        name = get_release_blob_name(appName, version, build_number,
+                                     self.dummy)
+        data = {
+            'appv': appVersion,
+            'extv': extVersion,
+            'buildID': buildID,
+        }
+        data['complete'] = {
+            'from': '*',
+            'filesize': completeMarSize,
+            'hashValue': completeMarHash,
+        }
+
+        data = json.dumps(data)
+        api = SingleLocale(auth=self.auth, api_root=self.api_root)
+        api.update_build(name=name, product=appName,
+                         build_target=build_target, version=appVersion,
+                         locale=locale, hashFunction=hashFunction,
+                         buildData=data)
