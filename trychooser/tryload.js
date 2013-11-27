@@ -13,7 +13,6 @@ function initLoad() {
     "ubuntu64-vm": 0,
     "macosx64": 0,
     "mac10.6-rev4": 0,
-    "mac10.7": 0,
     "mac10.8": 0,
     "macosx64": 0,
     "win32": 0,
@@ -91,7 +90,6 @@ function getTryLoads(callback) {
         totalTestLoad["macosx64"] = Math.max(
                                      Math.max(
                                       load_try_test["mac10.6-rev4"] + load_nontry_test["mac10.6-rev4"],
-                                      load_try_test["mac10.7"] + load_nontry_test["mac10.7"])
                                     , load_try_test["mac10.8"] + load_nontry_test["mac10.8"]);
         totalTestLoad["win32"] = Math.max(
                                    load_try_test["winxp"] + load_nontry_test["winxp"],
