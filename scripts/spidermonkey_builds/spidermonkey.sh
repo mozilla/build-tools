@@ -146,7 +146,7 @@ cp -p ../../src/build/unix/run-mozilla.sh $OBJDIR/dist/bin
 # make tests reproducible.
 COMMAND_PREFIX=''
 if [[ "$VARIANT" = "rootanalysis" ]]; then
-    export JS_GC_ZEAL=6
+    export JS_GC_ZEAL=7
 
     # rootanalysis builds are currently only done on Linux, which should have
     # setarch, but just in case we enable them on another platform:
