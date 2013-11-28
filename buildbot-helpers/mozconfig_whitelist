@@ -59,6 +59,8 @@ whitelist['nightly']['macosx64'] += [
     'mk_add_options MOZ_MAKE_FLAGS="-j12"',
     'ac_add_options --with-ccache',
     'ac_add_options --disable-install-strip',
+    'ac_add_options --enable-instruments',
+    'ac_add_options --enable-dtrace',
 ]
 
 whitelist['nightly']['win32'] += [
@@ -67,6 +69,7 @@ whitelist['nightly']['win32'] += [
     'if test "$IS_NIGHTLY" != ""; then',
     'ac_add_options --disable-auto-deps',
     'fi',
+    'ac_add_options --enable-metro',
 ]
 
 whitelist['nightly']['android'] += [
