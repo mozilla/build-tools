@@ -74,6 +74,7 @@ class Scanner:
         # Ignore stale broker refs we can't do anything about.
         re.compile(
         "twisted.spread.pb.DeadReferenceError: Calling Stale Broker"),
+        re.compile("assert state_json is not None"),
     ]
 
     def __init__(self, lasttime=0):
