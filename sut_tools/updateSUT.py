@@ -14,7 +14,7 @@ site.addsitedir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../li
 from sut_lib import connect, log
 
 # Constants
-target_version = "1.19"
+target_version = "1.20"
 apkfilename = "sutAgentAndroid.apk"
 device_name = os.getenv('SUT_NAME')
 apkFoopyDirPattern = "/builds/%(device_name)s"
