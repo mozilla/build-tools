@@ -2,6 +2,8 @@
 set -e
 set -x
 SCRIPTS_DIR="$(readlink -f $(dirname $0)/../..)"
+echo "date 1:"
+date
 
 if [ -z "$REVISION" ]; then
     export REVISION="default"
@@ -67,7 +69,9 @@ MOZCONFIG=../src/browser/config/mozconfigs/linux${_arch}/valgrind make -f ../src
 make -j4 || exit 2
 make package || exit 2
 
-debugger_args="--error-exitcode=1 --smc-check=all-non-file --gen-suppressions=all --leak-check=full --num-callers=15 --show-possibly-lost=no --track-origins=yes"
+#debugger_args="--error-exitcode=1 --smc-check=all-non-file --gen-suppressions=all --leak-check=full --num-callers=15 --show-possibly-lost=no --track-origins=yes"
+# XXX: temporary flags for a debugging run
+debugger_args="--tool=none --smc-check=all-non-file --trace-syscalls=yes"
 cross_architecture_suppression_file=$PWD/_valgrind/cross-architecture.sup
 if [ -f $cross_architecture_suppression_file ]; then
     debugger_args="$debugger_args --suppressions=$cross_architecture_suppression_file"
@@ -81,4 +85,8 @@ export OBJDIR=.
 export JARLOG_FILE=./jarlog/en-US.log
 export XPCOM_CC_RUN_DURING_SHUTDOWN=1
 
+echo "date 2:"
+date
 make pgo-profile-run EXTRA_TEST_ARGS="--debugger=valgrind --debugger-args='$debugger_args'" || exit 1
+echo "date 3:"
+date
