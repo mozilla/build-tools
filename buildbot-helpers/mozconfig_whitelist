@@ -2,10 +2,8 @@
 # Other keys in whitelist contain things are in that branches mozconfigs and allowed to be missing from nightly builds.
 whitelist = {
     'mozilla-release': {},
-    'mozilla-esr17': {},
     'mozilla-esr24': {},
     'mozilla-beta': {},
-    'comm-esr17': {},
     'comm-beta': {},
     'comm-esr24': {},
     'nightly': {},
@@ -146,17 +144,6 @@ for branch in ('mozilla-release', 'comm-esr24'):
     whitelist[branch]['android-armv6'] += ['ac_add_options --enable-updater']
     whitelist[branch]['android-x86'] += ['ac_add_options --enable-updater']
 
-
-for branch in ('mozilla-esr17', 'comm-esr17'):
-    for platform in all_platforms:
-        whitelist[branch][platform] = [
-            'ac_add_options --enable-official-branding',
-            'mk_add_options MOZ_PGO=1',
-            'mk_add_options MOZ_MAKE_FLAGS="-j4"',
-            'export MOZ_ESR=1',
-            'if [ "${MOZ_UPDATE_CHANNEL}" = "esr" ]; then',
-            'fi',
-        ]
 
 for branch in ('mozilla-esr24',):
     for platform in all_platforms:

@@ -27,20 +27,6 @@
     ],
     "repo_type": "hg"
   },
-  "mozilla-esr17": {
-    "repo": "http://hg.mozilla.org/releases/mozilla-esr17",
-    "graph_branches": [
-      "Mozilla-Esr17"
-    ],
-    "repo_type": "hg"
-  },
-  "comm-esr17": {
-    "repo": "http://hg.mozilla.org/releases/comm-esr17",
-    "graph_branches": [
-      "Thunderbird-Esr17"
-    ],
-    "repo_type": "hg"
-  },
   "mozilla-esr24": {
     "repo": "http://hg.mozilla.org/releases/mozilla-esr24",
     "graph_branches": [

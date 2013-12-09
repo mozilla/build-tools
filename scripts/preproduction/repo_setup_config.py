@@ -7,10 +7,6 @@ repoSetupConfig['hgSshKey'] = 'ffxbld_dsa'
 repoSetupConfig['reposToClone'] = {
     'build/buildbot-configs': {
         'overrides': {
-            'mozilla/release-firefox-mozilla-esr17.py': [
-                'mozilla/preproduction_release_overrides.py',
-                'mozilla/preproduction_release_overrides-esr17.py',
-            ],
             'mozilla/release-firefox-mozilla-esr24.py': [
                 'mozilla/preproduction_release_overrides.py',
                 'mozilla/preproduction_release_overrides-esr24.py',
