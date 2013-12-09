@@ -6,14 +6,6 @@ SCRIPTS_DIR="$(readlink -f $(dirname $0)/../..)"
 echo "Starting time:"
 date
 
-if [ -z "$REVISION" ]; then
-    export REVISION="default"
-fi
-
-if [ -z "$HG_REPO" ]; then
-    export HG_REPO="http://hg.mozilla.org/mozilla-central"
-fi
-
 if [ -f "$PROPERTIES_FILE" ]; then
     PYTHON="/tools/python/bin/python"
     [ -x $PYTHON ] || PYTHON=python
@@ -22,23 +14,34 @@ if [ -f "$PROPERTIES_FILE" ]; then
     builder=$($JSONTOOL -k properties.buildername $PROPERTIES_FILE)
     slavename=$($JSONTOOL -k properties.slavename $PROPERTIES_FILE)
     master=$($JSONTOOL -k properties.master $PROPERTIES_FILE)
+    branch=$($JSONTOOL -k properties.branch $PROPERTIES_FILE)
+    REVISION=$($JSONTOOL -k properties.revision $PROPERTIES_FILE)
+
+    BRANCHES_JSON=$SCRIPTS_DIR/buildfarm/maintenance/production-branches.json
+
+    HG_REPO=$($JSONTOOL -k ${branch}.repo branches.json)
 
     builddir=$(basename $(readlink -f .))
-    branch=$(basename $HG_REPO)
 
     # Clobbering
     if [ -z "$CLOBBERER_URL" ]; then
         export CLOBBERER_URL="http://clobberer.pvt.build.mozilla.org/index.php"
     fi
 
-    cd $SCRIPTS_DIR/../..
+    (cd $SCRIPTS_DIR/../..
     python $SCRIPTS_DIR/clobberer/clobberer.py -s scripts -s $(basename $PROPERTIES_FILE) \
-        $CLOBBERER_URL $branch "$builder" $builddir $slavename $master
+        $CLOBBERER_URL $branch "$builder" $builddir $slavename $master)
 
     # Purging
-    cd $SCRIPTS_DIR/..
+    (cd $SCRIPTS_DIR/..
     python $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
-        -s 8 -n info -n 'rel-*' -n 'tb-rel-*' -n $builddir
+        -s 8 -n info -n 'rel-*' -n 'tb-rel-*' -n $builddir)
+fi
+if [ -z "$HG_REPO" ]; then
+    export HG_REPO="http://hg.mozilla.org/mozilla-central"
+fi
+if [ -z "$REVISION" ]; then
+    export REVISION="default"
 fi
 
 python $SCRIPTS_DIR/buildfarm/utils/hgtool.py --rev $REVISION $HG_REPO src || exit 2
