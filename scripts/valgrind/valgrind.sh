@@ -19,7 +19,7 @@ if [ -f "$PROPERTIES_FILE" ]; then
 
     BRANCHES_JSON=$SCRIPTS_DIR/buildfarm/maintenance/production-branches.json
 
-    HG_REPO=$($JSONTOOL -k ${branch}.repo branches.json)
+    HG_REPO=$($JSONTOOL -k ${branch}.repo $BRANCHES_JSON)
 
     builddir=$(basename $(readlink -f .))
 
