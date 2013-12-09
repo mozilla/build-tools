@@ -63,7 +63,7 @@
     "repo_type": "hg"
   },
   "mozilla-b2g18_v1_1_0_hd": {
-    "repo": "http://hg.mozilla.org/releases/mozilla-b2g18_v1_0_1_hd",
+    "repo": "http://hg.mozilla.org/releases/mozilla-b2g18_v1_1_0_hd",
     "graph_branches": [
       "Mozilla-B2g18-v1.1.0hd"
     ],
@@ -251,28 +251,28 @@
     "repo_type": "hg"
   },
   "date": {
-    "repo": "http://hg.mozilla.org/integration/date",
+    "repo": "http://hg.mozilla.org/projects/date",
     "graph_branches": [
       "Date"
     ],
     "repo_type": "hg"
   },
   "fig": {
-    "repo": "http://hg.mozilla.org/integration/fig",
+    "repo": "http://hg.mozilla.org/projects/fig",
     "graph_branches": [
       "Fig"
     ],
     "repo_type": "hg"
   },
   "gum": {
-    "repo": "http://hg.mozilla.org/integration/gum",
+    "repo": "http://hg.mozilla.org/projects/gum",
     "graph_branches": [
       "Gum"
     ],
     "repo_type": "hg"
   },
   "jamun": {
-    "repo": "http://hg.mozilla.org/integration/jamun",
+    "repo": "http://hg.mozilla.org/projects/jamun",
     "graph_branches": [
       "Jamun"
     ],
