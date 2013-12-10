@@ -74,6 +74,7 @@ make -j4 || exit 2
 make package || exit 2
 
 debugger_args=" \
+    -d -v \
     --error-exitcode=1 \
     --smc-check=all-non-file \
     --vex-iropt-register-updates=allregs-at-each-insn \
