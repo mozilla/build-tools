@@ -3,9 +3,6 @@ set -e
 set -x
 SCRIPTS_DIR="$(readlink -f $(dirname $0)/../..)"
 
-echo "Starting time:"
-date
-
 if [ -f "$PROPERTIES_FILE" ]; then
     PYTHON="/tools/python/bin/python"
     [ -x $PYTHON ] || PYTHON=python
@@ -97,10 +94,6 @@ export OBJDIR=.
 export JARLOG_FILE=./jarlog/en-US.log
 export XPCOM_CC_RUN_DURING_SHUTDOWN=1
 
-echo "Starting pgo-profile-run:"
-date
-
-make pgo-profile-run EXTRA_TEST_ARGS="--debugger=valgrind --debugger-args='$debugger_args'" || exit 1
-
-echo "Finished pgo-profile-run:"
-date
+# XXX: temporarily disable Valgrind
+#make pgo-profile-run EXTRA_TEST_ARGS="--debugger=valgrind --debugger-args='$debugger_args'" || exit 1
+make pgo-profile-run || exit 1
