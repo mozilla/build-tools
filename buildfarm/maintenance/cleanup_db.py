@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sqlalchemy as sa
 import time
+import json
 
 import logging
 log = logging.getLogger(__name__)
@@ -88,7 +89,7 @@ def deleter(column):
     return delete_func
 
 
-def cleanup_builds(meta, cutoff):
+def cleanup_statusdb_builds(meta, cutoff):
     log.info("Cleaning up builds before %s", cutoff)
     t_builds = sa.Table('builds', meta, autoload=True)
     t_steps = sa.Table('steps', meta, autoload=True)
@@ -110,7 +111,7 @@ def cleanup_builds(meta, cutoff):
     log.info("Finished cleaning up builds")
 
 
-def cleanup_orphaned_steps(meta):
+def cleanup_statusdb_orphaned_steps(meta):
     log.info("Cleaning up orphaned steps")
     t_builds = sa.Table('builds', meta, autoload=True)
     t_steps = sa.Table('steps', meta, autoload=True)
@@ -130,7 +131,7 @@ def cleanup_orphaned_steps(meta):
     log.info("Finished cleaning up orphaned steps")
 
 
-def cleanup_orphaned_properties(meta):
+def cleanup_statusdb_orphaned_properties(meta):
     log.info("Cleaning up orphaned build properties")
     t_builds = sa.Table('builds', meta, autoload=True)
     t_properties = sa.Table('build_properties', meta, autoload=True)
@@ -150,6 +151,90 @@ def cleanup_orphaned_properties(meta):
     log.info("Finished cleaning up orphaned build properties")
 
 
+IGNORABLE_CLASSES = (
+    "buildbotcustom.l10n.TriggerableL10n",
+    "buildbotcustom.scheduler.PersistentScheduler",
+    "buildbot.schedulers.basic.Dependent",
+    "buildbot.schedulers.triggerable.Triggerable",
+    "buildbotcustom.scheduler.TriggerBouncerCheck",
+    "buildbotcustom.scheduler.Dependent-props",
+    "buildbotcustom.buildbotcustom.l10n.TriggerableL10n",
+    "buildbot.schedulers.timed.Nightly",
+    "buildbotcustom.scheduler.SpecificNightly-props",
+    "buildbotcustom.scheduler.Nightly-props",
+    "buildbotcustom.scheduler.AggregatingScheduler",
+)
+
+PERBUILD_CLASSES = (
+    "buildbot.schedulers.basic.Scheduler",
+    "buildbotcustom.scheduler.MultiScheduler",
+    "buildbotcustom.scheduler.BuilderChooserScheduler",
+    "buildbotcustom.scheduler.Scheduler-props",
+    "buildbotcustom.scheduler.BuilderChooserScheduler-props")
+
+_change_cache = {}
+
+
+def get_change_date(db, changeid):
+    if changeid in _change_cache:
+        return _change_cache[changeid]
+
+    q = sa.text("SELECT when_timestamp FROM changes WHERE changeid=:changeid")
+    results = db.execute(q, changeid=changeid)
+    row = results.fetchone()
+    if row:
+        _change_cache[changeid] = row.when_timestamp
+        return row.when_timestamp
+    else:
+        _change_cache[changeid] = None
+        return None
+
+
+def should_delete(db, s, cutoff):
+    state = json.loads(s.state)
+    if s.class_name in IGNORABLE_CLASSES:
+        # Not sure if we have enough data here to make a decision...
+        return False
+    elif s.class_name in PERBUILD_CLASSES:
+        assert "last_processed" in state
+        change_time = get_change_date(db, state['last_processed'])
+        if change_time < cutoff:
+            return True
+    else:
+        log.warning("unhandled scheduler class for scheduler %s: %s %s",
+                    s.schedulerid, s.class_name, s.name)
+        return False
+
+
+def cleanup_schedulerdb_schedulers(db):
+    now = time.time()
+    regular_cutoff = now - 7 * 86400  # 1 week
+    release_cutoff = now - 60 * 86400  # 2 months
+
+    # Get all the schedulers from the db
+    q = sa.text("SELECT * FROM schedulers")
+    schedulers = db.execute(q)
+    to_delete = []
+    for s in schedulers:
+        if s.name.startswith("release-"):
+            cutoff = release_cutoff
+        else:
+            cutoff = regular_cutoff
+
+        try:
+            if should_delete(db, s, cutoff):
+                to_delete.append(s)
+        except Exception:
+            log.exception("couldn't process scheduler %s: %s", s.schedulerid,
+                          s.name)
+
+    for s in to_delete:
+        log.info("deleting scheduler %s: %s %s %s", s.schedulerid,
+                 s.class_name, s.name, s.state)
+        q = sa.text("DELETE FROM schedulers WHERE schedulerid=:schedulerid")
+        db.execute(q, schedulerid=s.schedulerid)
+
+
 if __name__ == '__main__':
     from optparse import OptionParser
     parser = OptionParser()
@@ -161,6 +246,7 @@ if __name__ == '__main__':
     )
     parser.add_option("-l", "--logfile", dest="logfile")
     parser.add_option("--status-db", dest="status_db")
+    parser.add_option("--scheduler-db", dest="scheduler_db")
     parser.add_option("--cutoff", dest="cutoff",
                       help="cutoff date, prior to which we'll delete data. "
                       "format is YYYY-MM-DD")
@@ -195,8 +281,12 @@ if __name__ == '__main__':
     if options.status_db:
         status_db = sa.create_engine(options.status_db)
         meta = sa.MetaData(bind=status_db)
-
-        cleanup_builds(meta, options.cutoff)
+        cleanup_statusdb_builds(meta, options.cutoff)
         if not options.skip_orphans:
-            cleanup_orphaned_steps(meta)
-            cleanup_orphaned_properties(meta)
+            cleanup_statusdb_orphaned_steps(meta)
+            cleanup_statusdb_orphaned_properties(meta)
+
+    if options.scheduler_db:
+        scheduler_db = sa.create_engine(options.scheduler_db)
+
+        cleanup_schedulerdb_schedulers(scheduler_db)
