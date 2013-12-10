@@ -7,4 +7,3 @@
 --enable-exact-rooting
 --enable-gcgenerational
 --enable-threadsafe
---disable-threadsafe
