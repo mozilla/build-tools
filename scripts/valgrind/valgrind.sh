@@ -93,6 +93,4 @@ export OBJDIR=.
 export JARLOG_FILE=./jarlog/en-US.log
 export XPCOM_CC_RUN_DURING_SHUTDOWN=1
 
-# XXX: temporarily disable
-#make pgo-profile-run EXTRA_TEST_ARGS="--debugger=valgrind --debugger-args='$debugger_args'" || exit 1
-echo "this is where |make pgo-profile-run| normally happens"
+make pgo-profile-run EXTRA_TEST_ARGS="--debugger=valgrind --debugger-args='$debugger_args'"
