@@ -71,7 +71,6 @@ make -j4 || exit 2
 make package || exit 2
 
 debugger_args=" \
-    -d -v \
     --error-exitcode=1 \
     --smc-check=all-non-file \
     --vex-iropt-register-updates=allregs-at-each-insn \
@@ -94,4 +93,6 @@ export OBJDIR=.
 export JARLOG_FILE=./jarlog/en-US.log
 export XPCOM_CC_RUN_DURING_SHUTDOWN=1
 
-make pgo-profile-run EXTRA_TEST_ARGS="--debugger=valgrind --debugger-args='$debugger_args'" || exit 1
+# XXX: temporarily disable
+#make pgo-profile-run EXTRA_TEST_ARGS="--debugger=valgrind --debugger-args='$debugger_args'" || exit 1
+echo "this is where |make pgo-profile-run| normally happens"
