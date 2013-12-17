@@ -206,11 +206,13 @@ def main(options):
     config = load_config(options.config)
 
     if config.getboolean('release-runner', 'verbose'):
-        log_level=logging.DEBUG
+        log_level = logging.DEBUG
     else:
-        log_level=logging.INFO
+        log_level = logging.INFO
     logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
                         level=log_level)
+    # Suppress logging of retry(), see bug 925321 for the details
+    logging.getLogger("util.retry").setLevel(logging.WARN)
 
     check_buildbot()
     check_fabric()
