@@ -84,9 +84,8 @@ function getTryLoads(callback) {
         totalTestLoad["linux64-asan"] = totalTestLoad["linux64"];
         // linux64-st-an: N/A
         totalTestLoad["macosx64"] = Math.max(
-                                     Math.max(
                                       load_try_test["mac10.6-rev4"] + load_nontry_test["mac10.6-rev4"],
-                                    , load_try_test["mac10.8"] + load_nontry_test["mac10.8"]);
+                                      load_try_test["mac10.8"] + load_nontry_test["mac10.8"]);
         totalTestLoad["win32"] = Math.max(
                                    load_try_test["winxp-ix"] + load_nontry_test["winxp-ix"],
                                    load_try_test["win7-ix"] + load_nontry_test["win7-ix"],
