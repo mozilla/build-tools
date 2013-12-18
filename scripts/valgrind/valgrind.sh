@@ -56,8 +56,6 @@ if [ ! -d objdir ]; then
 fi
 cd objdir
 
-export G_SLICE=always-malloc
-
 if [ "`uname -m`" = "x86_64" ]; then
     export LD_LIBRARY_PATH=/tools/gcc-4.5-0moz3/installed/lib64
     _arch=64
@@ -70,27 +68,4 @@ MOZCONFIG=../src/browser/config/mozconfigs/linux${_arch}/valgrind make -f ../src
 make -j4 || exit 2
 make package || exit 2
 
-debugger_args=" \
-    --error-exitcode=1 \
-    --smc-check=all-non-file \
-    --vex-iropt-register-updates=allregs-at-each-insn \
-    --gen-suppressions=all \
-    --num-callers=15 \
-    --leak-check=full \
-    --show-possibly-lost=no \
-    --track-origins=yes \
-"
-cross_architecture_suppression_file=$PWD/_valgrind/cross-architecture.sup
-if [ -f $cross_architecture_suppression_file ]; then
-    debugger_args="$debugger_args --suppressions=$cross_architecture_suppression_file"
-fi
-suppression_file=$PWD/_valgrind/${MACHTYPE}.sup
-if [ -f $suppression_file ]; then
-    debugger_args="$debugger_args --suppressions=$suppression_file"
-fi
-
-export OBJDIR=.
-export JARLOG_FILE=./jarlog/en-US.log
-export XPCOM_CC_RUN_DURING_SHUTDOWN=1
-
-make pgo-profile-run EXTRA_TEST_ARGS="--debugger=valgrind --debugger-args='$debugger_args'"
+$PYTHON ../src/mach valgrind-test || exit 2
