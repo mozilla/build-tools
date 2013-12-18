@@ -1,13 +1,9 @@
 #!/usr/bin/env python2
 """Idle Slave Rebooter
 
-Usage: reboot-idle-slaves.py [-h] [-v] [--dryrun] [-w <num workers>] [-x pattern ...] -s SERVER
+Usage: reboot-idle-slaves.py [-h] [--dryrun] (<config_file>)
 
 -h --help         Show this help message.
--v --verbose      More verbose output.
--s --server=<url> Set the SlaveAPI Server to speak with. Required.
--w --workers=<n>  Maximum number of slaves to kick at once. Maximum: 4. [default: 4]
--x --exclude=<pattern> Ignore hosts matching pattern (can be specified multiple times).
 --dryrun          Don't do any reboots, just print what would've been done.
 """
 
@@ -93,22 +89,28 @@ def process_slave(slaveapi, slave, dryrun=False):
 
 
 if __name__ == "__main__":
+    from ConfigParser import RawConfigParser
     from docopt import docopt, DocoptExit
     args = docopt(__doc__)
 
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-    logging.getLogger("util.retry").setLevel(logging.WARN)
-
-    slaveapi = args["--server"]
-    n_workers = int(args["--workers"])
-    excludes = args["--exclude"]
     dryrun = args["--dryrun"]
-    verbose = args["--verbose"]
+    config_file = args["<config_file>"]
 
+    cfg = RawConfigParser()
+    cfg.read(config_file)
+
+    slaveapi = cfg.get("main", "slaveapi_server")
+    n_workers = cfg.getint("main", "workers")
+    verbose = cfg.getboolean("main", "verbose")
+    excludes = cfg.options("exclude")
+
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
     if verbose:
         logging.getLogger("requests").setLevel(logging.DEBUG)
+        logging.getLogger("util.retry").setLevel(logging.DEBUG)
     else:
         logging.getLogger("requests").setLevel(logging.WARN)
+        logging.getLogger("util.retry").setLevel(logging.WARN)
 
     now = datetime.now()
 
