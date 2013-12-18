@@ -29,7 +29,6 @@ function initLoad() {
     "android-x86": 0,
     "tegra": 0,
     "panda": 0,
-    "unagi": 0,
   };
 }
 
@@ -73,7 +72,6 @@ function getTryLoads(callback) {
         totalBuildLoad["android-x86"] = totalBuildLoad["linux64"];
         totalBuildLoad["emulator"] = totalBuildLoad["linux"];
         totalBuildLoad["emulator-jb"] = totalBuildLoad["linux"];
-        totalBuildLoad["unagi"] = totalBuildLoad["linux"];
         totalBuildLoad["linux_gecko"] = totalBuildLoad["linux"];
         totalBuildLoad["linux64_gecko"] = totalBuildLoad["linux"];
         totalBuildLoad["macosx64_gecko"] = totalBuildLoad["macosx64"];
@@ -100,7 +98,7 @@ function getTryLoads(callback) {
         totalTestLoad["android-armv6"] = load_try_test["tegra"] + load_nontry_test["tegra"];
         totalTestLoad["android-noion"] = load_try_test["tegra"] + load_nontry_test["tegra"];
         totalTestLoad["emulator"] = totalTestLoad["linux64"];
-        // emulator-jb, unagi: N/A
+        // emulator-jb: N/A
         callback(totalBuildLoad, totalTestLoad);
       });
     });
