@@ -22,6 +22,9 @@ setup(
         'argparse',
         'twisted',
         'simplejson',
+        'furl',
+        'requests',
+        'docopt',
     ],
 
     entry_points={
@@ -29,6 +32,8 @@ setup(
             'slavealloc = slavealloc.scripts.main:main'
         ],
     },
+
+    scripts=["buildfarm/maintenance/reboot-idle-slaves.py"],
 
     # include files listed in MANIFEST.in
     include_package_data=True,
