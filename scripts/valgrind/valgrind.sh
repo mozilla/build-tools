@@ -68,7 +68,8 @@ MOZCONFIG=../src/browser/config/mozconfigs/linux${_arch}/valgrind make -f ../src
 make -j4 || exit 2
 make package || exit 2
 
+export MOZBUILD_STATE_PATH=.
 if ! python2.7 ../src/mach valgrind-test ; then
-    echo "TEST-UNEXPECTED-FAIL | Valgrind | one or more errors were found"
+    echo "TEST-UNEXPECTED-FAIL | valgrind-test | non-zero exit code"
     exit 2
 fi
