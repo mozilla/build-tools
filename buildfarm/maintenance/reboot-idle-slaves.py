@@ -83,7 +83,7 @@ def process_slave(slaveapi, slave, dryrun=False):
         retry(requests.post, args=(str(url),))
         # Because SlaveAPI fully escalates reboots (all the way to IT bug filing),
         # there's no reason for us to watch for it to complete.
-        log.info("%s - Reboot queued")
+        log.info("%s - Reboot queued", slave)
     except:
         log.exception("%s - Caught exception while processing", slave)
 
