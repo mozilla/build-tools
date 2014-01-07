@@ -64,6 +64,7 @@ else
     _arch=32
 fi
 
+# Note: an exit code of 2 turns the job red on TBPL.
 MOZCONFIG=../src/browser/config/mozconfigs/linux${_arch}/valgrind make -f ../src/client.mk configure || exit 2
 make -j4 || exit 2
 make package || exit 2
@@ -71,4 +72,9 @@ make package || exit 2
 # We need to set MOZBUILD_STATE_PATH so that |mach| skips its first-run
 # initialization step and actually runs the |valgrind-test| command.
 export MOZBUILD_STATE_PATH=.
-python2.7 ../src/mach valgrind-test || exit 2
+
+# |mach valgrind-test|'s exit code will be 1 (which turns the job orange on
+# TBPL) if Valgrind finds errors, and 2 (which turns the job red) if something
+# else goes wrong, such as Valgrind crashing.
+python2.7 ../src/mach valgrind-test
+exit $?
