@@ -17,6 +17,8 @@ if [ -f "$PROPERTIES_FILE" ]; then
     BRANCHES_JSON=$SCRIPTS_DIR/buildfarm/maintenance/production-branches.json
 
     HG_REPO=$($JSONTOOL -k ${branch}.repo $BRANCHES_JSON)
+    HG_MIRROR=${HG_REPO/hg\.mozilla\.org/hg-internal.dmz.scl3.mozilla.com}
+    HG_BUNDLE="http://ftp.mozilla.org/pub/mozilla.org/firefox/bundles/${branch}.hg"
 
     builddir=$(basename $(readlink -f .))
 
@@ -36,12 +38,16 @@ if [ -f "$PROPERTIES_FILE" ]; then
 fi
 if [ -z "$HG_REPO" ]; then
     export HG_REPO="http://hg.mozilla.org/mozilla-central"
+    export HG_MIRROR="http://hg-internal.dmz.scl3.mozilla.com/mozilla-central"
+    export HG_BUNDLE="http://ftp.mozilla.org/pub/mozilla.org/firefox/bundles/mozilla-central.hg"
 fi
 if [ -z "$REVISION" ]; then
     export REVISION="default"
 fi
 
-python $SCRIPTS_DIR/buildfarm/utils/hgtool.py --rev $REVISION $HG_REPO src || exit 2
+python $SCRIPTS_DIR/buildfarm/utils/retry.py -s 1 -r 5 -t 3660 \
+     python $SCRIPTS_DIR/buildfarm/utils/hgtool.py --rev $REVISION \
+          --mirror $HG_MIRROR --bundle $HG_BUNDLE $HG_REPO src || exit 2
 
 # Put our short revisions into the properties directory for consumption by buildbot.
 if [ ! -d properties ]; then
