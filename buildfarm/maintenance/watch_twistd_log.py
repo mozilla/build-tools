@@ -72,8 +72,9 @@ class Scanner:
         # Ignore clean-close "errors" from tegras
         re.compile(re.escape("Failure: twisted.spread.pb.PBConnectionLost: [Failure instance: Traceback (failure with no frames): <class 'twisted.internet.error.ConnectionDone'>: Connection was closed cleanly")),
         # Ignore stale broker refs we can't do anything about.
-        re.compile(
-        "twisted.spread.pb.DeadReferenceError: Calling Stale Broker"),
+        re.compile("twisted.spread.pb.DeadReferenceError: Calling Stale Broker"),
+        # Ignore exceptions triggered by NoneType objects.
+        re.compile(re.escape("exceptions.AttributeError: 'NoneType' object has no attribute")),
     ]
 
     def __init__(self, lasttime=0):
