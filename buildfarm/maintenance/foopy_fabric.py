@@ -105,6 +105,13 @@ def remove_error(device):
             run('rm -f ./error.flg')
         print OK, "Removed error flag for %s" % (device)
 
+@per_device
+def create_device_dirs(device):
+    from fabric.api import env
+    with settings(warn_only=True, user='root'):
+       run("mkdir /builds/%s" % device)
+    with settings(user='root'):
+       run("chown cltbld.cltbld /builds/%s" % device)
 
 @per_device
 def what_master(device):
