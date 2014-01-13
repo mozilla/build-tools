@@ -91,7 +91,7 @@ compare_preload_lists()
         echo "ERROR: wget exited with a non-zero exit code: $WGET_STATUS"
         exit ${WGET_STATUS}
     fi
-    VERSION=`cat version.txt | sed 's/[^.0-9]*$//'`
+    VERSION=`cat version.txt`
     if [ "${VERSION}" == "" ]; then
         echo "ERROR: Unable to parse version from version.txt"
 	exit 1
