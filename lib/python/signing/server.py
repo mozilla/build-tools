@@ -16,7 +16,7 @@ from gevent import pywsgi
 from IPy import IP
 import webob
 
-from util import b64, b64sha1sum
+from util import b64
 from util.file import safe_unlink, sha1sum, safe_copyfile
 
 import logging
@@ -284,15 +284,6 @@ class SigningServer:
         # Mapping of file hashes to gevent Events
         self.pending = {}
 
-        # mapping of token keys to token data
-        self.tokens = {}
-
-        # mapping of nonces for token keys
-        self.nonces = {}
-
-        self.redis = None
-        self.redis_prefix = "signing"
-
         self.load_config(config)
 
         self.messages = queue.Queue()
@@ -317,18 +308,6 @@ class SigningServer:
         for option, value in config.items('security'):
             if option.startswith('token_secret'):
                 self.token_secrets.append(value)
-
-        if config.has_option('server', 'redis'):
-            import redis
-            host = config.get('server', 'redis')
-            log.info("Connecting to redis server %s", host)
-            if ':' in host:
-                host, port = host.split(":")
-                port = int(port)
-                self.redis = redis.Redis(
-                    host=host, port=port, socket_timeout=30)
-            else:
-                self.redis = redis.Redis(host=host, socket_timeout=30)
 
         self.signed_dir = config.get('paths', 'signed_dir')
         self.unsigned_dir = config.get('paths', 'unsigned_dir')
@@ -368,102 +347,28 @@ class SigningServer:
                              config.getint('signing', 'concurrency'),
                              self.passphrases)
 
-    def verify_nonce(self, token, nonce):
-        if self.redis:
-            next_nonce_digest = self.redis.get(
-                "%s:nonce:%s" % (self.redis_prefix, b64sha1sum(token)))
-        else:
-            next_nonce_digest = self.nonces.get(token)
+    def verify_token(self, token, slave_ip):
+        token_data, token_sig = token.split('!', 1)
 
-        if next_nonce_digest is None:
-            return False
-
+        # validate the signature, so we know token_data is reliable
         for secret in self.token_secrets:
-            if sign_data(nonce, secret) == next_nonce_digest:
+            if verify_token(token_data, token_sig, secret):
                 break
         else:
-            # We tried all secrets and they all failed
             return False
-
-        # Generate the next one
-        valid_to = unpack_token_data(self.tokens[token])['valid_to']
-        next_nonce = b64(os.urandom(16))
-        self.save_nonce(token, next_nonce, valid_to)
-        return next_nonce
-
-    def save_nonce(self, token, nonce, expiry):
-        nonce_digest = sign_data(nonce, self.token_secret)
-        self.nonces[token] = nonce_digest
-        if self.redis:
-            log.debug("saving nonce to redis")
-            self.redis.setex("%s:nonce:%s" %
-                             (self.redis_prefix, b64sha1sum(token)),
-                             nonce_digest,
-                             int(expiry - time.time()),
-                             )
-            log.debug("saved nonce to redis")
-
-    def verify_token(self, token, slave_ip):
-        token_data = self.tokens.get(token)
-        if not token_data:
-            if not self.redis:
-                log.info("unknown token %s", token)
-                log.debug("Tokens: %s", self.tokens)
-                return False
-
-            log.info("couldn't find token data for key %s locally, checking cache", token)
-            token_data = self.redis.get(
-                "%s:tokens:%s" % (self.redis_prefix, b64sha1sum(token)))
-            if not token_data:
-                log.info("not in cache; failing verify_token")
-                return False
-            # Save it for later
-            self.tokens[token] = token_data
 
         info = unpack_token_data(token_data)
         valid_from, valid_to = info['valid_from'], info['valid_to']
         now = time.time()
         if now < valid_from or now > valid_to:
-            log.info("Invalid time window; deleting key")
-            self.delete_token(token)
+            log.info("Invalid time window")
             return False
 
         if info['slave_ip'] != slave_ip:
             log.info("Invalid slave ip")
-            self.delete_token(token)
             return False
 
-        for secret in self.token_secrets:
-            if verify_token(token_data, token, secret):
-                return True
-        else:
-            return False
-
-    def delete_token(self, token):
-        if token in self.tokens:
-            del self.tokens[token]
-        if token in self.nonces:
-            del self.nonces[token]
-        if self.redis:
-            self.redis.delete(
-                "%s:tokens:%s" % (self.redis_prefix, b64sha1sum(token)))
-            self.redis.delete(
-                "%s:nonce:%s" % (self.redis_prefix, b64sha1sum(token)))
-
-    def save_token(self, token, token_data):
-        self.tokens[token] = token_data
-        valid_to = unpack_token_data(token_data)['valid_to']
-        if self.redis:
-            log.debug("saving token to redis")
-            self.redis.setex("%s:tokens:%s" %
-                             (self.redis_prefix, b64sha1sum(token)),
-                             token_data,
-                             int(valid_to - time.time()),
-                             )
-            log.debug("saved token to redis")
-
-        # Set the initial nonce to ""
-        self.save_nonce(token, "", valid_to)
+        return True
 
     def get_token(self, slave_ip, duration):
         duration = int(duration)
@@ -476,9 +381,7 @@ class SigningServer:
         log.info("request for token for slave %s for %i seconds",
                  slave_ip, duration)
         data = make_token_data(slave_ip, valid_from, valid_to)
-        token = sign_data(data, self.token_secret)
-        self.save_token(token, data)
-        log.debug("Tokens: %s", self.tokens)
+        token = data + '!' + sign_data(data, self.token_secret)
         return token
 
     def cleanup_loop(self):
@@ -516,14 +419,6 @@ class SigningServer:
                 if not os.path.exists(unsigned):
                     log.info("Deleting %s with no unsigned file", signed)
                     safe_unlink(signed)
-
-        # Clean out self.tokens and self.nonces
-        now = time.time()
-        for token, token_data in self.tokens.items():
-            info = unpack_token_data(token_data)
-            if info['valid_to'] < now:
-                log.debug("Deleting expired token %s", token)
-                self.delete_token(token)
 
     def submit_file(self, filehash, filename, format_):
         assert (filehash, format_) not in self.pending
@@ -719,19 +614,23 @@ class SigningServer:
             fp.close()
         except:
             log.exception("Error downloading data")
-            os.unlink(tmpname)
+            if os.path.exists(tmpname):
+                os.unlink(tmpname)
 
         if s < self.min_filesize:
-            os.unlink(tmpname)
+            if os.path.exists(tmpname):
+                os.unlink(tmpname)
             start_response("400 File too small", headers)
             return ""
         if self.max_filesize[format_] and s > self.max_filesize[format_]:
-            os.unlink(tmpname)
+            if os.path.exists(tmpname):
+                os.unlink(tmpname)
             start_response("400 File too large", headers)
             return ""
 
         if h.hexdigest() != filehash:
-            os.unlink(tmpname)
+            if os.path.exists(tmpname):
+                os.unlink(tmpname)
             log.warn("Hash mismatch. Bad upload?")
             start_response("400 Hash mismatch", headers)
             return ""
@@ -745,13 +644,10 @@ class SigningServer:
         return ""
 
     def handle_token(self, environ, start_response, values):
-        if 'expire' in values:
-            self.delete_token(values['expire'])
-        else:
-            token = self.get_token(
-                values['slave_ip'],
-                values['duration'],
-            )
+        token = self.get_token(
+            values['slave_ip'],
+            values['duration'],
+        )
         start_response("200 OK", [])
         return token
 
@@ -794,23 +690,13 @@ class SigningServer:
 
                 slave_ip = environ['REMOTE_ADDR']
                 if not self.verify_token(values['token'], slave_ip):
+                    log.warn("Bad token")
                     start_response("400 Invalid token", [])
                     return ""
 
-                # Validate nonce
-                if 'nonce' not in values:
-                    self.delete_token(values['token'])
-                    start_response("400 Missing nonce", [])
-                    return ""
-
-                next_nonce = self.verify_nonce(
-                    values['token'], values['nonce'])
-                if not next_nonce:
-                    self.delete_token(values['token'])
-                    start_response("400 Invalid nonce", [])
-                    return ""
-
-                headers.append(('X-Nonce', next_nonce))
+                # nonces are unused, but still part of the protocol
+                next_nonce = 'UNUSED'
+                headers.append(('X-Nonce', 'UNUSED'))
 
                 return self.handle_upload(environ, start_response, values, rest, next_nonce)
         except:
