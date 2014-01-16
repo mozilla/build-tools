@@ -183,11 +183,6 @@
         "pdu": "pdu1.r602-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA14"
     },
-    "tegra-053": {
-        "foopy": "foopy113",
-        "pdu": "pdu2.r602-11.tegra.releng.scl3.mozilla.com",
-        "pduid": ".AA14"
-    },
     "tegra-054": {
         "foopy": "foopy113",
         "pdu": "pdu3.r602-11.tegra.releng.scl3.mozilla.com",
@@ -599,11 +594,6 @@
     "tegra-160": {
         "foopy": "foopy120",
         "pdu": "pdu2.r601-11.tegra.releng.scl3.mozilla.com",
-        "pduid": ".AA19"
-    },
-    "tegra-162": {
-        "foopy": "foopy120",
-        "pdu": "pdu3.r601-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA19"
     },
     "tegra-163": {
