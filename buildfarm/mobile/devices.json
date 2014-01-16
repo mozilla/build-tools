@@ -403,11 +403,6 @@
         "pdu": "pdu1.r601-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA6"
     },
-    "tegra-106": {
-        "foopy": "foopy117",
-        "pdu": "pdu2.r601-11.tegra.releng.scl3.mozilla.com",
-        "pduid": ".AA6"
-    },
     "tegra-107": {
         "foopy": "foopy117",
         "pdu": "pdu3.r601-11.tegra.releng.scl3.mozilla.com",
