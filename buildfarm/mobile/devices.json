@@ -1242,11 +1242,6 @@
         "pdu": "pdu2.r201-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA14"
     },
-    "tegra-320": {
-        "foopy": "foopy31",
-        "pdu": "pdu3.r201-11.tegra.releng.scl3.mozilla.com",
-        "pduid": ".AA11"
-    },
     "tegra-321": {
         "foopy": "foopy28",
         "pdu": "pdu3.r201-11.tegra.releng.scl3.mozilla.com",
