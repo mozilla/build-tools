@@ -170,6 +170,7 @@ def remove_path(path):
     log.debug("Removing %s", path)
 
     if _is_windows():
+        log.info("Using _rmtree_windows ...")
         _rmtree_windows(path)
         return
 
@@ -224,7 +225,6 @@ def _rmtree_windows(path):
     """ Windows-specific rmtree that handles path lengths longer than MAX_PATH.
         Ported from clobberer.py.
     """
-    log.info("Using _rmtree_windows ...")
     assert _is_windows()
     path = os.path.realpath(path)
     full_path = '\\\\?\\' + path
