@@ -75,6 +75,8 @@ class Scanner:
         re.compile("twisted.spread.pb.DeadReferenceError: Calling Stale Broker"),
         # Ignore exceptions triggered by NoneType objects.
         re.compile(re.escape("exceptions.AttributeError: 'NoneType' object has no attribute")),
+        # Ignore PB connect errors.
+        re.compiile(re.escape("Failure: twisted.spread.pb.PBConnectionLost: [Failure instance: Traceback (failure with no frames): <class 'socket.error'>: [Errno 9] Bad file descriptor")),
     ]
 
     def __init__(self, lasttime=0):
