@@ -59,7 +59,7 @@ def check_mozpool_status(status):
 class MozpoolHandler:
     def __init__(self, mozpool_api_url, log_obj=None):
         self.mozpool_api_url = mozpool_api_url
-        self.mozpool_timeout=10
+        self.mozpool_timeout=20
         self.user = getpass.getuser()
         self.hostname = socket.gethostname()
         if log_obj:
