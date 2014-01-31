@@ -22,7 +22,7 @@ releaseConfig=$($JSONTOOL -k properties.release_config $PROPERTIES_FILE)
 releaseTag=$($JSONTOOL -k properties.release_tag $PROPERTIES_FILE)
 
 if [ -z "$BUILDBOT_CONFIGS" ]; then
-    export BUILDBOT_CONFIGS="http://hg.mozilla.org/build/buildbot-configs"
+    export BUILDBOT_CONFIGS="https://hg.mozilla.org/build/buildbot-configs"
 fi
 
 $PYTHON $MY_DIR/chunked-verify.py -t $releaseTag -r $releaseConfig \

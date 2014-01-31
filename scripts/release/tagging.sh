@@ -22,7 +22,7 @@ slavename=$($JSONTOOL -k properties.slavename $PROPERTIES_FILE)
 master=$($JSONTOOL -k properties.master $PROPERTIES_FILE)
 
 if [ -z "$BUILDBOT_CONFIGS" ]; then
-    export BUILDBOT_CONFIGS="http://hg.mozilla.org/build/buildbot-configs"
+    export BUILDBOT_CONFIGS="https://hg.mozilla.org/build/buildbot-configs"
 fi
 if [ -z "$CLOBBERER_URL" ]; then
     export CLOBBERER_URL="http://clobberer.pvt.build.mozilla.org/index.php"

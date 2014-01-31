@@ -12,7 +12,7 @@ if test -d clone; then
 fi
 
 # checkout
-hg clone "http://hg.mozilla.org/$REPO_PATH" clone || exit 1
+hg clone "https://hg.mozilla.org/$REPO_PATH" clone || exit 1
 
 # bundle
 BUNDLE=`echo $BRANCH | tr -c '\n[:alnum:]_' '-'`.hg

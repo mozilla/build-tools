@@ -20,4 +20,4 @@ jhopkins for initial work in mozharness.
 dustin, dividehex, ted and mcote for creating all the pieces in the Mozpool stack.
 
 * [1] https://github.com/djmitche/mozpool
-* [2] http://hg.mozilla.org/build/mozharness/file/tip/mozharness/mozilla/testing/mozpool.py
+* [2] https://hg.mozilla.org/build/mozharness/file/tip/mozharness/mozilla/testing/mozpool.py

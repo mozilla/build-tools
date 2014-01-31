@@ -8,7 +8,7 @@ popd > /dev/null
 SPIDERDIR=$SCRIPTS_DIR/scripts/spidermonkey_builds
 
 if [ -z "$HG_REPO" ]; then
-    export HG_REPO="http://hg.mozilla.org/integration/mozilla-inbound"
+    export HG_REPO="https://hg.mozilla.org/integration/mozilla-inbound"
 fi
 
 function usage() {

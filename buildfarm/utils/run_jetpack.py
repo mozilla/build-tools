@@ -204,7 +204,7 @@ if __name__ == '__main__':
                     if "hg.mozilla.org" in line:
                         branch_rev = line.split('/')[-1].strip()
                         branch = line.split('/')[-3].strip()
-                        print "TinderboxPrint: <a href=\"http://hg.mozilla.org/%(branch)s/rev/%(branch_rev)s\">%(branch)s-rev:%(branch_rev)s</a>\n" % locals()
+                        print "TinderboxPrint: <a href=\"https://hg.mozilla.org/%(branch)s/rev/%(branch_rev)s\">%(branch)s-rev:%(branch_rev)s</a>\n" % locals()
                 f.close()
         print "EXE_URL: %s/%s/%s" % (ftp_url, directory, exe)
         # Download the build
@@ -252,7 +252,7 @@ if __name__ == '__main__':
     for d in dirs:
         if 'addon-sdk' in d:
             sdk_rev = d.split('-')[2]
-            print "TinderboxPrint: <a href=\"http://hg.mozilla.org/projects/addon-sdk/rev/%(sdk_rev)s\">sdk-rev:%(sdk_rev)s</a>\n" % locals()
+            print "TinderboxPrint: <a href=\"https://hg.mozilla.org/projects/addon-sdk/rev/%(sdk_rev)s\">sdk-rev:%(sdk_rev)s</a>\n" % locals()
             sdkdir = os.path.abspath(d)
             print "SDKDIR: %s" % sdkdir
         if options.platform in ('macosx', 'macosx64', 'snowleopard', 'lion', 'mountainlion', 'mavericks'):

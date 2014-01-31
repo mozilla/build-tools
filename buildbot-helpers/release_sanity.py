@@ -447,7 +447,7 @@ if __name__ == '__main__':
                             releaseConfig['version'],
                             releaseConfig['buildNumber'],
                             sourceRepoPath,
-                            'http://hg.mozilla.org',
+                            'https://hg.mozilla.org',
                             sr['revision'],
                         ))
                     # l10n_changesets do not have an entry for en-US

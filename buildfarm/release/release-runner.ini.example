@@ -16,7 +16,7 @@ buildbotcustom: https://hg.mozilla.org/build/buildbotcustom
 buildbotcustom_branch: production-0.8
 tools: https://hg.mozilla.org/build/tools
 tools_branch: default
-masters_json: http://hg.mozilla.org/build/tools/raw-file/default/buildfarm/maintenance/production-masters.json
+masters_json: https://hg.mozilla.org/build/tools/raw-file/default/buildfarm/maintenance/production-masters.json
 sendchange_master: localhost:9001
 staging: false
 verbose: true

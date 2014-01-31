@@ -16,7 +16,7 @@ REV="$1"
 [ -z "$REV" ] && { echo "no revision given"; exit 1; }
 
 REPO="$2"
-[ -z "$REPO" ] && REPO="http://hg.mozilla.org/build/tools"
+[ -z "$REPO" ] && REPO="https://hg.mozilla.org/build/tools"
 
 cd /tools || exit 1
 virtualenv slavealloc-$REV || exit 1

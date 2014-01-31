@@ -5,7 +5,7 @@ builds on a per-builder basis.
 
 This script simply updates a database that Buildbot reads from at the start of
 every build.
-http://hg.mozilla.org/build/buildbotcustom/file/default/process/factory.py
+https://hg.mozilla.org/build/buildbotcustom/file/default/process/factory.py
 */
 
 include("clobberer_creds.php");

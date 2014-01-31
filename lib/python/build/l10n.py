@@ -27,7 +27,7 @@ def getMakeCommand(usePymake, absSourceRepoPath):
 
 
 def getAllLocales(appName, sourceRepo, rev="default",
-                  hg="http://hg.mozilla.org"):
+                  hg="https://hg.mozilla.org"):
     localeFile = "%s/raw-file/%s/%s/locales/all-locales" % \
         (sourceRepo, rev, appName)
     url = urljoin(hg, localeFile)
@@ -232,7 +232,7 @@ def getLocalesForChunk(possibleLocales, chunks, thisChunk):
 
 
 def getNightlyLocalesForChunk(appName, sourceRepo, platform, chunks, thisChunk,
-                              hg="http://hg.mozilla.org"):
+                              hg="https://hg.mozilla.org"):
     possibleLocales = getPlatformLocales(
         getAllLocales(appName, sourceRepo, hg=hg),
         (platform,)

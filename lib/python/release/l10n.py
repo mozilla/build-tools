@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 def getShippedLocales(product, appName, version, buildNumber, sourceRepo,
-                      hg='http://hg.mozilla.org', revision=None):
+                      hg='https://hg.mozilla.org', revision=None):
     if revision is not None:
         tag = revision
     else:
@@ -140,7 +140,7 @@ def makeReleaseRepackUrls(productName, brandName, version, platform,
 
 def getReleaseLocalesForChunk(productName, appName, version, buildNumber,
                               sourceRepo, platform, chunks, thisChunk,
-                              hg='http://hg.mozilla.org'):
+                              hg='https://hg.mozilla.org'):
     possibleLocales = getPlatformLocales(
         getShippedLocales(productName, appName, version, buildNumber,
                           sourceRepo, hg),

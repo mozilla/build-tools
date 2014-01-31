@@ -46,7 +46,7 @@ def wfetch(url, retries=5):
 def main():
     '''
     We load the configuration file from:
-    http://hg.mozilla.org/mozilla-central/raw-file/default/build/machine-configuration.json
+    https://hg.mozilla.org/mozilla-central/raw-file/default/build/machine-configuration.json
     '''
     parser = OptionParser()
     parser.add_option(

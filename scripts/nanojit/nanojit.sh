@@ -3,7 +3,7 @@ set -e
 SCRIPTS_DIR="$(dirname $0)/../.."
 
 if [ -z "$HG_REPO" ]; then
-    export HG_REPO="http://hg.mozilla.org/projects/nanojit-central"
+    export HG_REPO="https://hg.mozilla.org/projects/nanojit-central"
 fi
 
 python $SCRIPTS_DIR/buildfarm/utils/hgtool.py $HG_REPO nanojit-src || exit 2
