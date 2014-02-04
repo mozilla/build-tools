@@ -257,7 +257,7 @@ else
     failure=0
     ls -1tr "${TMPDIR}" | grep '^failure\.' | while read failure_file
     do
-        while read failure_code entry1 entry2 entry3 entry4 entry5 entry6
+        while read failure_code entry1 entry2 entry3 entry4 entry5 entry6 entry7
         do
             log '===================================='
             log ''
@@ -267,7 +267,8 @@ else
                     update_xml_url="${entry1}"
                     update_xml="${entry2}"
                     update_xml_headers="${entry3}"
-                    update_xml_curl_exit_code="${entry4}"
+                    update_xml_debug="${entry4}"
+                    update_xml_curl_exit_code="${entry5}"
                     log "FAILURE $((++failure)): Update xml file not available"
                     log ""
                     log "    Download url: ${update_xml_url}"
@@ -275,6 +276,9 @@ else
                     log ""
                     log "    The HTTP headers were:"
                     sed -e "s/$(printf '\r')//" -e "s/^/$(date):          /" -e '$a\' "${update_xml_headers}"
+                    log ""
+                    log "    The full curl debug output was:"
+                    sed -e "s/$(printf '\r')//" -e "s/^/$(date):          /" -e '$a\' "${update_xml_debug}"
                     log ""
                     log "    The returned update.xml file was:"
                     sed -e "s/$(printf '\r')//" -e "s/^/$(date):          /" -e '$a\' "${update_xml}"
@@ -290,7 +294,8 @@ else
                     update_xml_actual_url="${entry2}"
                     update_xml="${entry3}"
                     update_xml_headers="${entry4}"
-                    update_xml_curl_exit_code="${entry5}"
+                    update_xml_debug="${entry5}"
+                    update_xml_curl_exit_code="${entry6}"
                     log "FAILURE $((++failure)): Update xml file not available at *redirected* location"
                     log ""
                     log "    Download url: ${update_xml_url}"
@@ -300,6 +305,9 @@ else
                     log ""
                     log "    The HTTP headers were:"
                     sed -e "s/$(printf '\r')//" -e "s/^/$(date):          /" -e '$a\' "${update_xml_headers}"
+                    log ""
+                    log "    The full curl debug output was:"
+                    sed -e "s/$(printf '\r')//" -e "s/^/$(date):          /" -e '$a\' "${update_xml_debug}"
                     log ""
                     log "    The returned update.xml file was:"
                     sed -e "s/$(printf '\r')//" -e "s/^/$(date):          /" -e '$a\' "${update_xml}"
@@ -314,7 +322,8 @@ else
                     patch_type="${entry2}"
                     update_xml="${entry3}"
                     update_xml_headers="${entry4}"
-                    update_xml_actual_url="${entry5}"
+                    update_xml_debug="${entry5}"
+                    update_xml_actual_url="${entry6}"
                     log "FAILURE $((++failure)): Patch type '${patch_type}' not present in the downloaded update.xml file."
                     log ""
                     log "    Update xml file downloaded from: ${update_xml_url}"
@@ -323,6 +332,9 @@ else
                     log ""
                     log "    The HTTP headers were:"
                     sed -e "s/$(printf '\r')//" -e "s/^/$(date):          /" -e '$a\' "${update_xml_headers}"
+                    log ""
+                    log "    The full curl debug output was:"
+                    sed -e "s/$(printf '\r')//" -e "s/^/$(date):          /" -e '$a\' "${update_xml_debug}"
                     log ""
                     log "    The returned update.xml file was:"
                     sed -e "s/$(printf '\r')//" -e "s/^/$(date):          /" -e '$a\' "${update_xml}"
@@ -335,8 +347,9 @@ else
                 NO_MAR_FILE)
                     mar_url="${entry1}"
                     mar_headers_file="${entry2}"
-                    mar_file_curl_exit_code="${entry3}"
-                    mar_actual_url="${entry4}"
+                    mar_headers_debug_file="${entry3}"
+                    mar_file_curl_exit_code="${entry4}"
+                    mar_actual_url="${entry5}"
                     log "FAILURE $((++failure)): Could not retrieve mar file"
                     log ""
                     log "    Mar file url: ${mar_url}"
@@ -346,6 +359,9 @@ else
                     log ""
                     log "    The HTTP headers were:"
                     sed -e "s/$(printf '\r')//" -e "s/^/$(date):          /" -e '$a\' "${mar_headers_file}"
+                    log ""
+                    log "    The full curl debug output was:"
+                    sed -e "s/$(printf '\r')//" -e "s/^/$(date):          /" -e '$a\' "${mar_headers_debug_file}"
                     log ""
                     log "    The mar download was tested because it was referenced in the following update xml file(s):"
                     show_update_xml_entries "${mar_url}"
@@ -357,8 +373,9 @@ else
                     mar_required_size="${entry2}"
                     mar_actual_size="${entry3}"
                     mar_headers_file="${entry4}"
-                    mar_file_curl_exit_code="${entry5}"
-                    mar_actual_url="${entry6}"
+                    mar_headers_debug_file="${entry5}"
+                    mar_file_curl_exit_code="${entry6}"
+                    mar_actual_url="${entry7}"
                     log "FAILURE $((++failure)): Mar file is wrong size"
                     log ""
                     log "    Mar file url: ${mar_url}"
@@ -374,13 +391,17 @@ else
                     log "    The HTTP headers were:"
                     sed -e "s/$(printf '\r')//" -e "s/^/$(date):          /" -e '$a\' "${mar_headers_file}"
                     log ""
+                    log "    The full curl debug output was:"
+                    sed -e "s/$(printf '\r')//" -e "s/^/$(date):          /" -e '$a\' "${mar_headers_debug_file}"
+                    log ""
                     ;;
 
                 BAD_HTTP_RESPONSE_CODE_FOR_MAR)
                     mar_url="${entry1}"
                     mar_headers_file="${entry2}"
-                    mar_file_curl_exit_code="${entry3}"
-                    mar_actual_url="${entry4}"
+                    mar_headers_debug_file="${entry3}"
+                    mar_file_curl_exit_code="${entry4}"
+                    mar_actual_url="${entry5}"
                     http_response_code="$(sed -e "s/$(printf '\r')//" -n -e '/^HTTP\//p' "${mar_headers_file}" | tail -1)"
                     log "FAILURE $((++failure)): '${http_response_code}' for mar file"
                     log ""
@@ -394,6 +415,9 @@ else
                     log ""
                     log "    The HTTP headers were:"
                     sed -e "s/$(printf '\r')//" -e "s/^/$(date):          /" -e '$a\' "${mar_headers_file}"
+                    log ""
+                    log "    The full curl debug output was:"
+                    sed -e "s/$(printf '\r')//" -e "s/^/$(date):          /" -e '$a\' "${mar_headers_debug_file}"
                     log ""
                     ;;
 
