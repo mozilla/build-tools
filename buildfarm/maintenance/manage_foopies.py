@@ -62,7 +62,10 @@ def run_action_on_foopy(action, foopy):
     try:
         action_func = getattr(foopy_fabric, action)
         with settings(host_string="%s.build.mozilla.org" % foopy):
-            action_func(foopy)
+            if options.argument:
+                action_func(foopy, options.argument)
+            else:
+                action_func(foopy)
             return True
     except AttributeError:
         print FAIL, "[%s] %s action is not defined." % (foopy, action)
@@ -115,6 +118,7 @@ if __name__ == '__main__':
     parser.add_option("-H", "--host", dest="hosts", action="append")
     parser.add_option("-D", "--device", dest="devices", action="append")
     parser.add_option("-j", dest="concurrency", type="int")
+    parser.add_option("-a", dest="argument", action="store")
 
     options, actions = parser.parse_args()
 
