@@ -79,11 +79,16 @@ if [ -f "$PROPERTIES_FILE" ]; then
         -s 4 -n info -n 'rel-*' -n 'tb-rel-*' -n $builddir
 fi
 
-$PYTHON $SCRIPTS_DIR/buildfarm/utils/hgtool.py "${hgtool_args[@]}" $HG_REPO src || exit 2
+if [ "$HG_REPO" = none ]; then
+  SOURCE=.
+else
+  $PYTHON $SCRIPTS_DIR/buildfarm/utils/hgtool.py "${hgtool_args[@]}" $HG_REPO src || exit 2
+  SOURCE=src
+fi
 
-(cd src/js/src; autoconf-2.13 || autoconf2.13)
+(cd $SOURCE/js/src; autoconf-2.13 || autoconf2.13)
 
-TRY_OVERRIDE=src/js/src/config.try
+TRY_OVERRIDE=$SOURCE/js/src/config.try
 if [ -r $TRY_OVERRIDE ]; then
   CONFIGURE_ARGS=$(cat $TRY_OVERRIDE)
 else
@@ -99,31 +104,44 @@ OBJDIR=$PWD
 
 echo OBJDIR is $OBJDIR
 
-NSPR64=""
+USE_64BIT=false
+
 if [[ "$OSTYPE" == darwin* ]]; then
-    NSPR64="--enable-64bit"
+  USE_64BIT=true
+elif [ "$OSTYPE" = "linux-gnu" ]; then
+  GCCDIR=/tools/gcc-4.7.2-0moz1
+  CONFIGURE_ARGS="$CONFIGURE_ARGS --with-ccache"
+  UNAME_M=$(uname -m)
+  MAKEFLAGS=-j4
+  if [ "$VARIANT" = "arm-sim" ]; then
+    USE_64BIT=false
+  elif [ "$UNAME_M" = "x86_64" ]; then
+    USE_64BIT=true
+  fi
+
+  if [ "$UNAME_M" != "arm" ]; then
+    export CC=$GCCDIR/bin/gcc
+    export CXX=$GCCDIR/bin/g++
+    if $USE_64BIT; then
+      export LD_LIBRARY_PATH=$GCCDIR/lib64
+    else
+      export LD_LIBRARY_PATH=$GCCDIR/lib
+    fi
+  fi
 fi
 
-if [ "$OSTYPE" = "linux-gnu" ]; then
-    GCCDIR=/tools/gcc-4.7.2-0moz1
-    CONFIGURE_ARGS="$CONFIGURE_ARGS --with-ccache"
-    UNAME_M=$(uname -m)
-    MAKEFLAGS=-j4
-    if [ "$UNAME_M" != "arm" ]; then
-        export CC=$GCCDIR/bin/gcc
-        export CXX=$GCCDIR/bin/g++
-        if [ "$UNAME_M" = "x86_64" ]; then
-            export LD_LIBRARY_PATH=$GCCDIR/lib64
-            NSPR64="--enable-64bit"
-        else
-            export LD_LIBRARY_PATH=$GCCDIR/lib
-        fi
-    fi
+if $USE_64BIT; then
+  NSPR64="--enable-64bit"
+else
+  NSPR64=""
+  export CC="$CC -m32"
+  export CXX="$CXX -m32"
+  export AR=ar
 fi
 
 test -d nspr || mkdir nspr
 (cd nspr
-../../src/nsprpub/configure --prefix=$OBJDIR/dist --with-dist-prefix=$OBJDIR/dist --with-mozilla $NSPR64
+../../$SOURCE/nsprpub/configure --prefix=$OBJDIR/dist --with-dist-prefix=$OBJDIR/dist --with-mozilla $NSPR64
 make && make install
 ) || exit 2
 
@@ -137,10 +155,10 @@ if [ "$OSTYPE" = "msys" ]; then
 else
     NSPR_LIBS=$($OBJDIR/dist/bin/nspr-config --libs)
 fi
-../../src/js/src/configure $CONFIGURE_ARGS --with-dist-dir=$OBJDIR/dist --prefix=$OBJDIR/dist --with-nspr-prefix=$OBJDIR/dist --with-nspr-cflags="$NSPR_CFLAGS" --with-nspr-libs="$NSPR_LIBS" || exit 2
+../../$SOURCE/js/src/configure $CONFIGURE_ARGS --with-dist-dir=$OBJDIR/dist --prefix=$OBJDIR/dist --with-nspr-prefix=$OBJDIR/dist --with-nspr-cflags="$NSPR_CFLAGS" --with-nspr-libs="$NSPR_LIBS" || exit 2
 
 make -s -w -j4 || exit 2
-cp -p ../../src/build/unix/run-mozilla.sh $OBJDIR/dist/bin
+cp -p ../../$SOURCE/build/unix/run-mozilla.sh $OBJDIR/dist/bin
 
 # The Root Analysis tests run in a special GC Zeal mode and disable ASLR to
 # make tests reproducible.
