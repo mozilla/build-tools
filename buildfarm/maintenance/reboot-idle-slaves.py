@@ -68,7 +68,7 @@ def process_slave(slaveapi, slave, dryrun=False):
         url.path.add("slaves").add(slave).add("actions").add("shutdown_buildslave")
         url.args["waittime"] = 30
         r = retry(requests.post, args=(str(url),)).json()
-        while r["state"] not in (PENDING, RUNNING):
+        while r["state"] in (PENDING, RUNNING):
             url.args["requestid"] = r["requestid"]
             time.sleep(30)
             r = retry(requests.get, args=(str(url),)).json()
