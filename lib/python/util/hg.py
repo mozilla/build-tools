@@ -434,6 +434,18 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
                          dest_sharedPath_data, repo, norm_sharedRepo)
                 remove_path(dest)
 
+            # Bug 969689: Check to see if the dest repo is still on a valid
+            # commit. It is possible that the shared repo was cloberred out from
+            # under us, effectively stripping our active commit. This can cause
+            # 'hg status', 'hg purge', and the like to do incorrect things. If
+            # we detect this situation, then it's best to clobber and re-create
+            # dest.
+            parent = get_revision(dest)
+            if not parent:
+                log.info("Shared repo %s no longer has our parent cset; clobbering",
+                         dest_sharedPath_data)
+                remove_path(dest)
+
         try:
             log.info("Updating shared repo")
             mercurial(repo, sharedRepo, branch=branch, revision=revision,

@@ -259,6 +259,39 @@ class TestHg(unittest.TestCase):
 
         self.assertEquals(getRevisions(self.wc), getRevisions(repo2))
 
+    def testShareExtraFiles(self):
+        shareBase = os.path.join(self.tmpdir, 'share')
+        backup = os.path.join(self.tmpdir, 'backup')
+
+        # Clone the original repo
+        mercurial(self.repodir, self.wc, shareBase=shareBase)
+
+        old_revs = self.revisions[:]
+
+        clone(self.repodir, backup)
+
+        # Make the working repo have a new file. We need it to have an earlier
+        # timestamp to trigger the odd behavior in hg, so use '-d yesterday'
+        run_cmd(['touch', '-d', 'yesterday', 'newfile'], cwd=self.wc)
+        run_cmd(['hg', 'add', 'newfile'], cwd=self.wc)
+        run_cmd(['hg', 'commit', '-m', '"add newfile"'], cwd=self.wc)
+
+        # Reset the share base to remove the 'add newfile' commit. We
+        # overwrite repodir with the backup that doesn't have the commit,
+        # then clone the repodir to a throwaway dir to create the new
+        # shareBase. Now self.wc still points to shareBase, but the
+        # changeset that self.wc was on is lost.
+        shutil.rmtree(self.repodir)
+        shutil.rmtree(shareBase)
+        clone(backup, self.repodir)
+        throwaway = os.path.join(self.tmpdir, 'throwaway')
+        mercurial(self.repodir, throwaway, shareBase=shareBase)
+
+        # Try and update our working copy
+        mercurial(self.repodir, self.wc, shareBase=shareBase)
+
+        self.assertFalse(os.path.exists(os.path.join(self.wc, 'newfile')))
+
     def testShareReset(self):
         shareBase = os.path.join(self.tmpdir, 'share')
 
