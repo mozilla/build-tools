@@ -765,8 +765,7 @@
         "pduid": ".AA7"
     },
     "tegra-204": {
-        "_comment": "Bug 749637: Assigned to Sec-Team",
-        "foopy": "None",
+        "foopy": "foopy125",
         "pdu": "pdu2.r202-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA7"
     },
