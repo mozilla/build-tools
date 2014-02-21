@@ -32,6 +32,7 @@
     "limit_b2g_platforms": [
       "linux32_gecko",
       "linux64_gecko",
+      "emulator-jb",
       "emulator"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
@@ -75,6 +76,7 @@
     "limit_b2g_platforms": [
       "linux32_gecko",
       "linux64_gecko",
+      "emulator-jb",
       "emulator"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
@@ -118,6 +120,7 @@
     "limit_b2g_platforms": [
       "linux32_gecko",
       "linux64_gecko",
+      "emulator-jb",
       "emulator"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
@@ -161,6 +164,7 @@
     "limit_b2g_platforms": [
       "linux32_gecko",
       "linux64_gecko",
+      "emulator-jb",
       "emulator"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
@@ -528,6 +532,7 @@
     "limit_b2g_platforms": [
       "linux32_gecko",
       "linux64_gecko",
+      "emulator-jb",
       "emulator"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
@@ -571,6 +576,7 @@
     "limit_b2g_platforms": [
       "linux32_gecko",
       "linux64_gecko",
+      "emulator-jb",
       "emulator"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
@@ -1718,6 +1724,7 @@
     "limit_b2g_platforms": [
       "linux32_gecko",
       "linux64_gecko",
+      "emulator-jb",
       "emulator"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
@@ -1761,6 +1768,7 @@
     "limit_b2g_platforms": [
       "linux32_gecko",
       "linux64_gecko",
+      "emulator-jb",
       "emulator"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
@@ -1804,6 +1812,7 @@
     "limit_b2g_platforms": [
       "linux32_gecko",
       "linux64_gecko",
+      "emulator-jb",
       "emulator"
     ],
     "master_dir": "/builds/buildbot/tests1-linux/master",
