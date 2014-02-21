@@ -222,7 +222,7 @@ def findMaster(tegra):
     if os.path.isfile(tacFile):
         lines = open(tacFile).readlines()
         for line in lines:
-            # buildmaster_host = 'dev-master01.build.scl1.mozilla.com'
+            # buildmaster_host = 'dev-master1.srv.releng.scl3.mozilla.com'
             if line.startswith('buildmaster_host = '):
                 v, h = line.split('=')
                 h = h.strip().replace("'", "").replace('"', '')

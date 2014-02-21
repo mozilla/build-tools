@@ -1,6 +1,6 @@
 [api]
 
-api_root: http://dev-master01.build.scl1.mozilla.com:5000
+api_root: http://dev-master1.srv.releng.scl3.mozilla.com:5000
 username: user
 password: password
 
