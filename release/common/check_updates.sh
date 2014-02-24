@@ -1,16 +1,17 @@
 check_updates () {
-  # called with 4 args - platform, source package, target package, update package
+  # called with 6 args - platform, source package, target package, update package, old updater boolean, updates-settings.ini values
   update_platform=$1
   source_package=$2
   target_package=$3
   locale=$4
   use_old_updater=$5
+  mar_channel_IDs=$6
 
   # cleanup
   rm -rf source/*
   rm -rf target/*
 
-  unpack_build $update_platform source "$source_package" $locale
+  unpack_build $update_platform source "$source_package" $locale '' $mar_channel_IDs
   if [ "$?" != "0" ]; then
     echo "FAILED: cannot unpack_build $update_platform source $source_package"
     return 1

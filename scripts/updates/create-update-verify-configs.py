@@ -139,6 +139,7 @@ if __name__ == "__main__":
     for v in reversed(sorted(completes, key=LooseVersion)):
         appVersion = pc['release'][v]['extension-version']
         build_id = pc['release'][v]['platforms'][ftp_platform]
+        mar_channel_IDs = pc['release'][v].get('mar-channel-ids')
         # Calculate locales which are common for the current version and
         # to_version
         locales = list(pc['release'][v]['locales'])
@@ -177,7 +178,8 @@ if __name__ == "__main__":
                                locales=locales,
                                patch_types=['complete', 'partial'],
                                from_path=from_path, ftp_server_from=staging_server,
-                               ftp_server_to=staging_server)
+                               ftp_server_to=staging_server,
+                               mar_channel_IDs=mar_channel_IDs)
         else:
             # Full test for limited locales
             # "from" and "to" to be downloaded from different staging
@@ -187,7 +189,8 @@ if __name__ == "__main__":
                 uvc.addRelease(release=appVersion, build_id=build_id,
                                locales=this_full_check_locales, from_path=from_path,
                                ftp_server_from=previous_releases_staging_server,
-                               ftp_server_to=staging_server)
+                               ftp_server_to=staging_server,
+                               mar_channel_IDs=mar_channel_IDs)
             # Quick test for other locales, no download
             if len(quick_check_locales) > 0:
                 log.info("Generating quick check configs for %s" % v)

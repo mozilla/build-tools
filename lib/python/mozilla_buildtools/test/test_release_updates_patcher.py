@@ -98,6 +98,7 @@ samplePatcherConfigObj['release'] = {
         'extension-version': '13.0.1',
         # Drop "de" here to make sure that fully dropping a locale works
         'locales': ['en-US', 'ja', 'ja-JP-mac', 'zu'],
+        'mar-channel-ids': 'firefox-mozilla-beta',
         'prettyVersion': '13.0.1',
         'schema': 2,
         'version': '13.0.1',
@@ -302,6 +303,7 @@ class TestPatcherConfig(unittest.TestCase):
     </exceptions>
     extension-version   11.0
     locales   de en-US ja ja-JP-mac zu
+    mar-channel-ids   firefox-mozilla-beta,firefox-mozilla-release
     <platforms>
         linux-i686 12345
         mac   12345
@@ -317,6 +319,7 @@ class TestPatcherConfig(unittest.TestCase):
             'completemarurl': 'http://%platform%.%locale%.complete',
             'extension-version': '11.0',
             'locales': ['de', 'en-US', 'ja', 'ja-JP-mac', 'zu'],
+            'mar-channel-ids': 'firefox-mozilla-beta,firefox-mozilla-release',
             'prettyVersion': '11.0',
             'schema': 2,
             'version': '11.0',

@@ -98,6 +98,7 @@ do
   channel=""
   from=""
   patch_types="complete"
+  mar_channel_IDs=""
   eval $entry
   for locale in $locales
   do
@@ -142,7 +143,7 @@ do
         fi
         source_file=`basename "$from_path"`
         target_file=`basename "$to_path"`
-        check_updates "$platform" "downloads/$source_file" "downloads/$target_file" $locale $use_old_updater
+        check_updates "$platform" "downloads/$source_file" "downloads/$target_file" $locale $use_old_updater $mar_channel_IDs
         err=$?
         if [ "$err" == "0" ]; then
           continue

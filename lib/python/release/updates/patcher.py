@@ -289,7 +289,9 @@ class PatcherConfig(dict):
                 raise PatcherConfigError("Found multiple entries for '%s' in release section" % node.name)
 
             # These are all single-value nodes.
-            if node.name in ('checksumsurl', 'completemarurl', 'extension-version', 'prettyVersion', 'version'):
+            if node.name in ('checksumsurl', 'completemarurl',
+                             'extension-version', 'prettyVersion', 'version',
+                             'mar-channel-ids'):
                 r[node.name] = self._stripStringNode(node.content)
             elif node.name == 'schema':
                 r['schema'] = int(node.arguments[0])
