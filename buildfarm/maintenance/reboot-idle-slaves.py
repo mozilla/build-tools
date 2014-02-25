@@ -22,7 +22,7 @@ site.addsitedir(path.join(path.dirname(path.realpath(__file__)), "../../lib/pyth
 
 from util.retry import retry
 
-MAX_WORKERS = 4
+MAX_WORKERS = 16
 IDLE_THRESHOLD = 5*60*60
 PENDING, RUNNING, SUCCESS, FAILURE = range(4)
 
