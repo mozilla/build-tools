@@ -18,6 +18,7 @@ if __name__ == '__main__':
     parser.add_option("-p", "--build-properties", dest="build_properties")
     parser.add_option("-a", "--api-root", dest="api_root")
     parser.add_option("-c", "--credentials-file", dest="credentials_file")
+    parser.add_option("-u", "--username", dest="username", default="ffxbld")
     parser.add_option("-t", "--type", dest="type_", help="nightly or release", default="nightly")
     parser.add_option("-d", "--dummy", dest="dummy", action="store_true",
                       help="Add '-dummy' suffix to branch name")
@@ -32,7 +33,7 @@ if __name__ == '__main__':
 
     credentials = {}
     execfile(options.credentials_file, credentials)
-    auth = (credentials['balrog_username'], credentials['balrog_password'])
+    auth = (options.username, credentials['balrog_credentials'][options.username])
     fp = open(options.build_properties)
     bp = json.load(fp)
     fp.close()
