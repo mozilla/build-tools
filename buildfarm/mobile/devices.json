@@ -439,22 +439,22 @@
         "pduid": ".AA9"
     },
     "tegra-118": {
-        "foopy": "foopy118",
+        "foopy": "foopy125",
         "pdu": "pdu3.r601-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA9"
     },
     "tegra-119": {
-        "foopy": "foopy118",
+        "foopy": "foopy125",
         "pdu": "pdu1.r601-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA10"
     },
     "tegra-120": {
-        "foopy": "foopy118",
+        "foopy": "foopy125",
         "pdu": "pdu2.r601-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA10"
     },
     "tegra-121": {
-        "foopy": "foopy118",
+        "foopy": "foopy125",
         "pdu": "pdu3.r601-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA10"
     },
@@ -532,7 +532,7 @@
         "pduid": ".AA15"
     },
     "tegra-145": {
-        "foopy": "foopy118",
+        "foopy": "foopy125",
         "pdu": "pdu2.r601-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA15"
     },
@@ -542,42 +542,42 @@
         "pduid": ".AA15"
     },
     "tegra-148": {
-        "foopy": "foopy118",
+        "foopy": "foopy125",
         "pdu": "pdu1.r601-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA16"
     },
     "tegra-149": {
-        "foopy": "foopy118",
+        "foopy": "foopy29",
         "pdu": "pdu2.r601-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA16"
     },
     "tegra-150": {
-        "foopy": "foopy118",
+        "foopy": "foopy29",
         "pdu": "pdu3.r601-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA16"
     },
     "tegra-151": {
-        "foopy": "foopy118",
+        "foopy": "foopy29",
         "pdu": "pdu1.r601-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA17"
     },
     "tegra-152": {
-        "foopy": "foopy118",
+        "foopy": "foopy29",
         "pdu": "pdu2.r601-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA17"
     },
     "tegra-154": {
-        "foopy": "foopy118",
+        "foopy": "foopy29",
         "pdu": "pdu3.r601-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA17"
     },
     "tegra-155": {
-        "foopy": "foopy118",
+        "foopy": "foopy29",
         "pdu": "pdu1.r601-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA18"
     },
     "tegra-157": {
-        "foopy": "foopy118",
+        "foopy": "foopy29",
         "pdu": "pdu2.r601-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA18"
     },
