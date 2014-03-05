@@ -266,8 +266,6 @@ class TestHg(unittest.TestCase):
         # Clone the original repo
         mercurial(self.repodir, self.wc, shareBase=shareBase)
 
-        old_revs = self.revisions[:]
-
         clone(self.repodir, backup)
 
         # Make the working repo have a new file. We need it to have an earlier
@@ -286,6 +284,27 @@ class TestHg(unittest.TestCase):
         clone(backup, self.repodir)
         throwaway = os.path.join(self.tmpdir, 'throwaway')
         mercurial(self.repodir, throwaway, shareBase=shareBase)
+
+        # Try and update our working copy
+        mercurial(self.repodir, self.wc, shareBase=shareBase)
+
+        self.assertFalse(os.path.exists(os.path.join(self.wc, 'newfile')))
+
+    def testShareExtraFilesReset(self):
+        shareBase = os.path.join(self.tmpdir, 'share')
+
+        # Clone the original repo
+        mercurial(self.repodir, self.wc, shareBase=shareBase)
+
+        # Reset the repo
+        run_cmd(
+            ['%s/init_hgrepo.sh' % os.path.dirname(__file__), self.repodir])
+
+        # Make the working repo have a new file. We need it to have an earlier
+        # timestamp to trigger the odd behavior in hg, so use '-d yesterday'
+        run_cmd(['touch', '-d', 'yesterday', 'newfile'], cwd=self.wc)
+        run_cmd(['hg', 'add', 'newfile'], cwd=self.wc)
+        run_cmd(['hg', 'commit', '-m', '"add newfile"'], cwd=self.wc)
 
         # Try and update our working copy
         mercurial(self.repodir, self.wc, shareBase=shareBase)
