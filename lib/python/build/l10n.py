@@ -73,10 +73,10 @@ def l10nRepackPrep(sourceRepoName, objdir, mozconfigPath, srcMozconfigPath,
     run_cmd(["mkdir", "-p", "l10n"])
 
     if tooltoolManifest:
-        cmd = ['scripts/scripts/tooltool/fetch_and_unpack.sh',
+        cmd = ['scripts/scripts/tooltool/tooltool_wrapper.sh',
                os.path.join(sourceRepoName, tooltoolManifest),
                tooltool_urls[0],  # TODO: pass all urls when tooltool ready
-               tooltool_script, 'setup.sh']
+               'setup.sh', tooltool_script]
         run_cmd(cmd)
 
     absSourceRepoPath = os.path.join(os.getcwd(), sourceRepoName)
