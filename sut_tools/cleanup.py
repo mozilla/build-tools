@@ -107,6 +107,18 @@ def cleanupDevice(device=None, dm=None):
             setFlag(errorFile, "Remote Device Error: Unable to properly remove %s" % devRoot)
             return RETCODE_ERROR
 
+    # cleanup the downloads directory
+    downloadDir = '/mnt/sdcard/Download'
+    if dm.dirExists(downloadDir):
+        log.info("Cleaning up %s" % downloadDir)
+        files = dm.listFiles(downloadDir)
+        for f in files:
+            name = "%s/%s" % (downloadDir, f)
+            status = dm.removeDir(name)
+            if status is None or not status:
+                setFlag(errorFile, "Remote Device Error: call to removeDir(%s) returned [%s]" % (name, status))
+                return RETCODE_ERROR
+
     # cleanup xpcshell tests binaries directory
     xpcbDir = '/data/local/xpcb'
     if dm.dirExists(xpcbDir):
