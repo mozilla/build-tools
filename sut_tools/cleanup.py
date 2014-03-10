@@ -114,9 +114,14 @@ def cleanupDevice(device=None, dm=None):
         files = dm.listFiles(downloadDir)
         for f in files:
             name = "%s/%s" % (downloadDir, f)
-            status = dm.removeDir(name)
+            type = "File"
+            if dm.isDir(name):
+                type = "Dir"
+                status = dm.removeDir(name)
+            else:
+                status = dm.removeFile(name)
             if status is None or not status:
-                setFlag(errorFile, "Remote Device Error: call to removeDir(%s) returned [%s]" % (name, status))
+                setFlag(errorFile, "Remote Device Error: call to remove%s(%s) returned [%s]" % (type, name, status))
                 return RETCODE_ERROR
 
     # cleanup xpcshell tests binaries directory
