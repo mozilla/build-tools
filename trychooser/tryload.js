@@ -74,6 +74,7 @@ function getTryLoads(callback) {
         totalBuildLoad["linux32_gecko"] = totalBuildLoad["linux"];
         totalBuildLoad["linux64_gecko"] = totalBuildLoad["linux"];
         totalBuildLoad["macosx64_gecko"] = totalBuildLoad["macosx64"];
+        totalBuildLoad["win32_gecko"] = totalBuildLoad["win32"];
 
         var totalTestLoad = {};
         totalTestLoad["linux"] = load_try_test["linux"] + load_nontry_test["linux"] +
@@ -97,6 +98,10 @@ function getTryLoads(callback) {
         totalTestLoad["emulator"] = totalTestLoad["linux64"];
         // emulator-jb: N/A
         // emulator-kk: N/A
+        totalTestLoad["linux32_gecko"] = totalTestLoad["linux"];
+        totalTestLoad["linux64_gecko"] = totalTestLoad["linux64"];
+        totalTestLoad["macosx64_gecko"] = totalTestLoad["macosx64"];
+        // win32_gecko: N/A
         callback(totalBuildLoad, totalTestLoad);
       });
     });
