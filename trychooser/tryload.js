@@ -70,6 +70,7 @@ function getTryLoads(callback) {
         totalBuildLoad["android-x86"] = totalBuildLoad["linux64"];
         totalBuildLoad["emulator"] = totalBuildLoad["linux"];
         totalBuildLoad["emulator-jb"] = totalBuildLoad["linux"];
+        totalBuildLoad["emulator-kk"] = totalBuildLoad["linux"];
         totalBuildLoad["linux32_gecko"] = totalBuildLoad["linux"];
         totalBuildLoad["linux64_gecko"] = totalBuildLoad["linux"];
         totalBuildLoad["macosx64_gecko"] = totalBuildLoad["macosx64"];
@@ -95,6 +96,7 @@ function getTryLoads(callback) {
         totalTestLoad["android-armv6"] = load_try_test["tegra"] + load_nontry_test["tegra"];
         totalTestLoad["emulator"] = totalTestLoad["linux64"];
         // emulator-jb: N/A
+        // emulator-kk: N/A
         callback(totalBuildLoad, totalTestLoad);
       });
     });
