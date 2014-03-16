@@ -54,11 +54,11 @@ label {
 }
 #wrapper {
     margin: 0 auto;
-    width: 975px;
+    width: 985px;
 }
 #col1 {
     float:left;
-    width:375px;
+    width:385px;
     padding: 5px;
 }
 #col2 {

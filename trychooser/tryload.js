@@ -2,12 +2,12 @@ var TRY_BUILD_LOAD_URL =  "http://builddata.pub.build.mozilla.org/reports/pendin
 var TRY_TEST_LOAD_URL =  "http://builddata.pub.build.mozilla.org/reports/pending/pending_test_try.txt";
 var NONTRY_TEST_LOAD_URL =  "http://builddata.pub.build.mozilla.org/reports/pending/pending_test_nontry.txt";
 
+/* Initialize the things which appear in the right-hand side of assignments in getTryLoads with the names
+   used in the URLs above. */
 function initLoad() {
   return {
     "linux": 0,
     "linux64": 0,
-    "linux64-asan": 0,
-    "linux64-st-an": 0,
     "linux-hp": 0,
     "ubuntu32-vm": 0,
     "ubuntu64-vm": 0,
@@ -21,11 +21,6 @@ function initLoad() {
     "win8": 0,
     "win64": 0,
     "win2012x64": 0,
-    "android": 0,
-    "emulator": 0,
-    "emulator-jb": 0,
-    "android-armv6": 0,
-    "android-x86": 0,
     "tegra": 0,
     "panda": 0,
   };
@@ -62,6 +57,9 @@ function getTryLoads(callback) {
         totalBuildLoad["linux64"] = totalBuildLoad["linux"];
         totalBuildLoad["linux64-asan"] = totalBuildLoad["linux"];
         totalBuildLoad["linux64-st-an"] = totalBuildLoad["linux"];
+        totalBuildLoad["linux64-valgrind"] = totalBuildLoad["linux"];
+        totalBuildLoad["linux64-br-haz"] = totalBuildLoad["linux"];
+        totalBuildLoad["linux64-sh-haz"] = totalBuildLoad["linux"];
         totalBuildLoad["macosx64"] = load_try_build["macosx64"];
         totalBuildLoad["win32"] = load_try_build["win32"] + load_try_build["win64"];
         totalBuildLoad["win64"] = load_try_build["win64"];
