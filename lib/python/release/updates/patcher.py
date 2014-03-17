@@ -54,7 +54,7 @@ class PatcherConfig(dict):
         return tuple(set([self['current-update']['from']] + [v[0] for v in
                                                              self['past-update']]))
 
-    def getOptionalAttrs(self, version):
+    def getOptionalAttrs(self, version, locale):
         if version not in self['release']:
             log.debug("%s not found in config" % version)
             return {}
@@ -62,9 +62,12 @@ class PatcherConfig(dict):
         # Currently, only schema 2 has optional attributes
         attrs = {}
         if schema == 2:
-            for attr in SCHEMA_2_OPTIONAL_ATTRIBUTES:
-                if attr in self['current-update']:
-                    attrs[attr] = self['current-update'][attr]
+            if locale in self['current-update'].get('action-locales',
+                                                    self['release'][version]['locales']):
+                for attr in SCHEMA_2_OPTIONAL_ATTRIBUTES:
+                    if attr in self['current-update']:
+                        attrs[attr] = substitutePath(self['current-update'][attr],
+                                                     locale=locale)
         return attrs
 
     def getPath(self, version, platform, locale, type_):
@@ -252,7 +255,7 @@ class PatcherConfig(dict):
                     SCHEMA_2_OPTIONAL_ATTRIBUTES_SINGLE_VALUE:
                 cu[node.name] = self._stripStringNode(node.content)
             # These are potentially multiple value nodes.
-            elif node.name in ('channel', 'testchannel') + \
+            elif node.name in ('channel', 'testchannel', 'action-locales') + \
                     SCHEMA_2_OPTIONAL_ATTRIBUTES_MULTI_VALUE:
                 cu[node.name] = list(node.arguments)
             # Force is weird in that it's a multiple value node, but the
