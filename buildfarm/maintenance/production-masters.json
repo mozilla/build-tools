@@ -1,5 +1,245 @@
 [
   {
+    "basedir": "/builds/buildbot/tests1-linux32",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-linux32/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-linux32/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-linux32/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-linux32/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-linux32/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "aws-us-east-1",
+    "db_name": "buildbot-master01.srv.releng.use1.mozilla.com:/builds/buildbot/tests1-linux32/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master01.srv.releng.use1.mozilla.com",
+    "http_port": 8201,
+    "limit_fx_platforms": [
+      "linux"
+    ],
+    "limit_mobile_platforms": [
+      "android-x86",
+      "android"
+    ],
+    "limit_tb_platforms": [
+      "linux"
+    ],
+    "limit_b2g_platforms": [
+      "linux32_gecko",
+      "emulator-jb",
+      "emulator"
+    ],
+    "master_dir": "/builds/buildbot/tests1-linux32/master",
+    "name": "bm01-tests1-linux32",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-linux32/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-linux32",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-linux32/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-linux32/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-linux32/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-linux32/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-linux32/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "aws-us-east-1",
+    "db_name": "buildbot-master02.srv.releng.use1.mozilla.com:/builds/buildbot/tests1-linux32/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master02.srv.releng.use1.mozilla.com",
+    "http_port": 8201,
+    "limit_fx_platforms": [
+      "linux"
+    ],
+    "limit_mobile_platforms": [
+      "android-x86",
+      "android"
+    ],
+    "limit_tb_platforms": [
+      "linux"
+    ],
+    "limit_b2g_platforms": [
+      "linux32_gecko",
+      "emulator-jb",
+      "emulator"
+    ],
+    "master_dir": "/builds/buildbot/tests1-linux32/master",
+    "name": "bm02-tests1-linux32",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-linux32/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-linux32",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-linux32/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-linux32/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-linux32/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-linux32/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-linux32/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "aws-us-east-1",
+    "db_name": "buildbot-master03.srv.releng.use1.mozilla.com:/builds/buildbot/tests1-linux32/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master01.srv.releng.use1.mozilla.com",
+    "http_port": 8201,
+    "limit_fx_platforms": [
+      "linux"
+    ],
+    "limit_mobile_platforms": [
+      "android-x86",
+      "android"
+    ],
+    "limit_tb_platforms": [
+      "linux"
+    ],
+    "limit_b2g_platforms": [
+      "linux32_gecko",
+      "emulator-jb",
+      "emulator"
+    ],
+    "master_dir": "/builds/buildbot/tests1-linux32/master",
+    "name": "bm03-tests1-linux32",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-linux32/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-linux32",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-linux32/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-linux32/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-linux32/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-linux32/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-linux32/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "aws-us-west-2",
+    "db_name": "buildbot-master04.srv.releng.usw2.mozilla.com:/builds/buildbot/tests1-linux32/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master04.srv.releng.usw2.mozilla.com",
+    "http_port": 8201,
+    "limit_fx_platforms": [
+      "linux"
+    ],
+    "limit_mobile_platforms": [
+      "android-x86",
+      "android"
+    ],
+    "limit_tb_platforms": [
+      "linux"
+    ],
+    "limit_b2g_platforms": [
+      "linux32_gecko",
+      "emulator-jb",
+      "emulator"
+    ],
+    "master_dir": "/builds/buildbot/tests1-linux32/master",
+    "name": "bm04-tests1-linux32",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-linux32/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-linux32",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-linux32/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-linux32/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-linux32/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-linux32/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-linux32/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "aws-us-west-2",
+    "db_name": "buildbot-master05.srv.releng.usw2.mozilla.com:/builds/buildbot/tests1-linux32/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master05.srv.releng.usw2.mozilla.com",
+    "http_port": 8201,
+    "limit_fx_platforms": [
+      "linux"
+    ],
+    "limit_mobile_platforms": [
+      "android-x86",
+      "android"
+    ],
+    "limit_tb_platforms": [
+      "linux"
+    ],
+    "limit_b2g_platforms": [
+      "linux32_gecko",
+      "emulator-jb",
+      "emulator"
+    ],
+    "master_dir": "/builds/buildbot/tests1-linux32/master",
+    "name": "bm05-tests1-linux32",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-linux32/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-linux32",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-linux32/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-linux32/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-linux32/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-linux32/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-linux32/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "aws-us-west-2",
+    "db_name": "buildbot-master06.srv.releng.usw2.mozilla.com:/builds/buildbot/tests1-linux32/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master06.srv.releng.usw2.mozilla.com",
+    "http_port": 8201,
+    "limit_fx_platforms": [
+      "linux"
+    ],
+    "limit_mobile_platforms": [
+      "android-x86",
+      "android"
+    ],
+    "limit_tb_platforms": [
+      "linux"
+    ],
+    "limit_b2g_platforms": [
+      "linux32_gecko",
+      "emulator-jb",
+      "emulator"
+    ],
+    "master_dir": "/builds/buildbot/tests1-linux32/master",
+    "name": "bm06-tests1-linux32",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-linux32/tools"
+  },
+  {
     "basedir": "/builds/buildbot/tests1-linux",
     "bbconfigs_branch": "production",
     "bbconfigs_dir": "/builds/buildbot/tests1-linux/buildbot-configs",
