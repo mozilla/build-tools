@@ -1181,7 +1181,7 @@
     "hostname": "buildbot-master94.srv.releng.use1.mozilla.com",
     "http_port": 8001,
     "master_dir": "/builds/buildbot/build1/master",
-    "name": "bm90-build1",
+    "name": "bm94-build1",
     "pb_port": 9001,
     "role": "build",
     "release_branches": ["mozilla-release", "mozilla-beta", "mozilla-esr24"],
