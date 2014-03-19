@@ -19,7 +19,7 @@ from twisted.application import service
 from buildslave.bot import BuildSlave
 
 import twisted.spread.pb
-twisted.spread.pb.MAX_BROKER_REFS = 2048
+twisted.spread.pb.MAX_BROKER_REFS = 4096
 
 maxdelay = 300
 buildmaster_host = %(buildmaster_host)r
