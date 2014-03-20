@@ -1,11 +1,12 @@
-from fabric.api import run
-from fabric.context_managers import cd, hide, show
-from fabric.operations import put
+from fabric.api import env, local, run as fabric_run
+from fabric.context_managers import hide, show, lcd, cd as fabric_cd
+from fabric.operations import put as fabric_put
 from fabric.colors import green, red
 import re
 import os
 import sys
 import inspect
+import shutil
 import time
 
 from util.retry import retry
@@ -17,6 +18,35 @@ BUILDBOT_WRANGLER = os.path.normpath(os.path.join(
     os.path.dirname(__file__),
     "../../../../buildfarm/maintenance/buildbot-wrangler.py"))
 
+def is_local(host_string):
+    if env.host_string in ('127.0.0.1', 'localhost'):
+        return True
+    else:
+        return False
+
+def cd(d):
+    if is_local(env.host_string):
+        return lcd(d)
+    else:
+        return fabric_cd(d)
+
+def run(cmd, workdir=None):
+    def doit():
+        if is_local(env.host_string):
+            return local(cmd, capture=True)
+        else:
+            return fabric_run(cmd)
+    if workdir:
+        with cd(workdir):
+            return doit()
+    else:
+        return doit()
+
+def put(src, dst):
+    if is_local(env.host_string):
+        return shutil.copyfile(src, dst)
+    else:
+        return fabric_put(src, dst)
 
 def get_actions():
     current_module = sys.modules[__name__]
@@ -48,13 +78,12 @@ def action_checkconfig(master):
     """Runs buildbot checkconfig"""
     action_check(master)
     with hide('stdout', 'stderr'):
-        with cd(master['basedir']):
-            try:
-                run('make checkconfig')
-                print "%-14s %s" % (master['name'], OK)
-            except:
-                print "%-14s %s" % (master['name'], FAIL)
-                raise
+        try:
+            run('make checkconfig', workdir=master['basedir'])
+            print "%-14s %s" % (master['name'], OK)
+        except:
+            print "%-14s %s" % (master['name'], FAIL)
+            raise
 
 
 def action_show_revisions(master):
@@ -98,65 +127,59 @@ def action_reconfig(master):
     """Performs a reconfig (only - no update or checkconfig)"""
     print "starting reconfig of %(hostname)s:%(basedir)s" % master
     with show('running'):
-        with cd(master['basedir']):
-            put(BUILDBOT_WRANGLER,
-                '%s/buildbot-wrangler.py' % master['basedir'])
-            run('rm -f *.pyc')
-            run('python buildbot-wrangler.py reconfig %s' %
-                master['master_dir'])
+        put(BUILDBOT_WRANGLER,
+            '%s/buildbot-wrangler.py' % master['basedir'])
+        run('rm -f *.pyc', workdir=master['basedir'])
+        run('python buildbot-wrangler.py reconfig %s' %
+            master['master_dir'], workdir=master['basedir'])
     print OK, "finished reconfig of %(hostname)s:%(basedir)s" % master
 
 
 def action_restart(master):
     with show('running'):
-        with cd(master['basedir']):
-            put(BUILDBOT_WRANGLER, '%s/buildbot-wrangler.py' %
-                master['basedir'])
-            run('rm -f *.pyc')
-            run('python buildbot-wrangler.py restart %s' %
-                master['master_dir'])
+        put(BUILDBOT_WRANGLER, '%s/buildbot-wrangler.py' %
+            master['basedir'])
+        run('rm -f *.pyc', workdir=master['basedir'])
+        run('python buildbot-wrangler.py restart %s' %
+            master['master_dir'], workdir=master['basedir'])
     print OK, "finished restarting of %(hostname)s:%(basedir)s" % master
 
 
 def action_graceful_restart(master):
     with show('running'):
-        with cd(master['basedir']):
-            put(BUILDBOT_WRANGLER, '%s/buildbot-wrangler.py' %
-                master['basedir'])
-            run('rm -f *.pyc')
-            run('python buildbot-wrangler.py graceful_restart %s %s' %
-                (master['master_dir'], master['http_port']))
+        put(BUILDBOT_WRANGLER, '%s/buildbot-wrangler.py' %
+            master['basedir'])
+        run('rm -f *.pyc', workdir=master['basedir'])
+        run('python buildbot-wrangler.py graceful_restart %s %s' %
+            (master['master_dir'], master['http_port']), workdir=master['basedir'])
     print OK, \
         "finished gracefully restarting of %(hostname)s:%(basedir)s" % master
 
 
 def action_stop(master):
     with show('running'):
-        with cd(master['basedir']):
-            put(BUILDBOT_WRANGLER,
-                '%s/buildbot-wrangler.py' % master['basedir'])
-            run('python buildbot-wrangler.py stop %s' % master['master_dir'])
+        put(BUILDBOT_WRANGLER,
+            '%s/buildbot-wrangler.py' % master['basedir'])
+        run('python buildbot-wrangler.py stop %s' % master['master_dir'], workdir=master['basedir'])
     print OK, "stopped %(hostname)s:%(basedir)s" % master
 
 
 def action_graceful_stop(master):
     with show('running'):
-        with cd(master['basedir']):
-            put(BUILDBOT_WRANGLER,
-                '%s/buildbot-wrangler.py' % master['basedir'])
-            run('rm -f *.pyc')
-            run('python buildbot-wrangler.py graceful_stop %s %s' %
-                (master['master_dir'], master['http_port']))
+        put(BUILDBOT_WRANGLER,
+            '%s/buildbot-wrangler.py' % master['basedir'])
+        run('rm -f *.pyc', workdir=master['basedir'])
+        run('python buildbot-wrangler.py graceful_stop %s %s' %
+            (master['master_dir'], master['http_port']), workdir=master['basedir'])
     print OK, "gracefully stopped %(hostname)s:%(basedir)s" % master
 
 
 def start(master):
     with show('running'):
-        with cd(master['basedir']):
-            put(BUILDBOT_WRANGLER,
-                '%s/buildbot-wrangler.py' % master['basedir'])
-            run('rm -f *.pyc')
-            run('python buildbot-wrangler.py start %s' % master['master_dir'])
+        put(BUILDBOT_WRANGLER,
+            '%s/buildbot-wrangler.py' % master['basedir'])
+        run('rm -f *.pyc', workdir=master['basedir'])
+        run('python buildbot-wrangler.py start %s' % master['master_dir'], workdir=master['basedir'])
     print OK, "started %(hostname)s:%(basedir)s" % master
 
 
@@ -165,20 +188,19 @@ def action_update(master):
     time.sleep(30)
     print OK
     with show('running'):
-        with cd(master['basedir']):
-            retry(run, args=('source bin/activate && make update',),
-                  sleeptime=10, retry_exceptions=(SystemExit,))
+        retry(run, args=('source bin/activate && make update',),
+                kwargs={'workdir': master['basedir']}, sleeptime=10,
+                retry_exceptions=(SystemExit,))
     print OK, "updated %(hostname)s:%(basedir)s" % master
 
 
 def action_update_buildbot(master):
     with show('running'):
         buildbot_dir = os.path.dirname(master['buildbot_setup'])
-        with cd(buildbot_dir):
-            run('hg pull')
-            run('hg update -r %s' % master['buildbot_branch'])
-            run('unset PYTHONHOME PYTHONPATH; %s setup.py install' %
-                master['buildbot_python'])
+        run('hg pull', workdir=buildbot_dir)
+        run('hg update -r %s' % master['buildbot_branch'], workdir=buildbot_dir)
+        run('unset PYTHONHOME PYTHONPATH; %s setup.py install' %
+            master['buildbot_python'], workdir=buildbot_dir)
     print OK, "updated buildbot in %(hostname)s:%(basedir)s" % master
 
 
@@ -213,6 +235,5 @@ def action_update_queue(host):
     with show('running'):
         queue_dir = "/builds/buildbot/queue"
         tools_dir = "%s/tools" % queue_dir
-        with cd(tools_dir):
-            run('hg pull -u')
+        run('hg pull -u', workdir=tools_dir)
     print OK, "updated queue in %s" % host
