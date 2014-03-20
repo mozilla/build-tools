@@ -246,11 +246,21 @@ def main(options):
     configs_workdir = 'buildbot-configs'
     custom_workdir = 'buildbotcustom'
     tools_workdir = 'tools'
-    configs_pushRepo = make_hg_url(HG, get_repo_path(buildbot_configs),
-                                   protocol='ssh')
-    custom_pushRepo = make_hg_url(HG, get_repo_path(buildbotcustom),
-                                  protocol='ssh')
-    tools_pushRepo = make_hg_url(HG, get_repo_path(tools), protocol='ssh')
+    if "://" in buildbot_configs and not buildbot_configs.startswith("file"):
+        configs_pushRepo = make_hg_url(HG, get_repo_path(buildbot_configs),
+                                    protocol='ssh')
+    else:
+        configs_pushRepo = buildbot_configs
+    if "://" in buildbotcustom and not buildbotcustom.startswith("file"):
+        custom_pushRepo = make_hg_url(HG, get_repo_path(buildbotcustom),
+                                    protocol='ssh')
+    else:
+        custom_pushRepo = buildbotcustom
+    if "://" in tools and not tools.startswith("file"):
+        tools_pushRepo = make_hg_url(HG, get_repo_path(tools),
+                                    protocol='ssh')
+    else:
+        tools_pushRepo = tools
 
     rr = ReleaseRunner(api_root=api_root, username=username, password=password)
 
