@@ -194,7 +194,7 @@ if __name__ == "__main__":
     parser.add_option("--properties-dir", dest="properties_dir")
     parser.add_option("--tooltool-manifest", dest="tooltool_manifest")
     parser.add_option("--tooltool-script", dest="tooltool_script",
-                      default="/tools/tooltool.py")
+                      default=[], action="append")
     parser.add_option("--tooltool-url", dest="tooltool_urls", action="append")
     parser.add_option("--use-pymake", dest="use_pymake",
                       action="store_true", default=False)
@@ -267,6 +267,9 @@ if __name__ == "__main__":
     if 'mozilla_dir' in releaseConfig:
         for i in range(0, len(makeDirs)):
             makeDirs[i] = path.join(releaseConfig['mozilla_dir'], makeDirs[i])
+
+    if not options.tooltool_script:
+        options.tooltool_script = ['/tools/tooltool.py']
 
     createRepacks(
         sourceRepo=make_hg_url(branchConfig["hghost"], sourceRepoInfo["path"]),
