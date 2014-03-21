@@ -19,6 +19,11 @@
     "limit_fx_platforms": [
       "linux"
     ],
+    "limit_fx_slave_platforms": {
+      "linux": [
+        "ubuntu32_vm"
+      ]
+    },
     "limit_mobile_platforms": [
       "android-x86",
       "android"
@@ -31,6 +36,17 @@
       "emulator-jb",
       "emulator"
     ],
+    "limit_b2g_slave_platforms": {
+      "linux32_gecko": [
+        "ubuntu32_vm-b2gdt"
+      ],
+      "emulator-jb": [
+        "ubuntu64_vm-b2g-emulator-jb"
+      ],
+      "emulator": [
+        "ubuntu64_vm-b2g-emulator"
+      ]
+    },
     "master_dir": "/builds/buildbot/tests1-linux32/master",
     "name": "bm01-tests1-linux32",
     "pb_port": 9201,
@@ -59,6 +75,11 @@
     "limit_fx_platforms": [
       "linux"
     ],
+    "limit_fx_slave_platforms": {
+      "linux": [
+        "ubuntu32_vm"
+      ]
+    },
     "limit_mobile_platforms": [
       "android-x86",
       "android"
@@ -71,6 +92,17 @@
       "emulator-jb",
       "emulator"
     ],
+    "limit_b2g_slave_platforms": {
+      "linux32_gecko": [
+        "ubuntu32_vm-b2gdt"
+      ],
+      "emulator-jb": [
+        "ubuntu64_vm-b2g-emulator-jb"
+      ],
+      "emulator": [
+        "ubuntu64_vm-b2g-emulator"
+      ]
+    },
     "master_dir": "/builds/buildbot/tests1-linux32/master",
     "name": "bm02-tests1-linux32",
     "pb_port": 9201,
@@ -99,6 +131,11 @@
     "limit_fx_platforms": [
       "linux"
     ],
+    "limit_fx_slave_platforms": {
+      "linux": [
+        "ubuntu32_vm"
+      ]
+    },
     "limit_mobile_platforms": [
       "android-x86",
       "android"
@@ -111,6 +148,17 @@
       "emulator-jb",
       "emulator"
     ],
+    "limit_b2g_slave_platforms": {
+      "linux32_gecko": [
+        "ubuntu32_vm-b2gdt"
+      ],
+      "emulator-jb": [
+        "ubuntu64_vm-b2g-emulator-jb"
+      ],
+      "emulator": [
+        "ubuntu64_vm-b2g-emulator"
+      ]
+    },
     "master_dir": "/builds/buildbot/tests1-linux32/master",
     "name": "bm03-tests1-linux32",
     "pb_port": 9201,
@@ -139,6 +187,11 @@
     "limit_fx_platforms": [
       "linux"
     ],
+    "limit_fx_slave_platforms": {
+      "linux": [
+        "ubuntu32_vm"
+      ]
+    },
     "limit_mobile_platforms": [
       "android-x86",
       "android"
@@ -151,6 +204,22 @@
       "emulator-jb",
       "emulator"
     ],
+    "limit_b2g_platforms": [
+      "linux32_gecko",
+      "emulator-jb",
+      "emulator"
+    ],
+    "limit_b2g_slave_platforms": {
+      "linux32_gecko": [
+        "ubuntu32_vm-b2gdt"
+      ],
+      "emulator-jb": [
+        "ubuntu64_vm-b2g-emulator-jb"
+      ],
+      "emulator": [
+        "ubuntu64_vm-b2g-emulator"
+      ]
+    },
     "master_dir": "/builds/buildbot/tests1-linux32/master",
     "name": "bm04-tests1-linux32",
     "pb_port": 9201,
@@ -179,6 +248,11 @@
     "limit_fx_platforms": [
       "linux"
     ],
+    "limit_fx_slave_platforms": {
+      "linux": [
+        "ubuntu32_vm"
+      ]
+    },
     "limit_mobile_platforms": [
       "android-x86",
       "android"
@@ -191,6 +265,22 @@
       "emulator-jb",
       "emulator"
     ],
+    "limit_b2g_platforms": [
+      "linux32_gecko",
+      "emulator-jb",
+      "emulator"
+    ],
+    "limit_b2g_slave_platforms": {
+      "linux32_gecko": [
+        "ubuntu32_vm-b2gdt"
+      ],
+      "emulator-jb": [
+        "ubuntu64_vm-b2g-emulator-jb"
+      ],
+      "emulator": [
+        "ubuntu64_vm-b2g-emulator"
+      ]
+    },
     "master_dir": "/builds/buildbot/tests1-linux32/master",
     "name": "bm05-tests1-linux32",
     "pb_port": 9201,
@@ -219,6 +309,11 @@
     "limit_fx_platforms": [
       "linux"
     ],
+    "limit_fx_slave_platforms": {
+      "linux": [
+        "ubuntu32_vm"
+      ]
+    },
     "limit_mobile_platforms": [
       "android-x86",
       "android"
@@ -231,6 +326,22 @@
       "emulator-jb",
       "emulator"
     ],
+    "limit_b2g_platforms": [
+      "linux32_gecko",
+      "emulator-jb",
+      "emulator"
+    ],
+    "limit_b2g_slave_platforms": {
+      "linux32_gecko": [
+        "ubuntu32_vm-b2gdt"
+      ],
+      "emulator-jb": [
+        "ubuntu64_vm-b2g-emulator-jb"
+      ],
+      "emulator": [
+        "ubuntu64_vm-b2g-emulator"
+      ]
+    },
     "master_dir": "/builds/buildbot/tests1-linux32/master",
     "name": "bm06-tests1-linux32",
     "pb_port": 9201,
@@ -238,6 +349,206 @@
     "ssh_port": 7201,
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/tests1-linux32/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-linux64",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-linux64/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-linux64/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-linux64/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-linux64/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-linux64/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "aws-us-east-1",
+    "db_name": "buildbot-master51.srv.releng.use1.mozilla.com:/builds/buildbot/tests1-linux64/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master51.srv.releng.use1.mozilla.com",
+    "http_port": 8201,
+    "limit_fx_platforms": [
+      "linux64",
+      "linux64-asan"
+    ],
+    "limit_fx_slave_platforms": {
+      "linux64": [
+        "ubuntu64_vm"
+      ],
+      "linux64-asan": [
+        "ubuntu64-asan_vm"
+      ]
+    },
+    "limit_mobile_platforms": [
+    ],
+    "limit_tb_platforms": [
+      "linux64"
+    ],
+    "limit_b2g_platforms": [
+      "linux64_gecko"
+    ],
+    "limit_b2g_slave_platforms": {
+      "linux64_gecko": [
+        "ubuntu64_vm-b2gdt"
+      ]
+    },
+    "master_dir": "/builds/buildbot/tests1-linux64/master",
+    "name": "bm51-tests1-linux64",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-linux64/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-linux64",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-linux64/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-linux64/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-linux64/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-linux64/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-linux64/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "aws-us-east-1",
+    "db_name": "buildbot-master52.srv.releng.use1.mozilla.com:/builds/buildbot/tests1-linux64/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master52.srv.releng.use1.mozilla.com",
+    "http_port": 8201,
+    "limit_fx_platforms": [
+      "linux64",
+      "linux64-asan"
+    ],
+    "limit_fx_slave_platforms": {
+      "linux64": [
+        "ubuntu64_vm"
+      ],
+      "linux64-asan": [
+        "ubuntu64-asan_vm"
+      ]
+    },
+    "limit_mobile_platforms": [
+    ],
+    "limit_tb_platforms": [
+      "linux64"
+    ],
+    "limit_b2g_platforms": [
+      "linux64_gecko"
+    ],
+    "limit_b2g_slave_platforms": {
+      "linux64_gecko": [
+        "ubuntu64_vm-b2gdt"
+      ]
+    },
+    "master_dir": "/builds/buildbot/tests1-linux64/master",
+    "name": "bm52-tests1-linux64",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-linux64/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-linux64",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-linux64/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-linux64/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-linux64/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-linux64/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-linux64/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "aws-us-west-2",
+    "db_name": "buildbot-master53.srv.releng.usw2.mozilla.com:/builds/buildbot/tests1-linux64/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master53.srv.releng.usw2.mozilla.com",
+    "http_port": 8201,
+    "limit_fx_platforms": [
+      "linux64",
+      "linux64-asan"
+    ],
+    "limit_fx_slave_platforms": {
+      "linux64": [
+        "ubuntu64_vm"
+      ],
+      "linux64-asan": [
+        "ubuntu64-asan_vm"
+      ]
+    },
+    "limit_mobile_platforms": [
+    ],
+    "limit_tb_platforms": [
+      "linux64"
+    ],
+    "limit_b2g_platforms": [
+      "linux64_gecko"
+    ],
+    "limit_b2g_slave_platforms": {
+      "linux64_gecko": [
+        "ubuntu64_vm-b2gdt"
+      ]
+    },
+    "master_dir": "/builds/buildbot/tests1-linux64/master",
+    "name": "bm53-tests1-linux64",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-linux64/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-linux64",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-linux64/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-linux64/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-linux64/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-linux64/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-linux64/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "aws-us-west-2",
+    "db_name": "buildbot-master54.srv.releng.usw2.mozilla.com:/builds/buildbot/tests1-linux64/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master54.srv.releng.usw2.mozilla.com",
+    "http_port": 8201,
+    "limit_fx_platforms": [
+      "linux64",
+      "linux64-asan"
+    ],
+    "limit_fx_slave_platforms": {
+      "linux64": [
+        "ubuntu64_vm"
+      ],
+      "linux64-asan": [
+        "ubuntu64-asan_vm"
+      ]
+    },
+    "limit_mobile_platforms": [
+    ],
+    "limit_tb_platforms": [
+      "linux64"
+    ],
+    "limit_b2g_platforms": [
+      "linux64_gecko"
+    ],
+    "limit_b2g_slave_platforms": {
+      "linux64_gecko": [
+        "ubuntu64_vm-b2gdt"
+      ]
+    },
+    "master_dir": "/builds/buildbot/tests1-linux64/master",
+    "name": "bm54-tests1-linux64",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-linux64/tools"
   },
   {
     "basedir": "/builds/buildbot/tests1-linux",
@@ -414,6 +725,106 @@
     "ssh_port": 7201,
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/tests1-linux/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-linux64",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-linux64/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-linux64/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-linux64/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-linux64/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-linux64/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "aws-us-east-1",
+    "db_name": "buildbot-master67.srv.releng.use1.mozilla.com:/builds/buildbot/tests1-linux64/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master67.srv.releng.use1.mozilla.com",
+    "http_port": 8201,
+    "limit_fx_platforms": [
+      "linux64",
+      "linux64-asan"
+    ],
+    "limit_fx_slave_platforms": {
+      "linux64": [
+        "ubuntu64_vm"
+      ],
+      "linux64-asan": [
+        "ubuntu64-asan_vm"
+      ]
+    },
+    "limit_mobile_platforms": [
+    ],
+    "limit_tb_platforms": [
+      "linux64"
+    ],
+    "limit_b2g_platforms": [
+      "linux64_gecko"
+    ],
+    "limit_b2g_slave_platforms": {
+      "linux64_gecko": [
+        "ubuntu64_vm-b2gdt"
+      ]
+    },
+    "master_dir": "/builds/buildbot/tests1-linux64/master",
+    "name": "bm67-tests1-linux64",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-linux64/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-linux64",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-linux64/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-linux64/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-linux64/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-linux64/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-linux64/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "aws-us-west-2",
+    "db_name": "buildbot-master68.srv.releng.usw2.mozilla.com:/builds/buildbot/tests1-linux64/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master68.srv.releng.usw2.mozilla.com",
+    "http_port": 8201,
+    "limit_fx_platforms": [
+      "linux64",
+      "linux64-asan"
+    ],
+    "limit_fx_slave_platforms": {
+      "linux64": [
+        "ubuntu64_vm"
+      ],
+      "linux64-asan": [
+        "ubuntu64-asan_vm"
+      ]
+    },
+    "limit_mobile_platforms": [
+    ],
+    "limit_tb_platforms": [
+      "linux64"
+    ],
+    "limit_b2g_platforms": [
+      "linux64_gecko"
+    ],
+    "limit_b2g_slave_platforms": {
+      "linux64_gecko": [
+        "ubuntu64_vm-b2gdt"
+      ]
+    },
+    "master_dir": "/builds/buildbot/tests1-linux64/master",
+    "name": "bm68-tests1-linux64",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-linux64/tools"
   },
   {
     "basedir": "/builds/buildbot/tests1-linux",
@@ -1263,6 +1674,174 @@
     "ssh_port": 7201,
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/tests1-panda/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-linux",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-linux/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-linux/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-linux/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-linux/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-linux/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "scl3",
+    "db_name": "buildbot-master103.srv.releng.scl3.mozilla.com:/builds/buildbot/tests1-linux/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master103.srv.releng.scl3.mozilla.com",
+    "http_port": 8201,
+    "limit_fx_platforms": [
+      "linux",
+      "linux64"
+    ],
+    "limit_fx_slave_platforms": {
+      "linux": [
+        "fedora",
+        "ubuntu32_hw"
+      ],
+      "linux64": [
+        "fedora64",
+        "ubuntu64_hw"
+      ]
+    },
+    "limit_mobile_platforms": [
+      "android-x86",
+      "android"
+    ],
+    "limit_tb_platforms": [
+      "linux",
+      "linux64"
+    ],
+    "limit_b2g_platforms": [
+      "emulator"
+    ],
+    "limit_b2g_slave_platforms": {
+      "emulator": [
+        "fedora-b2g-emulator",
+        "ubuntu64_hw-b2g-emulator"
+      ]
+    },
+    "master_dir": "/builds/buildbot/tests1-linux/master",
+    "name": "bm103-tests1-linux-BUG892122",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-linux/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-linux",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-linux/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-linux/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-linux/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-linux/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-linux/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "scl3",
+    "db_name": "buildbot-master104.srv.releng.scl3.mozilla.com:/builds/buildbot/tests1-linux/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master104.srv.releng.scl3.mozilla.com",
+    "http_port": 8201,
+    "limit_fx_platforms": [
+      "linux",
+      "linux64"
+    ],
+    "limit_fx_slave_platforms": {
+      "linux": [
+        "fedora",
+        "ubuntu32_hw"
+      ],
+      "linux64": [
+        "fedora64",
+        "ubuntu64_hw"
+      ]
+    },
+    "limit_mobile_platforms": [
+      "android-x86",
+      "android"
+    ],
+    "limit_tb_platforms": [
+      "linux",
+      "linux64"
+    ],
+    "limit_b2g_platforms": [
+      "emulator"
+    ],
+    "limit_b2g_slave_platforms": {
+      "emulator": [
+        "fedora-b2g-emulator",
+        "ubuntu64_hw-b2g-emulator"
+      ]
+    },
+    "master_dir": "/builds/buildbot/tests1-linux/master",
+    "name": "bm104-tests1-linux-BUG892122",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-linux/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-linux",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-linux/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-linux/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-linux/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-linux/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-linux/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "scl3",
+    "db_name": "buildbot-master105.srv.releng.scl3.mozilla.com:/builds/buildbot/tests1-linux/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master105.srv.releng.scl3.mozilla.com",
+    "http_port": 8201,
+    "limit_fx_platforms": [
+      "linux",
+      "linux64"
+    ],
+    "limit_fx_slave_platforms": {
+      "linux": [
+        "fedora",
+        "ubuntu32_hw"
+      ],
+      "linux64": [
+        "fedora64",
+        "ubuntu64_hw"
+      ]
+    },
+    "limit_mobile_platforms": [
+      "android-x86",
+      "android"
+    ],
+    "limit_tb_platforms": [
+      "linux",
+      "linux64"
+    ],
+    "limit_b2g_platforms": [
+      "emulator"
+    ],
+    "limit_b2g_slave_platforms": {
+      "emulator": [
+        "fedora-b2g-emulator",
+        "ubuntu64_hw-b2g-emulator"
+      ]
+    },
+    "master_dir": "/builds/buildbot/tests1-linux/master",
+    "name": "bm105-tests1-linux-BUG892122",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-linux/tools"
   },
   {
     "basedir": "/builds/buildbot/tests1-linux",
