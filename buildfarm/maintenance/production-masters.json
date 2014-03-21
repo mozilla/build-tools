@@ -1101,7 +1101,7 @@
     "buildbot_version": "0.8.2",
     "datacentre": "aws-us-east-1",
     "db_name": "buildbot-master75.srv.releng.use1.mozilla.com:/builds/buildbot/try1/master",
-    "enabled": false,
+    "enabled": true,
     "environment": "production",
     "hostname": "buildbot-master75.srv.releng.use1.mozilla.com",
     "http_port": 8101,
