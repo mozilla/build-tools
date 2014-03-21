@@ -1,3 +1,4 @@
+import collections
 from copy import copy
 
 
@@ -20,3 +21,14 @@ def getChunk(things, chunks, thisChunk):
         if c == thisChunk:
             return possibleThings[0:n]
         del possibleThings[0:n]
+
+
+# From https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
+def recursive_update(d, u):
+    for k, v in u.iteritems():
+        if isinstance(v, collections.Mapping):
+            r = recursive_update(d.get(k, {}), v)
+            d[k] = r
+        else:
+            d[k] = u[k]
+    return d

@@ -210,3 +210,7 @@ def fileInfo(filepath, product):
             raise ValueError("Unknown filetype for %s" % filepath)
 
         return ret
+
+
+def getProductDetails(product, appVersion):
+    return 'https://www.mozilla.org/%%locale%%/%s/%s/releasenotes/' % (product, appVersion)

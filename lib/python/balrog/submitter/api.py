@@ -1,4 +1,5 @@
 # TODO: extend API to handle release blobs
+import json
 import logging
 import requests
 import os
@@ -40,7 +41,7 @@ class API(object):
     url_template = None
     prerequest_url_template = None
 
-    def __init__(self, api_root='https://balrog.build.mozilla.org',
+    def __init__(self, api_root='https://aus4-admin-dev.allizom.org',
                  auth=None, ca_certs=CA_BUNDLE, timeout=60, raise_exceptions=True):
         """ Creates an API object which wraps REST API of Balrog server.
 
@@ -74,10 +75,14 @@ class API(object):
         # and possibly a data_version.
         if method != 'GET' and method != 'HEAD':
             # Use the URL of the resource we're going to modify first,
-            # because we'll need its data_version if it exists.
+            # because we'll need a CSRF token, and maybe its data version.
             try:
                 res = self.do_request(prerequest_url, None, 'HEAD', {})
-                data['data_version'] = res.headers['X-Data-Version']
+                # If a data_version was specified we shouldn't overwrite it
+                # because the caller may be acting on a modified version of
+                # a specific older version of the data.
+                if 'data_version' not in data:
+                    data['data_version'] = res.headers['X-Data-Version']
                 # We may already have a non-expired CSRF token, but it's
                 # faster/easier just to set it again even if we do, since
                 # we've already made the request.
@@ -105,13 +110,32 @@ class API(object):
             logging.debug('Data sent: %s' % sanitised_data)
         else:
             logging.debug('Data sent: %s' % data)
+        headers = {'Accept-Encoding': 'application/json'}
         try:
             return self.session.request(method=method, url=url, data=data,
                                         config=self.config, timeout=self.timeout,
-                                        verify=self.verify, auth=self.auth)
+                                        verify=self.verify, auth=self.auth,
+                                        headers=headers)
         except requests.HTTPError, e:
             logging.error('Caught HTTPError: %s' % e.response.content)
             raise
+
+
+class Release(API):
+    url_template = '/releases/%(name)s'
+    prerequest_url_template = '/releases/%(name)s'
+
+    def update_release(self, name, version, product, hashFunction, releaseData,
+                       data_version=None):
+        data = dict(name=name, version=version, product=product,
+                    hashFunction=hashFunction, data=releaseData)
+        if data_version:
+            data['data_version'] = data_version
+        return self.request(method='POST', data=data, url_template_vars=dict(name=name))
+
+    def get_data(self, name):
+        resp = self.request(url_template_vars=dict(name=name))
+        return (json.loads(resp.content), resp.headers['X-Data-Version'])
 
 
 class SingleLocale(API):
@@ -130,4 +154,14 @@ class SingleLocale(API):
             data['alias'] = alias
 
         return self.request(method='PUT', data=data,
+                            url_template_vars=url_template_vars)
+
+
+class Rule(API):
+    url_template = '/rules/%(rule_id)s'
+    prerequest_url_template = '/rules/%(rule_id)s'
+
+    def update_rule(self, rule_id, **rule_data):
+        url_template_vars = {'rule_id': rule_id}
+        return self.request(method='POST', data=rule_data,
                             url_template_vars=url_template_vars)
