@@ -59,8 +59,8 @@ class ReleaseCreator(object):
 
         data['ftpFilenames']['complete'] = '%s-%s.complete.mar' % (productName, version)
         data['ftpFilenames']['partial'] = '%s-%s-%s.partial.mar' % (productName, previousVersion, version)
-        data['bouncerProducts']['complete'] = '%s-%s-complete' % (productName, version)
-        data['bouncerProducts']['partial'] = '%s-%s-partial-%s' % (productName, version, previousVersion)
+        data['bouncerProducts']['complete'] = '%s-%s-Complete' % (productName, version)
+        data['bouncerProducts']['partial'] = '%s-%s-Partial-%s' % (productName, version, previousVersion)
 
         for platform in enUSPlatforms:
             updatePlatforms = buildbot2updatePlatforms(platform)
