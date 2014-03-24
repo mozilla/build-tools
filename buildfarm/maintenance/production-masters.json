@@ -32,9 +32,7 @@
       "linux"
     ],
     "limit_b2g_platforms": [
-      "linux32_gecko",
-      "emulator-jb",
-      "emulator"
+      "linux32_gecko"
     ],
     "limit_b2g_slave_platforms": {
       "linux32_gecko": [
@@ -82,9 +80,7 @@
       "linux"
     ],
     "limit_b2g_platforms": [
-      "linux32_gecko",
-      "emulator-jb",
-      "emulator"
+      "linux32_gecko"
     ],
     "limit_b2g_slave_platforms": {
       "linux32_gecko": [
@@ -132,9 +128,7 @@
       "linux"
     ],
     "limit_b2g_platforms": [
-      "linux32_gecko",
-      "emulator-jb",
-      "emulator"
+      "linux32_gecko"
     ],
     "limit_b2g_slave_platforms": {
       "linux32_gecko": [
@@ -182,14 +176,7 @@
       "linux"
     ],
     "limit_b2g_platforms": [
-      "linux32_gecko",
-      "emulator-jb",
-      "emulator"
-    ],
-    "limit_b2g_platforms": [
-      "linux32_gecko",
-      "emulator-jb",
-      "emulator"
+      "linux32_gecko"
     ],
     "limit_b2g_slave_platforms": {
       "linux32_gecko": [
@@ -237,14 +224,7 @@
       "linux"
     ],
     "limit_b2g_platforms": [
-      "linux32_gecko",
-      "emulator-jb",
-      "emulator"
-    ],
-    "limit_b2g_platforms": [
-      "linux32_gecko",
-      "emulator-jb",
-      "emulator"
+      "linux32_gecko"
     ],
     "limit_b2g_slave_platforms": {
       "linux32_gecko": [
@@ -292,14 +272,7 @@
       "linux"
     ],
     "limit_b2g_platforms": [
-      "linux32_gecko",
-      "emulator-jb",
-      "emulator"
-    ],
-    "limit_b2g_platforms": [
-      "linux32_gecko",
-      "emulator-jb",
-      "emulator"
+      "linux32_gecko"
     ],
     "limit_b2g_slave_platforms": {
       "linux32_gecko": [
@@ -349,7 +322,9 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "linux64_gecko"
+      "linux64_gecko",
+      "emulator-jb",
+      "emulator"
     ],
     "limit_b2g_slave_platforms": {
       "linux64_gecko": [
@@ -405,7 +380,9 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "linux64_gecko"
+      "linux64_gecko",
+      "emulator-jb",
+      "emulator"
     ],
     "limit_b2g_slave_platforms": {
       "linux64_gecko": [
@@ -461,7 +438,9 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "linux64_gecko"
+      "linux64_gecko",
+      "emulator-jb",
+      "emulator"
     ],
     "limit_b2g_slave_platforms": {
       "linux64_gecko": [
@@ -517,7 +496,9 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "linux64_gecko"
+      "linux64_gecko",
+      "emulator-jb",
+      "emulator"
     ],
     "limit_b2g_slave_platforms": {
       "linux64_gecko": [
@@ -573,7 +554,9 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "linux64_gecko"
+      "linux64_gecko",
+      "emulator-jb",
+      "emulator"
     ],
     "limit_b2g_slave_platforms": {
       "linux64_gecko": [
@@ -629,7 +612,9 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "linux64_gecko"
+      "linux64_gecko",
+      "emulator-jb",
+      "emulator"
     ],
     "limit_b2g_slave_platforms": {
       "linux64_gecko": [
