@@ -128,8 +128,8 @@ def bump_configs(release, cfgFile, l10nContents, workdir,
     update(workdir, productionBranch)
     cfgDir = path.join(workdir, 'mozilla')
     templateFile = path.join(cfgDir, '%s.template' % cfgFile)
-    tags = getTags(getBaseTag(release['product'], release['version']),
-                   release['buildNumber'])
+    tags = set(getTags(getBaseTag(release['product'], release['version']),
+                   release['buildNumber']))
     cfgFile = path.join(cfgDir, cfgFile)
     l10nChangesetsFile = path.join(
         cfgDir,
@@ -305,7 +305,7 @@ def main(options):
                 log.info("Adding %s -> %s symlink" % (symlink, target))
                 os.symlink(target, symlink)
 
-    tags = []
+    tags = set()
 
     def process_configs(repo, attempt):
         """Helper method that encapsulates all of the things necessary
@@ -314,7 +314,7 @@ def main(options):
         for release in rr.new_releases:
             rr.update_status(release, 'Writing configs')
             l10nContents = rr.get_release_l10n(release['name'])
-            tags.extend(getTags(
+            tags.update(getTags(
                 getBaseTag(release['product'], release['version']),
                 release['buildNumber'])
             )

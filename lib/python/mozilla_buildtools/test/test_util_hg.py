@@ -1089,6 +1089,12 @@ class TestHg(unittest.TestCase):
         self.assertTrue('tag1' in tags)
         self.assertTrue('tag2' in tags)
 
+    def testMultitagSet(self):
+        tag(self.repodir, set(['tag1', 'tag5']))
+        tags = getTags(self.repodir)
+        self.assertTrue('tag1' in tags)
+        self.assertTrue('tag5' in tags)
+
     def testTagWithMsg(self):
         rev = tag(self.repodir, ['tag'], msg='I made a tag!')
         info = getRevInfo(self.repodir, rev)
