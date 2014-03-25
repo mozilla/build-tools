@@ -1501,7 +1501,7 @@
       ]
     },
     "master_dir": "/builds/buildbot/tests1-linux/master",
-    "name": "bm104-tests1-linux-BUG892122",
+    "name": "bm104-tests1-linux",
     "pb_port": 9201,
     "role": "tests",
     "ssh_port": 7201,
@@ -1557,7 +1557,7 @@
       ]
     },
     "master_dir": "/builds/buildbot/tests1-linux/master",
-    "name": "bm105-tests1-linux-BUG892122",
+    "name": "bm105-tests1-linux",
     "pb_port": 9201,
     "role": "tests",
     "ssh_port": 7201,
