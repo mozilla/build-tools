@@ -317,6 +317,7 @@
       ]
     },
     "limit_mobile_platforms": [
+        "vm_android_2_3"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -375,6 +376,7 @@
       ]
     },
     "limit_mobile_platforms": [
+        "vm_android_2_3"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -433,6 +435,7 @@
       ]
     },
     "limit_mobile_platforms": [
+        "vm_android_2_3"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -491,6 +494,7 @@
       ]
     },
     "limit_mobile_platforms": [
+        "vm_android_2_3"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -549,6 +553,7 @@
       ]
     },
     "limit_mobile_platforms": [
+        "vm_android_2_3"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -607,6 +612,7 @@
       ]
     },
     "limit_mobile_platforms": [
+        "vm_android_2_3"
     ],
     "limit_tb_platforms": [
       "linux64"
