@@ -6,12 +6,13 @@ import sys
 import logging
 from subprocess import CalledProcessError
 from tempfile import NamedTemporaryFile
+import site
 
 logging.basicConfig(
     stream=sys.stdout, level=logging.INFO, format="%(message)s")
 log = logging.getLogger(__name__)
 
-sys.path.append(path.join(path.dirname(__file__), "../../lib/python"))
+site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 site.addsitedir(path.join(path.dirname(__file__), "../../lib/python/vendor"))
 from release.info import readReleaseConfig, readBranchConfig, readConfig
 from release.paths import makeCandidatesDir, makeReleasesDir
