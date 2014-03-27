@@ -12,6 +12,7 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 sys.path.append(path.join(path.dirname(__file__), "../../lib/python"))
+site.addsitedir(path.join(path.dirname(__file__), "../../lib/python/vendor"))
 from release.info import readReleaseConfig, readBranchConfig, readConfig
 from release.paths import makeCandidatesDir, makeReleasesDir
 from util.hg import update, make_hg_url, mercurial
