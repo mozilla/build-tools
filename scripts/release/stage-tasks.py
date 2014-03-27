@@ -17,6 +17,7 @@ from release.paths import makeCandidatesDir, makeReleasesDir
 from util.hg import update, make_hg_url, mercurial
 from util.commands import run_remote_cmd
 from util.transfer import scp
+from util.retry import retry
 import requests
 
 
@@ -259,7 +260,12 @@ def update_bouncer_alias(tuxedoServerUrl, auth, version,
     data = {"alias": alias, "related_product": related_product}
     log.info("Updating %s to point to %s using %s", alias, related_product,
              url)
-    requests.post(url, data=data, auth=auth, config={'danger_mode': True})
+
+    # Wrap the real call to hide credentials from retry's logging
+    def do_update_bouncer_alias():
+        requests.post(url, data=data, auth=auth, config={'danger_mode': True})
+
+    retry(do_update_bouncer_alias)
 
 
 if __name__ == '__main__':
