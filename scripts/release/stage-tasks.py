@@ -380,7 +380,7 @@ if __name__ == '__main__':
                                  productName=productName,
                                  version=version,
                                  buildNumber=buildNumber)
-        if bouncer_aliases:
+        if bouncer_aliases and productName != 'xulrunner':
             credentials_file = path.join(os.getcwd(), "oauth.txt")
             credentials = readConfig(
                 credentials_file,
