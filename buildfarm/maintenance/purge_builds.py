@@ -25,7 +25,7 @@ import sys
 from fnmatch import fnmatch
 import re
 
-DEFAULT_BASE_DIRS = ["..", "/scratchbox/users/cltbld/home/cltbld/build"]
+DEFAULT_BASE_DIRS = [".."]
 
 clobber_suffix = '.deleteme'
 
@@ -236,10 +236,14 @@ if __name__ == '__main__':
 
     cwd = os.path.basename(os.getcwd())
     parser = OptionParser(usage=__doc__)
-    parser.set_defaults(size=5, skip=[cwd], dry_run=False, max_age=max_age)
+    parser.set_defaults(size=5, share_size=1, skip=[cwd], dry_run=False, max_age=max_age)
 
     parser.add_option('-s', '--size',
                       help='free space required (in GB, default 5)', dest='size',
+                      type='float')
+
+    parser.add_option('--share-size',
+                      help='free space required for vcs shares (in GB, default 1)', dest='share_size',
                       type='float')
 
     parser.add_option('-n', '--not', help='do not delete this directory. Append :30d to skip for up to 30 days, or :30h to skip for up to 30 hours',
@@ -279,7 +283,7 @@ will be listed in the order in which they would be deleted.''')
     # space so we can be sure and delete repositories older than max_age
     if 'HG_SHARE_BASE_DIR' in os.environ:
         purge_hg_shares(os.environ['HG_SHARE_BASE_DIR'],
-                        options.size, cutoff_time, options.dry_run)
+                        options.share_size, cutoff_time, options.dry_run)
 
     after = freespace(base_dirs[0]) / (1024 * 1024 * 1024.0)
 
