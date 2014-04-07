@@ -285,6 +285,15 @@ will be listed in the order in which they would be deleted.''')
         purge_hg_shares(os.environ['HG_SHARE_BASE_DIR'],
                         options.share_size, cutoff_time, options.dry_run)
 
+    # tooltool cache cleanup
+    if 'TOOLTOOL_HOME' in os.environ and 'TOOLTOOL_CACHE' in os.environ:
+        import imp
+        try:
+            tooltool = imp.load_source('tooltool', os.path.join(os.environ['TOOLTOOL_HOME'], "tooltool.py"))
+            tooltool.purge(os.environ['TOOLTOOL_CACHE'], options.size)
+        except:
+            print "Warning: impossible to cleanup tooltool cache"
+
     after = freespace(base_dirs[0]) / (1024 * 1024 * 1024.0)
 
     # Try to cleanup the current dir if we still need space and it will
