@@ -173,3 +173,4 @@ if [[ "$VARIANT" = "rootanalysis" ]]; then
     fi
 fi
 $COMMAND_PREFIX make check || exit 1
+$COMMAND_PREFIX make check-jit-test || exit 1
