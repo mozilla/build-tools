@@ -28,6 +28,7 @@ master=$($JSONTOOL -k properties.master $PROPERTIES_FILE)
 releaseConfig=$($JSONTOOL -k properties.release_config $PROPERTIES_FILE)
 releaseTag=$($JSONTOOL -k properties.script_repo_revision $PROPERTIES_FILE)
 product=$($JSONTOOL -k properties.product $PROPERTIES_FILE)
+buildid=$($JSONTOOL -k properties.buildid $PROPERTIES_FILE)
 
 if [ -z "$BUILDBOT_CONFIGS" ]; then
     export BUILDBOT_CONFIGS="https://hg.mozilla.org/build/buildbot-configs"
@@ -46,7 +47,7 @@ export MOZ_SIGN_CMD="$MOZ_SIGN_CMD"
 
 cd $SCRIPTS_DIR/../..
 $PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s scripts -s buildprops.json \
-  -s data.json -s token -s nonce \
+  -s data.json -s token -s nonce -s oauth.txt \
   $CLOBBERER_URL $branch $builder $slavebuilddir $slavename $master
 cd $SCRIPTS_DIR/..
 $PYTHON $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
@@ -70,4 +71,5 @@ fi
 
 $PYTHON $MY_DIR/create-release-repacks.py -c $branchConfig -r $releaseConfig \
   -b $BUILDBOT_CONFIGS -t $releaseTag -p $platform \
-  --properties-dir $outputPropertiesDir $SOURCE_REPO_KEY $LOCALE_OPT $@
+  --properties-dir $outputPropertiesDir --buildid $buildid \
+  $SOURCE_REPO_KEY $LOCALE_OPT $@

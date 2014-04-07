@@ -11,7 +11,7 @@ from urlparse import urljoin
 
 from release.platforms import getPlatformLocales, buildbot2ftp
 from release.paths import makeCandidatesDir
-from util.commands import run_cmd
+from util.commands import get_output, run_cmd
 from util.hg import mercurial, update
 from util.paths import windows2msys, msys2windows
 from util.retry import retry
@@ -98,7 +98,7 @@ def l10nRepackPrep(sourceRepoName, objdir, mozconfigPath, srcMozconfigPath,
 
 
 def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
-                 l10nIni, compareLocalesRepo, env, merge=True,
+                 l10nIni, compareLocalesRepo, env, absObjdir, merge=True,
                  productName=None, platform=None,
                  version=None, partialUpdates=None,
                  buildNumber=None, stageServer=None):
@@ -214,6 +214,16 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
     retry(run_cmd,
           args=(make + ["upload", "AB_CD=%s" % locale], ),
           kwargs={'cwd': localeSrcDir, 'env': env})
+
+    # return the location of the checksums file, because consumers may want
+    # some information about the files that were generated.
+    # Some versions of make that we use (at least pymake) imply --print-directory
+    # We need to turn it off to avoid getting extra output that mess up our
+    # parsing of the checksum file path.
+    relative_checksums = get_output(make +
+                                    ["--no-print-directory", "echo-variable-CHECKSUM_FILE", "AB_CD=%s" % locale],
+                                    cwd=localeSrcDir, env=env).rstrip("\"'\n")
+    return path.normpath(path.join(absObjdir, relative_checksums))
 
 
 def getLocalesForChunk(possibleLocales, chunks, thisChunk):

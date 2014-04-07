@@ -1,18 +1,23 @@
 #!/usr/bin/env python
 
+from collections import defaultdict
 import logging
 import os
 from os import path
 from traceback import format_exc
+import site
 import sys
 
-sys.path.append(path.join(path.dirname(__file__), "../../lib/python"))
+site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
+site.addsitedir(path.join(path.dirname(__file__), "../../lib/python/vendor"))
 
+from balrog.submitter.cli import ReleaseSubmitter
+from build.checksums import parseChecksumsFile
 from build.l10n import repackLocale, l10nRepackPrep
 import build.misc
 from build.upload import postUploadCmdPrefix
 from release.download import downloadReleaseBuilds, downloadUpdateIgnore404
-from release.info import readReleaseConfig
+from release.info import readReleaseConfig, readConfig
 from release.l10n import getReleaseLocalesForChunk
 from util.hg import mercurial, update, make_hg_url
 from util.retry import retry
@@ -33,12 +38,14 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                   mozconfigPath, srcMozconfigPath, objdir, makeDirs, appName,
                   locales, product, version, buildNumber,
                   stageServer, stageUsername, stageSshKey,
-                  compareLocalesRepo, merge, platform, brand,
+                  compareLocalesRepo, merge, platform, brand, appVersion,
                   generatePartials=False, partialUpdates=None,
-                  appVersion=None, usePymake=False, tooltoolManifest=None,
-                  tooltool_script=None, tooltool_urls=None):
+                  usePymake=False, tooltoolManifest=None,
+                  tooltool_script=None, tooltool_urls=None,
+                  balrog_submitter=None, balrog_hash="sha512", buildid=None):
     sourceRepoName = path.split(sourceRepo)[-1]
-    localeSrcDir = path.join(sourceRepoName, objdir, appName, "locales")
+    absObjdir = path.join(sourceRepoName, objdir)
+    localeSrcDir = path.join(absObjdir, appName, "locales")
     # Even on Windows we need to use "/" as a separator for this because
     # compare-locales doesn"t work any other way
     l10nIni = "/".join([sourceRepoName, appName, "locales", "l10n.ini"])
@@ -107,14 +114,34 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                         args=(stageServer, product, oldVersion, oldBuildNumber,
                               platform, l)
                     )
-            repackLocale(locale=l, l10nRepoDir=l10nRepoDir,
-                         l10nBaseRepo=l10nBaseRepo, revision=revision,
-                         localeSrcDir=localeSrcDir, l10nIni=l10nIni,
-                         compareLocalesRepo=compareLocalesRepo, env=env,
-                         merge=merge,
-                         productName=product, platform=platform,
-                         version=version, partialUpdates=partialUpdates,
-                         buildNumber=buildNumber, stageServer=stageServer)
+            checksums_file = repackLocale(locale=l, l10nRepoDir=l10nRepoDir,
+                                          l10nBaseRepo=l10nBaseRepo, revision=revision,
+                                          localeSrcDir=localeSrcDir, l10nIni=l10nIni,
+                                          compareLocalesRepo=compareLocalesRepo, env=env,
+                                          absObjdir=absObjdir, merge=merge,
+                                          productName=product, platform=platform,
+                                          version=version, partialUpdates=partialUpdates,
+                                          buildNumber=buildNumber, stageServer=stageServer)
+
+            if balrog_submitter:
+                # TODO: partials, after bug 797033 is fixed
+                checksums = parseChecksumsFile(open(checksums_file).read())
+                marInfo = defaultdict(dict)
+                for f, info in checksums.iteritems():
+                    if f.endswith('.complete.mar'):
+                        marInfo['complete']['hash'] = info['hashes'][balrog_hash]
+                        marInfo['complete']['size'] = info['size']
+                if not marInfo['complete']:
+                    raise Exception("Couldn't find complete mar info")
+                balrog_submitter.run(
+                    platform=platform, productName=product.capitalize(),
+                    appVersion=appVersion, version=version,
+                    build_number=buildNumber, locale=l,
+                    hashFunction=balrog_hash, extVersion=appVersion,
+                    buildID=buildid,
+                    completeMarSize=marInfo['complete']['size'],
+                    completeMarHash=marInfo['complete']['hash'],
+                )
         except Exception, e:
             failed.append((l, format_exc()))
 
@@ -129,7 +156,7 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
 REQUIRED_BRANCH_CONFIG = ("stage_server", "stage_username", "stage_ssh_key",
                           "compare_locales_repo_path", "hghost")
 REQUIRED_RELEASE_CONFIG = ("sourceRepositories", "l10nRepoPath", "appName",
-                           "productName", "version", "buildNumber")
+                           "productName", "version", "buildNumber", "appVersion")
 
 
 def validate(options, args):
@@ -146,6 +173,12 @@ def validate(options, args):
     else:
         if len(options.locales) < 1:
             raise Exception('Need at least one locale to repack')
+
+    if options.balrog_api_root:
+        if not options.credentials_file or not options.balrog_username:
+            raise Exception("--credentials-file and --balrog-username must be set when --balrog-api-root is set.")
+        if not options.buildid:
+            raise Exception("--buildid must be set when --balrog-api-root is set")
 
     releaseConfig = readReleaseConfig(releaseConfigFile,
                                       required=REQUIRED_RELEASE_CONFIG)
@@ -198,6 +231,11 @@ if __name__ == "__main__":
     parser.add_option("--tooltool-url", dest="tooltool_urls", action="append")
     parser.add_option("--use-pymake", dest="use_pymake",
                       action="store_true", default=False)
+    # todo: maybe read these from branch/release config? is that even possible for credentials file?
+    parser.add_option("--balrog-api-root", dest="balrog_api_root")
+    parser.add_option("--credentials-file", dest="credentials_file")
+    parser.add_option("--balrog-username", dest="balrog_username")
+    parser.add_option("--buildid", dest="buildid")
 
     options, args = parser.parse_args()
     retry(mercurial, args=(options.buildbotConfigs, "buildbot-configs"))
@@ -218,17 +256,6 @@ if __name__ == "__main__":
     mozconfig = path.join(sourceRepoInfo['name'], releaseConfig["appName"],
                           "config", "mozconfigs", platform,
                           "l10n-mozconfig")
-    # FIXME: please kill the following block when ESR17 is dead
-    if releaseConfig["appVersion"].startswith("17.0"):
-        mozconfig = path.join("buildbot-configs", "mozilla2", options.platform,
-                              sourceRepoInfo['name'], "release",
-                              "l10n-mozconfig")
-        makeDirs.extend(["tier_base", "tier_nspr", path.join("modules", "libmar")])
-        if options.generatePartials:
-            makeDirs.extend([
-                path.join("modules", "libbz2"),
-                path.join("other-licenses", "bsdiff")
-            ])
 
     if options.chunks:
         locales = retry(getReleaseLocalesForChunk,
@@ -253,12 +280,6 @@ if __name__ == "__main__":
         f.close()
 
     l10nRepoDir = 'l10n'
-    # FIXME: please kill the following block when ESR17 is dead
-    if releaseConfig["appVersion"].startswith("17.0"):
-        try:
-            l10nRepoDir = path.split(releaseConfig["l10nRepoClonePath"])[-1]
-        except KeyError:
-            l10nRepoDir = path.split(releaseConfig["l10nRepoPath"])[-1]
 
     stageSshKey = path.join("~", ".ssh", branchConfig["stage_ssh_key"])
 
@@ -270,6 +291,15 @@ if __name__ == "__main__":
 
     if not options.tooltool_script:
         options.tooltool_script = ['/tools/tooltool.py']
+
+    if options.balrog_api_root:
+        credentials = readConfig(options.credentials_file,
+            required=['balrog_credentials']
+        )
+        auth = (options.balrog_username, credentials['balrog_credentials'][options.balrog_username])
+        balrog_submitter = ReleaseSubmitter(options.balrog_api_root, auth)
+    else:
+        balrog_submitter = None
 
     createRepacks(
         sourceRepo=make_hg_url(branchConfig["hghost"], sourceRepoInfo["path"]),
@@ -302,4 +332,6 @@ if __name__ == "__main__":
         tooltoolManifest=options.tooltool_manifest,
         tooltool_script=options.tooltool_script,
         tooltool_urls=options.tooltool_urls,
+        balrog_submitter=balrog_submitter,
+        buildid=options.buildid
     )
