@@ -133,14 +133,20 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                         marInfo['complete']['size'] = info['size']
                 if not marInfo['complete']:
                     raise Exception("Couldn't find complete mar info")
-                balrog_submitter.run(
-                    platform=platform, productName=product.capitalize(),
-                    appVersion=appVersion, version=version,
-                    build_number=buildNumber, locale=l,
-                    hashFunction=balrog_hash, extVersion=appVersion,
-                    buildID=buildid,
-                    completeMarSize=marInfo['complete']['size'],
-                    completeMarHash=marInfo['complete']['hash'],
+                retry(balrog_submitter.run,
+                    kwargs={
+                        'platform': platform,
+                        'productName': product.capitalize(),
+                        'appVersion': appVersion,
+                        'version': version,
+                        'build_number': buildNumber,
+                        'locale': l,
+                        'hashFunction': balrog_hash,
+                        'extVersion': appVersion,
+                        'buildID': buildid,
+                        'completeMarSize': marInfo['complete']['size'],
+                        'completeMarHash': marInfo['complete']['hash'],
+                    }
                 )
         except Exception, e:
             failed.append((l, format_exc()))
