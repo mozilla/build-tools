@@ -20,6 +20,7 @@ for platform in all_platforms:
 for platform in ['linux', 'linux64']:
     whitelist['nightly'][platform] += [
         'ac_add_options --disable-elf-hack # --enable-elf-hack conflicts with --enable-profiling',
+        '. "$topsrcdir/build/mozconfig.cache"',
     ]
 
 for platform in ['linux', 'linux64', 'macosx64']:
