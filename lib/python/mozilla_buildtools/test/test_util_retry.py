@@ -1,7 +1,7 @@
 import mock
 import unittest
 
-from util.retry import retry, retriable
+from util.retry import retry, retriable, retrying
 
 ATTEMPT_N = 1
 
@@ -143,3 +143,25 @@ class TestRetry(unittest.TestCase):
         ret = func(*args, **kwargs)
         self.assertEqual(ret[0], args)
         self.assertEqual(ret[1], kwargs)
+
+    def test_retrying_id(self):
+        """Make sure that the context manager doesn't change the original
+        callable"""
+        def wrapped():
+            pass
+        before = id(wrapped)
+        with retrying(wrapped) as w:
+            within = id(w)
+        after = id(wrapped)
+        self.assertEqual(before, after)
+        self.assertNotEqual(before, within)
+
+    def test_retrying_call_retry(self):
+        """Make sure to distribute retry and function args/kwargs properly"""
+        def wrapped(*args, **kwargs):
+            pass
+        with mock.patch("util.retry.retry") as mocked_retry:
+            with retrying(wrapped, 1, x="y") as w:
+                w("a", b=1, c="a")
+            mocked_retry.assert_called_once_with(
+                wrapped, 1, x='y', args=('a',), kwargs={'c': 'a', 'b': 1})

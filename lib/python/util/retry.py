@@ -1,14 +1,12 @@
 import time
 from functools import wraps
-import traceback
-
+from contextlib import contextmanager
 import logging
 log = logging.getLogger(__name__)
 
 
-def retry(
-    action, attempts=5, sleeptime=60, max_sleeptime=5 * 60, retry_exceptions=(Exception,),
-        cleanup=None, args=(), kwargs={}):
+def retry(action, attempts=5, sleeptime=60, max_sleeptime=5 * 60,
+          retry_exceptions=(Exception,), cleanup=None, args=(), kwargs={}):
     """Call `action' a maximum of `attempts' times until it succeeds,
         defaulting to 5. `sleeptime' is the number of seconds to wait
         between attempts, defaulting to 60 and doubling each retry attempt, to
@@ -29,8 +27,8 @@ def retry(
     n = 1
     while n <= attempts:
         try:
-            log.info("retry: Calling %s with args: %s, kwargs: %s, attempt #%d" %
-                    (action, str(args), str(kwargs), n))
+            log.info("retry: Calling %s with args: %s, kwargs: %s, "
+                     "attempt #%d" % (action, str(args), str(kwargs), n))
             return action(*args, **kwargs)
         except retry_exceptions:
             log.debug("retry: Caught exception: ", exc_info=True)
@@ -69,3 +67,12 @@ def retriable(*retry_args, **retry_kwargs):
                          **retry_kwargs)
         return _retriable_wrapper
     return _retriable_factory
+
+
+@contextmanager
+def retrying(func, *retry_args, **retry_kwargs):
+    @wraps(func)
+    def retry_it(*args, **kwargs):
+        return retry(func, args=args, kwargs=kwargs, *retry_args,
+                     **retry_kwargs)
+    yield retry_it
