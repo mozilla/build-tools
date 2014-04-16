@@ -28,8 +28,6 @@ PLATFORMS = {
     'win7-ix': 'win32',
     'win8': 'win32',
     'w764': 'win64',
-    'fedora': 'linux',
-    'fedora64': 'linux64',
     'ubuntu32': 'linux',
     'ubuntu64': 'linux64',
     'ubuntu32_vm': 'linux',
@@ -215,8 +213,7 @@ if __name__ == '__main__':
         sys.exit(4)
 
     # Custom paths/args for each platform's executable
-    if options.platform in ('linux', 'linux64', 'fedora', 'fedora64',
-                            'ubuntu32', 'ubuntu64',
+    if options.platform in ('linux', 'linux64', 'ubuntu32', 'ubuntu64',
                             'ubuntu32_vm', 'ubuntu64_vm', 'ubuntu64-asan_vm'):
         app_path = "%s/firefox/firefox" % basepath
         poller_cmd = 'tar -xjvf *%s' % options.ext

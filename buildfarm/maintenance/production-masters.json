@@ -1425,11 +1425,9 @@
     ],
     "limit_fx_slave_platforms": {
       "linux": [
-        "fedora",
         "ubuntu32_hw"
       ],
       "linux64": [
-        "fedora64",
         "ubuntu64_hw"
       ]
     },
@@ -1446,7 +1444,6 @@
     ],
     "limit_b2g_slave_platforms": {
       "emulator": [
-        "fedora-b2g-emulator",
         "ubuntu64_hw-b2g-emulator"
       ]
     },
@@ -1481,11 +1478,9 @@
     ],
     "limit_fx_slave_platforms": {
       "linux": [
-        "fedora",
         "ubuntu32_hw"
       ],
       "linux64": [
-        "fedora64",
         "ubuntu64_hw"
       ]
     },
@@ -1502,7 +1497,6 @@
     ],
     "limit_b2g_slave_platforms": {
       "emulator": [
-        "fedora-b2g-emulator",
         "ubuntu64_hw-b2g-emulator"
       ]
     },
@@ -1537,11 +1531,9 @@
     ],
     "limit_fx_slave_platforms": {
       "linux": [
-        "fedora",
         "ubuntu32_hw"
       ],
       "linux64": [
-        "fedora64",
         "ubuntu64_hw"
       ]
     },
@@ -1558,7 +1550,6 @@
     ],
     "limit_b2g_slave_platforms": {
       "emulator": [
-        "fedora-b2g-emulator",
         "ubuntu64_hw-b2g-emulator"
       ]
     },
