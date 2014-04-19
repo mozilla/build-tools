@@ -622,3 +622,10 @@ def tag(dest, tags, user=None, msg=None, rev=None, force=None):
     cmd.extend(tags)
     run_cmd(cmd, cwd=dest)
     return get_revision(dest)
+
+
+def merge_via_debugsetparents(dest, old_head, new_head, msg, user=None):
+    """Merge 2 heads avoiding non-fastforward commits"""
+    cmd = ['hg', 'debugsetparents', new_head, old_head]
+    run_cmd(cmd, cwd=dest)
+    commit(dest, msg=msg, user=user)
