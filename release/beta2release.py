@@ -46,6 +46,20 @@ def strip_outgoing(dest):
         log.warn("Ignoring strip error in %s", dest)
 
 
+def remove_locales(file_name, locales):
+    _, tmp_file_path = mkstemp()
+    with open(file_name) as f:
+        lines = f.readlines()
+    with open(tmp_file_path, "w") as out:
+        for line in lines:
+            locale = line.split()[0]
+            if locale not in locales:
+                out.write(line)
+            else:
+                log.warn("Removied locale: %s", locale)
+    shutil.move(tmp_file_path, file_name)
+
+
 def main():
     logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.INFO)
     parser = argparse.ArgumentParser()
@@ -61,6 +75,9 @@ def main():
         help="Repo to be merged to")
     parser.add_argument("--hg-user", default="ffxbld <release@mozilla.com>",
                         help="Mercurial username to be passed to hg -u")
+    parser.add_argument("--remove-locale", dest="remove_locales", action="append",
+                        required=True,
+                        help="Locales to be removed from release shipped-locales")
 
     args = parser.parse_args()
     from_dir = args.from_dir
@@ -111,9 +128,12 @@ def main():
                 "ac_add_options --with-branding=mobile/android/branding/beta",
                 "ac_add_options --with-branding=mobile/android/branding/official")
 
-    log.warn("Now, go edit any mozilla-release/browser/locales/shipped-locales "
-             "file if you need to remove some beta locales (eg: mn, sw)")
-    log.warn("Also apply any manual edits, such as disabling features.")
+    if args.remove_locales:
+        log.info("Removing locales: %s", args.remove_locales)
+        remove_locales(path.join(to_dir, "browser/locales/shipped-locales"),
+                       args.remove_locales)
+
+    log.warn("Apply any manual changes, such as disabling features.")
     raw_input("Hit 'return' to display channel, branding, and feature diffs onscreen")
     run_cmd(["hg", "diff"], cwd=to_dir)
     raw_input("If the diff looks good hit return to commit those changes")
