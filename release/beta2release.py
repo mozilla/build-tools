@@ -138,7 +138,7 @@ def main():
     run_cmd(["hg", "diff"], cwd=to_dir)
     raw_input("If the diff looks good hit return to commit those changes")
     commit(to_dir, user=hg_user,
-           msg="Update configs. CLOSED TREE a=release")
+           msg="Update configs. CLOSED TREE a=release ba=release")
     raw_input("Go ahead and push mozilla-release changes.")
 
 if __name__ == "__main__":
