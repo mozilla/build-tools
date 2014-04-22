@@ -151,7 +151,8 @@ def main():
     raw_input("Hit 'return' to display diffs onscreen")
     run_cmd(["hg", "diff"], cwd=ma_dir)
     raw_input("If the diff looks good hit return to commit those changes")
-    commit(ma_dir, user=hg_user, msg="Update configs. CLOSED TREE a=release")
+    commit(ma_dir, user=hg_user,
+           msg="Update configs. CLOSED TREE a=release ba=release")
     raw_input("Go ahead and push mozilla-aurora changes.")
 
     # mozilla-beta
@@ -188,7 +189,8 @@ def main():
     raw_input("Hit 'return' to display diffs onscreen")
     run_cmd(["hg", "diff"], cwd=mb_dir)
     raw_input("If the diff looks good hit return to commit those changes")
-    commit(mb_dir, user=hg_user, msg="Update configs. CLOSED TREE a=release")
+    commit(mb_dir, user=hg_user,
+           msg="Update configs. CLOSED TREE a=release ba=release")
     raw_input("Go ahead and push mozilla-beta changes.")
 
 if __name__ == "__main__":
