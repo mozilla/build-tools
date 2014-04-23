@@ -100,6 +100,8 @@ function setresult() {
     var value = 'try: ';
     var args = [];
 
+    args.push('try:');
+
     $('.option-radio[try-section]').each(function() {
         var arg = '-' + $(this).attr('try-section') + ' ';
         arg += $(this).find(':checked').attr('value');
@@ -163,7 +165,11 @@ function setresult() {
         args.push(arg);
     });
 
-    value = 'try: ' + args.join(' ');
+    if ($('.profile').is(':checked')) {
+      args.push('mozharness: --spsProfile');
+    }
+
+    value = args.join(' ');
 
     if (value.match(/-p none/)) {
         value = "(NO JOBS CHOSEN)";
