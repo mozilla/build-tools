@@ -598,7 +598,7 @@
     },
     "tegra-161": {
         "_comment": "ToDo: Bug 999930 - Missing in Action - needs to be added to scl3, re-image, added to foopy",
-        "foopy": "None",
+        "foopy": "None"
     },
     "tegra-163": {
         "foopy": "foopy120",
