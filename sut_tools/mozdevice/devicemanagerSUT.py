@@ -989,10 +989,8 @@ class DeviceManagerSUT(DeviceManager):
         if self.deviceRoot:
             deviceRoot = self.deviceRoot
         else:
-            try:
-                data = self._runCmds([{'cmd': 'testroot'}])
-            except:
-                return None
+            # don't try/except next line - bug 976106
+            data = self._runCmds([{'cmd': 'testroot'}])
 
             deviceRoot = data.strip() + '/tests'
 
