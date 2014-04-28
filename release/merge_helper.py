@@ -91,7 +91,7 @@ def main():
     mc_revision = get_revision(mc_dir)
     mc_tag = "FIREFOX_AURORA_%s_BASE" % curr_mc_version
     tag(mc_dir, tags=[mc_tag], rev=mc_revision, user=hg_user,
-        msg="Added %s tag for changeset %s. DONTBUILD CLOSED TREE a=release" %
+        msg="Added %s tag for changeset %s. IGNORE BROKEN CHANGESETS  DONTBUILD CLOSED TREE NO BUG a=release" %
         (mc_tag, mc_revision))
     new_mc_revision = get_revision(mc_dir)
     bump_version(mc_dir, curr_mc_version, next_mc_version, "a1", "a1",
@@ -101,7 +101,7 @@ def main():
     run_cmd(["hg", "diff"], cwd=mc_dir)
     raw_input("If the diff looks good hit return to commit those changes")
     commit(mc_dir, user=hg_user,
-           msg="Version bump. CLOSED TREE a=release")
+           msg="Version bump. IGNORE BROKEN CHANGESETS CLOSED TREE NO BUG a=release")
     raw_input("Go ahead and push mozilla-central...and continue to "
               "mozilla-aurora to mozilla-beta uplift ")
 
@@ -116,13 +116,13 @@ def main():
         user=hg_user, msg="Merge old head via |hg debugsetparents %s %s|. "
         "CLOSED TREE DONTBUILD a=release" % (new_mc_revision, ma_revision))
     tag(ma_dir, tags=[ma_tag, ma_end_tag], rev=ma_revision, user=hg_user,
-        msg="Added %s %s tags for changeset %s. DONTBUILD CLOSED TREE a=release" %
+        msg="Added %s %s tags for changeset %s. IGNORE BROKEN CHANGESETS DONTBUILD CLOSED TREE NO BUG a=release" %
         (ma_tag, ma_end_tag,  ma_revision))
     bump_version(ma_dir, next_ma_version, next_ma_version, "a1", "a2")
     raw_input("Hit 'return' to display diffs onscreen")
     run_cmd(["hg", "diff"], cwd=ma_dir)
     raw_input("If the diff looks good hit return to commit those changes")
-    commit(ma_dir, user=hg_user, msg="Version bump. CLOSED TREE a=release")
+    commit(ma_dir, user=hg_user, msg="Version bump. IGNORE BROKEN CHANGESETS CLOSED TREE NO BUG a=release")
 
     replace(path.join(ma_dir, "browser/confvars.sh"),
             "MOZ_BRANDING_DIRECTORY=browser/branding/nightly",
@@ -152,7 +152,7 @@ def main():
     run_cmd(["hg", "diff"], cwd=ma_dir)
     raw_input("If the diff looks good hit return to commit those changes")
     commit(ma_dir, user=hg_user,
-           msg="Update configs. CLOSED TREE a=release ba=release")
+           msg="Update configs. IGNORE BROKEN CHANGESETS CLOSED TREE NO BUG a=release ba=release")
     raw_input("Go ahead and push mozilla-aurora changes.")
 
     # mozilla-beta
@@ -165,13 +165,13 @@ def main():
         user=hg_user, msg="Merge old head via |hg debugsetparents %s %s|. "
         "CLOSED TREE DONTBUILD a=release" % (ma_revision, mb_revision))
     tag(mb_dir, tags=[mb_tag], rev=mb_revision, user=hg_user,
-        msg="Added %s tag for changeset %s. DONTBUILD CLOSED TREE a=release" %
+        msg="Added %s tag for changeset %s. IGNORE BROKEN CHANGESETS DONTBUILD CLOSED TREE NO BUG a=release" %
         (mb_tag, mb_revision))
     bump_version(mb_dir, next_mb_version, next_mb_version, "a2", "")
     raw_input("Hit 'return' to display diffs onscreen")
     run_cmd(["hg", "diff"], cwd=mb_dir)
     raw_input("If the diff looks good hit return to commit those changes")
-    commit(mb_dir, user=hg_user, msg="Version bump. CLOSED TREE a=release")
+    commit(mb_dir, user=hg_user, msg="Version bump. IGNORE BROKEN CHANGESETS CLOSED TREE NO BUG a=release")
     replace(path.join(mb_dir, "browser/confvars.sh"),
             "MOZ_BRANDING_DIRECTORY=browser/branding/aurora",
             "MOZ_BRANDING_DIRECTORY=browser/branding/nightly")
@@ -190,7 +190,7 @@ def main():
     run_cmd(["hg", "diff"], cwd=mb_dir)
     raw_input("If the diff looks good hit return to commit those changes")
     commit(mb_dir, user=hg_user,
-           msg="Update configs. CLOSED TREE a=release ba=release")
+           msg="Update configs. IGNORE BROKEN CHANGESETS CLOSED TREE NO BUG a=release ba=release")
     raw_input("Go ahead and push mozilla-beta changes.")
 
 if __name__ == "__main__":
