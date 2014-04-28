@@ -237,9 +237,9 @@ def ReleaseToBuildDir(builds_dir, builds_url, options, upload_dir, files, dated)
                 "%s\n" % os.path.join(tinderboxUrl, os.path.basename(f)))
     os.utime(tinderboxBuildsPath, None)
     # create latest softlink?
-    #if dated and options.release_to_latest_tinderbox_builds:
-    #    print >> sys.stderr, "ln -s %s %s" % (_to, _from)
-    #    rel_symlink(_to, _from, avoid_race_condition=True)
+    if dated and options.release_to_latest_tinderbox_builds:
+        print >> sys.stderr, "ln -s %s %s" % (_to, _from)
+        rel_symlink(_to, _from, avoid_race_condition=True)
 
 
 def ReleaseToTinderboxBuilds(options, upload_dir, files, dated=True):
@@ -251,27 +251,24 @@ def ReleaseToTinderboxBuildsOverwrite(options, upload_dir, files):
     ReleaseToTinderboxBuilds(options, upload_dir, files, dated=False)
 
 
-#def rel_symlink(_to, _from, avoid_race_condition=False):
-def rel_symlink(_to, _from):
+def rel_symlink(_to, _from, avoid_race_condition=False):
     _to = os.path.realpath(_to)
     _from = os.path.realpath(_from)
     (_from_path, dummy) = os.path.split(_from)
     _to = os.path.relpath(_to, _from_path)
-    os.symlink(_to, _from)
-# commented out due to bustage
-#    if avoid_race_condition:
-#        dirname = os.path.dirname(_from)
-#        tmpfile = tempfile.NamedTemporaryFile(dir=dirname, delete=False)
-#        _tmp_from = tmpfile.name
-#        os.system('ln -sf "%s" "%s"' % (_to, _tmp_from))
-#        if os.path.exists(_from):
-#            if os.path.isdir(_from):
-#                shutil.rmtree(_from)
-#            else:
-#                os.unlink(_from)
-#        os.rename(_tmp_from, _from)
-#    else:
-#        os.symlink(_to, _from)
+    if avoid_race_condition:
+        dirname = os.path.dirname(_from)
+        tmpfile = tempfile.NamedTemporaryFile(dir=dirname, delete=False)
+        _tmp_from = tmpfile.name
+        os.system('ln -sf "%s" "%s"' % (_to, _tmp_from))
+        if os.path.exists(_from):
+            if os.path.isdir(_from):
+                shutil.rmtree(_from)
+            else:
+                os.unlink(_from)
+        os.rename(_tmp_from, _from)
+    else:
+        os.symlink(_to, _from)
 
 
 def symlink_nightly_to_candidates(nightly_path, candidates_full_path, version):
