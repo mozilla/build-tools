@@ -31,7 +31,7 @@ MOZPOOL_STATE_MISSING = -2
 errorFile = None
 dm = None
 
-watcherINI = "\r\n[watcher]\r\nPingTarget = talos-remote.pvt.build.mozilla.org\r\nstrikes = 0\r\n"
+watcherINI = "\r\n[watcher]\r\nPingTarget = bm-remote.build.mozilla.org\r\nstrikes = 0\r\n"
 
 
 def dmAlive(dm):
