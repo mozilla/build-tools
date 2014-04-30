@@ -37,6 +37,11 @@ elf_hack_files = ["mobile/android/config/mozconfigs/android/nightly",
                   "browser/config/mozconfigs/linux32/nightly",
                   "browser/config/mozconfigs/linux64/nightly"]
 
+locale_files = ["browser/locales/shipped-locales",
+                "browser/locales/all-locales",
+                "mobile/android/locales/maemo-locales",
+                "mobile/android/locales/all-locales"]
+
 
 def get_major_version(d):
     with open(path.join(d, "browser/config/version.txt")) as f:
@@ -118,6 +123,9 @@ def main():
     tag(ma_dir, tags=[ma_tag, ma_end_tag], rev=ma_revision, user=hg_user,
         msg="Added %s %s tags for changeset %s. IGNORE BROKEN CHANGESETS DONTBUILD CLOSED TREE NO BUG a=release" %
         (ma_tag, ma_end_tag,  ma_revision))
+    log.info("Reverting locales")
+    for f in locale_files:
+        run_cmd(["hg", "revert", "-r", ma_end_tag, f], cwd=ma_dir)
     bump_version(ma_dir, next_ma_version, next_ma_version, "a1", "a2")
     raw_input("Hit 'return' to display diffs onscreen")
     run_cmd(["hg", "diff"], cwd=ma_dir)
