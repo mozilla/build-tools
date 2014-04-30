@@ -16,11 +16,11 @@ from util.algorithms import recursive_update
 def get_nightly_blob_name(productName, branch, build_type, suffix, dummy=False):
     if dummy:
         branch = '%s-dummy' % branch
-    return '%s-%s-%s-%s' % (productName.title(), branch, build_type, suffix)
+    return '%s-%s-%s-%s' % (productName, branch, build_type, suffix)
 
 
 def get_release_blob_name(productName, version, build_number, dummy=False):
-    name = '%s-%s-build%s' % (productName.title(), version, build_number)
+    name = '%s-%s-build%s' % (productName, version, build_number)
     if dummy:
         name += '-dummy'
     return name
@@ -89,7 +89,7 @@ class ReleaseCreator(object):
         api = Release(auth=self.auth, api_root=self.api_root)
         api.update_release(name=self.name,
                            version=appVersion,
-                           product=productName.title(),
+                           product=productName,
                            hashFunction=hashFunction,
                            releaseData=json.dumps(data),
                            data_version=data_version)
