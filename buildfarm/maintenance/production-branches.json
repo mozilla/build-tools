@@ -238,6 +238,11 @@
     ],
     "repo_type": "hg"
   },
+  "gaia-try": {
+    "repo": "https://hg.mozilla.org/integration/gaia-try",
+    "graph_branches": [],
+    "repo_type": "hg"
+  },
   "try-comm-central": {
     "repo": "https://hg.mozilla.org/try-comm-central",
     "graph_branches": [
