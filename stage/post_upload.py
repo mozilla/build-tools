@@ -213,6 +213,8 @@ def ReleaseToBuildDir(builds_dir, builds_url, options, upload_dir, files, dated)
         buildid = str(BuildIDToUnixTime(options.buildid))
         tinderboxBuildsPath = os.path.join(tinderboxBuildsPath, buildid)
         tinderboxUrl = os.path.join(tinderboxUrl, buildid)
+        _to = os.path.basename(tinderboxBuildsPath)
+        _from = os.path.join(os.path.dirname(tinderboxBuildsPath), "latest")
     if options.builddir:
         tinderboxBuildsPath = os.path.join(
             tinderboxBuildsPath, options.builddir)
@@ -234,17 +236,16 @@ def ReleaseToBuildDir(builds_dir, builds_url, options, upload_dir, files, dated)
             sys.stderr.write(
                 "%s\n" % os.path.join(tinderboxUrl, os.path.basename(f)))
     os.utime(tinderboxBuildsPath, None)
+    # create latest softlink?
+    if dated and options.release_to_latest_tinderbox_builds:
+        # best effort softlink
+        print >> sys.stderr, "ln -sf %s %s" % (_to, _from)
+        os.system('ln -sf "%s" "%s"' % (_to, _from))
 
 
 def ReleaseToTinderboxBuilds(options, upload_dir, files, dated=True):
     ReleaseToBuildDir(TINDERBOX_BUILDS_PATH, TINDERBOX_URL_PATH,
                       options, upload_dir, files, dated)
-
-
-def ReleaseToShadowCentralBuilds(options, upload_dir, files, dated=True):
-    options.product = "shadow-central"
-    ReleaseToBuildDir(
-        PVT_BUILD_DIR, PVT_BUILD_URL_PATH, options, upload_dir, files, dated)
 
 
 def ReleaseToTinderboxBuildsOverwrite(options, upload_dir, files):
@@ -437,12 +438,12 @@ if __name__ == '__main__':
     parser.add_option("-t", "--release-to-tinderbox-builds",
                       action="store_true", dest="release_to_tinderbox_builds",
                       help="Copy files to $product/tinderbox-builds/$tinderbox_builds_dir")
+    parser.add_option("--release-to-latest-tinderbox-builds",
+                      action="store_true", dest="release_to_latest_tinderbox_builds",
+                      help="Softlink tinderbox_builds_dir to latest")
     parser.add_option("--release-to-tinderbox-dated-builds",
                       action="store_true", dest="release_to_dated_tinderbox_builds",
                       help="Copy files to $product/tinderbox-builds/$tinderbox_builds_dir/$timestamp")
-    parser.add_option("--release-to-shadow-central-builds",
-                      action="store_true", dest="release_to_shadow_central_builds",
-                      help="Copy files to shadow-central/$tinderbox_builds_dir/$timestamp")
     parser.add_option("--release-to-try-builds",
                       action="store_true", dest="release_to_try_builds",
                       help="Copy files to try-builds/$who-$revision")
@@ -497,14 +498,6 @@ if __name__ == '__main__':
             error = True
     if options.release_to_dated_tinderbox_builds:
         releaseTo.append(ReleaseToTinderboxBuilds)
-        if not options.tinderbox_builds_dir:
-            print "Error, you must supply the tinderbox builds dir."
-            error = True
-        if not options.buildid:
-            print "Error, you must supply the build id."
-            error = True
-    if options.release_to_shadow_central_builds:
-        releaseTo.append(ReleaseToShadowCentralBuilds)
         if not options.tinderbox_builds_dir:
             print "Error, you must supply the tinderbox builds dir."
             error = True
