@@ -151,8 +151,6 @@ def ReleaseToDated(options, upload_dir, files):
         shortDatedPath += "/%s" % options.builddir
 
     for f in files:
-        if f.endswith('crashreporter-symbols.zip'):
-            continue
         if options.branch.endswith('l10n') and f.endswith('.xpi'):
             CopyFileToDir(f, upload_dir, longDatedPath, preserve_dirs=True)
             filePath = f.replace(upload_dir, "").lstrip("/")
