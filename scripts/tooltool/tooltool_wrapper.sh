@@ -15,10 +15,6 @@ if [ -e "$TT_MANIFEST" ]; then
     if [ ! -x "$TT_CMD" ]; then
         echo "Cannot execute $TT_CMD, exiting"
         exit 1
-    else
-        if [  ! -z $TOOLTOOL_CACHE ]; then
-            TT_CMD="${TT_CMD} -c ${TOOLTOOL_CACHE}"
-        fi
     fi
 
     echo "$TT_MANIFEST content"
@@ -27,7 +23,7 @@ if [ -e "$TT_MANIFEST" ]; then
     echo "======================================================="
     echo "Fetching..."
     python $(cd $(dirname $0) && pwd)/../../buildfarm/utils/retry.py -- \
-      "$@" --url "$TT_BASEURL" --overwrite -m "$TT_MANIFEST" fetch
+      "$@" --url "$TT_BASEURL" --overwrite -m "$TT_MANIFEST" fetch ${TOOLTOOL_CACHE:+ -c ${TOOLTOOL_CACHE}}
     if [ -e "$TT_BOOTSTRAP" ]; then
         echo "Bootstraping..."
         bash -xe "$TT_BOOTSTRAP"
