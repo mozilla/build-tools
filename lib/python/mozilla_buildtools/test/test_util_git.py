@@ -253,6 +253,8 @@ class TestGit(unittest.TestCase):
     def testGitBadDest(self):
         # Create self.wc without .git
         os.makedirs(self.wc)
+        self.assertFalse(git.is_git_repo(self.wc))
+
         rev = git.git(self.repodir, self.wc)
         self.assertEquals(rev, self.revisions[-1])
         self.assertTrue(os.path.exists(os.path.join(self.wc, 'hello.txt')))

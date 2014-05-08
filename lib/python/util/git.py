@@ -3,6 +3,7 @@ import os
 import subprocess
 import urlparse
 import urllib
+import re
 
 from util.commands import run_cmd, remove_path, run_quiet_cmd
 from util.file import safe_unlink
@@ -60,8 +61,12 @@ def init(dest, bare=False):
         safe_unlink(dest)
     else:
         for f in os.listdir(dest):
-            log.info("removing %s", os.path.join(dest, f))
-            safe_unlink(os.path.join(dest, f))
+            f = os.path.join(dest, f)
+            log.info("removing %s", f)
+            if os.path.isdir(f):
+                remove_path(f)
+            else:
+                safe_unlink(f)
 
     # Git will freak out if it tries to create intermediate directories for
     # dest, and then they exist. We can hit this when pulling in multiple repos
@@ -90,8 +95,13 @@ def is_git_repo(dest):
         return False
 
     try:
-        run_quiet_cmd(["git", "rev-parse"], cwd=dest)
-        return True
+        proc = subprocess.Popen(["git", "rev-parse", "--git-dir"], cwd=dest, stdout=subprocess.PIPE)
+        if proc.wait() != 0:
+            return False
+        output = proc.stdout.read().strip()
+        git_dir = os.path.normpath(os.path.join(dest, output))
+        retval = (git_dir == dest or git_dir == os.path.join(dest, ".git"))
+        return retval
     except subprocess.CalledProcessError:
         return False
 
@@ -125,6 +135,44 @@ def clean(repo):
     run_cmd(['git', 'clean', '-f', '-f', '-d'], cwd=repo, stdout=subprocess.PIPE)
 
 
+def add_remote(repo, remote_name, remote_repo):
+    """Adds a remote named `remote_name` to the local git repo in `repo`
+    pointing to `remote_repo`"""
+    run_cmd(['git', 'remote', 'add', remote_name, remote_repo], cwd=repo)
+
+
+def set_remote_url(repo, remote_name, remote_repo):
+    """Sets the url for a remote"""
+    run_cmd(['git', 'remote', 'set-url', remote_name, remote_repo], cwd=repo)
+
+
+def get_remote(repo, remote_name):
+    """Returns the url for the given remote, or None if the remote doesn't
+    exist"""
+    cmd = ['git', 'remote', '-v']
+    proc = subprocess.Popen(cmd, cwd=repo, stdout=subprocess.PIPE)
+    proc.wait()
+    for line in proc.stdout.readlines():
+        m = re.match(r"%s\s+(\S+) \(fetch\)$" % re.escape(remote_name), line)
+        if m:
+            return m.group(1)
+
+
+def set_remote(repo, remote_name, remote_repo):
+    """Sets remote named `remote_name` to `remote_repo`"""
+    log.debug("%s: getting remotes", repo)
+    my_remote = get_remote(repo, remote_name)
+    if my_remote == remote_repo:
+        return
+
+    if my_remote is not None:
+        log.info("%s: setting remote %s to %s (was %s)", repo, remote_name, remote_repo, my_remote)
+        set_remote_url(repo, remote_name, remote_repo)
+    else:
+        log.info("%s: adding remote %s %s", repo, remote_name, remote_repo)
+        add_remote(repo, remote_name, remote_repo)
+
+
 def git(repo, dest, refname=None, revision=None, update_dest=True,
         shareBase=DefaultShareBase, mirrors=None, clean_dest=False):
     """Makes sure that `dest` is has `revision` or `refname` checked out from
@@ -151,12 +199,13 @@ def git(repo, dest, refname=None, revision=None, update_dest=True,
             init(share_dir, bare=True)
             os.utime(share_dir, None)
         except Exception:
-            log.warning("couldn't create shared repo %s; disabling sharing", share_dir)
+            log.warning("couldn't create shared repo %s; disabling sharing", share_dir, exc_info=True)
             shareBase = None
             share_dir = None
 
     dest = os.path.abspath(dest)
 
+    log.info("Checking dest %s", dest)
     if not is_git_repo(dest):
         if os.path.exists(dest):
             log.warning("%s doesn't appear to be a valid git directory; clobbering", dest)
@@ -228,6 +277,9 @@ def git(repo, dest, refname=None, revision=None, update_dest=True,
                 log.info("error fetching into %s - clobbering", dest)
                 remove_path(dest)
                 raise
+
+    # Set our remote
+    set_remote(dest, 'origin', repo)
 
     if update_dest:
         log.info("Updating local copy refname: %s; revision: %s", refname, revision)
