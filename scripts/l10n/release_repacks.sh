@@ -37,7 +37,7 @@ if [ -z "$CLOBBERER_URL" ]; then
     export CLOBBERER_URL="http://clobberer.pvt.build.mozilla.org/index.php"
 fi
 
-if [ "$product" == "thunderbird" ]; then
+if [ "$product" == "Thunderbird" ]; then
     SOURCE_REPO_KEY=--source-repo-key=comm
 else
     SOURCE_REPO_KEY=
