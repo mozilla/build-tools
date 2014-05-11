@@ -237,8 +237,8 @@ def ReleaseToBuildDir(builds_dir, builds_url, options, upload_dir, files, dated)
     # create latest softlink?
     if dated and options.release_to_latest_tinderbox_builds:
         # best effort softlink
-        print >> sys.stderr, "ln -sf %s %s" % (_to, _from)
-        os.system('ln -sf "%s" "%s"' % (_to, _from))
+        print >> sys.stderr, "ln -sfnv %s %s" % (_to, _from)
+        os.system('ln -sfnv "%s" "%s"' % (_to, _from))
 
 
 def ReleaseToTinderboxBuilds(options, upload_dir, files, dated=True):
