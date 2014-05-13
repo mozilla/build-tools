@@ -4,7 +4,7 @@ from collections import defaultdict
 import logging
 import os
 from os import path
-from traceback import format_exc
+from traceback import format_exc, print_exc
 import site
 import sys
 
@@ -44,7 +44,7 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                   tooltool_script=None, tooltool_urls=None,
                   balrog_submitter=None, balrog_hash="sha512", buildid=None):
     sourceRepoName = path.split(sourceRepo)[-1]
-    absObjdir = path.join(sourceRepoName, objdir)
+    absObjdir = path.abspath(path.join(sourceRepoName, objdir))
     localeSrcDir = path.join(absObjdir, appName, "locales")
     # Even on Windows we need to use "/" as a separator for this because
     # compare-locales doesn"t work any other way
@@ -95,7 +95,7 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
     update(sourceRepoName, revision=revision)
     l10nRepackPrep(
         sourceRepoName, objdir, mozconfigPath, srcMozconfigPath, l10nRepoDir,
-        makeDirs, localeSrcDir, env, tooltoolManifest, tooltool_script, tooltool_urls)
+        makeDirs, env, tooltoolManifest, tooltool_script, tooltool_urls)
     input_env = retry(downloadReleaseBuilds,
                       args=(stageServer, product, brand, version, buildNumber,
                             platform),
@@ -149,6 +149,7 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                     }
                 )
         except Exception, e:
+            print_exc()
             failed.append((l, format_exc()))
 
     if len(failed) > 0:

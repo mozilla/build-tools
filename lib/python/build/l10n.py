@@ -2,7 +2,6 @@ from __future__ import with_statement
 
 import os
 from os import path
-import re
 import shutil
 import sys
 from urllib import urlretrieve
@@ -56,7 +55,7 @@ def compareLocales(repo, locale, l10nRepoDir, localeSrcDir, l10nIni,
 
 
 def l10nRepackPrep(sourceRepoName, objdir, mozconfigPath, srcMozconfigPath,
-                   l10nBaseRepoName, makeDirs, localeSrcDir, env,
+                   l10nBaseRepoName, makeDirs, env,
                    tooltoolManifest=None, tooltool_script=None,
                    tooltool_urls=None):
     if not path.exists(l10nBaseRepoName):
@@ -111,9 +110,9 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
     if 'thunderbird' in productName:
         mozillaDir = 'mozilla/'
 
-    # split on \\ since we care about the absSourceRepoPath for pymake, which
-    # is windows.
-    absSourceRepoPath = os.path.join(os.getcwd(), localeSrcDir.split("\\")[0])
+    # It's a bad assumption to make, but the source dir is currently always
+    # one level above the objdir.
+    absSourceRepoPath = path.split(absObjdir)[0]
     use_pymake = env.get("USE_PYMAKE", False)
     make = getMakeCommand(use_pymake, absSourceRepoPath)
 
@@ -220,10 +219,15 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
     # Some versions of make that we use (at least pymake) imply --print-directory
     # We need to turn it off to avoid getting extra output that mess up our
     # parsing of the checksum file path.
-    relative_checksums = get_output(make +
-                                    ["--no-print-directory", "echo-variable-CHECKSUM_FILE", "AB_CD=%s" % locale],
-                                    cwd=localeSrcDir, env=env).rstrip("\"'\n")
-    return path.normpath(path.join(absObjdir, relative_checksums))
+    curdir = os.getcwd()
+    try:
+        os.chdir(localeSrcDir)
+        relative_checksums = get_output(make +
+                                        ["--no-print-directory", "echo-variable-CHECKSUM_FILE", "AB_CD=%s" % locale],
+                                        env=env).strip("\"'\n")
+        return path.normpath(path.join(localeSrcDir, relative_checksums))
+    finally:
+        os.chdir(curdir)
 
 
 def getLocalesForChunk(possibleLocales, chunks, thisChunk):
