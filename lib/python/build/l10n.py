@@ -179,7 +179,11 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
                    l10nIni, revision=revision, merge=merge)
     run_cmd(make + ["installers-%s" % locale], cwd=localeSrcDir, env=env)
 
-    run_cmd(['rm', '-rf', current])
+    if sys.platform.startswith('win'):
+        rm = "rm-msys"
+    else:
+        rm = "rm"
+    run_cmd([rm, '-rf', current])
     run_cmd(['mkdir', current])
     run_cmd(['perl', unwrap_full_update, current_mar],
             cwd=path.join(nativeDistDir, 'current'), env=env)
@@ -190,7 +194,7 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
                                                          version)
             partial_mar = '%s/%s' % (updateAbsDir, partial_mar_name)
             UPLOAD_EXTRA_FILES.append('%s/%s' % (updateDir, partial_mar_name))
-            run_cmd(['rm', '-rf', previous])
+            run_cmd([rm, '-rf', previous])
             run_cmd(['mkdir', previous])
             run_cmd(
                 ['perl', unwrap_full_update, '%s/%s' % (prevMarDir, prevMar)],
