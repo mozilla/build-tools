@@ -55,10 +55,11 @@ pushd src; GOT_REVISION=`hg parent --template={node} | cut -c1-12`; popd
 echo "revision: $GOT_REVISION" > properties/revision
 echo "got_revision: $GOT_REVISION" > properties/got_revision
 
-if [ ! -d objdir ]; then
-    mkdir objdir
+objdir=${MOZ_OBJDIR-objdir}
+if [ ! -d $objdir ]; then
+    mkdir $objdir
 fi
-cd objdir
+cd $objdir
 
 if [ "`uname -m`" = "x86_64" ]; then
     export LD_LIBRARY_PATH=/tools/gcc-4.5-0moz3/installed/lib64
