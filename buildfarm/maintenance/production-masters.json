@@ -1176,8 +1176,7 @@
     "limit_fx_platforms": [],
     "limit_mobile_platforms": [
         "android",
-        "android-armv6",
-        "android-noion"
+        "android-armv6"
     ],
     "limit_tb_platforms": [],
     "limit_b2g_platforms": [],
@@ -1296,8 +1295,7 @@
     "limit_fx_platforms": [],
     "limit_mobile_platforms": [
         "android",
-        "android-armv6",
-        "android-noion"
+        "android-armv6"
     ],
     "limit_tb_platforms": [],
     "limit_b2g_platforms": [],

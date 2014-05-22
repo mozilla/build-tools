@@ -41,34 +41,6 @@
     ],
     "repo_type": "hg"
   },
-  "mozilla-b2g18": {
-    "repo": "https://hg.mozilla.org/releases/mozilla-b2g18",
-    "graph_branches": [
-      "Mozilla-B2g18"
-    ],
-    "repo_type": "hg"
-  },
-  "mozilla-b2g18_v1_0_0": {
-    "repo": "https://hg.mozilla.org/releases/mozilla-b2g18_v1_0_0",
-    "graph_branches": [
-      "Mozilla-B2g18_v1_0_0"
-    ],
-    "repo_type": "hg"
-  },
-  "mozilla-b2g18_v1_0_1": {
-    "repo": "https://hg.mozilla.org/releases/mozilla-b2g18_v1_0_1",
-    "graph_branches": [
-      "Mozilla-B2g18_v1_0_1"
-    ],
-    "repo_type": "hg"
-  },
-  "mozilla-b2g18_v1_1_0_hd": {
-    "repo": "https://hg.mozilla.org/releases/mozilla-b2g18_v1_1_0_hd",
-    "graph_branches": [
-      "Mozilla-B2g18-v1.1.0hd"
-    ],
-    "repo_type": "hg"
-  },
   "mozilla-b2g26_v1_2": {
     "repo": "https://hg.mozilla.org/releases/mozilla-b2g26_v1_2",
     "graph_branches": [
