@@ -134,10 +134,10 @@ function setresult() {
                 options = group.find(':checked:not(.group-selector):not(.subgroup-selector):not(.nondefault)');
             }
             options.each(function(i,elt){
-              names.push($(elt).attr('value'));
-              var project = $(elt).attr('data-project');
-              if (project)
-                have_projects[project] = true;
+                names.push($(elt).attr('value'));
+                var project = $(elt).attr('data-project');
+                if (project)
+                    have_projects[project] = true;
             });
         }
 
@@ -154,11 +154,11 @@ function setresult() {
 
         var filters = [];
         $('[try-filter=' + tryopt + '] :checked').each(function () {
-          filters.push.apply(filters, $(this).attr('value').split(','));
+            filters.push.apply(filters, $(this).attr('value').split(','));
         });
         if (filters.length > 0 && !disable_filters) {
-          filters = resolveFilters(filters).join(',');
-          names = names.map(function (n) { return n + '[' + filters + ']'; });
+            filters = resolveFilters(filters).join(',');
+            names = names.map(function (n) { return n + '[' + filters + ']'; });
         }
 
         arg += names.join(',');
@@ -166,7 +166,7 @@ function setresult() {
     });
 
     if ($('.profile').is(':checked')) {
-      args.push('mozharness: --spsProfile');
+        args.push('mozharness: --spsProfile');
     }
 
     value = args.join(' ');
