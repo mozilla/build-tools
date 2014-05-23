@@ -170,12 +170,24 @@ function setresult() {
     }
 
     value = args.join(' ');
+    var incomplete = false;
+
+    if (value.match(/-b none/)) {
+        $('#build_type-none').addClass('attention')
+        incomplete = true;
+    } else {
+        $('#build_type-none').removeClass('attention')
+    }
 
     if (value.match(/-p none/)) {
-        value = "(NO JOBS CHOSEN)";
         $('#platforms-none').addClass('attention');
+        incomplete = true;
     } else {
         $('#platforms-none').removeClass('attention');
+    }
+
+    if (incomplete) {
+        value = "(NO JOBS CHOSEN)";
     }
 
     $('.result_value').val(value);
