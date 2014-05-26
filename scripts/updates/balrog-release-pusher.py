@@ -6,11 +6,13 @@ except ImportError:
 
 import os
 from os import path
-import site
 import logging
 import sys
 
-site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
+# Use explicit version of python-requests
+sys.path.insert(0, path.join(path.dirname(__file__),
+                             "../../lib/python/vendor/requests-0.10.8"))
+sys.path.insert(0, path.join(path.dirname(__file__), "../../lib/python"))
 
 from balrog.submitter.cli import ReleaseCreator, ReleasePusher
 from release.info import readReleaseConfig

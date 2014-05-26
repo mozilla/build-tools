@@ -2,12 +2,14 @@
 
 import json
 import os
-import site
 import logging
 import sys
 
 
-site.addsitedir(os.path.join(os.path.dirname(__file__), "../../lib/python"))
+# Use explicit version of python-requests
+sys.path.insert(0, os.path.join(os.path.dirname(__file__),
+                                "../../lib/python/vendor/requests-0.10.8"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../lib/python"))
 
 from balrog.submitter.cli import NightlySubmitter, ReleaseSubmitter
 
