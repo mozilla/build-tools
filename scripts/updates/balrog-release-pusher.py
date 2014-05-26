@@ -81,12 +81,12 @@ if __name__ == '__main__':
     updateChannels = release_config['testChannels'] + [release_config['releaseChannel']]
 
     creator = ReleaseCreator(options.api_root, auth)
-    creator.run(release_config['appVersion'], release_config['productName'],
+    creator.run(release_config['appVersion'], release_config['productName'].capitalize(),
                 release_config['version'], release_config['buildNumber'],
                 release_config['partialUpdates'], updateChannels,
                 release_config['stagingServer'], release_config['bouncerServer'],
                 release_config['enUSPlatforms'], hashType)
 
     pusher = ReleasePusher(options.api_root, auth)
-    pusher.run(release_config['productName'], release_config['version'],
+    pusher.run(release_config['productName'].capitalize(), release_config['version'],
                release_config['buildNumber'], release_config['testChannelRuleIds'])
