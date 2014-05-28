@@ -7,7 +7,6 @@
 # * Check virtualenv is installed
 # * Check if tools is in a .hg or .git directory, and pull if possible (or pull down individual files from hg)
 # * Add an option not to refresh tools repo
-# * Create parent directory of wiki config file if it doesn't already exist
 # * log reconfig to a file and to console
 # * Check connectivity to an arbitrary master and report nicely
 # * Summarize failures from manage_masters.py at end of log
@@ -188,6 +187,10 @@ if [ "${UPDATE_WIKI}" == '1' ]; then
     # To avoid user getting confused about parent directory, tell user the
     # absolute path of the credentials file...
     PARENT_DIR="$(dirname "${WIKI_CREDENTIALS_FILE}")"
+    if [ ! -e "${PARENT_DIR}" ]; then
+    echo "  * Wiki credentials file parent directory '${PARENT_DIR}' not found; creating..." >&2
+        mkdir -p "${PARENT_DIR}"
+    fi
     pushd "${PARENT_DIR}" >/dev/null
     ABS_WIKI_CREDENTIALS_FILE="$(pwd)/$(basename "${WIKI_CREDENTIALS_FILE}")"
     popd >/dev/null
