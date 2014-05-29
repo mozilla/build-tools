@@ -31,8 +31,6 @@ from util.file import load_config, get_config
 
 log = logging.getLogger(__name__)
 
-HG = 'hg.mozilla.org'
-
 
 def reconfig_warning(from_, to, smtp_server, rr, start_time, elapsed,
                      proc):
@@ -222,6 +220,7 @@ def main(options):
     api_root = config.get('api', 'api_root')
     username = config.get('api', 'username')
     password = config.get('api', 'password')
+    hg_host = config.get('release-runner', 'hg_host')
     hg_username = config.get('release-runner', 'hg_username')
     hg_ssh_key = config.get('release-runner', 'hg_ssh_key')
     buildbot_configs = config.get('release-runner', 'buildbot_configs')
@@ -247,18 +246,18 @@ def main(options):
     custom_workdir = 'buildbotcustom'
     tools_workdir = 'tools'
     if "://" in buildbot_configs and not buildbot_configs.startswith("file"):
-        configs_pushRepo = make_hg_url(HG, get_repo_path(buildbot_configs),
-                                    protocol='ssh')
+        configs_pushRepo = make_hg_url(
+            hg_host, get_repo_path(buildbot_configs), protocol='ssh')
     else:
         configs_pushRepo = buildbot_configs
     if "://" in buildbotcustom and not buildbotcustom.startswith("file"):
-        custom_pushRepo = make_hg_url(HG, get_repo_path(buildbotcustom),
-                                    protocol='ssh')
+        custom_pushRepo = make_hg_url(
+            hg_host, get_repo_path(buildbotcustom), protocol='ssh')
     else:
         custom_pushRepo = buildbotcustom
     if "://" in tools and not tools.startswith("file"):
-        tools_pushRepo = make_hg_url(HG, get_repo_path(tools),
-                                    protocol='ssh')
+        tools_pushRepo = make_hg_url(hg_host, get_repo_path(tools),
+                                     protocol='ssh')
     else:
         tools_pushRepo = tools
 

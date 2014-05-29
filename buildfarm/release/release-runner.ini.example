@@ -8,6 +8,7 @@ password: password
 notify_from: Release Eng <DONOTreleaseME@mozilla.com>
 notify_to: Release Duty <you@example.com>
 smtp_server: localhost
+hg_host: hg.mozilla.org
 hg_username: ffxbld
 hg_ssh_key: ~/.ssh/ffxbld_dsa
 buildbot_configs: https://hg.mozilla.org/build/buildbot-configs
