@@ -9,6 +9,7 @@ from release.info import getProductDetails
 from release.paths import makeCandidatesDir
 from release.platforms import buildbot2updatePlatforms, buildbot2bouncer, \
   buildbot2ftp
+from release.versions import getPrettyVersion
 from balrog.submitter.api import Release, SingleLocale, Rule
 from util.algorithms import recursive_update
 
@@ -34,20 +35,27 @@ class ReleaseCreator(object):
 
     def generate_data(self, appVersion, productName, version, buildNumber,
                       partialUpdates, updateChannels, stagingServer,
-                      bouncerServer, enUSPlatforms):
+                      bouncerServer, enUSPlatforms, schemaVersion):
         # TODO: Multiple partial support. Probably as a part of bug 797033.
         previousVersion = str(max(StrictVersion(v) for v in partialUpdates))
         self.name = get_release_blob_name(productName, version, buildNumber)
         data = {
             'name': self.name,
-            'extv': appVersion,
-            'appv': appVersion,
             'detailsUrl': getProductDetails(productName, appVersion),
             'platforms': {},
             'fileUrls': {},
             'ftpFilenames': {},
             'bouncerProducts': {},
         }
+        assert schemaVersion in (1, 2), 'Unhandled schema version %s' % schemaVersion
+        if schemaVersion == 1:
+            data['appv'] = appVersion
+            data['extv'] = appVersion
+        elif schemaVersion == 2:
+            data['appVersion'] = appVersion
+            data['platformVersion'] = appVersion
+            data['displayVersion'] = getPrettyVersion(version)
+
 
         for channel in updateChannels:
             if channel in ('betatest', 'esrtest'):
@@ -59,8 +67,8 @@ class ReleaseCreator(object):
 
         data['ftpFilenames']['complete'] = '%s-%s.complete.mar' % (productName, version)
         data['ftpFilenames']['partial'] = '%s-%s-%s.partial.mar' % (productName, previousVersion, version)
-        data['bouncerProducts']['complete'] = '%s-%s-Complete' % (productName, version)
-        data['bouncerProducts']['partial'] = '%s-%s-Partial-%s' % (productName, version, previousVersion)
+        data['bouncerProducts']['complete'] = '%s-%s-Complete' % (productName.capitalize(), version)
+        data['bouncerProducts']['partial'] = '%s-%s-Partial-%s' % (productName.capitalize(), version, previousVersion)
 
         for platform in enUSPlatforms:
             updatePlatforms = buildbot2updatePlatforms(platform)
@@ -79,11 +87,12 @@ class ReleaseCreator(object):
 
     def run(self, appVersion, productName, version, buildNumber,
             partialUpdates, updateChannels, stagingServer, bouncerServer,
-            enUSPlatforms, hashFunction):
+            enUSPlatforms, hashFunction, schemaVersion):
         api = Release(auth=self.auth, api_root=self.api_root)
         data = self.generate_data(appVersion, productName, version,
                                   buildNumber, partialUpdates, updateChannels,
-                                  stagingServer, bouncerServer, enUSPlatforms)
+                                  stagingServer, bouncerServer, enUSPlatforms,
+                                  schemaVersion)
         current_data, data_version = api.get_data(self.name)
         data = recursive_update(current_data, data)
         api = Release(auth=self.auth, api_root=self.api_root)
@@ -105,8 +114,8 @@ class NightlySubmitter(object):
 
     def run(self, platform, buildID, productName, branch, appVersion, locale,
             hashFunction, extVersion, completeMarSize, completeMarHash,
-            completeMarUrl, partialMarSize, partialMarHash=None,
-            partialMarUrl=None, previous_buildid=None):
+            completeMarUrl, schemaVersion, partialMarSize,
+            partialMarHash=None, partialMarUrl=None, previous_buildid=None):
         targets = buildbot2updatePlatforms(platform)
         build_target = targets[0]
         alias = None
@@ -115,10 +124,17 @@ class NightlySubmitter(object):
 
         name = get_nightly_blob_name(productName, branch, self.build_type, buildID, self.dummy)
         data = {
-            'appv': appVersion,
-            'extv': extVersion,
             'buildID': buildID,
         }
+        assert schemaVersion in (1, 2), 'Unhandled schema version %s' % schemaVersion
+        if schemaVersion == 1:
+            data['appv'] = appVersion
+            data['extv'] = extVersion
+        elif schemaVersion == 2:
+            data['appVersion'] = appVersion
+            data['platformVersion'] = extVersion
+            data['displayVersion'] = appVersion
+
         data['complete'] = {
             'from': '*',
             'filesize': completeMarSize,
@@ -142,11 +158,13 @@ class NightlySubmitter(object):
             productName, branch, self.build_type, 'latest', self.dummy)]
         copyTo = json.dumps(copyTo)
         alias = json.dumps(alias)
+        schemaVersion = json.dumps(schemaVersion)
         api.update_build(name=name, product=productName,
                          build_target=build_target,
                          version=appVersion, locale=locale,
                          hashFunction=hashFunction,
-                         buildData=data, copyTo=copyTo, alias=alias)
+                         buildData=data, copyTo=copyTo, alias=alias,
+                         schemaVersion=schemaVersion)
 
 
 class ReleaseSubmitter(object):
@@ -156,7 +174,8 @@ class ReleaseSubmitter(object):
         self.dummy = dummy
 
     def run(self, platform, productName, appVersion, version, build_number, locale,
-            hashFunction, extVersion, buildID, completeMarSize, completeMarHash):
+            hashFunction, extVersion, buildID, completeMarSize, completeMarHash,
+            schemaVersion=2):
         targets = buildbot2updatePlatforms(platform)
         # Some platforms may have alias', but those are set-up elsewhere
         # for release blobs.
@@ -164,11 +183,19 @@ class ReleaseSubmitter(object):
 
         name = get_release_blob_name(productName, version, build_number,
                                      self.dummy)
+
         data = {
-            'appv': appVersion,
-            'extv': extVersion,
             'buildID': buildID,
         }
+        assert schemaVersion in (1, 2), 'Unhandled schema version %s' % schemaVersion
+        if schemaVersion == 1:
+            data['appv'] = appVersion
+            data['extv'] = extVersion
+        elif schemaVersion == 2:
+            data['appVersion'] = appVersion
+            data['platformVersion'] = extVersion
+            data['displayVersion'] = getPrettyVersion(version)
+
         data['complete'] = {
             'from': '*',
             'filesize': completeMarSize,
@@ -177,10 +204,11 @@ class ReleaseSubmitter(object):
 
         data = json.dumps(data)
         api = SingleLocale(auth=self.auth, api_root=self.api_root)
+        schemaVersion = json.dumps(schemaVersion)
         api.update_build(name=name, product=productName,
                          build_target=build_target, version=appVersion,
                          locale=locale, hashFunction=hashFunction,
-                         buildData=data)
+                         buildData=data, schemaVersion=schemaVersion)
 
 
 

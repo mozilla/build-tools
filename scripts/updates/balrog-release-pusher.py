@@ -56,6 +56,8 @@ if __name__ == '__main__':
     parser.add_option("-r", "--release-config", dest="release_config")
     parser.add_option("-a", "--api-root", dest="api_root")
     parser.add_option("-c", "--credentials-file", dest="credentials_file")
+    parser.add_option("-s", "--schema", dest="schema_version",
+                      help="blob schema version", type="int", default=2)
     parser.add_option("-u", "--username", dest="username")
     parser.add_option("-v", "--verbose", dest="verbose", action="store_true")
     options, args = parser.parse_args()
@@ -87,7 +89,7 @@ if __name__ == '__main__':
                 release_config['version'], release_config['buildNumber'],
                 release_config['partialUpdates'], updateChannels,
                 release_config['stagingServer'], release_config['bouncerServer'],
-                release_config['enUSPlatforms'], hashType)
+                release_config['enUSPlatforms'], hashType, options.schema_version)
 
     pusher = ReleasePusher(options.api_root, auth)
     pusher.run(release_config['productName'].capitalize(), release_config['version'],

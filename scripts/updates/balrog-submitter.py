@@ -22,6 +22,8 @@ if __name__ == '__main__':
     parser.add_option("-c", "--credentials-file", dest="credentials_file")
     parser.add_option("-u", "--username", dest="username", default="ffxbld")
     parser.add_option("-t", "--type", dest="type_", help="nightly or release", default="nightly")
+    parser.add_option("-s", "--schema", dest="schema_version",
+                      help="blob schema version", type="int", default=2)
     parser.add_option("-d", "--dummy", dest="dummy", action="store_true",
                       help="Add '-dummy' suffix to branch name")
     parser.add_option("-v", "--verbose", dest="verbose", action="store_true")
@@ -54,12 +56,13 @@ if __name__ == '__main__':
         submitter.run(props['platform'], props['buildid'], props['appName'],
             props['branch'], props['appVersion'], locale, props['hashType'],
             extVersion, props['completeMarSize'], props['completeMarHash'],
-            props['completeMarUrl'], **partialKwargs)
+            props['completeMarUrl'], options.schema_version, **partialKwargs)
     elif options.type_ == "release":
         submitter = ReleaseSubmitter(options.api_root, auth, options.dummy)
         submitter.run(props['platform'], props['appName'], props['appVersion'],
             props['version'], props['build_number'], locale,
             props['hashType'], extVersion, props['buildid'],
-            props['completeMarSize'], props['completeMarHash'])
+            props['completeMarSize'], props['completeMarHash'],
+            options.schema_version)
     else:
         parser.error("Invalid value for --type")

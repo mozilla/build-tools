@@ -126,11 +126,13 @@ class Release(API):
     prerequest_url_template = '/releases/%(name)s'
 
     def update_release(self, name, version, product, hashFunction, releaseData,
-                       data_version=None):
+                       data_version=None, schemaVersion=None):
         data = dict(name=name, version=version, product=product,
                     hashFunction=hashFunction, data=releaseData)
         if data_version:
             data['data_version'] = data_version
+        if schemaVersion:
+            data['schema_version'] = schemaVersion
         return self.request(method='POST', data=data, url_template_vars=dict(name=name))
 
     def get_data(self, name):
@@ -143,7 +145,8 @@ class SingleLocale(API):
     prerequest_url_template = '/releases/%(name)s'
 
     def update_build(self, name, product, version, build_target, locale,
-                     hashFunction, buildData, copyTo=None, alias=None):
+                     hashFunction, buildData, copyTo=None, alias=None,
+                     schemaVersion=None):
         url_template_vars = dict(api_root=self.api_root, name=name,
                                  locale=locale, build_target=build_target)
         data = dict(product=product, version=version,
@@ -152,6 +155,8 @@ class SingleLocale(API):
             data['copyTo'] = copyTo
         if alias:
             data['alias'] = alias
+        if schemaVersion:
+            data['schema_version'] = schemaVersion
 
         return self.request(method='PUT', data=data,
                             url_template_vars=url_template_vars)
