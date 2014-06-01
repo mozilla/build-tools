@@ -9,7 +9,7 @@ use Storable;
 
 use Bootstrap::Util qw(LoadLocaleManifest);
 
-use Release::Patcher::Config qw(GetProductDetails GetReleaseBlock BumpFilePath);
+use Release::Patcher::Config qw(GetProductDetails GetReleaseBlock BumpFilePath BumpURL);
 use Release::Versions qw(GetPrettyVersion);
 
 $|++;
@@ -238,6 +238,13 @@ sub BumpPatcherConfig {
     if ($doOnetimePatcherBumps) {
         $currentUpdateObj->{'to'} = $version;
         $currentUpdateObj->{'from'} = $oldVersion;
+        if (defined($currentUpdateObj->{'openURL'})) {
+            $currentUpdateObj->{'openURL'} = BumpURL(
+                oldURL => $currentUpdateObj->{'openURL'},
+                version => $version,
+                oldVersion => $oldVersion
+            )
+        }
     }
 
     $currentUpdateObj->{'details'} = $releaseNotesUrl ||
