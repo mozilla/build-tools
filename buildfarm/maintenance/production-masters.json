@@ -1431,7 +1431,8 @@
     },
     "limit_mobile_platforms": [
       "android-x86",
-      "android"
+      "android",
+      "android-armv6"
     ],
     "limit_tb_platforms": [
       "linux",
@@ -1484,7 +1485,8 @@
     },
     "limit_mobile_platforms": [
       "android-x86",
-      "android"
+      "android",
+      "android-armv6"
     ],
     "limit_tb_platforms": [
       "linux",
@@ -1537,7 +1539,8 @@
     },
     "limit_mobile_platforms": [
       "android-x86",
-      "android"
+      "android",
+      "android-armv6"
     ],
     "limit_tb_platforms": [
       "linux",
