@@ -358,7 +358,7 @@ if merge_to_production || [ "${FORCE_RECONFIG}" == '1' ]; then
         echo "  * Running: '$(pwd)/manage_masters.py' -f '$(pwd)/production-masters.json' -j16 -R scheduler -R build -R try -R tests show_revisions update"
         ./manage_masters.py -f production-masters.json -j16 -R scheduler -R build -R try -R tests show_revisions update >>"${RECONFIG_DIR}/manage_masters-${START_TIME}.log" 2>&1
         echo "  * Running: '$(pwd)/manage_foopies.py' -f '$(pwd | sed 's/\/[^\/]*$//')/mobile/devices.json' -j15 -H all show_revision update"
-        ./manage_foopies.py -f ../mobile/devices.json -j15 -H all show_revision update
+        ./manage_foopies.py -f ../mobile/devices.json -j15 -H all show_revision update >>"${RECONFIG_DIR}/manage_foopies-${START_TIME}.log" 2>&1
         echo "  * Running: '$(pwd)/manage_masters.py' -f '$(pwd)/production-masters.json' -j32 -R scheduler -R build -R try -R tests checkconfig reconfig"
         ./manage_masters.py -f production-masters.json -j32 -R scheduler -R build -R try -R tests checkconfig reconfig >>"${RECONFIG_DIR}/manage_masters-${START_TIME}.log" 2>&1
         # delete this now, since changes have been deployed
@@ -366,7 +366,7 @@ if merge_to_production || [ "${FORCE_RECONFIG}" == '1' ]; then
         echo "  * Running: '$(pwd)/manage_masters.py' -f '$(pwd)/production-masters.json' -j16 -R scheduler -R build -R try -R tests show_revisions"
         ./manage_masters.py -f production-masters.json -j16 -R scheduler -R build -R try -R tests show_revisions >>"${RECONFIG_DIR}/manage_masters-${START_TIME}.log" 2>&1
         echo "  * Running: '$(pwd)/manage_foopies.py' -f '$(pwd | sed 's/\/[^\/]*$//')/mobile/devices.json' -j15 -H all show_revision"
-        ./manage_foopies.py -f ../mobile/devices.json -j15 -H all show_revision
+        ./manage_foopies.py -f ../mobile/devices.json -j15 -H all show_revision >>"${RECONFIG_DIR}/manage_foopies-${START_TIME}.log" 2>&1
     fi
 fi
 
