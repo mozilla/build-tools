@@ -173,7 +173,7 @@ EXIT_CODE=0
 if [ "${DRY_RUN}" == 0 ]; then
     publish_log="$(mktemp -t publish-log.XXXXXXXXXX)"
     echo "  * Publishing updated maintenance page to https://wiki.mozilla.org/ReleaseEngineering/Maintenance..."
-    curl -s -b "${cookie_jar}" -H 'Content-Type:application/x-www-form-urlencoded' -d action=edit -d title='ReleaseEngineering/Maintenance' -d 'summary=reconfig' -d "text=$(cat "${new_content}")" --data-urlencode token="${edit_token}" 'https://wiki.mozilla.org/api.php' 2>&1 > "${publish_log}"
+    curl -s -b "${cookie_jar}" -H 'Content-Type:application/x-www-form-urlencoded' -d action=edit -d title='ReleaseEngineering/Maintenance' -d 'summary=reconfig' --data-urlencode "text=$(cat "${new_content}")" --data-urlencode token="${edit_token}" 'https://wiki.mozilla.org/api.php' 2>&1 > "${publish_log}"
     echo "  * Checking whether publish was successful..."
     if grep -q Success "${publish_log}"; then
         echo "  * Maintenance wiki updated successfully."
