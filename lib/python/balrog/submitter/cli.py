@@ -41,7 +41,7 @@ class ReleaseCreator(object):
         self.name = get_release_blob_name(productName, version, buildNumber)
         data = {
             'name': self.name,
-            'detailsUrl': getProductDetails(productName, appVersion),
+            'detailsUrl': getProductDetails(productName.lower(), appVersion),
             'platforms': {},
             'fileUrls': {},
             'ftpFilenames': {},
@@ -59,14 +59,15 @@ class ReleaseCreator(object):
 
         for channel in updateChannels:
             if channel in ('betatest', 'esrtest'):
-                dir_ = makeCandidatesDir(productName, version, buildNumber, server=stagingServer, protocol='http')
+                dir_ = makeCandidatesDir(productName.lower(), version,
+                                         buildNumber, server=stagingServer, protocol='http')
                 data['fileUrls'][channel] = '%supdate/%%OS_FTP%%/%%LOCALE%%/%%FILENAME%%' % dir_
             else:
                 url = 'http://%s/?product=%%PRODUCT%%&os=%%OS_BOUNCER%%&lang=%%LOCALE%%' % bouncerServer
                 data['fileUrls'][channel] = url
 
-        data['ftpFilenames']['complete'] = '%s-%s.complete.mar' % (productName, version)
-        data['ftpFilenames']['partial'] = '%s-%s-%s.partial.mar' % (productName, previousVersion, version)
+        data['ftpFilenames']['complete'] = '%s-%s.complete.mar' % (productName.lower(), version)
+        data['ftpFilenames']['partial'] = '%s-%s-%s.partial.mar' % (productName.lower(), previousVersion, version)
         data['bouncerProducts']['complete'] = '%s-%s-Complete' % (productName.capitalize(), version)
         data['bouncerProducts']['partial'] = '%s-%s-Partial-%s' % (productName.capitalize(), version, previousVersion)
 
