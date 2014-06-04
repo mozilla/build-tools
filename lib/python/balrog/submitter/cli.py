@@ -114,7 +114,7 @@ class NightlySubmitter(object):
 
     def run(self, platform, buildID, productName, branch, appVersion, locale,
             hashFunction, extVersion, completeMarSize, completeMarHash,
-            completeMarUrl, schemaVersion, partialMarSize,
+            completeMarUrl, schemaVersion, isOSUpdate=None, partialMarSize=None,
             partialMarHash=None, partialMarUrl=None, previous_buildid=None):
         targets = buildbot2updatePlatforms(platform)
         build_target = targets[0]
@@ -134,6 +134,8 @@ class NightlySubmitter(object):
             data['appVersion'] = appVersion
             data['platformVersion'] = extVersion
             data['displayVersion'] = appVersion
+            if isOSUpdate:
+                data['isOSUpdate'] = isOSUpdate
 
         data['complete'] = {
             'from': '*',

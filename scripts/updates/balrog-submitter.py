@@ -45,6 +45,9 @@ if __name__ == '__main__':
     locale = props.get('locale', 'en-US')
     extVersion = props.get('extVersion', props['appVersion'])
     if options.type_ == "nightly":
+        isOSUpdate = props.get('isOSUpdate', None)
+        if options.schema_version < 2:
+            parser.error("isOSUpdate is only supported in schema 2 and above.")
         partialKwargs = {
             'partialMarSize': props.get('partialMarSize')
         }
@@ -56,7 +59,8 @@ if __name__ == '__main__':
         submitter.run(props['platform'], props['buildid'], props['appName'],
             props['branch'], props['appVersion'], locale, props['hashType'],
             extVersion, props['completeMarSize'], props['completeMarHash'],
-            props['completeMarUrl'], options.schema_version, **partialKwargs)
+            props['completeMarUrl'], options.schema_version,
+            isOSUpdate=isOSUpdate, **partialKwargs)
     elif options.type_ == "release":
         submitter = ReleaseSubmitter(options.api_root, auth, options.dummy)
         submitter.run(props['platform'], props['appName'], props['appVersion'],
