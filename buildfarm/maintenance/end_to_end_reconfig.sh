@@ -234,7 +234,7 @@ echo "  * Checking fabric module is available in python environment..."
 if ! python -c 'import fabric' >/dev/null 2>&1; then
     echo "  * Fabric module not found"
     if [ ! -e "${RECONFIG_DIR}/fabric-virtual-env" ]; then
-        echo "  * Creating virtualenv directory '${RECONFIG_DIR}/fabric-virtual-env' for fabric instalation..."
+        echo "  * Creating virtualenv directory '${RECONFIG_DIR}/fabric-virtual-env' for fabric installation..."
         echo "  * Logging to: '${RECONFIG_DIR}/virtualenv-fabric-installation.log'..."
         virtualenv "${RECONFIG_DIR}/fabric-virtual-env" >"${RECONFIG_DIR}/virtualenv-fabric-installation.log" 2>&1
         source "${RECONFIG_DIR}/fabric-virtual-env/bin/activate"
