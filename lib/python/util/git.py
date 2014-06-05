@@ -132,7 +132,7 @@ def set_share(repo, share):
 
 def clean(repo):
     # Two '-f's means "clean submodules", which is what we want so far.
-    run_cmd(['git', 'clean', '-f', '-f', '-d'], cwd=repo, stdout=subprocess.PIPE)
+    run_cmd(['git', 'clean', '-f', '-f', '-d', '-x'], cwd=repo, stdout=subprocess.PIPE)
 
 
 def add_remote(repo, remote_name, remote_repo):
