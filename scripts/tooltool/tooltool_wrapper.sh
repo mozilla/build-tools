@@ -12,7 +12,7 @@ shift 3
 
 if [ -e "$TT_MANIFEST" ]; then
 
-    if [ ! -x "$TT_CMD" ]; then
+    if [ ! -x "$TT_CMD" ] && ! which "$TT_CMD" >/dev/null 2>&1; then
         echo "Cannot execute $TT_CMD, exiting"
         exit 1
     fi
