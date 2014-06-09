@@ -41,20 +41,6 @@
     ],
     "repo_type": "hg"
   },
-  "mozilla-b2g26_v1_2": {
-    "repo": "https://hg.mozilla.org/releases/mozilla-b2g26_v1_2",
-    "graph_branches": [
-      "Mozilla-B2g26-v1.2"
-    ],
-    "repo_type": "hg"
-  },
-  "mozilla-b2g26_v1_2f": {
-    "repo": "https://hg.mozilla.org/releases/mozilla-b2g26_v1_2f",
-    "graph_branches": [
-      "Mozilla-B2g26-v1.2f"
-    ],
-    "repo_type": "hg"
-  },
   "mozilla-b2g28_v1_3": {
     "repo": "https://hg.mozilla.org/releases/mozilla-b2g28_v1_3",
     "graph_branches": [
