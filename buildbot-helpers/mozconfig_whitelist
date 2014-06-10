@@ -69,6 +69,7 @@ whitelist['nightly']['win32'] += [
     'ac_add_options --disable-auto-deps',
     'fi',
     'ac_add_options --enable-metro',
+    '. "$topsrcdir/build/mozconfig.cache"',
 ]
 
 whitelist['nightly']['android'] += [
