@@ -364,8 +364,9 @@ def verifyDevice(device, checksut=True, doCheckStalled=True, watcherINI=False,
         return False
 
     if not canPing(device):
-        # TODO Reboot via PDU if ping fails
         log.info("verifyDevice: failing to ping")
+        # See if we can recover the device with a reboot.
+        soft_reboot(dm=dm, device=device)
         return False
 
     if not canTelnet(device):

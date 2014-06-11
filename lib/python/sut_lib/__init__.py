@@ -198,7 +198,7 @@ def getChildPIDs(pid):
     # 18575 18456 18455 /opt/local/Libra   ??  S      0:00.52
     # /opt/local/Library/Frameworks/Python.framework/Versions/2.6/Resources/Python.app/Contents/MacOS/Python
     # ../../sut_tools/installApp.py 10.250.49.8 ../talos-data/fennec-4.1a1pr$
-    p, lines = runCommand(['ps', '-x', '-U', 'cltbld', '-O', 'ppid,pgid,command'])
+    p, lines = runCommand(['ps', 'xU', 'cltbld', '-O', 'ppid,pgid,command'])
     pids = []
     for line in lines:
         item = line.split()
@@ -311,7 +311,7 @@ def checkStalled(device):
     pids = []
     deviceIP = getIPAddress(device)
     devicePath = os.path.join('/builds', device)
-    p, lines = runCommand(['ps', '-x', '-U', 'cltbld'])
+    p, lines = runCommand(['ps', 'xU', 'cltbld'])
 
     this_device_lines = []
     for line in lines:
@@ -533,7 +533,7 @@ def stopStalled(device):
     # 212 ??         0:17.99
     # /opt/local/Library/Frameworks/Python.framework/Versions/2.6/Resources/Python.app/Contents/MacOS/Python
     # clientproxy.py -b --tegra=tegra-032
-    p, lines = runCommand(['ps', '-x', '-U', 'cltbld'])
+    p, lines = runCommand(['ps', 'xU', 'cltbld'])
     this_device_lines = []
     for line in lines:
         if deviceIP in line or device in line:

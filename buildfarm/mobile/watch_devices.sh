@@ -59,6 +59,8 @@ function device_check() {
     fi
     if [ -f /builds/$device/error.flg ]; then
       log "error.flg file detected"
+      local contents=`cat /builds/$device/error.flg`
+      log "error.flg contents: $contents"
       # Clear flag if older than an hour
       if [ `find /builds/$device/error.flg -mmin +60` ]; then
         log "removing $device error.flg (older than an hour) and trying again"
@@ -85,6 +87,8 @@ function device_check() {
     log "(heartbeat) buildbot is running"
     if [ -f /builds/$device/error.flg ]; then
       log "Found an error.flg, expecting buildbot to self-kill after this job"
+      local contents=`cat /builds/$device/error.flg`
+      log "error.flg contents: $contents"
     fi
     if [ -f /builds/$device/disabled.flg ]; then
       log "disabled.flg wants us to force kill buildbot..."
