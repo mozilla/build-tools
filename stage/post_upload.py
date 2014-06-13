@@ -10,14 +10,16 @@
 # This script expects a directory as its first non-option argument,
 # followed by a list of filenames.
 
+import calendar
 import sys
 import os
 import os.path
+import pytz
 import shutil
 import re
 import tempfile
+from datetime import datetime
 from optparse import OptionParser
-from time import mktime, strptime
 from errno import EEXIST
 from ConfigParser import RawConfigParser
 
@@ -129,7 +131,8 @@ def BuildIDToDict(buildid):
 def BuildIDToUnixTime(buildid):
     """Returns the timestamp the buildid represents in unix time."""
     try:
-        return int(mktime(strptime(buildid, "%Y%m%d%H%M%S")))
+        pt = pytz.timezone('US/Pacific')
+        return calendar.timegm(pt.localize(datetime.strptime(buildid, "%Y%m%d%H%M%S")).utctimetuple())
     except:
         raise "Could not parse buildid!"
 
