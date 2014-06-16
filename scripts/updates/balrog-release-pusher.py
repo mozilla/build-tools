@@ -14,7 +14,7 @@ sys.path.insert(0, path.join(path.dirname(__file__),
                              "../../lib/python/vendor/requests-0.10.8"))
 sys.path.insert(0, path.join(path.dirname(__file__), "../../lib/python"))
 
-from balrog.submitter.cli import ReleaseCreator, ReleasePusher
+from balrog.submitter.cli import V2ReleaseCreator, ReleasePusher
 from release.info import readReleaseConfig
 from util.retry import retry
 from util.hg import mercurial, make_hg_url
@@ -73,6 +73,9 @@ if __name__ == '__main__':
             print >>sys.stderr, "Required option %s not present" % opt
             sys.exit(1)
 
+    if options.schema_version != 2:
+        parser.error("Only schema_version 2 supported.")
+
     properties = json.load(open(options.build_properties))['properties']
     releaseTag = properties['script_repo_revision']
     hashType = properties['hashType']
@@ -84,12 +87,13 @@ if __name__ == '__main__':
     auth = (options.username, credentials['balrog_credentials'][options.username])
     updateChannels = release_config['testChannels'] + [release_config['releaseChannel']]
 
-    creator = ReleaseCreator(options.api_root, auth)
+    if options.schema_version == 2:
+        creator = V2ReleaseCreator(options.api_root, auth)
     creator.run(release_config['appVersion'], release_config['productName'].capitalize(),
                 release_config['version'], release_config['buildNumber'],
                 release_config['partialUpdates'], updateChannels,
                 release_config['stagingServer'], release_config['bouncerServer'],
-                release_config['enUSPlatforms'], hashType, options.schema_version)
+                release_config['enUSPlatforms'], hashType)
 
     pusher = ReleasePusher(options.api_root, auth)
     pusher.run(release_config['productName'].capitalize(), release_config['version'],

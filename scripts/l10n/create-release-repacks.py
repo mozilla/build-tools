@@ -11,7 +11,7 @@ import sys
 site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 site.addsitedir(path.join(path.dirname(__file__), "../../lib/python/vendor"))
 
-from balrog.submitter.cli import ReleaseSubmitter
+from balrog.submitter.cli import V2ReleaseSubmitter
 from build.checksums import parseChecksumsFile
 from build.l10n import repackLocale, l10nRepackPrep
 import build.misc
@@ -304,7 +304,7 @@ if __name__ == "__main__":
             required=['balrog_credentials']
         )
         auth = (options.balrog_username, credentials['balrog_credentials'][options.balrog_username])
-        balrog_submitter = ReleaseSubmitter(options.balrog_api_root, auth)
+        balrog_submitter = V2ReleaseSubmitter(options.balrog_api_root, auth)
     else:
         balrog_submitter = None
 
