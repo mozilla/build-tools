@@ -306,10 +306,14 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "linux64",
+      "linux64-mulet",
       "linux64-asan"
     ],
     "limit_fx_slave_platforms": {
       "linux64": [
+        "ubuntu64_vm"
+      ],
+      "linux64-mulet": [
         "ubuntu64_vm"
       ],
       "linux64-asan": [
@@ -365,10 +369,14 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "linux64",
+      "linux64-mulet",
       "linux64-asan"
     ],
     "limit_fx_slave_platforms": {
       "linux64": [
+        "ubuntu64_vm"
+      ],
+      "linux64-mulet": [
         "ubuntu64_vm"
       ],
       "linux64-asan": [
@@ -424,10 +432,14 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "linux64",
+      "linux64-mulet",
       "linux64-asan"
     ],
     "limit_fx_slave_platforms": {
       "linux64": [
+        "ubuntu64_vm"
+      ],
+      "linux64-mulet": [
         "ubuntu64_vm"
       ],
       "linux64-asan": [
@@ -483,10 +495,14 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "linux64",
+      "linux64-mulet",
       "linux64-asan"
     ],
     "limit_fx_slave_platforms": {
       "linux64": [
+        "ubuntu64_vm"
+      ],
+      "linux64-mulet": [
         "ubuntu64_vm"
       ],
       "linux64-asan": [
@@ -542,10 +558,14 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "linux64",
+      "linux64-mulet",
       "linux64-asan"
     ],
     "limit_fx_slave_platforms": {
       "linux64": [
+        "ubuntu64_vm"
+      ],
+      "linux64-mulet": [
         "ubuntu64_vm"
       ],
       "linux64-asan": [
@@ -601,10 +621,14 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "linux64",
+      "linux64-mulet",
       "linux64-asan"
     ],
     "limit_fx_slave_platforms": {
       "linux64": [
+        "ubuntu64_vm"
+      ],
+      "linux64-mulet": [
         "ubuntu64_vm"
       ],
       "linux64-asan": [
@@ -1822,10 +1846,14 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "linux64",
+      "linux64-mulet",
       "linux64-asan"
     ],
     "limit_fx_slave_platforms": {
       "linux64": [
+        "ubuntu64_vm"
+      ],
+      "linux64-mulet": [
         "ubuntu64_vm"
       ],
       "linux64-asan": [
@@ -1881,10 +1909,14 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "linux64",
+      "linux64-mulet",
       "linux64-asan"
     ],
     "limit_fx_slave_platforms": {
       "linux64": [
+        "ubuntu64_vm"
+      ],
+      "linux64-mulet": [
         "ubuntu64_vm"
       ],
       "linux64-asan": [
@@ -1940,10 +1972,14 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "linux64",
+      "linux64-mulet",
       "linux64-asan"
     ],
     "limit_fx_slave_platforms": {
       "linux64": [
+        "ubuntu64_vm"
+      ],
+      "linux64-mulet": [
         "ubuntu64_vm"
       ],
       "linux64-asan": [
@@ -1999,10 +2035,14 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "linux64",
+      "linux64-mulet",
       "linux64-asan"
     ],
     "limit_fx_slave_platforms": {
       "linux64": [
+        "ubuntu64_vm"
+      ],
+      "linux64-mulet": [
         "ubuntu64_vm"
       ],
       "linux64-asan": [
