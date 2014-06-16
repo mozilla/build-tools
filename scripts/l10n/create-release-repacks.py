@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from collections import defaultdict
 import logging
 import os
 from os import path
@@ -11,13 +10,13 @@ import sys
 site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 site.addsitedir(path.join(path.dirname(__file__), "../../lib/python/vendor"))
 
-from balrog.submitter.cli import V2ReleaseSubmitter
+from balrog.submitter.cli import ReleaseSubmitterV3
 from build.checksums import parseChecksumsFile
 from build.l10n import repackLocale, l10nRepackPrep
 import build.misc
 from build.upload import postUploadCmdPrefix
 from release.download import downloadReleaseBuilds, downloadUpdateIgnore404
-from release.info import readReleaseConfig, readConfig
+from release.info import readReleaseConfig, readConfig, fileInfo
 from release.l10n import getReleaseLocalesForChunk
 from util.hg import mercurial, update, make_hg_url
 from util.retry import retry
@@ -126,12 +125,22 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
             if balrog_submitter:
                 # TODO: partials, after bug 797033 is fixed
                 checksums = parseChecksumsFile(open(checksums_file).read())
-                marInfo = defaultdict(dict)
+                completeInfo = []
+                partialInfo = []
                 for f, info in checksums.iteritems():
                     if f.endswith('.complete.mar'):
-                        marInfo['complete']['hash'] = info['hashes'][balrog_hash]
-                        marInfo['complete']['size'] = info['size']
-                if not marInfo['complete']:
+                        completeInfo.append({
+                            "size": info["size"],
+                            "hash": info["hashes"][balrog_hash],
+                        })
+                    if f.endswith('.partial.mar'):
+                        pathInfo = fileInfo(f, product.lower())
+                        partialInfo.append({
+                            "previousVersion": pathInfo["previousVersion"],
+                            "size": info["size"],
+                            "hash": info["hashes"][balrog_hash],
+                        })
+                if not completeInfo:
                     raise Exception("Couldn't find complete mar info")
                 retry(balrog_submitter.run,
                     kwargs={
@@ -144,8 +153,8 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                         'hashFunction': balrog_hash,
                         'extVersion': appVersion,
                         'buildID': buildid,
-                        'completeMarSize': marInfo['complete']['size'],
-                        'completeMarHash': marInfo['complete']['hash'],
+                        'completeInfo': completeInfo,
+                        'partialInfo': partialInfo,
                     }
                 )
         except Exception, e:
@@ -304,7 +313,7 @@ if __name__ == "__main__":
             required=['balrog_credentials']
         )
         auth = (options.balrog_username, credentials['balrog_credentials'][options.balrog_username])
-        balrog_submitter = V2ReleaseSubmitter(options.balrog_api_root, auth)
+        balrog_submitter = ReleaseSubmitterV3(options.balrog_api_root, auth)
     else:
         balrog_submitter = None
 

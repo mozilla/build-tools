@@ -14,7 +14,7 @@ sys.path.insert(0, path.join(path.dirname(__file__),
                              "../../lib/python/vendor/requests-0.10.8"))
 sys.path.insert(0, path.join(path.dirname(__file__), "../../lib/python"))
 
-from balrog.submitter.cli import V2ReleaseCreator, ReleasePusher
+from balrog.submitter.cli import ReleaseCreatorV2, ReleaseCreatorV3, ReleasePusher
 from release.info import readReleaseConfig
 from util.retry import retry
 from util.hg import mercurial, make_hg_url
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     parser.add_option("-a", "--api-root", dest="api_root")
     parser.add_option("-c", "--credentials-file", dest="credentials_file")
     parser.add_option("-s", "--schema", dest="schema_version",
-                      help="blob schema version", type="int", default=2)
+                      help="blob schema version", type="int", default=3)
     parser.add_option("-u", "--username", dest="username")
     parser.add_option("-v", "--verbose", dest="verbose", action="store_true")
     options, args = parser.parse_args()
@@ -73,8 +73,8 @@ if __name__ == '__main__':
             print >>sys.stderr, "Required option %s not present" % opt
             sys.exit(1)
 
-    if options.schema_version != 2:
-        parser.error("Only schema_version 2 supported.")
+    if options.schema_version not in (2,3):
+        parser.error("Only schema_versions 2 & 3 supported.")
 
     properties = json.load(open(options.build_properties))['properties']
     releaseTag = properties['script_repo_revision']
@@ -88,12 +88,14 @@ if __name__ == '__main__':
     updateChannels = release_config['testChannels'] + [release_config['releaseChannel']]
 
     if options.schema_version == 2:
-        creator = V2ReleaseCreator(options.api_root, auth)
+        creator = ReleaseCreatorV2(options.api_root, auth)
+    else:
+        creator = ReleaseCreatorV3(options.api_root, auth)
     creator.run(release_config['appVersion'], release_config['productName'].capitalize(),
                 release_config['version'], release_config['buildNumber'],
-                release_config['partialUpdates'], updateChannels,
-                release_config['stagingServer'], release_config['bouncerServer'],
-                release_config['enUSPlatforms'], hashType)
+                updateChannels, release_config['stagingServer'],
+                release_config['bouncerServer'], release_config['enUSPlatforms'],
+                hashType, partialUpdates=release_config['partialUpdates'])
 
     pusher = ReleasePusher(options.api_root, auth)
     pusher.run(release_config['productName'].capitalize(), release_config['version'],

@@ -26,7 +26,7 @@ class TestFileParsing(TestCase):
             'firefox',
             dict(product='firefox', version='3.0.12', locale='en-US',
                  platform='win32', contents='complete', format='mar',
-                 pathstyle='short', leading_path=''))
+                 pathstyle='short', leading_path='', previousVersion=None))
 
     def testShortPathLocaleMar(self):
         self._doFileInfoTest(
@@ -34,7 +34,7 @@ class TestFileParsing(TestCase):
             'firefox',
             dict(product='firefox', version='3.0.12', locale='es',
                  platform='win32', contents='complete', format='mar',
-                 pathstyle='short', leading_path=''))
+                 pathstyle='short', leading_path='', previousVersion=None))
 
     def testShortPathLocaleExe(self):
         self._doFileInfoTest(
@@ -50,7 +50,7 @@ class TestFileParsing(TestCase):
             'firefox',
             dict(product='firefox', version='3.5rc3', locale='en-US',
                  platform='win32', contents='complete', format='mar',
-                 pathstyle='long', leading_path=''))
+                 pathstyle='long', leading_path='', previousVersion=None))
 
     def testLongPathenUSMarFinal(self):
         self._doFileInfoTest(
@@ -58,7 +58,7 @@ class TestFileParsing(TestCase):
             'firefox',
             dict(product='firefox', version='3.5', locale='en-US',
                  platform='win32', contents='complete', format='mar',
-                 pathstyle='long', leading_path=''))
+                 pathstyle='long', leading_path='', previousVersion=None))
 
     def testLongPathenUSMarPointRelease(self):
         self._doFileInfoTest(
@@ -66,7 +66,7 @@ class TestFileParsing(TestCase):
             'firefox',
             dict(product='firefox', version='3.5.1', locale='en-US',
                  platform='win32', contents='complete', format='mar',
-                 pathstyle='long', leading_path=''))
+                 pathstyle='long', leading_path='', previousVersion=None))
 
     def testLongPathenUSMarPointRelease2(self):
         self._doFileInfoTest(
@@ -74,7 +74,7 @@ class TestFileParsing(TestCase):
             'firefox',
             dict(product='firefox', version='3.5.12', locale='en-US',
                  platform='win32', contents='complete', format='mar',
-                 pathstyle='long', leading_path=''))
+                 pathstyle='long', leading_path='', previousVersion=None))
 
     def testLongPathenUSMarProjectBranch(self):
         self._doFileInfoTest(
@@ -83,7 +83,7 @@ class TestFileParsing(TestCase):
             dict(
                 product='firefox', version='3.6.3plugin2', locale='en-US',
                 platform='win32', contents='complete', format='mar',
-                pathstyle='long', leading_path=''))
+                pathstyle='long', leading_path='', previousVersion=None))
 
     def testLongPathLocaleMarPointRelease(self):
         self._doFileInfoTest(
@@ -91,7 +91,7 @@ class TestFileParsing(TestCase):
             'firefox',
             dict(product='firefox', version='3.5.1', locale='fr',
                  platform='win32', contents='complete', format='mar',
-                 pathstyle='long', leading_path=''))
+                 pathstyle='long', leading_path='', previousVersion=None))
 
     def testLongPathLocaleExePointRelease(self):
         self._doFileInfoTest(
