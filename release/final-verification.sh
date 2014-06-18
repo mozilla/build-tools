@@ -155,10 +155,10 @@ export TMPDIR="$(mktemp -d -t final_verification.XXXXXXXXXX)"
 # this temporary file will list all update urls that need to be checked, in this format:
 # <update url> <comma separated list of patch types> <cfg file that requests it> <line number of config file>
 # e.g.
-# https://aus2.mozilla.org/update/1/Firefox/18.0/20130104154748/Linux_x86_64-gcc3/zh-TW/releasetest/update.xml?force=1 complete moz20-firefox-linux64-major.cfg 3
-# https://aus2.mozilla.org/update/1/Firefox/18.0/20130104154748/Linux_x86_64-gcc3/zu/releasetest/update.xml?force=1 complete moz20-firefox-linux64.cfg 7
-# https://aus2.mozilla.org/update/1/Firefox/19.0/20130215130331/Linux_x86_64-gcc3/ach/releasetest/update.xml?force=1 complete,partial moz20-firefox-linux64-major.cfg 11
-# https://aus2.mozilla.org/update/1/Firefox/19.0/20130215130331/Linux_x86_64-gcc3/af/releasetest/update.xml?force=1 complete,partial moz20-firefox-linux64.cfg 17
+# https://aus2.mozilla.org/update/3/Firefox/18.0/20130104154748/Linux_x86_64-gcc3/zh-TW/releasetest/default/default/default/update.xml?force=1 complete moz20-firefox-linux64-major.cfg 3
+# https://aus2.mozilla.org/update/3/Firefox/18.0/20130104154748/Linux_x86_64-gcc3/zu/releasetest/default/default/default/update.xml?force=1 complete moz20-firefox-linux64.cfg 7
+# https://aus2.mozilla.org/update/3/Firefox/19.0/20130215130331/Linux_x86_64-gcc3/ach/releasetest/default/default/default/update.xml?force=1 complete,partial moz20-firefox-linux64-major.cfg 11
+# https://aus2.mozilla.org/update/3/Firefox/19.0/20130215130331/Linux_x86_64-gcc3/af/releasetest/default/default/default/update.xml?force=1 complete,partial moz20-firefox-linux64.cfg 17
 update_xml_urls="$(mktemp -t update_xml_urls.XXXXXXXXXX)"
 
 ####################################################################################
@@ -170,7 +170,7 @@ update_xml_urls="$(mktemp -t update_xml_urls.XXXXXXXXXX)"
 # output of the error code, and the instance data for the failure.
 # e.g.
 #
-# PATCH_TYPE_MISSING https://aus2.mozilla.org/update/1/Firefox/4.0b12/20110222205441/Linux_x86-gcc3/dummy-locale/releasetest/update.xml?force=1 complete https://aus3.mozilla.org/update/1/Firefox/4.0b12/20110222205441/Linux_x86-gcc3/dummy-locale/releasetest/update.xml?force=1
+# PATCH_TYPE_MISSING https://aus2.mozilla.org/update/3/Firefox/4.0b12/20110222205441/Linux_x86-gcc3/dummy-locale/releasetest/update.xml?force=1 complete https://aus3.mozilla.org/update/3/Firefox/4.0b12/20110222205441/Linux_x86-gcc3/dummy-locale/releasetest/default/default/default/update.xml?force=1
 #
 # 2) mktemp -t update_xml_to_mar.XXXXXXXXXX
 #
@@ -221,7 +221,7 @@ do
         eval "${config_line}"
         for locale in ${locales}
         do
-            echo "${aus_server}/update/1/$product/$release/$build_id/$platform/$locale/$channel/update.xml?force=1" "${patch_types// /,}" "${cfg_file}" "${line_no}"
+            echo "${aus_server}/update/3/$product/$release/$build_id/$platform/$locale/$channel/default/default/default/update.xml?force=1" "${patch_types// /,}" "${cfg_file}" "${line_no}"
         done
     done
 done > "${update_xml_urls}"
