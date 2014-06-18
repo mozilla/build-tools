@@ -321,7 +321,8 @@
       ]
     },
     "limit_mobile_platforms": [
-      "android"
+      "android",
+      "android-armv6"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -384,7 +385,8 @@
       ]
     },
     "limit_mobile_platforms": [
-      "android"
+      "android",
+      "android-armv6"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -573,7 +575,8 @@
       ]
     },
     "limit_mobile_platforms": [
-      "android"
+      "android",
+      "android-armv6"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -1861,7 +1864,8 @@
       ]
     },
     "limit_mobile_platforms": [
-      "android"
+      "android",
+      "android-armv6"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -1924,7 +1928,8 @@
       ]
     },
     "limit_mobile_platforms": [
-      "android"
+      "android",
+      "android-armv6"
     ],
     "limit_tb_platforms": [
       "linux64"
