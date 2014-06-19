@@ -330,6 +330,7 @@
     "limit_b2g_platforms": [
       "linux64_gecko",
       "emulator-jb",
+      "emulator-kk",
       "emulator"
     ],
     "limit_b2g_slave_platforms": {
@@ -338,6 +339,9 @@
       ],
       "emulator-jb": [
         "ubuntu64_vm-b2g-emulator-jb"
+      ],
+      "emulator-kk": [
+        "ubuntu64_vm-b2g-emulator-kk"
       ],
       "emulator": [
         "ubuntu64_vm-b2g-emulator"
@@ -394,6 +398,7 @@
     "limit_b2g_platforms": [
       "linux64_gecko",
       "emulator-jb",
+      "emulator-kk",
       "emulator"
     ],
     "limit_b2g_slave_platforms": {
@@ -402,6 +407,9 @@
       ],
       "emulator-jb": [
         "ubuntu64_vm-b2g-emulator-jb"
+      ],
+      "emulator-kk": [
+        "ubuntu64_vm-b2g-emulator-kk"
       ],
       "emulator": [
         "ubuntu64_vm-b2g-emulator"
@@ -458,6 +466,7 @@
     "limit_b2g_platforms": [
       "linux64_gecko",
       "emulator-jb",
+      "emulator-kk",
       "emulator"
     ],
     "limit_b2g_slave_platforms": {
@@ -466,6 +475,9 @@
       ],
       "emulator-jb": [
         "ubuntu64_vm-b2g-emulator-jb"
+      ],
+      "emulator-kk": [
+        "ubuntu64_vm-b2g-emulator-kk"
       ],
       "emulator": [
         "ubuntu64_vm-b2g-emulator"
@@ -522,6 +534,7 @@
     "limit_b2g_platforms": [
       "linux64_gecko",
       "emulator-jb",
+      "emulator-kk",
       "emulator"
     ],
     "limit_b2g_slave_platforms": {
@@ -530,6 +543,9 @@
       ],
       "emulator-jb": [
         "ubuntu64_vm-b2g-emulator-jb"
+      ],
+      "emulator-kk": [
+        "ubuntu64_vm-b2g-emulator-kk"
       ],
       "emulator": [
         "ubuntu64_vm-b2g-emulator"
@@ -586,6 +602,7 @@
     "limit_b2g_platforms": [
       "linux64_gecko",
       "emulator-jb",
+      "emulator-kk",
       "emulator"
     ],
     "limit_b2g_slave_platforms": {
@@ -594,6 +611,9 @@
       ],
       "emulator-jb": [
         "ubuntu64_vm-b2g-emulator-jb"
+      ],
+      "emulator-kk": [
+        "ubuntu64_vm-b2g-emulator-kk"
       ],
       "emulator": [
         "ubuntu64_vm-b2g-emulator"
@@ -650,6 +670,7 @@
     "limit_b2g_platforms": [
       "linux64_gecko",
       "emulator-jb",
+      "emulator-kk",
       "emulator"
     ],
     "limit_b2g_slave_platforms": {
@@ -658,6 +679,9 @@
       ],
       "emulator-jb": [
         "ubuntu64_vm-b2g-emulator-jb"
+      ],
+      "emulator-kk": [
+        "ubuntu64_vm-b2g-emulator-kk"
       ],
       "emulator": [
         "ubuntu64_vm-b2g-emulator"
@@ -1876,6 +1900,7 @@
     "limit_b2g_platforms": [
       "linux64_gecko",
       "emulator-jb",
+      "emulator-kk",
       "emulator"
     ],
     "limit_b2g_slave_platforms": {
@@ -1884,6 +1909,9 @@
       ],
       "emulator-jb": [
         "ubuntu64_vm-b2g-emulator-jb"
+      ],
+      "emulator-kk": [
+        "ubuntu64_vm-b2g-emulator-kk"
       ],
       "emulator": [
         "ubuntu64_vm-b2g-emulator"
@@ -1940,6 +1968,7 @@
     "limit_b2g_platforms": [
       "linux64_gecko",
       "emulator-jb",
+      "emulator-kk",
       "emulator"
     ],
     "limit_b2g_slave_platforms": {
@@ -1948,6 +1977,9 @@
       ],
       "emulator-jb": [
         "ubuntu64_vm-b2g-emulator-jb"
+      ],
+      "emulator-kk": [
+        "ubuntu64_vm-b2g-emulator-kk"
       ],
       "emulator": [
         "ubuntu64_vm-b2g-emulator"
@@ -2004,6 +2036,7 @@
     "limit_b2g_platforms": [
       "linux64_gecko",
       "emulator-jb",
+      "emulator-kk",
       "emulator"
     ],
     "limit_b2g_slave_platforms": {
@@ -2012,6 +2045,9 @@
       ],
       "emulator-jb": [
         "ubuntu64_vm-b2g-emulator-jb"
+      ],
+      "emulator-kk": [
+        "ubuntu64_vm-b2g-emulator-kk"
       ],
       "emulator": [
         "ubuntu64_vm-b2g-emulator"
@@ -2068,6 +2104,7 @@
     "limit_b2g_platforms": [
       "linux64_gecko",
       "emulator-jb",
+      "emulator-kk",
       "emulator"
     ],
     "limit_b2g_slave_platforms": {
@@ -2076,6 +2113,9 @@
       ],
       "emulator-jb": [
         "ubuntu64_vm-b2g-emulator-jb"
+      ],
+      "emulator-kk": [
+        "ubuntu64_vm-b2g-emulator-kk"
       ],
       "emulator": [
         "ubuntu64_vm-b2g-emulator"
