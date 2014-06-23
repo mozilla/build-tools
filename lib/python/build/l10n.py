@@ -72,12 +72,12 @@ def l10nRepackPrep(sourceRepoName, objdir, mozconfigPath, srcMozconfigPath,
     run_cmd(["mkdir", "-p", "l10n"])
 
     if tooltoolManifest:
-        cmd = ['sh', 'scripts/scripts/tooltool/tooltool_wrapper.sh',
-               os.path.join(sourceRepoName, tooltoolManifest),
+        cmd = ['sh', '../scripts/scripts/tooltool/tooltool_wrapper.sh',
+               tooltoolManifest,
                tooltool_urls[0],  # TODO: pass all urls when tooltool ready
                'setup.sh']
         cmd.extend(tooltool_script)
-        run_cmd(cmd)
+        run_cmd(cmd, cwd=sourceRepoName)
 
     absSourceRepoPath = os.path.join(os.getcwd(), sourceRepoName)
     make = getMakeCommand(env.get("USE_PYMAKE"), absSourceRepoPath)
