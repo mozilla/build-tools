@@ -9,6 +9,8 @@
 USAGE()
 {
 cat <<EOF
+ DEPRECATED: use tools/scripts/periodic_file_updates/periodic_file_updates.sh instead.
+
  usage: `basename $0` [-n] [-c] [-d] [-a]
            [-p product]
            [--hgtool hgtool_location]
