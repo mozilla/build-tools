@@ -7,6 +7,7 @@ password: password
 [release-runner]
 notify_from: Release Eng <DONOTreleaseME@mozilla.com>
 notify_to: Release Duty <you@example.com>
+notify_to_release: Release Drivers <the-mailing-list@mozilla.org>
 smtp_server: localhost
 hg_host: hg.mozilla.org
 hg_username: ffxbld

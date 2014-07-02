@@ -199,6 +199,26 @@ def get_release_sanity_args(configs_workdir, release, cfgFile, masters_json,
     return args
 
 
+def sendMailRD(smtpServer, From, To, r):
+    # Send an email to the mailing after the build
+    contentMail = ""
+
+    comment = r.get("comment")
+    if comment is not None:
+        contentMail += "Comment:\n" + comment + "\n\n"
+
+    contentMail += "A new build has been submitted through ship-it:\n"
+
+    contentMail += "Commit: https://hg.mozilla.org/" + r["branch"] + "/rev/" + r["mozillaRevision"] + "\n"
+
+    contentMail += "\n" + r["submitter"] + "\n"
+
+    Subject = 'Build of %s' % r["name"]
+
+    sendmail(from_=From, to=To, subject=Subject, body=contentMail,
+             smtp_server=smtpServer)
+
+
 def main(options):
     log.info('Loading config from %s' % options.config)
     config = load_config(options.config)
@@ -236,10 +256,13 @@ def main(options):
     sleeptime = config.getint('release-runner', 'sleeptime')
     notify_from = get_config(config, 'release-runner', 'notify_from', None)
     notify_to = get_config(config, 'release-runner', 'notify_to', None)
+    notify_to_release = get_config(config, 'release-runner', 'notify_to_release', None)
     ssh_username = get_config(config, 'release-runner', 'ssh_username', None)
     ssh_key = get_config(config, 'release-runner', 'ssh_key', None)
     if isinstance(notify_to, basestring):
         notify_to = [x.strip() for x in notify_to.split(',')]
+    if isinstance(notify_to_release, basestring):
+        notify_to_release = [x.strip() for x in notify_to_release.split(',')]
     smtp_server = get_config(config, 'release-runner', 'smtp_server',
                              'localhost')
     configs_workdir = 'buildbot-configs'
@@ -271,6 +294,10 @@ def main(options):
             if rr.new_releases:
                 for release in rr.new_releases:
                     log.info('Got a new release request: %s' % release)
+
+                    # Send the mail to the mailing list
+                    sendMailRD(smtp_server, notify_from, notify_to_release, release)
+
                 break
             else:
                 log.debug('Sleeping for %d seconds before polling again' %
