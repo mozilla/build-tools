@@ -34,6 +34,13 @@
     ],
     "repo_type": "hg"
   },
+  "mozilla-esr31": {
+    "repo": "https://hg.mozilla.org/releases/mozilla-esr31",
+    "graph_branches": [
+      "Mozilla-Esr31"
+    ],
+    "repo_type": "hg"
+  },
   "comm-esr24": {
     "repo": "https://hg.mozilla.org/releases/comm-esr24",
     "graph_branches": [

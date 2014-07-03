@@ -212,17 +212,17 @@ def action_fix_makefile_symlink(master):
     print OK, "updated Makefile symlink in %(hostname)s:%(basedir)s" % master
 
 
-def action_add_esr24_symlinks(master):
+def action_add_esr31_symlinks(master):
     with show('running'):
-        run('ln -s %(bbconfigs_dir)s/mozilla/release-firefox-mozilla-esr24.py '
+        run('ln -s %(bbconfigs_dir)s/mozilla/release-firefox-mozilla-esr31.py '
             '%(master_dir)s/' % master)
-        run('ln -s %(bbconfigs_dir)s/mozilla/l10n-changesets_mozilla-esr24 '
+        run('ln -s %(bbconfigs_dir)s/mozilla/l10n-changesets_mozilla-esr31 '
             '%(master_dir)s/' % master)
-        run('ln -s %(bbconfigs_dir)s/mozilla/release-thunderbird-comm-esr24.py '
+        run('ln -s %(bbconfigs_dir)s/mozilla/release-thunderbird-comm-esr31.py '
             '%(master_dir)s/' % master)
-        run('ln -s %(bbconfigs_dir)s/mozilla/l10n-changesets_thunderbird-esr24 '
+        run('ln -s %(bbconfigs_dir)s/mozilla/l10n-changesets_thunderbird-esr31 '
             '%(master_dir)s/' % master)
-    print OK, "Added esr24 symlinks in %(hostname)s:%(basedir)s" % master
+    print OK, "Added esr31 symlinks in %(hostname)s:%(basedir)s" % master
 
 
 def per_host(fn):
