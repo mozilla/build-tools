@@ -2208,7 +2208,7 @@
       ]
     },
     "master_dir": "/builds/buildbot/tests1-linux64/master",
-    "name": "bm114-tests1-linux64",
+    "name": "bm117-tests1-linux64",
     "pb_port": 9201,
     "role": "tests",
     "ssh_port": 7201,
@@ -2276,7 +2276,7 @@
       ]
     },
     "master_dir": "/builds/buildbot/tests1-linux64/master",
-    "name": "bm115-tests1-linux64",
+    "name": "bm118-tests1-linux64",
     "pb_port": 9201,
     "role": "tests",
     "ssh_port": 7201,
