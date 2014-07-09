@@ -1634,7 +1634,8 @@
     "hostname": "buildbot-master106.srv.releng.scl3.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-        "macosx64"
+        "macosx64",
+        "macosx64-mulet"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -1669,7 +1670,8 @@
     "hostname": "buildbot-master107.srv.releng.scl3.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-        "macosx64"
+        "macosx64",
+        "macosx64-mulet"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -1704,7 +1706,8 @@
     "hostname": "buildbot-master108.srv.releng.scl3.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-        "macosx64"
+        "macosx64",
+        "macosx64-mulet"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
