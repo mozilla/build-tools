@@ -1,5 +1,3 @@
-from distutils.version import StrictVersion
-
 try:
     import simplejson as json
 except ImportError:
@@ -58,6 +56,15 @@ class ReleaseCreatorBase(object):
             else:
                 url = 'http://%s/?product=%%PRODUCT%%&os=%%OS_BOUNCER%%&lang=%%LOCALE%%' % bouncerServer
                 data['fileUrls'][channel] = url
+
+        # XXX: quick hack for bug 1021026. We should be using Bouncer for this
+        # after we implement better solution talked about in comments 2 through 4
+        if channel == 'release':
+            dir_ = makeCandidatesDir(productName.lower(), version,
+                                        buildNumber, server='download.cdn.mozilla.net', protocol='http')
+            url = '%supdate/%%OS_FTP%%/%%LOCALE%%/%%FILENAME%%' % dir_
+            data['fileUrls']['beta'] = url
+            data['fileUrls']['beta-cdntest'] = url
 
         data.update(self._get_update_data(productName, version, **updateKwargs))
 
