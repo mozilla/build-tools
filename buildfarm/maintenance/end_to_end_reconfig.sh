@@ -5,7 +5,6 @@
 # * Check hg is installed
 # * Check hg clone is working (error code 255)
 # * Check virtualenv is installed
-# * Check if tools is in a .hg or .git directory, and pull if possible (or pull down individual files from hg)
 # * Add an option not to refresh tools repo
 # * log reconfig to a file and to console
 # * Check connectivity to an arbitrary master and report nicely
@@ -347,26 +346,28 @@ function merge_to_production {
 
 # Return code of merge_to_production is 0 if merge performed successfully and changes made
 if merge_to_production || [ "${FORCE_RECONFIG}" == '1' ]; then
+    production_masters_url='http://hg.mozilla.org/build/tools/raw-file/tip/buildfarm/maintenance/production-masters.json'
+    devices_json_url='http://hg.mozilla.org/build/tools/raw-file/tip/buildfarm/mobile/devices.json'
     if [ "${PREPARE_ONLY}" == '1' ]; then
-        echo "  * Preparing reconfig only; not running: '$(pwd)/manage_masters.py' -f '$(pwd)/production-masters.json' -j16 -R scheduler -R build -R try -R tests show_revisions update"
-        echo "  * Preparing reconfig only; not running: '$(pwd)/manage_foopies.py' -f '$(pwd | sed 's/\/[^\/]*$//')/mobile/devices.json' -j15 -H all show_revision update"
-        echo "  * Preparing reconfig only; not running: '$(pwd)/manage_masters.py' -f '$(pwd)/production-masters.json' -j32 -R scheduler -R build -R try -R tests checkconfig reconfig"
-        echo "  * Preparing reconfig only; not running: '$(pwd)/manage_masters.py' -f '$(pwd)/production-masters.json' -j16 -R scheduler -R build -R try -R tests show_revisions"
-        echo "  * Preparing reconfig only; not running: '$(pwd)/manage_foopies.py' -f '$(pwd | sed 's/\/[^\/]*$//')/mobile/devices.json' -j15 -H all show_revision"
+        echo "  * Preparing reconfig only; not running: '$(pwd)/manage_masters.py' -f '${production_masters_url}' -j16 -R scheduler -R build -R try -R tests show_revisions update"
+        echo "  * Preparing reconfig only; not running: '$(pwd)/manage_foopies.py' -f '${devices_json_url}' -j16 -H all show_revision update"
+        echo "  * Preparing reconfig only; not running: '$(pwd)/manage_masters.py' -f '${production_masters_url}' -j32 -R scheduler -R build -R try -R tests checkconfig reconfig"
+        echo "  * Preparing reconfig only; not running: '$(pwd)/manage_masters.py' -f '${production_masters_url}' -j16 -R scheduler -R build -R try -R tests show_revisions"
+        echo "  * Preparing reconfig only; not running: '$(pwd)/manage_foopies.py' -f '${devices_json_url}' -j16 -H all show_revision"
     else
         # Split into two steps so -j option can be varied between them
-        echo "  * Running: '$(pwd)/manage_masters.py' -f '$(pwd)/production-masters.json' -j16 -R scheduler -R build -R try -R tests show_revisions update"
-        ./manage_masters.py -f production-masters.json -j16 -R scheduler -R build -R try -R tests show_revisions update >>"${RECONFIG_DIR}/manage_masters-${START_TIME}.log" 2>&1
-        echo "  * Running: '$(pwd)/manage_foopies.py' -f '$(pwd | sed 's/\/[^\/]*$//')/mobile/devices.json' -j15 -H all show_revision update"
-        ./manage_foopies.py -f ../mobile/devices.json -j15 -H all show_revision update >>"${RECONFIG_DIR}/manage_foopies-${START_TIME}.log" 2>&1
-        echo "  * Running: '$(pwd)/manage_masters.py' -f '$(pwd)/production-masters.json' -j32 -R scheduler -R build -R try -R tests checkconfig reconfig"
-        ./manage_masters.py -f production-masters.json -j32 -R scheduler -R build -R try -R tests checkconfig reconfig >>"${RECONFIG_DIR}/manage_masters-${START_TIME}.log" 2>&1
+        echo "  * Running: '$(pwd)/manage_masters.py' -f '${production_masters_url}' -j16 -R scheduler -R build -R try -R tests show_revisions update"
+        ./manage_masters.py -f "${production_masters_url}" -j16 -R scheduler -R build -R try -R tests show_revisions update >>"${RECONFIG_DIR}/manage_masters-${START_TIME}.log" 2>&1
+        echo "  * Running: '$(pwd)/manage_foopies.py' -f '${devices_json_url}' -j16 -H all show_revision update"
+        ./manage_foopies.py -f "${devices_json_url}" -j16 -H all show_revision update >>"${RECONFIG_DIR}/manage_foopies-${START_TIME}.log" 2>&1
+        echo "  * Running: '$(pwd)/manage_masters.py' -f '${production_masters_url}' -j32 -R scheduler -R build -R try -R tests checkconfig reconfig"
+        ./manage_masters.py -f "${production_masters_url}" -j32 -R scheduler -R build -R try -R tests checkconfig reconfig >>"${RECONFIG_DIR}/manage_masters-${START_TIME}.log" 2>&1
         # delete this now, since changes have been deployed
         [ -f "${RECONFIG_DIR}/pending_changes" ] && mv "${RECONFIG_DIR}/pending_changes" "${RECONFIG_DIR}/pending_changes_${START_TIME}"
-        echo "  * Running: '$(pwd)/manage_masters.py' -f '$(pwd)/production-masters.json' -j16 -R scheduler -R build -R try -R tests show_revisions"
-        ./manage_masters.py -f production-masters.json -j16 -R scheduler -R build -R try -R tests show_revisions >>"${RECONFIG_DIR}/manage_masters-${START_TIME}.log" 2>&1
-        echo "  * Running: '$(pwd)/manage_foopies.py' -f '$(pwd | sed 's/\/[^\/]*$//')/mobile/devices.json' -j15 -H all show_revision"
-        ./manage_foopies.py -f ../mobile/devices.json -j15 -H all show_revision >>"${RECONFIG_DIR}/manage_foopies-${START_TIME}.log" 2>&1
+        echo "  * Running: '$(pwd)/manage_masters.py' -f '${production_masters_url}' -j16 -R scheduler -R build -R try -R tests show_revisions"
+        ./manage_masters.py -f "${production_masters_url}" -j16 -R scheduler -R build -R try -R tests show_revisions >>"${RECONFIG_DIR}/manage_masters-${START_TIME}.log" 2>&1
+        echo "  * Running: '$(pwd)/manage_foopies.py' -f '${devices_json_url}' -j16 -H all show_revision"
+        ./manage_foopies.py -f "${devices_json_url}" -j16 -H all show_revision >>"${RECONFIG_DIR}/manage_foopies-${START_TIME}.log" 2>&1
     fi
 fi
 
