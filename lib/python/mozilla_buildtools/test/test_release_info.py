@@ -32,8 +32,8 @@ class TestGetReleaseConfigName(unittest.TestCase):
         self.assertEquals('release-firefox-mozilla-release.py', got)
 
     def testThunderbird(self):
-        got = getReleaseConfigName('thunderbird', 'comm-esr24')
-        self.assertEquals('release-thunderbird-comm-esr24.py', got)
+        got = getReleaseConfigName('thunderbird', 'comm-esr31')
+        self.assertEquals('release-thunderbird-comm-esr31.py', got)
 
     def testStaging(self):
         got = getReleaseConfigName('fennec', 'mozilla-release', staging=True)

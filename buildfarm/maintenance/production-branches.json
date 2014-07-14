@@ -41,10 +41,10 @@
     ],
     "repo_type": "hg"
   },
-  "comm-esr24": {
-    "repo": "https://hg.mozilla.org/releases/comm-esr24",
+  "comm-esr31": {
+    "repo": "https://hg.mozilla.org/releases/comm-esr31",
     "graph_branches": [
-      "Thunderbird-Esr24"
+      "Thunderbird-Esr31"
     ],
     "repo_type": "hg"
   },
