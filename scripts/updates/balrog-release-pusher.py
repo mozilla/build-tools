@@ -85,7 +85,9 @@ if __name__ == '__main__':
     credentials = {}
     execfile(options.credentials_file, credentials)
     auth = (options.username, credentials['balrog_credentials'][options.username])
-    updateChannels = release_config['testChannels'] + [release_config['releaseChannel']]
+    updateChannels = release_config['testChannels']
+    if release_config['releaseChannel']:
+        updateChannels.append(release_config['releaseChannel'])
 
     if options.schema_version == 2:
         creator = ReleaseCreatorV2(options.api_root, auth)
