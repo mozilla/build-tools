@@ -146,17 +146,11 @@ function setresult() {
             names.push($(elt).attr('value'));
         });
 
-        // If you specifically request a b2g or android build platform, then
-        // disable the filtering. This does not apply when you just pick 'all'.
-        var disable_filters = ("b2g" in have_projects) || ("android" in have_projects);
-        $('[try-filter=' + tryopt + ']').prop('disabled', disable_filters);
-        $('[try-filter=' + tryopt + ']').fadeTo(0, disable_filters ? 0.5 : 1.0);
-
         var filters = [];
         $('[try-filter=' + tryopt + '] :checked').each(function () {
             filters.push.apply(filters, $(this).attr('value').split(','));
         });
-        if (filters.length > 0 && !disable_filters) {
+        if (filters.length > 0) {
             filters = resolveFilters(filters).join(',');
             names = names.map(function (n) { return n + '[' + filters + ']'; });
         }
