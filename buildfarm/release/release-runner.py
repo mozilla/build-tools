@@ -205,7 +205,6 @@ def sendMailRD(smtpServer, From, cfgFile, r):
     release_config = readReleaseConfig(cfgFile)
     sources = release_config['sourceRepositories']
     To = release_config['ImportantRecipients']
-    productName = release_config['productName']
     comment = r.get("comment")
 
     if comment is not None:
@@ -214,8 +213,14 @@ def sendMailRD(smtpServer, From, cfgFile, r):
     contentMail += "A new build has been submitted through ship-it:\n"
 
     for name, source in sources.items():
+
+        # We cannot use the source["revision"] value because it has not been
+        # updated yet. It is done later in the process.
+        # Select the one defined
+        revision = r.get("commRevision") or r.get("mozillaRevision")
+
         # For now, firefox has only one source repo but Thunderbird has two
-        contentMail += name + " commit: https://hg.mozilla.org/" + source['path'] + "/rev/" + source['revision'] + "\n"
+        contentMail += name + " commit: https://hg.mozilla.org/" + source['path'] + "/rev/" + revision + "\n"
 
     contentMail += "\n" + r["submitter"] + "\n"
 
