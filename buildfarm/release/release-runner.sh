@@ -59,9 +59,24 @@ if [[ $RETVAL == 5 ]]; then
 # Any other non-zero exit code is some other issue, and we should send mail
 # about it.
 elif [[ $RETVAL != 0 ]]; then
+    # Super crazy sed magic below to grab everything from the last run.
+    # Explanation of it:
+    # H = append each line to the hold space while iterating through the file.
+    # If "Fetching release requests" appears in a line, replace the hold space
+    # buffer with it. This happens every time we encounter this pattern, so
+    # eventually we'll end up only the last instance of it (and what follows)
+    # in the hold space.
+    # ${...} = stuff do to do when we hit EOF
+    # g = copy the hold space into the pattern space
+    # p = print the pattern space (ie, the the last instance of
+    # "Fetching release requests" and what follows).
+    #
+    # If for some reason we have a log file that doesn't have
+    # "Fetching release requests" in it, the entire file will be printed.
+    # It's doubtful this will happen, so we won't waste time dealing with yet.
     (
         echo "Release runner encountered a runtime error: "
-        tail -n20 $LOGFILE
+        sed -n 'H;/Fetching release requests/h; ${;g;p;}' $LOGFILE
         echo
         echo "The full log is available on $HOSTNAME in $LOGFILE"
         echo "I'll sleep for $SLEEP_TIME seconds before retry"
