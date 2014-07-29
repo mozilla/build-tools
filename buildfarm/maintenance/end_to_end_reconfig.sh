@@ -21,6 +21,9 @@ START_TIME="$(date +%s)"
 # Explicitly unset any pre-existing environment variables to avoid variable collision
 unset PREPARE_ONLY FORCE_RECONFIG MERGE_TO_PRODUCTION UPDATE_WIKI RECONFIG_DIR WIKI_CREDENTIALS_FILE WIKI_USERNAME WIKI_PASSWORD
 
+# Force python into unbuffered mode, so we get full output, as it happens from the fabric scripts
+export PYTHONUNBUFFERED=1
+
 function usage {
     echo
     echo "This script can be used to reconfig interactively, or non-interactively. It will merge"
