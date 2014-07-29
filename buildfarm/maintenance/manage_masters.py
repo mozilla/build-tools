@@ -171,6 +171,9 @@ Supported actions:
             for master in masters:
                 run_action_on_master(action, master)
         else:
+            # Don't prompt for passwords when forking
+            env.abort_on_prompts = True
+
             p = multiprocessing.Pool(processes=options.concurrency)
             results = []
             for master in masters:

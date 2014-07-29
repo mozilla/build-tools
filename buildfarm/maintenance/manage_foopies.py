@@ -151,6 +151,9 @@ if __name__ == '__main__':
             for foopy in sorted(selected.keys()):
                 fn(action, genArg(foopy))
         else:
+            # Don't prompt for passwords when forking
+            env.abort_on_prompts = True
+
             p = multiprocessing.Pool(processes=options.concurrency)
             results = []
             for foopy in sorted(selected.keys()):
