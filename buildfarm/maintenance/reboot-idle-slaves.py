@@ -14,6 +14,7 @@ import requests
 import site
 from threading import Thread
 import time
+import Queue
 
 import logging
 log = logging.getLogger(__name__)
@@ -25,6 +26,8 @@ from util.retry import retry
 MAX_WORKERS = 16
 IDLE_THRESHOLD = 5*60*60
 PENDING, RUNNING, SUCCESS, FAILURE = range(4)
+
+SLAVE_QUEUE = Queue.Queue()
 
 def get_production_slaves(slaveapi):
     url = furl(slaveapi)
@@ -42,8 +45,14 @@ def get_slave(slaveapi, slave):
 def get_formatted_time(dt):
     return dt.strftime("%A, %B %d, %H:%M")
 
-def process_slave(slaveapi, slave, dryrun=False):
+def process_slave(slaveapi, dryrun=False):
     try:
+        try:
+            slave = SLAVE_QUEUE.get_nowait()
+            log.debug("%s - got slave from SLAVE_QUEUE" % slave)
+        except Queue.Empty:
+            return  # Unlikely due to our thread creation logic, but possible
+
         info = get_slave(slaveapi, slave)
         # Ignore slaves without recent job information
         if not info["recent_jobs"]:
@@ -126,23 +135,37 @@ if __name__ == "__main__":
     workers = {}
 
     try:
+        log.info("Populating List of Slaves to Check...")
         for slave in get_production_slaves(slaveapi):
             name = slave["name"]
             if is_excluded(name):
                 log.debug("%s - Excluding because it matches an excluded pattern.", name)
                 continue
-            while len(workers) >= n_workers:
+            log.debug("%s - Adding item to queue", name)
+            SLAVE_QUEUE.put_nowait(name)
+
+        # Run while there is any workers or any queued work
+        while len(workers) or SLAVE_QUEUE.qsize():
+            # Block until a worker frees
+            while len(workers) and len(workers) >= min(n_workers, SLAVE_QUEUE.qsize()):
                 time.sleep(.5)
                 for wname, w in workers.items():
                     if not w.is_alive():
                         del workers[wname]
-            t = Thread(target=process_slave, args=(slaveapi, name, dryrun))
-            t.start()
-            workers[name] = t
 
-        # Wait for all of the workers to finish before exiting.
+            # Start a new worker if there is more work
+            if len(workers) < n_workers and SLAVE_QUEUE.qsize():
+                t = Thread(target=process_slave, args=(slaveapi, dryrun))
+                t.start()
+                workers[t.ident] = t
+
+        # Wait for any remaining workers to finish before exiting.
         for w in workers.values():
             while w.is_alive():
                 w.join(1)
+        if SLAVE_QUEUE.qsize():
+            # This should not be possible, but report anyway.
+            log.info("%s items remained in queue at exit",
+                     SLAVE_QUEUE.qsize())
     except KeyboardInterrupt:
         raise
