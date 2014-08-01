@@ -31,13 +31,80 @@ def find_files(dirs, lasttime):
     return [r[1] for r in retval]
 
 
+def unauthorized_logins(hostname, excs, name):
+    import socket
+
+    pattern = re.compile("(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d-\d\d\d\d) \[Broker,\d+,(\d+.\d+.\d+.\d+)\]")
+    unauthorized_hosts = {}
+    remaining_excs = []
+    example = ""
+
+    for e in excs:
+        m = pattern.search(e)
+        if m and m.groups:
+            if unauthorized_hosts.has_key(m.group(2)):
+                unauthorized_hosts[m.group(2)]['count'] += 1;
+                unauthorized_hosts[m.group(2)]['last'] = str(m.group(1))
+            else:
+                unauthorized_hosts[m.group(2)] = {}
+                unauthorized_hosts[m.group(2)]['count'] = 1;
+                unauthorized_hosts[m.group(2)]['first'] = str(m.group(1))
+                unauthorized_hosts[m.group(2)]['last'] = str(m.group(1))
+                try:
+                    unauthorized_hosts[m.group(2)]['hostname'] = socket.gethostbyaddr(m.group(2))[0]
+                except socket.herror:
+                    unauthorized_hosts[m.group(2)]['hostname'] = "unknown"
+            if example == "":
+                example = e
+        else:
+            remaining_excs.append(e)
+
+    msg = ""
+    for ip in unauthorized_hosts:
+        msg = "% 10d - %s (%s) - %s\n" % (unauthorized_hosts[ip]['count'],
+                                          unauthorized_hosts[ip]['hostname'],
+                                          ip,
+                                          unauthorized_hosts[ip]['last'])
+    if msg != "":
+        prepend =  "The following slaves tried to connect unsuccessfully to %s %s:\n" % (hostname, name)
+        prepend += "# attempts - hostname (ip) - last seen\n"
+        msg = prepend + msg
+        msg += "\nExample:\n\n"
+        msg += example
+
+    return msg, remaining_excs
+
+
+def format_exceptions(hostname, excs, name):
+    repeat_pattern_funcs = [
+        unauthorized_logins,
+    ]
+
+    msg = ""
+    for f in repeat_pattern_funcs:
+        if excs:
+            repeat_msg, excs = f(hostname, excs, name)
+            if repeat_msg != "":
+                msg += repeat_msg
+                msg += "\n" + "-" * 80 + "\n"
+
+    if excs:
+        if msg == "":
+            msg = "The following exceptions"
+        else:
+            msg += "The following other exceptions"
+        msg += " (total %i) were detected on %s %s:\n\n" % (
+            len(excs), hostname, name)
+        msg += ("\n" + "-" * 80 + "\n").join(excs)
+
+    return msg
+
 def send_msg(fromaddr, emails, hostname, excs, name):
     """Send an email to each address in `emails`, from `fromaddr`
 
     The message will contain the hostname and list of exceptions `excs`"""
-    msg = "The following exceptions (total %i) were detected on %s %s:\n\n" % (
-        len(excs), hostname, name)
-    msg += ("\n" + "-" * 80 + "\n").join(excs)
+
+    msg = format_exceptions(hostname, excs, name)
 
     s = SMTP()
     s.connect()
