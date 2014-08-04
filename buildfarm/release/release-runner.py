@@ -207,7 +207,7 @@ def sendMailRD(smtpServer, From, cfgFile, r):
     To = release_config['ImportantRecipients']
     comment = r.get("comment")
 
-    if comment is not None:
+    if comment:
         contentMail += "Comment:\n" + comment + "\n\n"
 
     contentMail += "A new build has been submitted through ship-it:\n"
