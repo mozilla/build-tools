@@ -5065,11 +5065,6 @@
         "pdu": "pdu1.r202-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA5"
     },
-    "tegra-198": {
-        "foopy": "foopy32",
-        "pdu": "pdu2.r202-11.tegra.releng.scl3.mozilla.com",
-        "pduid": ".AA5"
-    },
     "tegra-199": {
         "foopy": "foopy111",
         "pdu": "pdu3.r202-11.tegra.releng.scl3.mozilla.com",
@@ -5083,11 +5078,6 @@
     "tegra-201": {
         "foopy": "foopy128",
         "pdu": "pdu2.r202-11.tegra.releng.scl3.mozilla.com",
-        "pduid": ".AA6"
-    },
-    "tegra-202": {
-        "foopy": "foopy32",
-        "pdu": "pdu3.r202-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA6"
     },
     "tegra-203": {
@@ -5619,45 +5609,15 @@
         "pdu": "pdu2.r201-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA18"
     },
-    "tegra-352": {
-        "foopy": "foopy32",
-        "pdu": "pdu3.r201-11.tegra.releng.scl3.mozilla.com",
-        "pduid": ".AA18"
-    },
-    "tegra-353": {
-        "foopy": "foopy32",
-        "pdu": "pdu1.r201-11.tegra.releng.scl3.mozilla.com",
-        "pduid": ".AA19"
-    },
-    "tegra-354": {
-        "foopy": "foopy32",
-        "pdu": "pdu2.r201-11.tegra.releng.scl3.mozilla.com",
-        "pduid": ".AA19"
-    },
-    "tegra-355": {
-        "foopy": "foopy32",
-        "pdu": "pdu3.r201-11.tegra.releng.scl3.mozilla.com",
-        "pduid": ".AA19"
-    },
     "tegra-356": {
         "foopy": "foopy30",
         "pdu": "pdu1.r201-11.tegra.releng.scl3.mozilla.com",
-        "pduid": ".AA20"
-    },
-    "tegra-357": {
-        "foopy": "foopy32",
-        "pdu": "pdu2.r201-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA20"
     },
     "tegra-362": {
         "foopy": "foopy30",
         "pdu": "pdu3.r201-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA20"
-    },
-    "tegra-363": {
-        "foopy": "foopy32",
-        "pdu": "pdu1.r201-11.tegra.releng.scl3.mozilla.com",
-        "pduid": ".AA21"
     },
     "tegra-364": {
         "foopy": "foopy30",
@@ -5668,10 +5628,5 @@
         "foopy": "foopy30",
         "pdu": "pdu3.r201-11.tegra.releng.scl3.mozilla.com",
         "pduid": ".AA21"
-    },
-    "tegra-369": {
-        "foopy": "foopy32",
-        "pdu": "pdu1.r201-11.tegra.releng.scl3.mozilla.com",
-        "pduid": ".AA22"
     }
 }
