@@ -41,7 +41,7 @@ def unauthorized_logins(hostname, excs, name):
 
     for e in excs:
         m = pattern.search(e)
-        if m and m.groups:
+        if e.find("Failure: twisted.cred.error.UnauthorizedLogin:") >= 0 and m and m.groups:
             if unauthorized_hosts.has_key(m.group(2)):
                 unauthorized_hosts[m.group(2)]['count'] += 1;
                 unauthorized_hosts[m.group(2)]['last'] = str(m.group(1))
