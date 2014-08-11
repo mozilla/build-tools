@@ -15,7 +15,7 @@ import logging
 log = logging.getLogger(__name__)
 
 MAC_DESIGNATED_REQUIREMENTS = """\
-=designated =>  identifier "%(identifier)s" and ( (anchor apple generic and    certificate leaf[field.1.2.840.113635.100.6.1.9] ) or (anchor apple generic and    certificate 1[field.1.2.840.113635.100.6.2.6]  and    certificate leaf[field.1.2.840.113635.100.6.1.13] and    certificate leaf[subject.OU] = "%(subject_ou)s"))
+=designated => ( (anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.9] ) or (anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] and certificate leaf[field.1.2.840.113635.100.6.1.13] and certificate leaf[subject.OU] = "%(subject_ou)s"))
 """
 
 
@@ -218,84 +218,88 @@ def jar_signfile(filename, keystore, keyname, fake=False, passphrase=None):
         raise
 
 
-def dmg_signfile(filename, keychain, signing_identity, code_resources, identifier, subject_ou, lockfile, fake=False, passphrase=None):
-    """ Sign a mac .app folder
-    """
-    from flufl.lock import Lock, TimeOutError, NotLockedError
-    from datetime import timedelta
-    import pexpect
+def get_bundle_executable(appdir):
+    """Return the CFBundleIdentifier from a Mac application."""
+    import plistlib
+    return plistlib.readPlist(os.path.join(appdir, 'Contents', 'Info.plist'))['CFBundleExecutable']
 
-    basename = os.path.basename(filename)
-    dirname = os.path.dirname(filename)
+
+def dmg_signfile(filename, keychain, signing_identity, subject_ou, fake=False):
+    """Sign a mac .app folder, including handling subapps within.
+    """
+    # Only some directories contain files that get explicitly signed by
+    # codesign. Others (such as .app/Contents/Resources) have their checksums
+    # embedded into the CodeResources file that codesign creates when the .app
+    # is signed at the end.
+    SIGN_DIRS = ("MacOS", "Library")
+    log.debug("Signing %s", filename)
+    app = os.path.basename(filename)
+    appdir = os.path.dirname(filename)
+    app_executable = get_bundle_executable(filename)
     stdout = tempfile.TemporaryFile()
 
     sign_command = ['codesign',
                     '-s', signing_identity, '-fv',
                     '--keychain', keychain,
-                    '--resource-rules', code_resources,
-                    '--requirement', MAC_DESIGNATED_REQUIREMENTS % locals(),
-                    basename]
+                    '--requirement', MAC_DESIGNATED_REQUIREMENTS % locals()]
 
-    # pexpect requires a string as input
-    unlock_command = 'security unlock-keychain ' + keychain
-    lock_command = ['security', 'lock-keychain', keychain]
+    # We scan "Contents" here to make it easier to find inner apps
+    # (by looking for things that end with ".app")
+    contents_d = os.path.join(filename, "Contents")
+    for top, dirs, files in os.walk(contents_d):
+        for d in dirs:
+            abs_d = os.path.join(top, d)
+            # We only want to sign individual files in certain directories.
+            # Removing items from "dirs" prevents walk() from descending into
+            # those directories.
+            # See SIGN_DIRS above for further explanation.
+            if top == contents_d and d not in SIGN_DIRS:
+                log.debug("Skipping %s because it's not in SIGN_DIRS.", abs_d)
+                dirs.remove(d)
+                continue
+            # Make sure to sign any inner apps, too
+            if d.endswith(".app"):
+                dmg_signfile(abs_d, keychain, signing_identity, subject_ou, fake)
+
+        # None of the individual files in Contents (eg, Info.plist) need
+        # explicit signing. They get taken care of during the overall .app
+        # signing, so there's no point in iterating over files if we're still
+        # in the root directory.
+        if top == contents_d:
+            log.debug("Skipping file iteration in %s because it's the root directory.", top)
+            continue
+
+        for f in files:
+            abs_f = os.path.join(top, f)
+            # If we find any ".app" after the app we're currently signing
+            # this means it's an inner app, which was handled above.
+            # We shouldn't do any further processing here.
+            if top[len(filename):].count(".app") > 0:
+                log.debug("Skipping %s because it's part an inner app.", abs_f)
+                continue
+            # We also need to skip the main executable, because this gets
+            # signed with the outer package, which happens below.
+            if f == app_executable:
+                log.debug("Skipping %s because it's the main executable.", abs_f)
+                continue
+            try:
+                dir_ = os.path.dirname(abs_f)
+                log.debug("Signing with command: %s %s", " ".join(sign_command), f)
+                check_call(sign_command + [f], cwd=dir_, stdout=stdout, stderr=STDOUT)
+            except:
+                stdout.seek(0)
+                data = stdout.read()
+                log.exception(data)
+                raise
+
     try:
-        sign_lock = None
-        try:
-            # Acquire a lock for the signing command, to ensure we don't have a
-            # race condition where one process locks the keychain immediately after another
-            # unlocks it.
-            log.debug("Try to acquire %s", lockfile)
-            sign_lock = Lock(lockfile)
-            # Put a 30 second timeout on waiting for the lock.
-            sign_lock.lock(timedelta(0, 30))
-
-            # Unlock the keychain so that we do not get a user-interaction prompt to use
-            # the keychain for signing. This operation requires a password.
-            child = pexpect.spawn(unlock_command)
-            child.expect('password to unlock .*')
-            child.sendline(passphrase)
-            # read output until child exits
-            child.read()
-            child.close()
-            if child.exitstatus != 0:
-                raise ValueError("keychain unlock failed")
-
-            # Execute the signing command
-            check_call(sign_command, cwd=dirname, stdout=stdout, stderr=STDOUT)
-
-        except TimeOutError, error:
-            # timed out acquiring lock, give an error
-            log.exception("Timeout acquiring lock  %s for codesign, is something broken? ", lockfile, error)
-            raise
-        except:
-            # catch any other locking error
-            log.exception("Error acquiring  %s for codesign, is something broken?", lockfile)
-            raise
-        finally:
-            # Lock the keychain again, no matter what happens
-            # This command does not require a password
-            check_call(lock_command)
-
-            # Release the lock, if it was acquired
-            if sign_lock:
-                try:
-                    sign_lock.unlock()
-                    log.debug("Release %s", lockfile)
-                except NotLockedError:
-                    log.debug("%s was already unlocked", lockfile)
-
+        log.debug("Signing with command: %s %s", " ".join(sign_command), app)
+        check_call(sign_command + [app], cwd=appdir, stdout=stdout, stderr=STDOUT)
     except:
         stdout.seek(0)
         data = stdout.read()
         log.exception(data)
         raise
-
-
-def get_identifier(appdir):
-    """Return the CFBundleIdentifier from a Mac application."""
-    import plistlib
-    return plistlib.readPlist(os.path.join(appdir, 'Contents', 'Info.plist'))['CFBundleIdentifier']
 
 
 def dmg_signpackage(pkgfile, dstfile, keychain, mac_id, subject_ou, fake=False, passphrase=None):
@@ -305,30 +309,77 @@ def dmg_signpackage(pkgfile, dstfile, keychain, mac_id, subject_ou, fake=False, 
     # Keep track of our output in a list here, and we can output everything
     # when we're done This is to avoid interleaving the output from
     # multiple processes.
+    from flufl.lock import Lock, TimeOutError, NotLockedError
+    from datetime import timedelta
+    import pexpect
 
     # TODO: Is it even possible to do 'fake' signing?
     logs = []
     logs.append("Repacking %s to %s" % (pkgfile, dstfile))
 
+    # pexpect requires a string as input
+    unlock_command = 'security unlock-keychain ' + keychain
+    lock_command = ['security', 'lock-keychain', keychain]
+    lockfile = os.path.join(os.path.dirname(keychain), '.lock')
+
     tmpdir = tempfile.mkdtemp()
-    pkgdir = os.path.dirname(pkgfile)
     try:
         # Unpack it
         logs.append("Unpacking %s to %s" % (pkgfile, tmpdir))
         unpacktar(pkgfile, tmpdir)
 
+
         for macdir in os.listdir(tmpdir):
             macdir = os.path.join(tmpdir, macdir)
             log.debug('Checking if we should sign %s', macdir)
             if shouldSign(macdir, 'mac'):
-                log.debug('Signing %s', macdir)
+                log.debug('Need to sign %s', macdir)
 
-                # Grab the code resources file. Need to find the filename
-                code_resources =  macdir + \
-                    "/Contents/_CodeSignature/CodeResources"
-                lockfile = os.path.join(os.path.dirname(keychain), '.lock')
+                try:
+                    sign_lock = None
+                    # Acquire a lock for the signing command, to ensure we don't have a
+                    # race condition where one process locks the keychain immediately after another
+                    # unlocks it.
+                    log.debug("Try to acquire %s", lockfile)
+                    sign_lock = Lock(lockfile)
+                    # Put a 30 second timeout on waiting for the lock.
+                    sign_lock.lock(timedelta(0, 30))
 
-                dmg_signfile(macdir, keychain, mac_id, code_resources, get_identifier(macdir), subject_ou, lockfile, passphrase=passphrase)
+                    # Unlock the keychain so that we do not get a user-interaction prompt to use
+                    # the keychain for signing. This operation requires a password.
+                    child = pexpect.spawn(unlock_command)
+                    child.expect('password to unlock .*')
+                    child.sendline(passphrase)
+                    # read output until child exits
+                    child.read()
+                    child.close()
+                    if child.exitstatus != 0:
+                        raise ValueError("keychain unlock failed")
+
+                    # Sign the thing!
+                    dmg_signfile(macdir, keychain, mac_id, subject_ou, fake)
+
+                except TimeOutError:
+                    # timed out acquiring lock, give an error
+                    log.exception("Timeout acquiring lock  %s for codesign, is something broken? ", lockfile)
+                    raise
+                except:
+                    # catch any other locking error
+                    log.exception("Error acquiring  %s for codesign, is something broken?", lockfile)
+                    raise
+                finally:
+                    # Lock the keychain again, no matter what happens
+                    # This command does not require a password
+                    check_call(lock_command)
+
+                    # Release the lock, if it was acquired
+                    if sign_lock:
+                        try:
+                            sign_lock.unlock()
+                            log.debug("Release %s", lockfile)
+                        except NotLockedError:
+                            log.debug("%s was already unlocked", lockfile)
+
 
         # Repack it
         logs.append("Packing %s" % dstfile)
