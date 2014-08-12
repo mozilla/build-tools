@@ -1,3 +1,4 @@
+v0.1.6, 2014-08-12 -- Don't close empty requests
 v0.1.5, 2014-01-29 -- Increase mozpoolclient's timeout 
 v0.1.4, 2013-11-08 -- Make installing mozpoolclient work out of the box (importable)
                    -- Add method query_device_state to utilize mozpool api by same name

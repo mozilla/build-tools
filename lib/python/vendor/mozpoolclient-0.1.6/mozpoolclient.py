@@ -252,11 +252,14 @@ class MozpoolHandler:
         """ returns the device to the pool and deletes the request. Returns
             204 No Content.
         """
-        request_url = request_url + 'return/'
-        data = {}
-        response, status = self.url_post(request_url, data=json.dumps(data), headers=JsonHeader, decode_json=False)
-        check_mozpool_status(status)
-        return response
+        if request_url:
+            request_url = request_url + 'return/'
+            data = {}
+            response, status = self.url_post(request_url, data=json.dumps(data), headers=JsonHeader, decode_json=False)
+            check_mozpool_status(status)
+            return response
+        else:
+            return "request_url doesn't exist. Already closed?"
 
     def device_power_cycle(self, device, duration, assignee=None, pxe_config=None):
         """ initiate a power-cycle of this device. The POST body is a JSON object,

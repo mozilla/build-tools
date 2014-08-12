@@ -1,6 +1,6 @@
 Metadata-Version: 1.0
 Name: mozpoolclient
-Version: 0.1.5
+Version: 0.1.6
 Summary: It allows you to interact with devices managed by Mozpool.
 Home-page: http://pypi.python.org/pypi/mozpoolclient/
 Author: Zambrano, Armen
