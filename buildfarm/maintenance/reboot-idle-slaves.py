@@ -29,6 +29,7 @@ PENDING, RUNNING, SUCCESS, FAILURE = range(4)
 
 SLAVE_QUEUE = Queue.Queue()
 
+
 def get_production_slaves(slaveapi):
     url = furl(slaveapi)
     url.path.add("slaves")
@@ -37,19 +38,23 @@ def get_production_slaves(slaveapi):
     r = retry(requests.get, args=(str(url),))
     return r.json()["slaves"]
 
+
 def get_slave(slaveapi, slave):
     url = furl(slaveapi)
     url.path.add("slaves").add(slave)
     return retry(requests.get, args=(str(url),)).json()
 
+
 def get_formatted_time(dt):
     return dt.strftime("%A, %B %d, %H:%M")
 
+
 def process_slave(slaveapi, dryrun=False):
+    slave = None  # No slave name yet
     try:
         try:
             slave = SLAVE_QUEUE.get_nowait()
-            log.debug("%s - got slave from SLAVE_QUEUE" % slave)
+            log.debug("%s - got slave from SLAVE_QUEUE", slave)
         except Queue.Empty:
             return  # Unlikely due to our thread creation logic, but possible
 
@@ -61,13 +66,16 @@ def process_slave(slaveapi, dryrun=False):
         last_job_time = datetime.fromtimestamp(info["recent_jobs"][0]["endtime"])
         # And also slaves that haven't been idle for more than the threshold
         if not (now - last_job_time).total_seconds() > IDLE_THRESHOLD:
-            log.info("%s - Skipping reboot because last job ended recently at %s", slave, get_formatted_time(last_job_time))
+            log.info("%s - Skipping reboot because last job ended recently at %s",
+                     slave, get_formatted_time(last_job_time))
             return
         if dryrun:
-            log.info("%s - Last job ended at %s, would've rebooted", slave, get_formatted_time(last_job_time))
+            log.info("%s - Last job ended at %s, would've rebooted",
+                     slave, get_formatted_time(last_job_time))
             return
         else:
-            log.info("%s - Last job ended at %s, rebooting", slave, get_formatted_time(last_job_time))
+            log.info("%s - Last job ended at %s, rebooting",
+                     slave, get_formatted_time(last_job_time))
         # We need to set a graceful shutdown for the slave on the off chance that
         # it picks up a job before us making the decision to reboot it, and the
         # reboot actually happening. In most cases this will happen nearly
