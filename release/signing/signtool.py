@@ -3,6 +3,7 @@
 
 If no include patterns are specified, all files will be considered. -i/-x only
 have effect when signing entire directories."""
+from collections import defaultdict
 import os
 import sys
 import site
@@ -39,6 +40,8 @@ def is_authenticode_signed(filename):
 
 
 def main():
+    allowed_formats = ("signcode", "gpg", "mar", "dmg", "dmgv2", "jar", "b2gmar")
+
     from optparse import OptionParser
     import random
     parser = OptionParser(__doc__)
@@ -58,7 +61,7 @@ def main():
     )
 
     parser.add_option(
-        "-H", "--host", dest="hosts", action="append", help="hostname[:port]")
+        "-H", "--host", dest="hosts", action="append", help="format[:format]:hostname[:port]")
     parser.add_option("-c", "--server-cert", dest="cert")
     parser.add_option("-t", "--token-file", dest="tokenfile",
                       help="file where token is stored")
@@ -69,7 +72,7 @@ def main():
     parser.add_option("-o", "--output-file", dest="output_file",
                       help="output file; if not set then files are replaced with signed copies. This can only be used when signing a single file")
     parser.add_option("-f", "--formats", dest="formats", action="append",
-                      help="signing formats (one or more of \"signcode\", \"gpg\", or \"osx\")")
+                      help="signing formats (one or more of %s)" % ", ".join(allowed_formats))
     parser.add_option("-q", "--quiet", dest="log_level", action="store_const",
                       const=logging.WARN)
     parser.add_option(
@@ -115,7 +118,6 @@ def main():
 
     # Handle format
     formats = []
-    allowed_formats = ("signcode", "gpg", "mar", "dmg", "jar", "b2gmar")
     for fmt in options.formats:
         if "," in fmt:
             for fmt in fmt.split(","):
@@ -146,18 +148,42 @@ def main():
     if not formats:
         parser.error("no formats specified")
 
-    buildValidatingOpener(options.cert)
+    format_urls = defaultdict(list)
+    for h in options.hosts:
+        # The last two parts of a host is the actual hostname:port. Any parts
+        # before that are formats - there could be 0..n formats so this is
+        # tricky to split.
+        parts = h.split(":")
+        h = parts[-2:]
+        fmts = parts[:-2]
+        # If no formats are specified, the host is assumed to support all of them.
+        if not fmts:
+            fmts = formats
 
-    urls = ["https://%s" % host for host in options.hosts]
-    random.shuffle(urls)
+        for f in fmts:
+            format_urls[f].append("https://%s" % ":".join(h))
+
+    missing_fmt_hosts = set(formats) - set(format_urls.keys())
+    if missing_fmt_hosts:
+        parser.error("no hosts capable of signing formats: %s" % " ".join(missing_fmt_hosts))
 
     log.debug("in %s", os.getcwd())
 
+    buildValidatingOpener(options.cert)
     token = open(options.tokenfile, 'rb').read()
 
     for fmt in formats:
+        urls = format_urls[fmt]
+        random.shuffle(urls)
+
+        # The only difference between dmg and dmgv2 are the servers they use.
+        # The server side code only understands "dmg" as a format, so we need
+        # to translate this now that we've chosen our URLs
+        if fmt == "dmgv2":
+            fmt = "dmg"
 
         log.debug("doing %s signing", fmt)
+        log.debug("possible hosts are %s" % urls)
         files = []
         # We want to package the ".app" file in a tar for mac signing.
         if fmt == "dmg":
