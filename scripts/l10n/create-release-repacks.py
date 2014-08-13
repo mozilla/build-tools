@@ -86,9 +86,10 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
             " -n " + \
             path.join(os.getcwd(), "nonce").replace('\\', '\\\\\\\\') + \
             " -c " + \
-            path.join(os.getcwd(), "scripts", "release", "signing", "host.cert").replace('\\', '\\\\\\\\') + \
-            " -H " + \
-            os.environ['MOZ_SIGN_CMD'].split(' ')[-1]
+            path.join(os.getcwd(), "scripts", "release", "signing", "host.cert").replace('\\', '\\\\\\\\')
+        signingServers = os.environ["MOZ_SIGN_CMD"].split("-H", 1)[1].split("-H")
+        for s in signingServers:
+            env["MOZ_SIGN_CMD"] += " -H %s" % s.strip()
     build.misc.cleanupObjdir(sourceRepoName, objdir, appName)
     retry(mercurial, args=(sourceRepo, sourceRepoName))
     update(sourceRepoName, revision=revision)
