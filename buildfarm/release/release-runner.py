@@ -217,7 +217,11 @@ def sendMailRD(smtpServer, From, cfgFile, r):
         # We cannot use the source["revision"] value because it has not been
         # updated yet. It is done later in the process.
         # Select the one defined
-        revision = r.get("commRevision") or r.get("mozillaRevision")
+        if name == "comm":
+            # Thunderbird
+            revision = r["commRevision"]
+        else:
+            revision = r["mozillaRevision"]
 
         # For now, firefox has only one source repo but Thunderbird has two
         contentMail += name + " commit: https://hg.mozilla.org/" + source['path'] + "/rev/" + revision + "\n"
