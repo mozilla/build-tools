@@ -192,11 +192,10 @@ def process_slave(slaveapi, dryrun=False):
                 log.info("%s - Last job ended at %s, would've rebooted",
                          slave, get_formatted_time(last_job_dt))
                 return
-            # TODO: XXXCallek remove this FAILURE clause when we want to reboot anyway
             if recent_graceful["state"] in (FAILURE,):
-                log.info("%s - Graceful shutdown failed, aborting reboot", slave)
-                return
-            log.info("%s - Graceful shutdown completed, rebooting", slave)
+                log.info("%s - Graceful shutdown failed, rebooting anyway", slave)
+            else:
+                log.info("%s - Graceful shutdown passed, rebooting", slave)
             return do_reboot(slaveapi, slave)
     except:
         log.exception("%s - Caught exception while processing", slave)
