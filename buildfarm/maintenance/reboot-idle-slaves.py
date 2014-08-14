@@ -49,6 +49,85 @@ def get_formatted_time(dt):
     return dt.strftime("%A, %B %d, %H:%M")
 
 
+def get_latest_timestamp_from_result(result):
+    if not result:
+        return 0
+    times = []
+    for key in ("finish_timestamp", "request_timestamp", "start_timestamp"):
+        if result[key]:
+            times.append(result[key])
+    return max(times)
+
+
+def get_latest_result(results):
+    res = None
+    for result in results:
+        if not res:
+            res = result
+            continue
+        res_ts = get_latest_timestamp_from_result(res)
+        if res_ts < get_latest_timestamp_from_result(result):
+            res = result
+    return res
+
+
+def get_recent_action(slaveapi, slave, action):
+    url = furl(slaveapi)
+    url.path.add("slaves").add(slave).add("actions").add(action)
+    history = retry(requests.get, args=(str(url),)).json()
+    results = []
+    for key in history.keys():
+        if not key == action:
+            continue
+        for item in history[action]:
+            results.append(history[action][item])
+    return get_latest_result(results)
+
+
+def get_recent_graceful(slaveapi, slave):
+    return get_recent_action(slaveapi, slave, "shutdown_buildslave")
+
+
+def get_recent_reboot(slaveapi, slave):
+    return get_recent_action(slaveapi, slave, "reboot")
+
+
+def get_recent_job(slaveapi, slave):
+    info = get_slave(slaveapi, slave)
+    if not info["recent_jobs"]:
+        return None
+
+    return info["recent_jobs"][0]["endtime"]
+
+
+def do_graceful(slaveapi, slave):
+    # We need to set a graceful shutdown for the slave on the off chance that
+    # it picks up a job before us making the decision to reboot it, and the
+    # reboot actually happening. In most cases this will happen nearly
+    # instantly.
+    log.debug("%s - Setting graceful shutdown", slave)
+    url = furl(slaveapi)
+    url.path.add("slaves").add(slave).add("actions").add("shutdown_buildslave")
+    url.args["waittime"] = 30
+    r = retry(requests.post, args=(str(url),)).json()
+    url.args["requestid"] = r["requestid"]
+
+    time.sleep(30)  # Sleep to give a graceful some leeway to complete
+    log.info("%s - issued graceful, re-adding to queue", slave)
+    SLAVE_QUEUE.put_nowait(slave)
+    return
+
+
+def do_reboot(slaveapi, slave):
+    url = furl(slaveapi)
+    url.path.add("slaves").add(slave).add("actions").add("reboot")
+    retry(requests.post, args=(str(url),))
+    # Because SlaveAPI fully escalates reboots (all the way to IT bug filing),
+    # there's no reason for us to watch for it to complete.
+    log.info("%s - Reboot queued", slave)
+    return
+
+
 def process_slave(slaveapi, dryrun=False):
     slave = None  # No slave name yet
     try:
@@ -58,49 +137,67 @@ def process_slave(slaveapi, dryrun=False):
         except Queue.Empty:
             return  # Unlikely due to our thread creation logic, but possible
 
-        info = get_slave(slaveapi, slave)
+        last_job_ts = get_recent_job(slaveapi, slave)
+
         # Ignore slaves without recent job information
-        if not info["recent_jobs"]:
-            log.info("%s - Skipping reboot because no recent jobs found", slave)
+        if not last_job_ts:
+            log.info("%s - Skipping reboot because no job history found", slave)
             return
-        last_job_time = datetime.fromtimestamp(info["recent_jobs"][0]["endtime"])
+
+        last_job_dt = datetime.fromtimestamp(last_job_ts)
         # And also slaves that haven't been idle for more than the threshold
-        if not (now - last_job_time).total_seconds() > IDLE_THRESHOLD:
+        if not (datetime.now() - last_job_dt).total_seconds() > IDLE_THRESHOLD:
             log.info("%s - Skipping reboot because last job ended recently at %s",
-                     slave, get_formatted_time(last_job_time))
-            return
-        if dryrun:
-            log.info("%s - Last job ended at %s, would've rebooted",
-                     slave, get_formatted_time(last_job_time))
-            return
-        else:
-            log.info("%s - Last job ended at %s, rebooting",
-                     slave, get_formatted_time(last_job_time))
-        # We need to set a graceful shutdown for the slave on the off chance that
-        # it picks up a job before us making the decision to reboot it, and the
-        # reboot actually happening. In most cases this will happen nearly
-        # instantly.
-        log.debug("%s - Setting graceful shutdown", slave)
-        url = furl(slaveapi)
-        url.path.add("slaves").add(slave).add("actions").add("shutdown_buildslave")
-        url.args["waittime"] = 30
-        r = retry(requests.post, args=(str(url),)).json()
-        url.args["requestid"] = r["requestid"]
-        while r["state"] in (PENDING, RUNNING):
-            time.sleep(30)
-            r = retry(requests.get, args=(str(url),)).json()
-
-        if r["state"] == FAILURE:
-            log.info("%s - Graceful shutdown failed, aborting reboot", slave)
+                     slave, get_formatted_time(last_job_dt))
             return
 
-        log.info("%s - Graceful shutdown finished, rebooting", slave)
-        url = furl(slaveapi)
-        url.path.add("slaves").add(slave).add("actions").add("reboot")
-        retry(requests.post, args=(str(url),))
-        # Because SlaveAPI fully escalates reboots (all the way to IT bug filing),
-        # there's no reason for us to watch for it to complete.
-        log.info("%s - Reboot queued", slave)
+        recent_graceful = get_recent_graceful(slaveapi, slave)
+        recent_graceful_ts = get_latest_timestamp_from_result(recent_graceful)
+        recent_reboot = get_recent_reboot(slaveapi, slave)
+        recent_reboot_ts = get_latest_timestamp_from_result(recent_reboot)
+        # Determine the timestamp we care about for doing work
+        idle_timestamp = max(last_job_ts, recent_reboot_ts)
+        idle_dt = datetime.fromtimestamp(idle_timestamp)
+
+        # If an action is in-flight, lets assume no work to do this run.
+        if (recent_graceful and "state" in recent_graceful and
+                recent_graceful["state"] in (PENDING, RUNNING)):
+            log.info("%s - waiting on graceful shutdown, will recheck next run",
+                     slave)
+            return
+        if (recent_reboot and "state" in recent_reboot and
+                recent_reboot["state"] in (PENDING, RUNNING)):
+            log.info("%s - waiting on a reboot request, assume success",
+                     slave)
+            return
+
+        # No work if we recently performed an action that should recover
+        if not (datetime.now() - idle_dt).total_seconds() > IDLE_THRESHOLD:
+            log.info("%s - Skipping reboot because we recently attempted recovery %s",
+                     slave, get_formatted_time(idle_dt))
+            return
+
+        if recent_graceful_ts <= idle_timestamp:
+            # we've passed IDLE_THRESHOLD since last reboot/job
+            # ---> initiate graceful
+            if dryrun:
+                log.info("%s - Last job ended at %s, would've gracefulled",
+                         slave, get_formatted_time(last_job_dt))
+                return
+            return do_graceful(slaveapi, slave)
+        else:  # (recent_graceful_ts > idle_timestamp)
+            # has recently graceful'd but needs a reboot
+            # ---> initiate reboot
+            if dryrun:
+                log.info("%s - Last job ended at %s, would've rebooted",
+                         slave, get_formatted_time(last_job_dt))
+                return
+            # TODO: XXXCallek remove this FAILURE clause when we want to reboot anyway
+            if recent_graceful["state"] in (FAILURE,):
+                log.info("%s - Graceful shutdown failed, aborting reboot", slave)
+                return
+            log.info("%s - Graceful shutdown completed, rebooting", slave)
+            return do_reboot(slaveapi, slave)
     except:
         log.exception("%s - Caught exception while processing", slave)
 
@@ -128,8 +225,6 @@ if __name__ == "__main__":
     else:
         logging.getLogger("requests").setLevel(logging.WARN)
         logging.getLogger("util.retry").setLevel(logging.WARN)
-
-    now = datetime.now()
 
     if n_workers > MAX_WORKERS:
         raise DocoptExit("Number of workers requested (%d) exceeds maximum (%d)" % (n_workers, MAX_WORKERS))
