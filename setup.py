@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="buildtools",
-    version="1.0.4",
+    version="1.0.5",
     description="Mozilla RelEng Toolkit",
     author="Release Engineers",
     author_email="release@mozilla.com",
