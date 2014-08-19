@@ -1,3 +1,5 @@
+from distutils.version import StrictVersion
+
 try:
     import simplejson as json
 except ImportError:
@@ -48,10 +50,18 @@ class ReleaseCreatorBase(object):
         data['platformVersion'] = appVersion
         data['displayVersion'] = getPrettyVersion(version)
 
+        # XXX: This is a hack for bug 1045583. We should remove it, and always
+        # use "candidates" for nightlyDir after the switch to Balrog is complete.
+        if productName.lower() == "mobile":
+            nightlyDir = "candidates"
+        else:
+            nightlyDir = "nightly"
+
         for channel in updateChannels:
             if channel in ('betatest', 'esrtest'):
                 dir_ = makeCandidatesDir(productName.lower(), version,
-                                         buildNumber, server=stagingServer, protocol='http')
+                                         buildNumber, server=stagingServer, protocol='http',
+                                         nightlyDir=nightlyDir)
                 data['fileUrls'][channel] = '%supdate/%%OS_FTP%%/%%LOCALE%%/%%FILENAME%%' % dir_
             else:
                 url = 'http://%s/?product=%%PRODUCT%%&os=%%OS_BOUNCER%%&lang=%%LOCALE%%' % bouncerServer
@@ -61,7 +71,8 @@ class ReleaseCreatorBase(object):
         # after we implement better solution talked about in comments 2 through 4
         if channel == 'release':
             dir_ = makeCandidatesDir(productName.lower(), version,
-                                        buildNumber, server='download.cdn.mozilla.net', protocol='http')
+                                     buildNumber, server='download.cdn.mozilla.net', protocol='http',
+                                     nightlyDir=nightlyDir)
             url = '%supdate/%%OS_FTP%%/%%LOCALE%%/%%FILENAME%%' % dir_
             data['fileUrls']['beta'] = url
             data['fileUrls']['beta-cdntest'] = url
@@ -112,8 +123,8 @@ class ReleaseCreatorV2(ReleaseCreatorBase):
 
         data['ftpFilenames']['complete'] = '%s-%s.complete.mar' % (productName.lower(), version)
         data['ftpFilenames']['partial'] = '%s-%s-%s.partial.mar' % (productName.lower(), previousVersion, version)
-        data['bouncerProducts']['complete'] = '%s-%s-Complete' % (productName.capitalize(), version)
-        data['bouncerProducts']['partial'] = '%s-%s-Partial-%s' % (productName.capitalize(), version, previousVersion)
+        data['bouncerProducts']['complete'] = '%s-%s-complete' % (productName.lower(), version)
+        data['bouncerProducts']['partial'] = '%s-%s-partial-%s' % (productName.lower(), version, previousVersion)
 
         return data
 
@@ -131,7 +142,7 @@ class ReleaseCreatorV3(ReleaseCreatorBase):
             },
             "bouncerProducts": {
                 "completes": {
-                    "*": "%s-%s-Complete" % (productName.capitalize(), version),
+                    "*": "%s-%s-complete" % (productName.lower(), version),
                 }
             }
         }
@@ -144,7 +155,7 @@ class ReleaseCreatorV3(ReleaseCreatorBase):
                                               previousInfo["buildNumber"],
                                               self.dummy)
                 filename = "%s-%s-%s.partial.mar" % (productName.lower(), previousVersion, version)
-                bouncerProduct = "%s-%s-Partial-%s" % (productName.capitalize(), version, previousVersion)
+                bouncerProduct = "%s-%s-partial-%s" % (productName.lower(), version, previousVersion)
                 data["ftpFilenames"]["partials"][from_] = filename
                 data["bouncerProducts"]["partials"][from_] = bouncerProduct
 

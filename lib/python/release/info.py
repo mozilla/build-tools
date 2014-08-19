@@ -219,4 +219,4 @@ def fileInfo(filepath, product):
 
 
 def getProductDetails(product, appVersion):
-    return 'https://www.mozilla.org/%%LOCALE%%/%s/%s/releasenotes/' % (product, appVersion)
+    return 'https://www.mozilla.com/%%LOCALE%%/%s/%s/releasenotes/' % (product, appVersion)
