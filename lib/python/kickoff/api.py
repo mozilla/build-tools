@@ -51,14 +51,17 @@ class API(object):
         log.debug('Data sent: %s' % data)
         try:
             return retry(self.session.request, sleeptime=5, max_sleeptime=15,
-                         retry_exceptions=(requests.HTTPError, requests.ConnectionError),
+                         retry_exceptions=(requests.HTTPError, 
+                                           requests.ConnectionError),
                          attempts=self.retries,
                          kwargs=dict(method=method, url=url, data=data,
                                      config=self.config, timeout=self.timeout,
                                      auth=self.auth, params=params)
-            )
+                        )
         except requests.HTTPError, e:
-            log.error('Caught HTTPError: %d %s' % (e.response.status_code, e.response.content), exc_info=True)
+            log.error('Caught HTTPError: %d %s' % 
+                     (e.response.status_code, e.response.content), 
+                     exc_info=True)
             raise
 
 
@@ -95,7 +98,8 @@ class Release(API):
 
     def update(self, name, **data):
         url_template_vars = {'name': name}
-        return self.request(method='POST', data=data, url_template_vars=url_template_vars).content
+        return self.request(method='POST', data=data, 
+                            url_template_vars=url_template_vars).content
 
 
 class ReleaseL10n(API):
@@ -103,3 +107,11 @@ class ReleaseL10n(API):
 
     def getL10n(self, name):
         return self.request(url_template_vars={'name': name}).content
+
+
+class Status(API):
+    url_template = '/releases/%(name)s/status'
+
+    def update(self, name, data):
+        return self.request(method='POST', data=data,
+                            url_template_vars={'name': name}).content
