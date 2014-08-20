@@ -125,14 +125,12 @@ function setresult() {
             names = ['all'];
         } else {
             var group = $(this).closest('.option-group');
-            var options;
-            if (group.find('.subgroup-all-selector:checked').length > 0) {
-                // Special-case. We need to collapse things into a subgroup "all" value
-                options = group.find(':checked:not(.group-selector):not(.option-subgroup *)')
-                    .add('.subgroup-all-selector', group);
-            } else {
-                options = group.find(':checked:not(.group-selector):not(.subgroup-selector):not(.nondefault)');
-            }
+            var options = group.find(':checked:not(.group-selector):not(.subgroup-selector):not(.nondefault)');
+            group.find('.subgroup-all-selector:checked').each(function(i, elm) {
+                options = options.add($(elm));
+                var subgroup = $(this).closest('.option-subgroup');
+                options = options.not(subgroup.find(':checked:not(.group-selector):not(.subgroup-selector):not(.nondefault)'))
+            })
             options.each(function(i,elt){
                 names.push($(elt).attr('value'));
                 var project = $(elt).attr('data-project');
