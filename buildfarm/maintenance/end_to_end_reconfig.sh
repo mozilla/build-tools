@@ -350,27 +350,20 @@ function merge_to_production {
 # Return code of merge_to_production is 0 if merge performed successfully and changes made
 if merge_to_production || [ "${FORCE_RECONFIG}" == '1' ]; then
     production_masters_url='http://hg.mozilla.org/build/tools/raw-file/tip/buildfarm/maintenance/production-masters.json'
-    devices_json_url='http://hg.mozilla.org/build/tools/raw-file/tip/buildfarm/mobile/devices.json'
     if [ "${PREPARE_ONLY}" == '1' ]; then
         echo "  * Preparing reconfig only; not running: '$(pwd)/manage_masters.py' -f '${production_masters_url}' -j16 -R scheduler -R build -R try -R tests show_revisions update"
-        echo "  * Preparing reconfig only; not running: '$(pwd)/manage_foopies.py' -f '${devices_json_url}' -j16 -H all show_revision update"
         echo "  * Preparing reconfig only; not running: '$(pwd)/manage_masters.py' -f '${production_masters_url}' -j32 -R scheduler -R build -R try -R tests checkconfig reconfig"
         echo "  * Preparing reconfig only; not running: '$(pwd)/manage_masters.py' -f '${production_masters_url}' -j16 -R scheduler -R build -R try -R tests show_revisions"
-        echo "  * Preparing reconfig only; not running: '$(pwd)/manage_foopies.py' -f '${devices_json_url}' -j16 -H all show_revision"
     else
         # Split into two steps so -j option can be varied between them
         echo "  * Running: '$(pwd)/manage_masters.py' -f '${production_masters_url}' -j16 -R scheduler -R build -R try -R tests show_revisions update"
         ./manage_masters.py -f "${production_masters_url}" -j16 -R scheduler -R build -R try -R tests show_revisions update >>"${RECONFIG_DIR}/manage_masters-${START_TIME}.log" 2>&1
-        echo "  * Running: '$(pwd)/manage_foopies.py' -f '${devices_json_url}' -j16 -H all show_revision update"
-        ./manage_foopies.py -f "${devices_json_url}" -j16 -H all show_revision update >>"${RECONFIG_DIR}/manage_foopies-${START_TIME}.log" 2>&1
         echo "  * Running: '$(pwd)/manage_masters.py' -f '${production_masters_url}' -j32 -R scheduler -R build -R try -R tests checkconfig reconfig"
         ./manage_masters.py -f "${production_masters_url}" -j32 -R scheduler -R build -R try -R tests checkconfig reconfig >>"${RECONFIG_DIR}/manage_masters-${START_TIME}.log" 2>&1
         # delete this now, since changes have been deployed
         [ -f "${RECONFIG_DIR}/pending_changes" ] && mv "${RECONFIG_DIR}/pending_changes" "${RECONFIG_DIR}/pending_changes_${START_TIME}"
         echo "  * Running: '$(pwd)/manage_masters.py' -f '${production_masters_url}' -j16 -R scheduler -R build -R try -R tests show_revisions"
         ./manage_masters.py -f "${production_masters_url}" -j16 -R scheduler -R build -R try -R tests show_revisions >>"${RECONFIG_DIR}/manage_masters-${START_TIME}.log" 2>&1
-        echo "  * Running: '$(pwd)/manage_foopies.py' -f '${devices_json_url}' -j16 -H all show_revision"
-        ./manage_foopies.py -f "${devices_json_url}" -j16 -H all show_revision >>"${RECONFIG_DIR}/manage_foopies-${START_TIME}.log" 2>&1
     fi
 fi
 
@@ -389,6 +382,23 @@ fi
 echo "  * Summary of changes:"
 cat "${RECONFIG_DIR}/reconfig_update_for_maintenance.wiki" | sed 's/^/        /'
 echo "  * Reconfig completed. Directory '${RECONFIG_DIR}' contains artefacts from reconfig process."
+
+# Manage foopies after everything else.
+if merge_to_production || [ "${FORCE_RECONFIG}" == '1' ]; then
+    devices_json_url='http://hg.mozilla.org/build/tools/raw-file/tip/buildfarm/mobile/devices.json'
+    if [ "${PREPARE_ONLY}" == '1' ]; then
+        echo "  * Preparing foopy update only; not running: '$(pwd)/manage_foopies.py' -f '${devices_json_url}' -j16 -H all show_revision update"
+        echo "  * Preparing foopy update only; not running: '$(pwd)/manage_foopies.py' -f '${devices_json_url}' -j16 -H all show_revision"
+    else
+        echo "  * Running: '$(pwd)/manage_foopies.py' -f '${devices_json_url}' -j16 -H all show_revision update"
+        ./manage_foopies.py -f "${devices_json_url}" -j16 -H all show_revision update >>"${RECONFIG_DIR}/manage_foopies-${START_TIME}.log" 2>&1
+        echo "  * Running: '$(pwd)/manage_foopies.py' -f '${devices_json_url}' -j16 -H all show_revision"
+        ./manage_foopies.py -f "${devices_json_url}" -j16 -H all show_revision >>"${RECONFIG_DIR}/manage_foopies-${START_TIME}.log" 2>&1
+    fi
+fi
+
+echo "  * Foopies updated."
+
 STOP_TIME="$(date +%s)"
 echo "  * Finish timestamp: ${STOP_TIME}"
 echo "  * Time taken: $((STOP_TIME - START_TIME))s"
