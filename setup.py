@@ -25,7 +25,6 @@ setup(
         'furl',
         'requests',
         'docopt',
-        'python-dateutil',
     ],
 
     entry_points={

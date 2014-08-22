@@ -5,7 +5,6 @@ import time
 import logging
 import sys
 import os
-import json
 from os import path
 from optparse import OptionParser
 from smtplib import SMTPException
@@ -87,7 +86,7 @@ class ReleaseRunner(object):
             log.warning('Caught HTTPError: %s' % e.response.content)
             log.warning('status update failed, continuing...', exc_info=True)
 
-    def start_release_automation(self, release, master, enUSPlatforms):
+    def start_release_automation(self, release, master):
         sendchange(
             release['branch'],
             getReleaseTag(getBaseTag(release['product'],
@@ -96,13 +95,12 @@ class ReleaseRunner(object):
             master,
             release['product']
         )
-        self.mark_as_completed(release, enUSPlatforms)
+        self.mark_as_completed(release)
 
-    def mark_as_completed(self, release, enUSPlatforms):
+    def mark_as_completed(self, release):
         log.info('mark as completed %s' % release['name'])
-        self.release_api.update(release['name'], complete=True, 
-                                status='Started', 
-                                enUSPlatforms=json.dumps(enUSPlatforms))
+        self.release_api.update(
+            release['name'], complete=True, status='Started')
 
     def mark_as_failed(self, release, why):
         log.info('mark as failed %s' % release['name'])
@@ -422,11 +420,7 @@ def main(options):
     for release in rr.new_releases:
         try:
             rr.update_status(release, 'Running sendchange command')
-            cfgFile = getReleaseConfigName(
-                release['product'], path.basename(release['branch']),
-                release['version'], staging)
-            enUSPlatforms = readReleaseConfig(cfgFile)['enUSPlatforms']
-            rr.start_release_automation(release, sendchange_master, enUSPlatforms)
+            rr.start_release_automation(release, sendchange_master)
         except:
             # We explicitly do not raise an error here because there's no
             # reason not to start other releases if the sendchange fails for
