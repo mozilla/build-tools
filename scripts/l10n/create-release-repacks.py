@@ -318,6 +318,9 @@ if __name__ == "__main__":
     else:
         balrog_submitter = None
 
+    partialUpdates = releaseConfig.get('partialUpdates', {}).copy()
+    partialUpdates.update(releaseConfig.get('extraPartials', {}))
+
     createRepacks(
         sourceRepo=make_hg_url(branchConfig["hghost"], sourceRepoInfo["path"]),
         revision=options.releaseTag,
@@ -344,7 +347,7 @@ if __name__ == "__main__":
         platform=options.platform,
         brand=brandName,
         generatePartials=options.generatePartials,
-        partialUpdates=releaseConfig["partialUpdates"],
+        partialUpdates=partialUpdates,
         usePymake=options.use_pymake,
         tooltoolManifest=options.tooltool_manifest,
         tooltool_script=options.tooltool_script,
