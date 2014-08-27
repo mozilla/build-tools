@@ -21,9 +21,10 @@ download_builds() {
     do
     source_file=`basename "$url"`
     if [ -f "$source_file" ]; then rm "$source_file"; fi
+    #PARAMS="--user=user --password=pass"
     cd downloads 
     if [ -f "$source_file" ]; then rm "$source_file"; fi
-    cached_download "${source_file}" "${url}"
+    $retry wget -O "$source_file" --progress=dot:mega --server-response --no-check-certificate $PARAMS "$url" 2>&1
     status=$?
     if [ $status != 0 ]; then
       echo "FAIL: Could not download source $source_file from $url"
