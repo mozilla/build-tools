@@ -100,15 +100,12 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
                  l10nIni, compareLocalesRepo, env, absObjdir, merge=True,
                  productName=None, platform=None,
                  version=None, partialUpdates=None,
-                 buildNumber=None, stageServer=None):
+                 buildNumber=None, stageServer=None,
+                 mozillaDir=None, mozillaSrcDir=None):
     repo = "/".join([l10nBaseRepo, locale])
     localeDir = path.join(l10nRepoDir, locale)
     retry(mercurial, args=(repo, localeDir))
     update(localeDir, revision=revision)
-
-    mozillaDir = ''
-    if 'thunderbird' in productName:
-        mozillaDir = 'mozilla/'
 
     # It's a bad assumption to make, but the source dir is currently always
     # one level above the objdir.
@@ -126,8 +123,12 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
     if sys.platform.startswith('darwin'):
         env["MOZ_PKG_PLATFORM"] = "mac"
     UPLOAD_EXTRA_FILES = []
-    nativeDistDir = path.normpath(path.abspath(
-        path.join(localeSrcDir, '../../%sdist' % mozillaDir)))
+    if mozillaDir:
+        nativeDistDir = path.normpath(path.abspath(
+            path.join(localeSrcDir, '../../%sdist' % mozillaDir)))
+    else:
+        nativeDistDir = path.normpath(path.abspath(
+            path.join(localeSrcDir, '../../dist')))
     posixDistDir = windows2msys(nativeDistDir)
     mar = '%s/host/bin/mar' % posixDistDir
     mbsdiff = '%s/host/bin/mbsdiff' % posixDistDir
@@ -143,9 +144,9 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
     unwrap_full_update = '../../../tools/update-packaging/unwrap_full_update.pl'
     make_incremental_update = '../../tools/update-packaging/make_incremental_update.sh'
     prevMarDir = '../../../../'
-    if mozillaDir:
-        unwrap_full_update = '../../../../%stools/update-packaging/unwrap_full_update.pl' % mozillaDir
-        make_incremental_update = '../../../%stools/update-packaging/make_incremental_update.sh' % mozillaDir
+    if mozillaSrcDir:
+        unwrap_full_update = '../../../../%s/tools/update-packaging/unwrap_full_update.pl' % mozillaSrcDir
+        make_incremental_update = '../../../%s/tools/update-packaging/make_incremental_update.sh' % mozillaSrcDir
         prevMarDir = '../../../../../'
     env['MAR'] = mar
     env['MBSDIFF'] = mbsdiff

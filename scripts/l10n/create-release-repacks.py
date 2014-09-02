@@ -41,7 +41,8 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                   generatePartials=False, partialUpdates=None,
                   usePymake=False, tooltoolManifest=None,
                   tooltool_script=None, tooltool_urls=None,
-                  balrog_submitter=None, balrog_hash="sha512", buildid=None):
+                  balrog_submitter=None, balrog_hash="sha512", buildid=None,
+                  mozillaDir=None, mozillaSrcDir=None):
     sourceRepoName = path.split(sourceRepo)[-1]
     absObjdir = path.abspath(path.join(sourceRepoName, objdir))
     localeSrcDir = path.join(absObjdir, appName, "locales")
@@ -121,7 +122,8 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                                           absObjdir=absObjdir, merge=merge,
                                           productName=product, platform=platform,
                                           version=version, partialUpdates=partialUpdates,
-                                          buildNumber=buildNumber, stageServer=stageServer)
+                                          buildNumber=buildNumber, stageServer=stageServer,
+                                          mozillaDir=mozillaDir, mozillaSrcDir=mozillaSrcDir)
 
             if balrog_submitter:
                 # TODO: partials, after bug 797033 is fixed
@@ -300,11 +302,17 @@ if __name__ == "__main__":
 
     stageSshKey = path.join("~", ".ssh", branchConfig["stage_ssh_key"])
 
+    mozillaDir = None
+    mozillaSrcDir = None
     # If mozilla_dir is defined, extend the paths in makeDirs with the prefix
     # of the mozilla_dir
     if 'mozilla_dir' in releaseConfig:
         for i in range(0, len(makeDirs)):
             makeDirs[i] = path.join(releaseConfig['mozilla_dir'], makeDirs[i])
+        mozillaDir = releaseConfig['mozilla_dir']
+        mozillaSrcDir = releaseConfig['mozilla_dir']
+    elif 'mozilla_srcdir' in releaseConfig:
+        mozillaSrcDir = releaseConfig['mozilla_srcdir']
 
     if not options.tooltool_script:
         options.tooltool_script = ['/tools/tooltool.py']
@@ -353,5 +361,7 @@ if __name__ == "__main__":
         tooltool_script=options.tooltool_script,
         tooltool_urls=options.tooltool_urls,
         balrog_submitter=balrog_submitter,
-        buildid=options.buildid
+        buildid=options.buildid,
+        mozillaDir=mozillaDir,
+        mozillaSrcDir=mozillaSrcDir
     )
