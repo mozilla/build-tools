@@ -43,7 +43,12 @@ def bump(repo, bumpFiles, versionKey):
     for f, info in bumpFiles.iteritems():
         fileToBump = path.join(repo, f)
         contents = open(fileToBump).read()
-        newContents = bumpFile(f, contents, info[versionKey])
+        # If info[versionKey] is a function, this function will do the bump.
+        # It takes the old contents as its input to generate the new content.
+        if callable(info[versionKey]):
+            newContents = info[versionKey](contents)
+        else:
+            newContents = bumpFile(f, contents, info[versionKey])
         if contents != newContents:
             fh = open(fileToBump, "w")
             fh.write(newContents)
