@@ -55,13 +55,6 @@
     ],
     "repo_type": "hg"
   },
-  "mozilla-b2g28_v1_3": {
-    "repo": "https://hg.mozilla.org/releases/mozilla-b2g28_v1_3",
-    "graph_branches": [
-      "Mozilla-B2g28-v1.3"
-    ],
-    "repo_type": "hg"
-  },
   "mozilla-b2g28_v1_3t": {
     "repo": "https://hg.mozilla.org/releases/mozilla-b2g28_v1_3t",
     "graph_branches": [
