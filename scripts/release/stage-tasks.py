@@ -162,6 +162,8 @@ def pushToMirrors(productName, version, buildNumber, stageServer,
     rsync_cmd = ['rsync', '-av']
     if dryRun:
         rsync_cmd.append('-n')
+    # use hardlinks
+    rsync_cmd.append('--link-dest=%s' % source_dir)
     run_remote_cmd(rsync_cmd + excludes + [source_dir, target_dir],
                    server=stageServer, username=stageUsername,
                    sshKey=stageSshKey)
