@@ -5,6 +5,7 @@ import time
 import logging
 import sys
 import os
+import json
 from os import path
 from optparse import OptionParser
 from smtplib import SMTPException
@@ -86,7 +87,7 @@ class ReleaseRunner(object):
             log.warning('Caught HTTPError: %s' % e.response.content)
             log.warning('status update failed, continuing...', exc_info=True)
 
-    def start_release_automation(self, release, master):
+    def start_release_automation(self, release, master, enUSPlatforms):
         sendchange(
             release['branch'],
             getReleaseTag(getBaseTag(release['product'],
@@ -95,12 +96,13 @@ class ReleaseRunner(object):
             master,
             release['product']
         )
-        self.mark_as_completed(release)
+        self.mark_as_completed(release, enUSPlatforms)
 
-    def mark_as_completed(self, release):
+    def mark_as_completed(self, release, enUSPlatforms):
         log.info('mark as completed %s' % release['name'])
-        self.release_api.update(
-            release['name'], complete=True, status='Started')
+        self.release_api.update(release['name'], complete=True, 
+                                status='Started', 
+                                enUSPlatforms=json.dumps(enUSPlatforms))
 
     def mark_as_failed(self, release, why):
         log.info('mark as failed %s' % release['name'])
@@ -420,7 +422,15 @@ def main(options):
     for release in rr.new_releases:
         try:
             rr.update_status(release, 'Running sendchange command')
-            rr.start_release_automation(release, sendchange_master)
+            staging = config.getboolean('release-runner', 'staging')
+            update(configs_workdir, revision='default')
+            cfgFile = path.join(configs_workdir, 
+                                'mozilla', 
+                                getReleaseConfigName(release['product'], 
+                                                     path.basename(release['branch']),
+                                                     release['version'], staging))
+            enUSPlatforms = readReleaseConfig(cfgFile)['enUSPlatforms']
+            rr.start_release_automation(release, sendchange_master, enUSPlatforms)
         except:
             # We explicitly do not raise an error here because there's no
             # reason not to start other releases if the sendchange fails for
