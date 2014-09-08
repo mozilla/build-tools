@@ -125,7 +125,7 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
     UPLOAD_EXTRA_FILES = []
     if mozillaDir:
         nativeDistDir = path.normpath(path.abspath(
-            path.join(localeSrcDir, '../../%sdist' % mozillaDir)))
+            path.join(localeSrcDir, '../../%s/dist' % mozillaDir)))
     else:
         nativeDistDir = path.normpath(path.abspath(
             path.join(localeSrcDir, '../../dist')))
