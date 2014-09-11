@@ -115,10 +115,8 @@ def main():
         level=verbosity[config.getboolean('shipit-notifier', 'verbose')]
     )
 
-    # Adjust unique_label when wanting to run shipit on multiple machines
-    unique_label = 'quickstart-{}'.format(uuid.uuid4())
-    
-    pulse = consumers.BuildConsumer(applabel=unique_label)
+    # Adjust applabel when wanting to run shipit on multiple machines
+    pulse = consumers.BuildConsumer(applabel='shipit-notifier')
     pulse.configure(topic='build.#.finished',
                     durable=True, callback=got_message)
 
