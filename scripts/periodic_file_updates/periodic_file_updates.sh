@@ -285,7 +285,7 @@ function compare_blocklist_files {
     WGET_STATUS=$?
     if [ ${WGET_STATUS} != 0 ]; then
         echo "ERROR: wget exited with a non-zero exit code: ${WGET_STATUS}"
-        return ${WGET_STATUS}
+        exit ${WGET_STATUS}
     fi
 
     rm -f blocklist_hg.xml
@@ -293,7 +293,7 @@ function compare_blocklist_files {
     WGET_STATUS=$?
     if [ ${WGET_STATUS} != 0 ]; then
         echo "ERROR: wget exited with a non-zero exit code: ${WGET_STATUS}" >&2
-        return ${WGET_STATUS}
+        exit ${WGET_STATUS}
     fi
 
     # The downloaded files should be non-empty and have a valid xml header
@@ -349,7 +349,7 @@ function clone_repo {
         CLONE_STATUS=$?
         if [ ${CLONE_STATUS} != 0 ]; then
             echo "ERROR: hg clone exited with a non-zero exit code: ${CLONE_STATUS}" >&2
-            return ${CLONE_STATUS}
+            exit ${CLONE_STATUS}
         fi
     fi
 
@@ -358,14 +358,14 @@ function clone_repo {
     PULL_STATUS=$?
     if [ ${PULL_STATUS} != 0 ]; then
         echo "ERROR: hg pull exited with a non-zero exit code: ${PULL_STATUS}" >&2
-        return ${PULL_STATUS}
+        exit ${PULL_STATUS}
     fi
     echo "INFO: updating to default: ${HG} -R ${REPODIR} update -C default"
     ${HG} -R ${REPODIR} update -C default
     UPDATE_STATUS=$?
     if [ ${UPDATE_STATUS} != 0 ]; then
         echo "ERROR: hg update exited with a non-zero exit code: ${UPDATE_STATUS}" >&2
-        return ${UPDATE_STATUS}
+        exit ${UPDATE_STATUS}
     fi
 }
 
@@ -455,7 +455,7 @@ function push_repo {
             echo "ERROR: hg rollback failed with exit code: ${ROLLBACK_STATUS}" >&2
             echo "This is unrecoverable, removing the local clone to start fresh next time." >&2
             rm -rf ${REPODIR}
-            return ${ROLLBACK_STATUS}
+            exit ${ROLLBACK_STATUS}
         fi
     else
         echo "INFO: hg push succeeded."
