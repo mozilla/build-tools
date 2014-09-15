@@ -58,7 +58,7 @@ class ReleaseCreatorBase(object):
             nightlyDir = "nightly"
 
         for channel in updateChannels:
-            if channel in ('betatest', 'esrtest'):
+            if channel in ('betatest', 'esrtest') or "localtest" in channel:
                 dir_ = makeCandidatesDir(productName.lower(), version,
                                          buildNumber, server=stagingServer, protocol='http',
                                          nightlyDir=nightlyDir)
