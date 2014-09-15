@@ -6,6 +6,7 @@ import sys
 import logging
 from subprocess import CalledProcessError
 from tempfile import NamedTemporaryFile
+import argparse
 import site
 
 logging.basicConfig(
@@ -14,7 +15,7 @@ log = logging.getLogger(__name__)
 
 site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 site.addsitedir(path.join(path.dirname(__file__), "../../lib/python/vendor"))
-from release.info import readReleaseConfig, readBranchConfig, readConfig
+from release.info import readReleaseConfig, readConfig
 from release.paths import makeCandidatesDir, makeReleasesDir
 from util.hg import update, make_hg_url, mercurial
 from util.commands import run_remote_cmd
@@ -26,8 +27,8 @@ import requests
 DEFAULT_BUILDBOT_CONFIGS_REPO = make_hg_url('hg.mozilla.org',
                                             'build/buildbot-configs')
 
-REQUIRED_BRANCH_CONFIG = ("stage_server", "stage_username", "stage_ssh_key")
-REQUIRED_RELEASE_CONFIG = ("productName", "version", "buildNumber")
+REQUIRED_RELEASE_CONFIG = ("productName", "version", "buildNumber",
+                           "stage_product")
 
 DEFAULT_RSYNC_EXCLUDES = ['--exclude=*tests*',
                           '--exclude=*crashreporter*',
@@ -43,6 +44,8 @@ DEFAULT_RSYNC_EXCLUDES = ['--exclude=*tests*',
                           '--exclude=host',
                           '--exclude=*.json',
                           '--exclude=*mar-tools*',
+                          '--exclude=gecko-unsigned-unaligned.apk',
+                          '--exclude=robocop.apk',
                           ]
 
 VIRUS_SCAN_CMD = ['nice', 'ionice', '-c2', '-n7',
@@ -70,28 +73,6 @@ PARTNER_BUNDLE_MAPPINGS = {
     r'msn/us/win32/en-US/Firefox\ Setup.exe': r'msn-us/win32/en-US/Firefox\ Setup\ %(version)s.exe',
     r'bing/win32/en-US/Firefox-Bing\ Setup.exe': r'bing/win32/en-US/Firefox\ Setup\ %(version)s.exe',
 }
-
-
-def validate(options, args):
-    if not options.configfile:
-        log.info("Must pass --configfile")
-        sys.exit(1)
-    releaseConfigFile = path.join("buildbot-configs", options.releaseConfig)
-    branchConfigFile = path.join("buildbot-configs", options.configfile)
-    branchConfigDir = path.dirname(branchConfigFile)
-
-    if not path.exists(branchConfigFile):
-        log.info("%s does not exist!" % branchConfigFile)
-        sys.exit(1)
-
-    releaseConfig = readReleaseConfig(releaseConfigFile,
-                                      required=REQUIRED_RELEASE_CONFIG)
-    sourceRepoName = releaseConfig['sourceRepositories'][
-        options.sourceRepoKey]['name']
-    branchConfig = readBranchConfig(branchConfigDir, branchConfigFile,
-                                    sourceRepoName,
-                                    required=REQUIRED_BRANCH_CONFIG)
-    return branchConfig, releaseConfig
 
 
 def checkStagePermissions(productName, version, buildNumber, stageServer,
@@ -228,7 +209,8 @@ def doSyncPartnerBundles(productName, version, buildNumber, stageServer,
         full_dest = path.join(PARTNER_BUNDLE_DIR, dest)
         full_src = path.join(candidates_dir, 'partner-repacks', src)
         full_src = full_src % {'version': version}
-        run_remote_cmd(['cp', '-f', full_src, full_dest],
+        run_remote_cmd(
+            ['cp', '-f', full_src, full_dest],
             server=stageServer, username=stageUsername, sshKey=stageSshKey
         )
 
@@ -274,38 +256,40 @@ def update_bouncer_alias(tuxedoServerUrl, auth, version,
 
 
 if __name__ == '__main__':
-    from optparse import OptionParser
-    parser = OptionParser("")
+    parser = argparse.ArgumentParser()
 
     parser.set_defaults(
-        buildbotConfigs=os.environ.get("BUILDBOT_CONFIGS",
-                                       DEFAULT_BUILDBOT_CONFIGS_REPO),
-        sourceRepoKey="mozilla",
     )
-    parser.add_option("-c", "--configfile", dest="configfile")
-    parser.add_option("-r", "--release-config", dest="releaseConfig")
-    parser.add_option("-b", "--buildbot-configs", dest="buildbotConfigs")
-    parser.add_option("-t", "--release-tag", dest="releaseTag")
-    parser.add_option("--source-repo-key", dest="sourceRepoKey")
-    parser.add_option("--product", dest="product")
-    parser.add_option("--ssh-user", dest="ssh_username")
-    parser.add_option("--ssh-key", dest="ssh_key")
-    parser.add_option("--overwrite", dest="overwrite", default=False, action="store_true")
-    parser.add_option("--extra-excludes", dest="extra_excludes",
-                      action="append")
+    parser.add_argument("-r", "--release-config", required=True,
+                        help="Release config file location relative to "
+                        "buildbot-configs repo root")
+    parser.add_argument("-b", "--buildbot-configs",
+                        help="buildbot-configs mercurial repo URL",
+                        default=os.environ.get("BUILDBOT_CONFIGS",
+                                               DEFAULT_BUILDBOT_CONFIGS_REPO))
+    parser.add_argument("-t", "--release-tag", required=True)
+    parser.add_argument("--product", help="Override for stage_product")
+    parser.add_argument("--ssh-user", required=True)
+    parser.add_argument("--ssh-key", required=True)
+    parser.add_argument("--overwrite", default=False, action="store_true")
+    parser.add_argument("--extra-excludes", action="append")
+    parser.add_argument("actions", nargs="+", help="Script actions")
 
-    options, args = parser.parse_args()
-    mercurial(options.buildbotConfigs, "buildbot-configs")
-    update("buildbot-configs", revision=options.releaseTag)
+    args = parser.parse_args()
+    actions = args.actions
+    mercurial(args.buildbot_configs, "buildbot-configs")
+    update("buildbot-configs", revision=args.release_tag)
 
-    branchConfig, releaseConfig = validate(options, args)
+    releaseConfigFile = path.join("buildbot-configs", args.release_config)
+    releaseConfig = readReleaseConfig(
+        releaseConfigFile, required=REQUIRED_RELEASE_CONFIG)
 
-    productName = options.product or releaseConfig['productName']
+    productName = args.product or releaseConfig['stage_product']
     version = releaseConfig['version']
     buildNumber = releaseConfig['buildNumber']
-    stageServer = branchConfig['stage_server']
-    stageUsername = options.ssh_username or branchConfig['stage_username']
-    stageSshKey = options.ssh_key or branchConfig["stage_ssh_key"]
+    stageServer = releaseConfig['stagingServer']
+    stageUsername = args.ssh_user
+    stageSshKey = args.ssh_key
     stageSshKey = path.join(os.path.expanduser("~"), ".ssh", stageSshKey)
     createIndexFiles = releaseConfig.get('makeIndexFiles', False) \
         and productName != 'xulrunner'
@@ -314,7 +298,7 @@ if __name__ == '__main__':
     ftpSymlinkName = releaseConfig.get('ftpSymlinkName')
     bouncer_aliases = releaseConfig.get('bouncer_aliases')
 
-    if 'permissions' in args:
+    if 'permissions' in actions:
         checkStagePermissions(stageServer=stageServer,
                               stageUsername=stageUsername,
                               stageSshKey=stageSshKey,
@@ -322,7 +306,7 @@ if __name__ == '__main__':
                               version=version,
                               buildNumber=buildNumber)
 
-    if 'antivirus' in args:
+    if 'antivirus' in actions:
         runAntivirusCheck(stageServer=stageServer,
                           stageUsername=stageUsername,
                           stageSshKey=stageSshKey,
@@ -330,17 +314,17 @@ if __name__ == '__main__':
                           version=version,
                           buildNumber=buildNumber)
 
-    if 'permissions' in args or 'antivirus' in args:
+    if 'permissions' in actions or 'antivirus' in actions:
         pushToMirrors(stageServer=stageServer,
                       stageUsername=stageUsername,
                       stageSshKey=stageSshKey,
                       productName=productName,
                       version=version,
                       buildNumber=buildNumber,
-                      extra_excludes=options.extra_excludes,
+                      extra_excludes=args.extra_excludes,
                       dryRun=True)
 
-    if 'push' in args:
+    if 'push' in actions:
         if createIndexFiles:
             makeIndexFiles(stageServer=stageServer,
                            stageUsername=stageUsername,
@@ -353,16 +337,16 @@ if __name__ == '__main__':
                       stageSshKey=stageSshKey,
                       productName=productName,
                       version=version,
-                      extra_excludes=options.extra_excludes,
+                      extra_excludes=args.extra_excludes,
                       buildNumber=buildNumber,
-                      overwrite=options.overwrite)
+                      overwrite=args.overwrite)
         if createIndexFiles:
             deleteIndexFiles(stageServer=stageServer,
                              stageUsername=stageUsername,
                              stageSshKey=stageSshKey,
                              cleanup_dir=makeCandidatesDir(productName, version, buildNumber))
 
-    if 'postrelease' in args:
+    if 'postrelease' in actions:
         if createIndexFiles:
             deleteIndexFiles(stageServer=stageServer,
                              stageUsername=stageUsername,
