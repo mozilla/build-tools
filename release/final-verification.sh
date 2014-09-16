@@ -210,7 +210,7 @@ aus_server="https://aus2.mozilla.org"
 for cfg_file in "${@}"
 do
     line_no=0
-    sed -e 's/betatest/releasetest/;s/esrtest/releasetest/' "${cfg_file}" | while read config_line
+    sed -e 's/localtest/cdntest/;s/betatest/releasetest/;s/esrtest/releasetest/' "${cfg_file}" | while read config_line
     do
         let line_no++
         # to avoid contamination between iterations, reset variables
