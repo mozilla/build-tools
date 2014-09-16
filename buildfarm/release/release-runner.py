@@ -317,13 +317,6 @@ def main(options):
             log.error("Caught exception when polling:", exc_info=True)
             sys.exit(5)
 
-    # Send email to r-d for a fast notification
-    for release in rr.new_releases:
-        cfgFile = configs_workdir + "/mozilla/" + getReleaseConfigName(
-            release['product'], path.basename(release['branch']),
-            release['version'], staging)
-        sendMailRD(smtp_server, notify_from, cfgFile, release)
-
     # Clean up after any potential previous attempts before starting.
     # Not doing this could end up with multiple heads on the same branch.
     for repo, workdir, push_repo in (
@@ -335,6 +328,13 @@ def main(options):
         retry(mercurial, args=(repo, workdir))
         cleanOutgoingRevs(workdir, push_repo, hg_username,
                           hg_ssh_key)
+
+    # Send email to r-d for a fast notification
+    for release in rr.new_releases:
+        cfgFile = configs_workdir + "/mozilla/" + getReleaseConfigName(
+            release['product'], path.basename(release['branch']),
+            release['version'], staging)
+        sendMailRD(smtp_server, notify_from, cfgFile, release)
 
     # Create symlinks if needed
     if 'symlinks' in config.sections():
