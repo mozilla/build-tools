@@ -2,14 +2,23 @@
 import os
 import re
 import subprocess
+import sys
 from urlparse import urlsplit
 from ConfigParser import RawConfigParser
 
 from util.commands import run_cmd, get_output, remove_path
-from util.retry import retry
+from util.retry import retry, retrier
 
 import logging
 log = logging.getLogger(__name__)
+
+# Error strings from HG that we want to retry on
+TRANSIENT_HG_ERRORS = (
+    'error: Name or service not known',
+    'HTTP Error 5',
+)
+
+RETRY_ATTEMPTS = 3
 
 
 class DefaultShareBase:
@@ -58,18 +67,36 @@ def get_repo_path(repo):
         return urlsplit(repo).path.lstrip("/")
 
 
+def get_hg_output(cmd, **kwargs):
+    """
+    Runs hg with the given arguments and sets HGPLAIN in the environment to
+    enforce consistent output.
+    Equivalent to:
+        env = {}
+        env['HGPLAIN'] = '1'
+        return get_output(['hg'] + cmd, env=env, **kwargs)
+    """
+    if 'env' in kwargs:
+        env = kwargs['env']
+        del kwargs['env']
+    else:
+        env = {}
+    env['HGPLAIN'] = '1'
+    return get_output(['hg'] + cmd, env=env, **kwargs)
+
+
 def get_revision(path):
     """Returns which revision directory `path` currently has checked out."""
-    return get_output(['hg', 'parent', '--template', '{node|short}'], cwd=path)
+    return get_hg_output(['parent', '--template', '{node|short}'], cwd=path)
 
 
 def get_branch(path):
-    return get_output(['hg', 'branch'], cwd=path).strip()
+    return get_hg_output(['branch'], cwd=path).strip()
 
 
 def get_branches(path):
     branches = []
-    for line in get_output(['hg', 'branches', '-c'], cwd=path).splitlines():
+    for line in get_hg_output(['branches', '-c'], cwd=path).splitlines():
         branches.append(line.split()[0])
     return branches
 
@@ -87,7 +114,7 @@ def is_hg_cset(rev):
 def hg_ver():
     """Returns the current version of hg, as a tuple of
     (major, minor, build)"""
-    ver_string = get_output(['hg', '-q', 'version'])
+    ver_string = get_hg_output(['-q', 'version'])
     match = re.search("\(version ([0-9.]+)\)", ver_string)
     if match:
         bits = match.group(1).split(".")
@@ -120,7 +147,7 @@ def update(dest, branch=None, revision=None):
         run_cmd(cmd, cwd=dest)
     else:
         # Check & switch branch
-        local_branch = get_output(['hg', 'branch'], cwd=dest).strip()
+        local_branch = get_hg_output(['branch'], cwd=dest).strip()
 
         cmd = ['hg', 'update', '-C']
 
@@ -200,7 +227,7 @@ def clone(repo, dest, branch=None, revision=None, update_dest=True,
             return mercurial(repo, dest, branch, revision, autoPurge=True,
                              update_dest=update_dest, clone_by_rev=clone_by_rev)
 
-    cmd = ['hg', 'clone']
+    cmd = ['clone']
     if not update_dest:
         cmd.append('-U')
 
@@ -214,7 +241,23 @@ def clone(repo, dest, branch=None, revision=None, update_dest=True,
                 cmd.extend(['-b', branch])
 
     cmd.extend([repo, dest])
-    run_cmd(cmd)
+    exc = None
+    for _ in retrier(attempts=RETRY_ATTEMPTS):
+        try:
+            get_hg_output(cmd=cmd, include_stderr=True)
+            break
+        except subprocess.CalledProcessError, e:
+            exc = sys.exc_info()
+            if any(s in e.output for s in TRANSIENT_HG_ERRORS):
+                # This is ok, try again!
+                # Make sure the dest is clean
+                if os.path.exists(dest):
+                    log.debug("deleting %s", dest)
+                    remove_path(dest)
+                continue
+            raise
+    else:
+        raise exc[0], exc[1], exc[2]
 
     if update_dest:
         return update(dest, branch, revision)
@@ -260,7 +303,7 @@ def pull(repo, dest, update_dest=True, mirrors=None, **kwargs):
 
     # Convert repo to an absolute path if it's a local repository
     repo = _make_absolute(repo)
-    cmd = ['hg', 'pull']
+    cmd = ['pull']
     # Don't pass -r to "hg pull", except when it's a valid HG revision.
     # Pulling using tag names is dangerous: it uses the local .hgtags, so if
     # the tag has moved on the remote side you won't pull the new revision the
@@ -273,7 +316,19 @@ def pull(repo, dest, update_dest=True, mirrors=None, **kwargs):
     cmd.extend(common_args(**pull_kwargs))
 
     cmd.append(repo)
-    run_cmd(cmd, cwd=dest)
+    exc = None
+    for _ in retrier(attempts=RETRY_ATTEMPTS):
+        try:
+            get_hg_output(cmd=cmd, cwd=dest, include_stderr=True)
+            break
+        except subprocess.CalledProcessError, e:
+            exc = sys.exc_info()
+            if any(s in e.output for s in TRANSIENT_HG_ERRORS):
+                # This is ok, try again!
+                continue
+            raise
+    else:
+        raise exc[0], exc[1], exc[2]
 
     if update_dest:
         branch = None
@@ -290,13 +345,13 @@ REVISION, BRANCH = 0, 1
 
 def out(src, remote, **kwargs):
     """Check for outgoing changesets present in a repo"""
-    cmd = ['hg', '-q', 'out', '--template', '{node} {branches}\n']
+    cmd = ['-q', 'out', '--template', '{node} {branches}\n']
     cmd.extend(common_args(**kwargs))
     cmd.append(remote)
     if os.path.exists(src):
         try:
             revs = []
-            for line in get_output(cmd, cwd=src).rstrip().split("\n"):
+            for line in get_hg_output(cmd, cwd=src).rstrip().split("\n"):
                 try:
                     rev, branch = line.split()
                 # Mercurial displays no branch at all if the revision is on
@@ -361,7 +416,7 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
         # Check that 'hg share' works
         try:
             log.info("Checking if share extension works")
-            output = get_output(['hg', 'help', 'share'], dont_log=True)
+            output = get_hg_output(['help', 'share'], dont_log=True)
             if 'no commands defined' in output:
                 # Share extension is enabled, but not functional
                 log.info("Disabling sharing since share extension doesn't seem to work (1)")
@@ -545,9 +600,9 @@ def share(source, dest, branch=None, revision=None):
 
 
 def cleanOutgoingRevs(reponame, remote, username, sshKey):
-    outgoingRevs = retry(out, kwargs=dict(src=reponame, remote=remote,
-                                          ssh_username=username,
-                                          ssh_key=sshKey))
+    outgoingRevs = retry(out, attempts=RETRY_ATTEMPTS,
+                         kwargs=dict(src=reponame, remote=remote,
+                                     ssh_username=username, ssh_key=sshKey))
     for r in reversed(outgoingRevs):
         run_cmd(['hg', '--config', 'extensions.mq=', 'strip', '-n',
                  r[REVISION]], cwd=reponame)
@@ -556,7 +611,7 @@ def cleanOutgoingRevs(reponame, remote, username, sshKey):
 def path(src, name='default'):
     """Returns the remote path associated with "name" """
     try:
-        return get_output(['hg', 'path', name], cwd=src).strip()
+        return get_hg_output(['path', name], cwd=src).strip()
     except subprocess.CalledProcessError:
         return None
 
@@ -571,7 +626,7 @@ def unbundle(bundle, dest):
 
     `bundle` can be a local file or remote url."""
     try:
-        get_output(['hg', 'unbundle', bundle], cwd=dest, include_stderr=True)
+        get_hg_output(['unbundle', bundle], cwd=dest, include_stderr=True)
         return True
     except subprocess.CalledProcessError:
         return False

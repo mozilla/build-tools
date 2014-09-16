@@ -30,6 +30,9 @@ if __name__ == '__main__':
         bundles=None,
     )
     parser.add_option(
+        "-v", "--verbose", dest="loglevel", action="store_const",
+        const=logging.DEBUG, help="verbose logging")
+    parser.add_option(
         "-r", "--rev", dest="revision", help="which revision to update to")
     parser.add_option(
         "-b", "--branch", dest="branch", help="which branch to update to")

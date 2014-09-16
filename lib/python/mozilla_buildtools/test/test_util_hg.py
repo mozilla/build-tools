@@ -7,8 +7,11 @@ import subprocess
 import util.hg as hg
 from util.hg import clone, pull, update, hg_ver, mercurial, _make_absolute, \
     share, push, apply_and_push, HgUtilError, make_hg_url, get_branch, purge, \
-    get_branches, path, init, unbundle, adjust_paths, is_hg_cset, commit, tag
+    get_branches, path, init, unbundle, adjust_paths, is_hg_cset, commit, tag, \
+    get_hg_output
 from util.commands import run_cmd, get_output
+
+from mock import patch
 
 
 def getRevisions(dest):
@@ -97,10 +100,14 @@ class TestHg(unittest.TestCase):
         self.revisions = getRevisions(self.repodir)
         self.wc = os.path.join(self.tmpdir, 'wc')
         self.pwd = os.getcwd()
+        self.sleep_patcher = patch('time.sleep')
+        self.sleep_patcher.start()
+        hg.RETRY_ATTEMPTS = 2
 
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
         os.chdir(self.pwd)
+        self.sleep_patcher.stop()
 
     def testGetBranch(self):
         clone(self.repodir, self.wc)
@@ -1059,8 +1066,8 @@ class TestHg(unittest.TestCase):
         # Try and update to a non-existent revision using our mirror and
         # bundle, with the master failing. We should fail
         self.assertRaises(subprocess.CalledProcessError, mercurial,
-                          self.repodir, self.wc, shareBase=shareBase, mirrors=[
-                          mirror], bundles=[bundle],
+                          self.repodir, self.wc, shareBase=shareBase,
+                          mirrors=[mirror], bundles=[bundle],
                           revision="1234567890")
 
     def testCommit(self):
@@ -1124,3 +1131,22 @@ class TestHg(unittest.TestCase):
         run_cmd(['hg', 'tag', '-R', self.repodir, 'tag'])
         tag(self.repodir, ['tag'], force=True)
         self.assertTrue('tag' in getTags(self.repodir))
+
+    def testFailingBackend(self):
+        # Test that remote failures get retried
+        num_calls = [0]
+
+        def _my_get_hg_output(cmd, **kwargs):
+            num_calls[0] += 1
+            if cmd[0] == 'clone':
+                e = subprocess.CalledProcessError(-1, cmd)
+                e.output = "error: Name or service not known"
+                raise e
+            else:
+                return get_hg_output(cmd, **kwargs)
+
+        # Two retries are forced in setUp() above
+        with patch('util.hg.get_hg_output', new=_my_get_hg_output):
+            self.assertRaises(subprocess.CalledProcessError,
+                              clone, "http://nxdomain.nxnx", self.wc)
+            self.assertEquals(num_calls, [2])
