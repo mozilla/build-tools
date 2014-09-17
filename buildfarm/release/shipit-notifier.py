@@ -14,11 +14,12 @@ from ConfigParser import ConfigParser
 from release.info import getReleaseName
 from mozillapulse import consumers
 from mozillapulse import config as pconf
-from kickoff.api import Status
 from os import path
 from dateutil import parser
 
-site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
+import sys
+sys.path.insert(0, path.join(path.dirname(__file__), "../../lib/python"))
+from kickoff.api import Status
 
 import logging as log
 
@@ -116,7 +117,7 @@ def main():
     )
 
     # Adjust applabel when wanting to run shipit on multiple machines
-    pulse = consumers.BuildConsumer(applabel='shipit-notifier')
+    pulse = consumers.BuildConsumer(applabel='shipit-notifier', ssl=False)
     pulse.configure(topic='build.#.finished',
                     durable=True, callback=got_message)
 
