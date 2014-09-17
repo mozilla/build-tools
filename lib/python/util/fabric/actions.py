@@ -237,3 +237,23 @@ def action_update_queue(host):
         tools_dir = "%s/tools" % queue_dir
         run('hg pull -u', workdir=tools_dir)
     print OK, "updated queue in %s" % host
+
+
+@per_host
+def action_retry_dead_queue(host):
+    for q in 'commands', 'pulse':
+        cmd = "find /dev/shm/queue/%s/dead -type f" % q
+        for f in run(cmd).split("\n"):
+            f = f.strip()
+            if not f:
+                continue
+            with show('running'):
+                if f.endswith(".log"):
+                    run("rm %s" % f)
+                else:
+                    run("mv %s /dev/shm/queue/%s/new" % (f, q))
+
+def action_master_health(master):
+    with show('running'):
+        run('ls -l %(master_dir)s/*.pid' % master)
+        run('free -m')
