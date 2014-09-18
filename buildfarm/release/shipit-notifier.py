@@ -35,7 +35,7 @@ def receive_message(config, data, message):
         if ' test ' in data['payload']['build'].get(u'builderName'):
             return
         if not data['payload']['build'].get('properties'):
-            log.error('TypeError: build properties not found - {}'.\
+            log.exception('TypeError: build properties not found - {}'.\
                       format(data['payload']['build'].get('builderName')))
             return
         if data['payload'][u'results'] != 0:
@@ -88,7 +88,7 @@ def receive_message(config, data, message):
         status_api.update(name, data=payload)
         print payload
     except Exception as e:
-        log.error('{} - {}'.format(e, data['payload']['build'].get('builderName')))
+        log.exception('{} - {}'.format(e, data['payload']['build'].get('builderName')))
     finally:
         message.ack()
 
