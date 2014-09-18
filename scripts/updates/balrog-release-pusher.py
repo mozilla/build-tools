@@ -22,8 +22,9 @@ from util.hg import mercurial, make_hg_url
 HG = "hg.mozilla.org"
 DEFAULT_BUILDBOT_CONFIGS_REPO = make_hg_url(HG, 'build/buildbot-configs')
 REQUIRED_CONFIG = ('appVersion', 'productName', 'version', 'enUSPlatforms',
-    'testChannels', 'releaseChannel', 'baseTag', 'buildNumber',
-    'partialUpdates', 'stagingServer', 'bouncerServer', 'testChannelRuleIds')
+    'localTestChannel', 'cdnTestChannel', 'releaseChannel', 'baseTag',
+    'buildNumber', 'partialUpdates', 'stagingServer', 'bouncerServer',
+    'testChannelRuleIds')
 
 def validate(options):
     err = False
@@ -85,7 +86,10 @@ if __name__ == '__main__':
     credentials = {}
     execfile(options.credentials_file, credentials)
     auth = (options.username, credentials['balrog_credentials'][options.username])
-    updateChannels = release_config['testChannels']
+    updateChannels = [
+        release_config['localTestChannel'],
+        release_config['cdnTestChannel']
+    ]
     if release_config['releaseChannel']:
         updateChannels.append(release_config['releaseChannel'])
 
