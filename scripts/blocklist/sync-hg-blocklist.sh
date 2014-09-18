@@ -111,7 +111,7 @@ compare_blocklists()
         echo "ERROR Unable to parse version from version.txt"
     fi
 
-    BLOCKLIST_URL_AMO="https://addons.mozilla.org/blocklist/3/${APP_ID}/${VERSION}/${APP_NAME}/20090105024647/blocklist-sync/en-US/nightly/blocklist-sync/default/default/"
+    BLOCKLIST_URL_AMO="https://blocklist.addons.mozilla.org/blocklist/3/${APP_ID}/${VERSION}/${APP_NAME}/20090105024647/blocklist-sync/en-US/nightly/blocklist-sync/default/default/"
     rm -f blocklist_amo.xml
     ${WGET} --no-check-certificate -O blocklist_amo.xml ${BLOCKLIST_URL_AMO}
     WGET_STATUS=$?
