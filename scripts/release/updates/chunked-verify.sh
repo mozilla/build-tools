@@ -20,6 +20,7 @@ chunks=$3
 thisChunk=$4
 releaseConfig=$($JSONTOOL -k properties.release_config $PROPERTIES_FILE)
 releaseTag=$($JSONTOOL -k properties.release_tag $PROPERTIES_FILE)
+slavebuilddir=$($JSONTOOL -k properties.slavebuilddir $PROPERTIES_FILE)
 
 if [ -z "$BUILDBOT_CONFIGS" ]; then
     export BUILDBOT_CONFIGS="https://hg.mozilla.org/build/buildbot-configs"
