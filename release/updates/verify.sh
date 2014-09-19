@@ -1,10 +1,14 @@
 #!/bin/bash
 #set -x
 
+. ../common/cached_download.sh
 . ../common/unpack.sh 
 . ../common/download_mars.sh
 . ../common/download_builds.sh
 . ../common/check_updates.sh
+
+clear_cache
+create_cache
 
 ftp_server_to="http://stage.mozilla.org/pub/mozilla.org"
 ftp_server_from="http://stage.mozilla.org/pub/mozilla.org"
@@ -170,3 +174,4 @@ do
   done
 done < $config_file
 
+clear_cache
