@@ -169,26 +169,9 @@ else
   fi
 fi
 
-test -d nspr || mkdir nspr
-(cd nspr
-../../$SOURCE/nsprpub/configure --prefix=$OBJDIR/dist --with-dist-prefix=$OBJDIR/dist --with-mozilla $NSPR64
-$MAKE && $MAKE install
-) || exit 2
-
-test -d js || mkdir js
-
-cd js
-NSPR_CFLAGS=$($OBJDIR/dist/bin/nspr-config --cflags)
-if [ "$OSTYPE" = "msys" ]; then
-    NSPR_LIBS="$OBJDIR/dist/lib/plds4.lib $OBJDIR/dist/lib/plc4.lib $OBJDIR/dist/lib/nspr4.lib"
-    export PATH="$OBJDIR/dist/lib:${PATH}"
-else
-    NSPR_LIBS=$($OBJDIR/dist/bin/nspr-config --libs)
-fi
-../../$SOURCE/js/src/configure $CONFIGURE_ARGS --with-dist-dir=$OBJDIR/dist --prefix=$OBJDIR/dist --with-nspr-prefix=$OBJDIR/dist --with-nspr-cflags="$NSPR_CFLAGS" --with-nspr-libs="$NSPR_LIBS" || exit 2
-
+../$SOURCE/js/src/configure $CONFIGURE_ARGS --enable-nspr-build --prefix=$OBJDIR/dist || exit 2
 $MAKE -s -w -j4 || exit 2
-cp -p ../../$SOURCE/build/unix/run-mozilla.sh $OBJDIR/dist/bin
+cp -p ../$SOURCE/build/unix/run-mozilla.sh $OBJDIR/dist/bin
 
 # The Root Analysis tests run in a special GC Zeal mode and disable ASLR to
 # make tests reproducible.
