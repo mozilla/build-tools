@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 set -x
 # This ugly hack is a cross-platform (Linux/Mac/Windows+MSYS) way to get the
