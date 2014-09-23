@@ -30,6 +30,7 @@ update_platform_map = {
     'win32': ['WINNT_x86-msvc'],
     'win64': ['WINNT_x86_64-msvc'],
     'flame': ['flame'],
+    'flame-kk': ['flame-kk', 'flame'],
 }
 
 # These FTP -> other mappings are provided so that things interpreting patcher

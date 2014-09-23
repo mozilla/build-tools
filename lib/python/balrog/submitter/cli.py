@@ -190,11 +190,18 @@ class NightlySubmitterBase(object):
 
         data.update(self._get_update_data(productName, branch, **updateKwargs))
 
-        name = get_nightly_blob_name(productName, branch, self.build_type, buildID, self.dummy)
+        # Bug 1055305 - a hack so that we can have JB and KK OTA for flame.
+        # They both query with buildTarget of flame, but differ in OS Version,
+        # so we need separate release blobs and rule to do the right thing
+        build_type = self.build_type
+        if build_target == 'flame-kk':
+            build_type = 'kitkat-%s' % build_type
+
+        name = get_nightly_blob_name(productName, branch, build_type, buildID, self.dummy)
         data = json.dumps(data)
         api = SingleLocale(auth=self.auth, api_root=self.api_root)
         copyTo = [get_nightly_blob_name(
-            productName, branch, self.build_type, 'latest', self.dummy)]
+            productName, branch, build_type, 'latest', self.dummy)]
         copyTo = json.dumps(copyTo)
         alias = json.dumps(alias)
         api.update_build(name=name, product=productName,
