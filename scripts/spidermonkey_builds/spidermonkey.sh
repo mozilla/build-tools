@@ -7,12 +7,11 @@ popd > /dev/null
 
 SPIDERDIR=$SCRIPTS_DIR/scripts/spidermonkey_builds
 
-if [ -z "$HG_REPO" ]; then
-    export HG_REPO="https://hg.mozilla.org/integration/mozilla-inbound"
-fi
+DEFAULT_REPO="https://hg.mozilla.org/integration/mozilla-inbound"
 
 function usage() {
   echo "Usage: $0 [-m mirror_url] [-b bundle_url] [-r revision] variant"
+  echo "PROPERTIES_FILE must be set for an automation build"
 }
 
 # It doesn't work to just pull from try. If you try to pull the full repo,
@@ -52,6 +51,26 @@ if [ ! -f "$SPIDERDIR/$VARIANT" ]; then
     exit 1
 fi
 
+if [ -n "$PROPERTIES_FILE" ]; then
+    if ! [ -f "$PROPERTIES_FILE" ]; then
+        echo "Properties file '$PROPERTIES_FILE' not found, aborting" >&2
+        exit 1
+    fi
+    echo "Properties file found; running automation build"
+    devel=""
+    HG_REPO=${HG_REPO:-$DEFAULT_REPO}
+else
+    echo "Properties file not set; running development build"
+    devel=1
+fi
+
+if [ -z "$HG_REPO" ] || [ "$HG_REPO" = none ]; then
+  SOURCE=.
+else
+  $PYTHON $SCRIPTS_DIR/buildfarm/utils/hgtool.py "${hgtool_args[@]}" $HG_REPO src || exit 2
+  SOURCE=src
+fi
+
 PYTHON="python"
 if [ -f "$PROPERTIES_FILE" ]; then
     JSONTOOL="$PYTHON $SCRIPTS_DIR/buildfarm/utils/jsontool.py"
@@ -79,13 +98,6 @@ if [ -f "$PROPERTIES_FILE" ]; then
         -s 4 -n info -n 'rel-*' -n 'tb-rel-*' -n $builddir
 fi
 
-if [ "$HG_REPO" = none ]; then
-  SOURCE=.
-else
-  $PYTHON $SCRIPTS_DIR/buildfarm/utils/hgtool.py "${hgtool_args[@]}" $HG_REPO src || exit 2
-  SOURCE=src
-fi
-
 (cd $SOURCE/js/src; autoconf-2.13 || autoconf2.13)
 
 TRY_OVERRIDE=$SOURCE/js/src/config.try
@@ -109,8 +121,10 @@ USE_64BIT=false
 if [[ "$OSTYPE" == darwin* ]]; then
   USE_64BIT=true
 elif [ "$OSTYPE" = "linux-gnu" ]; then
-  GCCDIR=/tools/gcc-4.7.2-0moz1
-  CONFIGURE_ARGS="$CONFIGURE_ARGS --with-ccache"
+  if [ -z "$devel" ]; then
+      GCCDIR="${GCCDIR:-/tools/gcc-4.7.2-0moz1}"
+      CONFIGURE_ARGS="$CONFIGURE_ARGS --with-ccache"
+  fi
   UNAME_M=$(uname -m)
   MAKEFLAGS=-j4
   if [ "$VARIANT" = "arm-sim" ]; then
@@ -119,7 +133,7 @@ elif [ "$OSTYPE" = "linux-gnu" ]; then
     USE_64BIT=true
   fi
 
-  if [ "$UNAME_M" != "arm" ]; then
+  if [ "$UNAME_M" != "arm" ] && [ -z "$devel" ]; then
     export CC=$GCCDIR/bin/gcc
     export CXX=$GCCDIR/bin/g++
     if $USE_64BIT; then
