@@ -10,7 +10,7 @@ SPIDERDIR=$SCRIPTS_DIR/scripts/spidermonkey_builds
 DEFAULT_REPO="https://hg.mozilla.org/integration/mozilla-inbound"
 
 function usage() {
-  echo "Usage: $0 [-m mirror_url] [-b bundle_url] [-r revision] variant"
+  echo "Usage: $0 [-m mirror_url] [-b bundle_url] [-r revision] [--dep] variant"
   echo "PROPERTIES_FILE must be set for an automation build"
 }
 
@@ -19,6 +19,7 @@ function usage() {
 # revision, the pull is painfully slow (as in, it could take days) without
 # --bundle and/or --mirror.
 hgtool_args=()
+noclean=""
 while [ $# -gt 1 ]; do
     case "$1" in
         -m|--mirror)
@@ -35,6 +36,10 @@ while [ $# -gt 1 ]; do
             shift
             hgtool_args+=(--clone-by-revision -r "$1")
             shift
+            ;;
+        --dep)
+            shift
+            noclean=1
             ;;
         *)
             echo "Invalid arguments" >&2
@@ -108,8 +113,12 @@ else
 fi
 
 # Always do clobber builds. They're fast.
-[ -d objdir ] && rm -rf objdir
-mkdir objdir
+if [ -z "$noclean" ]; then
+  [ -d objdir ] && rm -rf objdir
+  mkdir objdir
+else
+  [ -d objdir ] || mkdir objdir
+fi
 cd objdir
 
 OBJDIR=$PWD
