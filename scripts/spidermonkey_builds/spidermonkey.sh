@@ -151,21 +151,28 @@ elif [ "$OSTYPE" = "linux-gnu" ]; then
       export LD_LIBRARY_PATH=$GCCDIR/lib
     fi
   fi
+elif [ "$OSTYPE" = "msys" ]; then
+  USE_64BIT=false
+  MAKE=${MAKE:-mozmake}
 fi
+
+MAKE=${MAKE:-make}
 
 if $USE_64BIT; then
   NSPR64="--enable-64bit"
 else
   NSPR64=""
-  export CC="$CC -m32"
-  export CXX="$CXX -m32"
-  export AR=ar
+  if [ "$OSTYPE" != "msys" ]; then
+    export CC="$CC -m32"
+    export CXX="$CXX -m32"
+    export AR=ar
+  fi
 fi
 
 test -d nspr || mkdir nspr
 (cd nspr
 ../../$SOURCE/nsprpub/configure --prefix=$OBJDIR/dist --with-dist-prefix=$OBJDIR/dist --with-mozilla $NSPR64
-make && make install
+$MAKE && $MAKE install
 ) || exit 2
 
 test -d js || mkdir js
@@ -180,7 +187,7 @@ else
 fi
 ../../$SOURCE/js/src/configure $CONFIGURE_ARGS --with-dist-dir=$OBJDIR/dist --prefix=$OBJDIR/dist --with-nspr-prefix=$OBJDIR/dist --with-nspr-cflags="$NSPR_CFLAGS" --with-nspr-libs="$NSPR_LIBS" || exit 2
 
-make -s -w -j4 || exit 2
+$MAKE -s -w -j4 || exit 2
 cp -p ../../$SOURCE/build/unix/run-mozilla.sh $OBJDIR/dist/bin
 
 # The Root Analysis tests run in a special GC Zeal mode and disable ASLR to
@@ -195,5 +202,6 @@ if [[ "$VARIANT" = "rootanalysis" ]]; then
         COMMAND_PREFIX="setarch $(uname -m) -R "
     fi
 fi
-$COMMAND_PREFIX make check || exit 1
-$COMMAND_PREFIX make check-jit-test || exit 1
+
+$COMMAND_PREFIX $MAKE check || exit 1
+$COMMAND_PREFIX $MAKE check-jit-test || exit 1
