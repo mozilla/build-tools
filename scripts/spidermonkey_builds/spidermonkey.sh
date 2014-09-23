@@ -188,3 +188,5 @@ fi
 
 $COMMAND_PREFIX $MAKE check || exit 1
 $COMMAND_PREFIX $MAKE check-jit-test || exit 1
+$COMMAND_PREFIX $MAKE check-jstests || exit 1
+$COMMAND_PREFIX $OBJDIR/dist/bin/jsapi-tests || exit 1
