@@ -211,11 +211,11 @@ def buildValidatingOpener(ca_certs):
     class VerifiedHTTPSConnection(HTTPSConnection):
         def send(self, *args, **kwargs):
             log.debug("send: %s, %s", str(args), str(kwargs))
-            HTTPSConnection.send(self, *args, **kwargs)
+            return HTTPSConnection.send(self, *args, **kwargs)
 
         def getresponse(self, *args, **kwargs):
             log.debug("getting response")
-            HTTPSConnection.getresponse(self, *args, **kwargs)
+            return HTTPSConnection.getresponse(self, *args, **kwargs)
 
         def connect(self):
             # overrides the version in httplib so that we do
