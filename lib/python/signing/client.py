@@ -240,6 +240,7 @@ def buildValidatingOpener(ca_certs):
             return self.do_open(self.specialized_conn_class, req)
 
     https_handler = VerifiedHTTPSHandler()
+    https_handler.set_http_debuglevel(1)
     opener = urllib2.build_opener(https_handler)
     urllib2.install_opener(opener)
 
