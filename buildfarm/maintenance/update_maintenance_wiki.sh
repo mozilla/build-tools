@@ -91,7 +91,7 @@ current_content="$(mktemp -t current-content.XXXXXXXXXX)"
 new_content="$(mktemp -t new-content.XXXXXXXXXX)"
 
 echo "  * Retrieving current wiki text of https://wiki.mozilla.org/${WIKI_TITLE}..."
-curl -s "https://wiki.mozilla.org/${WIKI_TITLE}&action=raw" >> "${current_content}"
+curl -s "https://wiki.mozilla.org/${WIKI_TITLE}?action=raw" >> "${current_content}"
 
 # find first "| in production" line in the current content, and grab line number
 old_line="$(sed -n '/^| in production$/=' "${current_content}" | head -1)"

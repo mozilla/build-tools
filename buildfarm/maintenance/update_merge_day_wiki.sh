@@ -85,7 +85,7 @@ for WIKI_TITLE in ${B2G_TITLES}; do
     current_content="$(mktemp -t current-content.XXXXXXXXXX)"
     new_content="$(mktemp -t new-content.XXXXXXXXXX)"
     echo "  * Retrieving current wiki text of https://wiki.mozilla.org/${WIKI_TITLE}..."
-    curl -s "https://wiki.mozilla.org/${WIKI_TITLE}&action=raw" >> "${current_content}"
+    curl -s "https://wiki.mozilla.org/${WIKI_TITLE}?action=raw" >> "${current_content}"
     old_content=$(cat ${current_content})
     if [ "${old_content}" == "${B2G_VERSION}" ]; then
         echo "***** B2g version ${B2G_VERSION} hasn't changed!"
@@ -108,7 +108,7 @@ if [ -n "${ESR_VERSION}" ]; then
         current_content="$(mktemp -t current-content.XXXXXXXXXX)"
         new_content="$(mktemp -t new-content.XXXXXXXXXX)"
         echo "  * Retrieving current wiki text of https://wiki.mozilla.org/${WIKI_TITLE}..."
-        curl -s "https://wiki.mozilla.org/${WIKI_TITLE}&action=raw" >> "${current_content}"
+        curl -s "https://wiki.mozilla.org/${WIKI_TITLE}?action=raw" >> "${current_content}"
         old_content=$(cat ${current_content})
         if [ "${old_content}" == "${ESR_VERSION}" ]; then
             echo "***** ESR version ${ESR_VERSION} hasn't changed!"
@@ -131,7 +131,7 @@ for WIKI_TITLE in ${SIX_WEEK_DATE_TITLES}; do
     current_content="$(mktemp -t current-content.XXXXXXXXXX)"
     new_content="$(mktemp -t new-content.XXXXXXXXXX)"
     echo "  * Retrieving current wiki text of https://wiki.mozilla.org/${WIKI_TITLE}..."
-    curl -s "https://wiki.mozilla.org/${WIKI_TITLE}&action=raw" >> "${current_content}"
+    curl -s "https://wiki.mozilla.org/${WIKI_TITLE}?action=raw" >> "${current_content}"
     old_content=$(cat ${current_content})
     if [ -n "${NEXT_RELEASE_DATE}" ]; then
         if [ "${old_content}" == "${NEXT_RELEASE_DATE}" ]; then
@@ -160,7 +160,7 @@ for WIKI_TITLE in ${INCREMENT_TITLES}; do
     current_content="$(mktemp -t current-content.XXXXXXXXXX)"
     new_content="$(mktemp -t new-content.XXXXXXXXXX)"
     echo "  * Retrieving current wiki text of https://wiki.mozilla.org/${WIKI_TITLE}..."
-    curl -s "https://wiki.mozilla.org/${WIKI_TITLE}&action=raw" >> "${current_content}"
+    curl -s "https://wiki.mozilla.org/${WIKI_TITLE}?action=raw" >> "${current_content}"
     increment_wiki_integer
     wiki_edit_login
     wiki_post
