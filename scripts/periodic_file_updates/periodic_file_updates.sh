@@ -94,6 +94,7 @@ function get_version {
     echo "INFO: Retrieving current version from hg..."
     VERSION_URL_HG="${HGREPO}/raw-file/default/${APP_DIR}/config/version.txt"
     rm -f version.txt
+    echo "INFO: ${WGET} --no-check-certificate -O version.txt ${VERSION_URL_HG}"
     ${WGET} --no-check-certificate -O version.txt ${VERSION_URL_HG}
     WGET_STATUS=$?
     if [ ${WGET_STATUS} != 0 ]; then
@@ -120,6 +121,7 @@ function download_shared_artifacts {
     # Download everything we need: browser, tests, updater script, existing preload list and errors.
     echo "INFO: Downloading all the necessary pieces..."
     for URL in "${BROWSER_ARCHIVE_URL}" "${TESTS_ARCHIVE_URL}"; do
+	echo "INFO: ${WGET} --no-check-certificate ${URL}"
 	${WGET} --no-check-certificate ${URL}
 	WGET_STATUS=$?
 	if [ ${WGET_STATUS} != 0 ]; then
@@ -154,6 +156,7 @@ function compare_hsts_files {
     echo "INFO: Downloading all the necessary pieces to update HSTS..."
     rm -rf "${HSTS_PRELOAD_SCRIPT}" "${HSTS_PRELOAD_ERRORS}" "${HSTS_PRELOAD_INC}"
     for URL in "${HSTS_PRELOAD_SCRIPT_HG}" "${HSTS_PRELOAD_ERRORS_HG}" "${HSTS_PRELOAD_INC_HG}"; do
+	echo "INFO: ${WGET} --no-check-certificate ${URL}"
 	${WGET} --no-check-certificate ${URL}
 	WGET_STATUS=$?
 	if [ ${WGET_STATUS} != 0 ]; then
@@ -222,6 +225,7 @@ function compare_hpkp_files {
     echo "INFO: Downloading all the necessary pieces to update HPKP..."
     rm -f "${HPKP_PRELOAD_SCRIPT}" "${HPKP_PRELOAD_JSON}" "${HPKP_DER_TEST}" "${HPKP_PRELOAD_OUTPUT}" "${HPKP_PRELOAD_ERRORS}"
     for URL in "${HPKP_PRELOAD_SCRIPT_HG}" "${HPKP_PRELOAD_JSON_HG}" "${HPKP_DER_TEST_HG}" "${HPKP_PRELOAD_OUTPUT_HG}" "${HPKP_PRELOAD_ERRORS_HG}"; do
+	echo "INFO: ${WGET} --no-check-certificate ${URL}"
 	${WGET} --no-check-certificate ${URL}
 	WGET_STATUS=$?
 	if [ ${WGET_STATUS} != 0 ]; then
@@ -281,6 +285,7 @@ function compare_blocklist_files {
 
     cd "${BASEDIR}"
     rm -f blocklist_amo.xml
+    echo "INFO: ${WGET} --no-check-certificate -O blocklist_amo.xml ${BLOCKLIST_URL_AMO}"
     ${WGET} --no-check-certificate -O blocklist_amo.xml ${BLOCKLIST_URL_AMO}
     WGET_STATUS=$?
     if [ ${WGET_STATUS} != 0 ]; then
@@ -289,6 +294,7 @@ function compare_blocklist_files {
     fi
 
     rm -f blocklist_hg.xml
+    echo "INFO: ${WGET} -O blocklist_hg.xml ${BLOCKLIST_URL_HG}"
     ${WGET} -O blocklist_hg.xml ${BLOCKLIST_URL_HG}
     WGET_STATUS=$?
     if [ ${WGET_STATUS} != 0 ]; then
