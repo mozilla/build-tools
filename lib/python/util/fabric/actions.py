@@ -203,6 +203,10 @@ def action_update_buildbot(master):
             master['buildbot_python'], workdir=buildbot_dir)
     print OK, "updated buildbot in %(hostname)s:%(basedir)s" % master
 
+def action_uptime(master):
+    with hide('stdout', 'stderr', 'running'):
+        uptime = run('uptime')
+        print "%-25s %12s" % (master['name'], uptime)
 
 def action_fix_makefile_symlink(master):
     with show('running'):
