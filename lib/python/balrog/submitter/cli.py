@@ -355,8 +355,10 @@ class ReleaseSubmitterV3(ReleaseSubmitterBase):
             data["partials"] = []
             for info in partialInfo:
                 data["partials"].append({
-                    "from": get_release_blob_name(productName, info["previousVersion"],
-                                                  build_number, self.dummy),
+                    "from": get_release_blob_name(productName,
+                                                  info["previousVersion"],
+                                                  info["previousBuildNumber"] ,
+                                                  self.dummy),
                     "filesize": info["size"],
                     "hashValue": info["hash"],
                 })
