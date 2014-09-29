@@ -2806,7 +2806,7 @@
     },
     "panda-0616": {
         "foopy": "foopy47",
-        "relayhost": "anda-relay-016.p2.releng.scl3.mozilla.com",
+        "relayhost": "panda-relay-016.p2.releng.scl3.mozilla.com",
         "relayid": "2:7"
     },
     "panda-0617": {
