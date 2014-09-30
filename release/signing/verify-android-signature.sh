@@ -87,7 +87,7 @@ fi
 #Get the signature information from the apk package
 SIGOUT=`keytool -printcert -file META-INF/$SIGFILE`
 #The piping used in the diff *may* be a bash-only feature.
-DIFF=`diff -I "Valid from:" $TOOLSDIR/release/signing/$COMPFILE.sig <(echo "$SIGOUT")`
+DIFF=`diff -I "Valid from:" -I "SHA256:" $TOOLSDIR/release/signing/$COMPFILE.sig <(echo "$SIGOUT")`
 RET=$?
 rm -rf ./META-INF    #no longer need the unpackaged apk
 if [ $RET -eq 0 ]; then
