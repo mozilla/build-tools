@@ -5,5 +5,5 @@
 --enable-trace-malloc
 --disable-shared-js
 --enable-exact-rooting
---enable-gcgenerational
+--enable-gccompacting
 --enable-threadsafe

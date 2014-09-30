@@ -163,8 +163,8 @@ if $USE_64BIT; then
 else
   NSPR64=""
   if [ "$OSTYPE" != "msys" ]; then
-    export CC="$CC -m32"
-    export CXX="$CXX -m32"
+    export CC="${CC:-/usr/bin/gcc} -m32"
+    export CXX="${CXX:-/usr/bin/g++} -m32"
     export AR=ar
   fi
 fi
@@ -178,6 +178,15 @@ cp -p ../$SOURCE/build/unix/run-mozilla.sh $OBJDIR/dist/bin
 COMMAND_PREFIX=''
 if [[ "$VARIANT" = "rootanalysis" ]]; then
     export JS_GC_ZEAL=7
+
+    # rootanalysis builds are currently only done on Linux, which should have
+    # setarch, but just in case we enable them on another platform:
+    if type setarch >/dev/null 2>&1; then
+        COMMAND_PREFIX="setarch $(uname -m) -R "
+    fi
+elif [[ "$VARIANT" = "generational" ]]; then
+    # Generational is currently being used for compacting GC
+    export JS_GC_ZEAL=14
 
     # rootanalysis builds are currently only done on Linux, which should have
     # setarch, but just in case we enable them on another platform:
