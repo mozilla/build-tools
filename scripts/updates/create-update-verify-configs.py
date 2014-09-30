@@ -87,7 +87,7 @@ if __name__ == "__main__":
     else:
         log.setLevel(logging.INFO)
 
-    update_platform = buildbot2updatePlatforms(options.platform)[-1]
+    update_platform = buildbot2updatePlatforms(options.platform)[0]
     ftp_platform = buildbot2ftp(options.platform)
     full_check_locales = options.full_check_locales
 
