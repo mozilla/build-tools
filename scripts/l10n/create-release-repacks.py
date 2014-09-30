@@ -138,8 +138,10 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                         })
                     if f.endswith('.partial.mar'):
                         pathInfo = fileInfo(f, product.lower())
+                        previousVersion = pathInfo["previousVersion"]
                         partialInfo.append({
-                            "previousVersion": pathInfo["previousVersion"],
+                            "previousVersion": previousVersion,
+                            "previousBuildNumber": partialUpdates[previousVersion]['buildNumber'],
                             "size": info["size"],
                             "hash": info["hashes"][balrog_hash],
                         })
