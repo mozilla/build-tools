@@ -16,10 +16,7 @@ allDevices = loadDevicesData('/builds/tools/buildfarm/mobile')
 if len(allDevices) == 0:
     allDevices = loadDevicesData(
         os.path.join(os.path.dirname(__file__), '../../../buildfarm/mobile'))
-tegras = dict()
 pandas = dict()
 for x in allDevices:
-    if x.startswith('tegra-'):
-        tegras[x] = allDevices[x]
     if x.startswith('panda-'):
         pandas[x] = allDevices[x]

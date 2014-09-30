@@ -55,11 +55,8 @@ def status(device):
 @per_device
 @use_json
 def reboot(device, json):
-  if 'tegra' in device:
-      run("SUT_NAME=%s python /builds/sut_tools/tegra_powercycle.py %s && sleep 1" % (device, device))
-  else:
-      bank, relay = json['relayid'].split(":")
-      run("python /builds/sut_tools/relay.py powercycle %s %s %s ; sleep 5" % (json['relayhost'], bank, relay))
+  bank, relay = json['relayid'].split(":")
+  run("python /builds/sut_tools/relay.py powercycle %s %s %s ; sleep 5" % (json['relayhost'], bank, relay))
   print OK, "Powercycled %s" % device
 
 

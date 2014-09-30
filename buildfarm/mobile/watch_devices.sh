@@ -111,7 +111,7 @@ function device_check() {
 
 function watch_launcher(){
   log "STARTING Watcher"
-  ls -d /builds/{tegra-*[0-9],panda-*[0-9]} 2>/dev/null | sed 's:.*/::' | while read device; do
+  ls -d /builds/panda-*[0-9] 2>/dev/null | sed 's:.*/::' | while read device; do
     log "..checking $device"
     "${0}" "${device}" &
   done

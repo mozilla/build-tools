@@ -67,8 +67,7 @@ def smoketest(device_name, number):
     deviceRoot = dm.getDeviceRoot()
 
     # This does all the steps of verify.py including the cleanup.
-    if verifyDevice(device_name, checksut=False, doCheckStalled=False,
-                    watcherINI=True) is False:
+    if verifyDevice(device_name, checksut=False, doCheckStalled=False) is False:
         log.error("failed to run verify on %s" % (device_name))
         return 1  # Not ok to proceed
     log.info("Successfully verified the device")

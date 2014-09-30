@@ -19,7 +19,7 @@ def reboot(dm):
     proxyIP = getOurIP()
     proxyPort = calculatePort()
 
-    if 'panda' not in deviceName and 'tegra' not in deviceName:
+    if 'panda' not in deviceName:
         # Attempt to set devicename via env variable 'SUT_NAME'
         sname = os.getenv('SUT_NAME')
         if sname.strip():

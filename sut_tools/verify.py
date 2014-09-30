@@ -31,9 +31,6 @@ MOZPOOL_STATE_MISSING = -2
 errorFile = None
 dm = None
 
-watcherINI = "\r\n[watcher]\r\nPingTarget = talos-remote.pvt.build.mozilla.org\r\nstrikes = 0\r\n"
-
-
 def dmAlive(dm):
     """ Check that a devicemanager connection is still active
 
@@ -276,67 +273,7 @@ def cleanupDevice(device, dm):
     # Some sort of error happened above
     return False
 
-
-def setWatcherINI(dm):
-    """ If necessary Installs the (correct) watcher.ini for our infra
-
-    Returns False on failure, True on Success
-    """
-    import hashlib
-    realLoc = "/data/data/com.mozilla.watcher/files/watcher.ini"
-    currentHash = hashlib.md5(watcherINI).hexdigest()
-
-    def watcherDataCurrent():
-        remoteFileHash = dm._getRemoteHash(realLoc)
-        if currentHash != remoteFileHash:
-            return False
-        else:
-            return True
-
-    if not dmAlive(dm):
-        return False
-
-    try:
-        if watcherDataCurrent():
-            return True
-    except:
-        setFlag(errorFile, "Unable to identify if watcher.ini is current")
-        return False
-
-    tmpname = '/mnt/sdcard/watcher.ini'
-    try:
-        dm._runCmds([{'cmd': 'push %s %s' % (tmpname, len(
-            watcherINI)), 'data': watcherINI}])
-    except devicemanager.AgentError, err:
-        log.info("Error while pushing watcher.ini: %s" % err)
-        setFlag(errorFile, "Unable to properly upload the watcher.ini")
-        return False
-
-    try:
-        dm._runCmds(
-            [{'cmd': 'exec su -c "dd if=%s of=%s"' % (tmpname, realLoc)}])
-    except devicemanager.AgentError, err:
-        log.info("Error while moving watcher.ini to %s: %s" % (realLoc, err))
-        setFlag(errorFile, "Unable to properly upload the watcher.ini")
-        return False
-
-    try:
-        dm._runCmds([{'cmd': 'exec su -c "chmod 0777 %s"' % realLoc}])
-    except devicemanager.AgentError, err:
-        log.info("Error while setting permissions for %s: %s" % (realLoc, err))
-        setFlag(errorFile, "Unable to properly upload the watcher.ini")
-        return False
-
-    try:
-        if watcherDataCurrent():
-            return True
-    except:
-        pass
-    setFlag(errorFile, "Unable to verify the updated watcher.ini")
-    return False
-
-
-def verifyDevice(device, checksut=True, doCheckStalled=True, watcherINI=False,
+def verifyDevice(device, checksut=True, doCheckStalled=True, 
                  skipWhenMozpoolReady=False):
     # Returns False on failure, True on Success
     global dm, errorFile
@@ -391,11 +328,6 @@ def verifyDevice(device, checksut=True, doCheckStalled=True, watcherINI=False,
         log.info("verifyDevice: failing to cleanup device")
         return False
 
-    if watcherINI:
-        if not setWatcherINI(dm):
-            log.info("verifyDevice: failing to set watcher.ini")
-            return False
-
     return True
 
 if __name__ == '__main__':
@@ -417,11 +349,7 @@ if __name__ == '__main__':
     else:
         device_name = args[0]
 
-    # Only attempt updating the watcher INI if we run against a tegra.
-    doWatcherUpdate = 'tegra' in device_name
-
     if verifyDevice(device_name,
-                    watcherINI=doWatcherUpdate,
                     skipWhenMozpoolReady=options.skipWhenMozpoolReady) is False:
         sys.exit(1)  # Not ok to proceed
 
