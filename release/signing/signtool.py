@@ -48,7 +48,7 @@ def main():
     parser.set_defaults(
         hosts=[],
         cert=None,
-        log_level=logging.DEBUG,
+        log_level=logging.INFO,
         output_dir=None,
         output_file=None,
         formats=[],

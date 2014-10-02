@@ -209,14 +209,6 @@ def buildValidatingOpener(ca_certs):
     import ssl
 
     class VerifiedHTTPSConnection(HTTPSConnection):
-        def send(self, *args, **kwargs):
-            log.debug("send: %s, %s", str(args), str(kwargs))
-            return HTTPSConnection.send(self, *args, **kwargs)
-
-        def getresponse(self, *args, **kwargs):
-            log.debug("getting response")
-            return HTTPSConnection.getresponse(self, *args, **kwargs)
-
         def connect(self):
             # overrides the version in httplib so that we do
             #    certificate verification
@@ -248,7 +240,6 @@ def buildValidatingOpener(ca_certs):
             return self.do_open(self.specialized_conn_class, req)
 
     https_handler = VerifiedHTTPSHandler()
-    https_handler.set_http_debuglevel(1)
     opener = urllib2.build_opener(https_handler)
     urllib2.install_opener(opener)
 
