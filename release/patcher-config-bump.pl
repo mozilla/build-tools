@@ -241,7 +241,7 @@ sub BumpPatcherConfig {
         if (defined($currentUpdateObj->{'openURL'})) {
             $currentUpdateObj->{'openURL'} = BumpURL(
                 oldURL => $currentUpdateObj->{'openURL'},
-                version => $version,
+                version => $appVersion,
                 oldVersion => $oldVersion
             )
         }
