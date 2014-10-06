@@ -40,7 +40,7 @@ def is_authenticode_signed(filename):
 
 
 def main():
-    allowed_formats = ("signcode", "gpg", "mar", "dmg", "dmgv2", "jar", "b2gmar")
+    allowed_formats = ("signcode", "osslsigncode", "gpg", "mar", "dmg", "dmgv2", "jar", "b2gmar")
 
     from optparse import OptionParser
     import random
@@ -197,7 +197,7 @@ def main():
         for f in files:
             log.debug("%s", f)
             log.debug("checking %s for signature...", f)
-            if fmt == 'signcode' and is_authenticode_signed(f):
+            if fmt in ('signcode', 'osslsigncode') and is_authenticode_signed(f):
                 log.info("Skipping %s because it looks like it's already signed", f)
                 continue
             if options.output_dir:

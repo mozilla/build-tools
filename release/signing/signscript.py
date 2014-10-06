@@ -1,6 +1,7 @@
 #!/usr/bin/python
 """%prog [options] format inputfile outputfile inputfilename"""
 import os
+import os.path
 import site
 # Modify our search path to find our modules
 site.addsitedir(os.path.join(os.path.dirname(__file__), "../../lib/python"))
@@ -9,7 +10,7 @@ import logging
 import sys
 
 from util.file import copyfile, safe_unlink
-from signing.utils import shouldSign, signfile, gpg_signfile, mar_signfile, dmg_signpackage, jar_signfile
+from signing.utils import shouldSign, signfile, osslsigncode_signfile, gpg_signfile, mar_signfile, dmg_signpackage, jar_signfile
 
 if __name__ == '__main__':
     from optparse import OptionParser
@@ -83,6 +84,16 @@ if __name__ == '__main__':
         copyfile(inputfile, tmpfile)
         if shouldSign(filename):
             signfile(tmpfile, options.signcode_keydir, options.fake,
+                     passphrase, timestamp=options.signcode_timestamp)
+        else:
+            parser.error("Invalid file for signing: %s" % filename)
+            sys.exit(1)
+    elif format_ == "osslsigncode":
+        safe_unlink(tmpfile)
+        if not options.signcode_keydir:
+            parser.error("keydir required when format is osslsigncode")
+        if shouldSign(filename):
+            osslsigncode_signfile(inputfile, tmpfile, options.signcode_keydir, options.fake,
                      passphrase, timestamp=options.signcode_timestamp)
         else:
             parser.error("Invalid file for signing: %s" % filename)

@@ -1,5 +1,5 @@
-import time
 import os
+import time
 import tempfile
 import shlex
 import shutil
@@ -20,7 +20,7 @@ MAC_DESIGNATED_REQUIREMENTS = """\
 
 
 def signfile(filename, keydir, fake=False, passphrase=None, timestamp=True):
-    """Sign the given file with keys in keydir.
+    """Perform authenticode signing on the given file with keys in keydir.
 
     If passphrase is set, it will be sent as stdin to the process.
 
@@ -71,21 +71,44 @@ def signfile(filename, keydir, fake=False, passphrase=None, timestamp=True):
         log.exception(data)
         raise
 
-    # Regenerate any .chk files that are now invalid
-    if getChkFile(filename):
-        stdout = tempfile.TemporaryFile()
-        try:
-            command = ['shlibsign', '-v', '-i', basename]
-            check_call(command, cwd=dirname, stdout=stdout, stderr=STDOUT)
-            stdout.seek(0)
-            data = stdout.read()
-            if "signature: 40 bytes" not in data:
-                raise ValueError("shlibsign didn't generate signature")
-        except:
-            stdout.seek(0)
-            data = stdout.read()
-            log.exception(data)
-            raise
+
+def osslsigncode_signfile(inputfile, outputfile, keydir, fake=False, passphrase=None, timestamp=None):
+    """Perform Authenticode signing on "inputfile", writing a signed version
+    to "outputfile". See signcode_signfile for a description of other
+    arguments.
+
+    See https://bugzilla.mozilla.org/show_bug.cgi?id=711210#c15 for background
+    on why we want both methods.
+    """
+    if fake:
+        time.sleep(1)
+        return
+
+    stdout = tempfile.TemporaryFile()
+    args = [
+        '-certs', '%s/MozAuthenticode.spc' % keydir,
+        '-key', '%s/MozAuthenticode.pvk' % keydir,
+        '-i', 'http://www.mozilla.com',
+        '-h', 'sha1',
+        '-in', inputfile,
+        '-out', outputfile,
+    ]
+    if timestamp:
+        args.extend(['-t', 'http://timestamp.verisign.com/scripts/timestamp.dll'])
+
+    try:
+        import pexpect
+        proc = pexpect.spawn('osslsigncode', args)
+        # We use logfile_read because we only want stdout/stderr, _not_ stdin.
+        proc.logfile_read = stdout
+        proc.expect('Enter PEM pass phrase')
+        proc.sendline(passphrase)
+        proc.wait()
+    except:
+        stdout.seek(0)
+        data = stdout.read()
+        log.exception(data)
+        raise
 
 
 def gpg_signfile(filename, sigfile, gpgdir, fake=False, passphrase=None):

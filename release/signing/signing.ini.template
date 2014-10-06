@@ -32,6 +32,7 @@ max_filesize_gpg = 524288000
 max_filesize_dmg = 52428800
 max_filesize_mar = 52428800
 max_filesize_signcode = 52428800
+max_filesize_osslsigncode = 52428800
 # Secret for signing tokens. This should be kept private!
 # It should also be the same on all equivalent signing servers.
 token_secret = secretstring
@@ -57,7 +58,7 @@ unsigned_dir = unsigned-files
 
 [signing]
 # What signing formats we support
-formats = mar,gpg,signcode
+formats = mar,gpg,signcode,osslsigncode
 # Which script to run to sign files
 signscript = python ./signscript.py -c signing.ini
 # How many files to sign at once
@@ -66,6 +67,7 @@ concurrency = 4
 # signscript will be run on each of these on startup to test that passphrases
 # have been entered correctly
 testfile_signcode = test.exe
+testfile_osslsigncode = test64.exe
 testfile_mar = test.mar
 testfile_gpg = test.mar
 
@@ -73,6 +75,7 @@ testfile_gpg = test.mar
 # Various settings for signscript. signing-server.py doesn't look in here
 # Where are MozAuthenticode.{pvk,spc} located
 signcode_keydir = /path/to/keys
+osslsigncode_keydir = /path/to/keys
 # Where is the gpg directory with our private key
 gpg_homedir = /path/to/.gpg
 # How to run mar
