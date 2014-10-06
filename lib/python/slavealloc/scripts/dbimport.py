@@ -154,9 +154,7 @@ def json2list(json_file):
     list_json = simplejson.load(open(json_file))
 
     datacentre2datacenter = dict(
-        scl='scl1',
         mv='mtv1',
-        mpt='sjc1',
     )
 
     rv = []
@@ -171,8 +169,7 @@ def json2list(json_file):
         pool = '%s-%s' % (master_json['role'], datacenter)
 
         # smarts #3: use unqualified hostname
-        fqdn = master_json['hostname'].replace(
-            'build.scl1.mozilla.com', 'build.mozilla.org')
+        fqdn = master_json['hostname']
 
         master = dict(
             nickname=master_json['name'],
