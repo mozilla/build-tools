@@ -76,6 +76,13 @@
     ],
     "repo_type": "hg"
   },
+  "mozilla-b2g34_v2_1": {
+    "repo": "https://hg.mozilla.org/releases/mozilla-b2g34_v2_1",
+    "graph_branches": [
+      "Mozilla-B2g34-v2.1"
+    ],
+    "repo_type": "hg"
+  },
   "oak": {
     "repo": "https://hg.mozilla.org/projects/oak",
     "graph_branches": [
