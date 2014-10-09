@@ -1,7 +1,7 @@
 import mock
 import unittest
 
-from util.retry import retry, retriable, retrying
+from util.retry import retry, retriable, retrying, retrier
 
 ATTEMPT_N = 1
 
@@ -165,3 +165,38 @@ class TestRetry(unittest.TestCase):
                 w("a", b=1, c="a")
             mocked_retry.assert_called_once_with(
                 wrapped, 1, x='y', args=('a',), kwargs={'c': 'a', 'b': 1})
+
+    def test_retrier(self):
+        """Make sure retrier behaves properly"""
+        n = 0
+        for _ in retrier(attempts=5, sleeptime=0, jitter=0):
+            n += 1
+        self.assertEquals(n, 5)
+
+    def test_retrier_sleep(self):
+        """Make sure retrier sleep is behaving"""
+        with mock.patch("time.sleep") as sleep:
+            # Test that normal sleep scaling works
+            for _ in retrier(attempts=5, sleeptime=10, max_sleeptime=300, sleepscale=2, jitter=0):
+                pass
+            expected = [mock.call(x) for x in (10, 20, 40, 80)]
+            self.assertEquals(sleep.call_args_list, expected)
+
+    def test_retrier_maxsleep(self):
+        with mock.patch("time.sleep") as sleep:
+            # Test that max sleep time works
+            for _ in retrier(attempts=5, sleeptime=10, max_sleeptime=30, sleepscale=2, jitter=0):
+                pass
+            expected = [mock.call(x) for x in (10, 20, 30, 30)]
+            self.assertEquals(sleep.call_args_list, expected)
+
+    def test_retrier_jitter(self):
+        with mock.patch("time.sleep") as sleep:
+            # Test that jitter works
+            with mock.patch("random.randint") as randint:
+                randint.return_value = 3
+                for _ in retrier(attempts=5, sleeptime=10, max_sleeptime=300, sleepscale=2, jitter=3):
+                    randint.return_value *= -1
+                expected = [mock.call(x) for x in (7, 17, 31, 65)]
+                self.assertEquals(sleep.call_args_list, expected)
+                self.assertEquals(randint.call_args, mock.call(-3, 3))
