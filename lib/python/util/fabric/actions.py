@@ -229,6 +229,11 @@ def action_add_esr31_symlinks(master):
     print OK, "Added esr31 symlinks in %(hostname)s:%(basedir)s" % master
 
 
+def action_update_exception_timestamp(master):
+    with show('running'):
+        run('date +%s > /home/cltbld/.{0}s-last-time.txt'.format(master['name']))
+
+
 def per_host(fn):
     fn.per_host = True
     return fn
