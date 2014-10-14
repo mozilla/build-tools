@@ -11,7 +11,7 @@ notify_to_release: Release Drivers <the-mailing-list@mozilla.org>
 smtp_server: localhost
 hg_host: hg.mozilla.org
 hg_username: ffxbld
-hg_ssh_key: ~/.ssh/ffxbld_rsa
+hg_ssh_key: ~/.ssh/ffxbld_dsa
 buildbot_configs: https://hg.mozilla.org/build/buildbot-configs
 buildbot_configs_branch: production
 buildbotcustom: https://hg.mozilla.org/build/buildbotcustom

@@ -2,7 +2,7 @@ repoSetupConfig = {}
 repoSetupConfig['hgHost'] = 'hg.mozilla.org'
 repoSetupConfig['repoPath'] = 'users/prepr-ffxbld'
 repoSetupConfig['hgUserName'] = 'prepr-ffxbld'
-repoSetupConfig['hgSshKey'] = 'ffxbld_rsa'
+repoSetupConfig['hgSshKey'] = 'ffxbld_dsa'
 
 repoSetupConfig['reposToClone'] = {
     'build/buildbot-configs': {
