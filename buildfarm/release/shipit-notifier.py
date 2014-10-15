@@ -110,14 +110,24 @@ def main():
     if not options.config:
         parser.error('Configuration file is required')
 
+    if (not config.has_section('pulse') or
+        not config.has_option('pulse', 'user') or
+        not config.has_option('pulse', 'password')):
+        print ('Config file must have a [pulse] section containing and least '
+               '"user" and\n"password" options.')
+        return
+
     verbosity = {True: log.DEBUG, False: log.WARN}
     log.basicConfig(
         format='%(asctime)s %(message)s',
         level=verbosity[config.getboolean('shipit-notifier', 'verbose')]
     )
 
+    pulse_cfg = pconf.PulseConfiguration.read_from_config(config)
+
     # Adjust applabel when wanting to run shipit on multiple machines
-    pulse = consumers.BuildConsumer(applabel='shipit-notifier', ssl=False)
+    pulse = consumers.BuildConsumer(applabel='shipit-notifier', connect=False)
+    pulse.config = pulse_cfg
     pulse.configure(topic='build.#.finished',
                     durable=True, callback=got_message)
 

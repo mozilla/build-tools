@@ -5,3 +5,8 @@ password: password
 
 [shipit-notifier]
 verbose: true
+
+[pulse]
+user: pulseuser
+password: pulseuserpw
+ssl: false
