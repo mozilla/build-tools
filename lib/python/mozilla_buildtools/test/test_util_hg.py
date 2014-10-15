@@ -102,6 +102,8 @@ class TestHg(unittest.TestCase):
         self.pwd = os.getcwd()
         self.sleep_patcher = patch('time.sleep')
         self.sleep_patcher.start()
+        # Have a stable hgrc to test with
+        os.environ['HGRCPATH'] = os.path.join(os.path.dirname(__file__), "hgrc")
         hg.RETRY_ATTEMPTS = 2
 
     def tearDown(self):
