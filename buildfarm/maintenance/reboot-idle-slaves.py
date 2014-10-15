@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/builds/slaverebooter/bin/python2.7
 """Idle Slave Rebooter
 
 Usage: reboot-idle-slaves.py [-h] [--dryrun] (<config_file>)
@@ -17,7 +17,14 @@ import time
 import Queue
 
 import logging
+from logging.handlers import RotatingFileHandler
 log = logging.getLogger(__name__)
+handler = RotatingFileHandler("reboot-idle-slaves.log",
+                              maxBytes=52428800,
+                              backupCount=50)
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+log.addHandler(handler)
 
 site.addsitedir(path.join(path.dirname(path.realpath(__file__)), "../../lib/python"))
 
@@ -26,6 +33,8 @@ from util.retry import retry
 MAX_WORKERS = 16
 IDLE_THRESHOLD = 5*60*60
 PENDING, RUNNING, SUCCESS, FAILURE = range(4)
+WORKER_WAIT_THRESHOLD = 30*60
+WORKER_WAIT_INCREMENT = .5
 
 SLAVE_QUEUE = Queue.Queue()
 
@@ -217,7 +226,7 @@ if __name__ == "__main__":
     verbose = cfg.getboolean("main", "verbose")
     excludes = cfg.options("exclude")
 
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+    logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
     if verbose:
         logging.getLogger("requests").setLevel(logging.DEBUG)
         logging.getLogger("util.retry").setLevel(logging.DEBUG)
@@ -247,27 +256,40 @@ if __name__ == "__main__":
             SLAVE_QUEUE.put_nowait(name)
 
         # Run while there is any workers or any queued work
+        elapsed = 0
         while len(workers) or SLAVE_QUEUE.qsize():
             # Block until a worker frees
-            while len(workers) and len(workers) >= min(n_workers, SLAVE_QUEUE.qsize()):
-                time.sleep(.5)
+            while len(workers) and len(workers) >= min(n_workers, SLAVE_QUEUE.qsize()) and \
+                  elapsed < WORKER_WAIT_THRESHOLD:
+                log.debug("Waiting for a free worker...")
+                time.sleep(WORKER_WAIT_INCREMENT)
+                elapsed += WORKER_WAIT_INCREMENT
                 for wname, w in workers.items():
                     if not w.is_alive():
                         del workers[wname]
+            if elapsed >= WORKER_WAIT_THRESHOLD:
+                log.warning("Gave up waiting for a free worker after %d seconds" % WORKER_WAIT_THRESHOLD)
+                break
 
             # Start a new worker if there is more work
             if len(workers) < n_workers and SLAVE_QUEUE.qsize():
+                log.debug("Starting a new worker...")
                 t = Thread(target=process_slave, args=(slaveapi, dryrun))
                 t.start()
                 workers[t.ident] = t
+                log.debug("Started worker %s", t.ident)
 
         # Wait for any remaining workers to finish before exiting.
         for w in workers.values():
             while w.is_alive():
+                log.debug("Found a running worker. Attempting to join...")
                 w.join(1)
+
         if SLAVE_QUEUE.qsize():
             # This should not be possible, but report anyway.
             log.info("%s items remained in queue at exit",
                      SLAVE_QUEUE.qsize())
     except KeyboardInterrupt:
         raise
+
+    log.info("All done. Exiting...")
