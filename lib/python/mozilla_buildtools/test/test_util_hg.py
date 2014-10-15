@@ -3,12 +3,13 @@ import tempfile
 import shutil
 import os
 import subprocess
-
+import time
 import util.hg as hg
 from util.hg import clone, pull, update, hg_ver, mercurial, _make_absolute, \
     share, push, apply_and_push, HgUtilError, make_hg_url, get_branch, purge, \
     get_branches, path, init, unbundle, adjust_paths, is_hg_cset, commit, tag, \
     get_hg_output
+from util.file import touch
 from util.commands import run_cmd, get_output
 
 from mock import patch
@@ -42,6 +43,12 @@ def getTags(dest):
     for t in get_output(['hg', 'tags', '-R', dest]).splitlines():
         tags.append(t.split()[0])
     return tags
+
+
+def yesterday_timestamp():
+    """returns a valid yesterday timestamp for touch"""
+    yesterday = time.time() - 86400
+    return (yesterday, yesterday)
 
 
 class TestMakeAbsolute(unittest.TestCase):
@@ -278,8 +285,9 @@ class TestHg(unittest.TestCase):
         clone(self.repodir, backup)
 
         # Make the working repo have a new file. We need it to have an earlier
-        # timestamp to trigger the odd behavior in hg, so use '-d yesterday'
-        run_cmd(['touch', '-d', 'yesterday', 'newfile'], cwd=self.wc)
+        # timestamp (yesterday) to trigger the odd behavior in hg
+        newfile = os.path.join(self.wc, 'newfile')
+        touch(newfile, timestamp=yesterday_timestamp())
         run_cmd(['hg', 'add', 'newfile'], cwd=self.wc)
         run_cmd(['hg', 'commit', '-m', '"add newfile"'], cwd=self.wc)
 
@@ -310,8 +318,9 @@ class TestHg(unittest.TestCase):
             ['%s/init_hgrepo.sh' % os.path.dirname(__file__), self.repodir])
 
         # Make the working repo have a new file. We need it to have an earlier
-        # timestamp to trigger the odd behavior in hg, so use '-d yesterday'
-        run_cmd(['touch', '-d', 'yesterday', 'newfile'], cwd=self.wc)
+        # timestamp (yesterday) to trigger the odd behavior in hg
+        newfile = os.path.join(self.wc, 'newfile')
+        touch(newfile, timestamp=yesterday_timestamp())
         run_cmd(['hg', 'add', 'newfile'], cwd=self.wc)
         run_cmd(['hg', 'commit', '-m', '"add newfile"'], cwd=self.wc)
 
@@ -413,7 +422,8 @@ class TestHg(unittest.TestCase):
     def testPushWithForce(self):
         clone(self.repodir, self.wc, revision=self.revisions[0],
               clone_by_rev=True)
-        run_cmd(['touch', 'newfile'], cwd=self.wc)
+        newfile = os.path.join(self.wc, 'newfile')
+        touch(newfile)
         run_cmd(['hg', 'add', 'newfile'], cwd=self.wc)
         run_cmd(['hg', 'commit', '-m', '"re-add newfile"'], cwd=self.wc)
         push(self.repodir, self.wc, push_new_branches=False, force=True)
@@ -421,7 +431,8 @@ class TestHg(unittest.TestCase):
     def testPushForceFail(self):
         clone(self.repodir, self.wc, revision=self.revisions[0],
               clone_by_rev=True)
-        run_cmd(['touch', 'newfile'], cwd=self.wc)
+        newfile = os.path.join(self.wc, 'newfile')
+        touch(newfile)
         run_cmd(['hg', 'add', 'newfile'], cwd=self.wc)
         run_cmd(['hg', 'commit', '-m', '"add newfile"'], cwd=self.wc)
         self.assertRaises(Exception, push, self.repodir, self.wc,
@@ -645,28 +656,32 @@ class TestHg(unittest.TestCase):
         clone(self.repodir, self.wc)
 
         def c(repo, attempt, remote, local):
-            run_cmd(['touch', 'newfile'], cwd=remote)
+            newfile_remote = os.path.join(remote, 'newfile')
+            newfile_local = os.path.join(local, 'newfile')
+            touch(newfile_remote)
             run_cmd(['hg', 'add', 'newfile'], cwd=remote)
             run_cmd(['hg', 'commit', '-m', '"add newfile"'], cwd=remote)
-            run_cmd(['touch', 'newfile'], cwd=local)
+            touch(newfile_local)
             run_cmd(['hg', 'add', 'newfile'], cwd=local)
             run_cmd(['hg', 'commit', '-m', '"re-add newfile"'], cwd=local)
         apply_and_push(self.wc, self.repodir,
-                      (lambda r, a: c(r, a, self.repodir, self.wc)), force=True)
+                       (lambda r, a: c(r, a, self.repodir, self.wc)), force=True)
 
     def testApplyAndPushForceFail(self):
         clone(self.repodir, self.wc)
 
         def c(repo, attempt, remote, local):
-            run_cmd(['touch', 'newfile'], cwd=remote)
+            newfile_remote = os.path.join(remote, 'newfile')
+            newfile_local = os.path.join(local, 'newfile')
+            touch(newfile_remote)
             run_cmd(['hg', 'add', 'newfile'], cwd=remote)
             run_cmd(['hg', 'commit', '-m', '"add newfile"'], cwd=remote)
-            run_cmd(['touch', 'newfile'], cwd=local)
+            touch(newfile_local)
             run_cmd(['hg', 'add', 'newfile'], cwd=local)
             run_cmd(['hg', 'commit', '-m', '"re-add newfile"'], cwd=local)
         self.assertRaises(HgUtilError,
                           apply_and_push, self.wc, self.repodir,
-                         (lambda r, a: c(r, a, self.repodir, self.wc)), force=False)
+                          (lambda r, a: c(r, a, self.repodir, self.wc)), force=False)
 
     def testPath(self):
         clone(self.repodir, self.wc)
@@ -1073,7 +1088,8 @@ class TestHg(unittest.TestCase):
                           revision="1234567890")
 
     def testCommit(self):
-        run_cmd(['touch', 'newfile'], cwd=self.repodir)
+        newfile = os.path.join(self.repodir, 'newfile')
+        touch(newfile)
         run_cmd(['hg', 'add', 'newfile'], cwd=self.repodir)
         rev = commit(self.repodir, user='unittest', msg='gooooood')
         info = getRevInfo(self.repodir, rev)
@@ -1081,7 +1097,8 @@ class TestHg(unittest.TestCase):
         # can't test for user, because it depends on local hg configs.
 
     def testCommitWithUser(self):
-        run_cmd(['touch', 'newfile'], cwd=self.repodir)
+        newfile = os.path.join(self.repodir, 'newfile')
+        touch(newfile)
         run_cmd(['hg', 'add', 'newfile'], cwd=self.repodir)
         rev = commit(self.repodir, user='unittest', msg='new stuff!')
         info = getRevInfo(self.repodir, rev)

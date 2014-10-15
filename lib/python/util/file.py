@@ -102,3 +102,9 @@ def get_config_bool(config, section, option, default):
     if config.has_section(section) and config.has_option(section, option):
         return config.getboolean(section, option)
     return default
+
+
+def touch(filename, timestamp=None):
+    """a command line touch, replacement"""
+    with open(filename, 'a'):
+        os.utime(filename, timestamp)

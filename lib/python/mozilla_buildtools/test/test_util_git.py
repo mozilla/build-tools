@@ -6,6 +6,7 @@ import subprocess
 from util.commands import run_cmd, get_output
 
 import util.git as git
+from util.file import touch
 
 
 def getRevisions(dest, branches=None):
@@ -62,7 +63,7 @@ class TestGit(unittest.TestCase):
         self.assertFalse(git.has_revision(self.repodir, "foooooooooooooooo"))
 
     def testClean(self):
-        rev = git.git(self.repodir, self.wc)
+        git.git(self.repodir, self.wc)
         try:
             f = open(os.path.join(self.wc, 'blaaah'), 'w')
             f.write('blah')
@@ -142,7 +143,8 @@ class TestGit(unittest.TestCase):
         git.fetch(self.repodir, self.wc, refname='branch2')
 
         # Change the original repo
-        run_cmd(['touch', 'newfile'], cwd=self.repodir)
+        newfile = os.path.join(self.repodir, 'newfile')
+        touch(newfile)
         run_cmd(['git', 'add', 'newfile'], cwd=self.repodir)
         run_cmd(['git', 'commit', '-q', '-m', 'add newfile'], cwd=self.repodir)
 
@@ -172,14 +174,14 @@ class TestGit(unittest.TestCase):
             os.path.join(self.wc, 'hello.txt')).read())
 
     def testGitCleanDest(self):
-        rev = git.git(self.repodir, self.wc)
+        git.git(self.repodir, self.wc)
         try:
             f = open(os.path.join(self.wc, 'blaaah'), 'w')
             f.write('blah')
         finally:
             if not f.closed:
                 f.close()
-        rev = git.git(self.repodir, self.wc, clean_dest=True)
+        git.git(self.repodir, self.wc, clean_dest=True)
         self.assertFalse(os.path.exists(os.path.join(self.wc, 'blaaah')))
 
     def testGitRev(self):
@@ -191,7 +193,8 @@ class TestGit(unittest.TestCase):
         self.assertEquals(rev, self.revisions[1])
 
         # Make a new commit in repodir
-        run_cmd(['touch', 'newfile'], cwd=self.repodir)
+        newfile = os.path.join(self.repodir, 'newfile')
+        touch(newfile)
         run_cmd(['git', 'add', 'newfile'], cwd=self.repodir)
         run_cmd(['git', 'commit', '-q', '-m', 'add newfile'], cwd=self.repodir)
         new_rev = getRevisions(self.repodir)[-1]
@@ -239,7 +242,8 @@ class TestGit(unittest.TestCase):
         self.assertFalse(os.path.exists(os.path.join(self.wc, 'newfile')))
 
         # Add a commit to the original repo
-        run_cmd(['touch', 'newfile'], cwd=self.repodir)
+        newfile = os.path.join(self.repodir, 'newfile')
+        touch(newfile)
         run_cmd(['git', 'add', 'newfile'], cwd=self.repodir)
         run_cmd(['git', 'commit', '-q', '-m', 'add newfile'], cwd=self.repodir)
         new_rev = getRevisions(self.repodir)[-1]
@@ -277,7 +281,8 @@ class TestGit(unittest.TestCase):
         self.assertEquals(rev, self.revisions[-1])
 
         # Add a commit to the mirror
-        run_cmd(['touch', 'newfile'], cwd=mirror2)
+        newfile = os.path.join(mirror2, 'newfile')
+        touch(newfile)
         run_cmd(['git', 'add', 'newfile'], cwd=mirror2)
         run_cmd(['git', 'commit', '-q', '-m', 'add newfile'], cwd=mirror2)
         new_rev = getRevisions(mirror2)[-1]
