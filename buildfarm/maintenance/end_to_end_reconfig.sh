@@ -336,13 +336,12 @@ function merge_to_production {
         hg_wrapper commit -l "${RECONFIG_DIR}/${repo}_preview_changes.txt"
         if [ "${PREPARE_ONLY}" == '0' ]; then
             echo "  * Pushing '${RECONFIG_DIR}/${repo}' ${branch} branch to ssh://hg.mozilla.org/build/${repo}..."
-            #hg_wrapper push
+            hg_wrapper push
         fi
         echo "${repo}" >> "${RECONFIG_DIR}/pending_changes"
     done
     echo "  * Running python format_wiki_update.py --logdir ${RECONFIG_DIR} > $RECONFIG_DIR/${RECONFIG_UPDATE_FILE}"
     python format_wiki_update.py --logdir ${RECONFIG_DIR} > $RECONFIG_DIR/${RECONFIG_UPDATE_FILE}
-    exit 999
     [ -f "${RECONFIG_DIR}/pending_changes" ] && return 0 || return 1
 }
 
