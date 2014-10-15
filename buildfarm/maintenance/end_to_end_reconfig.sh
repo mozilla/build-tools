@@ -155,6 +155,8 @@ UPDATE_WIKI="${UPDATE_WIKI:-1}"
 RECONFIG_DIR="${RECONFIG_DIR:-/tmp/reconfig}"
 WIKI_CREDENTIALS_FILE="${WIKI_CREDENTIALS_FILE:-${HOME}/.wikiwriter/config}"
 
+RECONFIG_UPDATE_FILE="reconfig_update_for_maintenance.wiki"
+
 ##### Now check parsed parameters are valid...
 
 echo "  * Validating parameters..."
@@ -274,7 +276,7 @@ if [ -f "${RECONFIG_DIR}/pending_changes" ]; then
             1) echo "  * Continuing with stalled reconfig..."
                ;;
             2) echo "  * Cleaning out previous reconfig from '${RECONFIG_DIR}'..."
-               rm -rf "${RECONFIG_DIR}"/{buildbot-configs,buildbotcustom,pending_changes,mozharness,reconfig_update_for_maintenance.wiki}
+               rm -rf "${RECONFIG_DIR}"/{buildbot-configs,buildbotcustom,pending_changes,mozharness,${RECONFIG_UPDATE_FILE}}
                ;;
             3) echo "  * Aborting reconfig..."
                exit 67
@@ -334,16 +336,13 @@ function merge_to_production {
         hg_wrapper commit -l "${RECONFIG_DIR}/${repo}_preview_changes.txt"
         if [ "${PREPARE_ONLY}" == '0' ]; then
             echo "  * Pushing '${RECONFIG_DIR}/${repo}' ${branch} branch to ssh://hg.mozilla.org/build/${repo}..."
-            hg_wrapper push
+            #hg_wrapper push
         fi
         echo "${repo}" >> "${RECONFIG_DIR}/pending_changes"
     done
-    grep summary "${RECONFIG_DIR}"/*_preview_changes.txt | \
-        awk '{sub (/ r=.*$/,"");print substr($0, index($0,$2))}' | \
-        sed 's/[Bb]ug \([0-9]*\):* *-* */\* {{bug|\1}} - /' | \
-        sed 's/^[ \t]*//;s/[ \t,;]*$//' | \
-        sed 's/^\([^\*]\)/\* \1/' | \
-        sort -u >> "${RECONFIG_DIR}/reconfig_update_for_maintenance.wiki"
+    echo "  * Running python format_wiki_update.py --logdir ${RECONFIG_DIR} > $RECONFIG_DIR/${RECONFIG_UPDATE_FILE}"
+    python format_wiki_update.py --logdir ${RECONFIG_DIR} > $RECONFIG_DIR/${RECONFIG_UPDATE_FILE}
+    exit 999
     [ -f "${RECONFIG_DIR}/pending_changes" ] && return 0 || return 1
 }
 
@@ -369,9 +368,9 @@ fi
 
 if [ "${UPDATE_WIKI}" == "1" ]; then
     if [ "${PREPARE_ONLY}" == '1' ]; then
-        ./update_maintenance_wiki.sh -d -r "${RECONFIG_DIR}" -w "${RECONFIG_DIR}/reconfig_update_for_maintenance.wiki"
+        ./update_maintenance_wiki.sh -d -r "${RECONFIG_DIR}" -w "${RECONFIG_DIR}/${RECONFIG_UPDATE_FILE}"
     else
-        ./update_maintenance_wiki.sh -r "${RECONFIG_DIR}" -w "${RECONFIG_DIR}/reconfig_update_for_maintenance.wiki"
+        ./update_maintenance_wiki.sh -r "${RECONFIG_DIR}" -w "${RECONFIG_DIR}/${RECONFIG_UPDATE_FILE}"
         for file in "${RECONFIG_DIR}"/*_preview_changes.txt
         do
             mv "${file}" "$(echo "${file}" | sed "s/\\.txt\$/_${START_TIME}&/")"
@@ -380,7 +379,7 @@ if [ "${UPDATE_WIKI}" == "1" ]; then
 fi
 
 echo "  * Summary of changes:"
-cat "${RECONFIG_DIR}/reconfig_update_for_maintenance.wiki" | sed 's/^/        /'
+cat "${RECONFIG_DIR}/${RECONFIG_UPDATE_FILE}" | sed 's/^/        /'
 echo "  * Reconfig of masters completed."
 
 # Manage foopies after everything else.
