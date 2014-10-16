@@ -2,11 +2,9 @@
 # Other keys in whitelist contain things are in that branches mozconfigs and allowed to be missing from nightly builds.
 whitelist = {
     'mozilla-release': {},
-    'mozilla-esr24': {},
     'mozilla-esr31': {},
     'mozilla-beta': {},
     'comm-beta': {},
-    'comm-esr24': {},
     'comm-esr31': {},
     'nightly': {},
     }
@@ -123,7 +121,7 @@ for branch in ('mozilla-beta', 'comm-beta'):
     whitelist[branch]['android-x86'] += ['ac_add_options --enable-updater']
 
 
-for branch in ('mozilla-release', 'comm-esr24', 'comm-esr31'):
+for branch in ('mozilla-release', 'comm-esr31'):
     for platform in all_platforms:
         whitelist[branch][platform] = [
             'ac_add_options --enable-update-channel=release',
