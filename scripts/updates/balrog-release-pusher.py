@@ -101,7 +101,8 @@ if __name__ == '__main__':
                 release_config['version'], release_config['buildNumber'],
                 updateChannels, release_config['stagingServer'],
                 release_config['bouncerServer'], release_config['enUSPlatforms'],
-                hashType, partialUpdates=release_config['partialUpdates'])
+                hashType, openURL=release_config.get('openURL'),
+                partialUpdates=release_config['partialUpdates'])
 
     pusher = ReleasePusher(options.api_root, auth)
     pusher.run(release_config['productName'].capitalize(), release_config['version'],

@@ -35,7 +35,8 @@ class ReleaseCreatorBase(object):
 
     def generate_data(self, appVersion, productName, version, buildNumber,
                       updateChannels, stagingServer, bouncerServer,
-                      enUSPlatforms, schemaVersion, **updateKwargs):
+                      enUSPlatforms, schemaVersion, openURL=None,
+                      **updateKwargs):
         assert schemaVersion in (2, 3), 'Unhandled schema version %s' % schemaVersion
         self.name = get_release_blob_name(productName, version, buildNumber)
         data = {
@@ -49,6 +50,14 @@ class ReleaseCreatorBase(object):
         data['appVersion'] = appVersion
         data['platformVersion'] = appVersion
         data['displayVersion'] = getPrettyVersion(version)
+
+        actions = []
+        if openURL:
+            actions.append("showURL")
+            data["openURL"] = openURL
+
+        if actions:
+            data["actions"] = " ".join(actions)
 
         # XXX: This is a hack for bug 1045583. We should remove it, and always
         # use "candidates" for nightlyDir after the switch to Balrog is complete.
@@ -96,12 +105,13 @@ class ReleaseCreatorBase(object):
 
     def run(self, appVersion, productName, version, buildNumber,
             updateChannels, stagingServer, bouncerServer,
-            enUSPlatforms, hashFunction, schemaVersion, **updateKwargs):
+            enUSPlatforms, hashFunction, schemaVersion, openURL=None,
+            **updateKwargs):
         api = Release(auth=self.auth, api_root=self.api_root)
         data = self.generate_data(appVersion, productName, version,
                                   buildNumber, updateChannels,
                                   stagingServer, bouncerServer, enUSPlatforms,
-                                  schemaVersion, **updateKwargs)
+                                  schemaVersion, openURL, **updateKwargs)
         current_data, data_version = api.get_data(self.name)
         data = recursive_update(current_data, data)
         api = Release(auth=self.auth, api_root=self.api_root)
