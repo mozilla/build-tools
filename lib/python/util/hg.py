@@ -585,6 +585,8 @@ def apply_and_push(localrepo, remote, changer, max_attempts=10,
                          'rebase'], cwd=localrepo)
             except subprocess.CalledProcessError, e:
                 log.debug("Failed to rebase: %s" % str(e))
+                # abort failed rebase
+                run_cmd(['hg', 'rebase', '--abort'], cwd=localrepo)
                 update(localrepo, branch=branch)
                 for r in reversed(new_revs):
                     run_cmd(['hg', '--config', 'extensions.mq=', 'strip', '-n',
