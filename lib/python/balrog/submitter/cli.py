@@ -1,5 +1,3 @@
-from distutils.version import StrictVersion
-
 try:
     import simplejson as json
 except ImportError:
@@ -37,15 +35,13 @@ class ReleaseCreatorBase(object):
                       updateChannels, stagingServer, bouncerServer,
                       enUSPlatforms, schemaVersion, openURL=None,
                       **updateKwargs):
-        assert schemaVersion in (2, 3), 'Unhandled schema version %s' % schemaVersion
+        assert schemaVersion in (3, 4), 'Unhandled schema version %s' % schemaVersion
         self.name = get_release_blob_name(productName, version, buildNumber)
         data = {
             'name': self.name,
             'detailsUrl': getProductDetails(productName.lower(), appVersion),
             'platforms': {},
             'fileUrls': {},
-            'ftpFilenames': {},
-            'bouncerProducts': {},
         }
         data['appVersion'] = appVersion
         data['platformVersion'] = appVersion
@@ -59,34 +55,15 @@ class ReleaseCreatorBase(object):
         if actions:
             data["actions"] = " ".join(actions)
 
-        # XXX: This is a hack for bug 1045583. We should remove it, and always
-        # use "candidates" for nightlyDir after the switch to Balrog is complete.
-        if productName.lower() == "mobile":
-            nightlyDir = "candidates"
-        else:
-            nightlyDir = "nightly"
+        fileUrls = self._getFileUrls(productName, version, buildNumber,
+                                     updateChannels, stagingServer,
+                                     bouncerServer, **updateKwargs)
+        if fileUrls:
+            data.update(fileUrls)
 
-        for channel in updateChannels:
-            if channel in ('betatest', 'esrtest') or "localtest" in channel:
-                dir_ = makeCandidatesDir(productName.lower(), version,
-                                         buildNumber, server=stagingServer, protocol='http',
-                                         nightlyDir=nightlyDir)
-                data['fileUrls'][channel] = '%supdate/%%OS_FTP%%/%%LOCALE%%/%%FILENAME%%' % dir_
-            else:
-                url = 'http://%s/?product=%%PRODUCT%%&os=%%OS_BOUNCER%%&lang=%%LOCALE%%' % bouncerServer
-                data['fileUrls'][channel] = url
-
-        # XXX: quick hack for bug 1021026. We should be using Bouncer for this
-        # after we implement better solution talked about in comments 2 through 4
-        if channel == 'release':
-            dir_ = makeCandidatesDir(productName.lower(), version,
-                                     buildNumber, server='download.cdn.mozilla.net', protocol='http',
-                                     nightlyDir=nightlyDir)
-            url = '%supdate/%%OS_FTP%%/%%LOCALE%%/%%FILENAME%%' % dir_
-            data['fileUrls']['beta'] = url
-            data['fileUrls']['beta-cdntest'] = url
-
-        data.update(self._get_update_data(productName, version, **updateKwargs))
+        updateData = self._get_update_data(productName, version, **updateKwargs)
+        if updateData:
+            data.update(updateData)
 
         for platform in enUSPlatforms:
             updatePlatforms = buildbot2updatePlatforms(platform)
@@ -123,25 +100,41 @@ class ReleaseCreatorBase(object):
                            data_version=data_version)
 
 
-class ReleaseCreatorV2(ReleaseCreatorBase):
-    def run(self, *args, **kwargs):
-        return ReleaseCreatorBase.run(self, *args, schemaVersion=2, **kwargs)
-
-    def _get_update_data(self, productName, version, partialUpdates):
-        data = {}
-        previousVersion = str(max(StrictVersion(v) for v in partialUpdates))
-
-        data['ftpFilenames']['complete'] = '%s-%s.complete.mar' % (productName.lower(), version)
-        data['ftpFilenames']['partial'] = '%s-%s-%s.partial.mar' % (productName.lower(), previousVersion, version)
-        data['bouncerProducts']['complete'] = '%s-%s-complete' % (productName.lower(), version)
-        data['bouncerProducts']['partial'] = '%s-%s-partial-%s' % (productName.lower(), version, previousVersion)
-
-        return data
-
-
 class ReleaseCreatorV3(ReleaseCreatorBase):
     def run(self, *args, **kwargs):
         return ReleaseCreatorBase.run(self, *args, schemaVersion=3, **kwargs)
+
+    def _getFileUrls(self, productName, version, buildNumber, updateChannels,
+                     stagingServer, bouncerServer, partialUpdates):
+        data = {}
+        # XXX: This is a hack for bug 1045583. We should remove it, and always
+        # use "candidates" for nightlyDir after the switch to Balrog is complete.
+        if productName.lower() == "mobile":
+            nightlyDir = "candidates"
+        else:
+            nightlyDir = "nightly"
+
+        for channel in updateChannels:
+            if channel in ('betatest', 'esrtest') or "localtest" in channel:
+                dir_ = makeCandidatesDir(productName.lower(), version,
+                                         buildNumber, server=stagingServer, protocol='http',
+                                         nightlyDir=nightlyDir)
+                data["fileUrls"][channel] = '%supdate/%%OS_FTP%%/%%LOCALE%%/%%FILENAME%%' % dir_
+            else:
+                url = 'http://%s/?product=%%PRODUCT%%&os=%%OS_BOUNCER%%&lang=%%LOCALE%%' % bouncerServer
+                data["fileUrls"][channel] = url
+
+        # XXX: quick hack for bug 1021026. We should be using Bouncer for this
+        # after we implement better solution talked about in comments 2 through 4
+        if channel == 'release':
+            dir_ = makeCandidatesDir(productName.lower(), version,
+                                     buildNumber, server='download.cdn.mozilla.net', protocol='http',
+                                     nightlyDir=nightlyDir)
+            url = '%supdate/%%OS_FTP%%/%%LOCALE%%/%%FILENAME%%' % dir_
+            data["fileUrls"]['beta'] = url
+            data["fileUrls"]['beta-cdntest'] = url
+
+        return data
 
     def _get_update_data(self, productName, version, partialUpdates):
         data = {
@@ -172,6 +165,65 @@ class ReleaseCreatorV3(ReleaseCreatorBase):
         return data
 
 
+class ReleaseCreatorV4(ReleaseCreatorBase):
+    def run(self, *args, **kwargs):
+        return ReleaseCreatorBase.run(self, *args, schemaVersion=4, **kwargs)
+
+    # Replaced by _get_fileUrls
+    def _get_update_data(self, *args, **kwargs):
+        return None
+
+    def _getFileUrls(self, productName, version, buildNumber, updateChannels,
+                     stagingServer, bouncerServer, partialUpdates):
+        data = {"fileUrls": {}}
+
+        # TODO: comment about *
+        uniqueChannels = ["*"]
+        for c in updateChannels:
+            # Channels that aren't localtest all use the same URLs, which are
+            # added in the catch all. To avoid duplication, we simply don't
+            # add them explicitly.
+            if c in ("betatest", "esrtest") or "localtest" in c:
+                uniqueChannels.append(c)
+
+        for channel in uniqueChannels:
+            data["fileUrls"][channel] = {
+                "completes": {}
+            }
+            if channel in ('betatest', 'esrtest') or "localtest" in channel:
+                dir_ = makeCandidatesDir(productName.lower(), version,
+                                         buildNumber, server=stagingServer,
+                                         protocol='http')
+                filename = "%s-%s.complete.mar" % (productName.lower(), version)
+                data["fileUrls"][channel]["completes"]["*"] = "%s/%s" % (dir_, filename)
+            else:
+                bouncerProduct = "%s-%s-complete" % (productName.lower(), version)
+                url = 'http://%s/?product=%s&os=%%OS_BOUNCER%%&lang=%%LOCALE%%' % (bouncerServer, bouncerProduct)
+                data["fileUrls"][channel]["completes"]["*"] = url
+
+        if not partialUpdates:
+            return data
+
+        for previousVersion, previousInfo in partialUpdates.iteritems():
+            from_ = get_release_blob_name(productName, previousVersion,
+                                            previousInfo["buildNumber"],
+                                            self.dummy)
+            for channel in uniqueChannels:
+                data["fileUrls"][channel]["partials"] = {}
+                if channel in ('betatest', 'esrtest') or "localtest" in channel:
+                    dir_ = makeCandidatesDir(productName.lower(), version,
+                                            buildNumber, server=stagingServer,
+                                            protocol='http')
+                    filename = "%s-%s-%s.partial.mar" % (productName.lower(), previousVersion, version)
+                    data["fileUrls"][channel]["partials"][from_] = "%s/%s" % (dir_, filename)
+                else:
+                    bouncerProduct = "%s-%s-partial-%s" % (productName.lower(), version, previousVersion)
+                    url = 'http://%s/?product=%s&os=%%OS_BOUNCER%%&lang=%%LOCALE%%' % (bouncerServer, bouncerProduct)
+                    data["fileUrls"][channel]["partials"][from_] = url
+
+        return data
+
+
 class NightlySubmitterBase(object):
     build_type = 'nightly'
 
@@ -182,7 +234,7 @@ class NightlySubmitterBase(object):
 
     def run(self, platform, buildID, productName, branch, appVersion, locale,
             hashFunction, extVersion, schemaVersion, isOSUpdate=None, **updateKwargs):
-        assert schemaVersion in (2, 3), 'Unhandled schema version %s' % schemaVersion
+        assert schemaVersion in (3,4), 'Unhandled schema version %s' % schemaVersion
         targets = buildbot2updatePlatforms(platform)
         build_target = targets[0]
         alias = None
@@ -222,39 +274,7 @@ class NightlySubmitterBase(object):
                          schemaVersion=schemaVersion)
 
 
-class NightlySubmitterV2(NightlySubmitterBase):
-    def run(self, *args, **kwargs):
-        return NightlySubmitterBase.run(self, *args, schemaVersion=2, **kwargs)
-
-    def _get_update_data(self, productName, branch, completeMarSize,
-                         completeMarHash, completeMarUrl, partialMarSize=None,
-                         partialMarHash=None, partialMarUrl=None,
-                         previous_buildid=None):
-        data = {}
-        data['complete'] = {
-            'from': '*',
-            'filesize': completeMarSize,
-            'hashValue': completeMarHash,
-            'fileUrl': completeMarUrl
-        }
-        if partialMarSize:
-            data['partial'] = {
-                'from': get_nightly_blob_name(productName, branch,
-                                              self.build_type,
-                                              previous_buildid,
-                                              self.dummy),
-                'filesize': partialMarSize,
-                'hashValue': partialMarHash,
-                'fileUrl': partialMarUrl
-            }
-
-        return data
-
-
-class NightlySubmitterV3(NightlySubmitterBase):
-    def run(self, *args, **kwargs):
-        return NightlySubmitterBase.run(self, *args, schemaVersion=3, **kwargs)
-
+class MultipleUpdatesNightlyMixin(object):
     def _get_update_data(self, productName, branch, completeInfo,
                          partialInfo=None):
         data = {"completes": []}
@@ -289,6 +309,16 @@ class NightlySubmitterV3(NightlySubmitterBase):
         return data
 
 
+class NightlySubmitterV3(NightlySubmitterBase, MultipleUpdatesNightlyMixin):
+    def run(self, *args, **kwargs):
+        return NightlySubmitterBase.run(self, *args, schemaVersion=3, **kwargs)
+
+
+class NightlySubmitterV4(NightlySubmitterBase, MultipleUpdatesNightlyMixin):
+    def run(self, *args, **kwargs):
+        return NightlySubmitterBase.run(self, *args, schemaVersion=4, **kwargs)
+
+
 class ReleaseSubmitterBase(object):
     def __init__(self, api_root, auth, dummy=False):
         self.api_root = api_root
@@ -297,7 +327,7 @@ class ReleaseSubmitterBase(object):
 
     def run(self, platform, productName, appVersion, version, build_number, locale,
             hashFunction, extVersion, buildID, schemaVersion, **updateKwargs):
-        assert schemaVersion in (2, 3), 'Unhandled schema version %s' % schemaVersion
+        assert schemaVersion in (3, 4), 'Unhandled schema version %s' % schemaVersion
         targets = buildbot2updatePlatforms(platform)
         # Some platforms may have alias', but those are set-up elsewhere
         # for release blobs.
@@ -324,28 +354,7 @@ class ReleaseSubmitterBase(object):
                          buildData=data, schemaVersion=schemaVersion)
 
 
-class ReleaseSubmitterV2(ReleaseSubmitterBase):
-    def run(self, *args, **kwargs):
-        return ReleaseSubmitterBase.run(self, *args, schemaVersion=2, **kwargs)
-
-    def _get_update_data(self, productName, version, build_number,
-                         completeMarSize, completeMarHash):
-        data = {}
-
-        data['complete'] = {
-            'from': '*',
-            'filesize': completeMarSize,
-            'hashValue': completeMarHash,
-        }
-        # XXX: We never supported partials in schema 2 for releases.
-
-        return data
-
-
-class ReleaseSubmitterV3(ReleaseSubmitterBase):
-    def run(self, *args, **kwargs):
-        return ReleaseSubmitterBase.run(self, *args, schemaVersion=3, **kwargs)
-
+class MultipleUpdatesReleaseMixin(object):
     def _get_update_data(self, productName, version, build_number,
                          completeInfo, partialInfo=None):
         data = {"completes": []}
@@ -374,6 +383,16 @@ class ReleaseSubmitterV3(ReleaseSubmitterBase):
                 })
 
         return data
+
+
+class ReleaseSubmitterV3(ReleaseSubmitterBase, MultipleUpdatesReleaseMixin):
+    def run(self, *args, **kwargs):
+        return ReleaseSubmitterBase.run(self, *args, schemaVersion=3, **kwargs)
+
+
+class ReleaseSubmitterV4(ReleaseSubmitterBase, MultipleUpdatesReleaseMixin):
+    def run(self, *args, **kwargs):
+        return ReleaseSubmitterBase.run(self, *args, schemaVersion=4, **kwargs)
 
 
 class ReleasePusher(object):
