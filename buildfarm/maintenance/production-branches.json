@@ -268,12 +268,5 @@
       "Jamun"
     ],
     "repo_type": "hg"
-  },
-  "graphics": {
-    "repo": "https://hg.mozilla.org/projects/graphics",
-    "graph_branches": [
-      "Graphics"
-    ],
-    "repo_type": "hg"
   }
 }
