@@ -13,17 +13,18 @@ import traceback
 import time
 import logging
 import subprocess
+import mozdownload
 from optparse import OptionParser
 
 SDK_TARBALL = "addonsdk.tar.bz2"
 POLLER_DIR = "addonsdk-poller"
 SDK_DIR = "jetpack"
 
-PLATFORMS = {
-    'snowleopard': 'macosx64',
-    'lion': 'macosx64',
-    'mountainlion': 'macosx64',
-    'mavericks': 'macosx64',
+PLATFORM_FRAGMENTS = {
+    'snowleopard': 'mac64',
+    'lion': 'mac64',
+    'mountainlion': 'mac64',
+    'mavericks': 'mac64',
     'xp-ix': 'win32',
     'win7-ix': 'win32',
     'win8': 'win32',
@@ -32,7 +33,7 @@ PLATFORMS = {
     'ubuntu64': 'linux64',
     'ubuntu32_vm': 'linux',
     'ubuntu64_vm': 'linux64',
-    'ubuntu64-asan_vm': 'linux64-asan',
+    'ubuntu64-asan_vm': 'linux64'
 }
 
 log = logging.getLogger()
@@ -92,8 +93,6 @@ if __name__ == '__main__':
     parser = OptionParser(usage=__doc__)
     parser.add_option("-e", "--extension", dest="ext", default="",
                       help="Extension to match in the builds directory for downloading the build")
-    parser.add_option("-f", "--ftp-url", dest="ftp_url", default="",
-                      help="Url for ftp latest-builds directory where the build to download lives")
     parser.add_option(
         "-s", "--sdk-location", dest="sdk_location", default='jetpack-location.txt',
         help="Text file or url to use to download the current addonsdk tarball")
@@ -106,25 +105,7 @@ if __name__ == '__main__':
 
     (options, args) = parser.parse_args()
 
-    # Handling method of running tests (branch checkin vs. poller on addon-sdk
-    # repo)
-    if options.ftp_url == "":
-        # Branch change triggered test suite
-        # 'jetpack' dir must exist the build's tests package
-        if os.path.exists("./%s" % SDK_DIR):
-            os.chdir(SDK_DIR)
-            if ".txt" in options.sdk_location:
-                f = open(options.sdk_location, 'r')
-                sdk_url = f.readline()
-                f.close()
-            else:
-                sdk_url = options.sdk_location
-            os.chdir('..')
-            basepath = os.getcwd()
-        else:
-            print("No jetpack directory present!  Cannot run test suite.")
-            sys.exit(2)
-    elif options.ftp_url != "" and options.ext != "" and options.tarball_url != "":
+    if options.ext != "" and options.tarball_url != "":
         # Addonsdk checkin triggered
         is_poller = True
 
@@ -151,63 +132,15 @@ if __name__ == '__main__':
         os.chdir(POLLER_DIR)
         basepath = os.getcwd()
         sdk_url = options.tarball_url
-        platform = PLATFORMS[options.platform]
         branch = options.branch
-        ftp_url = options.ftp_url % locals()
-        pat = re.compile('firefox.*%s$' % options.ext)
-        urls = urllib.urlopen("%s" % ftp_url)
-        lines = urls.read().splitlines()
-        directory = None
 
-        # Find the largest-numbered numeric directory or symlink
-        for line in lines:
-            if line.startswith('d') or line.startswith('l'):
-                parts = line.split(" ")
-                # For a symlink, the last three parts are '1332439584', '->',
-                # '../old/etc.'
-                if line.startswith('l'):
-                    parts[-1] = parts[-3]
-                if not parts[-1].isdigit():
-                    continue
-                if directory is None or int(parts[-1]) > int(directory):
-                    directory = parts[-1]
 
-        # Now get the executable for this platform
-        if directory is None:
-            print "Error, no directory found to check for executables"
-            sys.exit(4)
-        urls = urllib.urlopen("%s/%s" % (ftp_url, directory))
-        filenames = urls.read().splitlines()
-        executables = []
-        for filename in filenames:
-            f = filename.split(" ")[-1]
-            if pat.match(f):
-                executables.append(f)
-        # Only grab the most recent build (in case there's more than one in the
-        # dir)
-        if len(executables) > 0:
-            exe = sorted(executables, reverse=True)[0]
-        else:
-            print "Error: missing Firefox executable"
-            sys.exit(4)
-        info_file = exe.replace(
-            options.ext, "%s.txt" % options.ext.split('.')[0])
-        # Now get the branch revision
-        for filename in filenames:
-            if info_file in filename:
-                info = filename.split(" ")[-1]
-                urllib.urlretrieve(
-                    "%s/%s/%s" % (ftp_url, directory, info), info)
-                f = open(info, 'r')
-                for line in f.readlines():
-                    if "hg.mozilla.org" in line:
-                        branch_rev = line.split('/')[-1].strip()
-                        branch = line.split('/')[-3].strip()
-                        print "TinderboxPrint: <a href=\"https://hg.mozilla.org/%(branch)s/rev/%(branch_rev)s\">%(branch)s-rev:%(branch_rev)s</a>\n" % locals()
-                f.close()
-        print "EXE_URL: %s/%s/%s" % (ftp_url, directory, exe)
-        # Download the build
-        urllib.urlretrieve("%s/%s/%s" % (ftp_url, directory, exe), exe)
+        nightly = mozdownload.TinderboxScraper(
+                                     directory=basepath,
+                                     version=None,
+                                     branch=branch,
+                                     platform=PLATFORM_FRAGMENTS[options.platform])
+        nightly.download();
     else:
         parser.error("Incorrect number of arguments")
         sys.exit(4)
