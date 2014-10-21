@@ -49,12 +49,7 @@ while [ $# -gt 1 ]; do
     esac
 done
 
-VARIANT=$1
-if [ ! -f "$SPIDERDIR/$VARIANT" ]; then
-    echo "Could not find $VARIANT"
-    usage
-    exit 1
-fi
+VARIANT="$1"
 
 if [ -n "$PROPERTIES_FILE" ]; then
     if ! [ -f "$PROPERTIES_FILE" ]; then
@@ -62,11 +57,11 @@ if [ -n "$PROPERTIES_FILE" ]; then
         exit 1
     fi
     echo "Properties file found; running automation build"
-    devel=""
+    export AUTOMATION=1
     HG_REPO=${HG_REPO:-$DEFAULT_REPO}
 else
     echo "Properties file not set; running development build"
-    devel=1
+    unset AUTOMATION
 fi
 
 if [ -z "$HG_REPO" ] || [ "$HG_REPO" = none ]; then
@@ -103,6 +98,26 @@ if [ -f "$PROPERTIES_FILE" ]; then
         -s 4 -n info -n 'rel-*' -n 'tb-rel-*' -n $builddir
 fi
 
+# The build script has been moved into the tree, but this script needs to keep
+# working for older branches.
+if [ -x "$SOURCE/js/src/devtools/automation/autospider.sh" ]; then
+    ARGS=""
+    if [ -n "$noclean" ]; then
+        ARGS="$ARGS --dep"
+    fi
+    exec $SOURCE/js/src/devtools/automation/autospider.sh $ARGS "$VARIANT"
+    exit 1
+fi
+
+# Everything from here down should be deleted when the oldest branch contains
+# the autospider.sh script.
+
+if [ ! -f "$SPIDERDIR/$VARIANT" ]; then
+    echo "Could not find $VARIANT"
+    usage
+    exit 1
+fi
+
 (cd $SOURCE/js/src; autoconf-2.13 || autoconf2.13)
 
 TRY_OVERRIDE=$SOURCE/js/src/config.try
@@ -130,7 +145,7 @@ USE_64BIT=false
 if [[ "$OSTYPE" == darwin* ]]; then
   USE_64BIT=true
 elif [ "$OSTYPE" = "linux-gnu" ]; then
-  if [ -z "$devel" ]; then
+  if [ -n "$AUTOMATION" ]; then
       GCCDIR="${GCCDIR:-/tools/gcc-4.7.2-0moz1}"
       CONFIGURE_ARGS="$CONFIGURE_ARGS --with-ccache"
   fi
@@ -142,7 +157,7 @@ elif [ "$OSTYPE" = "linux-gnu" ]; then
     USE_64BIT=true
   fi
 
-  if [ "$UNAME_M" != "arm" ] && [ -z "$devel" ]; then
+  if [ "$UNAME_M" != "arm" ] && [ -n "$AUTOMATION" ]; then
     export CC=$GCCDIR/bin/gcc
     export CXX=$GCCDIR/bin/g++
     if $USE_64BIT; then
