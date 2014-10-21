@@ -49,7 +49,7 @@ check_updates () {
     if [ "$use_old_updater" = "1" ]; then
         ../../update/updater ../../update 0
     else
-        ../../update/updater ../../update . 0
+        ../../update/updater ../../update . . 0
     fi
     cd ../..
   else
