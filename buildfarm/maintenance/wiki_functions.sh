@@ -25,7 +25,7 @@ function wiki_login {
     # Requires WIKI_TITLE set; maybe we should pass this in as an arg
     cookie_jar="$(mktemp -t cookie-jar.XXXXXXXXXX)"
     # login, store cookies in "${cookie_jar}" temporary file, and get login token...
-    echo "  * Logging in to wiki and getting login token and session cookie..."
+    echo "  * Logging in to wiki as user '${WIKI_USERNAME}' and getting login token and session cookie..."
     json="$(curl -s -c "${cookie_jar}" -d action=login -d lgname="${WIKI_USERNAME}" -d lgpassword="${WIKI_PASSWORD}" -d format=json 'https://wiki.mozilla.org/api.php')"
     login_token="$(echo "${json}" | sed -n 's/.*"token":"//p' | sed -n 's/".*//p')"
     if [ -z "${login_token}" ]; then

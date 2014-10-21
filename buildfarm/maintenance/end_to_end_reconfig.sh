@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -eu
 
 ################### TO DO ###################
 #
@@ -6,7 +6,6 @@
 # * Check hg clone is working (error code 255)
 # * Check virtualenv is installed
 # * Add an option not to refresh tools repo
-# * log reconfig to a file and to console
 # * Check connectivity to an arbitrary master and report nicely
 # * Summarize failures from manage_masters.py at end of log
 # * Option to checkconfig only without update
@@ -19,7 +18,7 @@
 START_TIME="$(date +%s)"
 
 # Explicitly unset any pre-existing environment variables to avoid variable collision
-unset PREPARE_ONLY FORCE_RECONFIG MERGE_TO_PRODUCTION UPDATE_WIKI RECONFIG_DIR WIKI_CREDENTIALS_FILE WIKI_USERNAME WIKI_PASSWORD
+unset PREPARE_ONLY FORCE_RECONFIG MERGE_TO_PRODUCTION UPDATE_BUGZILLA UPDATE_WIKI RECONFIG_DIR RECONFIG_CREDENTIALS_FILE WIKI_USERNAME WIKI_PASSWORD
 
 # Force python into unbuffered mode, so we get full output, as it happens from the fabric scripts
 export PYTHONUNBUFFERED=1
@@ -28,25 +27,33 @@ function usage {
     echo
     echo "This script can be used to reconfig interactively, or non-interactively. It will merge"
     echo "buildbotcustom, buildbot-configs, mozharness from default to production(-0.8)."
-    echo "It will then reconfig, and afterwards if all was successful, it will also update the"
-    echo "wiki page https://wiki.mozilla.org/ReleaseEngineering/Maintenance."
+    echo "It will then reconfig the buildbot masters, update the foopies with the latest tools"
+    echo "changes, and afterwards if all was successful, it will also update the wiki page"
+    echo "https://wiki.mozilla.org/ReleaseEngineering/Maintenance and additionally post comments"
+    echo "on the Bugzilla bugs it finds in the commit messages of merged changes, providing a link"
+    echo "to the hg web interface of the commits that have been deployed to production."
     echo
-    echo "Usage: $0 -h"
-    echo "Usage: $0 [-f] [-m] [-n] [-p] [-r RECONFIG_DIR] [-t] [-w WIKI_CREDENTIALS_FILE]"
+    echo "USAGE"
+    echo "     1) $(basename "${0}") -h"
+    echo "     2) $(basename "${0}") [-b] [-f] [-m] [-n] [-p] [-r RECONFIG_DIR] [-t] [-w RECONFIG_CREDENTIALS_FILE]"
     echo
-    echo "    -f:                        Force reconfig, even if no changes merged."
-    echo "    -h:                        Display help."
-    echo "    -m:                        No merging of default -> production(-0.8) of hg branches."
-    echo "    -n:                        No wiki update."
-    echo "    -p:                        Prepare only; does not push changes to hg, nor perform"
-    echo "                               reconfig, nor update wiki. Useful for validating setup,"
-    echo "                               or resolving merge conflicts in advance early rather"
-    echo "                               than waiting until real reconfig to resolve conflicts."
-    echo "    -r RECONFIG_DIR:           Use directory RECONFIG_DIR for storing temporary files"
-    echo "                               (default is /tmp/reconfig). This directory, and any"
-    echo "                               necessary parent directories will be created if required."
-    echo "    -w WIKI_CREDENTIALS_FILE:  Source WIKI_USERNAME and WIKI_PASSWORD env vars from file"
-    echo "                               WIKI_CREDENTIALS_FILE (default is ~/.wikiwriter/config)."
+    echo "OPTIONS"
+    echo "    -b:                            No posting of comments to Bugzilla."
+    echo "    -f:                            Force reconfig, even if no changes merged."
+    echo "    -h:                            Display help."
+    echo "    -m:                            No merging of default -> production(-0.8) of hg branches."
+    echo "    -n:                            No wiki update."
+    echo "    -p:                            Prepare only; does not push changes to hg, nor perform"
+    echo "                                   reconfig, nor update wiki, nor post to Bugzilla. Useful"
+    echo "                                   for validating setup, or resolving merge conflicts in"
+    echo "                                   advance early rather than waiting until real reconfig to"
+    echo "                                   resolve conflicts."
+    echo "    -r RECONFIG_DIR:               Use directory RECONFIG_DIR for storing temporary files"
+    echo "                                   (default is /tmp/reconfig). This directory, and any"
+    echo "                                   necessary parent directories will be created if required."
+    echo "    -w RECONFIG_CREDENTIALS_FILE:  Source environment variables: BUGZILLA_USERNAME,"
+    echo "                                   BUGZILLA_PASSWORD, WIKI_USERNAME, WIKI_PASSWORD from file"
+    echo "                                   RECONFIG_CREDENTIALS_FILE (default is ~/.reconfig/config)."
     echo
     echo "EXIT CODES"
     echo "     0        Success"
@@ -65,8 +72,8 @@ function usage {
     echo "              update_maintenance_wiki.sh"
     echo "    72        Theoretically not possible - non-existing markdown file passed to"
     echo "              update_maintenance_wiki.sh"
-    echo "    73        WIKI_USERNAME not specified in wiki credentials file"
-    echo "    74        WIKI_PASSWORD not specified in wiki credentials file"
+    echo "    73        WIKI_USERNAME not specified in reconfig credentials file"
+    echo "    74        WIKI_PASSWORD not specified in reconfig credentials file"
     echo "    75        Could not retreieve login token from wiki - probably a connectivity issue"
     echo "    76        Wiki user/password not authorized to update wiki page"
     echo "              https://wiki.mozilla.org/ReleaseEngineering/Maintenance"
@@ -75,6 +82,10 @@ function usage {
     echo "              result in exit code 76)"
     echo "    78        Wiki API response to request to provide an edit token produced a"
     echo "              non-parsable response"
+    echo "    79        BUGZILLA_USERNAME not specified in reconfig credentials file"
+    echo "    80        BUGZILLA_PASSWORD not specified in reconfig credentials file"
+    echo "    81        Bugzilla user/password not authorized to update Bugzilla"
+    echo "    82        Could not install python packages into a virtualenv"
     echo
 }
 
@@ -117,13 +128,17 @@ function hg_wrapper {
     return "${HG_RETURN_CODE}"
 }
 
+set +u
 command_called "${@}" | sed '1s/^/  * /;2s/^/    /'
+set -u
 
 echo "  * Start timestamp: ${START_TIME}"
 echo "  * Parsing parameters of $(basename "${0}")..."
 # Parse parameters passed to this script
-while getopts ":fhmnpr:w:" opt; do
+while getopts ":bfhmnpr:w:" opt; do
     case "${opt}" in
+        b)  UPDATE_BUGZILLA=0
+            ;;
         f)  FORCE_RECONFIG=1
             ;;
         h)  echo "  * Help option requested"
@@ -138,7 +153,7 @@ while getopts ":fhmnpr:w:" opt; do
             ;;
         r)  RECONFIG_DIR="${OPTARG}"
             ;;
-        w)  WIKI_CREDENTIALS_FILE="${OPTARG}"
+        w)  RECONFIG_CREDENTIALS_FILE="${OPTARG}"
             ;;
         ?)  usage >&2
             exit 1
@@ -151,9 +166,10 @@ echo "  * Setting defaults for parameters not provided in command line options..
 PREPARE_ONLY="${PREPARE_ONLY:-0}"
 FORCE_RECONFIG="${FORCE_RECONFIG:-0}"
 MERGE_TO_PRODUCTION="${MERGE_TO_PRODUCTION:-1}"
+UPDATE_BUGZILLA="${UPDATE_BUGZILLA:-1}"
 UPDATE_WIKI="${UPDATE_WIKI:-1}"
 RECONFIG_DIR="${RECONFIG_DIR:-/tmp/reconfig}"
-WIKI_CREDENTIALS_FILE="${WIKI_CREDENTIALS_FILE:-${HOME}/.wikiwriter/config}"
+RECONFIG_CREDENTIALS_FILE="${RECONFIG_CREDENTIALS_FILE:-${HOME}/.reconfig/config}"
 
 RECONFIG_UPDATE_FILE="reconfig_update_for_maintenance.wiki"
 
@@ -162,15 +178,15 @@ RECONFIG_UPDATE_FILE="reconfig_update_for_maintenance.wiki"
 echo "  * Validating parameters..."
 
 if [ "${PREPARE_ONLY}" == 0 ]; then
-    echo "  * Will be preparing *and performing* reconfig, all being well."
+    echo "  * Will be preparing *and performing* reconfig, all being well"
 else
-    echo "  * Preparing reconfig only; will not enact changes."
+    echo "  * Preparing reconfig only; will not enact changes"
 fi
 
 if [ ! -d "${RECONFIG_DIR}" ]; then
     echo "  * Storing reconfig output under '${RECONFIG_DIR}'..."
     if ! mkdir -p "${RECONFIG_DIR}"; then
-        echo "ERROR: Directory '${RECONFIG_DIR}' could not be created from directory '$(pwd)'." >&2
+        echo "ERROR: Directory '${RECONFIG_DIR}' could not be created from directory '$(pwd)'" >&2
         exit 64
     fi
 else
@@ -185,76 +201,141 @@ fi
 RECONFIG_DIR="$(pwd)"
 popd >/dev/null
 
-# Only validate wiki credentials if we are updating wiki...
-if [ "${UPDATE_WIKI}" == '1' ]; then
-    echo "  * Wiki update enabled."
-    # To avoid user getting confused about parent directory, tell user the
-    # absolute path of the credentials file...
-    PARENT_DIR="$(dirname "${WIKI_CREDENTIALS_FILE}")"
-    if [ ! -e "${PARENT_DIR}" ]; then
-    echo "  * Wiki credentials file parent directory '${PARENT_DIR}' not found; creating..." >&2
-        mkdir -p "${PARENT_DIR}"
-    fi
-    pushd "${PARENT_DIR}" >/dev/null
-    ABS_WIKI_CREDENTIALS_FILE="$(pwd)/$(basename "${WIKI_CREDENTIALS_FILE}")"
-    popd >/dev/null
-    if [ "${WIKI_CREDENTIALS_FILE}" == "${ABS_WIKI_CREDENTIALS_FILE}" ]; then
-        echo "  * Wiki credentials file location: '${WIKI_CREDENTIALS_FILE}'"
-    else
-        echo "  * Wiki credentials file location: '${WIKI_CREDENTIALS_FILE}' (absolute path: '${ABS_WIKI_CREDENTIALS_FILE}')"
-    fi
-    if [ ! -e "${ABS_WIKI_CREDENTIALS_FILE}" ]; then
-        echo "  * Wiki credentials file '${ABS_WIKI_CREDENTIALS_FILE}' not found; creating..." >&2
-        {
-            echo 'export WIKI_USERNAME="naughtymonkey"'
-            echo 'export WIKI_PASSWORD="nobananas"'
-        } > "${WIKI_CREDENTIALS_FILE}"
-        echo "  * Created credentials file '${ABS_WIKI_CREDENTIALS_FILE}'. Please edit this file, setting appropriate values, then rerun." >&2
-        exit 65
-    else
-        source "${WIKI_CREDENTIALS_FILE}"
-    fi
+# To avoid user getting confused about parent directory, tell user the
+# absolute path of the credentials file...
+echo "  * Checking we have a reconfig credentials file..."
+RECONFIG_CREDS_PARENT_DIR="$(dirname "${RECONFIG_CREDENTIALS_FILE}")"
+if [ ! -e "${RECONFIG_CREDS_PARENT_DIR}" ]; then
+echo "  * Reconfig credentials file parent directory '${RECONFIG_CREDS_PARENT_DIR}' not found; creating..."
+    mkdir -p "${RECONFIG_CREDS_PARENT_DIR}"
+fi
+pushd "${RECONFIG_CREDS_PARENT_DIR}" >/dev/null
+ABS_RECONFIG_CREDENTIALS_FILE="$(pwd)/$(basename "${RECONFIG_CREDENTIALS_FILE}")"
+popd >/dev/null
+if [ "${RECONFIG_CREDENTIALS_FILE}" == "${ABS_RECONFIG_CREDENTIALS_FILE}" ]; then
+    echo "  * Reconfig credentials file location: '${RECONFIG_CREDENTIALS_FILE}'"
 else
-    echo "  * Not updating wiki."
+    echo "  * Reconfig credentials file location: '${RECONFIG_CREDENTIALS_FILE}' (absolute path: '${ABS_RECONFIG_CREDENTIALS_FILE}')"
+fi
+if [ ! -e "${ABS_RECONFIG_CREDENTIALS_FILE}" ]; then
+    echo "  * Reconfig credentials file '${ABS_RECONFIG_CREDENTIALS_FILE}' not found; creating..."
+    {
+        echo "# Needed if updating wiki - note the wiki does *not* use your LDAP credentials..."
+        echo "export WIKI_USERNAME='naughtymonkey'"
+        echo "export WIKI_PASSWORD='nobananas'"
+        echo
+        echo "# Needed if updating Bugzilla bugs to mark them as in production - *no* Persona integration - must be a native Bugzilla account..."
+        echo "# Details for the 'Release Engineering SlaveAPI Service' <slaveapi@mozilla.releng.tld> Bugzilla user can be found in the RelEng"
+        echo "# private repo, in file passwords/slaveapi-bugzilla.txt.gpg (needs decrypting with an approved gpg key)."
+        echo "export BUGZILLA_USERNAME='naughtymonkey'"
+        echo "export BUGZILLA_PASSWORD='nobananas'"
+    } > "${RECONFIG_CREDENTIALS_FILE}"
+    echo "  * Created credentials file '${ABS_RECONFIG_CREDENTIALS_FILE}'. Please edit this file, setting appropriate values, then rerun."
+    exit 65
+else
+    echo "  * Loading config from '${ABS_RECONFIG_CREDENTIALS_FILE}'..."
+    source "${RECONFIG_CREDENTIALS_FILE}"
 fi
 
 # Now step into directory this script is in...
 cd "$(dirname "${0}")"
 
-if [ "${UPDATE_WIKI}" == '1' ]; then
-    # Now validate wiki credentials by performing a dry run...
-    echo "  * Testing login credentials for wiki..."
-    ./update_maintenance_wiki.sh -d
-fi
-
 # Test python version, and availability of fabric...
 echo "  * Checking python version is 2.7..."
 if ! python --version 2>&1 | grep -q '^Python 2\.7'; then
-    echo "ERROR: Python version 2.7 not found - please make sure python 2.7 is in your PATH." >&2
+    echo "ERROR: Python version 2.7 not found - please make sure python 2.7 is in your PATH" >&2
     exit 66
 fi
 
-echo "  * Checking fabric module is available in python environment..."
-if ! python -c 'import fabric' >/dev/null 2>&1; then
-    echo "  * Fabric module not found"
-    if [ ! -e "${RECONFIG_DIR}/fabric-virtual-env" ]; then
-        echo "  * Creating virtualenv directory '${RECONFIG_DIR}/fabric-virtual-env' for fabric installation..."
-        echo "  * Logging to: '${RECONFIG_DIR}/virtualenv-fabric-installation.log'..."
-        virtualenv "${RECONFIG_DIR}/fabric-virtual-env" >"${RECONFIG_DIR}/virtualenv-fabric-installation.log" 2>&1
-        source "${RECONFIG_DIR}/fabric-virtual-env/bin/activate"
-        echo "  * Installing fabric under '${RECONFIG_DIR}/fabric-virtual-env'..."
-        pip install fabric >"${RECONFIG_DIR}/virtualenv-fabric-installation.log" 2>&1
+for package in fabric requests; do
+    installed_package=false
+    echo "  * Checking ${package} package is available in python environment..."
+    if ! python -c "import ${package}" >/dev/null 2>&1; then
+        echo "  * Package ${package} not found"
+        if [ ! -e "${RECONFIG_DIR}/reconfig-virtual-env" ]; then
+            echo "  * Creating virtualenv directory '${RECONFIG_DIR}/reconfig-virtual-env' for reconfig tool..."
+            echo "  * Logging to: '${RECONFIG_DIR}/virtualenv-installation.log'..."
+            virtualenv "${RECONFIG_DIR}/reconfig-virtual-env" >"${RECONFIG_DIR}/virtualenv-installation.log" 2>&1
+            set +u
+            source "${RECONFIG_DIR}/reconfig-virtual-env/bin/activate"
+            set -u
+            echo "  * Installing ${package} under '${RECONFIG_DIR}/reconfig-virtual-env'..."
+            pip install "${package}" >>"${RECONFIG_DIR}/virtualenv-installation.log" 2>&1
+            installed_package=true
+        else
+            echo "  * Attempting to use existing virtualenv found in '${RECONFIG_DIR}/reconfig-virtual-env'..."
+            set +u
+            source "${RECONFIG_DIR}/reconfig-virtual-env/bin/activate"
+            set -u
+            if ! python -c "import ${package}" >/dev/null 2>&1; then
+                echo "  * Package ${package} not found under virtualenv '${RECONFIG_DIR}/reconfig-virtual-env', installing..."
+                pip install "${package}" >"${RECONFIG_DIR}/virtualenv-installation.log" 2>&1
+                installed_package=true
+            else
+                echo "  * Using existing package ${package} found in '${RECONFIG_DIR}/reconfig-virtual-env'"
+            fi
+        fi
     else
-        echo "  * Attempting to use existing fabric installation found in '${RECONFIG_DIR}/fabric-virtual-env'"
-        source "${RECONFIG_DIR}/fabric-virtual-env/bin/activate"
+        echo "  * Package ${package} found"
+    fi
+    if "${installed_package}"; then
+        echo "  * Re-checking if package ${package} is now available in python environment..."
+        if ! python -c "import ${package}" >/dev/null 2>&1; then
+            echo "ERROR: Could not successfully install package ${package} into python virtualenv '${RECONFIG_DIR}/reconfig-virtual-env'" >&2
+            echo "Exiting..." >&2
+            exit 82
+        else
+            echo "  * Package ${package} installed successfully into python environment"
+        fi
+    fi
+done
+
+if [ "${UPDATE_BUGZILLA}" == '1' ]; then
+    echo "  * Updates to Bugzilla enabled"
+    echo "  * Testing existence of Bugzilla login credentials..."
+    if [ -z "${BUGZILLA_USERNAME}" ]; then
+        echo "ERROR: Environment variable BUGZILLA_USERNAME must be set for posting comments to https://bugzilla.mozilla.org/" >&2
+        echo "Exiting..." >&2
+        exit 79
+    else
+        echo "  * Environment variable BUGZILLA_USERNAME defined ('${BUGZILLA_USERNAME}')"
+    fi
+    if [ -z "${BUGZILLA_PASSWORD}" ]; then
+        echo "ERROR: Environment variable BUGZILLA_PASSWORD must be set for posting comments to https://bugzilla.mozilla.org/" >&2
+        echo "Exiting..." >&2
+        exit 80
+    else
+        echo "  * Environment variable BUGZILLA_PASSWORD defined"
     fi
 fi
 
-echo "  * Re-checking if fabric module is now available in python environment..."
-if ! python -c 'import fabric' >/dev/null 2>&1; then
-    echo "  * Could not successfully install fabric into python environemnt." >&2
+if [ "${UPDATE_WIKI}" == '1' ]; then
+    echo "  * Wiki update enabled"
+    # Now validate wiki credentials by performing a dry run...
+    echo "  * Testing login credentials for wiki..."
+    ./update_maintenance_wiki.sh -d
 else
-    echo "  * Fabric installed successfully into python environment"
+    echo "  * Not updating wiki"
+fi
+
+if [ "${UPDATE_BUGZILLA}" == '1' ]; then
+    echo "  * Testing Bugzilla login as user '${BUGZILLA_USERNAME}'..."
+    BUGZILLA_LOGIN_RESPONSE="$(mktemp -t bugzilla_login.XXXXXXXXXX)"
+    curl -s -G --data-urlencode "login=${BUGZILLA_USERNAME}" --data-urlencode "password=${BUGZILLA_PASSWORD}" 'https://bugzilla.mozilla.org/rest/login' > "${BUGZILLA_LOGIN_RESPONSE}"
+    if grep -q '"token":' "${BUGZILLA_LOGIN_RESPONSE}"; then
+        echo "  * Login to Bugzilla successful"
+    else
+        echo "ERROR: Login to Bugzilla failed - response given:" >&2
+        cat "${BUGZILLA_LOGIN_RESPONSE}" | sed 's/^/    /' >&2
+        rm "${BUGZILLA_LOGIN_RESPONSE}"
+        echo >&2
+        echo "Please check values of BUGZILLA_USERNAME and BUGZILLA_PASSWORD set in this file: '${RECONFIG_CREDENTIALS_FILE}'" >&2
+        echo "Exiting..." >&2
+        exit 81
+    fi
+    rm "${BUGZILLA_LOGIN_RESPONSE}"
+else
+    echo "  * Not updating Bugzilla"
 fi
 
 # Check if a previous reconfig did not complete
@@ -290,7 +371,7 @@ if [ -f "${RECONFIG_DIR}/pending_changes" ]; then
 fi
 
 ### If we get this far, all our preflight checks have passed, so now on to business...
-echo "  * All preflight checks passed in '$(basename "${0}")'."
+echo "  * All preflight checks passed in '$(basename "${0}")'"
 
 # Merges mozharness, buildbot-configs from default -> production.
 # Merges buildbostcustom from default -> production-0.8.
@@ -300,7 +381,7 @@ function merge_to_production {
     echo "  * hg log for this session: '${RECONFIG_DIR}/hg-${START_TIME}.log'"
     for repo in mozharness buildbot-configs buildbotcustom; do
         if [ -d "${RECONFIG_DIR}/${repo}" ]; then
-            echo "  * Existing hg clone of ${repo} found: '${RECONFIG_DIR}/${repo}' - pulling for updates."
+            echo "  * Existing hg clone of ${repo} found: '${RECONFIG_DIR}/${repo}' - pulling for updates..."
             hg_wrapper pull
         else
             echo "  * Cloning ssh://hg.mozilla.org/build/${repo} into '${RECONFIG_DIR}/${repo}'..."
@@ -340,8 +421,6 @@ function merge_to_production {
         fi
         echo "${repo}" >> "${RECONFIG_DIR}/pending_changes"
     done
-    echo "  * Running python format_wiki_update.py --logdir ${RECONFIG_DIR} > $RECONFIG_DIR/${RECONFIG_UPDATE_FILE}"
-    python format_wiki_update.py --logdir ${RECONFIG_DIR} > $RECONFIG_DIR/${RECONFIG_UPDATE_FILE}
     [ -f "${RECONFIG_DIR}/pending_changes" ] && return 0 || return 1
 }
 
@@ -353,6 +432,7 @@ if merge_to_production || [ "${FORCE_RECONFIG}" == '1' ]; then
         echo "  * Preparing reconfig only; not running: '$(pwd)/manage_masters.py' -f '${production_masters_url}' -j32 -R scheduler -R build -R try -R tests checkconfig reconfig"
         echo "  * Preparing reconfig only; not running: '$(pwd)/manage_masters.py' -f '${production_masters_url}' -j16 -R scheduler -R build -R try -R tests show_revisions"
     else
+        echo "  * Fabric log for buildbot masters: '${RECONFIG_DIR}/manage_masters-${START_TIME}.log'"
         # Split into two steps so -j option can be varied between them
         echo "  * Running: '$(pwd)/manage_masters.py' -f '${production_masters_url}' -j16 -R scheduler -R build -R try -R tests show_revisions update"
         ./manage_masters.py -f "${production_masters_url}" -j16 -R scheduler -R build -R try -R tests show_revisions update >>"${RECONFIG_DIR}/manage_masters-${START_TIME}.log" 2>&1
@@ -362,40 +442,67 @@ if merge_to_production || [ "${FORCE_RECONFIG}" == '1' ]; then
         [ -f "${RECONFIG_DIR}/pending_changes" ] && mv "${RECONFIG_DIR}/pending_changes" "${RECONFIG_DIR}/pending_changes_${START_TIME}"
         echo "  * Running: '$(pwd)/manage_masters.py' -f '${production_masters_url}' -j16 -R scheduler -R build -R try -R tests show_revisions"
         ./manage_masters.py -f "${production_masters_url}" -j16 -R scheduler -R build -R try -R tests show_revisions >>"${RECONFIG_DIR}/manage_masters-${START_TIME}.log" 2>&1
+        echo "  * Reconfig of masters completed"
     fi
 fi
 
-if [ "${UPDATE_WIKI}" == "1" ]; then
-    if [ "${PREPARE_ONLY}" == '1' ]; then
-        ./update_maintenance_wiki.sh -d -r "${RECONFIG_DIR}" -w "${RECONFIG_DIR}/${RECONFIG_UPDATE_FILE}"
-    else
-        ./update_maintenance_wiki.sh -r "${RECONFIG_DIR}" -w "${RECONFIG_DIR}/${RECONFIG_UPDATE_FILE}"
-        for file in "${RECONFIG_DIR}"/*_preview_changes.txt
-        do
-            mv "${file}" "$(echo "${file}" | sed "s/\\.txt\$/_${START_TIME}&/")"
-        done 2>/dev/null || true
-    fi
+# Now we process the commit messages from all the changes we landed. This is handled by the python script
+# process_commit_comments.py. We pass options to this script based on what steps are enabled (e.g. wiki
+# updates, bugzilla updates). Create an array for this, and if it is empty at the end, we know we don't
+# have to do anything (arrays are better than strings since they can contains spaces).
+commit_processing_options=()
+
+if [ "${UPDATE_WIKI}" == '1' ]; then
+    commit_processing_options+=('--wiki-markup-file' "${RECONFIG_DIR}/${RECONFIG_UPDATE_FILE}")
+fi
+if [ "${UPDATE_BUGZILLA}" == '1' ] && [ "${PREPARE_ONLY}" != '1' ]; then
+    commit_processing_options+=('--update-bugzilla')
 fi
 
-echo "  * Summary of changes:"
-cat "${RECONFIG_DIR}/${RECONFIG_UPDATE_FILE}" | sed 's/^/        /'
-echo "  * Reconfig of masters completed."
+if [ "${#commit_processing_options[@]}" -gt 0 ]; then
+    echo -n "  * Running '$(pwd)/process_commit_comments.py' --logdir '${RECONFIG_DIR}'"
+    for ((i=0; i<${#commit_processing_options[@]}; i+=1)); do echo -n " '${commit_processing_options[${i}]}'"; done
+    echo
+    ./process_commit_comments.py --logdir "${RECONFIG_DIR}" "${commit_processing_options[@]}"
+else
+    echo "  * Skipping commit messages processing step, since no wiki update nor Bugzilla update enabled, so not required"
+fi
+
+if [ -f "${RECONFIG_DIR}/${RECONFIG_UPDATE_FILE}" ]; then
+    if [ "${UPDATE_WIKI}" == "1" ]; then
+        if [ "${PREPARE_ONLY}" == '1' ]; then
+            ./update_maintenance_wiki.sh -d -r "${RECONFIG_DIR}" -w "${RECONFIG_DIR}/${RECONFIG_UPDATE_FILE}"
+        else
+            ./update_maintenance_wiki.sh -r "${RECONFIG_DIR}" -w "${RECONFIG_DIR}/${RECONFIG_UPDATE_FILE}"
+            for file in "${RECONFIG_DIR}"/*_preview_changes.txt
+            do
+                mv "${file}" "$(echo "${file}" | sed "s/\\.txt\$/_${START_TIME}&/")"
+            done 2>/dev/null || true
+        fi
+    fi
+
+    echo "  * Summary of changes:"
+    cat "${RECONFIG_DIR}/${RECONFIG_UPDATE_FILE}" | sed 's/^/        /'
+fi
 
 # Manage foopies after everything else.
 # No easy way to see if there are changes to the tools repo since there is no production branch
 # and we do not tag it - so aside from running show_revision and then checking if every version
-# is already on the latest commit, we should probably just run it regardless
+# is already on the latest commit, we should probably just run it regardless.
 devices_json_url='http://hg.mozilla.org/build/tools/raw-file/tip/buildfarm/mobile/devices.json'
 if [ "${PREPARE_ONLY}" == '1' ]; then
     echo "  * Preparing foopy update only; not running: '$(pwd)/manage_foopies.py' -f '${devices_json_url}' -j16 -H all show_revision update"
     echo "  * Preparing foopy update only; not running: '$(pwd)/manage_foopies.py' -f '${devices_json_url}' -j16 -H all show_revision"
 else
+    echo "  * Fabric log for foopies: '${RECONFIG_DIR}/manage_foopies-${START_TIME}.log'"
     echo "  * Running: '$(pwd)/manage_foopies.py' -f '${devices_json_url}' -j16 -H all show_revision update"
     ./manage_foopies.py -f "${devices_json_url}" -j16 -H all show_revision update >>"${RECONFIG_DIR}/manage_foopies-${START_TIME}.log" 2>&1
     echo "  * Running: '$(pwd)/manage_foopies.py' -f '${devices_json_url}' -j16 -H all show_revision"
     ./manage_foopies.py -f "${devices_json_url}" -j16 -H all show_revision >>"${RECONFIG_DIR}/manage_foopies-${START_TIME}.log" 2>&1
+    echo "  * Foopies updated"
 fi
-echo "  * Foopies updated. Directory '${RECONFIG_DIR}' contains artefacts from reconfig process."
+
+echo "  * Directory '${RECONFIG_DIR}' contains artefacts from reconfig process"
 
 STOP_TIME="$(date +%s)"
 echo "  * Finish timestamp: ${STOP_TIME}"
