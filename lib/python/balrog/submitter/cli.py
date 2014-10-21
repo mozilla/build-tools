@@ -185,7 +185,7 @@ class ReleaseCreatorV4(ReleaseCreatorBase):
                                          buildNumber, server=stagingServer,
                                          protocol='http')
                 filename = "%s-%s.complete.mar" % (productName.lower(), version)
-                data["fileUrls"][channel]["completes"]["*"] = "%s/%s" % (dir_, filename)
+                data["fileUrls"][channel]["completes"]["*"] = "%supdate/%%OS_FTP%%/%%LOCALE%%/%s" % (dir_, filename)
             else:
                 bouncerProduct = "%s-%s-complete" % (productName.lower(), version)
                 url = 'http://%s/?product=%s&os=%%OS_BOUNCER%%&lang=%%LOCALE%%' % (bouncerServer, bouncerProduct)
@@ -194,18 +194,18 @@ class ReleaseCreatorV4(ReleaseCreatorBase):
         if not partialUpdates:
             return data
 
-        for previousVersion, previousInfo in partialUpdates.iteritems():
-            from_ = get_release_blob_name(productName, previousVersion,
-                                            previousInfo["buildNumber"],
-                                            self.dummy)
-            for channel in uniqueChannels:
-                data["fileUrls"][channel]["partials"] = {}
+        for channel in uniqueChannels:
+            data["fileUrls"][channel]["partials"] = {}
+            for previousVersion, previousInfo in partialUpdates.iteritems():
+                from_ = get_release_blob_name(productName, previousVersion,
+                                                previousInfo["buildNumber"],
+                                                self.dummy)
                 if channel in ('betatest', 'esrtest') or "localtest" in channel:
                     dir_ = makeCandidatesDir(productName.lower(), version,
                                             buildNumber, server=stagingServer,
                                             protocol='http')
                     filename = "%s-%s-%s.partial.mar" % (productName.lower(), previousVersion, version)
-                    data["fileUrls"][channel]["partials"][from_] = "%s/%s" % (dir_, filename)
+                    data["fileUrls"][channel]["partials"][from_] = "%supdate/%%OS_FTP%%/%%LOCALE%%/%s" % (dir_, filename)
                 else:
                     bouncerProduct = "%s-%s-partial-%s" % (productName.lower(), version, previousVersion)
                     url = 'http://%s/?product=%s&os=%%OS_BOUNCER%%&lang=%%LOCALE%%' % (bouncerServer, bouncerProduct)
