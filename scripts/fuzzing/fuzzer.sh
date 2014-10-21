@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 eval `ssh-agent`
-ssh-add ~/.ssh/ffxbld_dsa
+ssh-add ~/.ssh/ffxbld_rsa
 trap "ssh-agent -k" EXIT
 
 SCRIPTS_DIR="$(dirname $0)/../.."
