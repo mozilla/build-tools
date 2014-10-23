@@ -47,9 +47,9 @@ check_updates () {
     cd source/$platform_dirname;
     cp $updater ../../update
     if [ "$use_old_updater" = "1" ]; then
-        ../../update/updater ../../update 0
-    else
         ../../update/updater ../../update . 0
+    else
+        ../../update/updater ../../update . . 0
     fi
     cd ../..
   else

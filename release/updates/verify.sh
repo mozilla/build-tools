@@ -26,7 +26,6 @@ UPDATE_ONLY=1
 TEST_ONLY=2
 MARS_ONLY=3
 COMPLETE=4
-use_old_updater=0
 
 usage()
 {
@@ -35,7 +34,6 @@ usage()
   echo "    -t, --test-only        only test that MARs exist"
   echo "    -m, --mars-only        only test MARs"
   echo "    -c, --complete         complete upgrade test"
-  echo "    -o, --old-updater      use old updater syntax"
 }
 
 if [ -z "$*" ]
@@ -62,10 +60,6 @@ do
       ;;
     -c | --complete)
       runmode=$COMPLETE
-      shift
-      ;;
-    -o | --old-updater)
-      use_old_updater=1
       shift
       ;;
     *)
@@ -102,8 +96,21 @@ do
   channel=""
   from=""
   patch_types="complete"
+  use_old_updater=0
   mar_channel_IDs=""
   eval $entry
+
+  # the arguments for updater changed in Gecko 34/SeaMonkey 2.31
+  major_version=`echo $release | cut -f1 -d.`
+  if [[ "$product" == "seamonkey" ]]; then
+    minor_version=`echo $release | cut -f2 -d.`
+    if [[ $major_version -le 2 && $minor_version -lt 31 ]]; then
+      use_old_updater=1
+    fi
+  elif [[ $major_version -lt 34 ]]; then
+      use_old_updater=1
+  fi
+
   for locale in $locales
   do
     rm -f update/partial.size update/complete.size
