@@ -170,3 +170,7 @@ class Rule(API):
         url_template_vars = {'rule_id': rule_id}
         return self.request(method='POST', data=rule_data,
                             url_template_vars=url_template_vars)
+
+    def get_data(self, rule_id):
+        resp = self.request(url_template_vars=dict(rule_id=rule_id))
+        return (json.loads(resp.content), resp.headers["X-Data-Version"])
