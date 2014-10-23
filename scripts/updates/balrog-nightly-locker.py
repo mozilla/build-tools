@@ -16,14 +16,38 @@ if __name__ == '__main__':
     from argparse import ArgumentParser, REMAINDER
     parser = ArgumentParser()
 
-    parser.add_argument("-a", "--api-root", dest="api_root", required=True)
-    parser.add_argument("-c", "--credentials-file", dest="credentials_file", required=True)
-    parser.add_argument("-u", "--username", dest="username", required=True)
+    parser.add_argument("-a", "--api-root", dest="api_root", required=True,
+        help="The root of the Balrog API. Eg: https://aus4-admin-dev.allizom.org")
+    parser.add_argument("-c", "--credentials-file", dest="credentials_file", required=True,
+        help="""The file containing the credentials to use when authenticating to Balrog.
+             It must containing a dict called "balrog_credentials" which must have a key
+             matching the --username passed.""")
+    parser.add_argument("-u", "--username", dest="username", required=True,
+        help="The username to use when authenticating to Balrog.")
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False)
-    parser.add_argument("-r", "--rule-id", dest="rule_ids", action="append", required=True)
-    parser.add_argument("-n", "--dry-run", dest="dry_run", action="store_true", default=False)
-    parser.add_argument("action", nargs=1, choices=["lock", "unlock"])
-    parser.add_argument("action_args", nargs=REMAINDER)
+    parser.add_argument("-r", "--rule-id", dest="rule_ids", action="append", required=True,
+        help="""A rule id to perform an action on. This must be given at least once, but
+             can be passed multiple times to update multiple rules at the same time.""")
+    parser.add_argument("-n", "--dry-run", dest="dry_run", action="store_true", default=False,
+        help="""When set, the script will print out what would have been done. No rules
+             will be updated.""")
+    parser.add_argument("action", nargs=1, choices=["lock", "unlock"],
+        help="""The action to perform on the given rules.
+             When "lock" is requested, this script will change the mapping for the given
+             rules to match what they are currently pointing at. If no other arguments
+             are given, this is accomplished by looking at the current mapping for each
+             rule, finding the most recent buildid referenced in it, and constructing
+             that release's name based on the current mapping. If you want to lock rules
+             to a specific release, you may pass that as the next argument.
+
+             When "unlock" is requested, this script will change the mapping for the
+             given rules to point at their "latest" blob. This is accomplished by
+             stripping the current mapping of its last section, and appending "-latest".
+             For example: Firefox-mozilla-central-nightly-201410120103 becomes
+             Firefox-mozilla-central-nightly-latest."""
+        )
+    parser.add_argument("action_args", nargs=REMAINDER,
+        help="""See help for "action". Only valid when "action" is "lock".""")
 
     args = parser.parse_args()
 
