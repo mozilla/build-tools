@@ -393,6 +393,8 @@ function toggleall(node, klass)
 </script>
 </head>
 <body>
+<h1>ATTENTION: This version of clobberer has been deprecated.</h1> 
+<h1>Use <a href="https://api.pub.build.mozilla.org/clobberer/">The New Clobberer</a> instead :]</h2>
 <p>This page is used for clobbering buildbot-based builds.</p>
 <p>Please read
 <a href="https://wiki.mozilla.org/Build:ClobberingATinderbox">Build:ClobberingATinderbox</a>
@@ -401,7 +403,7 @@ for more information about what this page is for, and how to use it.</p>
 <?php
   if (isSpecial($_SERVER['REMOTE_USER'])) {
 ?>
-<h1>Release Clobbers</h1>
+<h1>Release Clobbers</h1> 
 <form method="POST">
 <input type="hidden" name="form_submitted" value="true">
 Clobber all release builders on <select name="master">
