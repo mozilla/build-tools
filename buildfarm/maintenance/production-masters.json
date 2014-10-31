@@ -26,6 +26,8 @@
     },
     "limit_mobile_platforms": [
       "android-x86",
+      "android-api-9",
+      "android-api-10",
       "android"
     ],
     "limit_tb_platforms": [
@@ -74,6 +76,8 @@
     },
     "limit_mobile_platforms": [
       "android-x86",
+      "android-api-9",
+      "android-api-10",
       "android"
     ],
     "limit_tb_platforms": [
@@ -122,6 +126,8 @@
     },
     "limit_mobile_platforms": [
       "android-x86",
+      "android-api-9",
+      "android-api-10",
       "android"
     ],
     "limit_tb_platforms": [
@@ -170,6 +176,8 @@
     },
     "limit_mobile_platforms": [
       "android-x86",
+      "android-api-9",
+      "android-api-10",
       "android"
     ],
     "limit_tb_platforms": [
@@ -218,6 +226,8 @@
     },
     "limit_mobile_platforms": [
       "android-x86",
+      "android-api-9",
+      "android-api-10",
       "android"
     ],
     "limit_tb_platforms": [
@@ -266,6 +276,8 @@
     },
     "limit_mobile_platforms": [
       "android-x86",
+      "android-api-9",
+      "android-api-10",
       "android"
     ],
     "limit_tb_platforms": [
@@ -322,6 +334,8 @@
     },
     "limit_mobile_platforms": [
       "android",
+      "android-api-9",
+      "android-api-10",
       "android-armv6"
     ],
     "limit_tb_platforms": [
@@ -394,6 +408,8 @@
     },
     "limit_mobile_platforms": [
       "android",
+      "android-api-9",
+      "android-api-10",
       "android-armv6"
     ],
     "limit_tb_platforms": [
@@ -466,6 +482,8 @@
     },
     "limit_mobile_platforms": [
       "android",
+      "android-api-9",
+      "android-api-10",
       "android-armv6"
     ],
     "limit_tb_platforms": [
@@ -538,6 +556,8 @@
     },
     "limit_mobile_platforms": [
       "android",
+      "android-api-9",
+      "android-api-10",
       "android-armv6"
     ],
     "limit_tb_platforms": [
@@ -610,6 +630,8 @@
     },
     "limit_mobile_platforms": [
       "android",
+      "android-api-9",
+      "android-api-10",
       "android-armv6"
     ],
     "limit_tb_platforms": [
@@ -682,6 +704,8 @@
     },
     "limit_mobile_platforms": [
       "android",
+      "android-api-9",
+      "android-api-10",
       "android-armv6"
     ],
     "limit_tb_platforms": [
@@ -1253,6 +1277,7 @@
     "http_port": 8201,
     "limit_fx_platforms": [],
     "limit_mobile_platforms": [
+        "android-api-10",
         "android"
     ],
     "limit_tb_platforms": [],
@@ -1340,6 +1365,7 @@
     "http_port": 8201,
     "limit_fx_platforms": [],
     "limit_mobile_platforms": [
+        "android-api-10",
         "android"
     ],
     "limit_tb_platforms": [],
@@ -1371,6 +1397,7 @@
     "http_port": 8201,
     "limit_fx_platforms": [],
     "limit_mobile_platforms": [
+        "android-api-10",
         "android"
     ],
     "limit_tb_platforms": [],
@@ -1402,6 +1429,7 @@
     "http_port": 8201,
     "limit_fx_platforms": [],
     "limit_mobile_platforms": [
+        "android-api-10",
         "android"
     ],
     "limit_tb_platforms": [],
@@ -1445,6 +1473,8 @@
     },
     "limit_mobile_platforms": [
       "android-x86",
+      "android-api-9",
+      "android-api-10",
       "android",
       "android-armv6"
     ],
@@ -1499,6 +1529,8 @@
     },
     "limit_mobile_platforms": [
       "android-x86",
+      "android-api-9",
+      "android-api-10",
       "android",
       "android-armv6"
     ],
@@ -1553,6 +1585,8 @@
     },
     "limit_mobile_platforms": [
       "android-x86",
+      "android-api-9",
+      "android-api-10",
       "android",
       "android-armv6"
     ],
@@ -1852,6 +1886,8 @@
     },
     "limit_mobile_platforms": [
       "android",
+      "android-api-9",
+      "android-api-10",
       "android-armv6"
     ],
     "limit_tb_platforms": [
@@ -1924,6 +1960,8 @@
     },
     "limit_mobile_platforms": [
       "android",
+      "android-api-9",
+      "android-api-10",
       "android-armv6"
     ],
     "limit_tb_platforms": [
@@ -1996,6 +2034,8 @@
     },
     "limit_mobile_platforms": [
       "android",
+      "android-api-9",
+      "android-api-10",
       "android-armv6"
     ],
     "limit_tb_platforms": [
@@ -2068,6 +2108,8 @@
     },
     "limit_mobile_platforms": [
       "android",
+      "android-api-9",
+      "android-api-10",
       "android-armv6"
     ],
     "limit_tb_platforms": [
@@ -2158,6 +2200,8 @@
     },
     "limit_mobile_platforms": [
       "android",
+      "android-api-9",
+      "android-api-10",
       "android-armv6"
     ],
     "limit_tb_platforms": [
@@ -2230,6 +2274,8 @@
     },
     "limit_mobile_platforms": [
       "android",
+      "android-api-9",
+      "android-api-10",
       "android-armv6"
     ],
     "limit_tb_platforms": [
