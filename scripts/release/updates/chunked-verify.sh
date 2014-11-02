@@ -26,7 +26,7 @@ if [ -z "$BUILDBOT_CONFIGS" ]; then
     export BUILDBOT_CONFIGS="https://hg.mozilla.org/build/buildbot-configs"
 fi
 
-$PYTHON $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
+$PYTHON -u $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
 -s 16 -n info -n 'rel-*' -n 'tb-rel-*' -n $slavebuilddir
 
 $PYTHON $MY_DIR/chunked-verify.py -t $releaseTag -r $releaseConfig \

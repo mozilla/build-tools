@@ -94,7 +94,7 @@ if [ -f "$PROPERTIES_FILE" ]; then
 
     # Purging
     cd $SCRIPTS_DIR/..
-    $PYTHON $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
+    $PYTHON -u $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
         -s 4 -n info -n 'rel-*' -n 'tb-rel-*' -n $builddir
 fi
 

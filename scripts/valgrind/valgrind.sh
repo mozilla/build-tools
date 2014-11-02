@@ -32,7 +32,7 @@ if [ -f "$PROPERTIES_FILE" ]; then
 
     # Purging
     (cd $SCRIPTS_DIR/..
-    python $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
+    python -u $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
         -s 8 -n info -n 'rel-*' -n 'tb-rel-*' -n $builddir)
 fi
 if [ -z "$HG_REPO" ]; then
