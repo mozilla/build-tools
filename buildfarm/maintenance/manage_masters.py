@@ -75,6 +75,7 @@ Supported actions:
     parser.set_defaults(
         hosts=[],
         roles=[],
+        datacentre=[],
         concurrency=1,
         show_list=False,
         all_masters=False,
@@ -86,6 +87,7 @@ Supported actions:
     parser.add_option("-R", "--role", dest="roles", action="append")
     parser.add_option("-M", "--match", dest="match", action="append",
                       help="masters that match the term")
+    parser.add_option("-D", "--datacentre", dest="datacentre", action="append")
     parser.add_option("-j", dest="concurrency", type="int")
     parser.add_option("-l", dest="show_list", action="store_true",
                       help="list hosts")
@@ -123,6 +125,8 @@ Supported actions:
             continue
         if ignored_roles and m['role'] in ignored_roles:
             continue
+        if options.datacentre and m['datacentre'] not in options.datacentre:
+            continue
         if m['name'] in options.hosts:
             masters.append(m)
         elif m['role'] in options.roles:
@@ -147,7 +151,7 @@ Supported actions:
         sys.exit(0)
 
     if len(masters) == 0:
-        parser.error("You need to specify a master via -H and/or -R")
+        parser.error("No masters matched, check your options -H, -R, -M, -D")
 
     env.user = options.username
     if options.ssh_key:
