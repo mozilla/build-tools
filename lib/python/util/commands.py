@@ -254,3 +254,11 @@ def _rmtree_windows(path):
             win32file.SetFileAttributesW('\\\\?\\' + full_name, win32file.FILE_ATTRIBUTE_NORMAL)
             win32file.DeleteFile('\\\\?\\' + full_name)
     win32file.RemoveDirectory('\\\\?\\' + path)
+
+
+def terminate_on_timeout(start_time, elapsed, proc):
+    """a callback to use with run_cmd_periodic_poll, that terminates the process
+       after a given timeout"""
+    log.error("operation timeout after %s seconds)" % (str(elapsed)))
+    log.error("terminating %s", proc)
+    proc.terminate()

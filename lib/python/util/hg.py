@@ -7,6 +7,7 @@ from urlparse import urlsplit
 from ConfigParser import RawConfigParser
 
 from util.commands import run_cmd, get_output, remove_path
+from util.commands import run_cmd_periodic_poll
 from util.retry import retry, retrier
 
 import logging
@@ -369,7 +370,8 @@ def out(src, remote, **kwargs):
             raise
 
 
-def push(src, remote, push_new_branches=True, force=False, **kwargs):
+def push(src, remote, push_new_branches=True, force=False,
+         warning_interval=None, warning_callback=None, **kwargs):
     cmd = ['hg', 'push']
     cmd.extend(common_args(**kwargs))
     if force:
@@ -377,7 +379,12 @@ def push(src, remote, push_new_branches=True, force=False, **kwargs):
     if push_new_branches:
         cmd.append('--new-branch')
     cmd.append(remote)
-    run_cmd(cmd, cwd=src)
+    if warning_interval and warning_callback:
+        # we have time limit for push
+        run_cmd_periodic_poll(cmd, cwd=src, warning_interval=warning_interval,
+                              warning_callback=warning_callback)
+    else:
+        run_cmd(cmd, cwd=src)
 
 
 def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
@@ -548,7 +555,8 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
 
 
 def apply_and_push(localrepo, remote, changer, max_attempts=10,
-                   ssh_username=None, ssh_key=None, force=False):
+                   ssh_username=None, ssh_key=None, force=False,
+                   warning_interval=None, warning_callback=None):
     """This function calls `changer' to make changes to the repo, and tries
        its hardest to get them to the origin repo. `changer' must be a
        callable object that receives two arguments: the directory of the local
@@ -566,7 +574,8 @@ def apply_and_push(localrepo, remote, changer, max_attempts=10,
             if len(new_revs) < 1:
                 raise HgUtilError("No revs to push")
             push(src=localrepo, remote=remote, ssh_username=ssh_username,
-                 ssh_key=ssh_key, force=force)
+                 ssh_key=ssh_key, force=force, warning_interval=warning_interval,
+                 warning_callback=warning_callback)
             return
         except subprocess.CalledProcessError, e:
             log.debug("Hit error when trying to push: %s" % str(e))
