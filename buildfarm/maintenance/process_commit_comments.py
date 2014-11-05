@@ -110,7 +110,7 @@ def process_results(update_bugzilla, wiki_markup_file):
                                'login': os.environ['BUGZILLA_USERNAME'],
                                'password': os.environ['BUGZILLA_PASSWORD']}
                     requests.post('https://bugzilla.mozilla.org/rest/bug/%s/comment' % bug_number, data=payload)
-                    print "  * curl -d 'id=%s' --data-urlencode 'comment=In production: %s' --data-urlencode 'login=%s' --data-urlencode 'password=XXXXX' 'https://bugzilla.mozilla.org/rest/bug/%s/comment'" % (bug_number, hg_changeset_url, os.environ['BUGZILLA_USERNAME'], bug_number)
+                    print "  * curl --data-urlencode 'comment=In production: %s' --data-urlencode 'login=%s' --data-urlencode 'password=XXXXX' 'https://bugzilla.mozilla.org/rest/bug/%s/comment'" % (hg_changeset_url, os.environ['BUGZILLA_USERNAME'], bug_number)
 
     if wiki_markup_file:
         f.close()
