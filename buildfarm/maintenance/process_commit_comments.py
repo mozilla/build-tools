@@ -106,8 +106,7 @@ def process_results(update_bugzilla, wiki_markup_file):
                                                         hg_changeset_url,
                                                         commit['revision']))
                 if args.update_bugzilla:
-                    payload = {'id': bug_number,
-                               'comment': 'In production: %s' % hg_changeset_url,
+                    payload = {'comment': 'In production: %s' % hg_changeset_url,
                                'login': os.environ['BUGZILLA_USERNAME'],
                                'password': os.environ['BUGZILLA_PASSWORD']}
                     requests.post('https://bugzilla.mozilla.org/rest/bug/%s/comment' % bug_number, data=payload)
