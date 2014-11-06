@@ -64,13 +64,6 @@ else
     unset AUTOMATION
 fi
 
-if [ -z "$HG_REPO" ] || [ "$HG_REPO" = none ]; then
-  SOURCE=.
-else
-  $PYTHON $SCRIPTS_DIR/buildfarm/utils/hgtool.py "${hgtool_args[@]}" $HG_REPO src || exit 2
-  SOURCE=src
-fi
-
 PYTHON="python"
 if [ -f "$PROPERTIES_FILE" ]; then
     JSONTOOL="$PYTHON $SCRIPTS_DIR/buildfarm/utils/jsontool.py"
@@ -96,6 +89,13 @@ if [ -f "$PROPERTIES_FILE" ]; then
     cd $SCRIPTS_DIR/..
     $PYTHON -u $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
         -s 4 -n info -n 'rel-*' -n 'tb-rel-*' -n $builddir
+fi
+
+if [ -z "$HG_REPO" ] || [ "$HG_REPO" = none ]; then
+  SOURCE=.
+else
+  $PYTHON $SCRIPTS_DIR/buildfarm/utils/hgtool.py "${hgtool_args[@]}" $HG_REPO src || exit 2
+  SOURCE=src
 fi
 
 # The build script has been moved into the tree, but this script needs to keep
