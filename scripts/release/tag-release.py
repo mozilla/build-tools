@@ -251,8 +251,8 @@ if __name__ == '__main__':
 
     for repo in config['sourceRepositories'].values():
         relbranch = repo['relbranch'] or generatedRelbranch
-        tagRepo(config, repo['path'], repo['name'], repo['revision'], tags,
-                repo['bumpFiles'], relbranch, options.attempts)
+        log.info("Skipping tagging %s at %s, with %s, because it's been done already",
+                 repo['path'], repo['revision'], tags)
     failed = []
     for l in sorted(l10nRepos):
         info = l10nRepos[l]
