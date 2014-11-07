@@ -11,7 +11,7 @@ logging.basicConfig(
     stream=sys.stdout, level=logging.INFO, format="%(message)s")
 log = logging.getLogger(__name__)
 
-from util.commands import run_cmd, get_output, terminate_on_timeout
+from util.commands import run_cmd, get_output
 from util.hg import mercurial, apply_and_push, update, get_revision, \
     make_hg_url, out, BRANCH, get_branches, cleanOutgoingRevs
 from util.retry import retry
@@ -35,7 +35,7 @@ def getBumpCommitMessage(productName, version):
 
 
 def getTagCommitMessage(revision, tags):
-    return "Added " + " ".join(tags) + " tag(s) for changeset " + revision + \
+    return "Added " +  " ".join(tags) + " tag(s) for changeset " + revision + \
            ". DONTBUILD CLOSED TREE a=release"
 
 
@@ -143,9 +143,7 @@ def tagRepo(config, repo, reponame, revision, tags, bumpFiles, relbranch,
     retry(apply_and_push, cleanup=cleanup_wrapper,
           args=(reponame, pushRepo, bump_and_tag_wrapper, pushAttempts),
           kwargs=dict(ssh_username=config['hgUsername'],
-                      ssh_key=config['hgSshKey'],
-                      warning_interval=120,
-                      warning_callback=terminate_on_timeout))
+                      ssh_key=config['hgSshKey']))
 
 
 def tagOtherRepo(config, repo, reponame, revision, pushAttempts):
