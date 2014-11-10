@@ -151,8 +151,8 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
             additionalParent = '../'
 
         unwrap_full_update = '../../../%s%s/tools/update-packaging/unwrap_full_update.pl' % (additionalParent, mozillaSrcDir)
-        make_incremental_update = '../../../%s/tools/update-packaging/make_incremental_update.sh' % (additionalParent, mozillaSrcDir)
-        prevMarDir = '../../../../../'
+        make_incremental_update = '../../%s%s/tools/update-packaging/make_incremental_update.sh' % (additionalParent, mozillaSrcDir)
+        prevMarDir = '../../../../%s' % additionalParent
     env['MAR'] = mar
     env['MBSDIFF'] = mbsdiff
 
