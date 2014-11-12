@@ -228,7 +228,9 @@ def sendMailRD(smtpServer, From, cfgFile, r):
         # For now, firefox has only one source repo but Thunderbird has two
         contentMail += name + " commit: https://hg.mozilla.org/" + source['path'] + "/rev/" + revision + "\n"
 
-    contentMail += "\n" + r["submitter"] + "\n"
+    contentMail += "\nCreated by " + r["submitter"] + "\n"
+
+    contentMail += "\nStarted by " + r["starter"] + "\n"
 
     Subject = 'Build of %s' % r["name"]
 
