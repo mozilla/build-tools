@@ -152,6 +152,40 @@ I am ur signature!
         raise
 
 
+def emevoucher_signfile(inputfile, outputfile, key, fake=False, passphrase=None):
+    """Perform SMIME signing on "inputfile", writing a signed version
+    to "outputfile", using passed in "key". This is necessary for the EME voucher.
+
+    If fake is True, generate a fake signature and sleep for a bit.
+
+    If passphrase is set, it will be passed to gpg on stdin
+    """
+    if fake:
+        time.sleep(1)
+        return
+
+    stdout = tempfile.TemporaryFile()
+    args = ['smime', '-sign', '-in', inputfile,
+            '-out', outputfile, '-signer', key,
+            '-md', 'sha256', '-binary', '-nodetach',
+            '-outform', 'DER']
+
+    try:
+        import pexpect
+        proc = pexpect.spawn("openssl", args)
+        # We use logfile_read because we only want stdout/stderr, _not_ stdin.
+        proc.logfile_read = stdout
+        proc.expect('Enter pass phrase')
+        proc.sendline(passphrase)
+        if proc.wait() != 0:
+            raise ValueError("openssl didn't return 0")
+    except:
+        stdout.seek(0)
+        data = stdout.read()
+        log.exception(data)
+        raise
+
+
 def mar_signfile(inputfile, outputfile, mar_cmd, fake=False, passphrase=None):
     # Now sign it
     if isinstance(mar_cmd, basestring):
