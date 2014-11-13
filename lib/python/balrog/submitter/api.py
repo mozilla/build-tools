@@ -110,7 +110,8 @@ class API(object):
             logging.debug('Data sent: %s' % sanitised_data)
         else:
             logging.debug('Data sent: %s' % data)
-        headers = {'Accept-Encoding': 'application/json'}
+        headers = {'Accept-Encoding': 'application/json',
+                   'Accept': 'application/json'}
         try:
             return self.session.request(method=method, url=url, data=data,
                                         config=self.config, timeout=self.timeout,
