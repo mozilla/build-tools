@@ -113,8 +113,6 @@ Supported actions:
     if not actions and not options.show_list:
         parser.error("at least one action is required")
 
-    ignored_roles = options.ignored_roles or ["servo"]
-
     # Load master data
     all_masters = json.load(urllib.urlopen(options.master_file))
 
@@ -123,7 +121,7 @@ Supported actions:
     for m in all_masters:
         if not m['enabled'] and not options.all_masters:
             continue
-        if ignored_roles and m['role'] in ignored_roles:
+        if options.ignored_roles and m['role'] in options.ignored_roles:
             continue
         if options.datacentre and m['datacentre'] not in options.datacentre:
             continue

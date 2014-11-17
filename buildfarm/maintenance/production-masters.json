@@ -2148,24 +2148,6 @@
     "tools_dir": "/builds/buildbot/tests1-linux64/tools"
   },
   {
-    "basedir": "/builds/buildbot/servo1",
-    "buildbot_bin": "/builds/buildbot/servo1/bin/buildbot",
-    "buildbot_python": "/builds/buildbot/servo1/bin/python",
-    "buildbot_setup": "/builds/buildbot/servo1/buildbot/master/setup.py",
-    "buildbot_version": "0.8.7p1",
-    "datacentre": "aws-us-east-1",
-    "db_name": "buildbot-master-servo-01.srv.servo.releng.use1.mozilla.com:/builds/buildbot/servo1/master",
-    "enabled": true,
-    "environment": "production",
-    "hostname": "buildbot-master-servo-01.srv.servo.releng.use1.mozilla.com",
-    "http_port": 8101,
-    "master_dir": "/builds/buildbot/servo1/master",
-    "name": "bms1-servo1",
-    "pb_port": 9001,
-    "role": "servo",
-    "ssh_port": 7001
-  },
-  {
     "basedir": "/builds/buildbot/tests1-linux64",
     "bbconfigs_branch": "production",
     "bbconfigs_dir": "/builds/buildbot/tests1-linux64/buildbot-configs",
