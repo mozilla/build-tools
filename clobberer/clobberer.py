@@ -133,8 +133,8 @@ def do_clobber(dir, dryrun=False, skip=None):
                     else:
                         shutil.move(f, clobber_path)
                         rmdirRecursive(clobber_path)
-    except:
-        print "Couldn't clobber properly, bailing out."
+    except Exception as e:
+        print("[clobber failed]: {}".format(e.message))
         sys.exit(1)
 
 
