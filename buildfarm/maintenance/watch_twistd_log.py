@@ -144,6 +144,8 @@ class Scanner:
         re.compile(re.escape("exceptions.AttributeError: 'NoneType' object has no attribute")),
         # Ignore PB connect errors.
         re.compile(re.escape("Failure: twisted.spread.pb.PBConnectionLost: [Failure instance: Traceback (failure with no frames): <class 'socket.error'>: [Errno 9] Bad file descriptor")),
+        # Ignore AbandonChain errors
+        re.compile(re.escape("Failure: buildslave.exceptions.AbandonChain")),
     ]
 
     def __init__(self, lasttime=0):

@@ -319,7 +319,8 @@ def checkStalled(device):
             this_device_lines.append(line)
 
     for line in this_device_lines:
-        if ('bcontroller' in line) or ('server.js' in line) or ('logcat.py' in line):
+        if ('bcontroller' in line) or ('server.js' in line) or \
+           ('logcat.py' in line) or ('pywebsocket_wrapper.py' in line):
             item = line.split()
             if len(item) > 1:
                 try:
@@ -540,7 +541,8 @@ def stopStalled(device):
             this_device_lines.append(line)
 
     for line in this_device_lines:
-        if ('bcontroller' in line) or ('server.js' in line):
+        if ('bcontroller' in line) or ('server.js' in line) or \
+           ('logcat.py' in line) or ('pywebsocket_wrapper.py' in line):
             item = line.split()
             if len(item) > 1:
                 try:
