@@ -16,9 +16,12 @@ ANY_VERSION_REGEX =\
      '(esr)?'             # Might be an esr
      '(pre)?')            # Might be a 'pre' (nightly) version
 
+# NB: If a file could match more than one of the regexes below the behaviour
+# will be undefined, because the key order will differ from system to system
+# and possibly run to run. Try to avoid this.
 BUMP_FILES = {
-    '^.*(version.*\.txt|milestone\.txt)$': '^%(version)s$',
-    '^.*(default-version\.txt|confvars\.sh)$': '^MOZ_APP_VERSION=%(version)s$'
+    r'^.*(version.*\.txt|milestone\.txt)$': '^%(version)s$',
+    r'^.*confvars\.sh$': '^MOZ_APP_VERSION=%(version)s$'
 }
 
 

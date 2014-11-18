@@ -210,9 +210,6 @@ class TestBumpFile(unittest.TestCase):
         self._doTest("js/src/config/milestone.txt",
                      "1.9.2.4pre", "1.9.2.5pre", "1.9.2.5pre")
 
-    def testBumpDefaultVersionTxt(self):
-        self._doTest("default-version.txt", "1.1.2pre", "1.1.3pre", "1.1.3pre")
-
     def testBumpConfVarsSh(self):
         self._doTest("confvars.sh", unbumpedConfVarsSh, bumpedConfVarsSh,
                      "4.0b6pre")
