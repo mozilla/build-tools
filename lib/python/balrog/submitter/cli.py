@@ -397,3 +397,18 @@ class ReleasePusher(object):
         api = Rule(auth=self.auth, api_root=self.api_root)
         for id_ in rule_ids:
             api.update_rule(id_, mapping=name)
+
+
+class BlobTweaker(object):
+    def __init__(self, api_root, auth):
+        self.api_root = api_root
+        self.auth = auth
+
+    def run(self, name, data):
+        api = Release(auth=self.auth, api_root=self.api_root)
+        current_data, data_version = api.get_data(name)
+        data = recursive_update(current_data, data)
+        api.update_release(name, data['appVersion'], name.split('-')[0],
+                           data['hashFunction'], json.dumps(data), data_version,
+                           schemaVersion=current_data['schema_version'])
+
