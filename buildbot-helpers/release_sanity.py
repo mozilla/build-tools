@@ -439,7 +439,7 @@ if __name__ == '__main__':
                 # verify that l10n changesets match the shipped locales
                 if releaseConfig.get('shippedLocalesPath'):
                     sr = releaseConfig['sourceRepositories'][source_repo]
-                    sourceRepoPath = sr.get('clonePath', sr['path'])
+                    sourceRepoPath = sr.get('path', sr['path'])
                     shippedLocales = getLocaleListFromShippedLocales(
                         getShippedLocales(
                             releaseConfig['productName'],
