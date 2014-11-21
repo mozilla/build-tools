@@ -229,6 +229,15 @@ def action_add_esr31_symlinks(master):
     print OK, "Added esr31 symlinks in %(hostname)s:%(basedir)s" % master
 
 
+def action_add_34_1_symlinks(master):
+    with show('running'):
+        run('ln -s %(bbconfigs_dir)s/mozilla/release-firefox-mozilla-release-34.1.py '
+            '%(master_dir)s/' % master)
+        run('ln -s %(bbconfigs_dir)s/mozilla/l10n-changesets_mozilla-release-34.1 '
+            '%(master_dir)s/' % master)
+    print OK, "Added 34.1 symlinks in %(hostname)s:%(basedir)s" % master
+
+
 def action_add_gecko_version_symlinks(master):
     with show('running'):
         run('ln -s %(bbconfigs_dir)s/mozilla/gecko_versions.json '
