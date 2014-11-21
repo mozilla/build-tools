@@ -36,13 +36,7 @@ def main():
     try:
         url_opener = urllib2.urlopen(args.manifest_url, timeout=10)
         http_code = url_opener.getcode()
-        if http_code == 404:
-            # Fallback to default values for branches where the manifest
-            # is not defined
-            print "script_repo_url: %s" % args.default_repo
-            print "script_repo_revision: %s" % args.default_revision
-            exit_code = 0
-        elif http_code == 200:
+        if http_code == 200:
             manifest = json.load(url_opener)
             print "script_repo_url: %s" % manifest["repo"]
             print "script_repo_revision: %s" % manifest["revision"]
@@ -51,6 +45,12 @@ def main():
             print "We have failed to retrieve the manifest (http code: %s)" % \
                     http_code
             exit_code = INFRA_CODE
+    except urllib2.HTTPError, e:
+        # Fallback to default values for branches where the manifest
+        # is not defined
+        print "script_repo_url: %s" % args.default_repo
+        print "script_repo_revision: %s" % args.default_revision
+        exit_code = 0
     except Exception, e:
         print str(e)
         exit_code = INFRA_CODE
