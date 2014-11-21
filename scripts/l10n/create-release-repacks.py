@@ -13,6 +13,7 @@ site.addsitedir(path.join(path.dirname(__file__), "../../lib/python/vendor"))
 from balrog.submitter.cli import ReleaseSubmitterV3
 from build.checksums import parseChecksumsFile
 from build.l10n import repackLocale, l10nRepackPrep
+from build.paths import get_repo_dirname
 import build.misc
 from build.upload import postUploadCmdPrefix
 from release.download import downloadReleaseBuilds, downloadUpdateIgnore404
@@ -274,9 +275,9 @@ if __name__ == "__main__":
     platform = options.platform
     if platform == "linux":
         platform = "linux32"
-    mozconfig = path.join(sourceRepoInfo['name'], releaseConfig["appName"],
-                          "config", "mozconfigs", platform,
-                          "l10n-mozconfig")
+    mozconfig = path.join(get_repo_dirname(sourceRepoInfo["path"]),
+                          releaseConfig["appName"], "config", "mozconfigs",
+                          platform, "l10n-mozconfig")
 
     if options.chunks:
         locales = retry(getReleaseLocalesForChunk,

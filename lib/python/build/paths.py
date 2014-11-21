@@ -55,3 +55,8 @@ def getRealpath(file_name, depth=1, cwd=None):
     depth += 1
     path_members = real_path.split(os.sep)[-depth:]
     return path.join(*path_members)
+
+
+def get_repo_dirname(repo_path):
+    """Returns repo directory name based on repo path"""
+    return repo_path.rstrip("/").split("/")[-1]
