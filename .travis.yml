@@ -12,3 +12,10 @@ install:
 
 script:
   - "tox"
+
+# currently cannot customise per user fork, see:
+# https://github.com/travis-ci/travis-ci/issues/1094
+notifications:
+  irc: "irc.mozilla.org#releng"
+  on_success: always
+  on_failure: always
