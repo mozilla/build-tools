@@ -3,14 +3,15 @@
 # Explicitly unset any pre-existing environment variables to avoid variable collision
 unset DRY_RUN
 
-INCREMENT_TITLES="Template:NEXT_VERSION Template:CENTRAL_VERSION Template:AURORA_VERSION Template:BETA_VERSION Template:RELEASE_VERSION"
-#INCREMENT_TITLES="User:Asasaki:TestVersion User:Asasaki:TestVersion2"
+INCREMENT_TITLES="Template:Version/Gecko/release/next \
+    Template:Version/Gecko/central/current \
+    Template:Version/Gecko/aurora/current \
+    Template:Version/Gecko/beta/current \
+    Template:Version/Gecko/release/current"
+
 B2G_TITLES="Template:B2G_DEV_VERSION"
-#B2G_TITLES="User:Asasaki:TestB2GVersion"
-ESR_TITLES="Template:ESR_VERSION"
-#ESR_TITLES=""
+ESR_TITLES="Template:Version/Gecko/esr/current"
 SIX_WEEK_DATE_TITLES="Template:NextReleaseDate"
-#SIX_WEEK_DATE_TITLES="User:Asasaki:TestReleaseDate"
 WIKI_COMMENT="Merge day"
 
 . "$(dirname "${0}")/wiki_functions.sh"
