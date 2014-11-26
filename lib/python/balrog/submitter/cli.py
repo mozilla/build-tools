@@ -11,7 +11,6 @@ from release.versions import getPrettyVersion
 from balrog.submitter.api import Release, SingleLocale, Rule
 from util.algorithms import recursive_update
 
-
 def get_nightly_blob_name(productName, branch, build_type, suffix, dummy=False):
     if dummy:
         branch = '%s-dummy' % branch
@@ -245,12 +244,18 @@ class NightlySubmitterBase(object):
 
         data.update(self._get_update_data(productName, branch, **updateKwargs))
 
-        # Bug 1055305 - a hack so that we can have JB and KK OTA for flame.
-        # They both query with buildTarget of flame, but differ in OS Version,
-        # so we need separate release blobs and rule to do the right thing
-        build_type = self.build_type
         if build_target == 'flame-kk':
-            build_type = 'kitkat-%s' % build_type
+            # Bug 1055305 - a hack so that we can have JB and KK OTA for flame.
+            # They both query with buildTarget of flame, but differ in OS Version,
+            # so we need separate release blobs and rule to do the right thing
+            build_type = 'kitkat-%s' % self.build_type
+        elif platform == 'android-api-9':
+            # Bug 1080749 - a hack to support api-9 and api-10+ split builds.
+            # Like 1055305 above, this is a hack to support two builds with same build target that
+            # require differed't release blobs and rules
+            build_type = 'api-9-%s' % self.build_type
+        else:
+            build_type = self.build_type
 
         name = get_nightly_blob_name(productName, branch, build_type, buildID, self.dummy)
         data = json.dumps(data)
