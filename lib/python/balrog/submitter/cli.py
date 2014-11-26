@@ -187,7 +187,10 @@ class ReleaseCreatorV4(ReleaseCreatorBase):
                 filename = "%s-%s.complete.mar" % (productName.lower(), version)
                 data["fileUrls"][channel]["completes"]["*"] = "%supdate/%%OS_FTP%%/%%LOCALE%%/%s" % (dir_, filename)
             else:
-                bouncerProduct = "%s-%s-complete" % (productName.lower(), version)
+                if productName.lower() == "fennec":
+                    bouncerProduct = "%s-%s" % (productName.lower(), version)
+                else:
+                    bouncerProduct = "%s-%s-complete" % (productName.lower(), version)
                 url = 'http://%s/?product=%s&os=%%OS_BOUNCER%%&lang=%%LOCALE%%' % (bouncerServer, bouncerProduct)
                 data["fileUrls"][channel]["completes"]["*"] = url
 
