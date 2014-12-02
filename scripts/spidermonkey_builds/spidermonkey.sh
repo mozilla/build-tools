@@ -32,6 +32,14 @@ while [ $# -gt 1 ]; do
             hgtool_args+=(--bundle "$1")
             shift
             ;;
+        --ttserver)
+            # Note that this script (and tooltool_wrapper.sh, and tooltool.py)
+            # only accepts a single tooltool server, so all but the last will
+            # be ignored.
+            shift
+            TT_SERVER="$1"
+            shift
+            ;;
         -r|--rev)
             shift
             hgtool_args+=(--clone-by-revision -r "$1")
@@ -40,6 +48,11 @@ while [ $# -gt 1 ]; do
         --dep)
             shift
             noclean=1
+            ;;
+        --platform)
+            shift
+            platform="$1"
+            shift
             ;;
         *)
             echo "Invalid arguments" >&2
@@ -96,6 +109,16 @@ if [ -z "$HG_REPO" ] || [ "$HG_REPO" = none ]; then
 else
   $PYTHON $SCRIPTS_DIR/buildfarm/utils/hgtool.py "${hgtool_args[@]}" $HG_REPO src || exit 2
   SOURCE=src
+
+  # Pull down some standard tools that the build seems to have started
+  # requiring, eg mozmake on windows.
+  if [ "$OSTYPE" = "msys" ] && [ -n "$platform" ]; then
+      if [ -z "$TT_SERVER" ]; then
+          echo "Error: tooltool base url not set (use --ttserver command line option or TT_SERVER environment variable)" >&2
+          exit 1
+      fi
+      $SCRIPTS_DIR/scripts/tooltool/tooltool_wrapper.sh $SOURCE/browser/config/tooltool-manifests/$platform/releng.manifest $TT_SERVER setup.sh c:\mozilla-build\python27\python.exe C:/mozilla-build/tooltool.py
+  fi
 fi
 
 # The build script has been moved into the tree, but this script needs to keep
@@ -104,6 +127,9 @@ if [ -x "$SOURCE/js/src/devtools/automation/autospider.sh" ]; then
     ARGS=""
     if [ -n "$noclean" ]; then
         ARGS="$ARGS --dep"
+    fi
+    if [ -n "$platform" ]; then
+        ARGS="$ARGV --platform $platform"
     fi
     exec $SOURCE/js/src/devtools/automation/autospider.sh $ARGS "$VARIANT"
     exit 1
