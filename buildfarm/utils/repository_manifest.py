@@ -35,7 +35,7 @@ def main():
     parser.add_option("--manifest-url", dest="manifest_url")
     parser.add_option("--default-repo", dest="default_repo")
     parser.add_option("--default-revision", dest="default_revision")
-    parser.add_option("--timeout", dest="timeout", type="float", default=10)
+    parser.add_option("--timeout", dest="timeout", type="float", default=30)
     options, args = parser.parse_args()
 
     if not options.manifest_url or \
