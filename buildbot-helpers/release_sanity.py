@@ -134,7 +134,11 @@ def verify_l10n_changesets(hgHost, l10n_changesets):
         try:
             urllib2.urlopen(locale_url)
         except urllib2.HTTPError, e:
-            log.error("error checking l10n changeset %s: %d %s" % (locale_url, e.code, e.reason))
+            reason = ""
+            if hasattr(e, 'reason'):
+                # Python 2.6 does not have reason
+                reason = e.reason
+            log.error("error checking l10n changeset %s: %d %s" % (locale_url, e.code, reason))
             success = False
             error_tally.add('verify_l10n')
     return success
