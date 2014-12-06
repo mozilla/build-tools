@@ -1,14 +1,51 @@
 #!/bin/bash
 
-# In the updates subdirectory of the directory this script is in,
-# there are a bunch of config files. You should call this script,
-# passing the names of one or more of those files as parameters
-# to this script.
-
 function usage {
+    log "In the updates subdirectory of the directory this script is in,"
+    log "there are a bunch of config files. You should call this script,"
+    log "passing the names of one or more of those files as parameters"
+    log "to this script."
+    log ""
+    log "This will validate that the update.xml files all exist for the"
+    log "given config file, and that they report the correct file sizes"
+    log "for the associated mar files, and that the associated mar files"
+    log "are available on the update servers."
+    log ""
+    log "This script will spawn multiple curl processes to query the"
+    log "snippets (update.xml file downloads) and the download urls in"
+    log "parallel. The number of parallel curl processes can be managed"
+    log "with the -p MAX_PROCS option."
+    log ""
+    log "Only the first three bytes of the mar files are downloaded"
+    log "using curl -r 0-2 option to save time. GET requests are issued"
+    log "rather than HEAD requests, since Akamai (one of our CDN"
+    log "partners) caches GET and HEAD requests separately - therefore"
+    log "they can be out-of-sync, and it is important that we validate"
+    log "that the GET requests return the expected results."
+    log ""
+    log "Please note this script can run on linux and OS X. It has not"
+    log "been tested on Windows, but may also work. It can be run"
+    log "locally, and does not require access to the mozilla vpn or"
+    log "any other special network, since the update servers are"
+    log "available over the internet. However, it does require an"
+    log "up-to-date checkout of the tools repository, as the updates/"
+    log "subfolder changes over time, and reflects the currently"
+    log "available updates. It makes no changes to the update servers"
+    log "so there is no harm in running it. It simply generates a"
+    log "report. However, please try to avoid hammering the update"
+    log "servers aggressively, e.g. with thousands of parallel"
+    log "processes. For example, feel free to run the examples below,"
+    log "first making sure that your source code checkout is up-to-"
+    log "date on your own machine, to get the latest configs in the"
+    log "updates/ subdirectory."
+    log ""
     log "Usage:"
     log "    $(basename "${0}") [-p MAX_PROCS] config1 [config2 config3 config4 ...]"
     log "    $(basename "${0}") -h"
+    log ""
+    log "Examples:"
+    log "    1. $(basename "${0}") -p 128 mozBeta-thunderbird-linux.cfg mozBeta-thunderbird-linux64.cfg"
+    log "    2. $(basename "${0}") mozBeta-thunderbird-linux64.cfg"
 }
 
 function log {
@@ -139,6 +176,10 @@ fi
 log "All checks completed successfully."
 log ''
 log "Starting stopwatch..."
+log ''
+log "Please be aware output will now be buffered up, and only displayed after completion."
+log "Therefore do not be alarmed if you see no output for several minutes."
+log "See https://bugzilla.mozilla.org/show_bug.cgi?id=863602#c5 for details".
 log ''
 
 START_TIME="$(date +%s)"
