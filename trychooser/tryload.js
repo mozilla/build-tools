@@ -63,7 +63,8 @@ function getTryLoads(callback) {
         totalBuildLoad["macosx64"] = load_try_build["macosx64"];
         totalBuildLoad["win32"] = load_try_build["win64"];
         totalBuildLoad["win64"] = totalBuildLoad["win32"];
-        totalBuildLoad["android"] = totalBuildLoad["linux"];
+        totalBuildLoad["android-api-9"] = totalBuildLoad["linux"];
+        totalBuildLoad["android-api-10"] = totalBuildLoad["linux"];
         totalBuildLoad["android-x86"] = totalBuildLoad["linux"];
         totalBuildLoad["emulator"] = totalBuildLoad["linux"];
         totalBuildLoad["emulator-jb"] = totalBuildLoad["linux"];
@@ -89,10 +90,10 @@ function getTryLoads(callback) {
                                    load_try_test["win7-ix"] + load_nontry_test["win7-ix"],
                                    load_try_test["win8-ix"] + load_nontry_test["win8-ix"]);
         totalTestLoad["win64"] = load_try_test["win2012x64"] + load_nontry_test["win2012x64"];
-        totalTestLoad["android"] = Math.max(
-                                     load_try_test["panda"] + load_nontry_test["panda"],
-                                     load_try_test["ubuntu64-hw"] + load_nontry_test["ubuntu64-hw"],
-                                     load_try_test["ubuntu64-vm"] + load_nontry_test["ubuntu64-vm"]);
+        totalTestLoad["android-api-9"] = Math.max(
+                                    load_try_test["ubuntu64-vm"] + load_nontry_test["ubuntu64-vm"]);
+        totalTestLoad["android-api-10"] = Math.max(
+                                    load_try_test["panda"] + load_nontry_test["panda"]);
         totalTestLoad["android-x86"] = load_try_test["ubuntu64-hw"]
         totalTestLoad["emulator"] = load_try_test["ubuntu64-vm"]
         // emulator-jb: N/A
