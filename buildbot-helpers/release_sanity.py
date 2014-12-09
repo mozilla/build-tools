@@ -117,6 +117,19 @@ def query_locale_revisions(l10n_changesets):
     return locales
 
 
+def get_l10n_changesets(locale_url):
+    try:
+        urllib2.urlopen(locale_url)
+        return True
+    except urllib2.HTTPError, e:
+        reason = ""
+        if hasattr(e, 'reason'):
+            # Python 2.6 does not have reason
+            reason = e.reason
+        log.error("error checking l10n changeset %s: %d %s" % (locale_url, e.code, reason))
+        raise e
+
+
 def verify_l10n_changesets(hgHost, l10n_changesets):
     """Checks for the existance of all l10n changesets"""
     success = True
@@ -131,15 +144,11 @@ def verify_l10n_changesets(hgHost, l10n_changesets):
         locale_url = make_hg_url(hgHost, localePath, protocol='https')
         log.info("Checking for existence l10n changeset %s %s in repo %s ..."
                  % (locale, revision, locale_url))
-        try:
-            urllib2.urlopen(locale_url)
-        except urllib2.HTTPError, e:
-            reason = ""
-            if hasattr(e, 'reason'):
-                # Python 2.6 does not have reason
-                reason = e.reason
-            log.error("error checking l10n changeset %s: %d %s" % (locale_url, e.code, reason))
-            success = False
+
+        success = retry(get_l10n_changesets,
+                        kwargs=dict(locale_url=locale_url), attempts=3,
+                        sleeptime=1, retry_exceptions=(urllib2.HTTPError,))
+        if success == False:
             error_tally.add('verify_l10n')
     return success
 
