@@ -23,7 +23,7 @@ sl_platform_map = {'win32': 'win32', 'win64': 'win64', 'macosx': 'osx',
 update_platform_map = {
     'android': ['Android_arm-eabi-gcc3'],
     'android-api-9': ['Android_arm-eabi-gcc3'],
-    'android-api-10': ['Android_arm-eabi-gcc3'],
+    'android-api-11': ['Android_arm-eabi-gcc3'],
     'android-armv6': ['Android_arm-eabi-gcc3-armv6'],
     'android-x86': ['Android_x86-gcc3'],
     'linux': ['Linux_x86-gcc3'],
