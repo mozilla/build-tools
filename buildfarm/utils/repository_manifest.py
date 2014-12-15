@@ -15,6 +15,7 @@
 """
 import json
 import logging
+import os
 import time
 import urllib2
 
@@ -81,19 +82,44 @@ def main():
     If none is found we fall back to the default repository
     '''
     parser = OptionParser(__doc__)
-    parser.add_option("--manifest-url", dest="manifest_url")
-    parser.add_option("--default-repo", dest="default_repo")
-    parser.add_option("--default-revision", dest="default_revision")
-    parser.add_option("--timeout", dest="timeout", type="float", default=30)
+    parser.add_option("--manifest-url", dest="manifest_url",
+                     help="URL to json file which specifies 'repo' and "
+                      "'revision' values.")
+    parser.add_option("--default-repo", dest="default_repo",
+                     help="If manifest_url is a 404 this is the repository we "
+                      "default to.")
+    parser.add_option("--default-revision", dest="default_revision",
+                     help="If manifest_url is a 404 this is the revision we "
+                      "default to.")
+    parser.add_option("--default-checkout", dest="default_checkout",
+                     help="If manifest_url's repo is the same as default_repo "
+                      "then use the default_checkout, otherwise, use checkout."
+                      "This is an optimization for when we have the ability "
+                      "of using an hg-shared checkout.")
+    parser.add_option("--checkout", dest="checkout",
+                     help="If default_repo and the repo in manifest_url are "
+                     "distinct we use a different checkout. In other words, "
+                     "we don't want to use an hg-shared checkout since we're "
+                     "trying to checkout a complete different repository")
+    parser.add_option("--timeout", dest="timeout", type="float", default=30,
+                     help="Used to specify how long to wait until timing out "
+                      "for network requests.")
     parser.add_option("--max-retries", dest="max_retries", type="int",
-                      default=10)
-    parser.add_option("--sleeptime", dest="sleeptime", type="int", default=10)
+                      default=10,
+                     help="A maximum number of retries for network requests.")
+    parser.add_option("--sleeptime", dest="sleeptime", type="int", default=10,
+                     help="How long to sleep in between network requests.")
     options, args = parser.parse_args()
 
     if not options.manifest_url or \
        not options.default_repo or \
        not options.default_revision:
         parser.error("You have to call the script with all options")
+
+    if options.default_checkout and options.checkout \
+       and options.default_checkout == options.checkout:
+        parser.error("If you use --default-checkout and --checkout,"
+                     "you can't have them be the same value.")
 
     exit_code = FAILURE_CODE
     try:
@@ -124,6 +150,25 @@ def main():
                 print "script_repo_url: %s" % repo
                 print "script_repo_revision: %s" % revision
                 exit_code = SUCCESS_CODE
+                # This block allow us to take advantage of default shared
+                # checkouts
+                if options.default_checkout and options.checkout:
+                    if options.default_repo == repo:
+                        # In the manifest we've requested to checkout the defult
+                        # repo, hence, we will use the default_checkout
+                        # location in order to use the hg-shared checkout
+                        checkout = options.default_checkout
+                    else:
+                        # We are not requesting the default repository, hence,
+                        # we can't use the hg-shared checkout
+                        checkout = options.checkout
+
+                    if not os.path.exists(checkout):
+                        print "The specified checkout (%s) does not exist." % checkout
+                        exit_code = FAILURE_CODE
+                    else:
+                        print "script_repo_checkout: %s" % checkout
+
             except urllib2.HTTPError:
                 # This is a 404 case because either the repo or the
                 # revision have wrong values
@@ -143,6 +188,12 @@ def main():
             # is not defined
             print "script_repo_url: %s" % options.default_repo
             print "script_repo_revision: %s" % options.default_revision
+            if options.default_checkout:
+                if not os.path.exists(checkout):
+                    print "The specified checkout (%s) does not exist." % checkout
+                    exit_code = FAILURE_CODE
+                else:
+                    print "script_repo_checkout: %s" % options.default_checkout
             exit_code = SUCCESS_CODE
         else:
             logging.exception("We got HTTPError code: %s." % e.getcode())
