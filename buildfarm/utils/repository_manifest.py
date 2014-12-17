@@ -163,11 +163,7 @@ def main():
                         # we can't use the hg-shared checkout
                         checkout = options.checkout
 
-                    if not os.path.exists(checkout):
-                        print "The specified checkout (%s) does not exist." % checkout
-                        exit_code = FAILURE_CODE
-                    else:
-                        print "script_repo_checkout: %s" % checkout
+                    print "script_repo_checkout: %s" % checkout
 
             except urllib2.HTTPError:
                 # This is a 404 case because either the repo or the
@@ -178,8 +174,8 @@ def main():
                 logging.exception("We have a non-valid json manifest.")
                 exit_code = FAILURE_CODE
         else:
-            print "We have failed to retrieve the manifest (http code: %s)" % \
-                    http_code
+            logging.error("We have failed to retrieve the manifest "
+                          "(http code: %s)" % http_code)
             exit_code = INFRA_CODE
 
     except urllib2.HTTPError, e:
@@ -189,11 +185,8 @@ def main():
             print "script_repo_url: %s" % options.default_repo
             print "script_repo_revision: %s" % options.default_revision
             if options.default_checkout:
-                if not os.path.exists(checkout):
-                    print "The specified checkout (%s) does not exist." % checkout
-                    exit_code = FAILURE_CODE
-                else:
-                    print "script_repo_checkout: %s" % options.default_checkout
+                print "script_repo_checkout: %s" % options.default_checkout
+
             exit_code = SUCCESS_CODE
         else:
             logging.exception("We got HTTPError code: %s." % e.getcode())
