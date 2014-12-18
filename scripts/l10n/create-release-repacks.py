@@ -21,6 +21,7 @@ from release.info import readReleaseConfig, readConfig, fileInfo
 from release.l10n import getReleaseLocalesForChunk
 from util.hg import mercurial, update, make_hg_url
 from util.retry import retry
+from release.info import getBuildID
 
 logging.basicConfig(
     stream=sys.stdout, level=logging.INFO, format="%(message)s")
@@ -42,15 +43,17 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                   generatePartials=False, partialUpdates=None,
                   usePymake=False, tooltoolManifest=None,
                   tooltool_script=None, tooltool_urls=None,
-                  balrog_submitter=None, balrog_hash="sha512", buildid=None,
+                  balrog_submitter=None, balrog_hash="sha512",
                   mozillaDir=None, mozillaSrcDir=None):
+    buildid = retry(getBuildID, args=(platform, product, version,
+                                      buildNumber, 'candidates'))
+    log.info('Got buildid: %s' % buildid)
     sourceRepoName = path.split(sourceRepo)[-1]
     absObjdir = path.abspath(path.join(sourceRepoName, objdir))
     localeSrcDir = path.join(absObjdir, appName, "locales")
     # Even on Windows we need to use "/" as a separator for this because
     # compare-locales doesn"t work any other way
     l10nIni = "/".join([sourceRepoName, appName, "locales", "l10n.ini"])
-
     env = {
         "MOZ_OBJDIR": objdir,
         "MOZ_MAKE_COMPLETE_MAR": "1",
@@ -199,8 +202,6 @@ def validate(options, args):
     if options.balrog_api_root:
         if not options.credentials_file or not options.balrog_username:
             raise Exception("--credentials-file and --balrog-username must be set when --balrog-api-root is set.")
-        if not options.buildid:
-            raise Exception("--buildid must be set when --balrog-api-root is set")
 
     releaseConfig = readReleaseConfig(releaseConfigFile,
                                       required=REQUIRED_RELEASE_CONFIG)
@@ -257,7 +258,6 @@ if __name__ == "__main__":
     parser.add_option("--balrog-api-root", dest="balrog_api_root")
     parser.add_option("--credentials-file", dest="credentials_file")
     parser.add_option("--balrog-username", dest="balrog_username")
-    parser.add_option("--buildid", dest="buildid")
 
     options, args = parser.parse_args()
     retry(mercurial, args=(options.buildbotConfigs, "buildbot-configs"))
@@ -364,7 +364,6 @@ if __name__ == "__main__":
         tooltool_script=options.tooltool_script,
         tooltool_urls=options.tooltool_urls,
         balrog_submitter=balrog_submitter,
-        buildid=options.buildid,
         mozillaDir=mozillaDir,
         mozillaSrcDir=mozillaSrcDir
     )

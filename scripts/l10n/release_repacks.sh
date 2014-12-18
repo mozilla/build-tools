@@ -28,7 +28,6 @@ master=$($JSONTOOL -k properties.master $PROPERTIES_FILE)
 releaseConfig=$($JSONTOOL -k properties.release_config $PROPERTIES_FILE)
 releaseTag=$($JSONTOOL -k properties.script_repo_revision $PROPERTIES_FILE)
 product=$($JSONTOOL -k properties.product $PROPERTIES_FILE)
-buildid=$($JSONTOOL -k properties.buildid $PROPERTIES_FILE)
 
 if [ -z "$BUILDBOT_CONFIGS" ]; then
     export BUILDBOT_CONFIGS="https://hg.mozilla.org/build/buildbot-configs"
@@ -71,5 +70,5 @@ fi
 
 $PYTHON $MY_DIR/create-release-repacks.py -c $branchConfig -r $releaseConfig \
   -b $BUILDBOT_CONFIGS -t $releaseTag -p $platform \
-  --properties-dir $outputPropertiesDir --buildid $buildid \
+  --properties-dir $outputPropertiesDir \
   $SOURCE_REPO_KEY $LOCALE_OPT $@
