@@ -8,10 +8,13 @@ before_script:
   - cp lib/python/mozilla_buildtools/test/hgrc ~/.hgrc
 
 install:
-  - "pip install tox"
+  - pip install tox
 
 script:
-  - "tox"
+  - tox
+
+after_script:
+  - tox -e py27-coveralls
 
 # currently cannot customise per user fork, see:
 # https://github.com/travis-ci/travis-ci/issues/1094
