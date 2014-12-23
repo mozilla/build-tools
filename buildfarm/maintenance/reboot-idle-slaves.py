@@ -15,6 +15,7 @@ import site
 from threading import Thread
 import time
 import Queue
+import pprint
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -34,10 +35,10 @@ MAX_WORKERS = 16
 IDLE_THRESHOLD = 5*60*60
 PENDING, RUNNING, SUCCESS, FAILURE = range(4)
 WORKER_WAIT_THRESHOLD = 30*60
-WORKER_WAIT_INCREMENT = .5
+STARTING_WAIT_INCREMENT = 1
+MAX_WAIT_INTERVAL = 2*60
 
 SLAVE_QUEUE = Queue.Queue()
-
 
 def get_production_slaves(slaveapi):
     url = furl(slaveapi)
@@ -257,18 +258,27 @@ if __name__ == "__main__":
 
         # Run while there is any workers or any queued work
         elapsed = 0
+        worker_wait_increment = STARTING_WAIT_INCREMENT
         while len(workers) or SLAVE_QUEUE.qsize():
             # Block until a worker frees
             while len(workers) and len(workers) >= min(n_workers, SLAVE_QUEUE.qsize()) and \
                   elapsed < WORKER_WAIT_THRESHOLD:
                 log.debug("Waiting for a free worker...")
-                time.sleep(WORKER_WAIT_INCREMENT)
-                elapsed += WORKER_WAIT_INCREMENT
+                if elapsed + worker_wait_increment >= WORKER_WAIT_THRESHOLD:
+                    worker_wait_increment = WORKER_WAIT_THRESHOLD - elapsed
+                log.debug("Sleeping %d seconds..." % worker_wait_increment)
+                time.sleep(worker_wait_increment)
+                elapsed += worker_wait_increment
+                worker_wait_increment = worker_wait_increment * 2
+                if worker_wait_increment > MAX_WAIT_INTERVAL:
+                    worker_wait_increment = MAX_WAIT_INTERVAL
+
                 for wname, w in workers.items():
+                    log.debug("worker: %s" % wname)
                     if not w.is_alive():
                         del workers[wname]
             if elapsed >= WORKER_WAIT_THRESHOLD:
-                log.warning("Gave up waiting for a free worker after %d seconds" % WORKER_WAIT_THRESHOLD)
+                log.warning("Gave up waiting for a free worker after %d seconds" % elapsed)
                 break
 
             # Start a new worker if there is more work
@@ -277,12 +287,14 @@ if __name__ == "__main__":
                 t = Thread(target=process_slave, args=(slaveapi, dryrun))
                 t.start()
                 workers[t.ident] = t
+                worker_wait_increment = STARTING_WAIT_INCREMENT
                 log.debug("Started worker %s", t.ident)
 
         # Wait for any remaining workers to finish before exiting.
         for w in workers.values():
             while w.is_alive():
                 log.debug("Found a running worker. Attempting to join...")
+                worker_wait_increment = STARTING_WAIT_INCREMENT
                 w.join(1)
 
         if SLAVE_QUEUE.qsize():
