@@ -333,14 +333,8 @@ def main(options):
 
     # Send email to r-d for a fast notification
     for release in rr.new_releases:
-        # XXX: SUPER MEGA HACK for bug 1102283
-        specialVersions = ["34.0.5", "34.0.6", "34.0.7", "34.0.8", "34.0.9"]
-        if release["version"] in specialVersions:
-            branch = "mozilla-release-34.1"
-        else:
-            branch = path.basename(release["branch"])
         cfgFile = configs_workdir + "/mozilla/" + getReleaseConfigName(
-            release['product'], branch,
+            release['product'], path.basename(release['branch']),
             release['version'], staging)
         sendMailRD(smtp_server, notify_from, cfgFile, release)
 
@@ -370,14 +364,8 @@ def main(options):
                 release['buildNumber'])
             )
             update(configs_workdir, revision='default')
-            # XXX: SUPER MEGA HACK for bug 1102283
-            specialVersions = ["34.0.5", "34.0.6", "34.0.7", "34.0.8", "34.0.9"]
-            if release["version"] in specialVersions:
-                branch = "mozilla-release-34.1"
-            else:
-                branch = path.basename(release["branch"])
             cfgFile = getReleaseConfigName(
-                release['product'], branch,
+                release['product'], path.basename(release['branch']),
                 release['version'], staging)
             bump_configs(release=release, cfgFile=cfgFile,
                          l10nContents=l10nContents, workdir=configs_workdir,
@@ -437,17 +425,11 @@ def main(options):
         try:
             rr.update_status(release, 'Running sendchange command')
             staging = config.getboolean('release-runner', 'staging')
-            # XXX: SUPER MEGA HACK for bug 1102283
-            specialVersions = ["34.0.5", "34.0.6", "34.0.7", "34.0.8", "34.0.9"]
-            if release["version"] in specialVersions:
-                branch = "mozilla-release-34.1"
-            else:
-                branch = path.basename(release["branch"])
             update(configs_workdir, revision='default')
             cfgFile = path.join(configs_workdir, 
                                 'mozilla', 
                                 getReleaseConfigName(release['product'], 
-                                                     branch,
+                                                     path.basename(release['branch']),
                                                      release['version'], staging))
             enUSPlatforms = readReleaseConfig(cfgFile)['enUSPlatforms']
             rr.start_release_automation(release, sendchange_master, enUSPlatforms)
