@@ -29,7 +29,7 @@ def retry(action, attempts=5, sleeptime=60, max_sleeptime=5 * 60,
     while n <= attempts:
         try:
             log.info("retry: Calling %s with args: %s, kwargs: %s, "
-                     "attempt #%d" % (action, str(args), str(kwargs), n))
+                     "attempt #%d" % (action.__name__, str(args), str(kwargs), n))
             return action(*args, **kwargs)
         except retry_exceptions:
             log.debug("retry: Caught exception: ", exc_info=True)
