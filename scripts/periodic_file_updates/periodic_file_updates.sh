@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 
 function usage {
 cat <<EOF
@@ -43,7 +43,6 @@ EOF
 DRY_RUN=false
 PRODUCT="firefox"
 BRANCH=""
-LATEST_DIR=""
 PLATFORM="linux-x86_64"
 PLATFORM_EXT="tar.bz2"
 UNPACK_CMD="tar jxf"
@@ -68,6 +67,7 @@ UNZIP="unzip -q"
 DIFF="diff -up"
 BASEDIR=`pwd`
 VERSION=''
+MC_VERSION=''
 
 DO_HSTS=false
 HSTS_PRELOAD_SCRIPT="getHSTSPreloadList.js"
@@ -88,25 +88,38 @@ BLOCKLIST_URL_AMO=''
 BLOCKLIST_URL_HG=''
 BLOCKLIST_UPDATED=false
 
-# Get the current in-tree version for this code branch.
+# Get the current in-tree version for a code branch.
 function get_version {
+    VERSION_BRANCH=$1
+    VERSION_FILE='version.txt'
+    VERSION_REPO=${HGREPO}
+    if [ "${VERSION_BRANCH}" == "mozilla-central" ]; then
+        VERSION_REPO=${MCHGREPO}
+    fi
     cd "${BASEDIR}"
-    echo "INFO: Retrieving current version from hg..."
-    VERSION_URL_HG="${HGREPO}/raw-file/default/${APP_DIR}/config/version.txt"
-    rm -f version.txt
-    echo "INFO: ${WGET} --no-check-certificate -O version.txt ${VERSION_URL_HG}"
-    ${WGET} --no-check-certificate -O version.txt ${VERSION_URL_HG}
+    echo "INFO: Retrieving current version from ${VERSION_BRANCH}..."
+
+    VERSION_URL_HG="${VERSION_REPO}/raw-file/default/${APP_DIR}/config/version.txt"
+    rm -f ${VERSION_FILE}
+    echo "INFO: ${WGET} --no-check-certificate -O ${VERSION_FILE} ${VERSION_URL_HG}"
+    ${WGET} --no-check-certificate -O ${VERSION_FILE} ${VERSION_URL_HG}
     WGET_STATUS=$?
     if [ ${WGET_STATUS} != 0 ]; then
         echo "ERROR: wget exited with a non-zero exit code: $WGET_STATUS" >&2
         exit ${WGET_STATUS}
     fi
-    VERSION=`cat version.txt`
-    echo ${VERSION}
-    if [ "${VERSION}" == "" ]; then
-        echo "ERROR: Unable to parse version from version.txt" >&2
-	exit 21
+    PARSED_VERSION=`cat version.txt`
+    echo "INFO: parsed version is ${PARSED_VERSION}"
+    if [ "${PARSED_VERSION}" == "" ]; then
+        echo "ERROR: Unable to parse version from $VERSION_FILE" >&2
+        exit 21
     fi
+    if [ "${VERSION_BRANCH}" == "mozilla-central" ]; then
+        MC_VERSION=${PARSED_VERSION}
+    else
+        VERSION=${PARSED_VERSION}
+    fi
+    rm -f ${VERSION_FILE}
 }
 
 # Cleanup common artifacts.
@@ -121,17 +134,17 @@ function download_shared_artifacts {
     # Download everything we need: browser, tests, updater script, existing preload list and errors.
     echo "INFO: Downloading all the necessary pieces..."
     for URL in "${BROWSER_ARCHIVE_URL}" "${TESTS_ARCHIVE_URL}"; do
-	echo "INFO: ${WGET} --no-check-certificate ${URL}"
-	${WGET} --no-check-certificate ${URL}
-	WGET_STATUS=$?
-	if [ ${WGET_STATUS} != 0 ]; then
+        echo "INFO: ${WGET} --no-check-certificate ${URL}"
+        ${WGET} --no-check-certificate ${URL}
+        WGET_STATUS=$?
+        if [ ${WGET_STATUS} != 0 ]; then
             echo "ERROR: wget exited with a non-zero exit code: ${WGET_STATUS}" >&2
             exit ${WGET_STATUS}
-	fi
-	if [ ! -f "$(basename "${URL}")" ]; then
+        fi
+        if [ ! -f "$(basename "${URL}")" ]; then
             echo "Downloaded file '$(basename "${URL}")' not found in directory '$(pwd)' - this should have been downloaded above from ${URL}." >&2
             exit 31
-	fi
+        fi
     done
 
     # Unpack the browser and move xpcshell in place for updating the preload list.
@@ -156,17 +169,17 @@ function compare_hsts_files {
     echo "INFO: Downloading all the necessary pieces to update HSTS..."
     rm -rf "${HSTS_PRELOAD_SCRIPT}" "${HSTS_PRELOAD_ERRORS}" "${HSTS_PRELOAD_INC}"
     for URL in "${HSTS_PRELOAD_SCRIPT_HG}" "${HSTS_PRELOAD_ERRORS_HG}" "${HSTS_PRELOAD_INC_HG}"; do
-	echo "INFO: ${WGET} --no-check-certificate ${URL}"
-	${WGET} --no-check-certificate ${URL}
-	WGET_STATUS=$?
-	if [ ${WGET_STATUS} != 0 ]; then
+        echo "INFO: ${WGET} --no-check-certificate ${URL}"
+        ${WGET} --no-check-certificate ${URL}
+        WGET_STATUS=$?
+        if [ ${WGET_STATUS} != 0 ]; then
             echo "ERROR: wget exited with a non-zero exit code: ${WGET_STATUS}" >&2
             exit ${WGET_STATUS}
-	fi
-	if [ ! -f "$(basename "${URL}")" ]; then
+        fi
+        if [ ! -f "$(basename "${URL}")" ]; then
             echo "Downloaded file '$(basename "${URL}")' not found in directory '$(pwd)' - this should have been downloaded above from ${URL}." >&2
             exit 41
-	fi
+        fi
     done
 
     # Run the script to get an updated preload list.
@@ -225,17 +238,17 @@ function compare_hpkp_files {
     echo "INFO: Downloading all the necessary pieces to update HPKP..."
     rm -f "${HPKP_PRELOAD_SCRIPT}" "${HPKP_PRELOAD_JSON}" "${HPKP_DER_TEST}" "${HPKP_PRELOAD_OUTPUT}" "${HPKP_PRELOAD_ERRORS}"
     for URL in "${HPKP_PRELOAD_SCRIPT_HG}" "${HPKP_PRELOAD_JSON_HG}" "${HPKP_DER_TEST_HG}" "${HPKP_PRELOAD_OUTPUT_HG}" "${HPKP_PRELOAD_ERRORS_HG}"; do
-	echo "INFO: ${WGET} --no-check-certificate ${URL}"
-	${WGET} --no-check-certificate ${URL}
-	WGET_STATUS=$?
-	if [ ${WGET_STATUS} != 0 ]; then
+        echo "INFO: ${WGET} --no-check-certificate ${URL}"
+        ${WGET} --no-check-certificate ${URL}
+        WGET_STATUS=$?
+        if [ ${WGET_STATUS} != 0 ]; then
             echo "ERROR: wget exited with a non-zero exit code: ${WGET_STATUS}" >&2
             exit ${WGET_STATUS}
-	fi
-	if [ ! -f "$(basename "${URL}")" ]; then
+        fi
+        if [ ! -f "$(basename "${URL}")" ]; then
             echo "Downloaded file '$(basename "${URL}")' not found in directory '$(pwd)' - this should have been downloaded above from ${URL}." >&2
             exit 51
-	fi
+        fi
     done
 
     # Run the script to get an updated preload list.
@@ -334,18 +347,18 @@ function clone_repo {
     if [ ! -d "${REPODIR}" ]; then
         CLONE_CMD=""
         if [ -f "${HGTOOL}" ]; then
-	    # Need to pass the default branch here to avoid pollution from buildprops.json
-	    # when hgtool.py is run in production.
-	    CLONE_CMD="${HGTOOL} --branch default"
+            # Need to pass the default branch here to avoid pollution from buildprops.json
+            # when hgtool.py is run in production.
+            CLONE_CMD="${HGTOOL} --branch default"
             if [ "${MIRROR}" != "" ]; then
                 CLONE_CMD="${CLONE_CMD} --mirror ${MIRROR}"
             fi
             if [ "${BUNDLE}" != "" ]; then
                 CLONE_CMD="${CLONE_CMD} --bundle ${BUNDLE}"
-	    fi
+            fi
         else
-	    # Fallback on vanilla hg
-	    echo "INFO: hgtool.py not found. Falling back to vanilla hg."
+            # Fallback on vanilla hg
+            echo "INFO: hgtool.py not found. Falling back to vanilla hg."
             CLONE_CMD="${HG} clone"
         fi
         CLONE_CMD="${CLONE_CMD} ${HGREPO} ${REPODIR}"
@@ -474,17 +487,17 @@ function push_repo {
 # Parse our command-line options.
 while [ $# -gt 0 ]; do
     case "$1" in
-	-h) usage; exit 0;;
+        -h) usage; exit 0;;
         -x) exitcodes; exit 0;;
-	-p) PRODUCT="$2"; shift;;
+        -p) PRODUCT="$2"; shift;;
         -b) BRANCH="$2"; shift;;
         -n) DRY_RUN=true;;
         -c) CLOSED_TREE=true;;
         -d) DONTBUILD=true;;
         -a) APPROVAL=true;;
-	--hsts) DO_HSTS=true;;
-	--hpkp) DO_HPKP=true;;
-	--blocklist) DO_BLOCKLIST=true;;
+        --hsts) DO_HSTS=true;;
+        --hpkp) DO_HPKP=true;;
+        --blocklist) DO_BLOCKLIST=true;;
         -u) HG_SSH_USER="$2"; shift;;
         -k) HG_SSH_KEY="$2"; shift;;
         -r) REPODIR="$2"; shift;;
@@ -511,21 +524,25 @@ if [ "$DO_HSTS" == "false" -a "$DO_HPKP" == "false" -a "$DO_BLOCKLIST" == "false
     exit 13
 fi
 
-LATEST_DIR=latest-`basename ${BRANCH}`
-
 if [ "${REPODIR}" == "" ]; then
    REPODIR=`basename ${BRANCH}`
 fi
 
 HGREPO="http://${HGHOST}/${BRANCH}"
 HGPUSHREPO="ssh://${HGHOST}/${BRANCH}"
+MCHGREPO="http://${HGHOST}/mozilla-central"
 
-get_version
+get_version $BRANCH
+get_version "mozilla-central"
 
-BROWSER_ARCHIVE="${PRODUCT}-${VERSION}.en-US.${PLATFORM}.${PLATFORM_EXT}"
-BROWSER_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/nightly/${LATEST_DIR}/${BROWSER_ARCHIVE}"
-TESTS_ARCHIVE="${PRODUCT}-${VERSION}.en-US.${PLATFORM}.tests.zip"
-TESTS_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/nightly/${LATEST_DIR}/${TESTS_ARCHIVE}"
+# Bug 1093295 - Use the mozilla-central version of build + test archive.
+# This ensures that we will always have the most current abilities
+# available in the test harnesses, even when updating older branches
+# like ESR.
+BROWSER_ARCHIVE="${PRODUCT}-${MC_VERSION}.en-US.${PLATFORM}.${PLATFORM_EXT}"
+BROWSER_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/nightly/latest-mozilla-central/${BROWSER_ARCHIVE}"
+TESTS_ARCHIVE="${PRODUCT}-${MC_VERSION}.en-US.${PLATFORM}.tests.zip"
+TESTS_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/nightly/latest-mozilla-central/${TESTS_ARCHIVE}"
 
 # Try to find hgtool if it hasn't been set.
 if [ ! -f "${HGTOOL}" ]; then
@@ -537,19 +554,19 @@ download_shared_artifacts
 if [ "${DO_HSTS}" == "true" ]; then
     compare_hsts_files
     if [ $? != 0 ]; then
-	HSTS_UPDATED=true
+        HSTS_UPDATED=true
     fi
 fi
 if [ "${DO_HPKP}" == "true" ]; then
     compare_hpkp_files
     if [ $? != 0 ]; then
-	HPKP_UPDATED=true
+        HPKP_UPDATED=true
     fi
 fi
 if [ "${DO_BLOCKLIST}" == "true" ]; then
     compare_blocklist_files
     if [ $? != 0 ]; then
-	BLOCKLIST_UPDATED=true
+        BLOCKLIST_UPDATED=true
     fi
 fi
 
@@ -559,7 +576,7 @@ if [ "${HSTS_UPDATED}" == "false" -a "${HPKP_UPDATED}" == "false" -a "${BLOCKLIS
 else
     if [ "${DRY_RUN}" == "true" ]; then
         echo "INFO: Updates are available, bot updating hg in dry-run mode."
-	exit 2
+        exit 2
     fi
 fi
 
@@ -576,4 +593,3 @@ if [ "${BLOCKLIST_UPDATED}" == "true" ]; then
   commit_blocklist_files
 fi
 push_repo
-
