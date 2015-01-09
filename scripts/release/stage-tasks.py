@@ -56,21 +56,7 @@ PARTNER_BUNDLE_DIR = '/mnt/netapp/stage/releases.mozilla.com/bundles'
 # Left side is destination relative to PARTNER_BUNDLE_DIR.
 # Right side is source, relative to partner-repacks in the candidates dir.
 PARTNER_BUNDLE_MAPPINGS = {
-    r'msn/international/mac/australia/Firefox\ Setup.dmg': r'msn-australia/mac/en-US/Firefox\ %(version)s.dmg',
-    r'msn/international/mac/canada/Firefox\ Setup.dmg': r'msn-canada/mac/en-US/Firefox\ %(version)s.dmg',
-    r'msn/international/mac/de/Firefox\ Setup.dmg': r'msn-de/mac/de/Firefox\ %(version)s.dmg',
-    r'msn/international/mac/en-GB/Firefox\ Setup.dmg': r'msn-uk/mac/en-GB/Firefox\ %(version)s.dmg',
-    r'msn/international/mac/fr/Firefox\ Setup.dmg': r'msn-fr/mac/fr/Firefox\ %(version)s.dmg',
-    r'msn/international/mac/ja/Firefox\ Setup.dmg': r'msn-ja/mac/ja-JP-mac/Firefox\ %(version)s.dmg',
-    r'msn/us/mac/en-US/Firefox\ Setup.dmg': r'msn-us/mac/en-US/Firefox\ %(version)s.dmg',
     r'bing/mac/en-US/Firefox-Bing.dmg': r'bing/mac/en-US/Firefox\ %(version)s.dmg',
-    r'msn/international/win32/australia/Firefox\ Setup.exe': r'msn-australia/win32/en-US/Firefox\ Setup\ %(version)s.exe',
-    r'msn/international/win32/canada/Firefox\ Setup.exe': r'msn-canada/win32/en-US/Firefox\ Setup\ %(version)s.exe',
-    r'msn/international/win32/de/Firefox\ Setup.exe': r'msn-de/win32/de/Firefox\ Setup\ %(version)s.exe',
-    r'msn/international/win32/en-GB/Firefox\ Setup.exe': r'msn-uk/win32/en-GB/Firefox\ Setup\ %(version)s.exe',
-    r'msn/international/win32/fr/Firefox\ Setup.exe': r'msn-fr/win32/fr/Firefox\ Setup\ %(version)s.exe',
-    r'msn/international/win32/ja/Firefox\ Setup.exe': r'msn-ja/win32/ja/Firefox\ Setup\ %(version)s.exe',
-    r'msn/us/win32/en-US/Firefox\ Setup.exe': r'msn-us/win32/en-US/Firefox\ Setup\ %(version)s.exe',
     r'bing/win32/en-US/Firefox-Bing\ Setup.exe': r'bing/win32/en-US/Firefox\ Setup\ %(version)s.exe',
 }
 
