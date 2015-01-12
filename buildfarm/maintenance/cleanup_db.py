@@ -237,6 +237,7 @@ def cleanup_schedulerdb_schedulers(db):
 
 if __name__ == '__main__':
     from optparse import OptionParser
+    from ConfigParser import RawConfigParser
     parser = OptionParser()
     parser.set_defaults(
         filename=None,
@@ -247,6 +248,7 @@ if __name__ == '__main__':
     parser.add_option("-l", "--logfile", dest="logfile")
     parser.add_option("--status-db", dest="status_db")
     parser.add_option("--scheduler-db", dest="scheduler_db")
+    parser.add_option("--config", dest="config_file", help="config file")
     parser.add_option("--cutoff", dest="cutoff",
                       help="cutoff date, prior to which we'll delete data. "
                       "format is YYYY-MM-DD")
@@ -277,9 +279,18 @@ if __name__ == '__main__':
     if not options.cutoff:
         parser.error("cutoff date is required")
 
+    # Load options from config if it's set
+    if options.config_file:
+        config_parser = RawConfigParser()
+        config_parser.read([options.config_file])
+        if config_parser.has_option("db", "status_db"):
+            options.status_db = config_parser.get("db", "status_db")
+        if config_parser.has_option("db", "scheduler_db"):
+            options.scheduler_db = config_parser.get("db", "scheduler_db")
+
     # Clean up statusdb
     if options.status_db:
-        status_db = sa.create_engine(options.status_db)
+        status_db = sa.create_engine(options.status_db, pool_recycle=300)
         meta = sa.MetaData(bind=status_db)
         cleanup_statusdb_builds(meta, options.cutoff)
         if not options.skip_orphans:
@@ -287,6 +298,6 @@ if __name__ == '__main__':
             cleanup_statusdb_orphaned_properties(meta)
 
     if options.scheduler_db:
-        scheduler_db = sa.create_engine(options.scheduler_db)
+        scheduler_db = sa.create_engine(options.scheduler_db, pool_recycle=300)
 
         cleanup_schedulerdb_schedulers(scheduler_db)
