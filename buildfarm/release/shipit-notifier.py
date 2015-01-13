@@ -4,93 +4,77 @@
 Listens for buildbot release messages from pulse and then sends them
 to the shipit REST API."""
 
-import uuid
-import site
-import datetime
 import pytz
+import site
 
 from optparse import OptionParser
 from ConfigParser import ConfigParser
-from release.info import getReleaseName
 from mozillapulse import consumers
 from mozillapulse import config as pconf
 from os import path
 from dateutil import parser
 
-import sys
-sys.path.insert(0, path.join(path.dirname(__file__), "../../lib/python"))
+site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 from kickoff.api import Status
+from release.info import getReleaseName
 
 import logging as log
 
-NAME_KEYS = (u'product', u'version', u'build_number')
-PROPERTIES_KEYS = (u'platform', u'chunkTotal', u'chunkNum', u'event_group')
+NAME_KEYS = ('product', 'version', 'build_number')
+PROPERTIES_KEYS = ('platform', 'chunkTotal', 'chunkNum', 'event_group')
+
+
+def get_properties_dict(props):
+    """Convert properties tuple into dict"""
+    props_dict = {}
+    for prop in props:
+        props_dict[prop[0]] = prop[1]
+    return props_dict
 
 
 def receive_message(config, data, message):
-    try:
-        if not data['payload']['build'].get(u'builderName').\
-                                        startswith('release-'):
-            return
-        if ' test ' in data['payload']['build'].get(u'builderName'):
-            return
-        if not data['payload']['build'].get('properties'):
-            log.exception('TypeError: build properties not found - {}'.\
-                      format(data['payload']['build'].get('builderName')))
-            return
-        if data['payload'][u'results'] != 0:
-            return
+    buildername = data["payload"]["build"]["builderName"]
+    properties = data["payload"]["build"]["properties"]
+    results = data["payload"]["results"]
 
-        log.info('msg received - {}'.format(data['payload']['build'].\
-                                     get(u'builderName')))
+    if not buildername.startswith('release-') or \
+            ' test ' in buildername:
+        return
+    if results != 0:
+        log.debug("Non zero results from %s", buildername)
+        return
+    if not properties:
+        log.exception("No properties set by %s", buildername)
+        return
 
-        payload = {}
-        payload[u'sent'] = data['_meta'].get(u'sent')
-        payload[u'results'] = data['payload'].get(u'results')
-        payload[u'event_name'] = data['payload']['build'].get(u'builderName')
+    log.info("Processing %s", buildername)
+    properties_dict = get_properties_dict(properties)
 
-        # Convert sent to UTC
-        timestamp = parser.parse(payload[u'sent']).astimezone(pytz.utc)
-        payload[u'sent'] = unicode(timestamp.strftime('%Y-%m-%d %H:%M:%S'))
+    payload = {}
+    for k, v in properties_dict.iteritems():
+        if k in PROPERTIES_KEYS:
+            payload[k] = v
+    if "event_group" not in payload:
+        log.debug("Ignoring message without event_group set")
+        return
+    # rename event_group to group
+    payload["group"] = payload.pop("event_group")
+    payload["results"] = results
+    payload["event_name"] = buildername
+    # Convert sent to UTC
+    timestamp = parser.parse(data["_meta"]["sent"]).astimezone(pytz.utc)
+    payload["sent"] = timestamp.strftime("%Y-%m-%d %H:%M:%S")
 
-        for key in PROPERTIES_KEYS:
-            for prop in data['payload']['build'].get('properties'):
-                if prop[0] == key:
-                    try:
-                        payload[key] = prop[1]
-                    except IndexError as e:
-                        payload[key] = 'None'
-                        log.warning('{} not in build properties for {} - {}'.\
-                                    format(key, payload['event_name'], e))
-        payload[u'group'] = payload.pop(u'event_group')
-        if 'postrelease' in payload[u'event_name']:
-            payload[u'group'] = 'postrelease'
+    name = getReleaseName(
+        properties_dict["product"], properties_dict["version"],
+        properties_dict["build_number"])
 
-        name = {}
-        for key in NAME_KEYS:
-            for prop in data['payload']['build'].get('properties'):
-                if prop[0] == key:
-                    try:
-                        name[key] = prop[1]
-                    except IndexError as e:
-                        name[key] = 'None'
-                        log.warning('{} not in build properties for {} - {}'.\
-                                    format(key, payload['event_name'], e))
-        name = getReleaseName(name.pop('product'), 
-                              name.pop('version'), 
-                              name.pop('build_number'))
-
-        log.info('adding new release event for {} with event_name {}'.\
-                 format(name, payload['event_name']))
-        status_api = Status((config.get('api', 'username'), 
-                             config.get('api', 'password')), 
-                            api_root=config.get('api', 'api_root'))
-        status_api.update(name, data=payload)
-        print payload
-    except Exception as e:
-        log.exception('{} - {}'.format(e, data['payload']['build'].get('builderName')))
-    finally:
-        message.ack()
+    log.info("Adding new release event for %s with event_name %s", name,
+             buildername)
+    status_api = Status(
+        (config.get('api', 'username'), config.get('api', 'password')),
+        api_root=config.get('api', 'api_root'))
+    status_api.update(name, data=payload)
 
 
 def main():
@@ -104,18 +88,21 @@ def main():
     except:
         parser.error("Could not open configuration file")
 
-    def got_message(*args, **kwargs):
-        receive_message(config, *args, **kwargs)
+    def got_message(data, message):
+        try:
+            receive_message(config, data, message)
+        finally:
+            message.ack()
 
     if not options.config:
         parser.error('Configuration file is required')
 
-    if (not config.has_section('pulse') or
-        not config.has_option('pulse', 'user') or
-        not config.has_option('pulse', 'password')):
-        print ('Config file must have a [pulse] section containing and least '
-               '"user" and\n"password" options.')
-        return
+    if not all([config.has_section('pulse'),
+                config.has_option('pulse', 'user'),
+                config.has_option('pulse', 'password')]):
+        log.critical('Config file must have a [pulse] section containing and '
+                     'least "user" and "password" options.')
+        exit(1)
 
     verbosity = {True: log.DEBUG, False: log.WARN}
     log.basicConfig(
