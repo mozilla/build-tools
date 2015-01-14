@@ -363,12 +363,6 @@ def ReleaseToMobileCandidatesDir(options, upload_dir, files):
         # the group cannot overwrite them.
         os.chmod(f, 0644)
 
-    # Same thing for directories, but 0755
-    for root, dirs, files in os.walk(candidatesPath):
-        for d in dirs:
-            os.chmod(os.path.join(root, d), 0755)
-
-
 def ReleaseToTryBuilds(options, upload_dir, files):
     tryBuildsPath = TRY_DIR % {'product': options.product,
                                'who': options.who,
