@@ -533,7 +533,11 @@ HGPUSHREPO="ssh://${HGHOST}/${BRANCH}"
 MCHGREPO="http://${HGHOST}/mozilla-central"
 
 get_version $BRANCH
-get_version "mozilla-central"
+if [ "${BRANCH}" == "mozilla-central" ]; then
+    VERSION=${MC_VERSION}
+else
+    get_version "mozilla-central"
+fi
 
 # Bug 1093295 - Use the mozilla-central version of build + test archive.
 # This ensures that we will always have the most current abilities
