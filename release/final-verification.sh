@@ -196,10 +196,10 @@ export TMPDIR="$(mktemp -d -t final_verification.XXXXXXXXXX)"
 # this temporary file will list all update urls that need to be checked, in this format:
 # <update url> <comma separated list of patch types> <cfg file that requests it> <line number of config file>
 # e.g.
-# https://aus2.mozilla.org/update/3/Firefox/18.0/20130104154748/Linux_x86_64-gcc3/zh-TW/releasetest/default/default/default/update.xml?force=1 complete moz20-firefox-linux64-major.cfg 3
-# https://aus2.mozilla.org/update/3/Firefox/18.0/20130104154748/Linux_x86_64-gcc3/zu/releasetest/default/default/default/update.xml?force=1 complete moz20-firefox-linux64.cfg 7
-# https://aus2.mozilla.org/update/3/Firefox/19.0/20130215130331/Linux_x86_64-gcc3/ach/releasetest/default/default/default/update.xml?force=1 complete,partial moz20-firefox-linux64-major.cfg 11
-# https://aus2.mozilla.org/update/3/Firefox/19.0/20130215130331/Linux_x86_64-gcc3/af/releasetest/default/default/default/update.xml?force=1 complete,partial moz20-firefox-linux64.cfg 17
+# https://aus4.mozilla.org/update/3/Firefox/18.0/20130104154748/Linux_x86_64-gcc3/zh-TW/releasetest/default/default/default/update.xml?force=1 complete moz20-firefox-linux64-major.cfg 3
+# https://aus4.mozilla.org/update/3/Firefox/18.0/20130104154748/Linux_x86_64-gcc3/zu/releasetest/default/default/default/update.xml?force=1 complete moz20-firefox-linux64.cfg 7
+# https://aus4.mozilla.org/update/3/Firefox/19.0/20130215130331/Linux_x86_64-gcc3/ach/releasetest/default/default/default/update.xml?force=1 complete,partial moz20-firefox-linux64-major.cfg 11
+# https://aus4.mozilla.org/update/3/Firefox/19.0/20130215130331/Linux_x86_64-gcc3/af/releasetest/default/default/default/update.xml?force=1 complete,partial moz20-firefox-linux64.cfg 17
 update_xml_urls="$(mktemp -t update_xml_urls.XXXXXXXXXX)"
 
 ####################################################################################
@@ -211,7 +211,7 @@ update_xml_urls="$(mktemp -t update_xml_urls.XXXXXXXXXX)"
 # output of the error code, and the instance data for the failure.
 # e.g.
 #
-# PATCH_TYPE_MISSING https://aus2.mozilla.org/update/3/Firefox/4.0b12/20110222205441/Linux_x86-gcc3/dummy-locale/releasetest/update.xml?force=1 complete https://aus3.mozilla.org/update/3/Firefox/4.0b12/20110222205441/Linux_x86-gcc3/dummy-locale/releasetest/default/default/default/update.xml?force=1
+# PATCH_TYPE_MISSING https://aus4.mozilla.org/update/3/Firefox/4.0b12/20110222205441/Linux_x86-gcc3/dummy-locale/releasetest/update.xml?force=1 complete https://aus4.mozilla.org/update/3/Firefox/4.0b12/20110222205441/Linux_x86-gcc3/dummy-locale/releasetest/default/default/default/update.xml?force=1
 #
 # 2) mktemp -t update_xml_to_mar.XXXXXXXXXX
 #
@@ -247,11 +247,11 @@ update_xml_urls="$(mktemp -t update_xml_urls.XXXXXXXXXX)"
 
 # generate full list of update.xml urls, followed by patch types,
 # as defined in the specified config files - and write into "${update_xml_urls}" file
-aus_server="https://aus2.mozilla.org"
+aus_server="https://aus4.mozilla.org"
 for cfg_file in "${@}"
 do
     line_no=0
-    sed -e 's/localtest/cdntest/;s/betatest/releasetest/;s/esrtest/releasetest/' "${cfg_file}" | while read config_line
+    sed -e 's/localtest/cdntest/' "${cfg_file}" | while read config_line
     do
         let line_no++
         # to avoid contamination between iterations, reset variables

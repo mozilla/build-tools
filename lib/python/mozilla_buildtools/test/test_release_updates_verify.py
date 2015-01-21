@@ -72,7 +72,7 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         uvc2.product = "Firefox"
         uvc2.platform = "Linux_x86-gcc3"
         uvc2.channel = "betatest"
-        uvc2.aus_server = "https://aus2.mozilla.org"
+        uvc2.aus_server = "https://aus4.mozilla.org"
         uvc2.to = "/firefox/4.0rc2.tar.bz2"
         uvc2.addRelease("4.0", build_id="888",
                         locales=["af", "de", "en-US", "ja", "zh-TW"],
@@ -103,7 +103,7 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         self.uvc.product = "Firefox"
         self.uvc.platform = "Linux_x86-gcc3"
         self.uvc.channel = "betatest"
-        self.uvc.aus_server = "https://aus2.mozilla.org"
+        self.uvc.aus_server = "https://aus4.mozilla.org"
         self.uvc.to = "/firefox/4.0rc2.tar.bz2"
         self.uvc.addRelease("4.0", build_id="888",
                             locales=("af", "de", "en-US", "ja", "zh-TW"),
@@ -150,7 +150,7 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         uvc2.product = "Firefox"
         uvc2.platform = "Linux_x86-gcc3"
         uvc2.channel = "betatest"
-        uvc2.aus_server = "https://aus2.mozilla.org"
+        uvc2.aus_server = "https://aus4.mozilla.org"
         uvc2.to = "/firefox/4.0rc2.tar.bz2"
         uvc2.addRelease("4.0", build_id="888",
                         locales=["af", "de", "en-US"],
@@ -172,7 +172,7 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         self.uvc.product = "Firefox"
         self.uvc.platform = "Linux_x86-gcc3"
         self.uvc.channel = "betatest"
-        self.uvc.aus_server = "https://aus2.mozilla.org"
+        self.uvc.aus_server = "https://aus4.mozilla.org"
         self.uvc.ftp_server_from = "stage.mozilla.org/firefox"
         self.uvc.ftp_server_to = "stage.mozilla.org/firefox"
         self.uvc.to = "/firefox/Firefox 4.0 Beta 2.exe"
@@ -184,7 +184,7 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         uvc2.product = "Firefox"
         uvc2.platform = "Linux_x86-gcc3"
         uvc2.channel = "betatest"
-        uvc2.aus_server = "https://aus2.mozilla.org"
+        uvc2.aus_server = "https://aus4.mozilla.org"
         uvc2.ftp_server_from = "stage.mozilla.org/firefox"
         uvc2.ftp_server_to = "stage.mozilla.org/firefox"
         uvc2.to = "/firefox/Firefox 4.0 Beta 2.exe"
@@ -226,7 +226,7 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         uvc2.product = "Firefox"
         uvc2.platform = "Linux_x86-gcc3"
         uvc2.channel = "betatest"
-        uvc2.aus_server = "https://aus2.mozilla.org"
+        uvc2.aus_server = "https://aus4.mozilla.org"
         uvc2.to = "/firefox/4.0rc2.tar.bz2"
         uvc2.addRelease("4.0", build_id="888",
                         locales=["af", "de", "en-US", "ja", "zh-TW"],
@@ -251,7 +251,7 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         uvc2.product = "Firefox"
         uvc2.platform = "Linux_x86-gcc3"
         uvc2.channel = "betatest"
-        uvc2.aus_server = "https://aus2.mozilla.org"
+        uvc2.aus_server = "https://aus4.mozilla.org"
         uvc2.to = "/firefox/4.0rc2.tar.bz2"
         uvc2.addRelease("4.0b12", build_id="777",
                         locales=["de", "ja", "zh-TW"],

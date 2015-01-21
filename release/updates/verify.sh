@@ -12,7 +12,7 @@ create_cache
 
 ftp_server_to="http://stage.mozilla.org/pub/mozilla.org"
 ftp_server_from="http://stage.mozilla.org/pub/mozilla.org"
-aus_server="https://aus2.mozilla.org"
+aus_server="https://aus4.mozilla.org"
 to=""
 
 pushd `dirname $0` &>/dev/null
