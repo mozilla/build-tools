@@ -39,7 +39,7 @@ export PATH=/usr/local/bin:$PATH
 
 # Sleep time after a failure, in seconds.
 SLEEP_TIME=60
-NOTIFY_TO=$(grep "notify_to:" $CONFIG|sed -e "s|.*<\(.*\)>|\1|g")
+NOTIFY_TO=$(grep "notify_to:" $CONFIG|perl -pe 's/.*?<(.*?)>/$1 /g')
 if [ -z "$NOTIFY_TO" ]; then
     NOTIFY_TO="release@mozilla.com"
 fi
