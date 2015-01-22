@@ -11,7 +11,9 @@ DEFAULT_REPO="https://hg.mozilla.org/integration/mozilla-inbound"
 
 function usage() {
   echo "Usage: $0 [-m mirror_url] [-b bundle_url] [-r revision] [--dep] variant"
-  echo "PROPERTIES_FILE must be set for an automation build"
+  if [ -z "$PROPERTIES_FILE" ]; then
+    echo "PROPERTIES_FILE must be set for an automation build"
+  fi
 }
 
 # It doesn't work to just pull from try. If you try to pull the full repo,
@@ -20,7 +22,8 @@ function usage() {
 # --bundle and/or --mirror.
 hgtool_args=()
 noclean=""
-while [ $# -gt 1 ]; do
+VARIANT=""
+while [ $# -gt 0 ]; do
     case "$1" in
         -m|--mirror)
             shift
@@ -55,14 +58,22 @@ while [ $# -gt 1 ]; do
             shift
             ;;
         *)
-            echo "Invalid arguments" >&2
-            usage
-            exit 1
+            if [ -z "$VARIANT" ]; then
+                VARIANT="$1"
+                shift
+            else
+                echo "Invalid arguments: multiple variants detected" >&2
+                usage
+                exit 1
+            fi
             ;;
     esac
 done
 
-VARIANT="$1"
+if [ -z "$VARIANT" ]; then
+    usage
+    exit 1
+fi
 
 if [ -n "$PROPERTIES_FILE" ]; then
     if ! [ -f "$PROPERTIES_FILE" ]; then
