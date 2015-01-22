@@ -88,8 +88,8 @@ def CopyFileToDir(original_file, source_dir, dest_dir, preserve_dirs=False):
             # If the file gets deleted by another instance of post_upload
             # because there was a name collision this improves the situation
             # as to not abort the process but continue with the next file
-            print "Warning: The file %s has already been unlinked by " + \
-                  "another instance of post_upload.py" % new_file
+            print "Warning: The file %s has already been unlinked by " % new_file + \
+                  "another instance of post_upload.py"
             return
 
     # Try hard linking the file
