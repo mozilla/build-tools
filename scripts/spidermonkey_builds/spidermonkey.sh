@@ -128,7 +128,7 @@ else
           echo "Error: tooltool base url not set (use --ttserver command line option or TT_SERVER environment variable)" >&2
           exit 1
       fi
-      $SCRIPTS_DIR/scripts/tooltool/tooltool_wrapper.sh $SOURCE/browser/config/tooltool-manifests/$platform/releng.manifest $TT_SERVER setup.sh c:\mozilla-build\python27\python.exe C:/mozilla-build/tooltool.py
+      $SCRIPTS_DIR/scripts/tooltool/tooltool_wrapper.sh $SOURCE/browser/config/tooltool-manifests/${platform%-debug}/releng.manifest $TT_SERVER setup.sh 'c:\mozilla-build\python27\python.exe' C:/mozilla-build/tooltool.py
   fi
 fi
 
