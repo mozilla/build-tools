@@ -39,7 +39,8 @@ fi
 
 case "${opt}" in
     gettac)
-        ${retry} --stderr-regexp 'ERROR 404: Not Found' --fail-if-match \
+        # The '[ ]' in the regexp is necessary to avoid log parser false positives.
+        ${retry} --stderr-regexp 'ERROR[ ]404: Not Found' --fail-if-match \
                 wget -q "-O${DEVICE_PATH}/buildbot.tac.new" "http://slavealloc.pvt.build.mozilla.org/gettac/${DEVICE}"
         if [ -s "${DEVICE_PATH}/buildbot.tac.new" ]; then
             rm -f "${DEVICE_PATH}/buildbot.tac"
