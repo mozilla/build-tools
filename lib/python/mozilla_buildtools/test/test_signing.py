@@ -142,14 +142,6 @@ class TestFileParsing(TestCase):
                 platform='win32', contents='installer', format='exe',
                 pathstyle='long', leading_path=''))
 
-    def testLongPathEUBallotBuild(self):
-        self._doFileInfoTest(
-            'unsigned/win32-EUballot/de/Firefox Setup 3.6.14.exe',
-            'firefox',
-            dict(product='firefox', version='3.6.14', locale='de',
-                 platform='win32', contents='installer', format='exe',
-                 pathstyle='long', leading_path='win32-EUballot/'))
-
     def testLongPathPartnerRepack(self):
         self._doFileInfoTest(
             'unsigned/partner-repacks/chinapack-win32/win32/zh-CN/Firefox Setup 3.6.14.exe',
