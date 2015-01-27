@@ -264,7 +264,9 @@ if __name__ == '__main__':
     l10nRevisionFile = path.join(
         'buildbot-configs', configDir, config['l10nRevisionFile'])
     l10nRepos = getL10nRepositories(
-        open(l10nRevisionFile).read(), config['l10nRepoPath'])
+        open(l10nRevisionFile).read(), config['l10nRepoPath'],
+        ignore_locales=["ach", "af", "an", "ar", "as", "ast", "az", "be"],
+    )
 
     if options.tag_source:
         for repo in config['sourceRepositories'].values():

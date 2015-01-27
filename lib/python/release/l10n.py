@@ -44,7 +44,8 @@ def parsePlainL10nChangesets(changesets):
     return ret
 
 
-def getL10nRepositories(changesets, l10nRepoPath, relbranch=None):
+def getL10nRepositories(changesets, l10nRepoPath, relbranch=None,
+                        ignore_locales=[]):
     """Parses a list of locale names and revisions for their associated
        repository from the 'changesets' string passed in."""
     # urljoin() will strip the last part of l10nRepoPath it doesn't end with
@@ -54,6 +55,8 @@ def getL10nRepositories(changesets, l10nRepoPath, relbranch=None):
     repositories = {}
     try:
         for locale, data in json.loads(changesets).iteritems():
+            if locale in ignore_locales:
+                continue
             locale = urljoin(l10nRepoPath, locale)
             repositories[locale] = {
                 'revision': data['revision'],
