@@ -196,7 +196,7 @@ def ReleaseToLatest(options, upload_dir, files):
         elif filename in ('mar', 'mar.exe', 'mbsdiff', 'mbsdiff.exe'):
             if options.tinderbox_builds_dir:
                 platform = options.tinderbox_builds_dir.split('-')[-1]
-                if platform in ('win32', 'macosx64', 'linux', 'linux64'):
+                if platform in ('win32', 'macosx64', 'linux', 'linux64', 'win64'):
                     CopyFileToDir(f, upload_dir, '%s/%s' % (marToolsPath, platform))
         else:
             CopyFileToDir(f, upload_dir, latestPath)
@@ -319,7 +319,7 @@ def ReleaseToCandidatesDir(options, upload_dir, files):
         if filename in ('mar', 'mar.exe', 'mbsdiff', 'mbsdiff.exe'):
             if options.tinderbox_builds_dir:
                 platform = options.tinderbox_builds_dir.split('-')[-1]
-                if platform in ('win32', 'macosx64', 'linux', 'linux64'):
+                if platform in ('win32', 'macosx64', 'linux', 'linux64', 'win64'):
                     CopyFileToDir(f, upload_dir, '%s/%s' % (marToolsPath, platform))
         else:
             CopyFileToDir(f, upload_dir, realCandidatesPath, preserve_dirs=True)
