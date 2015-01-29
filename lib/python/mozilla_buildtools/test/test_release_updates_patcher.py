@@ -85,12 +85,14 @@ samplePatcherConfigObj['release'] = {
         'schema': 2,
         'version': '13.0',
         'exceptions': {
-            'ja': ['win32'],
+            'ja': ['win32', 'win64'],
             'ja-JP-mac': ['mac'],
         },
+        # Add win64 here (and in 13.0.1) to make sure platform additions work.
         'platforms': {
             'mac': 32345,
             'win32': 32345,
+            'win64': 32345,
         },
     },
     '13.0.1': {
@@ -104,12 +106,13 @@ samplePatcherConfigObj['release'] = {
         'schema': 2,
         'version': '13.0.1',
         'exceptions': {
-            'ja': ['win32'],
+            'ja': ['win32', 'win64'],
             'ja-JP-mac': ['mac'],
         },
         'platforms': {
             'mac': 42345,
             'win32': 42345,
+            'win64': 42345,
         },
     },
 }
@@ -158,6 +161,10 @@ class TestPatcherConfig(unittest.TestCase):
             ('13.0', 'win32', 'en-US', ('betatest',
              'releasetest', 'release'), ('complete', 'partial')),
             ('13.0', 'win32', 'ja', ('betatest', 'releasetest',
+             'release'), ('complete', 'partial')),
+            ('13.0', 'win64', 'en-US', ('betatest',
+             'releasetest', 'release'), ('complete', 'partial')),
+            ('13.0', 'win64', 'ja', ('betatest', 'releasetest',
              'release'), ('complete', 'partial')),
         )
         got = []

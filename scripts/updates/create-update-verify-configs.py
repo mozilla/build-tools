@@ -105,6 +105,7 @@ if __name__ == "__main__":
 
     # Current version data
     pc = PatcherConfig(open(options.config).read())
+    partials = pc['current-update']['partials'].keys()
     app_name = pc['appName']
     to_version = pc['current-update']['to']
     to_ = makeReleaseRepackUrls(
@@ -114,46 +115,37 @@ if __name__ == "__main__":
     candidates_dir = makeCandidatesDir(
         product_name, to_version, build_number, ftp_root='/')
     to_path = "%s%s" % (candidates_dir, to_)
-
-    partials = pc['current-update']['partials'].keys()
-    # Exclude current version from update verify
-    completes = pc.getFromVersions()
-
     uvc = UpdateVerifyConfig(product=app_name, platform=update_platform,
                              channel=options.channel,
                              aus_server=aus_server_url, to=to_path)
-    to_locales = pc['release'][to_version]['locales']
-    # remove exceptions for to build, e.g. "ja" for mac
-    for locale, platforms in pc['release'][to_version]['exceptions'].iteritems():
-        if ftp_platform not in platforms and locale in to_locales:
-            log.info("Removing %s locale from %s platform for %s" % (
-                     locale, ftp_platform, to_version))
-            to_locales.remove(locale)
-    # Drop locales which are in full_check_locales but not in to_locales
-    for locale in list(full_check_locales):
-        if locale not in to_locales:
-            log.warn("Dropping %s locale from the full check list because it"
-                     " is dropped in %s" % (locale, to_version))
-            full_check_locales.remove(locale)
 
-    for v in reversed(sorted(completes, key=LooseVersion)):
-        appVersion = pc['release'][v]['extension-version']
-        build_id = pc['release'][v]['platforms'][ftp_platform]
-        mar_channel_IDs = pc['release'][v].get('mar-channel-ids')
-        # Calculate locales which are common for the current version and
-        # to_version
-        locales = list(pc['release'][v]['locales'])
-        for locale in list(locales):
-            if locale not in to_locales:
-                log.warn("Not generating updates for %s locale because it is"
-                         " dropped in %s" % (locale, to_version))
-                locales.remove(locale)
-        # remove exceptions, e.g. "ja" for mac
-        for locale, platforms in pc['release'][v]['exceptions'].iteritems():
-            if ftp_platform not in platforms and locale in locales:
-                log.info("Removing %s locale from %s platform for %s" % (
-                         locale, ftp_platform, v))
-                locales.remove(locale)
+    # getUpdatePaths yields all of the update paths, but we need to know
+    # everything about a fromVersion before we can add it to the update
+    # verify config, so we need to collect everything it yields before
+    # acting on it.
+    updatePaths = {}
+    for fromVersion, platform, locale, _, _ in pc.getUpdatePaths():
+        # Skip paths from platforms we don't care about.
+        if platform != ftp_platform:
+            continue
+        if fromVersion not in updatePaths:
+            updatePaths[fromVersion] = []
+        updatePaths[fromVersion].append(locale)
+
+    for fromVersion in reversed(sorted(updatePaths, key=LooseVersion)):
+        locales = updatePaths[fromVersion]
+        from_ = pc["release"][fromVersion]
+        appVersion = from_["extension-version"]
+        build_id = from_["platforms"][ftp_platform]
+        mar_channel_IDs = from_.get('mar-channel-ids')
+
+        path_ = makeReleaseRepackUrls(
+            product_name, app_name, fromVersion, options.platform,
+            locale='%locale%', signed=True, exclude_secondary=True
+        ).values()[0]
+        release_dir = makeReleasesDir(product_name, fromVersion, ftp_root='/')
+        from_path = "%s%s" % (release_dir, path_)
+
         # Exclude locales being full checked
         quick_check_locales = [l for l in locales
                                if l not in full_check_locales]
@@ -161,31 +153,17 @@ if __name__ == "__main__":
         this_full_check_locales = [l for l in full_check_locales
                                    if l in locales]
 
-        from_ = makeReleaseRepackUrls(
-            product_name, app_name, v, options.platform,
-            locale='%locale%', signed=True, exclude_secondary=True
-        ).values()[0]
-        release_dir = makeReleasesDir(product_name, v, ftp_root='/')
-        from_path = "%s%s" % (release_dir, from_)
-
-        if v in partials:
-            # Full test for all locales
-            # "from" and "to" to be downloaded from the same staging
-            # server in dev environment
-            if len(locales) > 0:
-                log.info("Generating configs for partial update checks for %s" % v)
-                uvc.addRelease(release=appVersion, build_id=build_id,
-                               locales=locales,
-                               patch_types=['complete', 'partial'],
-                               from_path=from_path, ftp_server_from=staging_server,
-                               ftp_server_to=staging_server,
-                               mar_channel_IDs=mar_channel_IDs)
+        if fromVersion in partials:
+            log.info("Generating configs for partial update checks for %s" % fromVersion)
+            uvc.addRelease(release=appVersion, build_id=build_id,
+                           locales=locales,
+                           patch_types=["complete", "partial"],
+                           from_path=from_path, ftp_server_from=staging_server,
+                           ftp_server_to=staging_server,
+                           mar_channel_IDs=mar_channel_IDs)
         else:
-            # Full test for limited locales
-            # "from" and "to" to be downloaded from different staging
-            # server in dev environment
             if len(this_full_check_locales) > 0:
-                log.info("Generating full check configs for %s" % v)
+                log.info("Generating full check configs for %s" % fromVersion)
                 uvc.addRelease(release=appVersion, build_id=build_id,
                                locales=this_full_check_locales, from_path=from_path,
                                ftp_server_from=previous_releases_staging_server,
@@ -193,8 +171,9 @@ if __name__ == "__main__":
                                mar_channel_IDs=mar_channel_IDs)
             # Quick test for other locales, no download
             if len(quick_check_locales) > 0:
-                log.info("Generating quick check configs for %s" % v)
+                log.info("Generating quick check configs for %s" % fromVersion)
                 uvc.addRelease(release=appVersion, build_id=build_id,
                                locales=quick_check_locales)
+
     f = open(options.output, 'w')
     uvc.write(f)
