@@ -789,11 +789,6 @@
         "relayhost": "panda-relay-016.p2.releng.scl3.mozilla.com",
         "relayid": "2:3"
     },
-    "panda-0188": {
-        "foopy": "foopy47",
-        "relayhost": "panda-relay-016.p2.releng.scl3.mozilla.com",
-        "relayid": "2:4"
-    },
     "panda-0189": {
         "foopy": "foopy47",
         "relayhost": "panda-relay-016.p2.releng.scl3.mozilla.com",
@@ -1108,11 +1103,6 @@
         "foopy": "foopy52",
         "relayhost": "panda-relay-022.p2.releng.scl3.mozilla.com",
         "relayid": "2:5"
-    },
-    "panda-0256": {
-        "foopy": "foopy52",
-        "relayhost": "panda-relay-022.p2.releng.scl3.mozilla.com",
-        "relayid": "2:6"
     },
     "panda-0258": {
         "foopy": "foopy53",
@@ -1638,11 +1628,6 @@
         "foopy": "foopy61",
         "relayhost": "panda-relay-032.p4.releng.scl3.mozilla.com",
         "relayid": "2:7"
-    },
-    "panda-0368": {
-        "foopy": "foopy61",
-        "relayhost": "panda-relay-033.p4.releng.scl3.mozilla.com",
-        "relayid": "1:1"
     },
     "panda-0369": {
         "foopy": "foopy61",
@@ -2259,11 +2244,6 @@
         "relayhost": "panda-relay-045.p5.releng.scl3.mozilla.com",
         "relayid": "1:1"
     },
-    "panda-0501": {
-        "foopy": "foopy72",
-        "relayhost": "panda-relay-045.p5.releng.scl3.mozilla.com",
-        "relayid": "1:2"
-    },
     "panda-0502": {
         "foopy": "foopy72",
         "relayhost": "panda-relay-045.p5.releng.scl3.mozilla.com",
@@ -2878,11 +2858,6 @@
         "foopy": "foopy79",
         "relayhost": "panda-relay-053.p6.releng.scl3.mozilla.com",
         "relayid": "1:1"
-    },
-    "panda-0635": {
-        "foopy": "foopy79",
-        "relayhost": "panda-relay-053.p6.releng.scl3.mozilla.com",
-        "relayid": "2:1"
     },
     "panda-0874": {
         "foopy": "foopy107",
