@@ -12,6 +12,8 @@ Usage: `basename $0` [-n] [-c] [-d] [-a]
            [-u hg_ssh_user]
            [-k hg_ssh_key]
            [-r existing_repo_dir]
+           # Use mozilla-central builds to check HSTS & HPKP
+           [--use-mozilla-central]
            # One (or more) of the following actions must be specified.
            --hsts | --hpkp | --blocklist
            -b branch
@@ -67,7 +69,8 @@ UNZIP="unzip -q"
 DIFF="diff -up"
 BASEDIR=`pwd`
 VERSION=''
-MC_VERSION=''
+MCVERSION=''
+USE_MC=false
 
 DO_HSTS=false
 HSTS_PRELOAD_SCRIPT="getHSTSPreloadList.js"
@@ -90,18 +93,12 @@ BLOCKLIST_UPDATED=false
 
 # Get the current in-tree version for a code branch.
 function get_version {
-    VERSION_BRANCH=$1
+    VERSION_REPO=$1
     VERSION_FILE='version.txt'
-    VERSION_REPO=${HGREPO}
-    if [ "${VERSION_BRANCH}" == "mozilla-central" ]; then
-        VERSION_REPO=${MCHGREPO}
-    fi
-    cd "${BASEDIR}"
-    echo "INFO: Retrieving current version from ${VERSION_BRANCH}..."
 
+    cd "${BASEDIR}"
     VERSION_URL_HG="${VERSION_REPO}/raw-file/default/${APP_DIR}/config/version.txt"
     rm -f ${VERSION_FILE}
-    echo "INFO: ${WGET} --no-check-certificate -O ${VERSION_FILE} ${VERSION_URL_HG}"
     ${WGET} --no-check-certificate -O ${VERSION_FILE} ${VERSION_URL_HG}
     WGET_STATUS=$?
     if [ ${WGET_STATUS} != 0 ]; then
@@ -109,17 +106,12 @@ function get_version {
         exit ${WGET_STATUS}
     fi
     PARSED_VERSION=`cat version.txt`
-    echo "INFO: parsed version is ${PARSED_VERSION}"
     if [ "${PARSED_VERSION}" == "" ]; then
         echo "ERROR: Unable to parse version from $VERSION_FILE" >&2
         exit 21
     fi
-    if [ "${VERSION_BRANCH}" == "mozilla-central" ]; then
-        MC_VERSION=${PARSED_VERSION}
-    else
-        VERSION=${PARSED_VERSION}
-    fi
     rm -f ${VERSION_FILE}
+    echo ${PARSED_VERSION}
 }
 
 # Cleanup common artifacts.
@@ -503,6 +495,7 @@ while [ $# -gt 0 ]; do
         -r) REPODIR="$2"; shift;;
         --mirror) MIRROR="$2"; shift;;
         --bundle) BUNDLE="$2"; shift;;
+        --use-mozilla-central) USE_MC=true;;
         -*) usage
             exit 11;;
         *)  break;; # terminate while loop
@@ -530,23 +523,27 @@ fi
 
 HGREPO="http://${HGHOST}/${BRANCH}"
 HGPUSHREPO="ssh://${HGHOST}/${BRANCH}"
-MCHGREPO="http://${HGHOST}/mozilla-central"
+MCREPO="http://${HGHOST}/mozilla-central"
 
-get_version $BRANCH
-if [ "${BRANCH}" == "mozilla-central" ]; then
-    VERSION=${MC_VERSION}
-else
-    get_version "mozilla-central"
+VERSION=$(get_version ${HGREPO})
+echo "INFO: parsed version is ${VERSION}"
+if [ "${USE_MC}" == "true" ]; then
+    MCVERSION=$(get_version ${MCREPO})
+    echo "INFO: parsed mozilla-central version is ${MCVERSION}"
 fi
 
-# Bug 1093295 - Use the mozilla-central version of build + test archive.
-# This ensures that we will always have the most current abilities
-# available in the test harnesses, even when updating older branches
-# like ESR.
-BROWSER_ARCHIVE="${PRODUCT}-${MC_VERSION}.en-US.${PLATFORM}.${PLATFORM_EXT}"
-BROWSER_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/nightly/latest-mozilla-central/${BROWSER_ARCHIVE}"
-TESTS_ARCHIVE="${PRODUCT}-${MC_VERSION}.en-US.${PLATFORM}.tests.zip"
-TESTS_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/nightly/latest-mozilla-central/${TESTS_ARCHIVE}"
+# Bug 1093295 - Use the mozilla-central version of build + test archive
+# for branches where we do not have latest builds (e.g. beta)
+BROWSER_ARCHIVE="${PRODUCT}-${VERSION}.en-US.${PLATFORM}.${PLATFORM_EXT}"
+BROWSER_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/nightly/latest-${REPODIR}/${BROWSER_ARCHIVE}"
+TESTS_ARCHIVE="${PRODUCT}-${VERSION}.en-US.${PLATFORM}.tests.zip"
+TESTS_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/nightly/latest-${REPODIR}/${TESTS_ARCHIVE}"
+if [ "${USE_MC}" == "true" ]; then
+    BROWSER_ARCHIVE="${PRODUCT}-${MCVERSION}.en-US.${PLATFORM}.${PLATFORM_EXT}"
+    BROWSER_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/nightly/latest-mozilla-central/${BROWSER_ARCHIVE}"
+    TESTS_ARCHIVE="${PRODUCT}-${MCVERSION}.en-US.${PLATFORM}.tests.zip"
+    TESTS_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/nightly/latest-mozilla-central/${TESTS_ARCHIVE}"
+fi
 
 # Try to find hgtool if it hasn't been set.
 if [ ! -f "${HGTOOL}" ]; then
