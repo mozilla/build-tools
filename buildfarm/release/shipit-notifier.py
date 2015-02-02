@@ -122,4 +122,9 @@ def main():
     pulse.listen()
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception:
+        # Supervisor disables a service if it fails too often and too fast.
+        import time
+        time.sleep(120)
