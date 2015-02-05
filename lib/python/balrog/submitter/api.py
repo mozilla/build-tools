@@ -41,7 +41,7 @@ class API(object):
     url_template = None
     prerequest_url_template = None
 
-    def __init__(self, api_root='https://aus4-admin-dev.allizom.org',
+    def __init__(self, api_root='https://aus4-admin-dev.allizom.org/api',
                  auth=None, ca_certs=CA_BUNDLE, timeout=60, raise_exceptions=True):
         """ Creates an API object which wraps REST API of Balrog server.
 

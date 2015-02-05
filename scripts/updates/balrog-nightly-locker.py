@@ -17,7 +17,7 @@ if __name__ == '__main__':
     parser = ArgumentParser()
 
     parser.add_argument("-a", "--api-root", dest="api_root", required=True,
-        help="The root of the Balrog API. Eg: https://aus4-admin-dev.allizom.org")
+        help="The root of the Balrog API. Eg: https://aus4-admin-dev.allizom.org/api")
     parser.add_argument("-c", "--credentials-file", dest="credentials_file", required=True,
         help="""The file containing the credentials to use when authenticating to Balrog.
              It must containing a dict called "balrog_credentials" which must have a key
