@@ -1442,10 +1442,10 @@
     "buildbot_setup": "/builds/buildbot/tests1-linux/buildbot/master/setup.py",
     "buildbot_version": "0.8.2",
     "datacentre": "scl3",
-    "db_name": "buildbot-master103.srv.releng.scl3.mozilla.com:/builds/buildbot/tests1-linux/master",
-    "enabled": true,
+    "db_name": "buildbot-master103.bb.releng.scl3.mozilla.com:/builds/buildbot/tests1-linux/master",
+    "enabled": false,
     "environment": "production",
-    "hostname": "buildbot-master103.srv.releng.scl3.mozilla.com",
+    "hostname": "buildbot-master103.bb.releng.scl3.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
       "linux",
