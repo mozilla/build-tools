@@ -1,5 +1,4 @@
 # buildbot -> bouncer platform mapping
-# TODO: make sure 'win64' is correct when Bouncer becomes aware of
 # 64-bit windows
 try:
     import simplejson as json
@@ -17,7 +16,7 @@ ftp_platform_map = {'win32': 'win32', 'win64': 'win64', 'macosx': 'mac',
                     'android-xul': 'android-xul'}
 # buildbot -> shipped-locales platform mapping
 # TODO: make sure 'win64' is correct when shipped-locales becomes aware of it
-sl_platform_map = {'win32': 'win32', 'win64': 'win64', 'macosx': 'osx',
+sl_platform_map = {'win32': 'win32', 'win64': 'win32', 'macosx': 'osx',
                    'linux': 'linux', 'linux64': 'linux', 'macosx64': 'osx'}
 # buildbot -> update platform mapping
 update_platform_map = {
