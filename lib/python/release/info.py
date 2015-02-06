@@ -179,7 +179,7 @@ def fileInfo(filepath, product):
         ret = {'pathstyle': 'long'}
         if filepath.endswith('.mar'):
             ret['format'] = 'mar'
-            m = re.search(r"update/(win32|linux-i686|linux-x86_64|mac|mac64)/([-a-zA-Z]+)/(%s)-(?:(\d+\.\d+(?:\.\d+)?(?:\w+(?:\d+)?)?)-)?(\d+\.\d+(?:\.\d+)?(?:\w+(?:\d+)?)?)\.(complete|partial)\.mar" % product, filepath)
+            m = re.search(r"update/(win32|win64|linux-i686|linux-x86_64|mac|mac64)/([-a-zA-Z]+)/(%s)-(?:(\d+\.\d+(?:\.\d+)?(?:\w+(?:\d+)?)?)-)?(\d+\.\d+(?:\.\d+)?(?:\w+(?:\d+)?)?)\.(complete|partial)\.mar" % product, filepath)
             if not m:
                 raise ValueError("Could not parse: %s" % filepath)
             ret['platform'] = m.group(1)
@@ -192,7 +192,7 @@ def fileInfo(filepath, product):
         elif filepath.endswith('.exe'):
             ret['format'] = 'exe'
             ret['contents'] = 'installer'
-            m = re.search(r"(partner-repacks/[-a-zA-Z0-9_]+/|)(win32|mac|linux-i686)/([-a-zA-Z]+)/((?i)%s) Setup (\d+\.\d+(?:\.\d+)?(?:\w+(?:\d+)?)?(?:\ \w+\ \d+)?)\.exe" % product, filepath)
+            m = re.search(r"(partner-repacks/[-a-zA-Z0-9_]+/|)(win32|win64|mac|linux-i686)/([-a-zA-Z]+)/((?i)%s) Setup (\d+\.\d+(?:\.\d+)?(?:\w+(?:\d+)?)?(?:\ \w+\ \d+)?)\.exe" % product, filepath)
             if not m:
                 raise ValueError("Could not parse: %s" % filepath)
             ret['leading_path'] = m.group(1)
