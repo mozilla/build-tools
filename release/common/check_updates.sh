@@ -28,7 +28,7 @@ check_updates () {
           updater="Contents/MacOS/updater.app/Contents/MacOS/updater"
           binary_file_pattern='^Binary files'
           ;;
-      WINNT_x86-msvc) 
+      WINNT*) 
           platform_dirname="bin"
           updater="updater.exe"
           binary_file_pattern='^Files.*and.*differ$'
