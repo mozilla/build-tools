@@ -149,7 +149,7 @@ def verify_l10n_changesets(hgHost, l10n_changesets):
         success = retry(get_l10n_changesets,
                         kwargs=dict(locale_url=locale_url), attempts=3,
                         sleeptime=1, retry_exceptions=(urllib2.HTTPError,))
-        if success == False:
+        if not success:
             error_tally.add('verify_l10n')
     return success
 
@@ -238,13 +238,18 @@ def verify_options(cmd_options, config):
     return success
 
 
-def verify_partial(platforms, product, version, build_number, protocol='http',
+def verify_partial(platforms, product, version, build_number, HACK_first_released_versions, protocol='http',
                    server='ftp.mozilla.org'):
 
+    from distutils.version import LooseVersion
     partial = Partial(product, version, build_number, protocol, server)
     log.info("Checking for existence of %s complete mar file..." % partial)
     complete_mar_name = partial.complete_mar_name()
     for platform in platforms:
+        if platform in HACK_first_released_versions:
+            if LooseVersion(version) < LooseVersion(HACK_first_released_versions[platform]):
+                # No partial for this!
+                continue
         log.info("Platform: %s" % platform)
         complete_mar_url = partial.complete_mar_url(platform=platform)
         if partial.exists(platform=platform):
@@ -517,7 +522,9 @@ if __name__ == '__main__':
                     # but it might have a value for betas (beta *might* use
                     # unreleased builds see bug 1091694 c2)
                     if not verify_partial(platforms, product, partial,
-                                          build_number):
+                                          build_number,
+                                          releaseConfig["HACK_first_released_version"],
+                                          server=releaseConfig['ftpServer']):
                         test_success = False
                         log.error("Error verifying partials")
 

@@ -6,6 +6,7 @@ from os import path
 from traceback import format_exc, print_exc
 import site
 import sys
+from distutils.version import LooseVersion
 
 site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 site.addsitedir(path.join(path.dirname(__file__), "../../lib/python/vendor"))
@@ -46,7 +47,7 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                   balrog_submitter=None, balrog_hash="sha512",
                   mozillaDir=None, mozillaSrcDir=None):
     buildid = retry(getBuildID, args=(platform, product, version,
-                                      buildNumber, 'candidates'))
+                                      buildNumber, 'candidates', stageServer))
     log.info('Got buildid: %s' % buildid)
     sourceRepoName = path.split(sourceRepo)[-1]
     absObjdir = path.abspath(path.join(sourceRepoName, objdir))
@@ -331,6 +332,15 @@ if __name__ == "__main__":
 
     partialUpdates = releaseConfig.get('partialUpdates', {}).copy()
     partialUpdates.update(releaseConfig.get('extraPartials', {}))
+    # FIXME: the follwong hack can be removed when win64 has the same list of
+    # partial update as other platforms. Check mozilla-esr38 to be sure.
+    if platform in releaseConfig.get('HACK_first_released_version', {}):
+        partialUpdates_copy = {}
+        for k, v in partialUpdates.iteritems():
+            if LooseVersion(k) >= LooseVersion(releaseConfig['HACK_first_released_version'][platform]):
+                partialUpdates_copy[k] = v
+        partialUpdates = partialUpdates_copy
+    # FIXME: end of hack
 
     createRepacks(
         sourceRepo=make_hg_url(branchConfig["hghost"], sourceRepoInfo["path"]),
