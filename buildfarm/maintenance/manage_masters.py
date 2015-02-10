@@ -151,7 +151,6 @@ Supported actions:
     if len(masters) == 0:
         parser.error("No masters matched, check your options -H, -R, -M, -D")
 
-    env.gateway = 'dmitchell@admin1.scl3.mozilla.com'
     env.user = options.username
     if options.ssh_key:
         env.key_filename = options.ssh_key
