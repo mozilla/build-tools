@@ -61,7 +61,7 @@
     "buildbot_version": "0.8.2",
     "datacentre": "aws-us-east-1",
     "db_name": "buildbot-master02.bb.releng.use1.mozilla.com:/builds/buildbot/tests1-linux32/master",
-    "enabled": false,
+    "enabled": true,
     "environment": "production",
     "hostname": "buildbot-master02.bb.releng.use1.mozilla.com",
     "http_port": 8201,
