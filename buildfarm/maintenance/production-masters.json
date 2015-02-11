@@ -2307,5 +2307,297 @@
     "ssh_port": 7201,
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/tests1-windows/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-linux64",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-linux64/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-linux64/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-linux64/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-linux64/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-linux64/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "aws-us-east-1",
+    "db_name": "buildbot-master120.bb.releng.use1.mozilla.com:/builds/buildbot/tests1-linux64/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master120.bb.releng.use1.mozilla.com",
+    "http_port": 8201,
+    "limit_fx_platforms": [
+      "linux64",
+      "linux64-asan",
+      "linux64-cc"
+    ],
+    "limit_fx_slave_platforms": {
+      "linux64": [
+        "ubuntu64_vm"
+      ],
+      "linux64-asan": [
+        "ubuntu64-asan_vm"
+      ],
+      "linux64-cc": [
+        "ubuntu64_vm"
+      ]
+    },
+    "limit_mobile_platforms": [
+      "android",
+      "android-api-9",
+      "android-armv6"
+    ],
+    "limit_tb_platforms": [
+      "linux64"
+    ],
+    "limit_b2g_platforms": [
+      "linux64_gecko",
+      "linux64-mulet",
+      "emulator-jb",
+      "emulator-kk",
+      "emulator"
+    ],
+    "limit_b2g_slave_platforms": {
+      "linux64_gecko": [
+        "ubuntu64_vm-b2gdt"
+      ],
+      "linux64-mulet": [
+        "ubuntu64_vm-mulet"
+      ],
+      "emulator-jb": [
+        "ubuntu64_vm-b2g-emulator-jb"
+      ],
+      "emulator-kk": [
+        "ubuntu64_vm-b2g-emulator-kk"
+      ],
+      "emulator": [
+        "ubuntu64_vm-b2g-emulator"
+      ]
+    },
+    "master_dir": "/builds/buildbot/tests1-linux64/master",
+    "name": "bm120-tests1-linux64",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-linux64/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-linux64",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-linux64/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-linux64/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-linux64/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-linux64/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-linux64/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "aws-us-east-1",
+    "db_name": "buildbot-master121.bb.releng.use1.mozilla.com:/builds/buildbot/tests1-linux64/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master121.bb.releng.use1.mozilla.com",
+    "http_port": 8201,
+    "limit_fx_platforms": [
+      "linux64",
+      "linux64-asan",
+      "linux64-cc"
+    ],
+    "limit_fx_slave_platforms": {
+      "linux64": [
+        "ubuntu64_vm"
+      ],
+      "linux64-asan": [
+        "ubuntu64-asan_vm"
+      ],
+      "linux64-cc": [
+        "ubuntu64_vm"
+      ]
+    },
+    "limit_mobile_platforms": [
+      "android",
+      "android-api-9",
+      "android-armv6"
+    ],
+    "limit_tb_platforms": [
+      "linux64"
+    ],
+    "limit_b2g_platforms": [
+      "linux64_gecko",
+      "linux64-mulet",
+      "emulator-jb",
+      "emulator-kk",
+      "emulator"
+    ],
+    "limit_b2g_slave_platforms": {
+      "linux64_gecko": [
+        "ubuntu64_vm-b2gdt"
+      ],
+      "linux64-mulet": [
+        "ubuntu64_vm-mulet"
+      ],
+      "emulator-jb": [
+        "ubuntu64_vm-b2g-emulator-jb"
+      ],
+      "emulator-kk": [
+        "ubuntu64_vm-b2g-emulator-kk"
+      ],
+      "emulator": [
+        "ubuntu64_vm-b2g-emulator"
+      ]
+    },
+    "master_dir": "/builds/buildbot/tests1-linux64/master",
+    "name": "bm121-tests1-linux64",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-linux64/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-linux64",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-linux64/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-linux64/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-linux64/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-linux64/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-linux64/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "aws-us-east-1",
+    "db_name": "buildbot-master122.bb.releng.usw2.mozilla.com:/builds/buildbot/tests1-linux64/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master122.bb.releng.usw2.mozilla.com",
+    "http_port": 8201,
+    "limit_fx_platforms": [
+      "linux64",
+      "linux64-asan",
+      "linux64-cc"
+    ],
+    "limit_fx_slave_platforms": {
+      "linux64": [
+        "ubuntu64_vm"
+      ],
+      "linux64-asan": [
+        "ubuntu64-asan_vm"
+      ],
+      "linux64-cc": [
+        "ubuntu64_vm"
+      ]
+    },
+    "limit_mobile_platforms": [
+      "android",
+      "android-api-9",
+      "android-armv6"
+    ],
+    "limit_tb_platforms": [
+      "linux64"
+    ],
+    "limit_b2g_platforms": [
+      "linux64_gecko",
+      "linux64-mulet",
+      "emulator-jb",
+      "emulator-kk",
+      "emulator"
+    ],
+    "limit_b2g_slave_platforms": {
+      "linux64_gecko": [
+        "ubuntu64_vm-b2gdt"
+      ],
+      "linux64-mulet": [
+        "ubuntu64_vm-mulet"
+      ],
+      "emulator-jb": [
+        "ubuntu64_vm-b2g-emulator-jb"
+      ],
+      "emulator-kk": [
+        "ubuntu64_vm-b2g-emulator-kk"
+      ],
+      "emulator": [
+        "ubuntu64_vm-b2g-emulator"
+      ]
+    },
+    "master_dir": "/builds/buildbot/tests1-linux64/master",
+    "name": "bm122-tests1-linux64",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-linux64/tools"
+  },
+  {
+    "basedir": "/builds/buildbot/tests1-linux64",
+    "bbconfigs_branch": "production",
+    "bbconfigs_dir": "/builds/buildbot/tests1-linux64/buildbot-configs",
+    "bbcustom_branch": "production-0.8",
+    "bbcustom_dir": "/builds/buildbot/tests1-linux64/buildbotcustom",
+    "buildbot_bin": "/builds/buildbot/tests1-linux64/bin/buildbot",
+    "buildbot_branch": "production-0.8",
+    "buildbot_python": "/builds/buildbot/tests1-linux64/bin/python",
+    "buildbot_setup": "/builds/buildbot/tests1-linux64/buildbot/master/setup.py",
+    "buildbot_version": "0.8.2",
+    "datacentre": "aws-us-east-1",
+    "db_name": "buildbot-master123.bb.releng.usw2.mozilla.com:/builds/buildbot/tests1-linux64/master",
+    "enabled": false,
+    "environment": "production",
+    "hostname": "buildbot-master123.bb.releng.usw2.mozilla.com",
+    "http_port": 8201,
+    "limit_fx_platforms": [
+      "linux64",
+      "linux64-asan",
+      "linux64-cc"
+    ],
+    "limit_fx_slave_platforms": {
+      "linux64": [
+        "ubuntu64_vm"
+      ],
+      "linux64-asan": [
+        "ubuntu64-asan_vm"
+      ],
+      "linux64-cc": [
+        "ubuntu64_vm"
+      ]
+    },
+    "limit_mobile_platforms": [
+      "android",
+      "android-api-9",
+      "android-armv6"
+    ],
+    "limit_tb_platforms": [
+      "linux64"
+    ],
+    "limit_b2g_platforms": [
+      "linux64_gecko",
+      "linux64-mulet",
+      "emulator-jb",
+      "emulator-kk",
+      "emulator"
+    ],
+    "limit_b2g_slave_platforms": {
+      "linux64_gecko": [
+        "ubuntu64_vm-b2gdt"
+      ],
+      "linux64-mulet": [
+        "ubuntu64_vm-mulet"
+      ],
+      "emulator-jb": [
+        "ubuntu64_vm-b2g-emulator-jb"
+      ],
+      "emulator-kk": [
+        "ubuntu64_vm-b2g-emulator-kk"
+      ],
+      "emulator": [
+        "ubuntu64_vm-b2g-emulator"
+      ]
+    },
+    "master_dir": "/builds/buildbot/tests1-linux64/master",
+    "name": "bm123-tests1-linux64",
+    "pb_port": 9201,
+    "role": "tests",
+    "ssh_port": 7201,
+    "tools_branch": "default",
+    "tools_dir": "/builds/buildbot/tests1-linux64/tools"
   }
 ]
