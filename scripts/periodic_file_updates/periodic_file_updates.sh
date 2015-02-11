@@ -31,7 +31,8 @@ EXIT CODES for `basename $0`:
    12    Branch not specified on command-line
    13    No update action specified on command-line
    21    Unable to parse version from version.txt
-   31    Missing downloaded artifact
+   31    Missing downloaded browser artifact
+   32    Missing downloaded tests artifact
    41    Missing downloaded HSTS file
    42    Generated HSTS preload list is empty
    51    Missing downloaded HPKP file
@@ -46,6 +47,7 @@ DRY_RUN=false
 PRODUCT="firefox"
 BRANCH=""
 PLATFORM="linux-x86_64"
+TBOX_BUILDS_PLATFORM="linux64"
 PLATFORM_EXT="tar.bz2"
 UNPACK_CMD="tar jxf"
 CLOSED_TREE=false
@@ -125,20 +127,30 @@ function download_shared_artifacts {
 
     # Download everything we need: browser, tests, updater script, existing preload list and errors.
     echo "INFO: Downloading all the necessary pieces..."
-    for URL in "${BROWSER_ARCHIVE_URL}" "${TESTS_ARCHIVE_URL}"; do
-        echo "INFO: ${WGET} --no-check-certificate ${URL}"
-        ${WGET} --no-check-certificate ${URL}
-        WGET_STATUS=$?
-        if [ ${WGET_STATUS} != 0 ]; then
-            echo "ERROR: wget exited with a non-zero exit code: ${WGET_STATUS}" >&2
-            exit ${WGET_STATUS}
-        fi
-        if [ ! -f "$(basename "${URL}")" ]; then
-            echo "Downloaded file '$(basename "${URL}")' not found in directory '$(pwd)' - this should have been downloaded above from ${URL}." >&2
-            exit 31
-        fi
-    done
+    POSSIBLE_ARTIFACT_DIRS="nightly/latest-${REPODIR} tinderbox-builds/${REPODIR}-${TBOX_BUILDS_PLATFORM}/latest"
+    if [ "${USE_MC}" == "true" ]; then
+        POSSIBLE_ARTIFACT_DIRS="nightly/latest-mozilla-central"
+    fi
+    for ARTIFACT_DIR in ${POSSIBLE_ARTIFACT_DIRS}; do
+        BROWSER_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/${ARTIFACT_DIR}/${BROWSER_ARCHIVE}"
+        TESTS_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/${ARTIFACT_DIR}/${TESTS_ARCHIVE}"
 
+	echo "INFO: ${WGET} --no-check-certificate ${BROWSER_ARCHIVE_URL}"
+        ${WGET} --no-check-certificate ${BROWSER_ARCHIVE_URL}
+	echo "INFO: ${WGET} --no-check-certificate ${TESTS_ARCHIVE_URL}"
+        ${WGET} --no-check-certificate ${TESTS_ARCHIVE_URL}
+        if [ -f ${BROWSER_ARCHIVE} -a -f ${TESTS_ARCHIVE} ]; then
+            break
+	fi
+    done
+    if [ ! -f ${BROWSER_ARCHIVE} ]; then
+        echo "Downloaded file '${BROWSER_ARCHIVE}' not found in directory '$(pwd)'." >&2
+        exit 31
+    fi
+    if [ ! -f ${TESTS_ARCHIVE} ]; then
+        echo "Downloaded file '${TESTS_ARCHIVE}' not found in directory '$(pwd)'." >&2
+        exit 32
+    fi
     # Unpack the browser and move xpcshell in place for updating the preload list.
     echo "INFO: Unpacking resources..."
     ${UNPACK_CMD} "${BROWSER_ARCHIVE}"
@@ -532,17 +544,11 @@ if [ "${USE_MC}" == "true" ]; then
     echo "INFO: parsed mozilla-central version is ${MCVERSION}"
 fi
 
-# Bug 1093295 - Use the mozilla-central version of build + test archive
-# for branches where we do not have latest builds (e.g. beta)
 BROWSER_ARCHIVE="${PRODUCT}-${VERSION}.en-US.${PLATFORM}.${PLATFORM_EXT}"
-BROWSER_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/nightly/latest-${REPODIR}/${BROWSER_ARCHIVE}"
 TESTS_ARCHIVE="${PRODUCT}-${VERSION}.en-US.${PLATFORM}.tests.zip"
-TESTS_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/nightly/latest-${REPODIR}/${TESTS_ARCHIVE}"
 if [ "${USE_MC}" == "true" ]; then
     BROWSER_ARCHIVE="${PRODUCT}-${MCVERSION}.en-US.${PLATFORM}.${PLATFORM_EXT}"
-    BROWSER_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/nightly/latest-mozilla-central/${BROWSER_ARCHIVE}"
     TESTS_ARCHIVE="${PRODUCT}-${MCVERSION}.en-US.${PLATFORM}.tests.zip"
-    TESTS_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/nightly/latest-mozilla-central/${TESTS_ARCHIVE}"
 fi
 
 # Try to find hgtool if it hasn't been set.
