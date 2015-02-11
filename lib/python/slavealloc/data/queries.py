@@ -2,7 +2,7 @@ import sqlalchemy as sa
 from slavealloc.data import model
 
 
-def denormalized_slaves():
+def denormalized_slaves(environments=None, purposes=None, pools=None, enabled=None):
     locked_masters = model.masters.alias('locked_masters')
     current_masters = model.masters.alias('current_masters')
     q = sa.select([
@@ -37,8 +37,15 @@ def denormalized_slaves():
             current_masters.c.masterid == model.slaves.c.current_masterid
         )
     ])
+    if environments:
+        q = q.where(model.environments.c.name.in_(environments))
+    if purposes:
+        q = q.where(model.purposes.c.name.in_(purposes))
+    if pools:
+        q = q.where(model.pools.c.name.in_(pools))
+    if enabled:
+        q = q.where(model.slaves.c.enabled == enabled)
     return q
-denormalized_slaves = denormalized_slaves()
 
 denormalized_masters = sa.select([
     model.masters,

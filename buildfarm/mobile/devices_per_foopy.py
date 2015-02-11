@@ -1,6 +1,6 @@
 import json
 
-STAGING_FOOPIES = ("foopy05", "foopy06", "foopy25", "foopy26")
+STAGING_FOOPIES = ("foopy109", "foopy110", "foopy25", "foopy26")
 
 f = open('devices.json', 'r')
 j = json.load(f)

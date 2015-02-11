@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 ### The canonical location for this file is
-###   http://hg.mozilla.org/build/tools/file/default/stage/post_upload.py
+###   https://hg.mozilla.org/build/tools/file/default/stage/post_upload.py
 ###
 ### Please update the copy in puppet to deploy new changes to
 ### stage.mozilla.org, see
@@ -10,14 +10,16 @@
 # This script expects a directory as its first non-option argument,
 # followed by a list of filenames.
 
+import calendar
 import sys
 import os
 import os.path
+import pytz
 import shutil
 import re
 import tempfile
+from datetime import datetime
 from optparse import OptionParser
-from time import mktime, strptime
 from errno import EEXIST
 from ConfigParser import RawConfigParser
 
@@ -86,8 +88,8 @@ def CopyFileToDir(original_file, source_dir, dest_dir, preserve_dirs=False):
             # If the file gets deleted by another instance of post_upload
             # because there was a name collision this improves the situation
             # as to not abort the process but continue with the next file
-            print "Warning: The file %s has already been unlinked by " + \
-                  "another instance of post_upload.py" % new_file
+            print "Warning: The file %s has already been unlinked by " % new_file + \
+                  "another instance of post_upload.py"
             return
 
     # Try hard linking the file
@@ -129,7 +131,8 @@ def BuildIDToDict(buildid):
 def BuildIDToUnixTime(buildid):
     """Returns the timestamp the buildid represents in unix time."""
     try:
-        return int(mktime(strptime(buildid, "%Y%m%d%H%M%S")))
+        pt = pytz.timezone('US/Pacific')
+        return calendar.timegm(pt.localize(datetime.strptime(buildid, "%Y%m%d%H%M%S")).utctimetuple())
     except:
         raise "Could not parse buildid!"
 
@@ -151,8 +154,6 @@ def ReleaseToDated(options, upload_dir, files):
         shortDatedPath += "/%s" % options.builddir
 
     for f in files:
-        if f.endswith('crashreporter-symbols.zip'):
-            continue
         if options.branch.endswith('l10n') and f.endswith('.xpi'):
             CopyFileToDir(f, upload_dir, longDatedPath, preserve_dirs=True)
             filePath = f.replace(upload_dir, "").lstrip("/")
@@ -195,7 +196,7 @@ def ReleaseToLatest(options, upload_dir, files):
         elif filename in ('mar', 'mar.exe', 'mbsdiff', 'mbsdiff.exe'):
             if options.tinderbox_builds_dir:
                 platform = options.tinderbox_builds_dir.split('-')[-1]
-                if platform in ('win32', 'macosx64', 'linux', 'linux64'):
+                if platform in ('win32', 'macosx64', 'linux', 'linux64', 'win64'):
                     CopyFileToDir(f, upload_dir, '%s/%s' % (marToolsPath, platform))
         else:
             CopyFileToDir(f, upload_dir, latestPath)
@@ -213,6 +214,8 @@ def ReleaseToBuildDir(builds_dir, builds_url, options, upload_dir, files, dated)
         buildid = str(BuildIDToUnixTime(options.buildid))
         tinderboxBuildsPath = os.path.join(tinderboxBuildsPath, buildid)
         tinderboxUrl = os.path.join(tinderboxUrl, buildid)
+        _to = os.path.basename(tinderboxBuildsPath)
+        _from = os.path.join(os.path.dirname(tinderboxBuildsPath), "latest")
     if options.builddir:
         tinderboxBuildsPath = os.path.join(
             tinderboxBuildsPath, options.builddir)
@@ -234,17 +237,16 @@ def ReleaseToBuildDir(builds_dir, builds_url, options, upload_dir, files, dated)
             sys.stderr.write(
                 "%s\n" % os.path.join(tinderboxUrl, os.path.basename(f)))
     os.utime(tinderboxBuildsPath, None)
+    # create latest softlink?
+    if dated and options.release_to_latest_tinderbox_builds:
+        # best effort softlink
+        print >> sys.stderr, "ln -sfnv %s %s" % (_to, _from)
+        os.system('ln -sfnv "%s" "%s"' % (_to, _from))
 
 
 def ReleaseToTinderboxBuilds(options, upload_dir, files, dated=True):
     ReleaseToBuildDir(TINDERBOX_BUILDS_PATH, TINDERBOX_URL_PATH,
                       options, upload_dir, files, dated)
-
-
-def ReleaseToShadowCentralBuilds(options, upload_dir, files, dated=True):
-    options.product = "shadow-central"
-    ReleaseToBuildDir(
-        PVT_BUILD_DIR, PVT_BUILD_URL_PATH, options, upload_dir, files, dated)
 
 
 def ReleaseToTinderboxBuildsOverwrite(options, upload_dir, files):
@@ -297,11 +299,14 @@ def ReleaseToCandidatesDir(options, upload_dir, files):
         'product': options.product,
     }
 
+    marToolsPath = "%s/mar-tools" % candidatesPath
+
     symlink_nightly_to_candidates(
         NIGHTLY_PATH, candidatesFullPath, options.version)
 
     for f in files:
         realCandidatesPath = candidatesPath
+        filename = os.path.basename(f)
         if not options.signed and 'win32' in f and '/logs/' not in f:
             realCandidatesPath = os.path.join(realCandidatesPath, 'unsigned')
             url = os.path.join(candidatesUrl, 'unsigned')
@@ -311,8 +316,13 @@ def ReleaseToCandidatesDir(options, upload_dir, files):
             realCandidatesPath = os.path.join(
                 realCandidatesPath, options.builddir)
             url = os.path.join(url, options.builddir)
-
-        CopyFileToDir(f, upload_dir, realCandidatesPath, preserve_dirs=True)
+        if filename in ('mar', 'mar.exe', 'mbsdiff', 'mbsdiff.exe'):
+            if options.tinderbox_builds_dir:
+                platform = options.tinderbox_builds_dir.split('-')[-1]
+                if platform in ('win32', 'macosx64', 'linux', 'linux64', 'win64'):
+                    CopyFileToDir(f, upload_dir, '%s/%s' % (marToolsPath, platform))
+        else:
+            CopyFileToDir(f, upload_dir, realCandidatesPath, preserve_dirs=True)
         # Output the URL to the candidate build
         if f.startswith(upload_dir):
             relpath = f[len(upload_dir):].lstrip("/")
@@ -352,12 +362,6 @@ def ReleaseToMobileCandidatesDir(options, upload_dir, files):
         # We always want release files chmod'ed this way so other users in
         # the group cannot overwrite them.
         os.chmod(f, 0644)
-
-    # Same thing for directories, but 0755
-    for root, dirs, files in os.walk(candidatesPath):
-        for d in dirs:
-            os.chmod(os.path.join(root, d), 0755)
-
 
 def ReleaseToTryBuilds(options, upload_dir, files):
     tryBuildsPath = TRY_DIR % {'product': options.product,
@@ -429,12 +433,12 @@ if __name__ == '__main__':
     parser.add_option("-t", "--release-to-tinderbox-builds",
                       action="store_true", dest="release_to_tinderbox_builds",
                       help="Copy files to $product/tinderbox-builds/$tinderbox_builds_dir")
+    parser.add_option("--release-to-latest-tinderbox-builds",
+                      action="store_true", dest="release_to_latest_tinderbox_builds",
+                      help="Softlink tinderbox_builds_dir to latest")
     parser.add_option("--release-to-tinderbox-dated-builds",
                       action="store_true", dest="release_to_dated_tinderbox_builds",
                       help="Copy files to $product/tinderbox-builds/$tinderbox_builds_dir/$timestamp")
-    parser.add_option("--release-to-shadow-central-builds",
-                      action="store_true", dest="release_to_shadow_central_builds",
-                      help="Copy files to shadow-central/$tinderbox_builds_dir/$timestamp")
     parser.add_option("--release-to-try-builds",
                       action="store_true", dest="release_to_try_builds",
                       help="Copy files to try-builds/$who-$revision")
@@ -489,14 +493,6 @@ if __name__ == '__main__':
             error = True
     if options.release_to_dated_tinderbox_builds:
         releaseTo.append(ReleaseToTinderboxBuilds)
-        if not options.tinderbox_builds_dir:
-            print "Error, you must supply the tinderbox builds dir."
-            error = True
-        if not options.buildid:
-            print "Error, you must supply the build id."
-            error = True
-    if options.release_to_shadow_central_builds:
-        releaseTo.append(ReleaseToShadowCentralBuilds)
         if not options.tinderbox_builds_dir:
             print "Error, you must supply the tinderbox builds dir."
             error = True

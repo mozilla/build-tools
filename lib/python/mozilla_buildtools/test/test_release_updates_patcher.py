@@ -16,6 +16,7 @@ samplePatcherConfigObj['current-update'] = {
     'from': '13.0',
     'to': '13.0.1',
     'actions': ['silent'],
+    'action-locales': ['en-US'],
     'complete': {
         'betatest-url': 'http://%platform%.%locale%.complete.mar',
         'path': '%platform%.%locale%.complete.mar',
@@ -84,12 +85,14 @@ samplePatcherConfigObj['release'] = {
         'schema': 2,
         'version': '13.0',
         'exceptions': {
-            'ja': ['win32'],
+            'ja': ['win32', 'win64'],
             'ja-JP-mac': ['mac'],
         },
+        # Add win64 here (and in 13.0.1) to make sure platform additions work.
         'platforms': {
             'mac': 32345,
             'win32': 32345,
+            'win64': 32345,
         },
     },
     '13.0.1': {
@@ -98,16 +101,18 @@ samplePatcherConfigObj['release'] = {
         'extension-version': '13.0.1',
         # Drop "de" here to make sure that fully dropping a locale works
         'locales': ['en-US', 'ja', 'ja-JP-mac', 'zu'],
+        'mar-channel-ids': 'firefox-mozilla-beta',
         'prettyVersion': '13.0.1',
         'schema': 2,
         'version': '13.0.1',
         'exceptions': {
-            'ja': ['win32'],
+            'ja': ['win32', 'win64'],
             'ja-JP-mac': ['mac'],
         },
         'platforms': {
             'mac': 42345,
             'win32': 42345,
+            'win64': 42345,
         },
     },
 }
@@ -156,6 +161,10 @@ class TestPatcherConfig(unittest.TestCase):
             ('13.0', 'win32', 'en-US', ('betatest',
              'releasetest', 'release'), ('complete', 'partial')),
             ('13.0', 'win32', 'ja', ('betatest', 'releasetest',
+             'release'), ('complete', 'partial')),
+            ('13.0', 'win64', 'en-US', ('betatest',
+             'releasetest', 'release'), ('complete', 'partial')),
+            ('13.0', 'win64', 'ja', ('betatest', 'releasetest',
              'release'), ('complete', 'partial')),
         )
         got = []
@@ -302,6 +311,7 @@ class TestPatcherConfig(unittest.TestCase):
     </exceptions>
     extension-version   11.0
     locales   de en-US ja ja-JP-mac zu
+    mar-channel-ids   firefox-mozilla-beta,firefox-mozilla-release
     <platforms>
         linux-i686 12345
         mac   12345
@@ -317,6 +327,7 @@ class TestPatcherConfig(unittest.TestCase):
             'completemarurl': 'http://%platform%.%locale%.complete',
             'extension-version': '11.0',
             'locales': ['de', 'en-US', 'ja', 'ja-JP-mac', 'zu'],
+            'mar-channel-ids': 'firefox-mozilla-beta,firefox-mozilla-release',
             'prettyVersion': '11.0',
             'schema': 2,
             'version': '11.0',
@@ -401,11 +412,15 @@ version   12.0
 
     def testGetOptionalAttrsSchema1(self):
         pc = samplePatcherConfigObj
-        self.assertEquals(pc.getOptionalAttrs('11.0'), {})
+        self.assertEquals(pc.getOptionalAttrs('11.0', 'en-US'), {})
 
-    def tesGetOptionalAttrsSchema2(self):
+    def testGetOptionalAttrsSchema2(self):
         pc = samplePatcherConfigObj
-        self.assertEquals(pc.getOptionalAttrs('12.0'), {'actions': 'silent'})
+        self.assertEquals(pc.getOptionalAttrs('12.0', 'en-US'), {'actions': ['silent']})
+
+    def testGetOptionalAttrsSchema2WrongLocale(self):
+        pc = samplePatcherConfigObj
+        self.assertEquals(pc.getOptionalAttrs('12.0', 'de'), {})
 
     def testGetFromVersions(self):
         pc = samplePatcherConfigObj

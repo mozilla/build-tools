@@ -1,5 +1,7 @@
+<!DOCTYPE html>
 <html>
 <head>
+<meta charset="utf-8">
 <title>TryChooser Syntax Builder</title>
 <link href="jquery-ui.css" rel="stylesheet" type="text/css">
 <script type="text/javascript" src="jquery.min.js"></script>
@@ -19,15 +21,16 @@
 
     <div id='try-options'>
         <div id="col1">
-            <span class='option-radio' try-section='b'>
             <h4>Build Types</h4>
-            <label><input type="radio" name="build_type" value="do">both</label>
-            <label><input type="radio" name="build_type" value="d">debug only</label>
-            <label><input type="radio" name="build_type" value="o" CHECKED>opt only</label>
+            <span class='option-radio' try-section='b'>
+                <label><input type="radio" name="build_type" value="do">Both</label>
+                <label><input type="radio" name="build_type" value="d">Debug only</label>
+                <label><input type="radio" name="build_type" value="o">Opt only</label>
+                <label id="build_type-none"><input type="radio" name="build_type" value="none" CHECKED>None</label>
             </span>
 
             <h4>Platforms</h4>
-            <span class='option-group' id='platforms' try-section='p'>
+            <div class='option-group' id='platforms' try-section='p'>
             <label><input type="checkbox" class="group-selector all-selector">All</label>
             <label id='platforms-none'><input type="checkbox" class="group-selector none-selector" CHECKED>None</label>
             <ul>
@@ -52,6 +55,41 @@
                 <span id="build_linux64" class="build_queue">N/A</span>
             </li>
             <li>
+                <label><input type="checkbox" name="platform" value="linux64-asan">linux64-asan</label>
+                <span id="test_linux64-asan" class="test_queue">N/A</span>
+                <span id="build_linux64-asan" class="build_queue">N/A</span>
+            </li>
+            <li>
+                <label><input type="checkbox" name="platform" value="linux64-st-an">linux64 static analysis</label>
+                <span id="test_linux64-st-an" class="test_queue">N/A</span>
+                <span id="build_linux64-st-an" class="build_queue">N/A</span>
+            </li>
+            <li>
+                <label><input type="checkbox" name="platform" value="linux64-valgrind">linux64 valgrind</label>
+                <span id="test_linux64-valgrind" class="test_queue">N/A</span>
+                <span id="build_linux64-valgrind" class="build_queue">N/A</span>
+            </li>
+            <li>
+                <label><input type="checkbox" name="platform" value="linux64-br-haz">browser rooting analysis</label>
+                <span id="test_linux64-br-haz" class="test_queue">N/A</span>
+                <span id="build_linux64-br-haz" class="build_queue">N/A</span>
+            </li>
+            <li>
+                <label><input type="checkbox" name="platform" value="linux64-b2g-haz">B2G rooting analysis</label>
+                <span id="test_linux64-b2g-haz" class="test_queue">N/A</span>
+                <span id="build_linux64-b2g-haz" class="build_queue">N/A</span>
+            </li>
+            <li>
+                <label><input type="checkbox" name="platform" value="linux64-sh-haz" class="nondefault">shell rooting analysis</label>
+                <span id="test_linux64-sh-haz" class="test_queue">N/A</span>
+                <span id="build_linux64-sh-haz" class="build_queue">N/A</span>
+            </li>
+            <li>
+                <label><input type="checkbox" name="platform" value="linux64-mulet">linux64-mulet</label>
+                <span id="test_linux64-mulet" class="test_queue">N/A</span>
+                <span id="build_linux64-mulet" class="build_queue">N/A</span>
+            </li>
+            <li>
                 <label><input type="checkbox" name="platform" value="macosx64">macosx64</label>
                 <span id="test_macosx64" class="test_queue">N/A</span>
                 <span id="build_macosx64" class="build_queue">N/A</span>
@@ -62,193 +100,309 @@
                 <span id="build_win32" class="build_queue">N/A</span>
             </li>
             <li>
-                <label><input type="checkbox" name="platform" value="win64">win64 (not run by default)</label>
+                <label><input type="checkbox" name="platform" value="win64">win64</label>
                 <span id="test_win64" class="test_queue">N/A</span>
                 <span id="build_win64" class="build_queue">N/A</span>
             </li>
             <li>
-                <label><input type="checkbox" name="platform" value="android" data-project="android">android (Android 2.2 & 4.0)</label>
-                <span id="test_android" class="test_queue">N/A</span>
-                <span id="build_android" class="build_queue">N/A</span>
+                <label><input type="checkbox" name="platform" value="android-api-9" data-project="android">android api 9-10 constrained</label>
+                <span id="test_android-api-9" class="test_queue">N/A</span>
+                <span id="build_android-api-9" class="build_queue">N/A</span>
             </li>
             <li>
-                <label><input type="checkbox" name="platform" value="android-armv6" data-project="android">android-armv6 (Android 2.2)</label>
-                <span id="test_android-armv6" class="test_queue">N/A</span>
-                <span id="build_android-armv6" class="build_queue">N/A</span>
+                <label><input type="checkbox" name="platform" value="android-api-11" data-project="android">android api 11+</label>
+                <span id="test_android-api-11" class="test_queue">N/A</span>
+                <span id="build_android-api-11" class="build_queue">N/A</span>
             </li>
             <li>
-                <label><input type="checkbox" name="platform" value="android-noion" data-project="android">android-noion (Android 2.2)</label>
-                <span id="test_android-noion" class="test_queue">N/A</span>
-                <span id="build_android-noion" class="build_queue">N/A</span>
+                <label><input type="checkbox" name="platform" value="android-x86" data-project="android">android-x86 (Android 4.2)</label>
+                <span id="test_android-x86" class="test_queue">N/A</span>
+                <span id="build_android-x86" class="build_queue">N/A</span>
             </li>
             <li>
-                <label><input type="checkbox" name="platform" value="ics_armv7a_gecko" data-project="b2g">ics_armv7a_gecko (B2G emulator)</label>
-                <span id="test_ics_armv7a_gecko" class="test_queue">N/A</span>
-                <span id="build_ics_armv7a_gecko" class="build_queue">N/A</span>
+                <label><input type="checkbox" name="platform" value="emulator" data-project="b2g">emulator (B2G ARM, ICS)</label>
+                <span id="test_emulator" class="test_queue">N/A</span>
+                <span id="build_emulator" class="build_queue">N/A</span>
             </li>
             <li>
-                <label><input type="checkbox" name="platform" value="panda" data-project="b2g">panda (B2G automation board)</label>
-                <span id="test_panda" class="test_queue">N/A</span>
-                <span id="build_panda" class="build_queue">N/A</span>
+                <label><input type="checkbox" name="platform" value="emulator-jb" data-project="b2g">emulator-jb (B2G ARM, JB)</label>
+                <span id="test_emulator-jb" class="test_queue">N/A</span>
+                <span id="build_emulator-jb" class="build_queue">N/A</span>
             </li>
             <li>
-                <label><input type="checkbox" name="platform" value="otoro" data-project="b2g">otoro (B2G device image)</label>
-                <span id="test_otoro" class="test_queue">N/A</span>
-                <span id="build_otoro" class="build_queue">N/A</span>
+                <label><input type="checkbox" name="platform" value="emulator-kk" data-project="b2g">emulator-kk (B2G ARM, KK)</label>
+                <span id="test_emulator-kk" class="test_queue">N/A</span>
+                <span id="build_emulator-kk" class="build_queue">N/A</span>
             </li>
             <li>
-                <label><input type="checkbox" name="platform" value="unagi" data-project="b2g">unagi (B2G device image)</label>
-                <span id="test_unagi" class="test_queue">N/A</span>
-                <span id="build_unagi" class="build_queue">N/A</span>
+                <label><input type="checkbox" name="platform" value="linux32_gecko" data-project="b2g">b2g desktop (linux)</label>
+                <span id="test_linux32_gecko" class="test_queue">N/A</span>
+                <span id="build_linux32_gecko" class="build_queue">N/A</span>
+            </li>
+            <li>
+                <label><input type="checkbox" name="platform" value="linux64_gecko" data-project="b2g">b2g desktop (linux64)</label>
+                <span id="test_linux64_gecko" class="test_queue">N/A</span>
+                <span id="build_linux64_gecko" class="build_queue">N/A</span>
+            </li>
+            <li>
+                <label><input type="checkbox" name="platform" value="macosx64_gecko" data-project="b2g">b2g desktop (macosx64)</label>
+                <span id="test_macosx64_gecko" class="test_queue">N/A</span>
+                <span id="build_macosx64_gecko" class="build_queue">N/A</span>
+            </li>
+            <li>
+                <label><input type="checkbox" name="platform" value="win32_gecko" data-project="b2g">b2g desktop (win32)</label>
+                <span id="test_win32_gecko" class="test_queue">N/A</span>
+                <span id="build_win32_gecko" class="build_queue">N/A</span>
             </li>
             </ul>
-            </span>
+            <p>Looking for PGO builds? See <a href="https://wiki.mozilla.org/ReleaseEngineering/TryChooser#What_if_I_want_PGO_for_my_build">this page</a>.</p>
+            </div>
 
-            <span class='option-group' id='tee-platforms' try-filter='u'>
+            <div class='option-group' id='tee-platforms' try-filter='u'>
             <label>Restrict tests to platform(s)</label>
             <ul>
 
             <li>
-              <label><input type="checkbox" value="x64">linux64</input></label>
+              <label><input type="checkbox" value="x64">linux64</label>
             </li>
 
             <li>
-              <label><input type="checkbox" value="Fedora,Ubuntu,-x64">linux32</input></label>
+              <label><input type="checkbox" value="Mulet Linux">linux64-mulet</label>
             </li>
 
             <li>
-              <label><input type="checkbox" value="10.6">OSX 10.6</input></label>
+              <label><input type="checkbox" value="Ubuntu,-x64">linux32</label>
             </li>
 
             <li>
-              <label><input type="checkbox" value="10.7">OSX 10.7</input></label>
+              <label><input type="checkbox" value="10.6">OSX 10.6</label>
             </li>
 
             <li>
-              <label><input type="checkbox" value="10.8">OSX 10.8</input></label>
+              <label><input type="checkbox" value="10.8">OSX 10.8 - <a href="https://bugzil.la/1091368">disabled when not explicity checked</a></label>
             </li>
 
             <li>
-              <label><input type="checkbox" value="5.1">WinXP</input></label>
+              <label><input type="checkbox" value="Windows XP">WinXP (win32)</label>
             </li>
 
             <li>
-              <label><input type="checkbox" value="6.1">Win7</input></label>
+              <label><input type="checkbox" value="Windows 7">Win7 (win32)</label>
             </li>
 
             <li>
-              <label><input type="checkbox" value="6.2">Win8</input></label>
+              <label><input type="checkbox" value="Windows 8">Win8 (win64)</label>
+            </li>
+
+            <li>
+              <label><input type="checkbox" value="Android">Android</label>
+            </li>
+
+            <li>
+              <label><input type="checkbox" value="b2g">B2G</label>
             </li>
 
             </ul>
-            </span>
+            </div>
 
-            <span class='option-email'>
             <h4>Email Settings</h4>
+            <div class='option-email'>
             <label><input type="radio" name="email" checked>Default</label><br>
             <label><input type="radio" name="email" value="-f">Failure Emails</label>
             <label><input type="radio" name="email" value="-e">All Email</label><br>
             <em>(default is no email)</em>
-            </span>
-
-            <h4>Experimental Features</h4>
-            <p>Auto-comment to bug on completion (<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=434998#c20">example</a>)
-            <em>Still a work in progress, comment in <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=430942">bug 430942</a> with issues</em>
-            </p>
-            <label>Bug Number: <input id="bugnumber" type="textbox" name="bugnumber" size=8></label>
-            <label><input id="post_to_bugzilla" type="checkbox" name="post_to_bugzilla" UNCHECKED>Add to Syntax</label><br>
+            </div>
 
         </div> <!-- col1 div -->
         <div id="col2">
             <h4>Unit Test Suites</h4>
-            <span class='option-group' try-section='u'>
+            <div class='option-group' try-section='u'>
             <label><input type="checkbox" class="group-selector all-selector">All</label>
             <label><input type="checkbox" class="group-selector none-selector" CHECKED>None</label>
             <ul>
                 <li><label><input type="checkbox" value="reftest">reftest</label></li>
-                <li><label><input type="checkbox" value="reftest-ipc">reftest-ipc <span style="color: red">(linux opt only)</span></label></li>
-                <li><label><input type="checkbox" value="reftest-no-accel">reftest-no-accel <span style="color: red">(linux/win7 only)</span></label></li>
+                <li><label><input type="checkbox" value="reftest-e10s">reftest-e10s <span class="info">(linux opt only)</span></label></li>
+                <li><label><input type="checkbox" value="reftest-no-accel">reftest-no-accel <span class="info">(linux/win7 only)</span></label></li>
                 <li><label><input type="checkbox" value="crashtest">crashtest</label></li>
-                <li><label><input type="checkbox" value="crashtest-ipc">crashtest-ipc <span style="color: red">(linux opt only)</span></label></li>
+                <li><label><input type="checkbox" value="crashtest-e10s">crashtest-e10s <span class="info">(linux opt only)</span></label></li>
                 <li><label><input type="checkbox" value="xpcshell">xpcshell</label></li>
                 <li><label><input type="checkbox" value="jsreftest">jsreftest</label></li>
                 <li><label><input type="checkbox" value="jetpack">jetpack</label></li>
                 <li><label><input type="checkbox" value="marionette">marionette</label></li>
-                <li><label><input type="checkbox" value="mozmill">mozmill <span style="color: red">(thunderbird only)</span></label></li>
-                <span class='option-subgroup'>
-                <li><label><input type="checkbox" class="subgroup-all-selector" value="mochitests">mochitests (all)</label></li>
+                <li><label><input type="checkbox" value="marionette-e10s">marionette-e10s<span class="info">(linux32 opt only)</span></label></li>
+                <li><label><input type="checkbox" value="mozmill">mozmill <span class="info">(thunderbird only)</span></label></li>
+                <li><label><input type="checkbox" value="cppunit">cppunit</label></li>
+                <li><label><input type="checkbox" value="jittests">jittests</label></li>
+                <li><label><input type="checkbox" value="jittest-1">jittest-1 <span class="info">(linux only)</span></label></li>
+                <li><label><input type="checkbox" value="jittest-2">jittest-2 <span class="info">(linux only)</span></label></li>
+                <div class='option-subgroup'>
+                <li><label><input type="checkbox" class="subgroup-selector subgroup-all-selector" value="mochitests">mochitests (all)</label></li>
                     <ul>OR
                     <li><label><input type="checkbox" value="mochitest-1">mochitest-1</label></li>
                     <li><label><input type="checkbox" value="mochitest-2">mochitest-2</label></li>
                     <li><label><input type="checkbox" value="mochitest-3">mochitest-3</label></li>
                     <li><label><input type="checkbox" value="mochitest-4">mochitest-4</label></li>
                     <li><label><input type="checkbox" value="mochitest-5">mochitest-5</label></li>
+                    <li><label><input type="checkbox" value="mochitest-gl">mochitest-gl</label></li>
                     <li><label><input type="checkbox" value="mochitest-bc">mochitest-bc</label></li>
+                    <li><label><input type="checkbox" value="mochitest-dt">mochitest-dt</label></li>
                     <li><label><input type="checkbox" value="mochitest-o">mochitest-o</label></li>
+                    <li><label><input type="checkbox" value="mochitest-e10s-1">mochitest-e10s-1</label></li>
+                    <li><label><input type="checkbox" value="mochitest-e10s-2">mochitest-e10s-2</label></li>
+                    <li><label><input type="checkbox" value="mochitest-e10s-3">mochitest-e10s-3</label></li>
+                    <li><label><input type="checkbox" value="mochitest-e10s-4">mochitest-e10s-4</label></li>
+                    <li><label><input type="checkbox" value="mochitest-e10s-5">mochitest-e10s-5</label></li>
+                    <li><label><input type="checkbox" value="mochitest-e10s-browser-chrome-1">mochitest-e10s-browser-chrome-1</label></li>
+                    <li><label><input type="checkbox" value="mochitest-e10s-browser-chrome-2">mochitest-e10s-browser-chrome-2</label></li>
+                    <li><label><input type="checkbox" value="mochitest-e10s-browser-chrome-3">mochitest-e10s-browser-chrome-3</label></li>
+                    <li><label><input type="checkbox" value="mochitest-e10s-devtools-chrome">mochitest-e10s-devtools-chrome</label></li>
                     </ul>
-            </span>
-
+                </div>
+                <div class='option-subgroup'>
+                <li><label><input type="checkbox" class="subgroup-selector subgroup-all-selector" value="web-platform-tests">web-platform-tests (all)</label></li>
+                <ul>OR
+                    <li><label><input type="checkbox" value="web-platform-tests-1">web-platform-tests-1</label></li>
+                    <li><label><input type="checkbox" value="web-platform-tests-2">web-platform-tests-2</label></li>
+                    <li><label><input type="checkbox" value="web-platform-tests-3">web-platform-tests-3</label></li>
+                    <li><label><input type="checkbox" value="web-platform-tests-4">web-platform-tests-4</label></li>
+                    <li><label><input type="checkbox" value="web-platform-tests-reftests">web-platform-tests-reftests</label></li>
+                </ul>
+                </div>
+            </ul>
             <h4> Android-Only Unittest Suites</h4>
+            <ul>
             <li><label><input type="checkbox" value="plain-reftest-1">plain-reftest-1</label></li>
             <li><label><input type="checkbox" value="plain-reftest-2">plain-reftest-2</label></li>
             <li><label><input type="checkbox" value="plain-reftest-3">plain-reftest-3</label></li>
             <li><label><input type="checkbox" value="plain-reftest-4">plain-reftest-4</label></li>
+            <li><label><input type="checkbox" value="plain-reftest-5">plain-reftest-5</label></li>
+            <li><label><input type="checkbox" value="plain-reftest-6">plain-reftest-6</label></li>
+            <li><label><input type="checkbox" value="plain-reftest-7">plain-reftest-7</label></li>
+            <li><label><input type="checkbox" value="plain-reftest-8">plain-reftest-8</label></li>
+            <li><label><input type="checkbox" value="plain-reftest-9">plain-reftest-9</label></li>
+            <li><label><input type="checkbox" value="plain-reftest-10">plain-reftest-10</label></li>
+            <li><label><input type="checkbox" value="plain-reftest-11">plain-reftest-11</label></li>
+            <li><label><input type="checkbox" value="plain-reftest-12">plain-reftest-12</label></li>
+            <li><label><input type="checkbox" value="plain-reftest-13">plain-reftest-13</label></li>
+            <li><label><input type="checkbox" value="plain-reftest-14">plain-reftest-14</label></li>
+            <li><label><input type="checkbox" value="plain-reftest-15">plain-reftest-15</label></li>
+            <li><label><input type="checkbox" value="plain-reftest-16">plain-reftest-16</label></li>
             <li><label><input type="checkbox" value="jsreftest-1">jsreftest-1</label></li>
             <li><label><input type="checkbox" value="jsreftest-2">jsreftest-2</label></li>
             <li><label><input type="checkbox" value="jsreftest-3">jsreftest-3</label></li>
-            <li><label><input type="checkbox" value="crashtest-2">crashtest-2</label></li>
-            <li><label><input type="checkbox" value="crashtest-3">crashtest-3</label></li>
+            <li><label><input type="checkbox" value="jsreftest-4">jsreftest-4</label></li>
+            <li><label><input type="checkbox" value="jsreftest-5">jsreftest-5</label></li>
+            <li><label><input type="checkbox" value="jsreftest-6">jsreftest-6</label></li>
+            <li><label><input type="checkbox" value="mochitest-1">mochitest-1</label></li>
+            <li><label><input type="checkbox" value="mochitest-2">mochitest-2</label></li>
+            <li><label><input type="checkbox" value="mochitest-3">mochitest-3</label></li>
+            <li><label><input type="checkbox" value="mochitest-4">mochitest-4</label></li>
+            <li><label><input type="checkbox" value="mochitest-5">mochitest-5</label></li>
             <li><label><input type="checkbox" value="mochitest-6">mochitest-6</label></li>
             <li><label><input type="checkbox" value="mochitest-7">mochitest-7</label></li>
             <li><label><input type="checkbox" value="mochitest-8">mochitest-8</label></li>
+            <li><label><input type="checkbox" value="mochitest-9">mochitest-9</label></li>
+            <li><label><input type="checkbox" value="mochitest-10">mochitest-10</label></li>
+            <li><label><input type="checkbox" value="mochitest-11">mochitest-11</label></li>
+            <li><label><input type="checkbox" value="mochitest-12">mochitest-12</label></li>
+            <li><label><input type="checkbox" value="mochitest-13">mochitest-13</label></li>
+            <li><label><input type="checkbox" value="mochitest-14">mochitest-14</label></li>
+            <li><label><input type="checkbox" value="mochitest-15">mochitest-15</label></li>
+            <li><label><input type="checkbox" value="mochitest-16">mochitest-16</label></li>
+            <li><label><input type="checkbox" value="mochitest-gl">mochitest-gl</label></li>
             <li><label><input type="checkbox" value="robocop-1">robocop-1</label></li>
             <li><label><input type="checkbox" value="robocop-2">robocop-2</label></li>
-
+            <li><label><input type="checkbox" value="robocop-3">robocop-3</label></li>
+            <li><label><input type="checkbox" value="robocop-4">robocop-4</label></li>
+            <li><label><input type="checkbox" value="robocop-5">robocop-5</label></li>
+            <li><label><input type="checkbox" value="crashtest-1">crashtest-1</label></li>
+            <li><label><input type="checkbox" value="crashtest-2">crashtest-2</label></li>
+            <li><label><input type="checkbox" value="xpcshell-1">xpcshell-1</label></li>
+            <li><label><input type="checkbox" value="xpcshell-2">xpcshell-2</label></li>
+            <li><label><input type="checkbox" value="xpcshell-3">xpcshell-3</label></li>
+            <div class='option-subgroup'>
+            <li><label><input type="checkbox" class="subgroup-selector subgroup-all-selector" value="autophone-tests">Autophone-tests (all)</label></li>
+              <ul>OR
+                  <li><label><input type="checkbox" value="autophone-smoketest">autophone-smoketest</label></li>
+                  <li><label><input type="checkbox" value="autophone-s1s2">autophone-s1s2</label></li>
+                  <li><label><input type="checkbox" value="autophone-webapp">autophone-webapp</label></li>
+                  <li><label><input type="checkbox" value="autophone-mochitest-dom-browser-element">autophone-mochitest-dom-browser-element</label></li>
+                  <li><label><input type="checkbox" value="autophone-mochitest-dom-media">autophone-mochitest-dom-media</label></li>
+                  <li><label><input type="checkbox" value="autophone-mochitest-skia">autophone-mochitest-skia</label></li>
+                  <li><label><input type="checkbox" value="autophone-mochitest-toolkit-widgets">autophone-mochitest-toolkit-widgets</label></li>
+              </ul>
+            </div>
+            </ul>
             <h4>B2G-Only Unittest Suites</h4>
+            <ul>
+            <li><label><input type="checkbox" value="crashtest-1">crashtest-1</label></li>
+            <li><label><input type="checkbox" value="crashtest-2">crashtest-2</label></li>
+            <li><label><input type="checkbox" value="crashtest-3">crashtest-3</label></li>
             <li><label><input type="checkbox" value="reftest-1">reftest-1</label></li>
             <li><label><input type="checkbox" value="reftest-2">reftest-2</label></li>
             <li><label><input type="checkbox" value="reftest-3">reftest-3</label></li>
             <li><label><input type="checkbox" value="reftest-4">reftest-4</label></li>
             <li><label><input type="checkbox" value="reftest-5">reftest-5</label></li>
             <li><label><input type="checkbox" value="reftest-6">reftest-6</label></li>
+            <li><label><input type="checkbox" value="reftest-7">reftest-7</label></li>
+            <li><label><input type="checkbox" value="reftest-8">reftest-8</label></li>
+            <li><label><input type="checkbox" value="reftest-9">reftest-9</label></li>
+            <li><label><input type="checkbox" value="reftest-10">reftest-10</label></li>
+            <li><label><input type="checkbox" value="reftest-11">reftest-11</label></li>
+            <li><label><input type="checkbox" value="reftest-12">reftest-12</label></li>
+            <li><label><input type="checkbox" value="reftest-13">reftest-13</label></li>
+            <li><label><input type="checkbox" value="reftest-14">reftest-14</label></li>
+            <li><label><input type="checkbox" value="reftest-15">reftest-15</label></li>
+            <li><label><input type="checkbox" value="reftest-16">reftest-16</label></li>
+            <li><label><input type="checkbox" value="reftest-17">reftest-17</label></li>
+            <li><label><input type="checkbox" value="reftest-18">reftest-18</label></li>
+            <li><label><input type="checkbox" value="reftest-19">reftest-19</label></li>
+            <li><label><input type="checkbox" value="reftest-20">reftest-20</label></li>
             <li><label><input type="checkbox" value="marionette-webapi">marionette-webapi</label></li>
+            <li><label><input type="checkbox" value="gaia-build">gaia-build</label></li>
+            <li><label><input type="checkbox" value="gaia-build-unit">gaia-build-unit</label></li>
+            <li><label><input type="checkbox" value="gaia-linter">gaia-linter</label></li>
+            <li><label><input type="checkbox" value="gaia-unit">gaia-unit-tests</label></li>
+            <li><label><input type="checkbox" value="gaia-ui-test">gaia-ui-tests</label></li>
+            <li><label><input type="checkbox" value="gaia-integration">gaia-integration-tests</label></li>
             </ul>
-            </span>
+            </div>
         </div> <!-- col2 div -->
         <div id="col3">
+            <h4>Profiling</h4>
+            <label><input type="checkbox" class="profile">profile</label> (<a href="https://wiki.mozilla.org/Buildbot/Talos/Profiling" title="Help">?</a>)
             <h4>Talos Suites</h4>
-            <span class='option-group' try-section='t'>
+            <div class='option-group' try-section='t'>
             <label><input type="checkbox" class="group-selector all-selector">All</label>
             <label><input type="checkbox" class="group-selector none-selector" CHECKED>None</label>
             <ul>
                 <li><label><input type="checkbox" name="talos_suite" value="chromez">chromez</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="dromaeojs">dromaeojs</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="other">other</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="dirtypaint">dirtypaint</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="other_nol64">other (no linux 64)</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="other_l64">other (linux 64 - includes mediatests)</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="g1">g1</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="svgr">svgr</label></li>
                 <li><label><input type="checkbox" name="talos_suite" value="tp5o">tp5o</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="xperf">xperf <span style="color: red">(win7 only)</span></label></li>
-
-                <h4>Android-Only Talos Suites:</h4>
-                <li><label><input type="checkbox" name="talos_suite" value="remote-ts">remote-ts</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="remote-tdhtml">remote-tdhtml</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="remote-tsvg">remote-tsvg</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="remote-tpan">remote-tpan</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="remote-trobopan">remote-trobopan</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="remote-trobocheck">remote-trobocheck</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="remote-troboprovider">remote-troboprovider</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="remote-trobocheck2">remote-trobocheck2</label></li>
-                <li><label><input type="checkbox" name="talos_suite" value="remote-tp4m_nochrome">remote-tp4m_nochrome</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="xperf">xperf <span class="info">(win7 only)</span></label></li>
             </ul>
-            </span>
+            <h4>Android-Only Talos Suites:</h4>
+            <ul>
+                <li><label><input type="checkbox" name="talos_suite" value="remote-trobocheck2">remote-trobocheck2</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="remote-trobopan">remote-trobopan</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="remote-troboprovider">remote-troboprovider</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="remote-tsvg">remote-tsvg</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="remote-tp4m_nochrome">remote-tp4m_nochrome</label></li>
+                <li><label><input type="checkbox" name="talos_suite" value="remote-ts">remote-ts</label></li>
+            </ul>
+            </div>
 
-            <p class="indent1"><strong>Want to match Talos suite names up to what they run?</strong>  Check <a href="http://hg.mozilla.org/build/buildbot-configs/file/tip/mozilla-tests/config.py#l179">the current configs</a><br>
+            <p class="indent1"><strong>Want to match Talos suite names up to what they run?</strong>  Check <a href="https://hg.mozilla.org/build/buildbot-configs/file/tip/mozilla-tests/config.py#l179">the current configs</a><br>
             (contents may shift over time, <br/>
             you want SUITES = { ... })</p>
         </div> <!-- col3 div -->
     </div> <!--- try-options div -->
-<div> <!-- wrapper div-->
-
 </form>
+</div> <!-- wrapper div-->
+
 </body>
 </html>

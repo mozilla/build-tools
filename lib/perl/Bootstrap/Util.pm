@@ -39,6 +39,7 @@ use strict;
 
 my %PLATFORM_MAP = (# bouncer/shipped-locales platform => patcher2 platform
                     'win32' => 'win32',
+                    'win64' => 'win64',
                     'linux' => 'linux-i686',
                     'linux64' => 'linux-x86_64',
                     'osx' => 'mac',
@@ -49,9 +50,11 @@ my %PLATFORM_FTP_MAP = (# buildbot platform => ftp directory
                         'linux64' => 'linux-x86_64',
                         'macosx' => 'mac',
                         'macosx64' => 'mac',
-                        'win32' => 'win32');
+                        'win32' => 'win32',
+                        'win64' => 'win64');
 
-my %EQUAL_PLATFORMS = ('linux' => ['linux64']);
+my %EQUAL_PLATFORMS = ('linux' => ['linux64'],
+                       'win32' => ['win64']);
 
 my $DEFAULT_CVSROOT = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
 

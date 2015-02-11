@@ -1,6 +1,7 @@
 #!/usr/bin/python
 """%prog [options] format inputfile outputfile inputfilename"""
 import os
+import os.path
 import site
 # Modify our search path to find our modules
 site.addsitedir(os.path.join(os.path.dirname(__file__), "../../lib/python"))
@@ -9,7 +10,9 @@ import logging
 import sys
 
 from util.file import copyfile, safe_unlink
-from signing.utils import shouldSign, signfile, gpg_signfile, mar_signfile, dmg_signpackage, jar_signfile
+from signing.utils import shouldSign, signfile, osslsigncode_signfile
+from signing.utils import gpg_signfile, mar_signfile, dmg_signpackage
+from signing.utils import jar_signfile, emevoucher_signfile
 
 if __name__ == '__main__':
     from optparse import OptionParser
@@ -27,6 +30,7 @@ if __name__ == '__main__':
         signcode_timestamp=None,
         jar_keystore=None,
         jar_keyname=None,
+        emevoucher_key=None,
     )
     parser.add_option("--keydir", dest="signcode_keydir",
                       help="where MozAuthenticode.spc, MozAuthenticode.spk can be found")
@@ -46,6 +50,8 @@ if __name__ == '__main__':
                       help="keystore for signing jar_")
     parser.add_option("--jar_keyname", dest="jar_keyname",
                       help="which key to use from jar_keystore")
+    parser.add_option("--emevoucher_key", dest="emevoucher_key",
+                      help="The certificate to use for signing the eme voucher")
     parser.add_option(
         "-v", action="store_const", dest="loglevel", const=logging.DEBUG)
 
@@ -87,12 +93,26 @@ if __name__ == '__main__':
         else:
             parser.error("Invalid file for signing: %s" % filename)
             sys.exit(1)
+    elif format_ == "osslsigncode":
+        safe_unlink(tmpfile)
+        if not options.signcode_keydir:
+            parser.error("keydir required when format is osslsigncode")
+        if shouldSign(filename):
+            osslsigncode_signfile(inputfile, tmpfile, options.signcode_keydir, options.fake,
+                     passphrase, timestamp=options.signcode_timestamp)
+        else:
+            parser.error("Invalid file for signing: %s" % filename)
+            sys.exit(1)
     elif format_ == "gpg":
         if not options.gpg_homedir:
             parser.error("gpgdir required when format is gpg")
         safe_unlink(tmpfile)
         gpg_signfile(
             inputfile, tmpfile, options.gpg_homedir, options.fake, passphrase)
+    elif format_ == "emevoucher":
+        safe_unlink(tmpfile)
+        emevoucher_signfile(
+            inputfile, tmpfile, options.emevoucher_key, options.fake, passphrase)
     elif format_ == "mar":
         if not options.mar_cmd:
             parser.error("mar_cmd is required when format is mar")

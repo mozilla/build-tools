@@ -1,37 +1,18 @@
 #!/bin/bash -eu
+export PATH='/usr/local/bin:/usr/local/bin:/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/home/cltbld/bin'
 PYTHON=`which python`
 
 # MAGIC NUMBERS (global)
 # used to determine how long we sleep when...
-CYCLE_WAIT=300 # 5 minutes between cycling of watches for our devices
 SUCCESS_WAIT=200 # ... seconds after we startup buildbot
 FAIL_WAIT=500 # ... seconds after we stop buildbot due to error.flg
 
-# boilerplate
-warn() { for m; do echo "$m"; done 1>&2; }
-die() { warn "$@" >&2 ; exit 1 ; }
-usage() { warn "$@" "${USAGE:-}" ; test $# -eq 0; exit $?; }
-
 log() {
-  local ts=`date +"%Y-%m-%d %H:%M:%S"`
-  warn "$ts -- $@" ;
+  echo "$(date +"%Y-%m-%d %H:%M:%S") -- ${1}" >&2
 }
-debug() { true; } # No actual debug logging yet
 death() {
-  local ts=`date +"%Y-%m-%d %H:%M:%S"`
-  die "$ts -- $@" ;
-}
-
-function log_output_to() {
-  # $1 is "where to
-  # $2 (if present) is "hide output to invoker"
-  if [ ! -z "${2:-}" ]; then
-    # Redirect all output
-    exec >>$1 2>&1
-  else
-    # Tee all output instead
-    exec > >(tee -a $1) 2>&1
-  fi
+  log "*** ERROR *** ${1}"
+  exit "${2}"
 }
 
 function check_buildbot_running() {
@@ -42,101 +23,106 @@ function check_buildbot_running() {
      return 1
   fi
   local expected_pid=`cat /builds/$device/twistd.pid`
-  debug "buildbot pid is $expected_pid"
-  local retcode=0
-  kill -0 $expected_pid 2>&1 > /dev/null || retcode=$?
-  return $retcode
-}
-
-function kill_lockfile() {
-  # $1 is device name
-  rm -f /builds/$1/watcher.lock
+  log "buildbot pid is $expected_pid"
+  kill -0 $expected_pid >/dev/null 2>&1
+  return $?
 }
 
 function device_check_exit() {
-  kill_lockfile $1
-  log "Cycle for our device ($1) complete"
+  local device="${1}"
+  rm -f "/builds/${device}/watcher.lock"
+  log "Cycle for our device (${device}) complete" >>"/builds/${device}/watcher.log" 2>&1
 }
 
 function device_check() {
   local device=$1
-  log_output_to "/builds/$device/watcher.log" hide
   export PYTHONPATH=/builds/sut_tools
-  deviceIP=`python -c "import sut_lib;print sut_lib.getIPAddress('$device')" 2> /dev/null`
-  local retcode=0
-  lockfile -r0 /builds/$device/watcher.lock 2>&1 > /dev/null || retcode=$?
-  if [ $retcode -ne 0 ]; then
-    die "failed to aquire lockfile"
+  deviceIP="$(nslookup "${device}" 2>/dev/null | sed -n '/^Name/,$s/^Address: *//p')"
+  # 43200s = 12 hours - this is when stale lockfiles will get cleaned up
+  if ! lockfile -l 43200 -r0 "/builds/${device}/watcher.lock" >/dev/null 2>&1; then
+    death "failed to aquire lockfile" 67
   fi
-  log "Starting cycle for our device ($device) now"
+  log_message="Starting cycle for our device ($device = $deviceIP) now"
+  log "##${log_message//?/#}##"
+  log "# ${log_message} #"
+  log "##${log_message//?/#}##"
   # Trap here, not earlier so that if lockfile fails, we don't clear the lock
   # From another process
   trap "device_check_exit $device" EXIT
-  local buildbot_running=0
-  check_buildbot_running $device || buildbot_running=$?
-  if [ $buildbot_running -ne 0 ]; then
-    if [ -f /builds/$device/disabled.flg ]; then
-       death "Not Starting due to disabled.flg"
+  log "contacting slavealloc"
+  if ! check_buildbot_running "${device}"; then
+    rm -f "/builds/${device}/disabled.flg"
+    log "Buildbot is not running"
+    /builds/tools/buildfarm/mobile/manage_buildslave.sh gettac $device
+    if grep -q "SLAVE DISABLED" /builds/$device/buildbot.tac; then
+      death "Not Starting, slavealloc says we're disabled" 64
     fi
     if [ -f /builds/$device/error.flg ]; then
+      log "error.flg file detected"
+      local contents=`cat /builds/$device/error.flg`
+      log "error.flg contents: $contents"
       # Clear flag if older than an hour
       if [ `find /builds/$device/error.flg -mmin +60` ]; then
-        log "removing $device error.flg and trying again"
+        log "removing $device error.flg (older than an hour) and trying again"
         rm -f /builds/$device/error.flg
       else
-        death "Error Flag told us not to start"
-      fi;
+        death "Error flag less than an hour old, so exiting" 65
+      fi
     fi
     export SUT_NAME=$device
     export SUT_IP=$deviceIP
-    retcode=0
-    $PYTHON /builds/sut_tools/verify.py $device || retcode=$?
-    if [ $retcode -ne 0 ]; then
-       if [ ! -f /builds/$device/error.flg ]; then
-           echo "Unknown verify failure" | tee "/builds/$device/error.flg"
-       fi
-       death "Verify failed"
-    fi;
+    if ! "${PYTHON}" /builds/sut_tools/verify.py --success-if-mozpool-ready $device; then
+      log "Verify procedure failed"
+      if [ ! -f /builds/$device/error.flg ]; then
+        log "error.flg file does not exist, so creating it..."
+        echo "Unknown verify failure" | tee "/builds/$device/error.flg"
+      fi
+      death "Exiting due to verify failure" 66
+    fi
+    log "starting buildbot slave"
     /builds/tools/buildfarm/mobile/manage_buildslave.sh start $device
     log "Sleeping for ${SUCCESS_WAIT} sec after startup, to prevent premature flag killing"
     sleep ${SUCCESS_WAIT} # wait a bit before checking for an error flag or otherwise
   else # buildbot running
     log "(heartbeat) buildbot is running"
-    if [ -f /builds/$device/error.flg -o -f /builds/$device/disabled.flg ]; then
-        log "Something wants us to kill buildbot..."
-        set +e # These steps are ok to fail, not a great thing but not critical
-        cp /builds/$device/error.flg /builds/$device/error.flg.bak # stop.py will remove error flag o_O
-        python /builds/sut_tools/stop.py --device $device
-        # Stop.py should really do foopy cleanups and not touch device
-        SUT_NAME=$device python /builds/sut_tools/cleanup.py $device
-        mv /builds/$device/error.flg.bak /builds/$device/error.flg # Restore it
-        set -e
-        log "sleeping for ${FAIL_WAIT} seconds after killing, to prevent startup before master notices"
-        sleep ${FAIL_WAIT} # Wait a while before allowing us to turn buildbot back on
-    fi;
-  fi;
-  exit
+    if [ -f /builds/$device/error.flg ]; then
+      log "Found an error.flg, expecting buildbot to self-kill after this job"
+      local contents=`cat /builds/$device/error.flg`
+      log "error.flg contents: $contents"
+    fi
+    if [ -f /builds/$device/disabled.flg ]; then
+      log "disabled.flg wants us to force kill buildbot..."
+      set +e # These steps are ok to fail, not a great thing but not critical
+      log "Stopping device $device..."
+      "${PYTHON}" /builds/sut_tools/stop.py --device $device
+      # Stop.py should really do foopy cleanups and not touch device
+      log "Attempting cleanup of device $device..."
+      SUT_NAME=$device python /builds/sut_tools/cleanup.py $device
+      set -e
+      log "sleeping for ${FAIL_WAIT} seconds after killing, to prevent startup before master notices"
+      sleep ${FAIL_WAIT} # Wait a while before allowing us to turn buildbot back on
+    fi
+  fi
+  # Force disable only once. If we got this far, then we did all that we must.
+  # Don't act on it next cycle.
+  rm -f "/builds/${device}/disabled.flg"
 }
 
 
 function watch_launcher(){
-  echo "STARTING Watcher"
-  log_output_to /builds/watcher.log
-  # get full abs path to our script for nested call
-  local script_abs_path=$(cd $(dirname $0);/bin/pwd)/${0##*/}
-  while true; do
-    log "Watcher is still alive"
-    for d in `ls -d tegra-*[0-9] panda-*[0-9] 2> /dev/null`; do
-      log "..checking $d"
-      $script_abs_path $d &
-    done
-    log "..done next run in ${CYCLE_WAIT} seconds."
-    sleep ${CYCLE_WAIT}
+  log "STARTING Watcher"
+  ls -d /builds/panda-*[0-9] 2>/dev/null | sed 's:.*/::' | while read device; do
+    log "..checking $device"
+    "${0}" "${device}" &
   done
+  log "Watcher completed."
 }
 
+# SCRIPT ENTRY POINT HERE...
+
 if [ "$#" -eq 0 ]; then
-   watch_launcher;
+  watch_launcher 2>&1 | tee -a "/builds/watcher.log"
 else
-   device_check $1 ;
-fi;
+  device="${1}"
+  device_check "${device}" >>"/builds/${device}/watcher.log" 2>&1
+fi

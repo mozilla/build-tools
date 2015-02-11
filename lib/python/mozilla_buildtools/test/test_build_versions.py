@@ -210,9 +210,6 @@ class TestBumpFile(unittest.TestCase):
         self._doTest("js/src/config/milestone.txt",
                      "1.9.2.4pre", "1.9.2.5pre", "1.9.2.5pre")
 
-    def testBumpDefaultVersionTxt(self):
-        self._doTest("default-version.txt", "1.1.2pre", "1.1.3pre", "1.1.3pre")
-
     def testBumpConfVarsSh(self):
         self._doTest("confvars.sh", unbumpedConfVarsSh, bumpedConfVarsSh,
                      "4.0b6pre")
@@ -231,7 +228,19 @@ class TestGetPossibleNextVersions(unittest.TestCase):
         got = getPossibleNextVersions('5.0')
         self.assertEquals(set(['5.0.1', '6.0']), got)
 
+    def testFirstEsr(self):
+        got = getPossibleNextVersions('24.0esr')
+        self.assertEquals(set(['24.1.0esr', '24.0.1esr']), got)
+
     def testEsr(self):
+        got = getPossibleNextVersions('24.2.0esr')
+        self.assertEquals(set(['24.2.1esr', '24.3.0esr']), got)
+
+    def testEsrResetLastDigit(self):
+        got = getPossibleNextVersions('24.4.1esr')
+        self.assertEquals(set(['24.4.2esr', '24.5.0esr']), got)
+
+    def testEsrDeprecatedStyle(self):
         got = getPossibleNextVersions('10.0.4esr')
         self.assertEquals(set(['10.0.5esr']), got)
 

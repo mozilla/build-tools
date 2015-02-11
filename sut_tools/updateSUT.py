@@ -6,12 +6,15 @@
 
 import urllib2
 import sys
-import time
 import os
+
+import site
+site.addsitedir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../lib/python"))
+
 from sut_lib import connect, log
 
 # Constants
-target_version = "1.16"
+target_version = "1.20"
 apkfilename = "sutAgentAndroid.apk"
 device_name = os.getenv('SUT_NAME')
 apkFoopyDirPattern = "/builds/%(device_name)s"
@@ -71,7 +74,7 @@ def doUpdate(dm):
 
     dm.debug = _oldDebug  # Restore it
 
-    if ver == None:
+    if ver is None:
         log.error("Automation Error: updateSUT.py: We should have been able to connect and determine the version.")
         return RETCODE_REVERIFY_FAILED
     elif not isVersionCorrect(ver=ver):
@@ -100,7 +103,7 @@ def version(dm):
 
 
 def download_apk():
-    url = 'http://build.mozilla.org/talos/mobile/sutAgentAndroid.%s.apk' % target_version
+    url = 'http://talos-bundles.pvt.build.mozilla.org/mobile/sutAgentAndroid.%s.apk' % target_version
     log.info("INFO: updateSUT.py: We're downloading the apk: %s" % url)
     req = urllib2.Request(url)
     try:

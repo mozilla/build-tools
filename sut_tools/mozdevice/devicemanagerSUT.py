@@ -991,7 +991,8 @@ class DeviceManagerSUT(DeviceManager):
         else:
             try:
                 data = self._runCmds([{'cmd': 'testroot'}])
-            except:
+            except BaseException as e:
+                print "Caught Exception:", e
                 return None
 
             deviceRoot = data.strip() + '/tests'

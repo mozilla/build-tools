@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 def getShippedLocales(product, appName, version, buildNumber, sourceRepo,
-                      hg='http://hg.mozilla.org', revision=None):
+                      hg='https://hg.mozilla.org', revision=None):
     if revision is not None:
         tag = revision
     else:
@@ -45,9 +45,8 @@ def parsePlainL10nChangesets(changesets):
 
 
 def getL10nRepositories(changesets, l10nRepoPath, relbranch=None):
-    """Reads in a list of locale names and revisions for their associated
-       repository from 'fileName'.
-    """
+    """Parses a list of locale names and revisions for their associated
+       repository from the 'changesets' string passed in."""
     # urljoin() will strip the last part of l10nRepoPath it doesn't end with
     # "/"
     if not l10nRepoPath.endswith('/'):
@@ -64,8 +63,7 @@ def getL10nRepositories(changesets, l10nRepoPath, relbranch=None):
     except (TypeError, ValueError):
         for locale, revision in parsePlainL10nChangesets(changesets).iteritems():
             if revision == 'FIXME':
-                raise Exception('Found FIXME in %s for locale "%s"' %
-                                (fileName, locale))
+                raise Exception('Found FIXME in changesets for locale "%s"' % locale)
             locale = urljoin(l10nRepoPath, locale)
             repositories[locale] = {
                 'revision': revision,
@@ -142,7 +140,7 @@ def makeReleaseRepackUrls(productName, brandName, version, platform,
 
 def getReleaseLocalesForChunk(productName, appName, version, buildNumber,
                               sourceRepo, platform, chunks, thisChunk,
-                              hg='http://hg.mozilla.org'):
+                              hg='https://hg.mozilla.org'):
     possibleLocales = getPlatformLocales(
         getShippedLocales(productName, appName, version, buildNumber,
                           sourceRepo, hg),

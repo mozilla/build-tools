@@ -5,7 +5,7 @@ Publisher for Pulse events.
 Consumes new events being written into a queue directory by the PulseStatus
 plugin
 
-see http://hg.mozilla.org/users/clegnitto_mozilla.com/mozillapulse/ for pulse
+see https://hg.mozilla.org/users/clegnitto_mozilla.com/mozillapulse/ for pulse
 code
 """
 import time

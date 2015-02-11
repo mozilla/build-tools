@@ -20,10 +20,14 @@ chunks=$3
 thisChunk=$4
 releaseConfig=$($JSONTOOL -k properties.release_config $PROPERTIES_FILE)
 releaseTag=$($JSONTOOL -k properties.release_tag $PROPERTIES_FILE)
+slavebuilddir=$($JSONTOOL -k properties.slavebuilddir $PROPERTIES_FILE)
 
 if [ -z "$BUILDBOT_CONFIGS" ]; then
-    export BUILDBOT_CONFIGS="http://hg.mozilla.org/build/buildbot-configs"
+    export BUILDBOT_CONFIGS="https://hg.mozilla.org/build/buildbot-configs"
 fi
+
+$PYTHON -u $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
+-s 16 -n info -n 'rel-*' -n 'tb-rel-*' -n $slavebuilddir
 
 $PYTHON $MY_DIR/chunked-verify.py -t $releaseTag -r $releaseConfig \
   -b $BUILDBOT_CONFIGS -p $platform --chunks $chunks --this-chunk $thisChunk \

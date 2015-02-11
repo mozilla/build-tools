@@ -6,7 +6,7 @@ use MozBuild::Util qw(GetBuildIDFromFTP);
 use Bootstrap::Util qw(GetBouncerToPatcherPlatformMap GetBouncerPlatforms GetBuildbotToFTPPlatformMap GetFTPToBuildbotPlatformMap GetEqualPlatforms);
 
 use base qw(Exporter);
-our @EXPORT_OK = qw(GetProductDetails GetReleaseBlock BumpFilePath);
+our @EXPORT_OK = qw(GetProductDetails GetReleaseBlock BumpFilePath BumpURL);
 
 sub GetProductDetails {
     my %args = @_;
@@ -152,6 +152,18 @@ sub BumpFilePath {
     }
 
     return $newPath;
+}
+
+sub BumpURL {
+    my %args = @_;
+    my $oldURL = $args{'oldURL'};
+    my $version = $args{'version'};
+    my $oldVersion = $args{'oldVersion'};
+
+    my $newURL = $oldURL;
+    $newURL =~ s/$oldVersion/$version/;
+
+    return $newURL;
 }
 
 1;

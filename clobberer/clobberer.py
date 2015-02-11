@@ -7,6 +7,11 @@ import urllib
 import os
 import traceback
 import time
+if os.name == 'nt':
+    from win32file import RemoveDirectory, DeleteFile, \
+        GetFileAttributesW, SetFileAttributesW, \
+        FILE_ATTRIBUTE_NORMAL, FILE_ATTRIBUTE_DIRECTORY
+    from win32api import FindFiles
 
 clobber_suffix = '.deleteme'
 
@@ -34,11 +39,37 @@ def read_file(fn):
     except ValueError:
         return None
 
+def rmdirRecursiveWindows(dir):
+    """Windows-specific version of rmdirRecursive that handles
+    path lengths longer than MAX_PATH.
+    """
+
+    dir = os.path.realpath(dir)
+    # Make sure directory is writable
+    SetFileAttributesW('\\\\?\\' + dir, FILE_ATTRIBUTE_NORMAL)
+
+    for ffrec in FindFiles('\\\\?\\' + dir + '\\*.*'):
+        file_attr = ffrec[0]
+        name = ffrec[8]
+        if name == '.' or name == '..':
+            continue
+        full_name = os.path.join(dir, name)
+
+        if file_attr & FILE_ATTRIBUTE_DIRECTORY:
+            rmdirRecursiveWindows(full_name)
+        else:
+            SetFileAttributesW('\\\\?\\' + full_name, FILE_ATTRIBUTE_NORMAL)
+            DeleteFile('\\\\?\\' + full_name)
+    RemoveDirectory('\\\\?\\' + dir)
 
 def rmdirRecursive(dir):
     """This is a replacement for shutil.rmtree that works better under
     windows. Thanks to Bear at the OSAF for the code.
     (Borrowed from buildbot.slave.commands)"""
+    if os.name == 'nt':
+        rmdirRecursiveWindows(dir)
+        return
+
     if not os.path.exists(dir):
         # This handles broken links
         if os.path.islink(dir):
@@ -102,8 +133,8 @@ def do_clobber(dir, dryrun=False, skip=None):
                     else:
                         shutil.move(f, clobber_path)
                         rmdirRecursive(clobber_path)
-    except:
-        print "Couldn't clobber properly, bailing out."
+    except Exception as e:
+        print("[clobber failed]: {}".format(e.message))
         sys.exit(1)
 
 
@@ -112,7 +143,12 @@ def getClobberDates(clobberURL, branch, buildername, builddir, slave, master):
                   builddir=builddir, slave=slave, master=master)
     url = "%s?%s" % (clobberURL, urllib.urlencode(params))
     print "Checking clobber URL: %s" % url
-    data = urllib2.urlopen(url).read().strip()
+    # The timeout arg was added to urlopen() at Python 2.6
+    # Deprecate this test when esr17 reaches EOL
+    if sys.version_info[:2] < (2, 6):
+        data = urllib2.urlopen(url).read().strip()
+    else:
+        data = urllib2.urlopen(url, timeout=30).read().strip()
 
     retval = {}
     try:
@@ -186,6 +222,7 @@ if __name__ == "__main__":
         our_clobber_date = read_file("last-clobber")
 
         clobber = False
+        clobberType = None
 
         print "%s:Our last clobber date: " % builddir, ts_to_str(our_clobber_date)
         print "%s:Server clobber date:   " % builddir, ts_to_str(server_clobber_date)
@@ -200,6 +237,7 @@ if __name__ == "__main__":
                 # If the server's clobber date is greater than our last clobber date,
                 # then we should clobber.
                 clobber = True
+                clobberType = "forced"
                 # We should also update our clobber date to match the server's
                 our_clobber_date = server_clobber_date
                 if who:
@@ -218,11 +256,13 @@ if __name__ == "__main__":
                 # We've never been clobbered
                 # Set our last clobber time to now, so that we'll clobber
                 # properly after periodicClobberTime
+                clobberType = "purged"
                 our_clobber_date = now
                 write_file(our_clobber_date, "last-clobber")
             elif periodicClobberTime and now > our_clobber_date + periodicClobberTime:
                 # periodicClobberTime has passed since our last clobber
                 clobber = True
+                clobberType = "periodic"
                 # Update our clobber date to now
                 our_clobber_date = now
                 print "%s:More than %s seconds have passed since our last clobber" % (builddir, periodicClobberTime)
@@ -232,3 +272,9 @@ if __name__ == "__main__":
             print "%s:Clobbering..." % builddir
             do_clobber(builder_dir, options.dryrun, options.skip)
             write_file(our_clobber_date, "last-clobber")
+
+        # If this is the build dir for the current job, display the clobber type in TBPL.
+        # Note in the case of purged clobber, we output the clobber type even though no
+        # clobber was performed this time.
+        if clobberType and builddir == my_builddir:
+            print "TinderboxPrint: %s clobber" % clobberType

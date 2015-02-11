@@ -3,6 +3,8 @@
 USAGE()
 {
 cat <<EOF
+ DEPRECATED: use tools/scripts/periodic_file_updates/periodic_file_updates.sh instead.
+
  usage: `basename $0` [-n] [-c] [-d] [-a]
            [-p product]
            [--hgtool hgtool_location]
@@ -18,6 +20,7 @@ EOF
 DRY_RUN=false
 PRODUCT="firefox"
 BRANCH=""
+LATEST_DIR=""
 PLATFORM="linux-x86_64"
 PLATFORM_EXT="tar.bz2"
 UNPACK_CMD="tar jxf"
@@ -25,7 +28,7 @@ CLOSED_TREE=false
 DONTBUILD=false
 APPROVAL=false
 HG_SSH_USER='ffxbld'
-HG_SSH_KEY='~cltbld/.ssh/ffxbld_dsa'
+HG_SSH_KEY='~cltbld/.ssh/ffxbld_rsa'
 REPODIR='hsts'
 HGTOOL=''
 MIRROR=''
@@ -41,6 +44,7 @@ DIFF="diff -up"
 PRELOAD_SCRIPT="getHSTSPreloadList.js"
 PRELOAD_ERRORS="nsSTSPreloadList.errors"
 PRELOAD_INC="nsSTSPreloadList.inc"
+BASEDIR=`pwd`
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -66,6 +70,8 @@ done
 if [ "$BRANCH" == "" ]; then
     USAGE
     exit 1
+else
+    LATEST_DIR=latest-`basename ${BRANCH}`
 fi
 
 HGREPO="http://${HGHOST}/${BRANCH}"
@@ -85,17 +91,18 @@ compare_preload_lists()
     WGET_STATUS=$?
     if [ ${WGET_STATUS} != 0 ]; then
         echo "ERROR: wget exited with a non-zero exit code: $WGET_STATUS"
-        return ${WGET_STATUS}
+        exit ${WGET_STATUS}
     fi
-    VERSION=`cat version.txt | sed 's/[^.0-9]*$//'`
+    VERSION=`cat version.txt`
     if [ "${VERSION}" == "" ]; then
         echo "ERROR: Unable to parse version from version.txt"
+	exit 1
     fi
 
     BROWSER_ARCHIVE="${PRODUCT}-${VERSION}.en-US.${PLATFORM}.${PLATFORM_EXT}"
-    BROWSER_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/nightly/latest-${BRANCH}/${BROWSER_ARCHIVE}"
+    BROWSER_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/nightly/${LATEST_DIR}/${BROWSER_ARCHIVE}"
     TESTS_ARCHIVE="${PRODUCT}-${VERSION}.en-US.${PLATFORM}.tests.zip"
-    TESTS_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/nightly/latest-${BRANCH}/${TESTS_ARCHIVE}"
+    TESTS_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/nightly/${LATEST_DIR}/${TESTS_ARCHIVE}"
     PRELOAD_SCRIPT_HG="${HGREPO}/raw-file/default/security/manager/tools/${PRELOAD_SCRIPT}"
     PRELOAD_ERRORS_HG="${HGREPO}/raw-file/default/security/manager/boot/src/${PRELOAD_ERRORS}"
     PRELOAD_INC_HG="${HGREPO}/raw-file/default/security/manager/boot/src/${PRELOAD_INC}"
@@ -108,13 +115,13 @@ compare_preload_lists()
 	WGET_STATUS=$?
 	if [ ${WGET_STATUS} != 0 ]; then
             echo "ERROR: wget exited with a non-zero exit code: ${WGET_STATUS}"
-            return ${WGET_STATUS}
+            exit ${WGET_STATUS}
 	fi
     done
     for F in ${BROWSER_ARCHIVE} ${TESTS_ARCHIVE} ${PRELOAD_SCRIPT} ${PRELOAD_ERRORS} ${PRELOAD_INC}; do
 	if [ ! -f ${F} ]; then
 	    echo "Downloaded file ${F} not found."
-	    return 1
+	    exit 1
 	fi
     done
 
@@ -123,14 +130,14 @@ compare_preload_lists()
     ${UNPACK_CMD} ${BROWSER_ARCHIVE}
     mkdir tests && cd tests
     ${UNZIP} ../${TESTS_ARCHIVE}
-    cd ..
+    cd ${BASEDIR}
     cp tests/bin/xpcshell ${PRODUCT}
 
     # Run the script to get an updated preload list.
     echo "INFO: Generating new HSTS preload list..."
-    cd  ${PRODUCT}
-    rm -rf ${PRELOAD_ERRORS} ${PRELOAD_INC}
-    LD_LIBRARY_PATH=. ./xpcshell ../${PRELOAD_SCRIPT}
+    cd ${PRODUCT}
+    echo INFO: Running \"LD_LIBRARY_PATH=. ./xpcshell ${BASEDIR}/${PRELOAD_SCRIPT} ${BASEDIR}/${PRELOAD_INC}\"
+    LD_LIBRARY_PATH=. ./xpcshell ${BASEDIR}/${PRELOAD_SCRIPT} ${BASEDIR}/${PRELOAD_INC}
 
     # The created files should be non-empty.
     echo "INFO: Checking whether new HSTS preload list is valid..."
@@ -141,9 +148,18 @@ compare_preload_lists()
         echo "New HSTS preload list is empty. That's less good."
         exit 1
     fi
-    cd ..
+    cd ${BASEDIR}
 
     # Check for differences
+    echo "INFO: diffing old/new HSTS error lists..."
+    ${DIFF} ${PRELOAD_ERRORS} ${PRODUCT}/${PRELOAD_ERRORS}
+    DIFF_STATUS=$?
+    case "${DIFF_STATUS}" in
+        0|1) ;;
+        *) echo "ERROR: diff exited with exit code: ${DIFF_STATUS}"
+           exit ${DIFF_STATUS}
+    esac
+
     echo "INFO: diffing old/new HSTS preload lists..."
     ${DIFF} ${PRELOAD_INC} ${PRODUCT}/${PRELOAD_INC}
     DIFF_STATUS=$?
@@ -215,7 +231,7 @@ update_preload_list_in_hg()
     echo ${HG} -R ${REPODIR} commit -u \"${HG_SSH_USER}\" -m \"${COMMIT_MESSAGE}\"
     ${HG} -R ${REPODIR} commit -u "${HG_SSH_USER}" -m "${COMMIT_MESSAGE}"
     echo ${HG} -R ${REPODIR} push -e \"ssh -l ${HG_SSH_USER} -i ${HG_SSH_KEY}\" ${HGPUSHREPO}
-    #${HG} -R ${REPODIR} push -e "ssh -l ${HG_SSH_USER} -i ${HG_SSH_KEY}" ${HGPUSHREPO}
+    ${HG} -R ${REPODIR} push -e "ssh -l ${HG_SSH_USER} -i ${HG_SSH_KEY}" ${HGPUSHREPO}
     PUSH_STATUS=$?
     if [ ${PUSH_STATUS} != 0 ]; then
         echo "ERROR: hg push exited with exit code: ${PUSH_STATUS}, probably raced another changeset"

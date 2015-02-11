@@ -1,5 +1,5 @@
 import unittest
-from build.paths import getRealpath
+from build.paths import getRealpath, get_repo_dirname
 import os
 from os import path
 from tempfile import mkdtemp
@@ -101,3 +101,21 @@ class TestgetRealpath(unittest.TestCase):
         os.symlink(symlink1, path.join(self.tempdir, symlink2))
         self.assertEqual(fname, getRealpath(symlink2, cwd=self.tempdir,
                                             depth=3))
+
+
+class TestGetRepoDirname(unittest.TestCase):
+
+    def test_regular(self):
+        self.assertEqual("repo", get_repo_dirname("path/repo"))
+
+    def test_trailing_slash(self):
+        self.assertEqual("repo", get_repo_dirname("path/repo/"))
+
+    def test_one_level(self):
+        self.assertEqual("repo", get_repo_dirname("repo"))
+
+    def test_one_level_with_slashes(self):
+        self.assertEqual("repo", get_repo_dirname("/repo/"))
+
+    def test_multiple_levels(self):
+        self.assertEqual("repo", get_repo_dirname("path//path2/repo"))

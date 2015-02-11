@@ -1,86 +1,78 @@
 $(document).ready(function() {
+    // Call out nondefault options
+    $('<span> (not run by default)</span>')
+        .addClass('info')
+        .insertAfter($('.nondefault').parent());
+
     // Several subsections are headed by all/none selectors. Make them control
     // their dependents
 
-    // If the all-selector is checked, then force all items to be checked
+    // If the all-selector is checked, then force all default items to be checked
     var suppress_loop = false;
     $('.all-selector').change(function() {
-        if ($(this).attr('checked')) {
+        if ($(this).prop('checked')) {
             suppress_loop = true;
-            $(this).closest('.option-group').find(':checkbox:not(.group-selector)')
-                .attr('checked', 1);
-            $(this).closest('.option-group').find('.none-selector')
-                .removeAttr('checked');
+            var group = $(this).closest('.option-group');
+            group.find(':checkbox:not(.group-selector):not(.nondefault)')
+                .prop('checked', true);
+            group.find('.none-selector')
+                .prop('checked', false);
             suppress_loop = false;
         }
     });
+
+    // If the none-selector is checked, then force all items to be unchecked
     $('.none-selector').change(function() {
-        if ($(this).attr('checked')) {
+        if ($(this).prop('checked')) {
             suppress_loop = true;
-            $(this).closest('.option-group').find(':checkbox:not(.group-selector)')
-                .removeAttr('checked');
-            $(this).closest('.option-group').find('.all-selector')
-                .removeAttr('checked');
+            var group = $(this).closest('.option-group');
+            group.find(':checkbox:not(.group-selector)')
+                .prop('checked', false);
+            group.find('.all-selector')
+                .prop('checked', false);
             suppress_loop = false;
         }
+    });
+
+    // Handle subgroups (eg mochitests-all).
+    $('.subgroup-all-selector').change(function() {
+        if ($(this).prop('checked')) {
+            $(this).closest('.option-subgroup').find(':checkbox:not(.subgroup-selector):not(.nondefault)')
+                .prop('checked', true);
+        }
+    });
+
+    // This must come before the regular checkboxes, so that the All selector
+    // is set in time to collapse the toplevel 'all'.
+    $('.option-subgroup').find(':checkbox:not(.subgroup-selector)').change(function() {
+        var subgroup = $(this).closest('.option-subgroup');
+        var unchecked_defaults =
+            subgroup.find(':checkbox:not(.subgroup-selector):not(:checked):not(.nondefault)');
+        subgroup.find('.subgroup-selector').prop('checked', unchecked_defaults.length == 0);
+    });
+
+    // Make all option-group descendant checkboxes control the group-selectors
+    $('.option-group').find(':checkbox:not(.group-selector)').change(function() {
+        if (suppress_loop) return;
+        var group = $(this).closest('.option-group');
+
+        var checked = group.find(':checkbox:not(.group-selector):checked');
+        group.find('.none-selector').prop('checked', checked.length == 0);
+
+        var unchecked_defaults =
+            group.find(':checkbox:not(.group-selector):not(:checked):not(.nondefault)');
+        group.find('.all-selector').prop('checked', unchecked_defaults.length == 0);
     });
 
     // Force initial update
     $('.all-selector:checked').change();
     $('.none-selector:checked').change();
 
-    // Make all option-group descendant checkboxes control the group-selectors
-    $('.option-group').find(':checkbox:not(.group-selector)').change(function() {
-        if (suppress_loop) return;
-        // sibs are the "sibling checkboxes", but I can't just use siblings()
-        // because they're wrapped in <li> tags.
-        var sibs = $(this).closest('.option-group').find(':checkbox:not(.group-selector)');
-        if ($(this).attr('checked')) {
-            $(this).closest('.option-group').find('.none-selector')
-                .removeAttr('checked'); // 'None' is no longer true
-            if (sibs.filter(':checked').length == sibs.length) {
-                // All are checked. Mark 'All'.
-                $(this).closest('.option-group').find('.all-selector')
-                    .attr('checked', 1);
-            } else {
-                $(this).closest('.option-group').find('.all-selector')
-                    .removeAttr('checked'); // 'All' is no longer true
-            }
-        } else {
-            $(this).closest('.option-group').find('.all-selector')
-                .removeAttr('checked'); // 'All' is no longer true
-            if (sibs.filter(':checked').length == 0) {
-                // None are checked. Mark 'None'.
-                $(this).closest('.option-group').find('.none-selector')
-                    .attr('checked', 1);
-            }
-        }
-    });
-
-    // Hacks to handle the mochitests-all subgroup
-    $('.subgroup-all-selector').change(function() {
-        if ($(this).attr('checked')) {
-            $(this).closest('.option-subgroup').find(':checkbox:not(.subgroup-all-selector)')
-                .attr('checked', 1);
-        }
-    });
-    $('.option-subgroup').find(':checkbox:not(.subgroup-all-selector)').change(function() {
-        var sibs = $(this).closest('.option-subgroup').find(':checkbox:not(.subgroup-all-selector)');
-        if ($(this).attr('checked')) {
-            if (sibs.filter(':checked').length == sibs.length) {
-                // All are checked. Mark 'All'.
-                $(this).closest('.option-subgroup').find('.subgroup-all-selector')
-                    .attr('checked', 1);
-            }
-        } else {
-            $(this).closest('.option-subgroup').find('.subgroup-all-selector')
-                .removeAttr('checked'); // 'All' is no longer true
-        }
-    });
-
+    // Selecting anything should update the try syntax
     $(':checkbox').change(setresult);
     $(':radio').change(setresult);
 
+    // Initialize the try syntax
     setresult();
 });
 
@@ -108,6 +100,8 @@ function setresult() {
     var value = 'try: ';
     var args = [];
 
+    args.push('try:');
+
     $('.option-radio[try-section]').each(function() {
         var arg = '-' + $(this).attr('try-section') + ' ';
         arg += $(this).find(':checked').attr('value');
@@ -131,52 +125,61 @@ function setresult() {
             names = ['all'];
         } else {
             var group = $(this).closest('.option-group');
-            var options;
-            if (group.find('.subgroup-all-selector:checked').length > 0) {
-                // Special-case. We need to collapse things into a subgroup "all" value
-                options = group.find(':checked:not(.group-selector):not(.option-subgroup *)')
-                    .add('.subgroup-all-selector', group);
-            } else {
-                options = group.find(':checked:not(.group-selector):not(.subgroup-all-selector)');
-            }
+            var options = group.find(':checked:not(.group-selector):not(.subgroup-selector):not(.nondefault)');
+            group.find('.subgroup-all-selector:checked').each(function(i, elm) {
+                options = options.add($(elm));
+                var subgroup = $(this).closest('.option-subgroup');
+                options = options.not(subgroup.find(':checked:not(.group-selector):not(.subgroup-selector):not(.nondefault)'))
+            })
             options.each(function(i,elt){
-              names.push($(elt).attr('value'));
-              var project = $(elt).attr('data-project');
-              if (project)
-                have_projects[project] = true;
+                names.push($(elt).attr('value'));
+                var project = $(elt).attr('data-project');
+                if (project)
+                    have_projects[project] = true;
             });
         }
 
-        // If you specifically request a b2g or android build platform, then
-        // disable the filtering. This does not apply when you just pick 'all'.
-        var disable_filters = ("b2g" in have_projects) || ("android" in have_projects);
-        $('[try-filter=' + tryopt + ']').prop('disabled', disable_filters);
-        $('[try-filter=' + tryopt + ']').fadeTo(0, disable_filters ? 0.5 : 1.0);
+        // Add in the nondefault builders
+        $(this).find(':checked.nondefault').each(function(i,elt) {
+            names.push($(elt).attr('value'));
+        });
 
         var filters = [];
         $('[try-filter=' + tryopt + '] :checked').each(function () {
-          filters.push.apply(filters, $(this).attr('value').split(','));
+            filters.push.apply(filters, $(this).attr('value').split(','));
         });
-        if (filters.length > 0 && !disable_filters) {
-          filters = resolveFilters(filters).join(',');
-          names = names.map(function (n) { return n + '[' + filters + ']'; });
+        if (filters.length > 0) {
+            filters = resolveFilters(filters).join(',');
+            names = names.map(function (n) { return n + '[' + filters + ']'; });
         }
 
         arg += names.join(',');
         args.push(arg);
     });
 
-    value = 'try: ' + args.join(' ');
+    if ($('.profile').is(':checked')) {
+        args.push('mozharness: --spsProfile');
+    }
 
-    if ($('#post_to_bugzilla').attr('checked')) {
-        value = value + ' --post-to-bugzilla Bug ' + document.getElementById("bugnumber").value;
+    value = args.join(' ');
+    var incomplete = false;
+
+    if (value.match(/-b none/)) {
+        $('#build_type-none').addClass('attention')
+        incomplete = true;
+    } else {
+        $('#build_type-none').removeClass('attention')
     }
 
     if (value.match(/-p none/)) {
-        value = "(NO JOBS CHOSEN)";
         $('#platforms-none').addClass('attention');
+        incomplete = true;
     } else {
         $('#platforms-none').removeClass('attention');
+    }
+
+    if (incomplete) {
+        value = "(NO JOBS CHOSEN)";
     }
 
     $('.result_value').val(value);

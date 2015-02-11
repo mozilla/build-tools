@@ -65,7 +65,7 @@ Options requiring arguments:
                           is different than --version.
   --build-number/-n       The current build number of the product.
   --aus-server-url/-a     The URL to be used when constructing update URLs.
-                          Eg. https://aus2.mozilla.org
+                          Eg. https://aus4.mozilla.org
   --staging-server/-s     The staging server that builds should be pulled from.
   --verify-config/-c      The path and filename of the config file to be bumped.
   --old-candidates-dir/-d The path (on the staging server) to the candidates
@@ -430,7 +430,7 @@ sub RunUnitTests {
                 oldOldBuildid => '2008070206',
                 oldOldFromBuild => '/firefox/releases/3.0.1/linux-i686/%locale%/firefox-3.0.1.tar.bz2',
                 oldOldToBuild => '/firefox/nightly/3.0.2-candidates/build6/firefox-3.0.2.%locale%.linux-i686.tar.bz2',
-                ausServer => 'https://aus2.mozilla.org',
+                ausServer => 'https://aus4.mozilla.org',
                 stagingServer => 'build.mozilla.org',
                 oldCandidatesDir => '/update-bump-unit-tests/pub/mozilla.org/firefox/nightly/3.0.2-candidates/build6',
                 prettyCandidatesDir => '0',
@@ -458,7 +458,7 @@ sub RunUnitTests {
                 oldOldBuildid => '20080829082037',
                 oldOldFromBuild => '/firefox/releases/shiretoko/alpha2/win32/en-US/Shiretoko Alpha 2 Setup.exe',
                 oldOldToBuild => '/firefox/nightly/3.1b1-candidates/build2/win32/%locale%/Firefox 3.1 Beta 1 Setup.exe',
-                ausServer => 'https://aus2.mozilla.org',
+                ausServer => 'https://aus4.mozilla.org',
                 stagingServer => 'build.mozilla.org',
                 oldCandidatesDir => '/update-bump-unit-tests/pub/mozilla.org/firefox/nightly/3.1b1-candidates/build2',
                 prettyCandidatesDir => '1',
@@ -485,7 +485,7 @@ sub RunUnitTests {
                 oldOldBuildid => '20091221164558',
                 oldOldFromBuild => '/firefox/nightly/3.5.7-candidates/build1/win32/%locale%/Firefox Setup 3.5.7.exe',
                 oldOldToBuild => '/firefox/nightly/3.6a1-candidates/build1/win32/%locale%/MozillaDeveloperPreview Setup 3.6 Aplha 1.exe',
-                ausServer => 'https://aus2.mozilla.org',
+                ausServer => 'https://aus4.mozilla.org',
                 stagingServer => 'build.mozilla.org',
                 oldCandidatesDir => '/update-bump-unit-tests/pub/mozilla.org/firefox/nightly/3.6a1-candidates/build1',
                 prettyCandidatesDir => '1',
@@ -513,7 +513,7 @@ sub RunUnitTests {
                 oldOldBuildid => '',
                 oldOldFromBuild => '',
                 oldOldToBuild => '',
-                ausServer => 'https://aus2.mozilla.org',
+                ausServer => 'https://aus4.mozilla.org',
                 stagingServer => 'build.mozilla.org',
                 oldCandidatesDir => '/update-bump-unit-tests/pub/mozilla.org/firefox/nightly/3.5.5-candidates/build1',
                 prettyCandidatesDir => '1',
@@ -540,7 +540,7 @@ sub RunUnitTests {
                 oldOldBuildid => '',
                 oldOldFromBuild => '',
                 oldOldToBuild => '',
-                ausServer => 'https://aus2.mozilla.org',
+                ausServer => 'https://aus4.mozilla.org',
                 stagingServer => 'build.mozilla.org',
                 oldCandidatesDir => '/update-bump-unit-tests/pub/mozilla.org/firefox/nightly/3.5.5-candidates/build1',
                 prettyCandidatesDir => '1',

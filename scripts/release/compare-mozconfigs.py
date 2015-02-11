@@ -22,12 +22,15 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
 
     mozconfigs = {}
+    nightly_mozconfigs = {}
     for arg in args:
-        platform, mozconfig = arg.split(',')
+        platform, mozconfig, nightly_mozconfig = arg.split(',')
         mozconfigs[platform] = mozconfig
+        nightly_mozconfigs[platform] = nightly_mozconfig
 
     passed = verify_mozconfigs(options.branch, options.revision, options.hghost,
-                               options.product, mozconfigs, options.whitelist)
+                               options.product, mozconfigs, nightly_mozconfigs,
+                               options.whitelist)
 
     if passed:
         logging.info('Mozconfig check passed!')

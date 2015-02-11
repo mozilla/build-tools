@@ -39,8 +39,9 @@ from release.info import readReleaseConfig, getRepoMatchingBranch
 from release.versions import getL10nDashboardVersion
 from release.l10n import getShippedLocales
 from release.platforms import getLocaleListFromShippedLocales
-from release.sanity import check_buildbot, find_version, locale_diff, \
+from release.sanity import check_buildbot, locale_diff, \
     sendchange, verify_mozconfigs
+from release.partials import Partial
 from util.retry import retry
 
 log = logging.getLogger(__name__)
@@ -62,30 +63,6 @@ def verify_repo(branch, revision, hghost):
                   " Check again, or use -b to bypass")
         success = False
         error_tally.add('verify_repo')
-    return success
-
-
-def verify_build(sourceRepo, hghost):
-    """ Ensure that the bumpFiles match what the release config wants them to
-    be"""
-    success = True
-    for filename, versions in sourceRepo['bumpFiles'].iteritems():
-        try:
-            url = make_hg_url(hghost, sourceRepo['path'],
-                              revision=sourceRepo['revision'],
-                              filename=filename)
-            found_version = urllib2.urlopen(url).read()
-            if not find_version(found_version, versions['version']):
-                log.error("%s has incorrect version '%s' (expected '%s')" %
-                          (filename, found_version, versions['version']))
-                success = False
-                error_tally.add('verify_build')
-        except urllib2.HTTPError, inst:
-            log.error("cannot find %s. Check again, or -b to bypass" %
-                      inst.geturl())
-            success = False
-            error_tally.add('verify_build')
-
     return success
 
 
@@ -141,6 +118,19 @@ def query_locale_revisions(l10n_changesets):
     return locales
 
 
+def get_l10n_changesets(locale_url):
+    try:
+        urllib2.urlopen(locale_url)
+        return True
+    except urllib2.HTTPError, e:
+        reason = ""
+        if hasattr(e, 'reason'):
+            # Python 2.6 does not have reason
+            reason = e.reason
+        log.error("error checking l10n changeset %s: %d %s" % (locale_url, e.code, reason))
+        raise e
+
+
 def verify_l10n_changesets(hgHost, l10n_changesets):
     """Checks for the existance of all l10n changesets"""
     success = True
@@ -155,11 +145,11 @@ def verify_l10n_changesets(hgHost, l10n_changesets):
         locale_url = make_hg_url(hgHost, localePath, protocol='https')
         log.info("Checking for existence l10n changeset %s %s in repo %s ..."
                  % (locale, revision, locale_url))
-        try:
-            urllib2.urlopen(locale_url)
-        except urllib2.HTTPError, e:
-            log.error("error checking l10n changeset %s: %d %s" % (locale_url, e.code, e.reason))
-            success = False
+
+        success = retry(get_l10n_changesets,
+                        kwargs=dict(locale_url=locale_url), attempts=3,
+                        sleeptime=1, retry_exceptions=(urllib2.HTTPError,))
+        if not success:
             error_tally.add('verify_l10n')
     return success
 
@@ -248,6 +238,34 @@ def verify_options(cmd_options, config):
     return success
 
 
+def verify_partial(platforms, product, version, build_number,
+                   HACK_first_released_versions=None, protocol='http',
+                   server='ftp.mozilla.org'):
+
+    from distutils.version import LooseVersion
+    partial = Partial(product, version, build_number, protocol, server)
+    log.info("Checking for existence of %s complete mar file..." % partial)
+    complete_mar_name = partial.complete_mar_name()
+    for platform in platforms:
+        if HACK_first_released_versions and platform in HACK_first_released_versions:
+            if LooseVersion(version) < LooseVersion(HACK_first_released_versions[platform]):
+                # No partial for this!
+                continue
+        log.info("Platform: %s" % platform)
+        complete_mar_url = partial.complete_mar_url(platform=platform)
+        if partial.exists(platform=platform):
+            log.info("complete mar: %s exists, url: %s" % (complete_mar_name,
+                                                           complete_mar_url))
+        else:
+            log.error("Requested file, %s, does not exist on %s"
+                      " Check again, or use -b to bypass" % (complete_mar_name,
+                                                             complete_mar_url))
+            error_tally.add('verify_partial')
+            return False
+
+    return True
+
+
 if __name__ == '__main__':
     parser = OptionParser(__doc__)
     parser.set_defaults(
@@ -268,6 +286,7 @@ if __name__ == '__main__':
         configs_branch='production',
         concurrency=8,
         skip_verify_configs=False,
+        checkMultiLocale=True,
     )
     parser.add_option(
         "-b", "--bypass-check", dest="check", action="store_false",
@@ -319,6 +338,9 @@ if __name__ == '__main__':
     parser.add_option("--skip-verify-configs", dest="skip_verify_configs",
                       action="store_true",
                       help="Do not verify configs agains remote repos")
+    parser.add_option("--bypass-multilocale-check", dest="checkMultiLocale",
+                      action="store_false",
+                      help="Do not verify that multilocale is enabled for Fennec")
 
     options, args = parser.parse_args()
     if not options.dryrun and not args:
@@ -402,6 +424,9 @@ if __name__ == '__main__':
                             'sourceRepositories']['mobile']['revision']
                 except KeyError:
                     log.error("Can't determine sourceRepo for mozconfigs")
+            nightly_mozconfigs = {}
+            for p in releaseConfig['mozconfigs']:
+                nightly_mozconfigs[p] = branchConfig['platforms'][p]['src_mozconfig']
             if options.checkMozconfigs and \
                     not verify_mozconfigs(
                         repo_path,
@@ -409,6 +434,7 @@ if __name__ == '__main__':
                         branchConfig['hghost'],
                         releaseConfig['productName'],
                         releaseConfig['mozconfigs'],
+                        nightly_mozconfigs,
                         options.whitelist):
                 test_success = False
                 error_tally.add('verify_mozconfig')
@@ -444,10 +470,18 @@ if __name__ == '__main__':
                         test_success = False
                         log.error("Error verifying l10n dashboard changesets")
 
+                if options.checkMultiLocale:
+                    if releaseConfig.get('enableMultiLocale'):
+                        f = open(l10nRevisionFile)
+                        if 'multilocale' not in f.read():
+                            test_success = False
+                            log.error("MultiLocale enabled but not present in l10n changesets")
+                        f.close()
+
                 # verify that l10n changesets match the shipped locales
                 if releaseConfig.get('shippedLocalesPath'):
                     sr = releaseConfig['sourceRepositories'][source_repo]
-                    sourceRepoPath = sr.get('clonePath', sr['path'])
+                    sourceRepoPath = sr['path']
                     shippedLocales = getLocaleListFromShippedLocales(
                         getShippedLocales(
                             releaseConfig['productName'],
@@ -455,7 +489,7 @@ if __name__ == '__main__':
                             releaseConfig['version'],
                             releaseConfig['buildNumber'],
                             sourceRepoPath,
-                            'http://hg.mozilla.org',
+                            'https://hg.mozilla.org',
                             sr['revision'],
                         ))
                     # l10n_changesets do not have an entry for en-US
@@ -470,18 +504,30 @@ if __name__ == '__main__':
             # verify that the relBranch + revision in the release_configs
             # exists in hg
             for sr in releaseConfig['sourceRepositories'].values():
-                sourceRepoPath = sr.get('clonePath', sr['path'])
+                sourceRepoPath = sr['path']
                 if not verify_repo(sourceRepoPath, sr['revision'],
                                    branchConfig['hghost']):
                     test_success = False
                     log.error("Error verifying repos")
 
-            # if this is a respin, verify that the version/milestone files
-            # have been bumped
-            if buildNumber > 1:
-                for sr in releaseConfig['sourceRepositories'].values():
-                    if not verify_build(sr, branchConfig['hghost']):
+            # check partial updates
+            partials = releaseConfig.get('partialUpdates')
+            if 'extraUpdates' in releaseConfig:
+                partials.extend(releaseConfig['extraUpdated'])
+            product = releaseConfig['productName']
+            platforms = releaseConfig['enUSPlatforms']
+            if partials:
+                for partial in partials:
+                    build_number = partials[partial]['buildNumber']
+                    # when bug 839926 lands, buildNumber must be None for releases
+                    # but it might have a value for betas (beta *might* use
+                    # unreleased builds see bug 1091694 c2)
+                    if not verify_partial(platforms, product, partial,
+                                          build_number,
+                                          releaseConfig.get("HACK_first_released_version"),
+                                          server=releaseConfig['ftpServer']):
                         test_success = False
+                        log.error("Error verifying partials")
 
     if test_success:
         if not options.dryrun:

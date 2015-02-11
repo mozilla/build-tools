@@ -30,6 +30,9 @@ if __name__ == '__main__':
         bundles=None,
     )
     parser.add_option(
+        "-v", "--verbose", dest="loglevel", action="store_const",
+        const=logging.DEBUG, help="verbose logging")
+    parser.add_option(
         "-r", "--rev", dest="revision", help="which revision to update to")
     parser.add_option(
         "-b", "--branch", dest="branch", help="which branch to update to")
@@ -48,6 +51,8 @@ if __name__ == '__main__':
                       help="add a mirror to try cloning/pulling from before repo")
     parser.add_option("--bundle", dest="bundles", action="append",
                       help="add a bundle to try downloading/unbundling from before doing a full clone")
+    parser.add_option("--purge", dest="auto_purge", action="store_true",
+                      help="Purge the destination directory (if it exists).")
 
     options, args = parser.parse_args()
 
@@ -85,6 +90,7 @@ if __name__ == '__main__':
                              shareBase=options.shared_dir,
                              clone_by_rev=options.clone_by_rev,
                              mirrors=options.mirrors,
-                             bundles=options.bundles)
+                             bundles=options.bundles,
+                             autoPurge=options.auto_purge)
 
     print "Got revision %s" % got_revision

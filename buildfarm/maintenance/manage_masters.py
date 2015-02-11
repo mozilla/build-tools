@@ -75,9 +75,11 @@ Supported actions:
     parser.set_defaults(
         hosts=[],
         roles=[],
+        datacentre=[],
         concurrency=1,
         show_list=False,
         all_masters=False,
+        ignored_roles=[],
     )
     parser.add_option("-f", "--master-file", dest="master_file",
                       help="list/url of masters")
@@ -85,6 +87,7 @@ Supported actions:
     parser.add_option("-R", "--role", dest="roles", action="append")
     parser.add_option("-M", "--match", dest="match", action="append",
                       help="masters that match the term")
+    parser.add_option("-D", "--datacentre", dest="datacentre", action="append")
     parser.add_option("-j", dest="concurrency", type="int")
     parser.add_option("-l", dest="show_list", action="store_true",
                       help="list hosts")
@@ -96,6 +99,8 @@ Supported actions:
                       help="Username passed to Fabric")
     parser.add_option("-k", "--ssh-key", dest="ssh_key",
                       help="SSH key passed to Fabric")
+    parser.add_option("--ignore-role", dest="ignored_roles", action="append",
+                      help="Ignore masters with this role. May be passed multiple times.")
 
     options, actions = parser.parse_args()
 
@@ -115,6 +120,10 @@ Supported actions:
 
     for m in all_masters:
         if not m['enabled'] and not options.all_masters:
+            continue
+        if options.ignored_roles and m['role'] in options.ignored_roles:
+            continue
+        if options.datacentre and m['datacentre'] not in options.datacentre:
             continue
         if m['name'] in options.hosts:
             masters.append(m)
@@ -140,7 +149,7 @@ Supported actions:
         sys.exit(0)
 
     if len(masters) == 0:
-        parser.error("You need to specify a master via -H and/or -R")
+        parser.error("No masters matched, check your options -H, -R, -M, -D")
 
     env.user = options.username
     if options.ssh_key:
@@ -164,6 +173,9 @@ Supported actions:
             for master in masters:
                 run_action_on_master(action, master)
         else:
+            # Don't prompt for passwords when forking
+            env.abort_on_prompts = True
+
             p = multiprocessing.Pool(processes=options.concurrency)
             results = []
             for master in masters:

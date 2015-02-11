@@ -10,7 +10,7 @@ WARNING: This script does NOT respond to SIGINT. You must use SIGQUIT or SIGKILL
  """
 
 ### The canonical location for this file is
-###   http://hg.mozilla.org/build/tools/file/default/stage/extract_and_run_command.py
+###   https://hg.mozilla.org/build/tools/file/default/stage/extract_and_run_command.py
 ###
 ### Please update the copy in puppet to deploy new changes to
 ### stage.mozilla.org, see

@@ -12,6 +12,7 @@ unpack_build () {
     pkg_file="$3"
     locale=$4
     unpack_jars=$5
+    update_settings_string=$6
 
     if [ ! -f "$pkg_file" ]; then
       return 1
@@ -42,6 +43,7 @@ unpack_build () {
                 echo "installing $pkg_file"
                 ../common/unpack-diskimage.sh "$pkg_file" mnt $dir_name
             fi
+            update_settings_file=`find . -name update-settings.ini`
             ;;
         win32|WINNT_x86-msvc)
             7z x ../"$pkg_file" > /dev/null
@@ -69,6 +71,7 @@ unpack_build () {
               done
               unzip -o ${locale}.xpi > /dev/null
             fi
+            update_settings_file='bin/update-settings.ini'
             ;;
         linux-i686|linux-x86_64|linux|linux64|Linux_x86-gcc|Linux_x86-gcc3|Linux_x86_64-gcc3)
             if `echo $pkg_file | grep -q "tar.gz"`
@@ -81,6 +84,7 @@ unpack_build () {
                 echo "Unknown package type for file: $pkg_file"
                 exit 1
             fi
+            update_settings_file=`echo $product | tr '[A-Z]' '[a-z]'`'/update-settings.ini'
             ;;
     esac
 
@@ -88,6 +92,15 @@ unpack_build () {
         for f in `find . -name '*.jar' -o -name '*.ja'`; do
             unzip -o "$f" -d "$f.dir" > /dev/null
         done
+    fi
+
+    if [ ! -z $update_settings_string ]; then
+       echo "Modifying update-settings.ini"
+       cat  $update_settings_file | sed -e "s/^ACCEPTED_MAR_CHANNEL_IDS.*/ACCEPTED_MAR_CHANNEL_IDS=${update_settings_string}/" > ${update_settings_file}.new
+       diff -u $update_settings_file{,.new}
+       echo " "
+       rm ${update_settings_file}
+       mv $update_settings_file{.new,}
     fi
 
     popd > /dev/null

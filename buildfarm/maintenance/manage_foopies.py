@@ -43,6 +43,7 @@ def _calc_selected(hosts, devices):
             selected[f] = deepcopy(_foopy_map[f])
     for d in devices:
         if d not in _devices_map:
+            sys.stderr.write("Warning: device '%s' not found in device map\n" % d)
             continue
         if 'foopy' not in _devices_map[d]:
             continue
@@ -61,7 +62,10 @@ def run_action_on_foopy(action, foopy):
     try:
         action_func = getattr(foopy_fabric, action)
         with settings(host_string="%s.build.mozilla.org" % foopy):
-            action_func(foopy)
+            if options.argument:
+                action_func(foopy, options.argument)
+            else:
+                action_func(foopy)
             return True
     except AttributeError:
         print FAIL, "[%s] %s action is not defined." % (foopy, action)
@@ -79,7 +83,10 @@ def run_action_on_devices(action, foopy_dict):
     try:
         with settings(host_string="%s.build.mozilla.org" % foopy_dict['host']):
             for device in foopy_dict['devices']:
-                action_func(device)
+                if hasattr(action_func, "needs_device_dict"):
+                    action_func(device, _devices_map[device])
+                else:
+                    action_func(device)
             return True
         return False
     except AttributeError:
@@ -111,6 +118,7 @@ if __name__ == '__main__':
     parser.add_option("-H", "--host", dest="hosts", action="append")
     parser.add_option("-D", "--device", dest="devices", action="append")
     parser.add_option("-j", dest="concurrency", type="int")
+    parser.add_option("-a", dest="argument", action="store")
 
     options, actions = parser.parse_args()
 
@@ -143,6 +151,9 @@ if __name__ == '__main__':
             for foopy in sorted(selected.keys()):
                 fn(action, genArg(foopy))
         else:
+            # Don't prompt for passwords when forking
+            env.abort_on_prompts = True
+
             p = multiprocessing.Pool(processes=options.concurrency)
             results = []
             for foopy in sorted(selected.keys()):

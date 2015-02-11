@@ -6,7 +6,6 @@
 
 import hashlib
 import ConfigParser
-import urllib2
 import optparse
 import os
 import os.path as path
@@ -93,11 +92,13 @@ def parseApk(apk_filename):
     # the ZipFile.open call depends on py2.6 but removes the dependency
     # on StringIO
     # appini = zipfile.ZipFile(apk_filename).open('application.ini', 'r')
-    appini = StringIO(zipfile.ZipFile(apk_filename).read('application.ini'))
-    config = ConfigParser.ConfigParser()
-    config.readfp(appini)
-
-    info = {}
+    try:
+        appini = StringIO(zipfile.ZipFile(apk_filename).read('application.ini'))
+        config = ConfigParser.ConfigParser()
+        config.readfp(appini)
+    except:
+        log.error('Automation Error: Unable to parse application.ini from %s!' % apk_filename)
+        raise
 
     buildid = config.get('App', 'BuildID')
     version = config.get('App', 'Version')

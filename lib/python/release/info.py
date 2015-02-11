@@ -56,13 +56,7 @@ def findOldBuildIDs(product, version, buildNumber, platforms,
 
 
 def getReleaseConfigName(product, branch, version=None, staging=False):
-    # XXX: Horrible hack for bug 842741. Because Thunderbird release
-    # and esr both build out of esr17 repositories we'll bump the wrong
-    # config for release without this.
-    if product == 'thunderbird' and 'esr17' in branch and version and 'esr' not in version:
-        cfg = 'release-thunderbird-comm-release.py'
-    else:
-        cfg = 'release-%s-%s.py' % (product, branch)
+    cfg = 'release-%s-%s.py' % (product, branch)
     if staging:
         cfg = 'staging_%s' % cfg
     return cfg
@@ -157,22 +151,27 @@ def fileInfo(filepath, product):
         directory structure, but not the file name itself ('long' paths,
         firefox 3.5+ style filenames)
     """
+    # TODO: delete me?
     try:
         # Mozilla 1.9.0 style (aka 'short') paths
         # e.g. firefox-3.0.12.en-US.win32.complete.mar
         filename = os.path.basename(filepath)
-        m = re.match("^(%s)-([0-9.]+)\.([-a-zA-Z]+)\.(win32)\.(complete|installer)\.(mar|exe)$" % product, filename)
+        m = re.match(r"^(%s)-([0-9.]+)\.([-a-zA-Z]+)\.(win32)\.(partial|complete|installer)\.(mar|exe)$" % product, filename)
         if not m:
             raise ValueError("Could not parse: %s" % filename)
-        return {'product': m.group(1),
-                'version': m.group(2),
-                'locale': m.group(3),
-                'platform': m.group(4),
-                'contents': m.group(5),
-                'format': m.group(6),
-                'pathstyle': 'short',
-                'leading_path': '',
-                }
+        format_ = m.group(6)
+        ret = {'product': m.group(1),
+               'version': m.group(2),
+               'locale': m.group(3),
+               'platform': m.group(4),
+               'contents': m.group(5),
+               'format': format_,
+               'pathstyle': 'short',
+               'leading_path': '',
+               }
+        if format_ == 'mar':
+            ret['previousVersion'] = None
+        return ret
     except:
         # Mozilla 1.9.1 and on style (aka 'long') paths
         # e.g. update/win32/en-US/firefox-3.5.1.complete.mar
@@ -180,39 +179,32 @@ def fileInfo(filepath, product):
         ret = {'pathstyle': 'long'}
         if filepath.endswith('.mar'):
             ret['format'] = 'mar'
-            m = re.search("update/(win32|linux-i686|linux-x86_64|mac|mac64)/([-a-zA-Z]+)/(%s)-(\d+\.\d+(?:\.\d+)?(?:\w+(?:\d+)?)?)\.(complete)\.mar" % product, filepath)
+            m = re.search(r"update/(win32|win64|linux-i686|linux-x86_64|mac|mac64)/([-a-zA-Z]+)/(%s)-(?:(\d+\.\d+(?:\.\d+)?(?:\w+(?:\d+)?)?)-)?(\d+\.\d+(?:\.\d+)?(?:\w+(?:\d+)?)?)\.(complete|partial)\.mar" % product, filepath)
             if not m:
                 raise ValueError("Could not parse: %s" % filepath)
             ret['platform'] = m.group(1)
             ret['locale'] = m.group(2)
             ret['product'] = m.group(3)
-            ret['version'] = m.group(4)
-            ret['contents'] = m.group(5)
+            ret['previousVersion'] = m.group(4)
+            ret['version'] = m.group(5)
+            ret['contents'] = m.group(6)
             ret['leading_path'] = ''
         elif filepath.endswith('.exe'):
             ret['format'] = 'exe'
             ret['contents'] = 'installer'
-            # EUballot builds use a different enough style of path than others
-            # that we can't catch them in the same regexp
-            if filepath.find('win32-EUballot') != -1:
-                ret['platform'] = 'win32'
-                m = re.search("(win32-EUballot/)([-a-zA-Z]+)/((?i)%s) Setup (\d+\.\d+(?:\.\d+)?(?:\w+\d+)?(?:\ \w+\ \d+)?)\.exe" % product, filepath)
-                if not m:
-                    raise ValueError("Could not parse: %s" % filepath)
-                ret['leading_path'] = m.group(1)
-                ret['locale'] = m.group(2)
-                ret['product'] = m.group(3).lower()
-                ret['version'] = m.group(4)
-            else:
-                m = re.search("(partner-repacks/[-a-zA-Z0-9_]+/|)(win32|mac|linux-i686)/([-a-zA-Z]+)/((?i)%s) Setup (\d+\.\d+(?:\.\d+)?(?:\w+(?:\d+)?)?(?:\ \w+\ \d+)?)\.exe" % product, filepath)
-                if not m:
-                    raise ValueError("Could not parse: %s" % filepath)
-                ret['leading_path'] = m.group(1)
-                ret['platform'] = m.group(2)
-                ret['locale'] = m.group(3)
-                ret['product'] = m.group(4).lower()
-                ret['version'] = m.group(5)
+            m = re.search(r"(partner-repacks/[-a-zA-Z0-9_]+/|)(win32|win64|mac|linux-i686)/([-a-zA-Z]+)/((?i)%s) Setup (\d+\.\d+(?:\.\d+)?(?:\w+(?:\d+)?)?(?:\ \w+\ \d+)?)\.exe" % product, filepath)
+            if not m:
+                raise ValueError("Could not parse: %s" % filepath)
+            ret['leading_path'] = m.group(1)
+            ret['platform'] = m.group(2)
+            ret['locale'] = m.group(3)
+            ret['product'] = m.group(4).lower()
+            ret['version'] = m.group(5)
         else:
             raise ValueError("Unknown filetype for %s" % filepath)
 
         return ret
+
+
+def getProductDetails(product, appVersion):
+    return 'https://www.mozilla.org/%%LOCALE%%/%s/%s/releasenotes/' % (product, appVersion)

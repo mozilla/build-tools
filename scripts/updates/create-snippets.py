@@ -92,7 +92,7 @@ if __name__ == "__main__":
         fromAppVersion = fromRelease['extension-version']
         detailsUrl = substitutePath(
             pc['current-update']['details'], platform, locale, appVersion)
-        optionalAttrs = pc.getOptionalAttrs(fromVersion)
+        optionalAttrs = pc.getOptionalAttrs(fromVersion, locale)
         checksumsUrl = substitutePath(
             pc['release'][version]['checksumsurl'], platform, locale)
         checksumsFile = path.join(options.checksumsDir, "%s-%s-%s-%s" %

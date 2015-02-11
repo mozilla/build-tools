@@ -6,9 +6,13 @@
 
 import os
 import sys
+
+import site
+site.addsitedir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../lib/python"))
+
 from mozdevice import devicemanagerSUT as devicemanager
-from sut_lib import clearFlag, setFlag, checkDeviceRoot, checkStalled, \
-    waitForDevice, log, soft_reboot_and_verify
+from sut_lib import setFlag, checkDeviceRoot, checkStalled, waitForDevice, \
+    log, powermanagement
 
 # main() RETURN CODES
 RETCODE_SUCCESS = 0
@@ -21,6 +25,8 @@ def cleanupFoopy(device=None):
     if errcode == 2:
         log.error("processes from previous run were detected and cleaned up")
     elif errcode == 3:
+        pidDir = os.path.join('/builds/', device)
+        errorFile = os.path.join(pidDir, 'error.flg')
         setFlag(errorFile,
                 "Remote Device Error: process from previous test run present")
         return RETCODE_KILLSTALLED
@@ -66,12 +72,15 @@ def cleanupDevice(device=None, dm=None):
                         dm.uninstallAppAndReboot(package_basename)
                         waitForDevice(dm)
                 except devicemanager.DMError, err:
-                    setFlag(errorFile, "Remote Device Error: Unable to uninstall %s and reboot: %s" % (package_basename, err))
+                    setFlag(errorFile,
+                            "Remote Device Error: Unable to uninstall %s and reboot: %s" % (package_basename, err))
                     return RETCODE_ERROR
+                finally:
+                    break  # Don't try this proc again, since we already matched
 
     if reboot_needed:
-        if not soft_reboot_and_verify(device, dm):
-            # NOTE: soft_reboot_and_verify will setFlag if needed
+        if not powermanagement.soft_reboot_and_verify(device, dm):
+            # NOTE: powermanagement.soft_reboot_and_verify will setFlag if needed
             return RETCODE_ERROR
 
     # Now Verify that they are all gone
@@ -98,6 +107,36 @@ def cleanupDevice(device=None, dm=None):
             setFlag(errorFile, "Remote Device Error: Unable to properly remove %s" % devRoot)
             return RETCODE_ERROR
 
+    # cleanup the downloads directory
+    downloadDir = '/mnt/sdcard/Download'
+    if dm.dirExists(downloadDir):
+        log.info("Cleaning up %s" % downloadDir)
+        files = dm.listFiles(downloadDir)
+        for f in files:
+            name = "%s/%s" % (downloadDir, f)
+            type = "File"
+            if dm.isDir(name):
+                type = "Dir"
+                status = dm.removeDir(name)
+            else:
+                status = dm.removeFile(name)
+            if status is None or not status:
+                setFlag(errorFile, "Remote Device Error: call to remove%s(%s) returned [%s]" % (type, name, status))
+                return RETCODE_ERROR
+
+    # cleanup xpcshell tests binaries directory
+    xpcbDir = '/data/local/xpcb'
+    if dm.dirExists(xpcbDir):
+        status = dm.removeDir(xpcbDir)
+        log.info("removeDir(%s) returned [%s]" % (xpcbDir, status))
+    # For some reason the directory is not deleted
+    #    if status is None or not status:
+    #        setFlag(errorFile, "Remote Device Error: call to removeDir(%s) returned [%s]" % (xpcbDir, status))
+    #        return RETCODE_ERROR
+    #    if dm.dirExists(xpcbDir):
+    #        setFlag(errorFile, "Remote Device Error: Unable to properly remove %s" % xpcbDir)
+    #        return RETCODE_ERROR
+
     if not dm.fileExists('/system/etc/hosts'):
         log.info("restoring /system/etc/hosts file")
         try:
@@ -121,8 +160,6 @@ def cleanupDevice(device=None, dm=None):
 
 def main(device=None, dm=None, doCheckStalled=True):
     assert ((device is not None) or (dm is not None))  # Require one to be set
-
-    device_name = os.environ['SUT_NAME']
 
     if doCheckStalled:
         retcode = cleanupFoopy(device)

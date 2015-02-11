@@ -9,6 +9,8 @@
 USAGE()
 {
 cat <<EOF
+ DEPRECATED: use tools/scripts/periodic_file_updates/periodic_file_updates.sh instead.
+
  usage: `basename $0` [-n] [-c] [-d] [-a]
            [-p product]
            [--hgtool hgtool_location]
@@ -27,7 +29,7 @@ CLOSED_TREE=false
 DONTBUILD=false
 APPROVAL=false
 HG_SSH_USER='ffxbld'
-HG_SSH_KEY='~cltbld/.ssh/ffxbld_dsa'
+HG_SSH_KEY='~cltbld/.ssh/ffxbld_rsa'
 PRODUCT='firefox'
 REPODIR='blocklist'
 HGTOOL=''
@@ -109,7 +111,7 @@ compare_blocklists()
         echo "ERROR Unable to parse version from version.txt"
     fi
 
-    BLOCKLIST_URL_AMO="https://addons.mozilla.org/blocklist/3/${APP_ID}/${VERSION}/${APP_NAME}/20090105024647/blocklist-sync/en-US/nightly/blocklist-sync/default/default/"
+    BLOCKLIST_URL_AMO="https://blocklist.addons.mozilla.org/blocklist/3/${APP_ID}/${VERSION}/${APP_NAME}/20090105024647/blocklist-sync/en-US/nightly/blocklist-sync/default/default/"
     rm -f blocklist_amo.xml
     ${WGET} --no-check-certificate -O blocklist_amo.xml ${BLOCKLIST_URL_AMO}
     WGET_STATUS=$?

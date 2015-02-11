@@ -23,17 +23,21 @@ import os
 import shutil
 import sys
 from fnmatch import fnmatch
+import re
 
-DEFAULT_BASE_DIRS = ["..", "/scratchbox/users/cltbld/home/cltbld/build"]
+DEFAULT_BASE_DIRS = [".."]
 
 clobber_suffix = '.deleteme'
 
 if sys.platform == 'win32':
     # os.statvfs doesn't work on Windows
-    import win32file
+    from win32file import RemoveDirectory, DeleteFile, \
+        GetFileAttributesW, SetFileAttributesW, GetDiskFreeSpace, \
+        FILE_ATTRIBUTE_NORMAL, FILE_ATTRIBUTE_DIRECTORY
+    from win32api import FindFiles
 
     def freespace(p):
-        secsPerClus, bytesPerSec, nFreeClus, totClus = win32file.GetDiskFreeSpace(p)
+        secsPerClus, bytesPerSec, nFreeClus, totClus = GetDiskFreeSpace(p)
         return secsPerClus * bytesPerSec * nFreeClus
 else:
     def freespace(p):
@@ -47,10 +51,38 @@ def mtime_sort(p1, p2):
     return cmp(os.path.getmtime(p1), os.path.getmtime(p2))
 
 
+def rmdirRecursiveWindows(dir):
+    """Windows-specific version of rmdirRecursive that handles
+    path lengths longer than MAX_PATH.
+    """
+
+    dir = os.path.realpath(dir)
+    # Make sure directory is writable
+    SetFileAttributesW('\\\\?\\' + dir, FILE_ATTRIBUTE_NORMAL)
+
+    for ffrec in FindFiles('\\\\?\\' + dir + '\*.*'):
+        file_attr = ffrec[0]
+        name = ffrec[8]
+        if name == '.' or name == '..':
+            continue
+        full_name = os.path.join(dir, name)
+
+        if file_attr & FILE_ATTRIBUTE_DIRECTORY:
+            rmdirRecursiveWindows(full_name)
+        else:
+            SetFileAttributesW('\\\\?\\' + full_name, FILE_ATTRIBUTE_NORMAL)
+            DeleteFile('\\\\?\\' + full_name)
+    RemoveDirectory('\\\\?\\' + dir)
+
+
 def rmdirRecursive(dir):
     """This is a replacement for shutil.rmtree that works better under
     windows. Thanks to Bear at the OSAF for the code.
     (Borrowed from buildbot.slave.commands)"""
+    if os.name == 'nt':
+        rmdirRecursiveWindows(dir)
+        return
+
     if not os.path.exists(dir):
         # This handles broken links
         if os.path.islink(dir):
@@ -85,24 +117,59 @@ def rmdirRecursive(dir):
     os.rmdir(dir)
 
 
+def str2seconds(s):
+    """ Accepts time intervals resembling:
+         30d  (30 days)
+         10h  (10 hours)
+        Returns the specified interval as a positive integer in seconds.
+    """
+    m = re.match(r'^(\d+)([dh])$', s)
+    if (m):
+        mul = {'d': 24*60*60, 'h': 60*60}
+        n = int(m.group(1))
+        unit = m.group(2)
+        return n * mul[unit]
+    else:
+        raise ValueError("Unhandled time format '%s'" % s)
+
+
 def purge(base_dirs, gigs, ignore, max_age, dry_run=False):
     """Delete directories under `base_dirs` until `gigs` GB are free.
 
     Delete any directories older than max_age.
 
-    Will not delete directories listed in the ignore list."""
+    Will not delete directories listed in the ignore list except
+    those tagged with an expiry threshold.  Example:
+
+      rel-*:40d
+
+    Will not delete rel-* directories until they are over 40 days old.
+    """
     gigs *= 1024 * 1024 * 1024
+
+    # convert 'ignore' to a dict resembling { directory: cutoff_time }
+    # where a cutoff time of -1 means 'never expire'.
+    ignore = dict(map(lambda x: x.split(':')[0:2] if len(x.split(':')) > 1 else [x, -1], ignore))
+    ignore = dict(map(lambda key: [key, time.time() - str2seconds(ignore[key])] if ignore[key] != -1 else [key, ignore[key]], ignore))
 
     dirs = []
     for base_dir in base_dirs:
         if os.path.exists(base_dir):
             for d in os.listdir(base_dir):
-                if any([fnmatch(d, pattern) for pattern in ignore]):
-                    continue
                 p = os.path.join(base_dir, d)
                 if not os.path.isdir(p):
                     continue
                 mtime = os.path.getmtime(p)
+                skip = False
+                for pattern, cutoff_time in ignore.iteritems():
+                    if (fnmatch(d, pattern)):
+                        if cutoff_time == -1 or mtime > cutoff_time:
+                            skip = True
+                            break
+                        else:
+                            print("Ignored directory '%s' exceeds cutoff time" % d)
+                if skip:
+                    continue
                 dirs.append((mtime, p))
 
     dirs.sort()
@@ -169,13 +236,17 @@ if __name__ == '__main__':
 
     cwd = os.path.basename(os.getcwd())
     parser = OptionParser(usage=__doc__)
-    parser.set_defaults(size=5, skip=[cwd], dry_run=False, max_age=max_age)
+    parser.set_defaults(size=5, share_size=1, skip=[cwd], dry_run=False, max_age=max_age)
 
     parser.add_option('-s', '--size',
                       help='free space required (in GB, default 5)', dest='size',
                       type='float')
 
-    parser.add_option('-n', '--not', help='do not delete this directory',
+    parser.add_option('--share-size',
+                      help='free space required for vcs shares (in GB, default 1)', dest='share_size',
+                      type='float')
+
+    parser.add_option('-n', '--not', help='do not delete this directory. Append :30d to skip for up to 30 days, or :30h to skip for up to 30 hours',
                       action='append', dest='skip')
 
     parser.add_option('', '--dry-run', action='store_true',
@@ -212,7 +283,16 @@ will be listed in the order in which they would be deleted.''')
     # space so we can be sure and delete repositories older than max_age
     if 'HG_SHARE_BASE_DIR' in os.environ:
         purge_hg_shares(os.environ['HG_SHARE_BASE_DIR'],
-                        options.size, cutoff_time, options.dry_run)
+                        options.share_size, cutoff_time, options.dry_run)
+
+    # tooltool cache cleanup
+    if 'TOOLTOOL_HOME' in os.environ and 'TOOLTOOL_CACHE' in os.environ:
+        import imp
+        try:
+            tooltool = imp.load_source('tooltool', os.path.join(os.environ['TOOLTOOL_HOME'], "tooltool.py"))
+            tooltool.purge(os.environ['TOOLTOOL_CACHE'], options.size)
+        except:
+            print "Warning: impossible to cleanup tooltool cache"
 
     after = freespace(base_dirs[0]) / (1024 * 1024 * 1024.0)
 

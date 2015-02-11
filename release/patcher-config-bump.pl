@@ -9,7 +9,7 @@ use Storable;
 
 use Bootstrap::Util qw(LoadLocaleManifest);
 
-use Release::Patcher::Config qw(GetProductDetails GetReleaseBlock BumpFilePath);
+use Release::Patcher::Config qw(GetProductDetails GetReleaseBlock BumpFilePath BumpURL);
 use Release::Versions qw(GetPrettyVersion);
 
 $|++;
@@ -141,7 +141,10 @@ sub BumpPatcherConfig {
     my $brand = $config{'brand'};
     my $version = $config{'version'};
     my $oldVersion = $config{'old-version'};
-    my @partialVersions = @{$config{'partial-version'}};
+    my @partialVersions = ();
+    if (defined($config{'partial-version'})){
+        @partialVersions = @{$config{'partial-version'}};
+    }
     my $appVersion = $config{'app-version'};
     my $build = $config{'build-number'};
     my $patcherConfig = $config{'patcher-config'};
@@ -164,7 +167,13 @@ sub BumpPatcherConfig {
         die "Could not load locale manifest";
     }
 
-    my $patcherConfigObj = new Config::General(-ConfigFile => $patcherConfig);
+    my $patcherConfigObj;
+    if (Config::General->VERSION ge '2.40') {
+        $patcherConfigObj = new Config::General(-ConfigFile => $patcherConfig, -SaveSorted => 1);
+    } else {
+        # remove this branch when ESR17 reaches EOL
+        $patcherConfigObj = new Config::General(-ConfigFile => $patcherConfig);
+    }
 
     my %rawConfig = $patcherConfigObj->getall();
     die "ASSERT: BumpPatcherConfig(): null rawConfig" 
@@ -229,6 +238,13 @@ sub BumpPatcherConfig {
     if ($doOnetimePatcherBumps) {
         $currentUpdateObj->{'to'} = $version;
         $currentUpdateObj->{'from'} = $oldVersion;
+        if (defined($currentUpdateObj->{'openURL'})) {
+            $currentUpdateObj->{'openURL'} = BumpURL(
+                oldURL => $currentUpdateObj->{'openURL'},
+                version => $appVersion,
+                oldVersion => $oldVersion
+            )
+        }
     }
 
     $currentUpdateObj->{'details'} = $releaseNotesUrl ||
@@ -252,7 +268,14 @@ sub BumpPatcherConfig {
 
     my $buildStr = 'build' . $build;
     my @oldPartialVersions = keys(%{$currentUpdateObj->{'partials'}});
-    my $oldPaths = $currentUpdateObj->{'partials'}->{$oldPartialVersions[0]};
+    my $oldPaths;
+    if ($#oldPartialVersions > 0) {
+        $oldPaths = $currentUpdateObj->{'partials'}->{$oldPartialVersions[0]};
+    } else {
+        print "WARNING: No old partials, using default values\n";
+        $oldPaths = {path => "update/%platform%/%locale%/${product}-doesnotexist.partial.mar"};
+        $oldPaths->{"betatest-url"} = $oldPaths->{"path"};
+    }
 
     $currentUpdateObj->{'partials'} = {};
     for my $partialVersion (@partialVersions) {

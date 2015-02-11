@@ -3,12 +3,13 @@
 
 import os
 import sys
+
+import site
+site.addsitedir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../lib/python"))
+
 from mozdevice import devicemanagerSUT as devicemanager
-import socket
-import random
-import time
-from sut_lib import getOurIP, calculatePort, clearFlag, setFlag, waitForDevice, \
-    log, soft_reboot_and_verify
+from sut_lib import getOurIP, calculatePort, setFlag, log, \
+    powermanagement
 
 
 def reboot(dm):
@@ -18,13 +19,14 @@ def reboot(dm):
     proxyIP = getOurIP()
     proxyPort = calculatePort()
 
-    if 'panda' not in deviceName and 'tegra' not in deviceName:
+    if 'panda' not in deviceName:
         # Attempt to set devicename via env variable 'SUT_NAME'
         sname = os.getenv('SUT_NAME')
         if sname.strip():
             deviceName = sname.strip()
         else:
-            log.info("Unable to find a proper devicename, will attempt to reboot device")
+            log.info("Unable to find a proper devicename, will attempt to "
+                     "reboot device")
 
     if dm is not None:
         try:
@@ -39,13 +41,19 @@ def reboot(dm):
 
     try:
         log.info('forcing device %s reboot' % deviceName)
-        status = soft_reboot_and_verify(
-            dm=dm, device=deviceName, ipAddr=proxyIP, port=proxyPort)
+        status = powermanagement.soft_reboot_and_verify(
+            dm=dm,
+            device=deviceName,
+            ipAddr=proxyIP,
+            port=proxyPort,
+            silent=True
+        )
         log.info(status)
     except:
         log.info("Failure while rebooting device")
         setFlag(errorFile,
-                "Remote Device Error: Device failed to recover after reboot")
+                "Remote Device Error: Device failed to recover after reboot",
+                True)
         return 1
 
     sys.stdout.flush()
@@ -61,7 +69,7 @@ if __name__ == '__main__':
     try:
         log.info("connecting to: %s" % deviceIP)
         dm = devicemanager.DeviceManagerSUT(deviceIP)
-        dm.debug = 5
+        dm.debug = 0
         dm.default_timeout = 30  # Set our timeout lower for deviceManager here
     except:
         pass

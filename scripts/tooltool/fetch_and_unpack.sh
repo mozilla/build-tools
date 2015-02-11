@@ -12,6 +12,10 @@ if [ -e "$TT_MANIFEST" ]; then
     if [ ! -x "$TT_CMD" ]; then
         echo "Cannot execute $TT_CMD, exiting"
         exit 1
+    else
+        if [  ! -z $TOOLTOOL_CACHE ]; then
+            TT_CMD="${TT_CMD} -c ${TOOLTOOL_CACHE}"
+        fi
     fi
 
     echo "$TT_MANIFEST content"

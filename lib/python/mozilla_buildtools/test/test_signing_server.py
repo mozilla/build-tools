@@ -7,6 +7,7 @@ if sys.version_info < (2, 6, 0):
 
 
 import time
+import hashlib
 import shutil
 import tempfile
 from unittest import TestCase
@@ -110,35 +111,6 @@ class TestSigningServer(TestCase):
         self.server.token_secret = "asdfasdf"
         self.assertEquals(False, self.server.verify_token(token, "1.2.3.4"))
 
-    def testNonce(self):
-        token = self.server.get_token("1.2.3.4", 300)
-        # First nonce is empty
-        nonce = self.server.verify_nonce(token, "")
-        self.assertTrue(nonce)
-
-    def testNonceOldSecret(self):
-        self.server.token_secret = "1234567890"
-        self.server.token_secrets = ["1234567890", "asdfasdf"]
-        token = self.server.get_token("1.2.3.4", 300)
-        nonce = self.server.verify_nonce(token, "")
-        self.assertTrue(nonce)
-        self.server.token_secret = "asdfasdf"
-        nonce = self.server.verify_nonce(token, nonce)
-        self.assertTrue(nonce)
-
-    def testNonceBadOldSecret(self):
-        # Make sure that using a bad secret to sign the nonce results in
-        # failure to validate
-        self.server.token_secret = "bad"
-        self.server.token_secrets = ["bad", "asdfasdf"]
-        token = self.server.get_token("1.2.3.4", 300)
-        nonce = self.server.verify_nonce(token, "")
-        self.assertTrue(nonce)
-        self.server.token_secret = "asdfasdf"
-        self.server.token_secrets = ["1234567890", "asdfasdf"]
-        nonce = self.server.verify_nonce(token, nonce)
-        self.assertFalse(nonce)
-
     def testBadIp(self):
         req = webob.Request.blank("/sign/token")
         req.environ['REMOTE_ADDR'] = '128.1.0.1'
@@ -193,3 +165,46 @@ class TestSigningServer(TestCase):
         resp = req.get_response(self.server)
 
         self.assertEquals(resp.status_code, 401)
+
+    def test_transactions(self):
+        master = '127.1.0.1'
+        slave = '127.0.0.0'
+
+        def new_token():
+            req = webob.Request.blank("/token")
+            req.environ['REMOTE_ADDR'] = master
+            req.headers['Authorization'] = "Basic %s" % "foo:bar".encode("base64")
+            req.method = 'POST'
+            req.POST['slave_ip'] = slave
+            req.POST['duration'] = "300"
+            resp = req.get_response(self.server)
+            self.assertEquals(resp.status_code, 200)
+            return resp.body
+
+        def sign(token, nonce, filename, data, slave=slave, expect_fail=False):
+            h = hashlib.new('sha1')
+            h.update(data)
+            sha1 = h.hexdigest()
+            req = webob.Request.blank("/sign/gpg", POST={
+                'filedata': (filename, data),
+                'token': token,
+                'nonce': nonce,
+                'filename': filename,
+                'sha1': sha1})
+            req.environ['REMOTE_ADDR'] = slave
+            req.method = 'POST'
+            resp = req.get_response(self.server)
+            if not expect_fail:
+                self.assertEquals(resp.status_code, 202)
+                return resp.headers['X-Nonce']
+            else:
+                self.assertEquals(resp.status_code, 400)
+
+        token = new_token()
+        nonce1 = sign(token, '', 'stuff.txt', 'stuff\n' * 100)
+        nonce2 = sign(token, nonce1, 'morestuff.txt', 'stuff!\n' * 100)
+        nonce3 = sign(token, nonce2, 'evenmorestuff.txt', 'stuff!!\n' * 100)
+
+        # try futzing with the token data
+        token = token.replace(slave, '127.0.0.99')
+        sign(token, nonce3, 'evenmorestuff.txt', 'stuff!!\n' * 100, slave='127.0.0.99', expect_fail=True)

@@ -145,9 +145,9 @@ echo "zh-TW win32 osx" >> my-locales
     parser.add_option("-v", "--verbose", action="store_true", dest="loud",
                       default=False)
     parser.add_option("-g", "--hg", action="store", dest="hg",
-                      default="http://hg.mozilla.org",
+                      default="https://hg.mozilla.org",
                       help="Root of the HG server. Defaults to " +
-                           "http://hg.mozilla.org. Only used when -s " +
+                           "https://hg.mozilla.org. Only used when -s " +
                            "isn't specified.")
     parser.add_option("-b", "--branch", action="store", dest="branch",
                       help="The branch, relative to the HG server, to " +

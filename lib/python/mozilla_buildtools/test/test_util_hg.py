@@ -3,12 +3,16 @@ import tempfile
 import shutil
 import os
 import subprocess
-
+import time
 import util.hg as hg
 from util.hg import clone, pull, update, hg_ver, mercurial, _make_absolute, \
-    share, push, apply_and_push, HgUtilError, make_hg_url, get_branch, \
-    get_branches, path, init, unbundle, adjust_paths, is_hg_cset, commit, tag
+    share, push, apply_and_push, HgUtilError, make_hg_url, get_branch, purge, \
+    get_branches, path, init, unbundle, adjust_paths, is_hg_cset, commit, tag, \
+    get_hg_output
+from util.file import touch
 from util.commands import run_cmd, get_output
+
+from mock import patch
 
 
 def getRevisions(dest):
@@ -36,9 +40,15 @@ def getRevInfo(dest, rev):
 
 def getTags(dest):
     tags = []
-    for tag in get_output(['hg', 'tags', '-R', dest]).splitlines():
-        tags.append(tag.split()[0])
+    for t in get_output(['hg', 'tags', '-R', dest]).splitlines():
+        tags.append(t.split()[0])
     return tags
+
+
+def yesterday_timestamp():
+    """returns a valid yesterday timestamp for touch"""
+    yesterday = time.time() - 86400
+    return (yesterday, yesterday)
 
 
 class TestMakeAbsolute(unittest.TestCase):
@@ -97,10 +107,16 @@ class TestHg(unittest.TestCase):
         self.revisions = getRevisions(self.repodir)
         self.wc = os.path.join(self.tmpdir, 'wc')
         self.pwd = os.getcwd()
+        self.sleep_patcher = patch('time.sleep')
+        self.sleep_patcher.start()
+        # Have a stable hgrc to test with
+        os.environ['HGRCPATH'] = os.path.join(os.path.dirname(__file__), "hgrc")
+        hg.RETRY_ATTEMPTS = 2
 
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
         os.chdir(self.pwd)
+        self.sleep_patcher.stop()
 
     def testGetBranch(self):
         clone(self.repodir, self.wc)
@@ -259,6 +275,60 @@ class TestHg(unittest.TestCase):
 
         self.assertEquals(getRevisions(self.wc), getRevisions(repo2))
 
+    def testShareExtraFiles(self):
+        shareBase = os.path.join(self.tmpdir, 'share')
+        backup = os.path.join(self.tmpdir, 'backup')
+
+        # Clone the original repo
+        mercurial(self.repodir, self.wc, shareBase=shareBase)
+
+        clone(self.repodir, backup)
+
+        # Make the working repo have a new file. We need it to have an earlier
+        # timestamp (yesterday) to trigger the odd behavior in hg
+        newfile = os.path.join(self.wc, 'newfile')
+        touch(newfile, timestamp=yesterday_timestamp())
+        run_cmd(['hg', 'add', 'newfile'], cwd=self.wc)
+        run_cmd(['hg', 'commit', '-m', '"add newfile"'], cwd=self.wc)
+
+        # Reset the share base to remove the 'add newfile' commit. We
+        # overwrite repodir with the backup that doesn't have the commit,
+        # then clone the repodir to a throwaway dir to create the new
+        # shareBase. Now self.wc still points to shareBase, but the
+        # changeset that self.wc was on is lost.
+        shutil.rmtree(self.repodir)
+        shutil.rmtree(shareBase)
+        clone(backup, self.repodir)
+        throwaway = os.path.join(self.tmpdir, 'throwaway')
+        mercurial(self.repodir, throwaway, shareBase=shareBase)
+
+        # Try and update our working copy
+        mercurial(self.repodir, self.wc, shareBase=shareBase)
+
+        self.assertFalse(os.path.exists(os.path.join(self.wc, 'newfile')))
+
+    def testShareExtraFilesReset(self):
+        shareBase = os.path.join(self.tmpdir, 'share')
+
+        # Clone the original repo
+        mercurial(self.repodir, self.wc, shareBase=shareBase)
+
+        # Reset the repo
+        run_cmd(
+            ['%s/init_hgrepo.sh' % os.path.dirname(__file__), self.repodir])
+
+        # Make the working repo have a new file. We need it to have an earlier
+        # timestamp (yesterday) to trigger the odd behavior in hg
+        newfile = os.path.join(self.wc, 'newfile')
+        touch(newfile, timestamp=yesterday_timestamp())
+        run_cmd(['hg', 'add', 'newfile'], cwd=self.wc)
+        run_cmd(['hg', 'commit', '-m', '"add newfile"'], cwd=self.wc)
+
+        # Try and update our working copy
+        mercurial(self.repodir, self.wc, shareBase=shareBase)
+
+        self.assertFalse(os.path.exists(os.path.join(self.wc, 'newfile')))
+
     def testShareReset(self):
         shareBase = os.path.join(self.tmpdir, 'share')
 
@@ -293,10 +363,51 @@ class TestHg(unittest.TestCase):
         self.assertEquals(getRevisions(self.wc), self.revisions)
 
     def testPushWithRevision(self):
-        clone(self.repodir, self.wc, revision=self.revisions[-2],
+        clone(self.repodir, self.wc, revision=self.revisions[-1],
               clone_by_rev=True)
-        push(src=self.repodir, remote=self.wc, revision=self.revisions[-1])
+        push(src=self.repodir, remote=self.wc, revision=self.revisions[-2])
         self.assertEquals(getRevisions(self.wc), self.revisions[-2:])
+
+    def testPurgeUntrackedFile(self):
+        clone(self.repodir, self.wc)
+        fileToPurge = os.path.join(self.wc, 'fileToPurge')
+        with file(fileToPurge, 'a') as f:
+            f.write('purgeme')
+        purge(self.wc)
+        self.assertFalse(os.path.exists(fileToPurge))
+
+    def testPurgeUntrackedDirectory(self):
+        clone(self.repodir, self.wc)
+        directoryToPurge = os.path.join(self.wc, 'directoryTopPurge')
+        os.makedirs(directoryToPurge)
+        purge(directoryToPurge)
+        self.assertFalse(os.path.isdir(directoryToPurge))
+
+    def testPurgeVeryLongPath(self):
+        clone(self.repodir, self.wc)
+        # now create a very long path name
+        longPath = self.wc
+        for new_dir in xrange(1, 64):
+            longPath = os.path.join(longPath, str(new_dir))
+        os.makedirs(longPath)
+        self.assertTrue(os.path.isdir(longPath))
+        purge(self.wc)
+        self.assertFalse(os.path.isdir(longPath))
+
+    def testPurgeAFreshClone(self):
+        clone(self.repodir, self.wc)
+        purge(self.wc)
+        self.assertTrue(os.path.exists(os.path.join(self.wc, 'hello.txt')))
+
+    def testPurgeTrackedFile(self):
+        clone(self.repodir, self.wc)
+        fileToModify = os.path.join(self.wc, 'hello.txt')
+        with open(fileToModify, 'w') as f:
+            f.write('hello!')
+        purge(self.wc)
+        with open(fileToModify, 'r') as f:
+            content = f.read()
+        self.assertEqual(content, 'hello!')
 
     def testMercurial(self):
         rev = mercurial(self.repodir, self.wc)
@@ -311,7 +422,8 @@ class TestHg(unittest.TestCase):
     def testPushWithForce(self):
         clone(self.repodir, self.wc, revision=self.revisions[0],
               clone_by_rev=True)
-        run_cmd(['touch', 'newfile'], cwd=self.wc)
+        newfile = os.path.join(self.wc, 'newfile')
+        touch(newfile)
         run_cmd(['hg', 'add', 'newfile'], cwd=self.wc)
         run_cmd(['hg', 'commit', '-m', '"re-add newfile"'], cwd=self.wc)
         push(self.repodir, self.wc, push_new_branches=False, force=True)
@@ -319,7 +431,8 @@ class TestHg(unittest.TestCase):
     def testPushForceFail(self):
         clone(self.repodir, self.wc, revision=self.revisions[0],
               clone_by_rev=True)
-        run_cmd(['touch', 'newfile'], cwd=self.wc)
+        newfile = os.path.join(self.wc, 'newfile')
+        touch(newfile)
         run_cmd(['hg', 'add', 'newfile'], cwd=self.wc)
         run_cmd(['hg', 'commit', '-m', '"add newfile"'], cwd=self.wc)
         self.assertRaises(Exception, push, self.repodir, self.wc,
@@ -543,28 +656,32 @@ class TestHg(unittest.TestCase):
         clone(self.repodir, self.wc)
 
         def c(repo, attempt, remote, local):
-            run_cmd(['touch', 'newfile'], cwd=remote)
+            newfile_remote = os.path.join(remote, 'newfile')
+            newfile_local = os.path.join(local, 'newfile')
+            touch(newfile_remote)
             run_cmd(['hg', 'add', 'newfile'], cwd=remote)
             run_cmd(['hg', 'commit', '-m', '"add newfile"'], cwd=remote)
-            run_cmd(['touch', 'newfile'], cwd=local)
+            touch(newfile_local)
             run_cmd(['hg', 'add', 'newfile'], cwd=local)
             run_cmd(['hg', 'commit', '-m', '"re-add newfile"'], cwd=local)
         apply_and_push(self.wc, self.repodir,
-                      (lambda r, a: c(r, a, self.repodir, self.wc)), force=True)
+                       (lambda r, a: c(r, a, self.repodir, self.wc)), force=True)
 
     def testApplyAndPushForceFail(self):
         clone(self.repodir, self.wc)
 
         def c(repo, attempt, remote, local):
-            run_cmd(['touch', 'newfile'], cwd=remote)
+            newfile_remote = os.path.join(remote, 'newfile')
+            newfile_local = os.path.join(local, 'newfile')
+            touch(newfile_remote)
             run_cmd(['hg', 'add', 'newfile'], cwd=remote)
             run_cmd(['hg', 'commit', '-m', '"add newfile"'], cwd=remote)
-            run_cmd(['touch', 'newfile'], cwd=local)
+            touch(newfile_local)
             run_cmd(['hg', 'add', 'newfile'], cwd=local)
             run_cmd(['hg', 'commit', '-m', '"re-add newfile"'], cwd=local)
         self.assertRaises(HgUtilError,
                           apply_and_push, self.wc, self.repodir,
-                         (lambda r, a: c(r, a, self.repodir, self.wc)), force=False)
+                          (lambda r, a: c(r, a, self.repodir, self.wc)), force=False)
 
     def testPath(self):
         clone(self.repodir, self.wc)
@@ -966,12 +1083,13 @@ class TestHg(unittest.TestCase):
         # Try and update to a non-existent revision using our mirror and
         # bundle, with the master failing. We should fail
         self.assertRaises(subprocess.CalledProcessError, mercurial,
-                          self.repodir, self.wc, shareBase=shareBase, mirrors=[
-                          mirror], bundles=[bundle],
+                          self.repodir, self.wc, shareBase=shareBase,
+                          mirrors=[mirror], bundles=[bundle],
                           revision="1234567890")
 
     def testCommit(self):
-        run_cmd(['touch', 'newfile'], cwd=self.repodir)
+        newfile = os.path.join(self.repodir, 'newfile')
+        touch(newfile)
         run_cmd(['hg', 'add', 'newfile'], cwd=self.repodir)
         rev = commit(self.repodir, user='unittest', msg='gooooood')
         info = getRevInfo(self.repodir, rev)
@@ -979,7 +1097,8 @@ class TestHg(unittest.TestCase):
         # can't test for user, because it depends on local hg configs.
 
     def testCommitWithUser(self):
-        run_cmd(['touch', 'newfile'], cwd=self.repodir)
+        newfile = os.path.join(self.repodir, 'newfile')
+        touch(newfile)
         run_cmd(['hg', 'add', 'newfile'], cwd=self.repodir)
         rev = commit(self.repodir, user='unittest', msg='new stuff!')
         info = getRevInfo(self.repodir, rev)
@@ -995,6 +1114,12 @@ class TestHg(unittest.TestCase):
         tags = getTags(self.repodir)
         self.assertTrue('tag1' in tags)
         self.assertTrue('tag2' in tags)
+
+    def testMultitagSet(self):
+        tag(self.repodir, set(['tag1', 'tag5']))
+        tags = getTags(self.repodir)
+        self.assertTrue('tag1' in tags)
+        self.assertTrue('tag5' in tags)
 
     def testTagWithMsg(self):
         rev = tag(self.repodir, ['tag'], msg='I made a tag!')
@@ -1025,3 +1150,22 @@ class TestHg(unittest.TestCase):
         run_cmd(['hg', 'tag', '-R', self.repodir, 'tag'])
         tag(self.repodir, ['tag'], force=True)
         self.assertTrue('tag' in getTags(self.repodir))
+
+    def testFailingBackend(self):
+        # Test that remote failures get retried
+        num_calls = [0]
+
+        def _my_get_hg_output(cmd, **kwargs):
+            num_calls[0] += 1
+            if cmd[0] == 'clone':
+                e = subprocess.CalledProcessError(-1, cmd)
+                e.output = "error: Name or service not known"
+                raise e
+            else:
+                return get_hg_output(cmd, **kwargs)
+
+        # Two retries are forced in setUp() above
+        with patch('util.hg.get_hg_output', new=_my_get_hg_output):
+            self.assertRaises(subprocess.CalledProcessError,
+                              clone, "http://nxdomain.nxnx", self.wc)
+            self.assertEquals(num_calls, [2])

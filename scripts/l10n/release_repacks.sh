@@ -30,13 +30,13 @@ releaseTag=$($JSONTOOL -k properties.script_repo_revision $PROPERTIES_FILE)
 product=$($JSONTOOL -k properties.product $PROPERTIES_FILE)
 
 if [ -z "$BUILDBOT_CONFIGS" ]; then
-    export BUILDBOT_CONFIGS="http://hg.mozilla.org/build/buildbot-configs"
+    export BUILDBOT_CONFIGS="https://hg.mozilla.org/build/buildbot-configs"
 fi
 if [ -z "$CLOBBERER_URL" ]; then
-    export CLOBBERER_URL="http://clobberer.pvt.build.mozilla.org/index.php"
+    export CLOBBERER_URL="https://api.pub.build.mozilla.org/clobberer/lastclobber"
 fi
 
-if [ "$product" == "thunderbird" ]; then
+if [ "$product" == "Thunderbird" ]; then
     SOURCE_REPO_KEY=--source-repo-key=comm
 else
     SOURCE_REPO_KEY=
@@ -46,10 +46,10 @@ export MOZ_SIGN_CMD="$MOZ_SIGN_CMD"
 
 cd $SCRIPTS_DIR/../..
 $PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s scripts -s buildprops.json \
-  -s data.json -s token -s nonce \
+  -s data.json -s token -s nonce -s oauth.txt \
   $CLOBBERER_URL $branch $builder $slavebuilddir $slavename $master
 cd $SCRIPTS_DIR/..
-$PYTHON $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
+$PYTHON -u $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
   -s 7 -n info -n 'rel-*' -n 'tb-rel-*' -n $slavebuilddir
 cd $workdir
 
@@ -70,4 +70,5 @@ fi
 
 $PYTHON $MY_DIR/create-release-repacks.py -c $branchConfig -r $releaseConfig \
   -b $BUILDBOT_CONFIGS -t $releaseTag -p $platform \
-  --properties-dir $outputPropertiesDir $SOURCE_REPO_KEY $LOCALE_OPT $@
+  --properties-dir $outputPropertiesDir \
+  $SOURCE_REPO_KEY $LOCALE_OPT $@

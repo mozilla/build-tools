@@ -12,10 +12,11 @@ class UpdateVerifyConfig(object):
     comment_regex = re.compile("^#")
     key_write_order = ("release", "product", "platform", "build_id", "locales",
                        "channel", "patch_types", "from", "aus_server",
-                       "ftp_server_from", "ftp_server_to", "to")
+                       "ftp_server_from", "ftp_server_to", "to",
+                       "mar_channel_IDs")
     global_keys = ("product", "platform", "channel", "aus_server", "to")
     release_keys = ("release", "build_id", "locales", "patch_types", "from",
-                    "ftp_server_from", "ftp_server_to")
+                    "ftp_server_from", "ftp_server_to", "mar_channel_IDs")
     first_only_keys = ("from", "aus_server", "to")
     compare_attrs = global_keys + ("releases",)
 
@@ -101,7 +102,8 @@ class UpdateVerifyConfig(object):
 
     def addRelease(self, release=None, build_id=None, locales=[],
                    patch_types=['complete'], from_path=None,
-                   ftp_server_from=None, ftp_server_to=None):
+                   ftp_server_from=None, ftp_server_to=None,
+                   mar_channel_IDs=None):
         """Locales and patch_types can be passed as either a string or a list.
            If a string is passed, they will be converted to a list for internal
            storage"""
@@ -119,6 +121,7 @@ class UpdateVerifyConfig(object):
             "from": from_path,
             "ftp_server_from": ftp_server_from,
             "ftp_server_to": ftp_server_to,
+            "mar_channel_IDs": mar_channel_IDs,
         })
 
     def addLocaleToRelease(self, build_id, locale, from_path=None):
@@ -164,7 +167,8 @@ class UpdateVerifyConfig(object):
                 newConfig.addRelease(r["release"], build_id, locales=[],
                                      ftp_server_from=r["ftp_server_from"],
                                      ftp_server_to=r["ftp_server_to"],
-                                     patch_types=r["patch_types"], from_path=from_path)
+                                     patch_types=r["patch_types"], from_path=from_path,
+                                     mar_channel_IDs=r["mar_channel_IDs"])
             except UpdateVerifyError:
                 pass
             newConfig.addLocaleToRelease(build_id, locale, from_path)

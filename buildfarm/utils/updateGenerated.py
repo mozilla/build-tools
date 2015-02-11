@@ -6,15 +6,15 @@ import zlib
 
 SAVED_ENV = {}
 
-basePath = '/home/anodelman/public_html/'
+basePath = '/home/talos/public_html/'
 
 dirtyProfiles = ['places_generated_med/places.sqlite',
                  'places_generated_min/places.sqlite']
 
 maxDirtyProfile = ['places_generated_max/places.sqlite']
 
-updateCmd = ['/usr/local/bin/python',
-             '/home/anodelman/generator/places/builddb/increment_dates.py']
+updateCmd = ['python',
+             '/home/talos/generator/places/builddb/increment_dates.py']
 
 profilesList = [['dirtyDBs.zip', dirtyProfiles],
                 ['dirtyMaxDBs.zip', maxDirtyProfile]]
@@ -55,8 +55,8 @@ def createZip(zipName):
 def updateProfiles(profiles):
     key = 'PLACES_DB_PATH'
     for val in profiles:
-        setEnvironmentVar('PYTHONPATH', '$PYTHONPATH:/usr/local/bin:/home/anodelman/generator')
-        setEnvironmentVar('DJANGO_SETTINGS_MODULE', 'places.settings')
+        setEnvironmentVar('PYTHONPATH', '$PYTHONPATH:/usr/local/bin')
+        setEnvironmentVar('PYTHONPATH', '/home/talos/generator')
         setEnvironmentVar(key, basePath + val)
         print "\nUpdating " + val + "\n"
         runCmd(updateCmd)

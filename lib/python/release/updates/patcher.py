@@ -54,7 +54,7 @@ class PatcherConfig(dict):
         return tuple(set([self['current-update']['from']] + [v[0] for v in
                                                              self['past-update']]))
 
-    def getOptionalAttrs(self, version):
+    def getOptionalAttrs(self, version, locale):
         if version not in self['release']:
             log.debug("%s not found in config" % version)
             return {}
@@ -62,9 +62,12 @@ class PatcherConfig(dict):
         # Currently, only schema 2 has optional attributes
         attrs = {}
         if schema == 2:
-            for attr in SCHEMA_2_OPTIONAL_ATTRIBUTES:
-                if attr in self['current-update']:
-                    attrs[attr] = self['current-update'][attr]
+            if locale in self['current-update'].get('action-locales',
+                                                    self['release'][version]['locales']):
+                for attr in SCHEMA_2_OPTIONAL_ATTRIBUTES:
+                    if attr in self['current-update']:
+                        attrs[attr] = substitutePath(self['current-update'][attr],
+                                                     locale=locale)
         return attrs
 
     def getPath(self, version, platform, locale, type_):
@@ -117,6 +120,7 @@ class PatcherConfig(dict):
         channels = tuple(self['current-update']['testchannel'] +
                          self['current-update']['channel'])
         toLocales = self['release'][self['current-update']['to']]['locales']
+        toExceptions = self['release'][self['current-update']['to']]['exceptions']
 
         # Now that we know all of the versions that need updates to the latest
         # we can start yielding the paths.
@@ -130,12 +134,16 @@ class PatcherConfig(dict):
                     # platforms. If it *is* in the exception list it is only
                     # applicable to the platforms listed.
                     if locale in r['exceptions'] and platform not in r['exceptions'][locale]:
-                        log.debug("Not generating update path for %s %s because it's not in the exception list." % (platform, locale))
+                        log.debug("Not generating update path for %s %s because it's not in the exception list for old release." % (platform, locale))
                         continue
                     # Make sure the locale is in the "to" release. If it's not
                     # we shouldn't generate an update for it!
                     if locale not in toLocales:
                         log.debug('Not generating update path for %s %s %s because %s isn\'t a locale for the "to" version' % (version, platform, locale, locale))
+                        continue
+                    # Make sure the locale isn't an exception in the "to" release
+                    if locale in toExceptions and platform not in toExceptions[locale]:
+                        log.debug("Not generating update path for %s %s because it's not in the exception list for new release." % (platform, locale))
                         continue
                     # Some patcher configs will have a <partial> block for
                     # backwards compatibility purposes. We don't support that
@@ -247,7 +255,7 @@ class PatcherConfig(dict):
                     SCHEMA_2_OPTIONAL_ATTRIBUTES_SINGLE_VALUE:
                 cu[node.name] = self._stripStringNode(node.content)
             # These are potentially multiple value nodes.
-            elif node.name in ('channel', 'testchannel') + \
+            elif node.name in ('channel', 'testchannel', 'action-locales') + \
                     SCHEMA_2_OPTIONAL_ATTRIBUTES_MULTI_VALUE:
                 cu[node.name] = list(node.arguments)
             # Force is weird in that it's a multiple value node, but the
@@ -284,7 +292,9 @@ class PatcherConfig(dict):
                 raise PatcherConfigError("Found multiple entries for '%s' in release section" % node.name)
 
             # These are all single-value nodes.
-            if node.name in ('checksumsurl', 'completemarurl', 'extension-version', 'prettyVersion', 'version'):
+            if node.name in ('checksumsurl', 'completemarurl',
+                             'extension-version', 'prettyVersion', 'version',
+                             'mar-channel-ids'):
                 r[node.name] = self._stripStringNode(node.content)
             elif node.name == 'schema':
                 r['schema'] = int(node.arguments[0])

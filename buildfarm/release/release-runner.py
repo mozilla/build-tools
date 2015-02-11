@@ -5,11 +5,13 @@ import time
 import logging
 import sys
 import os
+import json
 from os import path
 from optparse import OptionParser
 from smtplib import SMTPException
 from functools import partial
 import textwrap
+from twisted.python.lockfile import FilesystemLock
 
 site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 
@@ -28,12 +30,7 @@ from util.fabric.common import check_fabric, FabricHelper
 from util.sendmail import sendmail
 from util.file import load_config, get_config
 
-logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s")
 log = logging.getLogger(__name__)
-
-HG = 'hg.mozilla.org'
-RELEASE_SANITY_SCRIPT = path.join(path.dirname(__file__),
-                                  "../../buildbot-helpers/release_sanity.py")
 
 
 def reconfig_warning(from_, to, smtp_server, rr, start_time, elapsed,
@@ -90,7 +87,7 @@ class ReleaseRunner(object):
             log.warning('Caught HTTPError: %s' % e.response.content)
             log.warning('status update failed, continuing...', exc_info=True)
 
-    def start_release_automation(self, release, master):
+    def start_release_automation(self, release, master, enUSPlatforms):
         sendchange(
             release['branch'],
             getReleaseTag(getBaseTag(release['product'],
@@ -99,12 +96,13 @@ class ReleaseRunner(object):
             master,
             release['product']
         )
-        self.mark_as_completed(release)
+        self.mark_as_completed(release, enUSPlatforms)
 
-    def mark_as_completed(self, release):
+    def mark_as_completed(self, release, enUSPlatforms):
         log.info('mark as completed %s' % release['name'])
-        self.release_api.update(
-            release['name'], complete=True, status='Started')
+        self.release_api.update(release['name'], complete=True, 
+                                status='Started', 
+                                enUSPlatforms=json.dumps(enUSPlatforms))
 
     def mark_as_failed(self, release, why):
         log.info('mark as failed %s' % release['name'])
@@ -130,8 +128,8 @@ def bump_configs(release, cfgFile, l10nContents, workdir,
     update(workdir, productionBranch)
     cfgDir = path.join(workdir, 'mozilla')
     templateFile = path.join(cfgDir, '%s.template' % cfgFile)
-    tags = getTags(getBaseTag(release['product'], release['version']),
-                   release['buildNumber'])
+    tags = set(getTags(getBaseTag(release['product'], release['version']),
+                   release['buildNumber']))
     cfgFile = path.join(cfgDir, cfgFile)
     l10nChangesetsFile = path.join(
         cfgDir,
@@ -151,12 +149,9 @@ def bump_configs(release, cfgFile, l10nContents, workdir,
         f.write(l10nContents)
     prodRev = commit(workdir, 'Update release config for %s' % release['name'],
                      user=hg_username)
-    # Write out the tags now too, because we want them on the production
-    # branch.
-    forceTag = False
-    if release['buildNumber'] > 1:
-        forceTag = True
-    tag(workdir, tags, rev=prodRev, force=forceTag, user=hg_username)
+    # We always force tagging, because it makes it easier to retrigger a
+    # release that fails for infrastructure reasons.
+    tag(workdir, tags, rev=prodRev, force=True, user=hg_username)
 
     # And then write the same files to the default branch
     update(workdir, defaultBranch)
@@ -168,11 +163,11 @@ def bump_configs(release, cfgFile, l10nContents, workdir,
            user=hg_username)
 
 
-def tag_repo(workdir, branch, tags, force, pushRepo, hg_username,
+def tag_repo(workdir, branch, tags, pushRepo, hg_username,
              hg_ssh_key):
     def tag_and_push(repo, attempt):
         update(workdir, branch)
-        tag(workdir, tags, rev=branch, force=force, user=hg_username)
+        tag(workdir, tags, rev=branch, force=True, user=hg_username)
         log.info("Tagged %s, attempt #%s" % (repo, attempt))
 
     apply_and_push(workdir, pushRepo, tag_and_push,
@@ -205,34 +200,66 @@ def get_release_sanity_args(configs_workdir, release, cfgFile, masters_json,
         args.append('--bypass-l10n-dashboard-check')
     return args
 
-if __name__ == '__main__':
-    parser = OptionParser(__doc__)
-    parser.add_option('-c', '--config', dest='config',
-                      help='Configuration file')
 
-    options = parser.parse_args()[0]
+def sendMailRD(smtpServer, From, cfgFile, r):
+    # Send an email to the mailing after the build
+    contentMail = ""
+    release_config = readReleaseConfig(cfgFile)
+    sources = release_config['sourceRepositories']
+    To = release_config['ImportantRecipients']
+    comment = r.get("comment")
 
-    if not options.config:
-        parser.error('Need to pass a config')
+    if comment:
+        contentMail += "Comment:\n" + comment + "\n\n"
+
+    contentMail += "A new build has been submitted through ship-it:\n"
+
+    for name, source in sources.items():
+
+        # We cannot use the source["revision"] value because it has not been
+        # updated yet. It is done later in the process.
+        # Select the one defined
+        if name == "comm":
+            # Thunderbird
+            revision = r["commRevision"]
+        else:
+            revision = r["mozillaRevision"]
+
+        # For now, firefox has only one source repo but Thunderbird has two
+        contentMail += name + " commit: https://hg.mozilla.org/" + source['path'] + "/rev/" + revision + "\n"
+
+    contentMail += "\nCreated by " + r["submitter"] + "\n"
+
+    contentMail += "\nStarted by " + r["starter"] + "\n"
+
+    Subject = 'Build of %s' % r["name"]
+
+    sendmail(from_=From, to=To, subject=Subject, body=contentMail,
+             smtp_server=smtpServer)
+
+
+def main(options):
     log.info('Loading config from %s' % options.config)
     config = load_config(options.config)
 
     if config.getboolean('release-runner', 'verbose'):
-        log.setLevel(logging.DEBUG)
+        log_level = logging.DEBUG
     else:
-        log.setLevel(logging.INFO)
+        log_level = logging.INFO
+    logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
+                        level=log_level)
+    # Suppress logging of retry(), see bug 925321 for the details
+    logging.getLogger("util.retry").setLevel(logging.WARN)
 
     check_buildbot()
     check_fabric()
 
-    sendchange_master = config.get('release-runner', 'sendchange_master')
-    if not sendchange_master:
-        parser.error('Need to pass sendchange_master')
-
     # Shorthand
+    sendchange_master = config.get('release-runner', 'sendchange_master')
     api_root = config.get('api', 'api_root')
     username = config.get('api', 'username')
     password = config.get('api', 'password')
+    hg_host = config.get('release-runner', 'hg_host')
     hg_username = config.get('release-runner', 'hg_username')
     hg_ssh_key = config.get('release-runner', 'hg_ssh_key')
     buildbot_configs = config.get('release-runner', 'buildbot_configs')
@@ -257,11 +284,21 @@ if __name__ == '__main__':
     configs_workdir = 'buildbot-configs'
     custom_workdir = 'buildbotcustom'
     tools_workdir = 'tools'
-    configs_pushRepo = make_hg_url(HG, get_repo_path(buildbot_configs),
-                                   protocol='ssh')
-    custom_pushRepo = make_hg_url(HG, get_repo_path(buildbotcustom),
-                                  protocol='ssh')
-    tools_pushRepo = make_hg_url(HG, get_repo_path(tools), protocol='ssh')
+    if "://" in buildbot_configs and not buildbot_configs.startswith("file"):
+        configs_pushRepo = make_hg_url(
+            hg_host, get_repo_path(buildbot_configs), protocol='ssh')
+    else:
+        configs_pushRepo = buildbot_configs
+    if "://" in buildbotcustom and not buildbotcustom.startswith("file"):
+        custom_pushRepo = make_hg_url(
+            hg_host, get_repo_path(buildbotcustom), protocol='ssh')
+    else:
+        custom_pushRepo = buildbotcustom
+    if "://" in tools and not tools.startswith("file"):
+        tools_pushRepo = make_hg_url(hg_host, get_repo_path(tools),
+                                     protocol='ssh')
+    else:
+        tools_pushRepo = tools
 
     rr = ReleaseRunner(api_root=api_root, username=username, password=password)
 
@@ -269,14 +306,14 @@ if __name__ == '__main__':
     while True:
         try:
             log.debug('Fetching release requests')
-            new_releases = rr.get_release_requests()
+            rr.get_release_requests()
             if rr.new_releases:
                 for release in rr.new_releases:
                     log.info('Got a new release request: %s' % release)
                 break
             else:
                 log.debug('Sleeping for %d seconds before polling again' %
-                        sleeptime)
+                          sleeptime)
                 time.sleep(sleeptime)
         except Exception, e:
             log.error("Caught exception when polling:", exc_info=True)
@@ -294,6 +331,13 @@ if __name__ == '__main__':
         cleanOutgoingRevs(workdir, push_repo, hg_username,
                           hg_ssh_key)
 
+    # Send email to r-d for a fast notification
+    for release in rr.new_releases:
+        cfgFile = configs_workdir + "/mozilla/" + getReleaseConfigName(
+            release['product'], path.basename(release['branch']),
+            release['version'], staging)
+        sendMailRD(smtp_server, notify_from, cfgFile, release)
+
     # Create symlinks if needed
     if 'symlinks' in config.sections():
         format_dict = dict(buildbot_configs=configs_workdir,
@@ -306,10 +350,7 @@ if __name__ == '__main__':
                 log.info("Adding %s -> %s symlink" % (symlink, target))
                 os.symlink(target, symlink)
 
-    tags = []
-    # For safety's sake, we shouldn't force any tagging
-    # unless we know we need to.
-    force_tag = bool([r for r in rr.new_releases if r['buildNumber'] > 1])
+    tags = set()
 
     def process_configs(repo, attempt):
         """Helper method that encapsulates all of the things necessary
@@ -318,7 +359,7 @@ if __name__ == '__main__':
         for release in rr.new_releases:
             rr.update_status(release, 'Writing configs')
             l10nContents = rr.get_release_l10n(release['name'])
-            tags.extend(getTags(
+            tags.update(getTags(
                 getBaseTag(release['product'], release['version']),
                 release['buildNumber'])
             )
@@ -334,7 +375,8 @@ if __name__ == '__main__':
             rs_args = get_release_sanity_args(configs_workdir, release,
                                               cfgFile, masters_json,
                                               buildbot_configs_branch)
-            run_cmd(['python', RELEASE_SANITY_SCRIPT] + rs_args +
+            release_sanity_script = "%s/buildbot-helpers/release_sanity.py" % tools_workdir
+            run_cmd(['python', release_sanity_script] + rs_args +
                     ['--dry-run'])
             rr.update_status(
                 release, 'Waiting for other releases to run release sanity'
@@ -353,10 +395,10 @@ if __name__ == '__main__':
         for release in rr.new_releases:
             rr.update_status(release, 'Tagging other repositories')
         tag_repo(workdir=custom_workdir, branch=buildbotcustom_branch,
-                 tags=tags, force=force_tag, pushRepo=custom_pushRepo,
+                 tags=tags, pushRepo=custom_pushRepo,
                  hg_username=hg_username, hg_ssh_key=hg_ssh_key)
         tag_repo(workdir=tools_workdir, branch=tools_branch, tags=tags,
-                 force=force_tag, pushRepo=tools_pushRepo,
+                 pushRepo=tools_pushRepo,
                  hg_username=hg_username, hg_ssh_key=hg_ssh_key)
         for release in rr.new_releases:
             rr.update_status(release, 'Reconfiging masters')
@@ -382,7 +424,15 @@ if __name__ == '__main__':
     for release in rr.new_releases:
         try:
             rr.update_status(release, 'Running sendchange command')
-            rr.start_release_automation(release, sendchange_master)
+            staging = config.getboolean('release-runner', 'staging')
+            update(configs_workdir, revision='default')
+            cfgFile = path.join(configs_workdir, 
+                                'mozilla', 
+                                getReleaseConfigName(release['product'], 
+                                                     path.basename(release['branch']),
+                                                     release['version'], staging))
+            enUSPlatforms = readReleaseConfig(cfgFile)['enUSPlatforms']
+            rr.start_release_automation(release, sendchange_master, enUSPlatforms)
         except:
             # We explicitly do not raise an error here because there's no
             # reason not to start other releases if the sendchange fails for
@@ -392,4 +442,31 @@ if __name__ == '__main__':
             rr.update_status(release, 'Sendchange failed')
             log.error('Sendchange failed for %s: ' % release, exc_info=True)
 
-    sys.exit(rc)
+    if rc != 0:
+        sys.exit(rc)
+
+if __name__ == '__main__':
+    parser = OptionParser(__doc__)
+    parser.add_option('-l', '--lockfile', dest='lockfile',
+                      default=path.join(os.getcwd(), ".release-runner.lock"))
+    parser.add_option('-c', '--config', dest='config',
+                      help='Configuration file')
+
+    options = parser.parse_args()[0]
+
+    if not options.config:
+        parser.error('Need to pass a config')
+
+    lockfile = options.lockfile
+    log.debug("Using lock file %s", lockfile)
+    lock = FilesystemLock(lockfile)
+    if not lock.lock():
+        raise Exception("Cannot acquire lock: %s" % lockfile)
+    log.debug("Lock acquired: %s", lockfile)
+    if not lock.clean:
+        log.warning("Previous run did not properly exit")
+    try:
+        main(options)
+    finally:
+        log.debug("Releasing lock: %s", lockfile)
+        lock.unlock()

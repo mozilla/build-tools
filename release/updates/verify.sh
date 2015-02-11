@@ -1,14 +1,18 @@
 #!/bin/bash
 #set -x
 
+. ../common/cached_download.sh
 . ../common/unpack.sh 
 . ../common/download_mars.sh
 . ../common/download_builds.sh
 . ../common/check_updates.sh
 
+clear_cache
+create_cache
+
 ftp_server_to="http://stage.mozilla.org/pub/mozilla.org"
 ftp_server_from="http://stage.mozilla.org/pub/mozilla.org"
-aus_server="https://aus2.mozilla.org"
+aus_server="https://aus4.mozilla.org"
 to=""
 
 pushd `dirname $0` &>/dev/null
@@ -22,7 +26,6 @@ UPDATE_ONLY=1
 TEST_ONLY=2
 MARS_ONLY=3
 COMPLETE=4
-use_old_updater=0
 
 usage()
 {
@@ -31,7 +34,6 @@ usage()
   echo "    -t, --test-only        only test that MARs exist"
   echo "    -m, --mars-only        only test MARs"
   echo "    -c, --complete         complete upgrade test"
-  echo "    -o, --old-updater      use old updater syntax"
 }
 
 if [ -z "$*" ]
@@ -58,10 +60,6 @@ do
       ;;
     -c | --complete)
       runmode=$COMPLETE
-      shift
-      ;;
-    -o | --old-updater)
-      use_old_updater=1
       shift
       ;;
     *)
@@ -98,7 +96,21 @@ do
   channel=""
   from=""
   patch_types="complete"
+  use_old_updater=0
+  mar_channel_IDs=""
   eval $entry
+
+  # the arguments for updater changed in Gecko 34/SeaMonkey 2.31
+  major_version=`echo $release | cut -f1 -d.`
+  if [[ "$product" == "seamonkey" ]]; then
+    minor_version=`echo $release | cut -f2 -d.`
+    if [[ $major_version -le 2 && $minor_version -lt 31 ]]; then
+      use_old_updater=1
+    fi
+  elif [[ $major_version -lt 34 ]]; then
+      use_old_updater=1
+  fi
+
   for locale in $locales
   do
     rm -f update/partial.size update/complete.size
@@ -109,10 +121,10 @@ do
       then
         if [ "$runmode" == "$TEST_ONLY" ]
         then
-          download_mars "${aus_server}/update/1/$product/$release/$build_id/$platform/$locale/$channel/update.xml?force=1" $patch_type 1
+          download_mars "${aus_server}/update/3/$product/$release/$build_id/$platform/$locale/$channel/default/default/default/update.xml?force=1" $patch_type 1
           err=$?
         else
-          download_mars "${aus_server}/update/1/$product/$release/$build_id/$platform/$locale/$channel/update.xml?force=1" $patch_type
+          download_mars "${aus_server}/update/3/$product/$release/$build_id/$platform/$locale/$channel/default/default/default/update.xml?force=1" $patch_type
           err=$?
         fi
         if [ "$err" != "0" ]; then
@@ -120,10 +132,10 @@ do
           continue
         fi
       else
-        update_path="$product/$release/$build_id/$platform/$locale/$channel"
+        update_path="$product/$release/$build_id/$platform/$locale/$channel/default/default/default"
         mkdir -p updates/$update_path/complete
         mkdir -p updates/$update_path/partial
-        $retry wget --no-check-certificate -q -O $patch_type updates/$update_path/$patch_type/update.xml "${aus_server}/update/1/$update_path/update.xml?force=1"
+        $retry wget --no-check-certificate -q -O $patch_type updates/$update_path/$patch_type/update.xml "${aus_server}/update/3/$update_path/update.xml?force=1"
 
       fi
       if [ "$runmode" == "$COMPLETE" ]
@@ -142,7 +154,7 @@ do
         fi
         source_file=`basename "$from_path"`
         target_file=`basename "$to_path"`
-        check_updates "$platform" "downloads/$source_file" "downloads/$target_file" $locale $use_old_updater
+        check_updates "$platform" "downloads/$source_file" "downloads/$target_file" $locale $use_old_updater $mar_channel_IDs
         err=$?
         if [ "$err" == "0" ]; then
           continue
@@ -169,3 +181,4 @@ do
   done
 done < $config_file
 
+clear_cache

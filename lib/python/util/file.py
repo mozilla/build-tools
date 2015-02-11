@@ -60,7 +60,8 @@ def safe_unlink(filename):
                     safe_unlink(fp)
                 os.rmdir(root)
         else:
-            os.unlink(filename)
+            if os.path.exists(filename):
+                os.unlink(filename)
     except OSError, e:
         # Ignore "No such file or directory"
         if e.errno == 2:
@@ -101,3 +102,9 @@ def get_config_bool(config, section, option, default):
     if config.has_section(section) and config.has_option(section, option):
         return config.getboolean(section, option)
     return default
+
+
+def touch(filename, timestamp=None):
+    """a command line touch, replacement"""
+    with open(filename, 'a'):
+        os.utime(filename, timestamp)

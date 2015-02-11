@@ -29,8 +29,9 @@ def generateChecksums(checksums_dir, sums_info):
                     print "Failed to parse the following line:"
                     print line
                     raise
-                if hash_type in sums:
-                    sums[hash_type].append((hash, file_name))
+                entry = (hash, file_name)
+                if hash_type in sums and entry not in sums[hash_type]:
+                    sums[hash_type].append(entry)
     for hash_type in sums_info.keys():
         sums_file = open(sums_info[hash_type], 'w')
         # sort by file name

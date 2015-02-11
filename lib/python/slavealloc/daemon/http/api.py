@@ -83,6 +83,7 @@ class Instance(resource.Resource):
         res.close()
 
         request.setHeader('content-type', 'application/json')
+        request.setHeader('Cache-control', 'no-cache')
 
         # handle nonexistent rows
         if not row:
@@ -133,6 +134,7 @@ class Collection(resource.Resource):
         res = query.execute()
 
         request.setHeader('content-type', 'application/json')
+        request.setHeader('Cache-control', 'no-cache')
         return simplejson.dumps([dict(r.items()) for r in res.fetchall()])
 
 
@@ -150,7 +152,16 @@ class SlaveResource(Instance):
 
 class SlavesResource(Collection):
     instance_class = SlaveResource
-    query = queries.denormalized_slaves
+    # set in render_GET
+    query = None
+
+    def render_GET(self, request):
+        environments = request.args.get('environment')
+        purposes = request.args.get('purpose')
+        pools = request.args.get('pool')
+        enabled = request.args.get('enabled', [None])[0]
+        self.query = queries.denormalized_slaves(environments, purposes, pools, enabled)
+        return Collection.render_GET(self, request)
 
 # masters
 
@@ -221,6 +232,7 @@ class BuildbotTacResource(resource.Resource):
             alloc = None
 
         request.setHeader('content-type', 'application/json')
+        request.setHeader('Cache-control', 'no-cache')
 
         if not alloc:
             request.setResponseCode(404)

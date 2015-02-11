@@ -22,6 +22,7 @@ class TacSlaveResource(resource.Resource):
 
         def handle_success(buildbot_tac):
             request.setHeader('content-type', 'text/plain')
+            request.setHeader('Cache-control', 'no-cache')
             request.write(buildbot_tac)
             request.finish()
         d.addCallback(handle_success)
@@ -30,6 +31,7 @@ class TacSlaveResource(resource.Resource):
             f.trap(exceptions.NoAllocationError)
             request.setResponseCode(404)
             request.setHeader('content-type', 'text/plain')
+            request.setHeader('Cache-control', 'no-cache')
             request.write('no allocation available')
             request.finish()
         d.addErrback(handle_noalloc)
@@ -38,6 +40,7 @@ class TacSlaveResource(resource.Resource):
             log.err(f, "while handling request for '%s'" % self.slave_name)
             request.setResponseCode(500)
             request.setHeader('content-type', 'text/plain')
+            request.setHeader('Cache-control', 'no-cache')
             request.write('error processing request: %s' % f.getErrorMessage())
             request.finish()
         d.addErrback(handle_error)

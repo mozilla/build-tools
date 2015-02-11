@@ -126,6 +126,9 @@ class ReconfigWatcher(Watcher):
                 if "configuration update complete" in line:
                     return
 
+                if "configuration update failed" in line:
+                    raise Exception("reconfig failed")
+
                 if "Unhandled Error" in line:
                     in_error = True
                     print >> sys.stderr, line.rstrip()

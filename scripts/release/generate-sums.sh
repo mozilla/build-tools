@@ -26,10 +26,10 @@ releaseConfig=$($JSONTOOL -k properties.release_config $PROPERTIES_FILE)
 releaseTag=$($JSONTOOL -k properties.script_repo_revision $PROPERTIES_FILE)
 
 if [ -z "$BUILDBOT_CONFIGS" ]; then
-    export BUILDBOT_CONFIGS="http://hg.mozilla.org/build/buildbot-configs"
+    export BUILDBOT_CONFIGS="https://hg.mozilla.org/build/buildbot-configs"
 fi
 if [ -z "$CLOBBERER_URL" ]; then
-    export CLOBBERER_URL="http://clobberer.pvt.build.mozilla.org/index.php"
+    export CLOBBERER_URL="https://api.pub.build.mozilla.org/clobberer/lastclobber"
 fi
 
 export MOZ_SIGN_CMD="$MOZ_SIGN_CMD"
@@ -39,7 +39,7 @@ $PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s scripts -s buildprops.json \
   -s token -s nonce \
   $CLOBBERER_URL $branch $builder $slavebuilddir $slavename $master
 cd $SCRIPTS_DIR/..
-$PYTHON $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
+$PYTHON -u $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
   -s 0.5 -n info -n 'rel-*' -n 'tb-rel-*' -n $slavebuilddir
 cd $workdir
 

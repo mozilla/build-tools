@@ -31,7 +31,7 @@ REQUIRED_OPTIONS = ('brandName', 'product', 'appName', 'version', 'appVersion',
 DEFAULT_CHANNELS = ('beta', 'betatest')
 DEFAULT_PLATFORMS = getSupportedPlatforms()
 DEFAULT_STAGE_SERVER = 'stage.mozilla.org'
-DEFAULT_HG_SERVER = 'http://hg.mozilla.org'
+DEFAULT_HG_SERVER = 'https://hg.mozilla.org'
 
 
 def getSnippetDirname(oldBaseSnippetDir, channel):
