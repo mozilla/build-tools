@@ -1,15 +1,19 @@
 #!/usr/bin/python
-# vim:sts=2 sw=2
+# vim:sts=4 sw=4
+from __future__ import print_function
 import sys
 import shutil
 import urllib2
 import urllib
 import os
-import traceback
 import time
+import logging
+
+log = logging.getLogger()
+
 if os.name == 'nt':
     from win32file import RemoveDirectory, DeleteFile, \
-        GetFileAttributesW, SetFileAttributesW, \
+        SetFileAttributesW, \
         FILE_ATTRIBUTE_NORMAL, FILE_ATTRIBUTE_DIRECTORY
     from win32api import FindFiles
 
@@ -39,6 +43,7 @@ def read_file(fn):
     except ValueError:
         return None
 
+
 def rmdirRecursiveWindows(dir):
     """Windows-specific version of rmdirRecursive that handles
     path lengths longer than MAX_PATH.
@@ -62,6 +67,7 @@ def rmdirRecursiveWindows(dir):
             DeleteFile('\\\\?\\' + full_name)
     RemoveDirectory('\\\\?\\' + dir)
 
+
 def rmdirRecursive(dir):
     """This is a replacement for shutil.rmtree that works better under
     windows. Thanks to Bear at the OSAF for the code.
@@ -81,7 +87,7 @@ def rmdirRecursive(dir):
         return
 
     # Verify the directory is read/write/execute for the current user
-    os.chmod(dir, 0700)
+    os.chmod(dir, 0o700)
 
     for name in os.listdir(dir):
         full_name = os.path.join(dir, name)
@@ -92,14 +98,14 @@ def rmdirRecursive(dir):
                 # I think this is now redundant, but I don't have an NT
                 # machine to test on, so I'm going to leave it in place
                 # -warner
-                os.chmod(full_name, 0600)
+                os.chmod(full_name, 0o600)
 
         if os.path.isdir(full_name):
             rmdirRecursive(full_name)
         else:
             # Don't try to chmod links
             if not os.path.islink(full_name):
-                os.chmod(full_name, 0700)
+                os.chmod(full_name, 0o700)
             os.remove(full_name)
     os.rmdir(dir)
 
@@ -108,11 +114,11 @@ def do_clobber(dir, dryrun=False, skip=None):
     try:
         for f in os.listdir(dir):
             if skip is not None and f in skip:
-                print "Skipping", f
+                log.info("Skipping %s", f)
                 continue
             clobber_path = f + clobber_suffix
             if os.path.isfile(f):
-                print "Removing", f
+                log.info("Removing %s", f)
                 if not dryrun:
                     if os.path.exists(clobber_path):
                         os.unlink(clobber_path)
@@ -123,7 +129,7 @@ def do_clobber(dir, dryrun=False, skip=None):
                         shutil.move(f, clobber_path)
                         os.unlink(clobber_path)
             elif os.path.isdir(f):
-                print "Removing %s/" % f
+                log.info("Removing %s/", f)
                 if not dryrun:
                     if os.path.exists(clobber_path):
                         rmdirRecursive(clobber_path)
@@ -134,21 +140,16 @@ def do_clobber(dir, dryrun=False, skip=None):
                         shutil.move(f, clobber_path)
                         rmdirRecursive(clobber_path)
     except Exception as e:
-        print("[clobber failed]: {}".format(e.message))
+        log.error("[clobber failed]: %s", e.message)
         sys.exit(1)
 
 
-def getClobberDates(clobberURL, branch, buildername, builddir, slave, master):
+def getClobberDates(clobberURL, branch, buildername, builddir, slave):
     params = dict(branch=branch, buildername=buildername,
-                  builddir=builddir, slave=slave, master=master)
+                  builddir=builddir, slave=slave)
     url = "%s?%s" % (clobberURL, urllib.urlencode(params))
-    print "Checking clobber URL: %s" % url
-    # The timeout arg was added to urlopen() at Python 2.6
-    # Deprecate this test when esr17 reaches EOL
-    if sys.version_info[:2] < (2, 6):
-        data = urllib2.urlopen(url).read().strip()
-    else:
-        data = urllib2.urlopen(url, timeout=30).read().strip()
+    log.info("Checking clobber URL: %s", url)
+    data = urllib2.urlopen(url, timeout=30).read().strip()
 
     retval = {}
     try:
@@ -161,61 +162,89 @@ def getClobberDates(clobberURL, branch, buildername, builddir, slave, master):
             retval[builddir] = (builder_time, who)
         return retval
     except ValueError:
-        print "Error parsing response from server"
-        print data
+        log.exception("Error parsing response from server")
+        log.error(data)
         raise
 
 if __name__ == "__main__":
-    from optparse import OptionParser
-    parser = OptionParser(
-        "%prog [options] clobberURL branch buildername builddir slave master")
+    from argparse import ArgumentParser
+    parser = ArgumentParser()
     parser.add_option("-n", "--dry-run", dest="dryrun", action="store_true",
                       default=False, help="don't actually delete anything")
-    parser.add_option("-t", "--periodic", dest="period", type="float",
+    parser.add_option("-t", "--periodic", dest="period", type=float,
                       default=None, help="hours between periodic clobbers")
     parser.add_option('-s', '--skip', help='do not delete this file/directory',
                       action='append', dest='skip', default=['last-clobber'])
     parser.add_option('-d', '--dir', help='clobber this directory',
-                      dest='dir', default='.', type='string')
+                      dest='dir', default='.')
     parser.add_option('-v', '--verbose', help='be more verbose',
-                      dest='verbose', action='store_true', default=False)
+                      dest='loglevel', action='store_const',
+                      default=logging.INFO, const=logging.DEBUG)
 
-    options, args = parser.parse_args()
-    if len(args) != 6:
-        parser.error("Incorrect number of arguments")
+    parser.add_option('--url', dest='clobberURL', help='URL to clobberer service')
+    parser.add_option('--branch', dest='branch', help='currently active branch')
+    parser.add_option('--builder', dest='builder', help='currently active builder name')
+    parser.add_option('--slavedir', dest='slavedir', help='local build directory name')
 
-    if options.period:
-        periodicClobberTime = options.period * 3600
+    # TODO: default to local hostname?
+    parser.add_option('--slave', dest='slave', help='slave name')
+
+    parser.add_option('legacy', nargs='*', help='legacy support: specify clobberURL branch buildername slavedir slave')
+
+    args = parser.parse_args()
+
+    if args.period:
+        periodicClobberTime = args.period * 3600
     else:
         periodicClobberTime = None
 
-    clobberURL, branch, builder, my_builddir, slave, master = args
+    if args.legacy:
+        args.clobberURL = args.legacy[0]
+        args.branch = args.legacy[1]
+        args.builder = args.legacy[2]
+        args.slavedir = args.legacy[3]
+        args.slave = args.legacy[4]
+
+    # Make sure we have required arguments
+    required = ('clobberURL', 'branch', 'builder', 'slavedir', 'slave')
+
+    if not args.clobberURL:
+        parser.error("clobberURL is required")
+
+    if not args.slave:
+        parser.error("slave is required")
+
+    # branch/builder/slavedir must all be set together
+    if (args.branch or args.builder or args.slavedir) and not (
+            args.branch and args.builder and args.slavedir):
+        parser.error("branch/builder/slavedir only partially specified")
+
+    logging.basicConfig(level=args.loglevel, format="%(asctime)s - %(message)s")
 
     try:
         server_clobber_dates = getClobberDates(
-            clobberURL, branch, builder, my_builddir, slave, master)
+            args.clobberURL, args.branch, args.builder, args.my_builddir,
+            args.slave,
+        )
     except:
-        if options.verbose:
-            traceback.print_exc()
-        print "Error contacting server"
+        log.error("error contacting server", exc_info=args.verbose)
         sys.exit(1)
 
-    if options.verbose:
-        print "Server gave us", server_clobber_dates
+    log.debug("Server gave us %s", server_clobber_dates)
 
     now = int(time.time())
 
     # Add ourself to the server_clobber_dates if it's not set
     # This happens when this slave has never been clobbered
-    if my_builddir not in server_clobber_dates:
-        server_clobber_dates[my_builddir] = None, ""
+    if args.slavedir not in server_clobber_dates:
+        server_clobber_dates[args.slavedir] = None, ""
 
-    root_dir = os.path.abspath(options.dir)
+    root_dir = os.path.abspath(args.dir)
 
     for builddir, (server_clobber_date, who) in server_clobber_dates.items():
         builder_dir = os.path.join(root_dir, builddir)
         if not os.path.isdir(builder_dir):
-            print "%s doesn't exist, skipping" % builder_dir
+            log.info("%s doesn't exist, skipping", builder_dir)
             continue
         os.chdir(builder_dir)
 
@@ -224,8 +253,8 @@ if __name__ == "__main__":
         clobber = False
         clobberType = None
 
-        print "%s:Our last clobber date: " % builddir, ts_to_str(our_clobber_date)
-        print "%s:Server clobber date:   " % builddir, ts_to_str(server_clobber_date)
+        log.info("%s:Our last clobber date: %s", builddir, ts_to_str(our_clobber_date))
+        log.info("%s:Server clobber date:   %s", builddir, ts_to_str(server_clobber_date))
 
         # If we don't have a last clobber date, then this is probably a fresh build.
         # We should only do a forced server clobber if we know when our last clobber
@@ -241,13 +270,13 @@ if __name__ == "__main__":
                 # We should also update our clobber date to match the server's
                 our_clobber_date = server_clobber_date
                 if who:
-                    print "%s:Server is forcing a clobber, initiated by %s" % (builddir, who)
+                    log.info("%s:Server is forcing a clobber, initiated by %s", (builddir, who))
                 else:
-                    print "%s:Server is forcing a clobber" % builddir
+                    log.info("%s:Server is forcing a clobber", builddir)
 
         if not clobber:
-            # Disable periodic clobbers for builders that aren't my_builddir
-            if builddir != my_builddir:
+            # Disable periodic clobbers for builders that aren't args.slavedir
+            if builddir != args.slavedir:
                 continue
 
             # Next, check if more than the periodicClobberTime period has passed since
@@ -265,16 +294,16 @@ if __name__ == "__main__":
                 clobberType = "periodic"
                 # Update our clobber date to now
                 our_clobber_date = now
-                print "%s:More than %s seconds have passed since our last clobber" % (builddir, periodicClobberTime)
+                log.info("%s:More than %s seconds have passed since our last clobber", (builddir, periodicClobberTime))
 
         if clobber:
             # Finally, perform a clobber if we're supposed to
-            print "%s:Clobbering..." % builddir
-            do_clobber(builder_dir, options.dryrun, options.skip)
+            log.info("%s:Clobbering...", builddir)
+            do_clobber(builder_dir, args.dryrun, args.skip)
             write_file(our_clobber_date, "last-clobber")
 
         # If this is the build dir for the current job, display the clobber type in TBPL.
         # Note in the case of purged clobber, we output the clobber type even though no
         # clobber was performed this time.
-        if clobberType and builddir == my_builddir:
-            print "TinderboxPrint: %s clobber" % clobberType
+        if clobberType and builddir == args.slavedir:
+            print("TinderboxPrint: %s clobber" % clobberType)

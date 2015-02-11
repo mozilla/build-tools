@@ -45,7 +45,7 @@ class TestClobbererClient(TestCase):
 
     def test_get_clobber_dates(self):
         import urllib2
-        lastclobber_fmt = '{}:{}:{}\n'
+        lastclobber_fmt = '{0}:{1}:{2}\n'
         builddir = 'the-roadhouse'
         timestamp = 9999
         who = 'JimMorrison@thedoors.net'
@@ -69,7 +69,6 @@ class TestClobbererClient(TestCase):
             'buildername',
             'builddir',
             'slave',
-            'master',
         )
         self.assertEqual(clobber_dates_return, {builddir: (timestamp, who)})
 
@@ -81,7 +80,6 @@ class TestClobbererClient(TestCase):
             'buildername',
             'builddir',
             'slave',
-            'master',
         )
         self.assertEqual(clobber_dates_return, {})
 
