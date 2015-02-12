@@ -3,10 +3,14 @@ import logging
 from apache_conf_parser import ApacheConfParser
 
 from release.platforms import ftp2bouncer
-from release.updates.snippets import (SCHEMA_2_OPTIONAL_ATTRIBUTES,
-                                      SCHEMA_2_OPTIONAL_ATTRIBUTES_SINGLE_VALUE,
-                                      SCHEMA_2_OPTIONAL_ATTRIBUTES_MULTI_VALUE)
 
+SCHEMA_2_OPTIONAL_ATTRIBUTES_SINGLE_VALUE = (
+    'showPrompt', 'showNeverForVersion', 'showSurvey', 'licenseUrl',
+    'billboardURL', 'openURL', 'notificationURL', 'alertURL', 'promptWaitTime',
+)
+SCHEMA_2_OPTIONAL_ATTRIBUTES_MULTI_VALUE = ('actions',)
+SCHEMA_2_OPTIONAL_ATTRIBUTES = SCHEMA_2_OPTIONAL_ATTRIBUTES_SINGLE_VALUE + \
+    SCHEMA_2_OPTIONAL_ATTRIBUTES_MULTI_VALUE
 log = logging.getLogger()
 
 
@@ -20,7 +24,7 @@ def substitutePath(path, platform=None, locale=None, version=None):
     }
     for sub, replacement in subs.items():
         if '%%%s%%' % sub in path:
-            if replacement == None:
+            if replacement is None:
                 raise TypeError("No substitution provided for '%s'" % sub)
             path = path.replace('%%%s%%' % sub, replacement)
     return path
