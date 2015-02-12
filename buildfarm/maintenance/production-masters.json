@@ -378,10 +378,10 @@
     "buildbot_setup": "/builds/buildbot/tests1-linux64/buildbot/master/setup.py",
     "buildbot_version": "0.8.2",
     "datacentre": "aws-us-east-1",
-    "db_name": "buildbot-master52.srv.releng.use1.mozilla.com:/builds/buildbot/tests1-linux64/master",
+    "db_name": "buildbot-master52.bb.releng.use1.mozilla.com:/builds/buildbot/tests1-linux64/master",
     "enabled": true,
     "environment": "production",
-    "hostname": "buildbot-master52.srv.releng.use1.mozilla.com",
+    "hostname": "buildbot-master52.bb.releng.use1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
       "linux64",
