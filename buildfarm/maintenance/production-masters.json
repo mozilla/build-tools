@@ -1234,7 +1234,7 @@
     "buildbot_version": "0.8.2",
     "datacentre": "scl3",
     "db_name": "buildbot-master87.bb.releng.scl3.mozilla.com:/builds/buildbot/try1/master",
-    "enabled": false,
+    "enabled": true,
     "environment": "production",
     "hostname": "buildbot-master87.bb.releng.scl3.mozilla.com",
     "http_port": 8101,
