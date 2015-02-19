@@ -246,7 +246,7 @@ def action_add_gecko_version_symlinks(master):
 
 def action_update_exception_timestamp(master):
     with show('running'):
-        run('date +%s > /home/cltbld/.{0}s-last-time.txt'.format(master['name']))
+        run('date +%s > /home/cltbld/.{0}-last-time.txt'.format(master['name']))
 
 
 def per_host(fn):
