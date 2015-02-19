@@ -62,6 +62,13 @@
     ],
     "repo_type": "hg"
   },
+  "mozilla-b2g34_v2_1s": {
+    "repo": "https://hg.mozilla.org/releases/mozilla-b2g34_v2_1s",
+    "graph_branches": [
+      "Mozilla-B2g34-v2.1s"
+    ],
+    "repo_type": "hg"
+  },
   "mozilla-b2g37_v2_2": {
     "repo": "https://hg.mozilla.org/releases/mozilla-b2g37_v2_2",
     "graph_branches": [
