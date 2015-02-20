@@ -37,7 +37,7 @@ function getTryLoad(url, callback) {
         var line = loadLines[i];
         var words = loadLines[i].split(" ");
         if (words.length == 2 && words[1].charAt(0) == "(" && words[1].charAt(words[1].length-1) == ")") {
-          load[words[0]] = parseInt(words[1].substring(1, words[1].length - 1)); 
+          load[words[0]] = parseInt(words[1].substring(1, words[1].length - 1));
         }
       }
       callback(load);
@@ -70,6 +70,7 @@ function getTryLoads(callback) {
         totalBuildLoad["emulator"] = totalBuildLoad["linux"];
         totalBuildLoad["emulator-jb"] = totalBuildLoad["linux"];
         totalBuildLoad["emulator-kk"] = totalBuildLoad["linux"];
+        totalBuildLoad["emulator-l"] = totalBuildLoad["linux"];
         totalBuildLoad["linux32_gecko"] = totalBuildLoad["linux"];
         totalBuildLoad["linux64_gecko"] = totalBuildLoad["linux"];
         totalBuildLoad["macosx64_gecko"] = totalBuildLoad["macosx64"];
@@ -100,6 +101,7 @@ function getTryLoads(callback) {
         totalTestLoad["emulator"] = load_try_test["ubuntu64-vm"]
         // emulator-jb: N/A
         // emulator-kk: N/A
+        // emulator-l: N/A
         totalTestLoad["linux32_gecko"] = totalTestLoad["linux"];
         totalTestLoad["linux64_gecko"] = totalTestLoad["linux64"];
         totalTestLoad["macosx64_gecko"] = totalTestLoad["macosx64"];
