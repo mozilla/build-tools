@@ -282,7 +282,7 @@ def main(args):
             args.slave,
         )
     except:
-        log.error("error contacting server", exc_info=args.verbose)
+        log.error("error contacting server", exc_info=args.loglevel)
         sys.exit(1)
 
     log.debug("Server gave us %s", server_clobber_dates)
