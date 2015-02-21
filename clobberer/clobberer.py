@@ -253,16 +253,16 @@ def main():
     from argparse import ArgumentParser
     parser = ArgumentParser()
     parser.add_argument("-n", "--dry-run", dest="dryrun", action="store_true",
-                      default=False, help="don't actually delete anything")
+                        default=False, help="don't actually delete anything")
     parser.add_argument("-t", "--periodic", dest="period", type=float,
-                      default=None, help="hours between periodic clobbers")
+                        default=None, help="hours between periodic clobbers")
     parser.add_argument('-s', '--skip', help='do not delete this file/directory',
-                      action='append', dest='skip', default=['last-clobber'])
+                        action='append', dest='skip', default=['last-clobber'])
     parser.add_argument('-d', '--dir', help='clobber this directory',
-                      dest='dir', default='.')
+                        dest='dir', default='.')
     parser.add_argument('-v', '--verbose', help='be more verbose',
-                      dest='loglevel', action='store_const',
-                      default=logging.INFO, const=logging.DEBUG)
+                        dest='loglevel', action='store_const',
+                        default=logging.INFO, const=logging.DEBUG)
 
     parser.add_argument('--url', dest='clobberURL', help='URL to clobberer service')
     parser.add_argument('--branch', dest='branch', help='currently active branch')
