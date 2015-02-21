@@ -176,8 +176,8 @@ def process_clobber_dates(server_clobber_dates, args):
     now = int(time.time())
     # Add ourself to the server_clobber_dates if it's not set
     # This happens when this slave has never been clobbered
-    if args.slavedir not in server_clobber_dates:
-        server_clobber_dates[args.slavedir] = None, ""
+    if args.builddir not in server_clobber_dates:
+        server_clobber_dates[args.builddir] = None, ""
 
     root_dir = os.path.abspath(args.dir)
 
@@ -215,8 +215,8 @@ def process_clobber_dates(server_clobber_dates, args):
                     log.info("%s:Server is forcing a clobber", builddir)
 
         if not clobber:
-            # Disable periodic clobbers for builders that aren't args.slavedir
-            if builddir != args.slavedir:
+            # Disable periodic clobbers for builders that aren't args.builddir
+            if builddir != args.builddir:
                 continue
 
             # Next, check if more than the periodicClobberTime period has passed since
@@ -245,7 +245,7 @@ def process_clobber_dates(server_clobber_dates, args):
         # If this is the build dir for the current job, display the clobber type in TBPL.
         # Note in the case of purged clobber, we output the clobber type even though no
         # clobber was performed this time.
-        if clobberType and builddir == args.slavedir:
+        if clobberType and builddir == args.builddir:
             print("TinderboxPrint: %s clobber" % clobberType)
 
 
@@ -267,18 +267,18 @@ def make_argparser():
     parser.add_argument('--url', dest='clobberURL', help='URL to clobberer service')
     parser.add_argument('--branch', dest='branch', help='currently active branch')
     parser.add_argument('--builder', dest='builder', help='currently active builder name')
-    parser.add_argument('--slavedir', dest='slavedir', help='local build directory name')
+    parser.add_argument('--builddir', dest='builddir', help='local build directory name')
 
     parser.add_argument('--slave', default=get_hostname(), dest='slave', help='slave name')
 
-    parser.add_argument('legacy', nargs='*', help='legacy support: specify clobberURL branch buildername slavedir slave')
+    parser.add_argument('legacy', nargs='*', help='legacy support: specify clobberURL branch buildername builddir slave')
     return parser
 
 
 def main(args):
     try:
         server_clobber_dates = getClobberDates(
-            args.clobberURL, args.branch, args.builder, args.my_builddir,
+            args.clobberURL, args.branch, args.builder, args.builddir,
             args.slave,
         )
     except:
@@ -302,7 +302,7 @@ if __name__ == "__main__":
         parsed_args.clobberURL = parsed_args.legacy[0]
         parsed_args.branch = parsed_args.legacy[1]
         parsed_args.builder = parsed_args.legacy[2]
-        parsed_args.slavedir = parsed_args.legacy[3]
+        parsed_args.builddir = parsed_args.legacy[3]
         parsed_args.slave = parsed_args.legacy[4]
 
     # Make sure we have required arguments - we can't use argparsers required
@@ -313,10 +313,10 @@ if __name__ == "__main__":
     if not parsed_args.slave:
         parser.error("slave is required")
 
-    # branch/builder/slavedir must all be set together
-    if (parsed_args.branch or parsed_args.builder or parsed_args.slavedir) and not (
-            parsed_args.branch and parsed_args.builder and parsed_args.slavedir):
-        parser.error("branch/builder/slavedir only partially specified")
+    # branch/builder/builddir must all be set together
+    if (parsed_args.branch or parsed_args.builder or parsed_args.builddir) and not (
+            parsed_args.branch and parsed_args.builder and parsed_args.builddir):
+        parser.error("branch/builder/builddir only partially specified")
 
     logging.basicConfig(level=parsed_args.loglevel, format="%(asctime)s - %(message)s")
 
