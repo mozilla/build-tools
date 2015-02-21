@@ -49,8 +49,8 @@ def read_file(fn):
         return None
 
 
-def rmdirRecursiveWindows(dir):
-    """Windows-specific version of rmdirRecursive that handles
+def rmdir_recursive_windows(dir):
+    """Windows-specific version of rmdir_recursive that handles
     path lengths longer than MAX_PATH.
     """
 
@@ -66,19 +66,19 @@ def rmdirRecursiveWindows(dir):
         full_name = os.path.join(dir, name)
 
         if file_attr & FILE_ATTRIBUTE_DIRECTORY:
-            rmdirRecursiveWindows(full_name)
+            rmdir_recursive_windows(full_name)
         else:
             SetFileAttributesW('\\\\?\\' + full_name, FILE_ATTRIBUTE_NORMAL)
             DeleteFile('\\\\?\\' + full_name)
     RemoveDirectory('\\\\?\\' + dir)
 
 
-def rmdirRecursive(dir):
+def rmdir_recursive(dir):
     """This is a replacement for shutil.rmtree that works better under
     windows. Thanks to Bear at the OSAF for the code.
     (Borrowed from buildbot.slave.commands)"""
     if os.name == 'nt':
-        rmdirRecursiveWindows(dir)
+        rmdir_recursive_windows(dir)
         return
 
     if not os.path.exists(dir):
@@ -106,7 +106,7 @@ def rmdirRecursive(dir):
                 os.chmod(full_name, 0o600)
 
         if os.path.isdir(full_name):
-            rmdirRecursive(full_name)
+            rmdir_recursive(full_name)
         else:
             # Don't try to chmod links
             if not os.path.islink(full_name):
@@ -137,19 +137,19 @@ def do_clobber(dir, dryrun=False, skip=None):
                 log.info("Removing %s/", f)
                 if not dryrun:
                     if os.path.exists(clobber_path):
-                        rmdirRecursive(clobber_path)
+                        rmdir_recursive(clobber_path)
                     # Prevent repeated moving.
                     if f.endswith(clobber_suffix):
-                        rmdirRecursive(f)
+                        rmdir_recursive(f)
                     else:
                         shutil.move(f, clobber_path)
-                        rmdirRecursive(clobber_path)
+                        rmdir_recursive(clobber_path)
     except Exception as e:
         log.error("[clobber failed]: %s", e.message)
         sys.exit(1)
 
 
-def getClobberDates(clobberURL, branch, buildername, builddir, slave):
+def get_clobber_dates(clobberURL, branch, buildername, builddir, slave):
     params = dict(branch=branch, buildername=buildername,
                   builddir=builddir, slave=slave)
     url = "%s?%s" % (clobberURL, urllib.urlencode(params))
@@ -277,7 +277,7 @@ def make_argparser():
 
 def main(args):
     try:
-        server_clobber_dates = getClobberDates(
+        server_clobber_dates = get_clobber_dates(
             args.clobberURL, args.branch, args.builder, args.builddir,
             args.slave,
         )
