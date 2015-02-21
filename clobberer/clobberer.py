@@ -172,7 +172,7 @@ def getClobberDates(clobberURL, branch, buildername, builddir, slave):
         raise
 
 
-def processClobberDates(server_clobber_dates, args):
+def process_clobber_dates(server_clobber_dates, args):
     now = int(time.time())
     # Add ourself to the server_clobber_dates if it's not set
     # This happens when this slave has never been clobbered
@@ -287,7 +287,7 @@ def main(args):
 
     log.debug("Server gave us %s", server_clobber_dates)
 
-    processClobberDates(server_clobber_dates, args)
+    process_clobber_dates(server_clobber_dates, args)
 
 if __name__ == "__main__":
     parser = make_argparser()
@@ -320,4 +320,4 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=parsed_args.loglevel, format="%(asctime)s - %(message)s")
 
-    main()
+    main(parsed_args)
