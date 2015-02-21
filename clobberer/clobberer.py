@@ -249,9 +249,9 @@ def processClobberDates(server_clobber_dates, args):
             print("TinderboxPrint: %s clobber" % clobberType)
 
 
-def main():
-    from argparse import ArgumentParser
-    parser = ArgumentParser()
+def make_argparser():
+    import argparse
+    parser = argparse.ArgumentParser(__doc__)
     parser.add_argument("-n", "--dry-run", dest="dryrun", action="store_true",
                         default=False, help="don't actually delete anything")
     parser.add_argument("-t", "--periodic", dest="period", type=float,
@@ -272,35 +272,10 @@ def main():
     parser.add_argument('--slave', default=get_hostname(), dest='slave', help='slave name')
 
     parser.add_argument('legacy', nargs='*', help='legacy support: specify clobberURL branch buildername slavedir slave')
+    return parser
 
-    args = parser.parse_args()
 
-    if args.period:
-        args.periodicClobberTime = args.period * 3600
-    else:
-        args.periodicClobberTime = None
-
-    if args.legacy:
-        args.clobberURL = args.legacy[0]
-        args.branch = args.legacy[1]
-        args.builder = args.legacy[2]
-        args.slavedir = args.legacy[3]
-        args.slave = args.legacy[4]
-
-    # Make sure we have required arguments
-    if not args.clobberURL:
-        parser.error("clobberURL is required")
-
-    if not args.slave:
-        parser.error("slave is required")
-
-    # branch/builder/slavedir must all be set together
-    if (args.branch or args.builder or args.slavedir) and not (
-            args.branch and args.builder and args.slavedir):
-        parser.error("branch/builder/slavedir only partially specified")
-
-    logging.basicConfig(level=args.loglevel, format="%(asctime)s - %(message)s")
-
+def main(args):
     try:
         server_clobber_dates = getClobberDates(
             args.clobberURL, args.branch, args.builder, args.my_builddir,
@@ -315,4 +290,34 @@ def main():
     processClobberDates(server_clobber_dates, args)
 
 if __name__ == "__main__":
+    parser = make_argparser()
+    parsed_args = parser.parse_args()
+
+    if parsed_args.period:
+        parsed_args.periodicClobberTime = parsed_args.period * 3600
+    else:
+        parsed_args.periodicClobberTime = None
+
+    if parsed_args.legacy and len(parsed_args.legacy) > 1:
+        parsed_args.clobberURL = parsed_args.legacy[0]
+        parsed_args.branch = parsed_args.legacy[1]
+        parsed_args.builder = parsed_args.legacy[2]
+        parsed_args.slavedir = parsed_args.legacy[3]
+        parsed_args.slave = parsed_args.legacy[4]
+
+    # Make sure we have required arguments - we can't use argparsers required
+    # logic because of the need for legacy support.
+    if not parsed_args.clobberURL:
+        parser.error("clobberURL is required")
+
+    if not parsed_args.slave:
+        parser.error("slave is required")
+
+    # branch/builder/slavedir must all be set together
+    if (parsed_args.branch or parsed_args.builder or parsed_args.slavedir) and not (
+            parsed_args.branch and parsed_args.builder and parsed_args.slavedir):
+        parser.error("branch/builder/slavedir only partially specified")
+
+    logging.basicConfig(level=parsed_args.loglevel, format="%(asctime)s - %(message)s")
+
     main()
