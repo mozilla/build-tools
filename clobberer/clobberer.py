@@ -8,6 +8,7 @@ import urllib
 import os
 import time
 import logging
+import socket
 
 log = logging.getLogger()
 
@@ -24,6 +25,10 @@ def ts_to_str(ts):
     if ts is None:
         return None
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(ts))
+
+
+def get_hostname():
+    return socket.gethostname().split('.')[0]
 
 
 def write_file(ts, fn):
@@ -264,8 +269,7 @@ def main():
     parser.add_option('--builder', dest='builder', help='currently active builder name')
     parser.add_option('--slavedir', dest='slavedir', help='local build directory name')
 
-    # TODO: default to local hostname?
-    parser.add_option('--slave', dest='slave', help='slave name')
+    parser.add_option('--slave', default=get_hostname(), dest='slave', help='slave name')
 
     parser.add_option('legacy', nargs='*', help='legacy support: specify clobberURL branch buildername slavedir slave')
 
