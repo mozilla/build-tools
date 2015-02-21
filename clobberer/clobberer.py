@@ -252,26 +252,26 @@ def processClobberDates(server_clobber_dates, args):
 def main():
     from argparse import ArgumentParser
     parser = ArgumentParser()
-    parser.add_option("-n", "--dry-run", dest="dryrun", action="store_true",
+    parser.add_argument("-n", "--dry-run", dest="dryrun", action="store_true",
                       default=False, help="don't actually delete anything")
-    parser.add_option("-t", "--periodic", dest="period", type=float,
+    parser.add_argument("-t", "--periodic", dest="period", type=float,
                       default=None, help="hours between periodic clobbers")
-    parser.add_option('-s', '--skip', help='do not delete this file/directory',
+    parser.add_argument('-s', '--skip', help='do not delete this file/directory',
                       action='append', dest='skip', default=['last-clobber'])
-    parser.add_option('-d', '--dir', help='clobber this directory',
+    parser.add_argument('-d', '--dir', help='clobber this directory',
                       dest='dir', default='.')
-    parser.add_option('-v', '--verbose', help='be more verbose',
+    parser.add_argument('-v', '--verbose', help='be more verbose',
                       dest='loglevel', action='store_const',
                       default=logging.INFO, const=logging.DEBUG)
 
-    parser.add_option('--url', dest='clobberURL', help='URL to clobberer service')
-    parser.add_option('--branch', dest='branch', help='currently active branch')
-    parser.add_option('--builder', dest='builder', help='currently active builder name')
-    parser.add_option('--slavedir', dest='slavedir', help='local build directory name')
+    parser.add_argument('--url', dest='clobberURL', help='URL to clobberer service')
+    parser.add_argument('--branch', dest='branch', help='currently active branch')
+    parser.add_argument('--builder', dest='builder', help='currently active builder name')
+    parser.add_argument('--slavedir', dest='slavedir', help='local build directory name')
 
-    parser.add_option('--slave', default=get_hostname(), dest='slave', help='slave name')
+    parser.add_argument('--slave', default=get_hostname(), dest='slave', help='slave name')
 
-    parser.add_option('legacy', nargs='*', help='legacy support: specify clobberURL branch buildername slavedir slave')
+    parser.add_argument('legacy', nargs='*', help='legacy support: specify clobberURL branch buildername slavedir slave')
 
     args = parser.parse_args()
 
