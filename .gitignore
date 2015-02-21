@@ -1,3 +1,5 @@
+*.swp
+.ropeproject
 release-runner*.ini
 master_config.json
 buildbot-configs
