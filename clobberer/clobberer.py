@@ -172,7 +172,11 @@ def process_clobber_times(server_clobber_times, args):
     root_dir = os.path.abspath(args.dir)
 
     for clobber_time in server_clobber_times['result']:
-        builder_dir = os.path.join(root_dir, clobber_time['builddir'])
+        builddir = clobber_time['builddir']
+        server_clobber_date = clobber_time['lastclobber']
+        who = clobber_time['who']
+
+        builder_dir = os.path.join(root_dir, builddir)
         if not os.path.isdir(builder_dir):
             log.info("%s doesn't exist, skipping", builder_dir)
             continue
@@ -250,6 +254,7 @@ def make_argparser():
                         action='append', dest='skip', default=['last-clobber'])
     parser.add_argument('-d', '--dir', help='clobber this directory',
                         dest='dir', default='.')
+    parser.add_argument('--builddir', help='a specific builddir for periodic clobbers')
     parser.add_argument('-v', '--verbose', help='be more verbose',
                         dest='loglevel', action='store_const',
                         default=logging.INFO, const=logging.DEBUG)
