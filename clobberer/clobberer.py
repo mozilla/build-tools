@@ -5,10 +5,10 @@ import sys
 import shutil
 import urllib2
 import urllib
+import json
 import os
 import time
 import logging
-import socket
 
 log = logging.getLogger()
 
@@ -25,10 +25,6 @@ def ts_to_str(ts):
     if ts is None:
         return None
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(ts))
-
-
-def get_hostname():
-    return socket.gethostname().split('.')[0]
 
 
 def write_file(ts, fn):
@@ -149,40 +145,34 @@ def do_clobber(dir, dryrun=False, skip=None):
         sys.exit(1)
 
 
-def get_clobber_dates(clobberURL, branch, buildername, builddir, slave):
+def get_clobber_times(clobber_url):
+    log.info("Checking clobber URL: %s", clobber_url)
+    data = urllib2.urlopen(clobber_url, timeout=30).read()
+    return json.loads(data)
+
+
+def legacy_checkin(clobber_url, branch, buildername, builddir, slave, master=None):
+    '''
+    The legacy clobberer records new build types by recording client checkins, so,
+    to not break the system we'll still need to check in (and throw away the server
+    response).
+    '''
     params = dict(branch=branch, buildername=buildername,
-                  builddir=builddir, slave=slave)
-    url = "%s?%s" % (clobberURL, urllib.urlencode(params))
-    log.info("Checking clobber URL: %s", url)
-    data = urllib2.urlopen(url, timeout=30).read().strip()
-
-    retval = {}
-    try:
-        for line in data.split("\n"):
-            line = line.strip()
-            if not line:
-                continue
-            builddir, builder_time, who = line.split(":")
-            builder_time = int(builder_time)
-            retval[builddir] = (builder_time, who)
-        return retval
-    except ValueError:
-        log.exception("Error parsing response from server")
-        log.error(data)
-        raise
+                  builddir=builddir, slave=slave, master=master)
+    url = "%s?%s" % (clobber_url, urllib.urlencode(params))
+    if sys.version_info[:2] < (2, 6):
+        urllib2.urlopen(url).read().strip()
+    else:
+        urllib2.urlopen(url, timeout=30).read().strip()
 
 
-def process_clobber_dates(server_clobber_dates, args):
+def process_clobber_times(server_clobber_times, args):
     now = int(time.time())
-    # Add ourself to the server_clobber_dates if it's not set
-    # This happens when this slave has never been clobbered
-    if args.builddir not in server_clobber_dates:
-        server_clobber_dates[args.builddir] = None, ""
 
     root_dir = os.path.abspath(args.dir)
 
-    for builddir, (server_clobber_date, who) in server_clobber_dates.items():
-        builder_dir = os.path.join(root_dir, builddir)
+    for clobber_time in server_clobber_times['result']:
+        builder_dir = os.path.join(root_dir, clobber_time['builddir'])
         if not os.path.isdir(builder_dir):
             log.info("%s doesn't exist, skipping", builder_dir)
             continue
@@ -263,61 +253,39 @@ def make_argparser():
     parser.add_argument('-v', '--verbose', help='be more verbose',
                         dest='loglevel', action='store_const',
                         default=logging.INFO, const=logging.DEBUG)
-
-    parser.add_argument('--url', dest='clobberURL', help='URL to clobberer service')
-    parser.add_argument('--branch', dest='branch', help='currently active branch')
-    parser.add_argument('--builder', dest='builder', help='currently active builder name')
-    parser.add_argument('--builddir', dest='builddir', help='local build directory name')
-
-    parser.add_argument('--slave', default=get_hostname(), dest='slave', help='slave name')
-
-    parser.add_argument('legacy', nargs='*', help='legacy support: specify clobberURL branch buildername builddir slave')
+    parser.add_argument('--url', dest='clobber_url', help='URL to clobberer service')
+    parser.add_argument('legacy', nargs='*', help='legacy support: '
+                        'specify clobber_url branch buildername builddir slave'
+                        '(only checks in, does not clobber)')
     return parser
 
 
 def main(args):
+    if args.period:
+        args.periodicClobberTime = args.period * 3600
+    else:
+        args.periodicClobberTime = None
+
+    # Legacy support
+    if args.legacy and len(args.legacy) > 1:
+        log.info("Legacy mode detected (checkin only)")
+        legacy_checkin(*args.legacy)
+        sys.exit(0)
+
+    if not args.clobber_url:
+        # we can't set required=True because of legacy support
+        raise Exception("--url required")
+
     try:
-        server_clobber_dates = get_clobber_dates(
-            args.clobberURL, args.branch, args.builder, args.builddir,
-            args.slave,
-        )
+        server_clobber_times = get_clobber_times(args.clobber_url)
     except:
         log.error("error contacting server", exc_info=args.loglevel)
         sys.exit(1)
 
-    log.debug("Server gave us %s", server_clobber_dates)
-
-    process_clobber_dates(server_clobber_dates, args)
+    process_clobber_times(server_clobber_times, args)
 
 if __name__ == "__main__":
     parser = make_argparser()
     parsed_args = parser.parse_args()
-
-    if parsed_args.period:
-        parsed_args.periodicClobberTime = parsed_args.period * 3600
-    else:
-        parsed_args.periodicClobberTime = None
-
-    if parsed_args.legacy and len(parsed_args.legacy) > 1:
-        parsed_args.clobberURL = parsed_args.legacy[0]
-        parsed_args.branch = parsed_args.legacy[1]
-        parsed_args.builder = parsed_args.legacy[2]
-        parsed_args.builddir = parsed_args.legacy[3]
-        parsed_args.slave = parsed_args.legacy[4]
-
-    # Make sure we have required arguments - we can't use argparsers required
-    # logic because of the need for legacy support.
-    if not parsed_args.clobberURL:
-        parser.error("clobberURL is required")
-
-    if not parsed_args.slave:
-        parser.error("slave is required")
-
-    # branch/builder/builddir must all be set together
-    if (parsed_args.branch or parsed_args.builder or parsed_args.builddir) and not (
-            parsed_args.branch and parsed_args.builder and parsed_args.builddir):
-        parser.error("branch/builder/builddir only partially specified")
-
     logging.basicConfig(level=parsed_args.loglevel, format="%(asctime)s - %(message)s")
-
     main(parsed_args)
