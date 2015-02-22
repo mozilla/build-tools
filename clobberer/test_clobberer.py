@@ -4,7 +4,7 @@ import shutil
 import os
 
 from clobberer import do_clobber
-from clobberer import getClobberDates
+from clobberer import get_clobber_times
 
 
 class TestClobbererClient(TestCase):
@@ -43,13 +43,22 @@ class TestClobbererClient(TestCase):
         os.rmdir(skip_dir_name)
         os.remove(skip_file_name)
 
-    def test_get_clobber_dates(self):
+    def test_get_clobber_times(self):
         import urllib2
-        lastclobber_fmt = '{0}:{1}:{2}\n'
+        import json
+
         builddir = 'the-roadhouse'
         timestamp = 9999
         who = 'JimMorrison@thedoors.net'
-        FAKE_URLOPEN_DATA = lastclobber_fmt.format(builddir, timestamp, who)
+        fake_data = {'result': [
+            {
+                'builddir': builddir,
+                'lastclobber': timestamp,
+                'who': who
+                }
+            ]
+        }
+        FAKE_URLOPEN_DATA = json.dumps(fake_data)
 
         class FakeURLOpen(object):
 
@@ -63,25 +72,14 @@ class TestClobbererClient(TestCase):
         # monkey patch urllib2 to force simulated clobber data
         urllib2.urlopen = FakeURLOpen
 
-        clobber_dates_return = getClobberDates(
-            'clobberer/lastclobber',
-            'branch',
-            'buildername',
-            'builddir',
-            'slave',
-        )
-        self.assertEqual(clobber_dates_return, {builddir: (timestamp, who)})
+        clobber_dates_return = get_clobber_times('clobberer/lastclobber/all')
+        self.assertEqual(clobber_dates_return, fake_data)
 
         # make sure it can handle no data
-        FAKE_URLOPEN_DATA = ""
-        clobber_dates_return = getClobberDates(
-            'clobberer/lastclobber',
-            'branch',
-            'buildername',
-            'builddir',
-            'slave',
-        )
-        self.assertEqual(clobber_dates_return, {})
+        fake_data_null = {'result': []}
+        FAKE_URLOPEN_DATA = json.dumps(fake_data_null)
+        clobber_dates_return = get_clobber_times('clobberer/lastclobber/all')
+        self.assertEqual(clobber_dates_return, fake_data_null)
 
 if __name__ == '__main__':
     import unittest

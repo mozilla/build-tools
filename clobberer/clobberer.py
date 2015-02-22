@@ -182,7 +182,7 @@ def process_clobber_times(server_clobber_times, args):
             continue
         os.chdir(builder_dir)
 
-        our_clobber_date = read_file("last-clobber")
+        our_clobber_date = read_file("last-clobber") or 0
 
         clobber = False
         clobberType = None
@@ -204,7 +204,7 @@ def process_clobber_times(server_clobber_times, args):
                 # We should also update our clobber date to match the server's
                 our_clobber_date = server_clobber_date
                 if who:
-                    log.info("%s:Server is forcing a clobber, initiated by %s", (builddir, who))
+                    log.info("%s:Server is forcing a clobber, initiated by %s", builddir, who)
                 else:
                     log.info("%s:Server is forcing a clobber", builddir)
 
@@ -228,7 +228,8 @@ def process_clobber_times(server_clobber_times, args):
                 clobberType = "periodic"
                 # Update our clobber date to now
                 our_clobber_date = now
-                log.info("%s:More than %s seconds have passed since our last clobber", (builddir, args.periodicClobberTime))
+                log.info("%s:More than %s seconds have passed since our last clobber",
+                         (builddir, args.periodicClobberTime))
 
         if clobber:
             # Finally, perform a clobber if we're supposed to
