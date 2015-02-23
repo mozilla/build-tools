@@ -162,26 +162,23 @@ def legacy_get_clobber_times(clobber_url, branch, buildername, builddir, slave, 
     else:
         data = urllib2.urlopen(url, timeout=30).read().strip()
 
-    try:
-        for line in data.split("\n"):
-            line = line.strip()
-            if not line:
-                continue
-            builddir, lastclobber, who = line.split(":")
-            lastclobber = int(lastclobber)
-        # return a dictionary that mimicks the new endpoint
-        # json format
-        return {
-            'result': [{
-                'builddir': builddir,
-                'lasclobber': lastclobber,
-                'who': who
-            }]
-        }
-    except ValueError:
-        print("Error parsing response from server")
-        print(data)
-        raise
+    processed_data = data.strip().split(':')
+
+    if len(processed_data) < 2:
+        # We received an empty result, time to bail
+        return {'result': []}
+
+    builddir_result, lastclobber, who = processed_data
+    lastclobber = int(lastclobber)
+    # return a dictionary that mimicks the new endpoint
+    # json format
+    return {
+        'result': [{
+            'builddir': builddir_result,
+            'lastclobber': lastclobber,
+            'who': who
+        }]
+    }
 
 
 def process_clobber_times(server_clobber_times, args):
