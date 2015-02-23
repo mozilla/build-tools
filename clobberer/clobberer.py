@@ -151,19 +151,37 @@ def get_clobber_times(clobber_url):
     return json.loads(data)
 
 
-def legacy_checkin(clobber_url, branch, buildername, builddir, slave, master=None):
-    '''
-    The legacy clobberer records new build types by recording client checkins, so,
-    to not break the system we'll still need to check in (and throw away the server
-    response).
-    '''
+def legacy_get_clobber_times(clobber_url, branch, buildername, builddir, slave, master=None):
     params = dict(branch=branch, buildername=buildername,
                   builddir=builddir, slave=slave, master=master)
     url = "%s?%s" % (clobber_url, urllib.urlencode(params))
+    # The timeout arg was added to urlopen() at Python 2.6
+    # Deprecate this test when esr17 reaches EOL
     if sys.version_info[:2] < (2, 6):
-        urllib2.urlopen(url).read().strip()
+        data = urllib2.urlopen(url).read().strip()
     else:
-        urllib2.urlopen(url, timeout=30).read().strip()
+        data = urllib2.urlopen(url, timeout=30).read().strip()
+
+    try:
+        for line in data.split("\n"):
+            line = line.strip()
+            if not line:
+                continue
+            builddir, lastclobber, who = line.split(":")
+            lastclobber = int(lastclobber)
+        # return a dictionary that mimicks the new endpoint
+        # json format
+        return {
+            'result': [{
+                'builddir': builddir,
+                'lasclobber': lastclobber,
+                'who': who
+            }]
+        }
+    except ValueError:
+        print("Error parsing response from server")
+        print(data)
+        raise
 
 
 def process_clobber_times(server_clobber_times, args):
@@ -272,18 +290,17 @@ def main(args):
     else:
         args.periodicClobberTime = None
 
-    # Legacy support
-    if args.legacy and len(args.legacy) > 1:
-        log.info("Legacy mode detected (checkin only)")
-        legacy_checkin(*args.legacy)
-        sys.exit(0)
-
-    if not args.clobber_url:
-        # we can't set required=True because of legacy support
-        raise Exception("--url required")
-
     try:
-        server_clobber_times = get_clobber_times(args.clobber_url)
+        # Legacy support
+        if args.legacy and len(args.legacy) > 1:
+            log.info("Entering legacy mode.")
+            server_clobber_times = legacy_get_clobber_times(*args.legacy)
+        else:
+
+            if not args.clobber_url:
+                # we can't set required=True because of legacy support
+                raise Exception("--url required")
+            server_clobber_times = get_clobber_times(args.clobber_url)
     except:
         log.error("error contacting server", exc_info=args.loglevel)
         sys.exit(1)
