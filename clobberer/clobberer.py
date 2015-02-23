@@ -1,6 +1,5 @@
 #!/usr/bin/python
 # vim:sts=4 sw=4
-from __future__ import print_function
 import sys
 import shutil
 import urllib2
@@ -256,7 +255,7 @@ def process_clobber_times(server_clobber_times, args):
         # Note in the case of purged clobber, we output the clobber type even though no
         # clobber was performed this time.
         if clobberType and builddir == args.builddir:
-            print("TinderboxPrint: %s clobber" % clobberType)
+            log.info("Tinderboxlog.info: %s clobber" % clobberType)
 
 
 def make_argparser():
