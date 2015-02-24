@@ -180,7 +180,8 @@ def legacy_get_clobber_times(clobber_url, branch, buildername, builddir, slave, 
         'result': [{
             'builddir': builddir_result,
             'lastclobber': lastclobber,
-            'who': who
+            'who': who,
+            'slave': None
         }]
     }
 
@@ -191,6 +192,7 @@ def process_clobber_times(server_clobber_times, args):
     root_dir = os.path.abspath(args.dir)
 
     for clobber_time in server_clobber_times['result']:
+        slave = clobber_time['slave']
         builddir = clobber_time['builddir']
         server_clobber_date = clobber_time['lastclobber']
         who = clobber_time['who']
@@ -214,8 +216,10 @@ def process_clobber_times(server_clobber_times, args):
         # was, and if the server date is more recent than that.
         if server_clobber_date is not None and our_clobber_date is not None:
             # If the server is giving us a clobber date, compare the server's idea of
-            # the clobber date to our last clobber date
-            if server_clobber_date > our_clobber_date:
+            # the clobber date to our last clobber date also skip slave specific
+            # clobbers that aren't for the current host
+            if (server_clobber_date > our_clobber_date) and \
+                (slave is None or slave == args.slave):
                 # If the server's clobber date is greater than our last clobber date,
                 # then we should clobber.
                 clobber = True

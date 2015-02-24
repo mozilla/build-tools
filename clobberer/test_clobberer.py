@@ -54,7 +54,8 @@ class TestClobbererClient(TestCase):
             {
                 'builddir': builddir,
                 'lastclobber': timestamp,
-                'who': who
+                'who': who,
+                'slave': None
                 }
             ]
         }
@@ -116,7 +117,8 @@ class TestClobbererClient(TestCase):
                 'result': [{
                     'builddir': builddir,
                     'lastclobber': timestamp,
-                    'who': who
+                    'who': who,
+                    'slave': None
                 }]
             }
         )
