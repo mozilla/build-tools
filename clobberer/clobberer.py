@@ -7,6 +7,7 @@ import urllib
 import json
 import os
 import time
+import socket
 import logging
 
 log = logging.getLogger()
@@ -18,6 +19,10 @@ if os.name == 'nt':
     from win32api import FindFiles
 
 clobber_suffix = '.deleteme'
+
+
+def get_hostname():
+    return socket.gethostname().split('.')[0]
 
 
 def ts_to_str(ts):
@@ -274,6 +279,8 @@ def make_argparser():
                         dest='loglevel', action='store_const',
                         default=logging.INFO, const=logging.DEBUG)
     parser.add_argument('--url', dest='clobber_url', help='URL to clobberer service')
+    parser.add_argument('--slave', default=get_hostname(),
+                        help='Name of the slave being clobbered (defaults to hostname)')
     parser.add_argument('legacy', nargs='*', help='legacy support: '
                         'specify clobber_url branch buildername builddir slave'
                         '(only checks in, does not clobber)')
