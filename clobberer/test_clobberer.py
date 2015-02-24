@@ -135,6 +135,69 @@ class TestClobbererClient(TestCase):
         )
         self.assertEqual(clobber_dates_return, {'result': []})
 
+    def test_process_clobber_times(self):
+        import clobberer
+        parser = clobberer.make_argparser()
+
+        def stubbed_do_clobber(*args):
+            clobberer.clobbered = True
+
+        # Let's avoid leaving junk files around places
+        def stubbed_write_file(*args):
+            pass
+
+        clobberer.do_clobber = stubbed_do_clobber
+        clobberer.write_file = stubbed_write_file
+
+        slave_name = 'un-petit-bebe'
+        process_args = parser.parse_args([
+            '--dir',
+            '/',
+            '--slave',
+            slave_name
+        ])
+
+        server_clobber_times_no_slave = {'result': [
+            {
+                'builddir': 'tmp',
+                'lastclobber': 1,
+                'who': 'albert.camus@gmail.net',
+                'slave': None
+            }
+        ]}
+
+        # should cause no response
+        server_clobber_times_wrong_slave = {'result': [
+            {
+                'builddir': 'tmp',
+                'lastclobber': 1,
+                'who': 'albert.camus@gmail.net',
+                'slave': 'iamamwhoami'
+            }
+        ]}
+
+        server_clobber_times_right_slave = {'result': [
+            {
+                'builddir': 'tmp',
+                'lastclobber': 1,
+                'who': 'albert.camus@gmail.net',
+                'slave': slave_name
+            }
+        ]}
+
+        # so we can tell if a clobber has been triggered
+        clobberer.clobbered = False
+        clobberer.process_clobber_times(server_clobber_times_no_slave, process_args)
+        assert clobberer.clobbered is True
+
+        clobberer.clobbered = False
+        clobberer.process_clobber_times(server_clobber_times_wrong_slave, process_args)
+        assert clobberer.clobbered is False
+
+        clobberer.clobbered = False
+        clobberer.process_clobber_times(server_clobber_times_right_slave, process_args)
+        assert clobberer.clobbered is True
+
 if __name__ == '__main__':
     import unittest
     unittest.main()
