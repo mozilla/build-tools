@@ -296,20 +296,15 @@ def main(args):
     else:
         args.periodic_clobber_time = None
 
-    try:
-        # Legacy support
-        if args.legacy and len(args.legacy) > 1:
-            log.info("Entering legacy mode.")
-            server_clobber_times = legacy_get_clobber_times(*args.legacy)
-        else:
-
-            if not args.clobber_url:
-                # we can't set required=True because of legacy support
-                raise Exception("--url required")
-            server_clobber_times = get_clobber_times(args.clobber_url)
-    except:
-        log.error("error contacting server", exc_info=args.loglevel)
-        sys.exit(1)
+    # Legacy support
+    if args.legacy and len(args.legacy) > 1:
+        log.info("Entering legacy mode.")
+        server_clobber_times = legacy_get_clobber_times(*args.legacy)
+    elif not args.clobber_url:
+        # we can't set required=True because of legacy support
+        raise Exception("--url required")
+    else:
+        server_clobber_times = get_clobber_times(args.clobber_url)
 
     process_clobber_times(server_clobber_times, args)
 
