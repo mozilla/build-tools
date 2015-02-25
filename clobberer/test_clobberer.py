@@ -1,13 +1,17 @@
 from unittest import TestCase
 import tempfile
 import shutil
-import urllib2
 import json
 import mock
 import os
 
 from clobberer import do_clobber
-from clobberer import get_clobber_times, legacy_get_clobber_times
+from clobberer import (
+    get_clobber_times,
+    legacy_get_clobber_times,
+    make_argparser,
+    process_clobber_times
+)
 
 
 class TestClobbererClient(TestCase):
@@ -133,19 +137,14 @@ class TestClobbererClient(TestCase):
         )
         self.assertEqual(clobber_dates_return, {'result': []})
 
-    def test_process_clobber_times(self):
-        import clobberer
-        parser = clobberer.make_argparser()
-
-        def stubbed_do_clobber(*args):
-            clobberer.clobbered = True
+    @mock.patch('clobberer.write_file')
+    @mock.patch('clobberer.do_clobber')
+    def test_process_clobber_times_no_slave(self, mock_do_clobber, mock_write_file):
+        parser = make_argparser()
 
         # Let's avoid leaving junk files around places
         def stubbed_write_file(*args):
             pass
-
-        clobberer.do_clobber = stubbed_do_clobber
-        clobberer.write_file = stubbed_write_file
 
         slave_name = 'un-petit-bebe'
         process_args = parser.parse_args([
@@ -164,6 +163,27 @@ class TestClobbererClient(TestCase):
             }
         ]}
 
+        # so we can tell if a clobber has been triggered
+        process_clobber_times(server_clobber_times_no_slave, process_args)
+        mock_do_clobber.assert_called_with('/tmp', False, ['last-clobber'])
+
+    @mock.patch('clobberer.write_file')
+    @mock.patch('clobberer.do_clobber')
+    def test_process_clobber_times_wrong_slave(self, mock_do_clobber, mock_write_file):
+        parser = make_argparser()
+
+        # Let's avoid leaving junk files around places
+        def stubbed_write_file(*args):
+            pass
+
+        slave_name = 'un-petit-bebe'
+        process_args = parser.parse_args([
+            '--dir',
+            '/',
+            '--slave',
+            slave_name
+        ])
+
         # should cause no response
         server_clobber_times_wrong_slave = {'result': [
             {
@@ -174,6 +194,26 @@ class TestClobbererClient(TestCase):
             }
         ]}
 
+        process_clobber_times(server_clobber_times_wrong_slave, process_args)
+        assert not mock_do_clobber.called
+
+    @mock.patch('clobberer.write_file')
+    @mock.patch('clobberer.do_clobber')
+    def test_process_clobber_times_right_slave(self, mock_do_clobber, mock_write_file):
+        parser = make_argparser()
+
+        # Let's avoid leaving junk files around places
+        def stubbed_write_file(*args):
+            pass
+
+        slave_name = 'un-petit-bebe'
+        process_args = parser.parse_args([
+            '--dir',
+            '/',
+            '--slave',
+            slave_name
+        ])
+
         server_clobber_times_right_slave = {'result': [
             {
                 'builddir': 'tmp',
@@ -183,18 +223,8 @@ class TestClobbererClient(TestCase):
             }
         ]}
 
-        # so we can tell if a clobber has been triggered
-        clobberer.clobbered = False
-        clobberer.process_clobber_times(server_clobber_times_no_slave, process_args)
-        assert clobberer.clobbered is True
-
-        clobberer.clobbered = False
-        clobberer.process_clobber_times(server_clobber_times_wrong_slave, process_args)
-        assert clobberer.clobbered is False
-
-        clobberer.clobbered = False
-        clobberer.process_clobber_times(server_clobber_times_right_slave, process_args)
-        assert clobberer.clobbered is True
+        process_clobber_times(server_clobber_times_right_slave, process_args)
+        mock_do_clobber.assert_called_with('/tmp', False, ['last-clobber'])
 
 if __name__ == '__main__':
     import unittest
