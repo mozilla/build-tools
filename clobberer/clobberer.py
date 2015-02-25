@@ -235,23 +235,23 @@ def process_clobber_times(server_clobber_times, args):
             if builddir != args.builddir:
                 continue
 
-            # Next, check if more than the periodicClobberTime period has passed since
+            # Next, check if more than the periodic_clobber_time period has passed since
             # our last clobber
             if our_clobber_date is None:
                 # We've never been clobbered
                 # Set our last clobber time to now, so that we'll clobber
-                # properly after periodicClobberTime
+                # properly after periodic_clobber_time
                 clobber_type = "purged"
                 our_clobber_date = now
                 write_file(our_clobber_date, "last-clobber")
-            elif args.periodicClobberTime and now > our_clobber_date + args.periodicClobberTime:
-                # periodicClobberTime has passed since our last clobber
+            elif args.periodic_clobber_time and now > our_clobber_date + args.periodic_clobber_time:
+                # periodic_clobber_time has passed since our last clobber
                 clobber = True
                 clobber_type = "periodic"
                 # Update our clobber date to now
                 our_clobber_date = now
                 log.info("%s:More than %s seconds have passed since our last clobber",
-                         (builddir, args.periodicClobberTime))
+                         (builddir, args.periodic_clobber_time))
 
         if clobber:
             # Finally, perform a clobber if we're supposed to
@@ -292,9 +292,9 @@ def make_argparser():
 
 def main(args):
     if args.period:
-        args.periodicClobberTime = args.period * 3600
+        args.periodic_clobber_time = args.period * 3600
     else:
-        args.periodicClobberTime = None
+        args.periodic_clobber_time = None
 
     try:
         # Legacy support
