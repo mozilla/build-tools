@@ -1,6 +1,9 @@
 from unittest import TestCase
 import tempfile
 import shutil
+import urllib2
+import json
+import mock
 import os
 
 from clobberer import do_clobber
@@ -43,10 +46,8 @@ class TestClobbererClient(TestCase):
         os.rmdir(skip_dir_name)
         os.remove(skip_file_name)
 
-    def test_get_clobber_times(self):
-        import urllib2
-        import json
-
+    @mock.patch('urllib2.urlopen')
+    def test_get_clobber_times(self, mock_urlopen):
         builddir = 'the-roadhouse'
         timestamp = 9999
         who = 'JimMorrison@thedoors.net'
@@ -59,48 +60,39 @@ class TestClobbererClient(TestCase):
                 }
             ]
         }
-        FAKE_URLOPEN_DATA = json.dumps(fake_data)
 
-        class FakeURLOpen(object):
+        fake_data_json_str = json.dumps(fake_data)
 
-            def __init__(self, *args, **kwargs):
-                pass
-
-            def read(self):
-                # some fake clobber data
-                return FAKE_URLOPEN_DATA
-
-        # monkey patch urllib2 to force simulated clobber data
-        urllib2.urlopen = FakeURLOpen
+        urllib2_mock = mock.Mock()
+        urllib2_mock.read.side_effect = [fake_data_json_str]
+        mock_urlopen.return_value = urllib2_mock
 
         clobber_dates_return = get_clobber_times('clobberer/lastclobber/all')
         self.assertEqual(clobber_dates_return, fake_data)
 
+    @mock.patch('urllib2.urlopen')
+    def test_get_clobber_times_null(self, mock_urlopen):
         # make sure it can handle no data
         fake_data_null = {'result': []}
-        FAKE_URLOPEN_DATA = json.dumps(fake_data_null)
+        fake_data_json_str = json.dumps(fake_data_null)
+        urllib2_mock = mock.Mock()
+        urllib2_mock.read.side_effect = [fake_data_json_str]
+        mock_urlopen.return_value = urllib2_mock
+
         clobber_dates_return = get_clobber_times('clobberer/lastclobber/all')
         self.assertEqual(clobber_dates_return, fake_data_null)
 
-    def test_legacy_get_clobber_times(self):
-        import urllib2
+    @mock.patch('urllib2.urlopen')
+    def test_legacy_get_clobber_times(self, mock_urlopen):
         lastclobber_fmt = '{}:{}:{}\n'
         builddir = 'the-roadhouse'
         timestamp = 9999
         who = 'JimMorrison@thedoors.net'
-        FAKE_URLOPEN_DATA = lastclobber_fmt.format(builddir, timestamp, who)
 
-        class FakeURLOpen(object):
-
-            def __init__(self, *args, **kwargs):
-                pass
-
-            def read(self):
-                # some fake clobber data
-                return FAKE_URLOPEN_DATA
-
-        # monkey patch urllib2 to force simulated clobber data
-        urllib2.urlopen = FakeURLOpen
+        fake_data_str = lastclobber_fmt.format(builddir, timestamp, who)
+        urllib2_mock = mock.Mock()
+        urllib2_mock.read.side_effect = [fake_data_str]
+        mock_urlopen.return_value = urllib2_mock
 
         clobber_dates_return = legacy_get_clobber_times(
             'clobberer/lastclobber',
@@ -123,8 +115,14 @@ class TestClobbererClient(TestCase):
             }
         )
 
+    @mock.patch('urllib2.urlopen')
+    def test_legacy_get_clobber_times_null(self, mock_urlopen):
         # make sure it can handle no data
-        FAKE_URLOPEN_DATA = ""
+        fake_data_str = ""
+        urllib2_mock = mock.Mock()
+        urllib2_mock.read.side_effect = [fake_data_str]
+        mock_urlopen.return_value = urllib2_mock
+
         clobber_dates_return = legacy_get_clobber_times(
             'clobberer/lastclobber',
             'branch',
