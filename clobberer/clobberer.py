@@ -49,6 +49,16 @@ def read_file(fn):
         return None
 
 
+def sanitize_builddir(builddir):
+    """
+    Try to prevent users from wiping out directories
+    higher than --build.
+    >>>sanitize_builddir('../../abc')
+    //abc
+    """
+    return builddir.replace('.', '')
+
+
 def rmdir_recursive_windows(dir):
     """Windows-specific version of rmdir_recursive that handles
     path lengths longer than MAX_PATH.
@@ -193,7 +203,7 @@ def process_clobber_times(server_clobber_times, args):
 
     for clobber_time in server_clobber_times['result']:
         slave = clobber_time['slave']
-        builddir = clobber_time['builddir']
+        builddir = sanitize_builddir(clobber_time['builddir'])
         server_clobber_date = clobber_time['lastclobber']
         who = clobber_time['who']
 
