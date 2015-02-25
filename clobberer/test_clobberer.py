@@ -142,10 +142,6 @@ class TestClobbererClient(TestCase):
     def test_process_clobber_times_no_slave(self, mock_do_clobber, mock_write_file):
         parser = make_argparser()
 
-        # Let's avoid leaving junk files around places
-        def stubbed_write_file(*args):
-            pass
-
         slave_name = 'un-petit-bebe'
         process_args = parser.parse_args([
             '--dir',
@@ -172,10 +168,6 @@ class TestClobbererClient(TestCase):
     def test_process_clobber_times_wrong_slave(self, mock_do_clobber, mock_write_file):
         parser = make_argparser()
 
-        # Let's avoid leaving junk files around places
-        def stubbed_write_file(*args):
-            pass
-
         slave_name = 'un-petit-bebe'
         process_args = parser.parse_args([
             '--dir',
@@ -201,10 +193,6 @@ class TestClobbererClient(TestCase):
     @mock.patch('clobberer.do_clobber')
     def test_process_clobber_times_right_slave(self, mock_do_clobber, mock_write_file):
         parser = make_argparser()
-
-        # Let's avoid leaving junk files around places
-        def stubbed_write_file(*args):
-            pass
 
         slave_name = 'un-petit-bebe'
         process_args = parser.parse_args([
