@@ -206,7 +206,7 @@ def process_clobber_times(server_clobber_times, args):
         our_clobber_date = read_file("last-clobber") or 0
 
         clobber = False
-        clobberType = None
+        clobber_type = None
 
         log.info("%s:Our last clobber date: %s", builddir, ts_to_str(our_clobber_date))
         log.info("%s:Server clobber date:   %s", builddir, ts_to_str(server_clobber_date))
@@ -218,12 +218,11 @@ def process_clobber_times(server_clobber_times, args):
             # If the server is giving us a clobber date, compare the server's idea of
             # the clobber date to our last clobber date also skip slave specific
             # clobbers that aren't for the current host
-            if (server_clobber_date > our_clobber_date) and \
-                (slave is None or slave == args.slave):
+            if (server_clobber_date > our_clobber_date) and (slave is None or slave == args.slave):
                 # If the server's clobber date is greater than our last clobber date,
                 # then we should clobber.
                 clobber = True
-                clobberType = "forced"
+                clobber_type = "forced"
                 # We should also update our clobber date to match the server's
                 our_clobber_date = server_clobber_date
                 if who:
@@ -242,13 +241,13 @@ def process_clobber_times(server_clobber_times, args):
                 # We've never been clobbered
                 # Set our last clobber time to now, so that we'll clobber
                 # properly after periodicClobberTime
-                clobberType = "purged"
+                clobber_type = "purged"
                 our_clobber_date = now
                 write_file(our_clobber_date, "last-clobber")
             elif args.periodicClobberTime and now > our_clobber_date + args.periodicClobberTime:
                 # periodicClobberTime has passed since our last clobber
                 clobber = True
-                clobberType = "periodic"
+                clobber_type = "periodic"
                 # Update our clobber date to now
                 our_clobber_date = now
                 log.info("%s:More than %s seconds have passed since our last clobber",
@@ -263,8 +262,8 @@ def process_clobber_times(server_clobber_times, args):
         # If this is the build dir for the current job, display the clobber type in TBPL.
         # Note in the case of purged clobber, we output the clobber type even though no
         # clobber was performed this time.
-        if clobberType and builddir == args.builddir:
-            log.info("Tinderboxlog.info: %s clobber" % clobberType)
+        if clobber_type and builddir == args.builddir:
+            log.info("Tinderboxlog.info: %s clobber" % clobber_type)
 
 
 def make_argparser():
