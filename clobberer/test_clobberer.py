@@ -1,10 +1,17 @@
 from unittest import TestCase
 import tempfile
 import shutil
+import json
+import mock
 import os
 
 from clobberer import do_clobber
-from clobberer import getClobberDates
+from clobberer import (
+    get_clobber_times,
+    legacy_get_clobber_times,
+    make_argparser,
+    process_clobber_times
+)
 
 
 class TestClobbererClient(TestCase):
@@ -43,27 +50,55 @@ class TestClobbererClient(TestCase):
         os.rmdir(skip_dir_name)
         os.remove(skip_file_name)
 
-    def test_get_clobber_dates(self):
-        import urllib2
+    @mock.patch('urllib2.urlopen')
+    def test_get_clobber_times(self, mock_urlopen):
+        builddir = 'the-roadhouse'
+        timestamp = 9999
+        who = 'JimMorrison@thedoors.net'
+        fake_data = {'result': [
+            {
+                'builddir': builddir,
+                'lastclobber': timestamp,
+                'who': who,
+                'slave': None
+                }
+            ]
+        }
+
+        fake_data_json_str = json.dumps(fake_data)
+
+        urllib2_mock = mock.Mock()
+        urllib2_mock.read.side_effect = [fake_data_json_str]
+        mock_urlopen.return_value = urllib2_mock
+
+        clobber_dates_return = get_clobber_times('clobberer/lastclobber/all')
+        self.assertDictEqual(clobber_dates_return, fake_data)
+
+    @mock.patch('urllib2.urlopen')
+    def test_get_clobber_times_null(self, mock_urlopen):
+        # make sure it can handle no data
+        fake_data_null = {'result': []}
+        fake_data_json_str = json.dumps(fake_data_null)
+        urllib2_mock = mock.Mock()
+        urllib2_mock.read.side_effect = [fake_data_json_str]
+        mock_urlopen.return_value = urllib2_mock
+
+        clobber_dates_return = get_clobber_times('clobberer/lastclobber/all')
+        self.assertDictEqual(clobber_dates_return, fake_data_null)
+
+    @mock.patch('urllib2.urlopen')
+    def test_legacy_get_clobber_times(self, mock_urlopen):
         lastclobber_fmt = '{}:{}:{}\n'
         builddir = 'the-roadhouse'
         timestamp = 9999
         who = 'JimMorrison@thedoors.net'
-        FAKE_URLOPEN_DATA = lastclobber_fmt.format(builddir, timestamp, who)
 
-        class FakeURLOpen(object):
+        fake_data_str = lastclobber_fmt.format(builddir, timestamp, who)
+        urllib2_mock = mock.Mock()
+        urllib2_mock.read.side_effect = [fake_data_str]
+        mock_urlopen.return_value = urllib2_mock
 
-            def __init__(self, *args, **kwargs):
-                pass
-
-            def read(self):
-                # some fake clobber data
-                return FAKE_URLOPEN_DATA
-
-        # monkey patch urllib2 to force simulated clobber data
-        urllib2.urlopen = FakeURLOpen
-
-        clobber_dates_return = getClobberDates(
+        clobber_dates_return = legacy_get_clobber_times(
             'clobberer/lastclobber',
             'branch',
             'buildername',
@@ -71,11 +106,28 @@ class TestClobbererClient(TestCase):
             'slave',
             'master',
         )
-        self.assertEqual(clobber_dates_return, {builddir: (timestamp, who)})
 
+        self.assertDictEqual(
+            clobber_dates_return,
+            {
+                'result': [{
+                    'builddir': builddir,
+                    'lastclobber': timestamp,
+                    'who': who,
+                    'slave': None
+                }]
+            }
+        )
+
+    @mock.patch('urllib2.urlopen')
+    def test_legacy_get_clobber_times_null(self, mock_urlopen):
         # make sure it can handle no data
-        FAKE_URLOPEN_DATA = ""
-        clobber_dates_return = getClobberDates(
+        fake_data_str = ""
+        urllib2_mock = mock.Mock()
+        urllib2_mock.read.side_effect = [fake_data_str]
+        mock_urlopen.return_value = urllib2_mock
+
+        clobber_dates_return = legacy_get_clobber_times(
             'clobberer/lastclobber',
             'branch',
             'buildername',
@@ -83,7 +135,84 @@ class TestClobbererClient(TestCase):
             'slave',
             'master',
         )
-        self.assertEqual(clobber_dates_return, {})
+        self.assertDictEqual(clobber_dates_return, {'result': []})
+
+    @mock.patch('clobberer.write_file')
+    @mock.patch('clobberer.do_clobber')
+    def test_process_clobber_times_no_slave(self, mock_do_clobber, mock_write_file):
+        parser = make_argparser()
+
+        slave_name = 'un-petit-bebe'
+        process_args = parser.parse_args([
+            '--dir',
+            '/',
+            '--slave',
+            slave_name
+        ])
+
+        server_clobber_times_no_slave = {'result': [
+            {
+                'builddir': 'tmp',
+                'lastclobber': 1,
+                'who': 'albert.camus@gmail.net',
+                'slave': None
+            }
+        ]}
+
+        # so we can tell if a clobber has been triggered
+        process_clobber_times(server_clobber_times_no_slave, process_args)
+        mock_do_clobber.assert_called_with('/tmp', False, ['last-clobber'])
+
+    @mock.patch('clobberer.write_file')
+    @mock.patch('clobberer.do_clobber')
+    def test_process_clobber_times_wrong_slave(self, mock_do_clobber, mock_write_file):
+        parser = make_argparser()
+
+        slave_name = 'un-petit-bebe'
+        process_args = parser.parse_args([
+            '--dir',
+            '/',
+            '--slave',
+            slave_name
+        ])
+
+        # should cause no response
+        server_clobber_times_wrong_slave = {'result': [
+            {
+                'builddir': 'tmp',
+                'lastclobber': 1,
+                'who': 'albert.camus@gmail.net',
+                'slave': 'iamamwhoami'
+            }
+        ]}
+
+        process_clobber_times(server_clobber_times_wrong_slave, process_args)
+        assert not mock_do_clobber.called
+
+    @mock.patch('clobberer.write_file')
+    @mock.patch('clobberer.do_clobber')
+    def test_process_clobber_times_right_slave(self, mock_do_clobber, mock_write_file):
+        parser = make_argparser()
+
+        slave_name = 'un-petit-bebe'
+        process_args = parser.parse_args([
+            '--dir',
+            '/',
+            '--slave',
+            slave_name
+        ])
+
+        server_clobber_times_right_slave = {'result': [
+            {
+                'builddir': 'tmp',
+                'lastclobber': 1,
+                'who': 'albert.camus@gmail.net',
+                'slave': slave_name
+            }
+        ]}
+
+        process_clobber_times(server_clobber_times_right_slave, process_args)
+        mock_do_clobber.assert_called_with('/tmp', False, ['last-clobber'])
 
 if __name__ == '__main__':
     import unittest
