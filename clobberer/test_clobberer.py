@@ -72,7 +72,7 @@ class TestClobbererClient(TestCase):
         mock_urlopen.return_value = urllib2_mock
 
         clobber_dates_return = get_clobber_times('clobberer/lastclobber/all')
-        self.assertEqual(clobber_dates_return, fake_data)
+        self.assertDictEqual(clobber_dates_return, fake_data)
 
     @mock.patch('urllib2.urlopen')
     def test_get_clobber_times_null(self, mock_urlopen):
@@ -84,7 +84,7 @@ class TestClobbererClient(TestCase):
         mock_urlopen.return_value = urllib2_mock
 
         clobber_dates_return = get_clobber_times('clobberer/lastclobber/all')
-        self.assertEqual(clobber_dates_return, fake_data_null)
+        self.assertDictEqual(clobber_dates_return, fake_data_null)
 
     @mock.patch('urllib2.urlopen')
     def test_legacy_get_clobber_times(self, mock_urlopen):
@@ -107,7 +107,7 @@ class TestClobbererClient(TestCase):
             'master',
         )
 
-        self.assertEqual(
+        self.assertDictEqual(
             clobber_dates_return,
             {
                 'result': [{
@@ -135,7 +135,7 @@ class TestClobbererClient(TestCase):
             'slave',
             'master',
         )
-        self.assertEqual(clobber_dates_return, {'result': []})
+        self.assertDictEqual(clobber_dates_return, {'result': []})
 
     @mock.patch('clobberer.write_file')
     @mock.patch('clobberer.do_clobber')
