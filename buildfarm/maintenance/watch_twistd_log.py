@@ -89,14 +89,40 @@ def format_exceptions(hostname, excs, name):
                 msg += "\n" + "-" * 80 + "\n"
 
     if excs:
+        matched_excs = {}
+        for exc in excs:
+            lines = exc.split("\n")
+            key = "\n".join(lines[2:])
+            parsed_ts =  ' '.join(lines[1].split(' ')[:2])
+            if matched_excs.has_key(key):
+                matched_excs[key]['count'] += 1
+                if parsed_ts > matched_excs[key]['most_recent']:
+                    matched_excs[key]['most_recent'] = parsed_ts
+                    continue
+                if parsed_ts < matched_excs[key]['first']:
+                    matched_excs[key]['first'] = parsed_ts
+                    continue
+            else:
+                matched_excs[key] = {}
+                matched_excs[key]['count'] = 1
+                matched_excs[key]['example'] = exc
+                matched_excs[key]['exception'] = lines[-2].strip()
+                matched_excs[key]['first'] = parsed_ts
+                matched_excs[key]['most_recent'] = parsed_ts
         if msg == "":
             msg = "The following exceptions"
         else:
             msg += "The following other exceptions"
-        msg += " (total %i) were detected on %s %s:\n\n" % (
+        msg += " (total %i) were detected on %s %s:\n" % (
             len(excs), hostname, name)
-        msg += ("\n" + "-" * 80 + "\n").join(excs)
-
+        for exc_key in sorted(matched_excs, key=lambda x: (matched_excs[x]['count'], x), reverse=True):
+            msg += "\n" + "-" * 80 + "\n"
+            msg += "Count: %d, " % matched_excs[exc_key]['count']
+            msg += "Exception: %s\n" % matched_excs[exc_key]['exception']
+            msg += "First instance: %s, Most recent instance: %s\n" % (matched_excs[exc_key]['first'],
+                                                                       matched_excs[exc_key]['most_recent'])
+            msg += "Example:\n"
+            msg += matched_excs[exc_key]['example']
     return msg
 
 def send_msg(fromaddr, emails, hostname, excs, name):
