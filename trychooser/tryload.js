@@ -1,6 +1,5 @@
 var TRY_BUILD_LOAD_URL =  "http://builddata.pub.build.mozilla.org/reports/pending/pending_compile_try.txt";
-var TRY_TEST_LOAD_URL =  "http://builddata.pub.build.mozilla.org/reports/pending/pending_test_try.txt";
-var NONTRY_TEST_LOAD_URL =  "http://builddata.pub.build.mozilla.org/reports/pending/pending_test_nontry.txt";
+var TEST_LOAD_URL =  "http://builddata.pub.build.mozilla.org/reports/pending/pending_test_all.txt";
 
 /* Initialize the things which appear in the right-hand side of assignments in getTryLoads with the names
    used in the URLs above. */
@@ -50,68 +49,57 @@ function getTryLoad(url, callback) {
 
 function getTryLoads(callback) {
   getTryLoad(TRY_BUILD_LOAD_URL, function(load_try_build) {
-    getTryLoad(TRY_TEST_LOAD_URL, function(load_try_test) {
-      getTryLoad(NONTRY_TEST_LOAD_URL, function(load_nontry_test) {
-        var totalBuildLoad = {};
-        totalBuildLoad["linux"] = load_try_build["linux64"];
-        totalBuildLoad["linux64"] = totalBuildLoad["linux"];
-        totalBuildLoad["linux64-asan"] = totalBuildLoad["linux"];
-        totalBuildLoad["linux64-st-an"] = totalBuildLoad["linux"];
-        totalBuildLoad["linux64-valgrind"] = totalBuildLoad["linux"];
-        totalBuildLoad["linux64-br-haz"] = totalBuildLoad["linux"];
-        totalBuildLoad["linux64-sh-haz"] = totalBuildLoad["linux"];
-        totalBuildLoad["linux64-mulet"] = totalBuildLoad["linux"];
-        totalBuildLoad["macosx64"] = load_try_build["macosx64"];
-        totalBuildLoad["win32"] = load_try_build["win64"];
-        totalBuildLoad["win64"] = totalBuildLoad["win32"];
-        totalBuildLoad["android-api-9"] = totalBuildLoad["linux"];
-        totalBuildLoad["android-api-11"] = totalBuildLoad["linux"];
-        totalBuildLoad["android-x86"] = totalBuildLoad["linux"];
-        totalBuildLoad["emulator"] = totalBuildLoad["linux"];
-        totalBuildLoad["emulator-jb"] = totalBuildLoad["linux"];
-        totalBuildLoad["emulator-kk"] = totalBuildLoad["linux"];
-        totalBuildLoad["emulator-l"] = totalBuildLoad["linux"];
-        totalBuildLoad["linux32_gecko"] = totalBuildLoad["linux"];
-        totalBuildLoad["linux64_gecko"] = totalBuildLoad["linux"];
-        totalBuildLoad["macosx64_gecko"] = totalBuildLoad["macosx64"];
-        totalBuildLoad["macosx64-mulet"] = totalBuildLoad["macosx64"];
-        totalBuildLoad["win32_gecko"] = totalBuildLoad["win32"];
-        totalBuildLoad["win32-mulet"] = totalBuildLoad["win32"];
-
-        var totalTestLoad = {};
-        totalTestLoad["linux"] = load_try_test["ubuntu32-hw"] + load_nontry_test["ubuntu32-hw"] +
-                                load_try_test["ubuntu32-vm"] + load_nontry_test["ubuntu32-vm"];
-        totalTestLoad["linux64"] = load_try_test["ubuntu64-hw"] + load_nontry_test["ubuntu64-hw"] +
-                                   load_try_test["ubuntu64-vm"] + load_nontry_test["ubuntu64-vm"];
-        totalTestLoad["linux64-mulet"] = totalTestLoad["linux64"];
-        totalTestLoad["linux64-asan"] = totalTestLoad["linux64"];
-        // linux64-st-an: N/A
-        totalTestLoad["macosx64"] = Math.max(
-                                      load_try_test["mac10.6"] + load_nontry_test["mac10.6"],
-                                      load_try_test["mac10.8"] + load_nontry_test["mac10.8"],
-                                      load_try_test["mac10.10"] + load_nontry_test["mac10.10"]);
-        totalTestLoad["macosx64-mulet"] = totalTestLoad["macosx64"];
-        totalTestLoad["win32"] = Math.max(
-                                   load_try_test["winxp-ix"] + load_nontry_test["winxp-ix"],
-                                   load_try_test["win7-ix"] + load_nontry_test["win7-ix"],
-                                   load_try_test["win8-ix"] + load_nontry_test["win8-ix"]);
-        totalTestLoad["win32-mulet"] = totalTestLoad["win32"];
-        totalTestLoad["win64"] = load_try_test["win2012x64"] + load_nontry_test["win2012x64"];
-        totalTestLoad["android-api-9"] = Math.max(
-                                    load_try_test["ubuntu64-vm"] + load_nontry_test["ubuntu64-vm"]);
-        totalTestLoad["android-api-11"] = Math.max(
-                                    load_try_test["panda"] + load_nontry_test["panda"]);
-        totalTestLoad["android-x86"] = load_try_test["ubuntu64-hw"]
-        totalTestLoad["emulator"] = load_try_test["ubuntu64-vm"]
-        // emulator-jb: N/A
-        // emulator-kk: N/A
-        // emulator-l: N/A
-        totalTestLoad["linux32_gecko"] = totalTestLoad["linux"];
-        totalTestLoad["linux64_gecko"] = totalTestLoad["linux64"];
-        totalTestLoad["macosx64_gecko"] = totalTestLoad["macosx64"];
-        // win32_gecko: N/A
-        callback(totalBuildLoad, totalTestLoad);
-      });
+    getTryLoad(TEST_LOAD_URL, function(load_test) {
+      var totalBuildLoad = {};
+      totalBuildLoad["linux"] = load_try_build["linux64"];
+      totalBuildLoad["linux64"] = totalBuildLoad["linux"];
+      totalBuildLoad["linux64-asan"] = totalBuildLoad["linux"];
+      totalBuildLoad["linux64-st-an"] = totalBuildLoad["linux"];
+      totalBuildLoad["linux64-valgrind"] = totalBuildLoad["linux"];
+      totalBuildLoad["linux64-br-haz"] = totalBuildLoad["linux"];
+      totalBuildLoad["linux64-sh-haz"] = totalBuildLoad["linux"];
+      totalBuildLoad["linux64-mulet"] = totalBuildLoad["linux"];
+      totalBuildLoad["macosx64"] = load_try_build["macosx64"];
+      totalBuildLoad["win32"] = load_try_build["win64"];
+      totalBuildLoad["win64"] = totalBuildLoad["win32"];
+      totalBuildLoad["android-api-9"] = totalBuildLoad["linux"];
+      totalBuildLoad["android-api-11"] = totalBuildLoad["linux"];
+      totalBuildLoad["android-x86"] = totalBuildLoad["linux"];
+      totalBuildLoad["emulator"] = totalBuildLoad["linux"];
+      totalBuildLoad["emulator-jb"] = totalBuildLoad["linux"];
+      totalBuildLoad["emulator-kk"] = totalBuildLoad["linux"];
+      totalBuildLoad["emulator-l"] = totalBuildLoad["linux"];
+      totalBuildLoad["linux32_gecko"] = totalBuildLoad["linux"];
+      totalBuildLoad["linux64_gecko"] = totalBuildLoad["linux"];
+      totalBuildLoad["macosx64_gecko"] = totalBuildLoad["macosx64"];
+      totalBuildLoad["macosx64-mulet"] = totalBuildLoad["macosx64"];
+      totalBuildLoad["win32_gecko"] = totalBuildLoad["win32"];
+      totalBuildLoad["win32-mulet"] = totalBuildLoad["win32"];
+        
+      var totalTestLoad = {};
+      totalTestLoad["linux"] = load_test["ubuntu32-hw"] + load_test["ubuntu32-vm"];
+      totalTestLoad["linux64"] = load_test["ubuntu64-hw"] + load_test["ubuntu64-vm"];
+      totalTestLoad["linux64-mulet"] = totalTestLoad["linux64"];
+      totalTestLoad["linux64-asan"] = totalTestLoad["linux64"];
+      // linux64-st-an: N/A
+      totalTestLoad["macosx64"] = Math.max(load_test["mac10.6"], load_test["mac10.8"],
+                                    load_test["mac10.10"]);
+      totalTestLoad["macosx64-mulet"] = totalTestLoad["macosx64"];
+      totalTestLoad["win32"] = Math.max(load_test["winxp-ix"], load_test["win7-ix"]);
+      totalTestLoad["win32-mulet"] = totalTestLoad["win32"];
+      totalTestLoad["win64"] = load_test["win8-ix"];
+      totalTestLoad["android-api-9"] = load_test["ubuntu64-vm"];
+      totalTestLoad["android-api-11"] = load_test["panda"];
+      totalTestLoad["android-x86"] = load_test["ubuntu64-hw"];
+      totalTestLoad["emulator"] = load_test["ubuntu64-vm"];
+      // emulator-jb: N/A
+      // emulator-kk: N/A
+      // emulator-l: N/A
+      totalTestLoad["linux32_gecko"] = totalTestLoad["linux"];
+      totalTestLoad["linux64_gecko"] = totalTestLoad["linux64"];
+      totalTestLoad["macosx64_gecko"] = totalTestLoad["macosx64"];
+      // win32_gecko: N/A
+      callback(totalBuildLoad, totalTestLoad);
     });
   });
 }
