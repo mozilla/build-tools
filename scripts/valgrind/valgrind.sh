@@ -5,6 +5,7 @@ SCRIPTS_DIR="$(readlink -f $(dirname $0)/../..)"
 
 if [ -f "$PROPERTIES_FILE" ]; then
     PYTHON="/tools/python/bin/python"
+    [ -x $PYTHON ] || PYTHON="${PYTHON}2.7"
     [ -x $PYTHON ] || PYTHON=python
     JSONTOOL="$PYTHON $SCRIPTS_DIR/buildfarm/utils/jsontool.py"
 
@@ -27,12 +28,12 @@ if [ -f "$PROPERTIES_FILE" ]; then
     fi
 
     (cd $SCRIPTS_DIR/../..
-    python $SCRIPTS_DIR/clobberer/clobberer.py -s scripts -s $(basename $PROPERTIES_FILE) \
+    $PYTHON $SCRIPTS_DIR/clobberer/clobberer.py -s scripts -s $(basename $PROPERTIES_FILE) \
         $CLOBBERER_URL $branch "$builder" $builddir $slavename $master)
 
     # Purging
     (cd $SCRIPTS_DIR/..
-    python -u $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
+    $PYTHON -u $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
         -s 8 -n info -n 'rel-*' -n 'tb-rel-*' -n $builddir)
 fi
 if [ -z "$HG_REPO" ]; then
@@ -43,8 +44,8 @@ if [ -z "$REVISION" ]; then
     export REVISION="default"
 fi
 
-python $SCRIPTS_DIR/buildfarm/utils/retry.py -s 1 -r 5 -t 3660 \
-     python $SCRIPTS_DIR/buildfarm/utils/hgtool.py --rev $REVISION \
+$PYTHON $SCRIPTS_DIR/buildfarm/utils/retry.py -s 1 -r 5 -t 3660 \
+     $PYTHON $SCRIPTS_DIR/buildfarm/utils/hgtool.py --rev $REVISION \
           --bundle $HG_BUNDLE $HG_REPO src || exit 2
 
 # Put our short revisions into the properties directory for consumption by buildbot.
