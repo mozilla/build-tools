@@ -6,6 +6,7 @@ SCRIPTS_DIR="$(readlink -f $(dirname $0)/../..)"
 if [ -f "$PROPERTIES_FILE" ]; then
     PYTHON="/tools/python/bin/python"
     [ -x $PYTHON ] || PYTHON="${PYTHON}2.7"
+    [ -x $PYTHON ] || PYTHON=$(which python2.7)
     [ -x $PYTHON ] || PYTHON=python
     JSONTOOL="$PYTHON $SCRIPTS_DIR/buildfarm/utils/jsontool.py"
 
