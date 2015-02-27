@@ -13,6 +13,7 @@ import traceback
 import time
 import logging
 import subprocess
+import copy
 from optparse import OptionParser
 
 SDK_TARBALL = "addonsdk.tar.bz2"
@@ -46,7 +47,9 @@ def runCommand(cmd, env=None, logEcho=True):
     log.debug('calling [%s]' % ' '.join(cmd))
 
     o = []
-    p = subprocess.Popen(cmd, env=env, stdout=subprocess.PIPE,
+    subENV = copy.copy(env);
+    subENV["DISPLAY"] = ":0"
+    p = subprocess.Popen(cmd, env=subENV, stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT)
 
     try:
