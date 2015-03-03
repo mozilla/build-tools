@@ -216,14 +216,11 @@ def sendMailRD(smtpServer, From, cfgFile, r):
 
     for name, source in sources.items():
 
-        # We cannot use the source["revision"] value because it has not been
-        # updated yet. It is done later in the process.
-        # Select the one defined
         if name == "comm":
             # Thunderbird
-            revision = r["commRevision"]
+            revision = source["commRevision"]
         else:
-            revision = r["mozillaRevision"]
+            revision = source["mozillaRevision"]
 
         # For now, firefox has only one source repo but Thunderbird has two
         contentMail += name + " commit: https://hg.mozilla.org/" + source['path'] + "/rev/" + revision + "\n"
@@ -331,13 +328,6 @@ def main(options):
         cleanOutgoingRevs(workdir, push_repo, hg_username,
                           hg_ssh_key)
 
-    # Send email to r-d for a fast notification
-    for release in rr.new_releases:
-        cfgFile = configs_workdir + "/mozilla/" + getReleaseConfigName(
-            release['product'], path.basename(release['branch']),
-            release['version'], staging)
-        sendMailRD(smtp_server, notify_from, cfgFile, release)
-
     # Create symlinks if needed
     if 'symlinks' in config.sections():
         format_dict = dict(buildbot_configs=configs_workdir,
@@ -371,6 +361,10 @@ def main(options):
                          l10nContents=l10nContents, workdir=configs_workdir,
                          hg_username=hg_username,
                          productionBranch=buildbot_configs_branch)
+
+            # Send email to r-d for a fast notification
+            sendMailRD(smtp_server, notify_from, "%s/mozilla/%s" % (configs_workdir, cfgFile), release)
+
             rr.update_status(release, 'Running release sanity')
             rs_args = get_release_sanity_args(configs_workdir, release,
                                               cfgFile, masters_json,
