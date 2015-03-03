@@ -1169,3 +1169,4 @@ class TestHg(unittest.TestCase):
             self.assertRaises(subprocess.CalledProcessError,
                               clone, "http://nxdomain.nxnx", self.wc)
             self.assertEquals(num_calls, [2])
+

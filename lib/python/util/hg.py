@@ -6,7 +6,7 @@ import sys
 from urlparse import urlsplit
 from ConfigParser import RawConfigParser
 
-from util.commands import run_cmd, get_output, remove_path
+from util.commands import run_cmd, get_output, remove_path, TERMINATED_PROCESS_MSG
 from util.retry import retry, retrier
 
 import logging
@@ -16,6 +16,7 @@ log = logging.getLogger(__name__)
 TRANSIENT_HG_ERRORS = (
     'error: Name or service not known',
     'HTTP Error 5',
+    TERMINATED_PROCESS_MSG,
 )
 
 RETRY_ATTEMPTS = 3
@@ -67,7 +68,7 @@ def get_repo_path(repo):
         return urlsplit(repo).path.lstrip("/")
 
 
-def get_hg_output(cmd, **kwargs):
+def get_hg_output(cmd, timeout=1800, **kwargs):
     """
     Runs hg with the given arguments and sets HGPLAIN in the environment to
     enforce consistent output.
@@ -82,7 +83,7 @@ def get_hg_output(cmd, **kwargs):
     else:
         env = {}
     env['HGPLAIN'] = '1'
-    return get_output(['hg'] + cmd, env=env, **kwargs)
+    return get_output(['hg'] + cmd, timeout=timeout, env=env, **kwargs)
 
 
 def get_revision(path):
@@ -160,7 +161,7 @@ def update(dest, branch=None, revision=None):
 
 
 def clone(repo, dest, branch=None, revision=None, update_dest=True,
-          clone_by_rev=False, mirrors=None, bundles=None):
+          clone_by_rev=False, mirrors=None, bundles=None, timeout=3600):
     """Clones hg repo and places it at `dest`, replacing whatever else is
     there.  The working copy will be empty.
 
@@ -180,6 +181,12 @@ def clone(repo, dest, branch=None, revision=None, update_dest=True,
 
     Regardless of how the repository ends up being cloned, the 'default' path
     will point to `repo`.
+
+    If this function runs for more than `timeout` seconds, the hg clone
+    subprocess will be terminated. This features allows to terminate hung clones
+    before buildbot kills the full jobs. When a timeout terminates the process,
+    the exception is caught by `retrier`.
+
     """
     if os.path.exists(dest):
         remove_path(dest)
@@ -227,7 +234,7 @@ def clone(repo, dest, branch=None, revision=None, update_dest=True,
             return mercurial(repo, dest, branch, revision, autoPurge=True,
                              update_dest=update_dest, clone_by_rev=clone_by_rev)
 
-    cmd = ['clone']
+    cmd = ['clone', '--traceback']
     if not update_dest:
         cmd.append('-U')
 
@@ -244,7 +251,7 @@ def clone(repo, dest, branch=None, revision=None, update_dest=True,
     exc = None
     for _ in retrier(attempts=RETRY_ATTEMPTS):
         try:
-            get_hg_output(cmd=cmd, include_stderr=True)
+            get_hg_output(cmd=cmd, include_stderr=True, timeout=timeout)
             break
         except subprocess.CalledProcessError, e:
             exc = sys.exc_info()
@@ -303,7 +310,7 @@ def pull(repo, dest, update_dest=True, mirrors=None, **kwargs):
 
     # Convert repo to an absolute path if it's a local repository
     repo = _make_absolute(repo)
-    cmd = ['pull']
+    cmd = ['pull', '--traceback']
     # Don't pass -r to "hg pull", except when it's a valid HG revision.
     # Pulling using tag names is dangerous: it uses the local .hgtags, so if
     # the tag has moved on the remote side you won't pull the new revision the
@@ -370,7 +377,7 @@ def out(src, remote, **kwargs):
 
 
 def push(src, remote, push_new_branches=True, force=False, **kwargs):
-    cmd = ['hg', 'push']
+    cmd = ['hg', 'push', '--traceback']
     cmd.extend(common_args(**kwargs))
     if force:
         cmd.append('-f')
@@ -628,7 +635,8 @@ def unbundle(bundle, dest):
 
     `bundle` can be a local file or remote url."""
     try:
-        get_hg_output(['unbundle', bundle], cwd=dest, include_stderr=True)
+        get_hg_output(['unbundle', '--traceback', bundle], timeout=3600,
+                      cwd=dest, include_stderr=True)
         return True
     except subprocess.CalledProcessError:
         return False
