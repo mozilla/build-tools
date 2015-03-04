@@ -218,12 +218,14 @@ def sendMailRD(smtpServer, From, cfgFile, r):
 
         if name == "comm":
             # Thunderbird
-            revision = source["commRevision"]
+            revision = source["comm"]["revision"]
+            path = source["comm"]["path"]
         else:
-            revision = source["mozillaRevision"]
+            revision = source["mozilla"]["revision"]
+            path = source["mozilla"]["path"]
 
         # For now, firefox has only one source repo but Thunderbird has two
-        contentMail += name + " commit: https://hg.mozilla.org/" + source['path'] + "/rev/" + revision + "\n"
+        contentMail += name + " commit: https://hg.mozilla.org/" + path + "/rev/" + revision + "\n"
 
     contentMail += "\nCreated by " + r["submitter"] + "\n"
 
