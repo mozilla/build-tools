@@ -100,8 +100,8 @@ class ReleaseRunner(object):
 
     def mark_as_completed(self, release, enUSPlatforms):
         log.info('mark as completed %s' % release['name'])
-        self.release_api.update(release['name'], complete=True, 
-                                status='Started', 
+        self.release_api.update(release['name'], complete=True,
+                                status='Started',
                                 enUSPlatforms=json.dumps(enUSPlatforms))
 
     def mark_as_failed(self, release, why):
@@ -229,7 +229,16 @@ def sendMailRD(smtpServer, From, cfgFile, r):
 
     contentMail += "\nStarted by " + r["starter"] + "\n"
 
-    Subject = 'Build of %s' % r["name"]
+    subjectPrefix = ""
+
+    # On r-d, we prefix the subject of the email in order to simplify filtering
+    # We don't do it for thunderbird
+    if "Fennec" in r["name"]:
+        subjectPrefix = "[mobile] "
+    if "Firefox" in r["name"]:
+        subjectPrefix = "[desktop] "
+
+    Subject = subjectPrefix + 'Build of %s' % r["name"]
 
     sendmail(from_=From, to=To, subject=Subject, body=contentMail,
              smtp_server=smtpServer)
@@ -420,9 +429,9 @@ def main(options):
             rr.update_status(release, 'Running sendchange command')
             staging = config.getboolean('release-runner', 'staging')
             update(configs_workdir, revision='default')
-            cfgFile = path.join(configs_workdir, 
-                                'mozilla', 
-                                getReleaseConfigName(release['product'], 
+            cfgFile = path.join(configs_workdir,
+                                'mozilla',
+                                getReleaseConfigName(release['product'],
                                                      path.basename(release['branch']),
                                                      release['version'], staging))
             enUSPlatforms = readReleaseConfig(cfgFile)['enUSPlatforms']
