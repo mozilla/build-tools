@@ -273,24 +273,26 @@ class NightlySubmitterBase(object):
 
 
 class MultipleUpdatesNightlyMixin(object):
-    def _get_update_data(self, productName, branch, completeInfo,
+    def _get_update_data(self, productName, branch, completeInfo=None,
                          partialInfo=None):
-        data = {"completes": []}
+        data = {}
 
-        for info in completeInfo:
-            if "from_buildid" in info:
-                from_ = get_nightly_blob_name(productName, branch,
-                                              self.build_type,
-                                              info["from_buildid"],
-                                              self.dummy)
-            else:
-                from_ = "*"
-            data["completes"].append({
-                "from": from_,
-                "filesize": info["size"],
-                "hashValue": info["hash"],
-                "fileUrl": info["url"],
-            })
+        if completeInfo:
+            data["completes"] = []
+            for info in completeInfo:
+                if "from_buildid" in info:
+                    from_ = get_nightly_blob_name(productName, branch,
+                                                self.build_type,
+                                                info["from_buildid"],
+                                                self.dummy)
+                else:
+                    from_ = "*"
+                data["completes"].append({
+                    "from": from_,
+                    "filesize": info["size"],
+                    "hashValue": info["hash"],
+                    "fileUrl": info["url"],
+                })
         if partialInfo:
             data["partials"] = []
             for info in partialInfo:
@@ -354,20 +356,22 @@ class ReleaseSubmitterBase(object):
 
 class MultipleUpdatesReleaseMixin(object):
     def _get_update_data(self, productName, version, build_number,
-                         completeInfo, partialInfo=None):
-        data = {"completes": []}
+                         completeInfo=None, partialInfo=None):
+        data = {}
 
-        for info in completeInfo:
-            if "previousVersion" in info:
-                from_ = get_release_blob_name(productName, version,
-                                              build_number, self.dummy)
-            else:
-                from_ = "*"
-            data["completes"].append({
-                "from": from_,
-                "filesize": info["size"],
-                "hashValue": info["hash"],
-            })
+        if completeInfo:
+            data["completes"] = []
+            for info in completeInfo:
+                if "previousVersion" in info:
+                    from_ = get_release_blob_name(productName, version,
+                                                build_number, self.dummy)
+                else:
+                    from_ = "*"
+                data["completes"].append({
+                    "from": from_,
+                    "filesize": info["size"],
+                    "hashValue": info["hash"],
+                })
         if partialInfo:
             data["partials"] = []
             for info in partialInfo:
