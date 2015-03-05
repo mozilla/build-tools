@@ -164,7 +164,7 @@ def get_output(cmd, include_stderr=False, dont_log=False, timeout=86400,
     If you need to stop a process when it takes longer than expected, set a decent
     timeout value when calling this function.
 
-    Please note that proc.commuicate() can be an expensive operation when the output
+    Please note that proc.communicate() can be an expensive operation when the output
     is large, some samples:
     output size | time spent in proc.communicate():
        [bytes]  |  [s]
@@ -211,7 +211,7 @@ def get_output(cmd, include_stderr=False, dont_log=False, timeout=86400,
                      (elapsed, timeout))
             proc.terminate()
             (stdoutdata, stderrdata) = proc.communicate()
-            # the process is terminated but .commuicate can take few seconds to
+            # the process is terminated but .communicate can take few seconds to
             # complete
             msg = "%s, stdout: %s" % (TERMINATED_PROCESS_MSG, stdoutdata)
             if include_stderr:
