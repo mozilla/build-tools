@@ -161,7 +161,7 @@ def update(dest, branch=None, revision=None):
 
 
 def clone(repo, dest, branch=None, revision=None, update_dest=True,
-          clone_by_rev=False, mirrors=None, bundles=None, timeout=3600):
+          clone_by_rev=False, mirrors=None, bundles=None, timeout=1800):
     """Clones hg repo and places it at `dest`, replacing whatever else is
     there.  The working copy will be empty.
 
@@ -187,6 +187,7 @@ def clone(repo, dest, branch=None, revision=None, update_dest=True,
     before buildbot kills the full jobs. When a timeout terminates the process,
     the exception is caught by `retrier`.
 
+    Default timeout is 1800 seconds
     """
     if os.path.exists(dest):
         remove_path(dest)
