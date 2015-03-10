@@ -75,6 +75,9 @@ function getTryLoads(callback) {
       totalBuildLoad["macosx64-mulet"] = totalBuildLoad["macosx64"];
       totalBuildLoad["win32_gecko"] = totalBuildLoad["win32"];
       totalBuildLoad["win32-mulet"] = totalBuildLoad["win32"];
+      totalBuildLoad["linux64_graphene"] = totalBuildLoad["linux64"];
+      totalBuildLoad["macosx64_graphene"] = totalBuildLoad["macosx64"];
+      totalBuildLoad["win64_graphene"] = totalBuildLoad["win64"];
         
       var totalTestLoad = {};
       totalTestLoad["linux"] = load_test["ubuntu32-hw"] + load_test["ubuntu32-vm"];
