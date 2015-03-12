@@ -9,7 +9,7 @@ whitelist = {
     'nightly': {},
     }
 
-all_platforms = ['win32', 'linux', 'linux64', 'macosx64', 'android', 'android-api-9', 'android-api-11', 'android-armv6', 'android-x86', 'win64']
+all_platforms = ['win32', 'linux', 'linux64', 'macosx64', 'android', 'android-api-9', 'android-api-11', 'android-x86', 'win64']
 
 for platform in all_platforms:
     whitelist['nightly'][platform] = [
@@ -93,12 +93,6 @@ for p in ('android', 'android-api-9', 'android-api-11'):
         'ac_add_options --with-branding=mobile/android/branding/nightly',
     ]
 
-whitelist['nightly']['android-armv6'] += [
-    'ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',
-    'ac_add_options --enable-warnings-as-errors',
-    'ac_add_options --with-ccache=/usr/bin/ccache',
-]
-
 whitelist['nightly']['android-x86'] += [
     'ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',
     'ac_add_options --enable-warnings-as-errors',
@@ -132,7 +126,6 @@ for branch in ('mozilla-beta', 'comm-beta'):
     whitelist[branch]['android'] += ['ac_add_options --enable-updater']
     whitelist[branch]['android-api-9'] += ['ac_add_options --enable-updater']
     whitelist[branch]['android-api-11'] += ['ac_add_options --enable-updater']
-    whitelist[branch]['android-armv6'] += ['ac_add_options --enable-updater']
     whitelist[branch]['android-x86'] += ['ac_add_options --enable-updater']
     whitelist[branch]['android-api-9'] += ['ac_add_options --with-branding=mobile/android/branding/beta']
     whitelist[branch]['android-api-11'] += ['ac_add_options --with-branding=mobile/android/branding/beta']
@@ -163,7 +156,6 @@ for branch in ('mozilla-release', 'comm-esr31'):
     whitelist[branch]['android'] += ['ac_add_options --enable-updater']
     whitelist[branch]['android-api-9'] += ['ac_add_options --enable-updater']
     whitelist[branch]['android-api-11'] += ['ac_add_options --enable-updater']
-    whitelist[branch]['android-armv6'] += ['ac_add_options --enable-updater']
     whitelist[branch]['android-x86'] += ['ac_add_options --enable-updater']
 
 
@@ -174,7 +166,6 @@ for branch in ('mozilla-esr31',):
             'mk_add_options MOZ_PGO=1',
             'export BUILDING_RELEASE=1',
         ]
-whitelist['mozilla-esr31']['android-armv6'] += ['ac_add_options --enable-updater']
 
 if __name__ == '__main__':
     import pprint
