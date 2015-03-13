@@ -335,7 +335,6 @@
     ],
     "limit_b2g_platforms": [
       "linux64_gecko",
-      "linux64-mulet",
       "emulator-jb",
       "emulator-kk",
       "emulator"
@@ -343,9 +342,6 @@
     "limit_b2g_slave_platforms": {
       "linux64_gecko": [
         "ubuntu64_vm-b2gdt"
-      ],
-      "linux64-mulet": [
-        "ubuntu64_vm-mulet"
       ],
       "emulator-jb": [
         "ubuntu64_vm-b2g-emulator-jb"
@@ -407,15 +403,11 @@
     ],
     "limit_b2g_platforms": [
       "linux64_gecko",
-      "linux64-mulet",
       "emulator-jb",
       "emulator-kk",
       "emulator"
     ],
     "limit_b2g_slave_platforms": {
-      "linux64-mulet": [
-        "ubuntu64_vm-mulet"
-      ],
       "linux64_gecko": [
         "ubuntu64_vm-b2gdt"
       ],
@@ -479,15 +471,11 @@
     ],
     "limit_b2g_platforms": [
       "linux64_gecko",
-      "linux64-mulet",
       "emulator-jb",
       "emulator-kk",
       "emulator"
     ],
     "limit_b2g_slave_platforms": {
-      "linux64-mulet": [
-        "ubuntu64_vm-mulet"
-      ],
       "linux64_gecko": [
         "ubuntu64_vm-b2gdt"
       ],
@@ -550,16 +538,12 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "linux64-mulet",
       "linux64_gecko",
       "emulator-jb",
       "emulator-kk",
       "emulator"
     ],
     "limit_b2g_slave_platforms": {
-      "linux64-mulet": [
-        "ubuntu64_vm-mulet"
-      ],
       "linux64_gecko": [
         "ubuntu64_vm-b2gdt"
       ],
@@ -622,16 +606,12 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "linux64-mulet",
       "linux64_gecko",
       "emulator-jb",
       "emulator-kk",
       "emulator"
     ],
     "limit_b2g_slave_platforms": {
-      "linux64-mulet": [
-        "ubuntu64_vm-mulet"
-      ],
       "linux64_gecko": [
         "ubuntu64_vm-b2gdt"
       ],
@@ -694,16 +674,12 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "linux64-mulet",
       "linux64_gecko",
       "emulator-jb",
       "emulator-kk",
       "emulator"
     ],
     "limit_b2g_slave_platforms": {
-      "linux64-mulet": [
-        "ubuntu64_vm-mulet"
-      ],
       "linux64_gecko": [
         "ubuntu64_vm-b2gdt"
       ],
@@ -1868,16 +1844,12 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "linux64-mulet",
       "linux64_gecko",
       "emulator-jb",
       "emulator-kk",
       "emulator"
     ],
     "limit_b2g_slave_platforms": {
-      "linux64-mulet": [
-        "ubuntu64_vm-mulet"
-      ],
       "linux64_gecko": [
         "ubuntu64_vm-b2gdt"
       ],
@@ -1940,16 +1912,12 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "linux64-mulet",
       "linux64_gecko",
       "emulator-jb",
       "emulator-kk",
       "emulator"
     ],
     "limit_b2g_slave_platforms": {
-      "linux64-mulet": [
-        "ubuntu64_vm-mulet"
-      ],
       "linux64_gecko": [
         "ubuntu64_vm-b2gdt"
       ],
@@ -2012,16 +1980,12 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "linux64-mulet",
       "linux64_gecko",
       "emulator-jb",
       "emulator-kk",
       "emulator"
     ],
     "limit_b2g_slave_platforms": {
-      "linux64-mulet": [
-        "ubuntu64_vm-mulet"
-      ],
       "linux64_gecko": [
         "ubuntu64_vm-b2gdt"
       ],
@@ -2084,16 +2048,12 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "linux64-mulet",
       "linux64_gecko",
       "emulator-jb",
       "emulator-kk",
       "emulator"
     ],
     "limit_b2g_slave_platforms": {
-      "linux64-mulet": [
-        "ubuntu64_vm-mulet"
-      ],
       "linux64_gecko": [
         "ubuntu64_vm-b2gdt"
       ],
@@ -2156,16 +2116,12 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "linux64-mulet",
       "linux64_gecko",
       "emulator-jb",
       "emulator-kk",
       "emulator"
     ],
     "limit_b2g_slave_platforms": {
-      "linux64-mulet": [
-        "ubuntu64_vm-mulet"
-      ],
       "linux64_gecko": [
         "ubuntu64_vm-b2gdt"
       ],
@@ -2228,16 +2184,12 @@
       "linux64"
     ],
     "limit_b2g_platforms": [
-      "linux64-mulet",
       "linux64_gecko",
       "emulator-jb",
       "emulator-kk",
       "emulator"
     ],
     "limit_b2g_slave_platforms": {
-      "linux64-mulet": [
-        "ubuntu64_vm-mulet"
-      ],
       "linux64_gecko": [
         "ubuntu64_vm-b2gdt"
       ],
@@ -2335,7 +2287,6 @@
     ],
     "limit_b2g_platforms": [
       "linux64_gecko",
-      "linux64-mulet",
       "emulator-jb",
       "emulator-kk",
       "emulator"
@@ -2343,9 +2294,6 @@
     "limit_b2g_slave_platforms": {
       "linux64_gecko": [
         "ubuntu64_vm-b2gdt"
-      ],
-      "linux64-mulet": [
-        "ubuntu64_vm-mulet"
       ],
       "emulator-jb": [
         "ubuntu64_vm-b2g-emulator-jb"
@@ -2407,7 +2355,6 @@
     ],
     "limit_b2g_platforms": [
       "linux64_gecko",
-      "linux64-mulet",
       "emulator-jb",
       "emulator-kk",
       "emulator"
@@ -2415,9 +2362,6 @@
     "limit_b2g_slave_platforms": {
       "linux64_gecko": [
         "ubuntu64_vm-b2gdt"
-      ],
-      "linux64-mulet": [
-        "ubuntu64_vm-mulet"
       ],
       "emulator-jb": [
         "ubuntu64_vm-b2g-emulator-jb"
@@ -2479,7 +2423,6 @@
     ],
     "limit_b2g_platforms": [
       "linux64_gecko",
-      "linux64-mulet",
       "emulator-jb",
       "emulator-kk",
       "emulator"
@@ -2487,9 +2430,6 @@
     "limit_b2g_slave_platforms": {
       "linux64_gecko": [
         "ubuntu64_vm-b2gdt"
-      ],
-      "linux64-mulet": [
-        "ubuntu64_vm-mulet"
       ],
       "emulator-jb": [
         "ubuntu64_vm-b2g-emulator-jb"
@@ -2551,7 +2491,6 @@
     ],
     "limit_b2g_platforms": [
       "linux64_gecko",
-      "linux64-mulet",
       "emulator-jb",
       "emulator-kk",
       "emulator"
@@ -2559,9 +2498,6 @@
     "limit_b2g_slave_platforms": {
       "linux64_gecko": [
         "ubuntu64_vm-b2gdt"
-      ],
-      "linux64-mulet": [
-        "ubuntu64_vm-mulet"
       ],
       "emulator-jb": [
         "ubuntu64_vm-b2g-emulator-jb"
