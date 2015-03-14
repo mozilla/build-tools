@@ -16,6 +16,18 @@ import requests
 found_commits = {}
 unique_bugs = {}
 
+def get_revision_url_for_tag(repo_basedir, repo_name, tag='production'):
+    """Find the corresponding revision for a given tag in a local repo,
+    and return a web URL for that revision.
+    """
+    base_hg_url = "https://hg.mozilla.org/build/%s/rev/" % repo_name
+    try:
+        from mercurial import hg, ui
+        repo = hg.repository(ui.ui(), os.path.join(repo_basedir, repo_name))
+        return base_hg_url + str(repo[tag])
+    except:
+        return base_hg_url + tag
+
 def clean_commit_entry(entry):
     """Remove common preceding/trailing characters from commit messages.
     """
@@ -71,7 +83,7 @@ def collate_merge_previews(logdir):
                                                             'summary': clean_commit_entry(summary),
                                                             'review': clean_commit_entry(review)})
 
-def process_results(update_bugzilla, wiki_markup_file):
+def process_results(update_bugzilla, wiki_markup_file, logdir):
     """Write our formatted commit data out to a file.
     """
     if not found_commits:
@@ -106,7 +118,10 @@ def process_results(update_bugzilla, wiki_markup_file):
                                                         hg_changeset_url,
                                                         commit['revision']))
                 if args.update_bugzilla:
-                    payload = {'comment': 'In production: %s' % hg_changeset_url,
+                    comment = 'In production: %s' % hg_changeset_url
+                    if repo == "mozharness":
+                        comment = 'mozharness production tag moved to: %s' % get_revision_url_for_tag(logdir, 'mozharness', tag='production')
+                    payload = {'comment': comment,
                                'login': os.environ['BUGZILLA_USERNAME'],
                                'password': os.environ['BUGZILLA_PASSWORD']}
                     requests.post('https://bugzilla.mozilla.org/rest/bug/%s/comment' % bug_number, data=payload)
@@ -132,4 +147,6 @@ if __name__ == '__main__':
         sys.exit(1)
 
     collate_merge_previews(args.logdir)
-    process_results(update_bugzilla=args.update_bugzilla, wiki_markup_file=args.wiki_markup_file)
+    process_results(update_bugzilla=args.update_bugzilla,
+                    wiki_markup_file=args.wiki_markup_file,
+                    logdir=args.logdir)
