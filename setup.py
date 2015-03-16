@@ -26,7 +26,6 @@ setup(
         'requests',
         'docopt',
         'python-dateutil',
-        'jinja2',
     ],
 
     entry_points={
