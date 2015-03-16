@@ -19,7 +19,7 @@ import requests
 from kickoff.api import Releases, Release, ReleaseL10n
 from release.config import substituteReleaseConfig
 from release.info import getBaseTag, getTags, readReleaseConfig, \
-    getReleaseConfigName, getReleaseTag
+    getReleaseConfigName, getReleaseTag, isFinalRelease
 from release.versions import getAppVersion
 from release.sanity import check_buildbot, sendchange
 from util.commands import run_cmd
@@ -138,6 +138,14 @@ def bump_configs(release, cfgFile, l10nContents, workdir,
     subs = release.copy()
     if 'partials' in release:
         subs['partials'] = getPartials(release)
+    # This is true 99% of the time. It's exceedingly rare that we ship a point
+    # release that we first push to the beta channel. If we need to, the
+    # expectation is that this will be ignored by hardcoding True in the
+    # template.
+    if isFinalRelease(release["version"]):
+        subs["betaChannelEnabled"] = True
+    else:
+        subs["betaChannelEnabled"] = False
 
     with open(templateFile) as f:
         template = f.read()

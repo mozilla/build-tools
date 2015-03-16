@@ -30,10 +30,8 @@ def validate(options, args):
     releaseConfigFile = path.join("buildbot-configs", options.releaseConfig)
     releaseConfig = readReleaseConfig(releaseConfigFile,
                                       required=(options.configDict,))
-    assert options.platform in releaseConfig[options.configDict], \
-        "%s doesn't exist in %s" % (options.platform, options.configDict)
     uvConfig = path.join(UPDATE_VERIFY_DIR,
-                         releaseConfig[options.configDict][options.platform])
+                         releaseConfig[options.configDict][options.release_channel]["verifyConfigs"][options.platform])
     assert path.isfile(uvConfig), "Update verify config must exist!"
     return releaseConfig
 
@@ -44,7 +42,7 @@ if __name__ == "__main__":
     parser.set_defaults(
         buildbotConfigs=os.environ.get("BUILDBOT_CONFIGS",
                                        DEFAULT_BUILDBOT_CONFIGS_REPO),
-        configDict="verifyConfigs",
+        configDict="updateChannels",
         chunks=None,
         thisChunk=None,
     )
@@ -53,6 +51,7 @@ if __name__ == "__main__":
     parser.add_option("-r", "--release-config", dest="releaseConfig")
     parser.add_option("-b", "--buildbot-configs", dest="buildbotConfigs")
     parser.add_option("-p", "--platform", dest="platform")
+    parser.add_option("-C", "--release-channel", dest="release_channel")
     parser.add_option("--chunks", dest="chunks", type="int")
     parser.add_option("--this-chunk", dest="thisChunk", type="int")
 
@@ -60,7 +59,7 @@ if __name__ == "__main__":
     mercurial(options.buildbotConfigs, "buildbot-configs")
     update("buildbot-configs", revision=options.releaseTag)
     releaseConfig = validate(options, args)
-    verifyConfigFile = releaseConfig[options.configDict][options.platform]
+    verifyConfigFile = releaseConfig[options.configDict][options.release_channel]["verifyConfigs"][options.platform]
 
     fd, configFile = mkstemp()
     fh = os.fdopen(fd, "w")

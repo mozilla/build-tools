@@ -18,6 +18,7 @@ platform=$1
 configDict=$2
 chunks=$3
 thisChunk=$4
+channel=$5
 releaseConfig=$($JSONTOOL -k properties.release_config $PROPERTIES_FILE)
 releaseTag=$($JSONTOOL -k properties.release_tag $PROPERTIES_FILE)
 slavebuilddir=$($JSONTOOL -k properties.slavebuilddir $PROPERTIES_FILE)
@@ -31,4 +32,4 @@ $PYTHON -u $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
 
 $PYTHON $MY_DIR/chunked-verify.py -t $releaseTag -r $releaseConfig \
   -b $BUILDBOT_CONFIGS -p $platform --chunks $chunks --this-chunk $thisChunk \
-  --config-dict $2
+  --config-dict $2 --release-channel $channel

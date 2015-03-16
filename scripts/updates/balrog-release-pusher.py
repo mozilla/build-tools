@@ -6,6 +6,7 @@ except ImportError:
 
 import os
 from os import path
+import re
 import logging
 import sys
 
@@ -23,9 +24,8 @@ from util.hg import mercurial, make_hg_url
 HG = "hg.mozilla.org"
 DEFAULT_BUILDBOT_CONFIGS_REPO = make_hg_url(HG, 'build/buildbot-configs')
 REQUIRED_CONFIG = ('appVersion', 'productName', 'version', 'enUSPlatforms',
-    'localTestChannel', 'cdnTestChannel', 'releaseChannel', 'baseTag',
-    'buildNumber', 'partialUpdates', 'stagingServer', 'bouncerServer',
-    'testChannelRuleIds')
+    'baseTag', 'updateChannels', 'buildNumber', 'partialUpdates',
+    'stagingServer', 'bouncerServer')
 
 def validate(options):
     err = False
@@ -61,6 +61,7 @@ if __name__ == '__main__':
     parser.add_option("-s", "--schema", dest="schema_version",
                       help="blob schema version", type="int", default=4)
     parser.add_option("-u", "--username", dest="username")
+    parser.add_option("-C", "--release-channel", dest="release_channel")
     parser.add_option("-v", "--verbose", dest="verbose", action="store_true")
     options, args = parser.parse_args()
 
@@ -70,7 +71,7 @@ if __name__ == '__main__':
     logging.basicConfig(stream=sys.stdout, level=logging_level,
                         format="%(message)s")
 
-    for opt in ('build_properties', 'release_config', 'api_root', 'credentials_file', 'buildbot_configs', 'username'):
+    for opt in ('build_properties', 'release_config', 'api_root', 'credentials_file', 'buildbot_configs', 'username', 'release_channel'):
         if not getattr(options, opt):
             print >>sys.stderr, "Required option %s not present" % opt
             sys.exit(1)
@@ -78,37 +79,43 @@ if __name__ == '__main__':
     if options.schema_version not in (3,4):
         parser.error("Only schema_versions 3 & 4 supported.")
 
+    release_channel = options.release_channel
     properties = json.load(open(options.build_properties))['properties']
     releaseTag = properties['script_repo_revision']
     hashType = properties['hashType']
     retry(mercurial, args=(options.buildbot_configs, 'buildbot-configs'), kwargs=dict(revision=releaseTag))
     release_config = validate(options)
+    channelInfo = release_config["updateChannels"][release_channel]
 
     credentials = {}
     execfile(options.credentials_file, credentials)
     auth = (options.username, credentials['balrog_credentials'][options.username])
     updateChannels = [
-        release_config['localTestChannel'],
-        release_config['cdnTestChannel']
+        release_channel,
+        channelInfo['localTestChannel'],
+        channelInfo['cdnTestChannel']
     ]
-    if release_config['releaseChannel']:
-        updateChannels.append(release_config['releaseChannel'])
 
     if options.schema_version == 3:
         creator = ReleaseCreatorV3(options.api_root, auth)
     else:
-        creator = ReleaseCreatorV4(options.api_root, auth)
-    # XXX: remove me later
-    partials = release_config['partialUpdates'].copy()
-    if release_config.get('extraPartials'):
-        partials.update(release_config['extraPartials'])
+        creator= ReleaseCreatorV4(options.api_root, auth)
+    partials = {}
+    for v in release_config['partialUpdates']:
+        if re.match(channelInfo.get("versionRegex", "^.*$"), v):
+            partials[v] = release_config["partialUpdates"][v]
+
     creator.run(release_config['appVersion'], release_config['productName'].capitalize(),
                 release_config['version'], release_config['buildNumber'],
                 updateChannels, release_config['stagingServer'],
                 release_config['bouncerServer'], release_config['enUSPlatforms'],
                 hashType, openURL=release_config.get('openURL'),
-                partialUpdates=partials)
+                partialUpdates=partials,
+                requiresMirrors=channelInfo.get("requiresMirrors", True))
 
+    testChannelRuleIds = []
+    for c in channelInfo["testChannels"].values():
+        testChannelRuleIds.append(c["ruleId"])
     pusher = ReleasePusher(options.api_root, auth)
     pusher.run(release_config['productName'].capitalize(), release_config['version'],
-               release_config['buildNumber'], release_config['testChannelRuleIds'])
+               release_config['buildNumber'], testChannelRuleIds)

@@ -65,8 +65,10 @@ def get_product_uptake(tuxedoServerUrl, bouncerProductName, os,
 
 def get_release_uptake(tuxedoServerUrl, bouncerProductName, version,
                        platforms, partialVersions=None, checkMARs=True,
-                       username=None, password=None):
+                       checkInstallers=True, username=None, password=None):
     assert isinstance(platforms, (list, tuple))
+    if not checkMars and not checkInstallers:
+        raise ValueError("One of checkMars or checkInstallers must be true. Cannot check uptake of nothing!")
     bouncerProduct = generateBouncerProduct(bouncerProductName, version)
     bouncerCompleteMARProduct = generateBouncerProduct(
         bouncerProductName,
@@ -81,10 +83,11 @@ def get_release_uptake(tuxedoServerUrl, bouncerProductName, version,
     dl = []
 
     for os in [buildbot2bouncer(x) for x in platforms]:
-        dl.append(get_product_uptake(tuxedoServerUrl=tuxedoServerUrl,
-                                     bouncerProductName=bouncerProduct,
-                                     username=username, os=os,
-                                     password=password))
+        if checkInstallers:
+            dl.append(get_product_uptake(tuxedoServerUrl=tuxedoServerUrl,
+                                        bouncerProductName=bouncerProduct,
+                                        username=username, os=os,
+                                        password=password))
         if checkMARs:
             dl.append(get_product_uptake(
                 tuxedoServerUrl=tuxedoServerUrl,

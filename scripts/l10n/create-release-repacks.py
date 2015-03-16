@@ -331,7 +331,6 @@ if __name__ == "__main__":
         balrog_submitter = None
 
     partialUpdates = releaseConfig.get('partialUpdates', {}).copy()
-    partialUpdates.update(releaseConfig.get('extraPartials', {}))
     # FIXME: the follwong hack can be removed when win64 has the same list of
     # partial update as other platforms. Check mozilla-esr38 to be sure.
     if platform in releaseConfig.get('HACK_first_released_version', {}):
