@@ -6,7 +6,6 @@ before_script:
   - git config --global user.email "travis@travis-ci.org"
   - git config --global user.name "Travis McTravis"
   - cp lib/python/mozilla_buildtools/test/hgrc ~/.hgrc
-  - sudo apt-get install php5-cli
 
 install:
   - pip install tox
