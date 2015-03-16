@@ -67,7 +67,7 @@ def get_release_uptake(tuxedoServerUrl, bouncerProductName, version,
                        platforms, partialVersions=None, checkMARs=True,
                        checkInstallers=True, username=None, password=None):
     assert isinstance(platforms, (list, tuple))
-    if not checkMars and not checkInstallers:
+    if not checkMARs and not checkInstallers:
         raise ValueError("One of checkMars or checkInstallers must be true. Cannot check uptake of nothing!")
     bouncerProduct = generateBouncerProduct(bouncerProductName, version)
     bouncerCompleteMARProduct = generateBouncerProduct(
