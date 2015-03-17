@@ -1,6 +1,6 @@
 from release.product_details_update import updateProductDetailFiles, getTypeFromVersion
-from util.commands import run_cmd
-from util.svn import exportJSON
+#from util.commands import run_cmd
+#from util.svn import exportJSON
 import os
 import tempfile
 import unittest
