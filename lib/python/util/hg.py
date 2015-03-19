@@ -2,6 +2,7 @@
 import os
 import re
 import subprocess
+import time
 import sys
 from urlparse import urlsplit
 from ConfigParser import RawConfigParser
@@ -272,7 +273,7 @@ def clone(repo, dest, branch=None, revision=None, update_dest=True,
             if any(s in e.output for s in TRANSIENT_HG_ERRORS_EXTRA_WAIT):
                 sleeptime = _ * RETRY_EXTRA_WAIT_SCALE
                 log.debug("Encountered an HG error which requires extra sleep, sleeping for %.2fs", sleeptime)
-                os.sleep(sleeptime)
+                time.sleep(sleeptime)
 
             if any(s in e.output for s in TRANSIENT_HG_ERRORS):
                 # This is ok, try again!
@@ -354,7 +355,7 @@ def pull(repo, dest, update_dest=True, mirrors=None, **kwargs):
             if any(s in e.output for s in TRANSIENT_HG_ERRORS_EXTRA_WAIT):
                 sleeptime = _ * RETRY_EXTRA_WAIT_SCALE
                 log.debug("Encountered an HG error which requires extra sleep, sleeping for %.2fs", sleeptime)
-                os.sleep(sleeptime)
+                time.sleep(sleeptime)
 
             if any(s in e.output for s in TRANSIENT_HG_ERRORS):
                 # This is ok, try again!
