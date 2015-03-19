@@ -80,10 +80,17 @@ def retrying(func, *retry_args, **retry_kwargs):
 
 
 def retrier(attempts=5, sleeptime=10, max_sleeptime=300, sleepscale=1.5, jitter=1):
+    if jitter > sleeptime:
+        # To prevent negative sleep times
+        raise Exception('jitter (%i) must be less than sleep time (%i)', jitter, sleeptime)
+
     for _ in range(attempts):
         log.debug("attempt %i/%i", _ + 1, attempts)
-        yield
+        yield sleeptime
+
         if jitter:
+            # our jitter should scale along with the sleeptime
+            jitter = int(jitter * sleepscale)
             sleeptime += random.randint(-jitter, jitter)
         if _ == attempts - 1:
             # Don't need to sleep the last time
