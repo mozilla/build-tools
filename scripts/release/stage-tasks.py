@@ -25,7 +25,7 @@ from util.svn import checkoutSVN, exportJSON, commitSVN, getSVNrev, updateRev
 
 import requests
 
-from product_details_update import updateProductDetailFiles
+from release.product_details_update import updateProductDetailFiles
 
 
 DEFAULT_BUILDBOT_CONFIGS_REPO = make_hg_url('hg.mozilla.org',
