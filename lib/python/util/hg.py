@@ -26,7 +26,7 @@ TRANSIENT_HG_ERRORS_EXTRA_WAIT = (
 )
 
 # Multiply wait times by this value for the "extra wait" errors
-RETRY_EXTRA_WAIT_SCALE = 2
+RETRY_EXTRA_WAIT_SCALE = 5
 
 RETRY_ATTEMPTS = 3
 RETRY_SLEEPTIME = 15
