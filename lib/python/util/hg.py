@@ -345,7 +345,7 @@ def pull(repo, dest, update_dest=True, mirrors=None, **kwargs):
     cmd.append(repo)
     exc = None
     for _ in retrier(attempts=RETRY_ATTEMPTS, sleeptime=RETRY_SLEEPTIME,
-                     sleepscape=RETRY_SLEEPSCALE, jitter=RETRY_JITTER):
+                     sleepscale=RETRY_SLEEPSCALE, jitter=RETRY_JITTER):
         try:
             get_hg_output(cmd=cmd, cwd=dest, include_stderr=True)
             break
