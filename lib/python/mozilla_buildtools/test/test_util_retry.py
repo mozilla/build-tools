@@ -197,6 +197,6 @@ class TestRetry(unittest.TestCase):
                 randint.return_value = 3
                 for _ in retrier(attempts=5, sleeptime=10, max_sleeptime=300, sleepscale=2, jitter=3):
                     randint.return_value *= -1
-                expected = [mock.call(x) for x in (7, 17, 31, 65)]
+                expected = [mock.call(x) for x in (7, 23, 37, 83)]
                 self.assertEquals(sleep.call_args_list, expected)
-                self.assertEquals(randint.call_args, mock.call(-3, 3))
+                self.assertEquals(randint.call_args, mock.call(-48, 48))
