@@ -3,3 +3,5 @@ vendor/pefile-1.2.10-114/
 vendor/python-daemon-1.5.5/
 vendor/requests-0.10.8/
 vendor/mozpoolclient-0.1.6/
+vendor/Jinja2-2.7.3/
+vendor/MarkupSafe-0.23/
