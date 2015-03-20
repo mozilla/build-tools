@@ -87,9 +87,6 @@ def retrier(attempts=5, sleeptime=10, max_sleeptime=300, sleepscale=1.5, jitter=
     sleeptime_real = sleeptime
     for _ in range(attempts):
         log.debug("attempt %i/%i", _ + 1, attempts)
-        if _ == attempts - 1:
-            # Don't need to sleep the last time
-            break
 
         yield sleeptime_real
 
@@ -105,5 +102,7 @@ def retrier(attempts=5, sleeptime=10, max_sleeptime=300, sleepscale=1.5, jitter=
         if sleeptime_real > max_sleeptime:
             sleeptime_real = max_sleeptime
 
-        log.debug("sleeping for %.2fs (attempt %i/%i)", sleeptime_real, _ + 1, attempts)
-        time.sleep(sleeptime_real)
+        # Don't need to sleep the last time
+        if _ < attempts - 1:
+            log.debug("sleeping for %.2fs (attempt %i/%i)", sleeptime_real, _ + 1, attempts)
+            time.sleep(sleeptime_real)
