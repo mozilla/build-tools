@@ -261,7 +261,7 @@ def updateProductDetails(productName, version, productDetailsRepo, mozillaComRep
     """
     Add a new version to the product details
     """
-    os.environ["SVN_SSH"] = svnSshKey
+    os.environ["SVN_SSH"] = "ssh -i %s" % svnSshKey
     pdDir = "product-details.svn"
     mcDir = "mozilla.com.svn"
     retry(checkoutSVN, args=(pdDir, productDetailsRepo), attempts=3)
