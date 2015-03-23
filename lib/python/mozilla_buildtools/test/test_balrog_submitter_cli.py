@@ -20,8 +20,9 @@ class TestNightlySubmitterBase(unittest.TestCase):
 
 class TestNightlySubmitterV4(unittest.TestCase):
 
-    @unittest.skipIf(sys.version_info < (2, 7), "Missing assertDictEqual()")
     def test_canonical_ur_replacement(self):
+        if sys.version_info < (2, 7):
+            return
         url_replacements = [
             ("ftp.mozilla.org", "download.cdn.mozilla.net")
         ]
@@ -42,8 +43,9 @@ class TestNightlySubmitterV4(unittest.TestCase):
                 'hashValue': 'abcd'
             }]})
 
-    @unittest.skipIf(sys.version_info < (2, 7), "Missing assertDictEqual()")
     def test_no_canonical_ur_replacement(self):
+        if sys.version_info < (2, 7):
+            return
         submitter = NightlySubmitterV4(api_root=None, auth=None,
                                        url_replacements=None)
         completeInfo = [{
