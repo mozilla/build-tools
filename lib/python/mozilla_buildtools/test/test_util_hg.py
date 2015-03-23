@@ -99,7 +99,10 @@ class TestIsHgCset(unittest.TestCase):
 
 class TestHg(unittest.TestCase):
     def setUp(self):
-        self.tmpdir = tempfile.mkdtemp()
+        tmpdir = None
+        if os.path.isdir("/dev/shm"):
+            tmpdir = "/dev/shm"
+        self.tmpdir = tempfile.mkdtemp(dir=tmpdir)
         self.repodir = os.path.join(self.tmpdir, 'repo')
         run_cmd(['%s/init_hgrepo.sh' % os.path.dirname(__file__),
                 self.repodir])
