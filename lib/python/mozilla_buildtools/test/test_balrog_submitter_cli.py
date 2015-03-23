@@ -1,4 +1,5 @@
 import unittest
+import sys
 from balrog.submitter.cli import NightlySubmitterBase, NightlySubmitterV4
 
 
@@ -19,6 +20,7 @@ class TestNightlySubmitterBase(unittest.TestCase):
 
 class TestNightlySubmitterV4(unittest.TestCase):
 
+    @unittest.skipIf(sys.version_info < (2, 7), "Missing assertDictEqual()")
     def test_canonical_ur_replacement(self):
         url_replacements = [
             ("ftp.mozilla.org", "download.cdn.mozilla.net")
@@ -40,6 +42,7 @@ class TestNightlySubmitterV4(unittest.TestCase):
                 'hashValue': 'abcd'
             }]})
 
+    @unittest.skipIf(sys.version_info < (2, 7), "Missing assertDictEqual()")
     def test_no_canonical_ur_replacement(self):
         submitter = NightlySubmitterV4(api_root=None, auth=None,
                                        url_replacements=None)
