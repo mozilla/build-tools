@@ -10,6 +10,10 @@ from release.platforms import buildbot2updatePlatforms, buildbot2bouncer, \
 from release.versions import getPrettyVersion
 from balrog.submitter.api import Release, SingleLocale, Rule
 from util.algorithms import recursive_update
+import logging
+
+log = logging.getLogger(__name__)
+
 
 def get_nightly_blob_name(productName, branch, build_type, suffix, dummy=False):
     if dummy:
@@ -236,10 +240,21 @@ class ReleaseCreatorV4(ReleaseCreatorBase):
 class NightlySubmitterBase(object):
     build_type = 'nightly'
 
-    def __init__(self, api_root, auth, dummy=False):
+    def __init__(self, api_root, auth, dummy=False, url_replacements=None):
         self.api_root = api_root
         self.auth = auth
         self.dummy = dummy
+        self.url_replacements = url_replacements
+
+    def _replace_canocical_url(self, url):
+        if self.url_replacements:
+            for string_from, string_to in self.url_replacements:
+                if string_from in url:
+                    new_url = url.replace(string_from, string_to)
+                    log.warning("Replacing %s with %s", url, new_url)
+                    return new_url
+
+        return url
 
     def run(self, platform, buildID, productName, branch, appVersion, locale,
             hashFunction, extVersion, schemaVersion, isOSUpdate=None, **updateKwargs):
@@ -290,6 +305,7 @@ class NightlySubmitterBase(object):
 
 
 class MultipleUpdatesNightlyMixin(object):
+
     def _get_update_data(self, productName, branch, completeInfo=None,
                          partialInfo=None):
         data = {}
@@ -299,16 +315,16 @@ class MultipleUpdatesNightlyMixin(object):
             for info in completeInfo:
                 if "from_buildid" in info:
                     from_ = get_nightly_blob_name(productName, branch,
-                                                self.build_type,
-                                                info["from_buildid"],
-                                                self.dummy)
+                                                  self.build_type,
+                                                  info["from_buildid"],
+                                                  self.dummy)
                 else:
                     from_ = "*"
                 data["completes"].append({
                     "from": from_,
                     "filesize": info["size"],
                     "hashValue": info["hash"],
-                    "fileUrl": info["url"],
+                    "fileUrl": self._replace_canocical_url(info["url"]),
                 })
         if partialInfo:
             data["partials"] = []
@@ -320,7 +336,7 @@ class MultipleUpdatesNightlyMixin(object):
                                                   self.dummy),
                     "filesize": info["size"],
                     "hashValue": info["hash"],
-                    "fileUrl": info["url"],
+                    "fileUrl": self._replace_canocical_url(info["url"]),
                 })
 
         return data

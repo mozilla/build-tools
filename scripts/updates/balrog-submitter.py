@@ -25,6 +25,13 @@ if __name__ == '__main__':
     parser.add_option("-t", "--type", dest="type_", help="nightly or release", default="nightly")
     parser.add_option("-s", "--schema", dest="schema_version",
                       help="blob schema version", type="int", default=4)
+    parser.add_option(
+        "-r", "--url-replacement", action="append", dest="url_replacements",
+        help="""
+Coma-separated pair of from/to string to be replaced in the final URL, e.g.
+--url-replacement ftp.mozilla.org,download.cdn.mozilla.net
+Valid for nightly updates only.
+""")
     parser.add_option("-d", "--dummy", dest="dummy", action="store_true",
                       help="Add '-dummy' suffix to branch name")
     parser.add_option("-v", "--verbose", dest="verbose", action="store_true")
@@ -48,14 +55,23 @@ if __name__ == '__main__':
     props = bp['properties']
     locale = props.get('locale', 'en-US')
     extVersion = props.get('extVersion', props['appVersion'])
+    url_replacements = []
+    if options.url_replacements:
+        for replacement in options.url_replacements:
+            from_, to = replacement.split(",")
+            url_replacements.append([from_, to])
     if options.type_ == "nightly":
         isOSUpdate = props.get('isOSUpdate', None)
         updateKwargs = {}
 
         if options.schema_version == 3:
-            submitter = NightlySubmitterV3(options.api_root, auth, options.dummy)
+            submitter = NightlySubmitterV3(options.api_root, auth,
+                                           options.dummy,
+                                           url_replacements=url_replacements)
         else:
-            submitter = NightlySubmitterV4(options.api_root, auth, options.dummy)
+            submitter = NightlySubmitterV4(options.api_root, auth,
+                                           options.dummy,
+                                           url_replacements=url_replacements)
 
         updateKwargs["completeInfo"] = [{
             'size': props['completeMarSize'],
