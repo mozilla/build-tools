@@ -33,12 +33,8 @@
       "linux"
     ],
     "limit_b2g_platforms": [
-      "linux32_gecko"
     ],
     "limit_b2g_slave_platforms": {
-      "linux32_gecko": [
-        "ubuntu32_vm-b2gdt"
-      ]
     },
     "master_dir": "/builds/buildbot/tests1-linux32/master",
     "name": "bm01-tests1-linux32",
@@ -82,12 +78,8 @@
       "linux"
     ],
     "limit_b2g_platforms": [
-      "linux32_gecko"
     ],
     "limit_b2g_slave_platforms": {
-      "linux32_gecko": [
-        "ubuntu32_vm-b2gdt"
-      ]
     },
     "master_dir": "/builds/buildbot/tests1-linux32/master",
     "name": "bm02-tests1-linux32",
@@ -131,12 +123,8 @@
       "linux"
     ],
     "limit_b2g_platforms": [
-      "linux32_gecko"
     ],
     "limit_b2g_slave_platforms": {
-      "linux32_gecko": [
-        "ubuntu32_vm-b2gdt"
-      ]
     },
     "master_dir": "/builds/buildbot/tests1-linux32/master",
     "name": "bm03-tests1-linux32",
@@ -180,12 +168,8 @@
       "linux"
     ],
     "limit_b2g_platforms": [
-      "linux32_gecko"
     ],
     "limit_b2g_slave_platforms": {
-      "linux32_gecko": [
-        "ubuntu32_vm-b2gdt"
-      ]
     },
     "master_dir": "/builds/buildbot/tests1-linux32/master",
     "name": "bm04-tests1-linux32",
@@ -229,12 +213,8 @@
       "linux"
     ],
     "limit_b2g_platforms": [
-      "linux32_gecko"
     ],
     "limit_b2g_slave_platforms": {
-      "linux32_gecko": [
-        "ubuntu32_vm-b2gdt"
-      ]
     },
     "master_dir": "/builds/buildbot/tests1-linux32/master",
     "name": "bm05-tests1-linux32",
@@ -278,12 +258,8 @@
       "linux"
     ],
     "limit_b2g_platforms": [
-      "linux32_gecko"
     ],
     "limit_b2g_slave_platforms": {
-      "linux32_gecko": [
-        "ubuntu32_vm-b2gdt"
-      ]
     },
     "master_dir": "/builds/buildbot/tests1-linux32/master",
     "name": "bm06-tests1-linux32",
