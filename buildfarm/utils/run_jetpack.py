@@ -22,7 +22,6 @@ SDK_DIR = "jetpack"
 PLATFORMS = {
     'snowleopard': 'macosx64',
     'lion': 'macosx64',
-    'mountainlion': 'macosx64',
     'yosemite': 'macosx64',
     'xp-ix': 'win32',
     'win7-ix': 'win32',
@@ -217,7 +216,7 @@ if __name__ == '__main__':
                             'ubuntu32_vm', 'ubuntu64_vm', 'ubuntu64-asan_vm'):
         app_path = "%s/firefox/firefox" % basepath
         poller_cmd = 'tar -xjvf *%s' % options.ext
-    elif options.platform in ('macosx', 'macosx64', 'snowleopard', 'mountainlion', 'yosemite'):
+    elif options.platform in ('macosx', 'macosx64', 'snowleopard', 'yosemite'):
         poller_cmd = '../scripts/buildfarm/utils/installdmg.sh *.dmg'
     elif options.platform in ('win32', 'win7-ix', 'win8', 'win64', 'xp-ix'):
         app_path = "%s/firefox/firefox.exe" % basepath
@@ -253,7 +252,7 @@ if __name__ == '__main__':
             print "TinderboxPrint: <a href=\"https://hg.mozilla.org/projects/addon-sdk/rev/%(sdk_rev)s\">sdk-rev:%(sdk_rev)s</a>\n" % locals()
             sdkdir = os.path.abspath(d)
             print "SDKDIR: %s" % sdkdir
-        if options.platform in ('macosx', 'macosx64', 'snowleopard', 'lion', 'mountainlion', 'yosemite'):
+        if options.platform in ('macosx', 'macosx64', 'snowleopard', 'lion', 'yosemite'):
             if '.app' in d:
                 app_path = os.path.abspath(d)
                 print "APP_PATH: %s" % app_path
