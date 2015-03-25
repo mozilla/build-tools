@@ -121,14 +121,21 @@ else
   $PYTHON $SCRIPTS_DIR/buildfarm/utils/hgtool.py "${hgtool_args[@]}" $HG_REPO src || exit 2
   SOURCE=src
 
-  # Pull down some standard tools that the build seems to have started
-  # requiring, eg mozmake on windows.
-  if [ "$OSTYPE" = "msys" ] && [ -n "$platform" ]; then
+  # Pull down some standard tools that the build now requires, eg mozmake on
+  # windows and clang on osx.
+  if [ -n "$platform" ]; then
       if [ -z "$TT_SERVER" ]; then
           echo "Error: tooltool base url not set (use --ttserver command line option or TT_SERVER environment variable)" >&2
           exit 1
       fi
-      $SCRIPTS_DIR/scripts/tooltool/tooltool_wrapper.sh $SOURCE/browser/config/tooltool-manifests/${platform%-debug}/releng.manifest $TT_SERVER setup.sh 'c:\mozilla-build\python27\python.exe' C:/mozilla-build/tooltool.py
+      TT_WRAPPER=$SCRIPTS_DIR/scripts/tooltool/tooltool_wrapper.sh
+      TT_MANIFEST=$SOURCE/browser/config/tooltool-manifests/${platform%-debug}/releng.manifest
+      TT_BOOTSTRAP=setup.sh
+      if [ "$OSTYPE" = "msys" ]; then
+          $TT_WRAPPER $TT_MANIFEST $TT_SERVER $TT_BOOTSTRAP 'c:\mozilla-build\python27\python.exe' C:/mozilla-build/tooltool.py
+      else
+          $TT_WRAPPER $TT_MANIFEST $TT_SERVER $TT_BOOTSTRAP /builds/tooltool.py
+      fi
   fi
 fi
 
