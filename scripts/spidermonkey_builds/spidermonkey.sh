@@ -136,6 +136,14 @@ else
       else
           $TT_WRAPPER $TT_MANIFEST $TT_SERVER $TT_BOOTSTRAP /builds/tooltool.py
       fi
+
+      if [[ "$OSTYPE" == darwin* ]]; then
+          export CC=$(pwd)/clang/bin/clang
+          export CXX=$(pwd)/clang/bin/clang++
+      elif [ "$OSTYPE" = "linux-gnu" ]; then
+          export CC=$(pwd)/gcc/bin/gcc
+          export CXX=$(pwd)/gcc/bin/g++
+      fi
   fi
 fi
 
