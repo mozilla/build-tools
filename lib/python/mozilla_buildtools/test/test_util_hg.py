@@ -8,7 +8,7 @@ import util.hg as hg
 from util.hg import clone, pull, update, hg_ver, mercurial, _make_absolute, \
     share, push, apply_and_push, HgUtilError, make_hg_url, get_branch, purge, \
     get_branches, path, init, unbundle, adjust_paths, is_hg_cset, commit, tag, \
-    get_hg_output
+    get_hg_output, has_rev
 from util.file import touch
 from util.commands import run_cmd, get_output
 
@@ -1046,6 +1046,15 @@ class TestHg(unittest.TestCase):
         self.assertEquals(getRevisions(sharerepo), self.revisions[-1:])
         self.assertEquals(getRevisions(self.wc), self.revisions[-1:])
 
+    def testMercurialSkipPull(self):
+        # Clone once into our working copy
+        mercurial(self.repodir, self.wc)
+
+        # The second clone should avoid calling pull()
+        with patch('util.hg.pull') as patched_pull:
+            mercurial(self.repodir, self.wc, revision=self.revisions[-1])
+            self.assertEquals(patched_pull.call_count, 0)
+
     def testAdjustPaths(self):
         mercurial(self.repodir, self.wc)
 
@@ -1172,3 +1181,7 @@ class TestHg(unittest.TestCase):
             self.assertRaises(subprocess.CalledProcessError,
                               clone, "http://nxdomain.nxnx", self.wc)
             self.assertEquals(num_calls, [2])
+
+    def testHasRev(self):
+        self.assertTrue(has_rev(self.repodir, self.revisions[0]))
+        self.assertFalse(has_rev(self.repodir, self.revisions[0] + 'g'))

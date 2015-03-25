@@ -124,6 +124,22 @@ def is_hg_cset(rev):
         return False
 
 
+def has_rev(repo, rev):
+    """Returns True if the repository has the specified revision.
+
+    Arguments:
+        repo (str):     path to repository
+        rev  (str):     revision identifier
+    """
+    log.debug("checking to see if %s exists in %s", rev, repo)
+    cmd = ['log', '-r', rev, '--template', '{node}']
+    try:
+        get_hg_output(cmd, cwd=repo)
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+
 def hg_ver():
     """Returns the current version of hg, as a tuple of
     (major, minor, build)"""
@@ -485,6 +501,11 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
             try:
                 if autoPurge:
                     purge(dest)
+                if revision is not None and is_hg_cset(revision) and has_rev(dest, revision):
+                    log.info("skipping pull since we already have %s", revision)
+                    if update_dest:
+                        return update(dest, branch=branch, revision=revision)
+                    return revision
                 return pull(repo, dest, update_dest=update_dest, branch=branch,
                             revision=revision,
                             mirrors=mirrors)
