@@ -35,7 +35,7 @@ class TestProductDetails(unittest.TestCase):
         assert value in open(filename).read()
 
     def test_product_detail_fennec_aurora(self):
-        updateProductDetailFiles(self.targetSVNDirectory, "fennec", "42.0a2")
+        updateProductDetailFiles(self.targetSVNDirectory, "mobile", "42.0a2")
         self.ContentCheckfile(os.path.join(self.targetSVNDirectory, "mobile_alpha_version.php"), "'42.0a2'")
 
     def test_product_detail_firefox_aurora(self):
@@ -45,7 +45,7 @@ class TestProductDetails(unittest.TestCase):
     def test_product_detail_fennec_beta(self):
         with mock.patch('time.strftime') as t:
             t.return_value = "2014-09-05"
-            updateProductDetailFiles(self.targetSVNDirectory, "fennec", "32.0b3")
+            updateProductDetailFiles(self.targetSVNDirectory, "mobile", "32.0b3")
             self.ContentCheckfile(os.path.join(self.targetSVNDirectory, "mobile_beta_version.php"), "'32.0b3'")
             self.ContentCheckfile(os.path.join(self.targetSVNDirectory, "history/mobileHistory.class.php"), "'32.0b3' => '2014-09-05',")
 
@@ -68,10 +68,10 @@ class TestProductDetails(unittest.TestCase):
         with mock.patch('time.strftime') as t:
             t.return_value = "2014-09-07"
 
-            updateProductDetailFiles(self.targetSVNDirectory, "fennec", "32.0")
+            updateProductDetailFiles(self.targetSVNDirectory, "mobile", "32.0")
             self.ContentCheckfile(os.path.join(self.targetSVNDirectory, "mobile_latest_version.php"), "'32.0'")
             self.ContentCheckfile(os.path.join(self.targetSVNDirectory, "history/mobileHistory.class.php"), "'32.0' => '2014-09-07',")
-            updateProductDetailFiles(self.targetSVNDirectory, "fennec", "31.0.1")
+            updateProductDetailFiles(self.targetSVNDirectory, "mobile", "31.0.1")
             self.ContentCheckfile(os.path.join(self.targetSVNDirectory, "mobile_latest_version.php"), "'31.0.1'")
             self.ContentCheckfile(os.path.join(self.targetSVNDirectory, "history/mobileHistory.class.php"), "'31.0.1' => '2014-09-07',")
 
