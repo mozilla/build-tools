@@ -6,7 +6,7 @@ from build.versions import ANY_VERSION_REGEX
 
 
 PRODUCT_VERSION_TEMPLATES = {
-    "fennec": {
+    "mobile": {
         "aurora": {
             "version_template": "mobile_alpha_version.php.tpl",
         },
@@ -96,8 +96,7 @@ def updateVersionTemplate(targetSVNDirectory, templateFile, version):
     """
     Templates are stored in dedicated directory. use jinja to update them
     """
-    fullPath = os.path.dirname(os.path.abspath(__file__))
-    templatesDir = os.path.join(fullPath, targetSVNDirectory, "templates")
+    templatesDir = os.path.join(targetSVNDirectory, "templates")
 
     env = Environment(loader=FileSystemLoader(templatesDir))
 
@@ -108,8 +107,7 @@ def updateVersionTemplate(targetSVNDirectory, templateFile, version):
     output_from_parsed_template = template.render(VERSION=version)
 
     # Save the results
-    targetFile = os.path.join(fullPath, targetSVNDirectory,
-                              templateFile.replace(".tpl", ""))
+    targetFile = os.path.join(targetSVNDirectory, templateFile.replace(".tpl", ""))
     with open(targetFile, "wb") as fh:
         fh.write(output_from_parsed_template)
     fh.close()
@@ -121,9 +119,7 @@ def addNewVersion(targetSVNDirectory, category, filename, version):
     because we need to keep the markers
     Do it by hand
     """
-    fullPath = os.path.dirname(os.path.abspath(__file__))
-    sourceFile = os.path.join(fullPath, targetSVNDirectory, "history",
-                              filename)
+    sourceFile = os.path.join(targetSVNDirectory, "history", filename)
     f = open(sourceFile, 'r')
     filedata = f.read()
     f.close()

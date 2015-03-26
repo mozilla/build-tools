@@ -13,11 +13,6 @@ def checkoutSVN(targetSVNDirectory, svnURL):
         cmd = ["svn", "co", svnURL, targetSVNDirectory]
         run_cmd(cmd)
 
-    # Sanity check
-    svnStatus = get_output(["svn", "status", targetSVNDirectory])
-    if len(svnStatus) != 0:
-        raise Exception("Uncommited changes: " + svnStatus)
-
 
 def exportJSON(targetSVNDirectory):
     """
