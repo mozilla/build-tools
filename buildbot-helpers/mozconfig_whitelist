@@ -93,6 +93,8 @@ for p in ('android', 'android-api-9', 'android-api-11'):
         'ac_add_options --with-branding=mobile/android/branding/nightly',
     ]
 
+whitelist['nightly']['android-api-11'] += ['MOZ_ANDROID_GECKOLIBS_AAR=1']
+
 whitelist['nightly']['android-x86'] += [
     'ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}',
     'ac_add_options --enable-warnings-as-errors',
