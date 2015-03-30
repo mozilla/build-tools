@@ -2,10 +2,21 @@ language: python
 python:
   - "2.7"
 
+sudo: false
+
 env:
+  global:
+    - PIP_FIND_LINKS=file://$HOME/.cache/pip
+    - PIP_CACHE_DIR=$HOME/.cache/pip
+  matrix:
     - TOX_ENV=py27-hg2.6
     - TOX_ENV=py26-hg2.6
     - TOX_ENV=py27-hg3.1
+
+cache:
+  directories:
+    - $HOME/.cache/pip
+    - $TRAVIS_BUILD_DIR/.tox
 
 before_script:
   - git config --global user.email "travis@travis-ci.org"
@@ -17,6 +28,8 @@ install:
 
 script:
   - tox -e $TOX_ENV
+  # Remove logs to avoid cache uploads
+  - rm -rf $HOME/.cache/pip/log
 
 after_script:
   - tox -e py27-coveralls
