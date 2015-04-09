@@ -31,6 +31,7 @@ if __name__ == '__main__':
         jar_keystore=None,
         jar_keyname=None,
         emevoucher_key=None,
+        emevoucher_chain=None,
     )
     parser.add_option("--keydir", dest="signcode_keydir",
                       help="where MozAuthenticode.spc, MozAuthenticode.spk can be found")
@@ -52,6 +53,8 @@ if __name__ == '__main__':
                       help="which key to use from jar_keystore")
     parser.add_option("--emevoucher_key", dest="emevoucher_key",
                       help="The certificate to use for signing the eme voucher")
+    parser.add_option("--emevoucher_chain", dest="emevoucher_chain",
+                      help="Certificate chain to include in EME voucher signatures")
     parser.add_option(
         "-v", action="store_const", dest="loglevel", const=logging.DEBUG)
 
@@ -112,7 +115,8 @@ if __name__ == '__main__':
     elif format_ == "emevoucher":
         safe_unlink(tmpfile)
         emevoucher_signfile(
-            inputfile, tmpfile, options.emevoucher_key, options.fake, passphrase)
+            inputfile, tmpfile, options.emevoucher_key,
+            options.emevoucher_chain, options.fake, passphrase)
     elif format_ == "mar":
         if not options.mar_cmd:
             parser.error("mar_cmd is required when format is mar")

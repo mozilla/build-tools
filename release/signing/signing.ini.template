@@ -4,11 +4,6 @@
 listen = 0.0.0.0
 # What port we listen on
 port = 8080
-# host[:port] to a redis server
-# this isn't required when running a single signing server, but it required
-# when clients expect to be able to connect to one of a number of equivalent
-# servers
-redis = localhost
 # How long should files be kept on disk (in seconds)
 max_file_age = 300
 # How often should we clean up files, tokens, etc. (in seconds)
@@ -82,5 +77,6 @@ osslsigncode_keydir = /path/to/keys
 gpg_homedir = /path/to/.gpg
 # Where is the eme voucher private key
 emevoucher_key = /path/to/cert.pem
+emevoucher_chain = /path/to/chain.pem
 # How to run mar
 mar_cmd = /path/to/signmar -d /path/to/nsscerts -n keyname -s

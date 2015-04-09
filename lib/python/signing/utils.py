@@ -152,7 +152,7 @@ I am ur signature!
         raise
 
 
-def emevoucher_signfile(inputfile, outputfile, key, fake=False, passphrase=None):
+def emevoucher_signfile(inputfile, outputfile, key, chain, fake=False, passphrase=None):
     """Perform SMIME signing on "inputfile", writing a signed version
     to "outputfile", using passed in "key". This is necessary for the EME voucher.
 
@@ -167,6 +167,7 @@ def emevoucher_signfile(inputfile, outputfile, key, fake=False, passphrase=None)
     stdout = tempfile.TemporaryFile()
     args = ['smime', '-sign', '-in', inputfile,
             '-out', outputfile, '-signer', key,
+            '-certfile', chain,
             '-md', 'sha256', '-binary', '-nodetach',
             '-outform', 'DER']
 
