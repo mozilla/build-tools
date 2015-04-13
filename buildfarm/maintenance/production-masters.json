@@ -27,6 +27,7 @@
     "limit_mobile_platforms": [
       "android-x86",
       "android-api-9",
+      "android-api-11",
       "android"
     ],
     "limit_tb_platforms": [
@@ -72,6 +73,7 @@
     "limit_mobile_platforms": [
       "android-x86",
       "android-api-9",
+      "android-api-11",
       "android"
     ],
     "limit_tb_platforms": [
@@ -117,6 +119,7 @@
     "limit_mobile_platforms": [
       "android-x86",
       "android-api-9",
+      "android-api-11",
       "android"
     ],
     "limit_tb_platforms": [
@@ -162,6 +165,7 @@
     "limit_mobile_platforms": [
       "android-x86",
       "android-api-9",
+      "android-api-11",
       "android"
     ],
     "limit_tb_platforms": [
@@ -207,6 +211,7 @@
     "limit_mobile_platforms": [
       "android-x86",
       "android-api-9",
+      "android-api-11",
       "android"
     ],
     "limit_tb_platforms": [
@@ -252,6 +257,7 @@
     "limit_mobile_platforms": [
       "android-x86",
       "android-api-9",
+      "android-api-11",
       "android"
     ],
     "limit_tb_platforms": [
@@ -304,7 +310,8 @@
     },
     "limit_mobile_platforms": [
       "android",
-      "android-api-9"
+      "android-api-9",
+      "android-api-11"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -372,7 +379,8 @@
     },
     "limit_mobile_platforms": [
       "android",
-      "android-api-9"
+      "android-api-9",
+      "android-api-11"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -440,7 +448,8 @@
     },
     "limit_mobile_platforms": [
       "android",
-      "android-api-9"
+      "android-api-9",
+      "android-api-11"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -508,7 +517,8 @@
     },
     "limit_mobile_platforms": [
       "android",
-      "android-api-9"
+      "android-api-9",
+      "android-api-11"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -576,7 +586,8 @@
     },
     "limit_mobile_platforms": [
       "android",
-      "android-api-9"
+      "android-api-9",
+      "android-api-11"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -644,7 +655,8 @@
     },
     "limit_mobile_platforms": [
       "android",
-      "android-api-9"
+      "android-api-9",
+      "android-api-11"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -1814,7 +1826,8 @@
     },
     "limit_mobile_platforms": [
       "android",
-      "android-api-9"
+      "android-api-9",
+      "android-api-11"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -1882,7 +1895,8 @@
     },
     "limit_mobile_platforms": [
       "android",
-      "android-api-9"
+      "android-api-9",
+      "android-api-11"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -1950,7 +1964,8 @@
     },
     "limit_mobile_platforms": [
       "android",
-      "android-api-9"
+      "android-api-9",
+      "android-api-11"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -2018,7 +2033,8 @@
     },
     "limit_mobile_platforms": [
       "android",
-      "android-api-9"
+      "android-api-9",
+      "android-api-11"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -2086,7 +2102,8 @@
     },
     "limit_mobile_platforms": [
       "android",
-      "android-api-9"
+      "android-api-9",
+      "android-api-11"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -2154,7 +2171,8 @@
     },
     "limit_mobile_platforms": [
       "android",
-      "android-api-9"
+      "android-api-9",
+      "android-api-11"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -2256,7 +2274,8 @@
     },
     "limit_mobile_platforms": [
       "android",
-      "android-api-9"
+      "android-api-9",
+      "android-api-11"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -2324,7 +2343,8 @@
     },
     "limit_mobile_platforms": [
       "android",
-      "android-api-9"
+      "android-api-9",
+      "android-api-11"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -2392,7 +2412,8 @@
     },
     "limit_mobile_platforms": [
       "android",
-      "android-api-9"
+      "android-api-9",
+      "android-api-11"
     ],
     "limit_tb_platforms": [
       "linux64"
@@ -2460,7 +2481,8 @@
     },
     "limit_mobile_platforms": [
       "android",
-      "android-api-9"
+      "android-api-9",
+      "android-api-11"
     ],
     "limit_tb_platforms": [
       "linux64"
