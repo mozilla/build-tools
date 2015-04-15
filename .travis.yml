@@ -11,7 +11,7 @@ env:
   matrix:
     - TOX_ENV=py27-hg2.6
     - TOX_ENV=py26-hg2.6
-    - TOX_ENV=py27-hg3.1
+    - TOX_ENV=py27-hg3.2
 
 cache:
   directories:
