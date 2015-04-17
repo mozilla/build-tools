@@ -47,6 +47,7 @@ sub GetReleaseBlock {
     my $localeInfo = $args{'localeInfo'};
     my $platforms = $args{'platforms'};
     my $schema = $args{'schema'};
+    my @marChannelIds = @{$args{"marChannelIds"}};
 
     my $releaseBlock = {};
     $releaseBlock->{'schema'} = $schema;
@@ -81,6 +82,9 @@ sub GetReleaseBlock {
       '/pub/mozilla.org/' . $product . '/nightly/' . $version . '-candidates/' .
       $buildStr . '/%platform%/%locale%/' . $product . '-' . $version .
       '.checksums';
+    if (@marChannelIds) {
+        $releaseBlock->{"mar-channel-ids"} = join(",", @marChannelIds);
+    }
 
     $releaseBlock->{'exceptions'} = {};
 

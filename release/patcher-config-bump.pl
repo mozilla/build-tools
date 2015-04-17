@@ -31,7 +31,7 @@ sub ProcessArgs {
     GetOptions(
         \%config,
         "product|p=s", "brand|r=s", "version|v=s", "old-version|o=s",
-        "partial-version=s@", "prompt-wait-time=s",
+        "partial-version=s@", "prompt-wait-time=s", "mar-channel-id=s@",
         "app-version|a=s", "build-number|b=s", "patcher-config|c=s",
         "staging-server|t=s", "ftp-server|f=s", "bouncer-server|d=s",
         "use-beta-channel|u", "shipped-locales|l=s", "releasenotes-url|n=s",
@@ -144,6 +144,10 @@ sub BumpPatcherConfig {
     my @partialVersions = ();
     if (defined($config{'partial-version'})){
         @partialVersions = @{$config{'partial-version'}};
+    }
+    my @marChannelIds = ();
+    if (defined($config{'mar-channel-id'})){
+        @marChannelIds = @{$config{'mar-channel-id'}};
     }
     my $appVersion = $config{'app-version'};
     my $build = $config{'build-number'};
@@ -411,6 +415,7 @@ sub BumpPatcherConfig {
         localeInfo => $localeInfo,
         platforms => $platforms,
         schema => $schema,
+        marChannelIds => \@marChannelIds,
     );
 
     $patcherConfigObj->save_file($patcherConfig);
