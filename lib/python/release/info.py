@@ -56,7 +56,10 @@ def findOldBuildIDs(product, version, buildNumber, platforms,
 
 
 def getReleaseConfigName(product, branch, version=None, staging=False):
-    cfg = 'release-%s-%s.py' % (product, branch)
+    if product == "firefox" and branch == "mozilla-release" and "b" in version:
+        cfg = "release-firefox-mozilla-beta.py"
+    else:
+        cfg = 'release-%s-%s.py' % (product, branch)
     if staging:
         cfg = 'staging_%s' % cfg
     return cfg
