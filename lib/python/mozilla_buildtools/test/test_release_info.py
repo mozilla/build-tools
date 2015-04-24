@@ -24,11 +24,11 @@ class TestGetBaseTag(unittest.TestCase):
 
 class TestGetReleaseConfigName(unittest.TestCase):
     def testFennec(self):
-        got = getReleaseConfigName('fennec', 'mozilla-beta')
+        got = getReleaseConfigName('fennec', 'mozilla-beta', "35.0b1")
         self.assertEquals('release-fennec-mozilla-beta.py', got)
 
     def testFirefox(self):
-        got = getReleaseConfigName('firefox', 'mozilla-release')
+        got = getReleaseConfigName('firefox', 'mozilla-release', "36.0")
         self.assertEquals('release-firefox-mozilla-release.py', got)
 
     def testThunderbird(self):
