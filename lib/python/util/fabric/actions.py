@@ -216,17 +216,17 @@ def action_fix_makefile_symlink(master):
     print OK, "updated Makefile symlink in %(hostname)s:%(basedir)s" % master
 
 
-def action_add_esr31_symlinks(master):
+def action_add_esr38_symlinks(master):
     with show('running'):
-        run('ln -s %(bbconfigs_dir)s/mozilla/release-firefox-mozilla-esr31.py '
+        run('ln -s %(bbconfigs_dir)s/mozilla/release-firefox-mozilla-esr38.py '
             '%(master_dir)s/' % master)
-        run('ln -s %(bbconfigs_dir)s/mozilla/l10n-changesets_mozilla-esr31 '
+        run('ln -s %(bbconfigs_dir)s/mozilla/l10n-changesets_mozilla-esr38 '
             '%(master_dir)s/' % master)
-        run('ln -s %(bbconfigs_dir)s/mozilla/release-thunderbird-comm-esr31.py '
+        run('ln -s %(bbconfigs_dir)s/mozilla/release-thunderbird-comm-esr38.py '
             '%(master_dir)s/' % master)
-        run('ln -s %(bbconfigs_dir)s/mozilla/l10n-changesets_thunderbird-esr31 '
+        run('ln -s %(bbconfigs_dir)s/mozilla/l10n-changesets_thunderbird-esr38 '
             '%(master_dir)s/' % master)
-    print OK, "Added esr31 symlinks in %(hostname)s:%(basedir)s" % master
+    print OK, "Added esr38 symlinks in %(hostname)s:%(basedir)s" % master
 
 
 def action_rm_34_1_symlinks(master):
@@ -253,7 +253,7 @@ def action_add_config_seta_symlinks(master):
 def action_add_config_seta_mobile_symlinks(master):
     with show('running'):
         run('ln -s %(bbconfigs_dir)s/mozilla-tests/config_seta_mobile.py '
-            '%(master_dir)s/' % master)        
+            '%(master_dir)s/' % master)
 
 
 def action_update_exception_timestamp(master):
