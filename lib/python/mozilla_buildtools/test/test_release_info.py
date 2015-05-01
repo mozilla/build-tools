@@ -23,18 +23,34 @@ class TestGetBaseTag(unittest.TestCase):
 
 
 class TestGetReleaseConfigName(unittest.TestCase):
-    def testFennec(self):
-        got = getReleaseConfigName('fennec', 'mozilla-beta', "35.0b1")
+    def testFennecBeta(self):
+        got = getReleaseConfigName('fennec', 'mozilla-beta', '35.0b1')
         self.assertEquals('release-fennec-mozilla-beta.py', got)
 
-    def testFirefox(self):
-        got = getReleaseConfigName('firefox', 'mozilla-release', "36.0")
+    def testFennecBetaHackery(self):
+        got = getReleaseConfigName('fennec', 'mozilla-release', '35.0b1')
+        self.assertEquals('release-fennec-mozilla-beta.py', got)
+
+    def testFennecRelease(self):
+        got = getReleaseConfigName('fennec', 'mozilla-release', '35.0')
+        self.assertEquals('release-fennec-mozilla-release.py', got)
+
+    def testFirefoxBeta(self):
+        got = getReleaseConfigName('firefox', 'mozilla-beta', '38.0b7')
+        self.assertEquals('release-firefox-mozilla-beta.py', got)
+
+    def testFirefoxBetaHackery(self):
+        got = getReleaseConfigName('firefox', 'mozilla-release', '38.0b7')
+        self.assertEquals('release-firefox-mozilla-beta.py', got)
+
+    def testFirefoxRelase(self):
+        got = getReleaseConfigName('firefox', 'mozilla-release', '38.0')
         self.assertEquals('release-firefox-mozilla-release.py', got)
 
     def testThunderbird(self):
-        got = getReleaseConfigName('thunderbird', 'comm-esr38')
+        got = getReleaseConfigName('thunderbird', 'comm-esr38', '38.0esr')
         self.assertEquals('release-thunderbird-comm-esr38.py', got)
 
     def testStaging(self):
-        got = getReleaseConfigName('fennec', 'mozilla-release', staging=True)
+        got = getReleaseConfigName('fennec', 'mozilla-release', '38.0', staging=True)
         self.assertEquals('staging_release-fennec-mozilla-release.py', got)
