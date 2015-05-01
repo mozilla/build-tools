@@ -55,6 +55,9 @@ class TestMakeAbsolute(unittest.TestCase):
     def testAbsolutePath(self):
         self.assertEquals(_make_absolute("/foo/bar"), "/foo/bar")
 
+    def testStripTrailingSlash(self):
+        self.assertEquals(_make_absolute("/foo/bar/"), "/foo/bar")
+
     def testRelativePath(self):
         self.assertEquals(
             _make_absolute("foo/bar"), os.path.abspath("foo/bar"))

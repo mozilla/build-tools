@@ -49,7 +49,7 @@ def _make_absolute(repo):
         repo = "file://%s" % os.path.abspath(path)
     elif "://" not in repo:
         repo = os.path.abspath(repo)
-    return repo
+    return repo.rstrip('/')
 
 
 def make_hg_url(hgHost, repoPath, protocol='https', revision=None,
@@ -487,7 +487,7 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
         hgpath = path(dest, "default")
 
         # Make sure that our default path is correct
-        if hgpath != _make_absolute(repo):
+        if not hgpath or _make_absolute(hgpath) != _make_absolute(repo):
             log.info("hg path isn't correct (%s should be %s); clobbering",
                      hgpath, _make_absolute(repo))
             remove_path(dest)
