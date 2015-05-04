@@ -14,6 +14,8 @@ from util.retry import retry
 OK = green('[OK]')
 FAIL = red('[FAIL]')
 
+RECONFIG_LOCKFILE = 'reconfig.lock'
+
 BUILDBOT_WRANGLER = os.path.normpath(os.path.join(
     os.path.dirname(__file__),
     "../../../../buildfarm/maintenance/buildbot-wrangler.py"))
@@ -126,12 +128,21 @@ def show_revisions_header():
 def action_reconfig(master):
     """Performs a reconfig (only - no update or checkconfig)"""
     print "starting reconfig of %(hostname)s:%(basedir)s" % master
+    with hide('stdout', 'stderr', 'running'):
+        lockfile_check = run('if [ -e %s ]; then echo "lockfile found"; fi' % RECONFIG_LOCKFILE, workdir=master['basedir'])
+        if lockfile_check != "":
+            print FAIL, "lockfile (%s) found in %s:%s" % (RECONFIG_LOCKFILE,
+                                                          master['hostname'],
+                                                          master['basedir'])
+            return
     with show('running'):
+        action_create_reconfig_lockfile(master, notify=False)
         put(BUILDBOT_WRANGLER,
             '%s/buildbot-wrangler.py' % master['basedir'])
         run('rm -f *.pyc', workdir=master['basedir'])
         run('python buildbot-wrangler.py reconfig %s' %
             master['master_dir'], workdir=master['basedir'])
+        action_remove_reconfig_lockfile(master, notify=False)
     print OK, "finished reconfig of %(hostname)s:%(basedir)s" % master
 
 
@@ -203,10 +214,12 @@ def action_update_buildbot(master):
             master['buildbot_python'], workdir=buildbot_dir)
     print OK, "updated buildbot in %(hostname)s:%(basedir)s" % master
 
+
 def action_uptime(master):
     with hide('stdout', 'stderr', 'running'):
         uptime = run('uptime')
         print "%-25s %12s" % (master['name'], uptime)
+
 
 def action_fix_makefile_symlink(master):
     with show('running'):
@@ -289,7 +302,33 @@ def action_retry_dead_queue(host):
                 else:
                     run("mv %s /dev/shm/queue/%s/new" % (f, q))
 
+
 def action_master_health(master):
     with show('running'):
         run('ls -l %(master_dir)s/*.pid' % master)
         run('free -m')
+
+
+def action_create_reconfig_lockfile(master, notify=True):
+    with hide('stdout', 'stderr', 'running'):
+        run('touch %s' % RECONFIG_LOCKFILE, workdir=master['basedir'])
+    if notify:
+        print OK, "Created %s in %s:%s" % (RECONFIG_LOCKFILE,
+                                           master['hostname'],
+                                           master['basedir'])
+
+
+def action_remove_reconfig_lockfile(master, notify=True):
+    with hide('stdout', 'stderr', 'running'):
+        run('rm -f %s' % RECONFIG_LOCKFILE, workdir=master['basedir'])
+    if notify:
+        print OK, "Removed %s from %s:%s" % (RECONFIG_LOCKFILE,
+                                             master['hostname'],
+                                             master['basedir'])
+
+
+def action_restart_pulse_publisher(master):
+    with show('running'):
+        run('/etc/init.d/pulse_publisher restart')
+    print OK, 'Pulse publisher restarted on %s:%s' % (master['hostname'], master['basedir'])
+
