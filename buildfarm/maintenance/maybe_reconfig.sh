@@ -118,7 +118,7 @@ if reconfig_needed; then
     make checkconfig >> ${LOGFILE} 2>&1
     RC=$?
     if [ "${RC}" == "0" ]; then
-        python ./tools/buildfarm/maintence/buildbot-wrangler.py reconfig ${MASTER_DIR}/master >> ${LOGFILE}
+        python ./tools/buildfarm/maintenance/buildbot-wrangler.py reconfig ${MASTER_DIR}/master >> ${LOGFILE}
         RC=$?
     else
         log_error "Checkconfig failed."
