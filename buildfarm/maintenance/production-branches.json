@@ -48,6 +48,13 @@
     ],
     "repo_type": "hg"
   },
+  "comm-esr38": {
+    "repo": "https://hg.mozilla.org/releases/comm-esr38",
+    "graph_branches": [
+      "Thunderbird-Esr38"
+    ],
+    "repo_type": "hg"
+  },
   "mozilla-b2g30_v1_4": {
     "repo": "https://hg.mozilla.org/releases/mozilla-b2g30_v1_4",
     "graph_branches": [
