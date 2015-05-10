@@ -60,6 +60,7 @@ function getTryLoads(callback) {
       totalBuildLoad["linux64-sh-haz"] = totalBuildLoad["linux"];
       totalBuildLoad["linux64-mulet"] = totalBuildLoad["linux"];
       totalBuildLoad["macosx64"] = load_try_build["macosx64"];
+      totalBuildLoad["macosx64-st-an"] = load_try_build["macosx64"];
       totalBuildLoad["win32"] = load_try_build["win64"];
       totalBuildLoad["win64"] = totalBuildLoad["win32"];
       totalBuildLoad["android-api-9"] = totalBuildLoad["linux"];
@@ -87,6 +88,7 @@ function getTryLoads(callback) {
       // linux64-st-an: N/A
       totalTestLoad["macosx64"] = Math.max(load_test["mac10.6"], load_test["mac10.8"],
                                     load_test["mac10.10"]);
+      // macosx64-st-an: N/A
       totalTestLoad["macosx64-mulet"] = totalTestLoad["macosx64"];
       totalTestLoad["win32"] = Math.max(load_test["winxp-ix"], load_test["win7-ix"]);
       totalTestLoad["win32-mulet"] = totalTestLoad["win32"];
