@@ -17,7 +17,8 @@ log = logging.getLogger(__name__)
 def is_csrf_token_expired(token):
     from datetime import datetime
     expiry = token.split('##')[0]
-    if expiry <= datetime.now().strftime('%Y%m%d%H%M%S'):
+    # this comparison relies on ship-it running on UTC-based systems
+    if expiry <= datetime.utcnow().strftime('%Y%m%d%H%M%S'):
         return True
     return False
 
