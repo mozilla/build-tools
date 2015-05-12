@@ -276,14 +276,9 @@ class NightlySubmitterBase(object):
 
         data.update(self._get_update_data(productName, branch, **updateKwargs))
 
-        if build_target == 'flame-kk':
-            # Bug 1055305 - a hack so that we can have JB and KK OTA for flame.
-            # They both query with buildTarget of flame, but differ in OS Version,
-            # so we need separate release blobs and rule to do the right thing
-            build_type = 'kitkat-%s' % self.build_type
-        elif platform == 'android-api-9':
+        if platform == 'android-api-9':
             # Bug 1080749 - a hack to support api-9 and api-10+ split builds.
-            # Like 1055305 above, this is a hack to support two builds with same build target that
+            # Like 1055305, this is a hack to support two builds with same build target that
             # require differed't release blobs and rules
             build_type = 'api-9-%s' % self.build_type
         else:
