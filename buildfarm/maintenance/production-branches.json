@@ -55,13 +55,6 @@
     ],
     "repo_type": "hg"
   },
-  "mozilla-b2g30_v1_4": {
-    "repo": "https://hg.mozilla.org/releases/mozilla-b2g30_v1_4",
-    "graph_branches": [
-      "Mozilla-B2g30-v1.4"
-    ],
-    "repo_type": "hg"
-  },
   "mozilla-b2g32_v2_0": {
     "repo": "https://hg.mozilla.org/releases/mozilla-b2g32_v2_0",
     "graph_branches": [
