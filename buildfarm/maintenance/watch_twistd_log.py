@@ -44,12 +44,15 @@ def unauthorized_logins(hostname, excs, name):
         if e.find("Failure: twisted.cred.error.UnauthorizedLogin:") >= 0 and m and m.groups:
             if unauthorized_hosts.has_key(m.group(2)):
                 unauthorized_hosts[m.group(2)]['count'] += 1;
-                unauthorized_hosts[m.group(2)]['last'] = str(m.group(1))
+                if str(m.group(1)) < unauthorized_hosts[m.group(2)]['first']:
+                    unauthorized_hosts[m.group(2)]['first'] = str(m.group(1))
+                if str(m.group(1)) > unauthorized_hosts[m.group(2)]['most_recent']:
+                    unauthorized_hosts[m.group(2)]['most_recent'] = str(m.group(1))
             else:
                 unauthorized_hosts[m.group(2)] = {}
                 unauthorized_hosts[m.group(2)]['count'] = 1;
                 unauthorized_hosts[m.group(2)]['first'] = str(m.group(1))
-                unauthorized_hosts[m.group(2)]['last'] = str(m.group(1))
+                unauthorized_hosts[m.group(2)]['most_recent'] = str(m.group(1))
                 try:
                     unauthorized_hosts[m.group(2)]['hostname'] = socket.gethostbyaddr(m.group(2))[0]
                 except socket.herror:
@@ -61,15 +64,13 @@ def unauthorized_logins(hostname, excs, name):
 
     msg = ""
     for ip in unauthorized_hosts:
-        msg = "% 10d - %s (%s) - %s\n" % (unauthorized_hosts[ip]['count'],
-                                          unauthorized_hosts[ip]['hostname'],
-                                          ip,
-                                          unauthorized_hosts[ip]['last'])
+        msg += "Count: %d | First instance: %s | Most recent instance: %s | Twistd exception: twisted.cred.error.UnauthorizedLogin - %s %s\n" % (unauthorized_hosts[ip]['count'],
+                                                                                                                                                 unauthorized_hosts[ip]['first'],
+                                                                                                                                                 unauthorized_hosts[ip]['most_recent'],
+                                                                                                                                                 unauthorized_hosts[ip]['hostname'],
+                                                                                                                                                 ip)
     if msg != "":
-        prepend =  "The following slaves tried to connect unsuccessfully to %s %s:\n" % (hostname, name)
-        prepend += "# attempts - hostname (ip) - last seen\n"
-        msg = prepend + msg
-        msg += "\nExample:\n\n"
+        msg += "Example:\n"
         msg += example
 
     return msg, remaining_excs
@@ -86,7 +87,6 @@ def format_exceptions(hostname, excs, name):
             repeat_msg, excs = f(hostname, excs, name)
             if repeat_msg != "":
                 msg += repeat_msg
-                msg += "\n" + "-" * 80 + "\n"
 
     if excs:
         matched_excs = {}
@@ -109,29 +109,20 @@ def format_exceptions(hostname, excs, name):
                 matched_excs[key]['exception'] = lines[-2].strip()
                 matched_excs[key]['first'] = parsed_ts
                 matched_excs[key]['most_recent'] = parsed_ts
-        if msg == "":
-            msg = "The following exceptions"
-        else:
-            msg += "The following other exceptions"
-        msg += " (total %i) were detected on %s %s:\n" % (
-            len(excs), hostname, name)
         for exc_key in sorted(matched_excs, key=lambda x: (matched_excs[x]['count'], x), reverse=True):
             msg += "\n" + "-" * 80 + "\n"
-            msg += "Count: %d, " % matched_excs[exc_key]['count']
-            msg += "Exception: %s\n" % matched_excs[exc_key]['exception']
-            msg += "First instance: %s, Most recent instance: %s\n" % (matched_excs[exc_key]['first'],
-                                                                       matched_excs[exc_key]['most_recent'])
+            msg += "Count: %d | First instance: %s | Most recent instance: %s | Twistd exception: %s\n" % (matched_excs[exc_key]['count'],
+                                                                                                           matched_excs[exc_key]['first'],
+                                                                                                           matched_excs[exc_key]['most_recent'],
+                                                                                                           matched_excs[exc_key]['exception'])
             msg += "Example:\n"
             msg += matched_excs[exc_key]['example']
     return msg
 
-def send_msg(fromaddr, emails, hostname, excs, name):
+def send_msg(fromaddr, emails, hostname, name, msg):
     """Send an email to each address in `emails`, from `fromaddr`
 
     The message will contain the hostname and list of exceptions `excs`"""
-
-    msg = format_exceptions(hostname, excs, name)
-
     s = SMTP()
     s.connect()
 
@@ -269,12 +260,13 @@ if __name__ == '__main__':
     exceptions.extend(s.scan_dirs(args))
 
     if exceptions:
+        hostname = os.uname()[1]
+        msg = format_exceptions(hostname, exceptions, options.name)
         if options.emails:
-            hostname = os.uname()[1]
             send_msg(options.fromaddr, options.emails,
-                     hostname, exceptions, options.name)
+                     hostname, options.name, msg)
         else:
-            print "\n".join(exceptions)
+            print msg
 
     if options.timefile:
         open(options.timefile, "w").write(str(s.lasttime))
