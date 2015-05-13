@@ -24,7 +24,7 @@ before_script:
   - cp lib/python/mozilla_buildtools/test/hgrc ~/.hgrc
 
 install:
-  - pip install tox
+  - pip install tox==1.9.2
 
 script:
   - tox -e $TOX_ENV
