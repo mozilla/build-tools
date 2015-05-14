@@ -130,6 +130,13 @@ def main():
         else:
             formats.append(fmt)
 
+    # bug 1164456
+    # GPG signing must happen last because it will be invalid if done prior to
+    # any format that modifies the file in-place.
+    if "gpg" in formats:
+        formats.remove("gpg")
+        formats.append("gpg")
+
     if options.output_file and (len(args) > 1 or os.path.isdir(args[0])):
         parser.error(
             "-o / --output-file can only be used when signing a single file")
