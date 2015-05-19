@@ -235,9 +235,6 @@ class PatcherConfig(dict):
             if version[0] not in self['release']:
                 raise PatcherConfigError(
                     "No release found for version '%s'" % version[0])
-            if version[1] not in self['release']:
-                raise PatcherConfigError(
-                    "No release found for version '%s'" % version[1])
 
     def parsePastUpdate(self, pastUpdate):
         # A past-update node is a single block of text in the format:
