@@ -14,8 +14,7 @@ function initLoad() {
     "ubuntu32-vm": 0,
     "ubuntu64-hw": 0,
     "ubuntu64-vm": 0,
-    "mac10.6": 0,
-    "mac10.8": 0,
+    "mac10.6": 0,    
     "mac10.10": 0,
     "winxp-ix": 0,
     "win7-ix": 0,
@@ -86,8 +85,7 @@ function getTryLoads(callback) {
       totalTestLoad["linux64-mulet"] = totalTestLoad["linux64"];
       totalTestLoad["linux64-asan"] = totalTestLoad["linux64"];
       // linux64-st-an: N/A
-      totalTestLoad["macosx64"] = Math.max(load_test["mac10.6"], load_test["mac10.8"],
-                                    load_test["mac10.10"]);
+      totalTestLoad["macosx64"] = Math.max(load_test["mac10.6"], load_test["mac10.10"]);
       // macosx64-st-an: N/A
       totalTestLoad["macosx64-mulet"] = totalTestLoad["macosx64"];
       totalTestLoad["win32"] = Math.max(load_test["winxp-ix"], load_test["win7-ix"]);
