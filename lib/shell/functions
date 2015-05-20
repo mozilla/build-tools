@@ -42,6 +42,8 @@ function log_info () {
 }
 
 function log_error () {
-    log_msg "ERROR" "$1"
+    error_msg="$1"
+    echo "ERROR - ${error_msg}" >&2
+    log_msg "ERROR" "${error_msg}"
 }
 

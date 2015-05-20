@@ -25,11 +25,21 @@ function reconfig_needed () {
         fi
         # Find the current production rev
         original_production_rev=$(${HG} -R "${d}" heads ${tag} -T '{node}\n')
-        ${HG} -R "${d}" pull > /dev/null
+        timeout 5m ${HG} -R "${d}" pull > /dev/null
+        if [ "$?" != "0" ]; then
+            error_msg="hg pull failed for ${d}"
+            log_error "${error_msg}"
+            exit 6
+        fi
         current_production_rev=$(${HG} -R "${d}" heads ${tag} -T '{node}\n')
         if [ "${original_production_rev}" != "${current_production_rev}" ]; then
             log_info "${d}: ${tag} tag has moved - old rev: ${original_production_rev}; new rev: ${current_production_rev}"
-            ${HG} -R "${d}" update -r ${tag} >> ${LOGFILE}
+            timeout 5m ${HG} -R "${d}" update -r ${tag} >> ${LOGFILE}
+            if [ "$?" != "0" ]; then
+                error_msg="hg update failed for ${d} with tag ${tag}"
+                log_error "${error_msg}"
+                exit 7
+            fi
             # Changes to the tools repo don't trigger a reconfig.
             if [ "${d}" != "tools" ]; then
                 is_reconfig_needed=0
@@ -87,7 +97,6 @@ if [ "${OUTPUT}" != "" ]; then
             # If the lockfile is older than is acceptable, log the error, but also print
             # the error to STDOUT so cronmail will trigger.
             error_msg="Reconfig lockfile is older than ${LOCKFILE_MAX_AGE} minutes."
-            echo "ERROR: ${error_msg}" >&2
             log_error "${error_msg}"
         else
             # This is an acceptable state.
@@ -107,7 +116,7 @@ pushd ${MASTER_DIR} > /dev/null
 # Activate our venv
 if [ ! -e bin/activate ]; then
     log_error "activate script not found: are you sure this is a buildbot venv?"
-    exit 2
+    exit 4
 fi
 source bin/activate
 
@@ -127,6 +136,7 @@ if reconfig_needed; then
         log_info "Reconfig completed successfuly. - ${START_TIME}"
     else
         log_error "Reconfig failed. - ${START_TIME}"
+        exit 5
     fi
 else
     log_info "No reconfig required."
