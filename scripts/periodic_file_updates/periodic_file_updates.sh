@@ -73,6 +73,7 @@ BASEDIR=`pwd`
 VERSION=''
 MCVERSION=''
 USE_MC=false
+FLATTENED=true
 
 DO_HSTS=false
 HSTS_PRELOAD_SCRIPT="getHSTSPreloadList.js"
@@ -160,14 +161,31 @@ function download_shared_artifacts {
     cp tests/bin/xpcshell "${PRODUCT}"
 }
 
+# In bug 1164714, the public/src subdirectories were flattened away under security/manager.
+# We need to check whether the HGREPO were processing has had that change uplifted yet so
+# that we can find the files we need to update.
+function is_flattened {
+    # This URL will only be present in repos that have *not* been flattened.
+    TEST_URL="${HGREPO}/raw-file/default/security/manager/boot/src/"
+    HTTP_STATUS=`${WGET} --spider -S ${TEST_URL} 2>&1 | grep "HTTP/" | awk '{print $2}'`
+    if [ "$HTTP_STATUS" == "200" ]; then
+        export FLATTENED=false
+    fi
+}
+
 # Downloads the current in-tree HSTS (HTTP Strict Transport Security) files.
 # Runs a simple xpcshell script to generate up-to-date HSTS information.
 # Compares the new HSTS output with the old to determine whether we need to update.
 function compare_hsts_files {
     cd "${BASEDIR}"
     HSTS_PRELOAD_SCRIPT_HG="${HGREPO}/raw-file/default/security/manager/tools/${HSTS_PRELOAD_SCRIPT}"
-    HSTS_PRELOAD_ERRORS_HG="${HGREPO}/raw-file/default/security/manager/boot/src/${HSTS_PRELOAD_ERRORS}"
-    HSTS_PRELOAD_INC_HG="${HGREPO}/raw-file/default/security/manager/boot/src/${HSTS_PRELOAD_INC}"
+    if [ "${FLATTENED}" == "true" ]; then
+        HSTS_PRELOAD_ERRORS_HG="${HGREPO}/raw-file/default/security/manager/ssl/${HSTS_PRELOAD_ERRORS}"
+        HSTS_PRELOAD_INC_HG="${HGREPO}/raw-file/default/security/manager/ssl/${HSTS_PRELOAD_INC}"
+    else
+        HSTS_PRELOAD_ERRORS_HG="${HGREPO}/raw-file/default/security/manager/boot/src/${HSTS_PRELOAD_ERRORS}"
+        HSTS_PRELOAD_INC_HG="${HGREPO}/raw-file/default/security/manager/boot/src/${HSTS_PRELOAD_INC}"
+    fi
 
     # Download everything we need: browser, tests, updater script, existing preload list and errors.
     echo "INFO: Downloading all the necessary pieces to update HSTS..."
@@ -235,8 +253,13 @@ function compare_hpkp_files {
     HPKP_PRELOAD_SCRIPT_HG="${HGREPO}/raw-file/default/security/manager/tools/${HPKP_PRELOAD_SCRIPT}"
     HPKP_PRELOAD_JSON_HG="${HGREPO}/raw-file/default/security/manager/tools/${HPKP_PRELOAD_JSON}"
     HPKP_DER_TEST_HG="${HGREPO}/raw-file/default/security/manager/ssl/tests/unit/tlsserver/${HPKP_DER_TEST}"
-    HPKP_PRELOAD_ERRORS_HG="${HGREPO}/raw-file/default/security/manager/boot/src/${HPKP_PRELOAD_ERRORS}"
-    HPKP_PRELOAD_OUTPUT_HG="${HGREPO}/raw-file/default/security/manager/boot/src/${HPKP_PRELOAD_OUTPUT}"
+    if [ "${FLATTENED}" == "true" ]; then
+        HPKP_PRELOAD_ERRORS_HG="${HGREPO}/raw-file/default/security/manager/ssl/${HPKP_PRELOAD_ERRORS}"
+        HPKP_PRELOAD_OUTPUT_HG="${HGREPO}/raw-file/default/security/manager/ssl/${HPKP_PRELOAD_OUTPUT}"
+    else
+        HPKP_PRELOAD_ERRORS_HG="${HGREPO}/raw-file/default/security/manager/boot/src/${HPKP_PRELOAD_ERRORS}"
+        HPKP_PRELOAD_OUTPUT_HG="${HGREPO}/raw-file/default/security/manager/boot/src/${HPKP_PRELOAD_OUTPUT}"
+    fi
 
     # Download everything we need: browser, tests, updater script, existing preload list and errors.
     echo "INFO: Downloading all the necessary pieces to update HPKP..."
@@ -395,8 +418,13 @@ function clone_repo {
 # Copies new HSTS files in place, and commits them.
 function commit_hsts_files {
     cd "${BASEDIR}"
-    cp -f ${PRODUCT}/${HSTS_PRELOAD_ERRORS} ${REPODIR}/security/manager/boot/src/
-    cp -f ${PRODUCT}/${HSTS_PRELOAD_INC} ${REPODIR}/security/manager/boot/src/
+    if [ "${FLATTENED}" == "true" ]; then
+        cp -f ${PRODUCT}/${HSTS_PRELOAD_ERRORS} ${REPODIR}/security/manager/ssl/
+        cp -f ${PRODUCT}/${HSTS_PRELOAD_INC} ${REPODIR}/security/manager/ssl/
+    else
+        cp -f ${PRODUCT}/${HSTS_PRELOAD_ERRORS} ${REPODIR}/security/manager/boot/src/
+	cp -f ${PRODUCT}/${HSTS_PRELOAD_INC} ${REPODIR}/security/manager/boot/src/
+    fi
     COMMIT_MESSAGE="No bug, Automated HSTS preload list update from host ${LOCALHOST}"
     if [ ${DONTBUILD} == true ]; then
         COMMIT_MESSAGE="${COMMIT_MESSAGE} - (DONTBUILD)"
@@ -419,8 +447,13 @@ function commit_hsts_files {
 # Copies new HPKP files in place, and commits them.
 function commit_hpkp_files {
     cd "${BASEDIR}"
-    cp -f ${PRODUCT}/${HPKP_PRELOAD_ERRORS} ${REPODIR}/security/manager/boot/src/
-    cp -f ${PRODUCT}/${HPKP_PRELOAD_OUTPUT} ${REPODIR}/security/manager/boot/src/
+    if [ "${FLATTENED}" == "true" ]; then
+        cp -f ${PRODUCT}/${HPKP_PRELOAD_ERRORS} ${REPODIR}/security/manager/ssl/
+        cp -f ${PRODUCT}/${HPKP_PRELOAD_OUTPUT} ${REPODIR}/security/manager/ssl/
+    else
+        cp -f ${PRODUCT}/${HPKP_PRELOAD_ERRORS} ${REPODIR}/security/manager/boot/src/
+        cp -f ${PRODUCT}/${HPKP_PRELOAD_OUTPUT} ${REPODIR}/security/manager/boot/src/
+    fi
     COMMIT_MESSAGE="No bug, Automated HPKP preload list update from host ${LOCALHOST}"
     if [ ${DONTBUILD} == true ]; then
         COMMIT_MESSAGE="${COMMIT_MESSAGE} - (DONTBUILD)"
@@ -558,6 +591,7 @@ fi
 
 preflight_cleanup
 download_shared_artifacts
+is_flattened
 if [ "${DO_HSTS}" == "true" ]; then
     compare_hsts_files
     if [ $? != 0 ]; then
