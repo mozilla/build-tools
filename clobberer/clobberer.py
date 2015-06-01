@@ -75,7 +75,7 @@ def rmdir_recursive_windows(dir):
 
     for ffrec in FindFiles('\\\\?\\' + dir + '\\*.*'):
         file_attr = ffrec[0]
-        name = ffrec[8]
+        name = ffrec[8].decode(sys.getfilesystemencoding())
         if name == '.' or name == '..':
             continue
         full_name = os.path.join(dir, name)
