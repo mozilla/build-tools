@@ -1,4 +1,5 @@
-# Tools
+# Tools [![Build Status](https://travis-ci.org/mozilla/build-tools.png)](https://travis-ci.org/mozilla/build-tools)
+
 This repository contains tools used by Mozilla Release Engineering. This repository
 is checked out on Buildbot masters and Buildbot slaves.
 
