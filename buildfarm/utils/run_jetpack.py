@@ -153,6 +153,7 @@ if __name__ == '__main__':
         platform = PLATFORMS[options.platform]
         branch = options.branch
         ftp_url = options.ftp_url % locals()
+        print "FTP_URL: %s" % ftp_url
         pat = re.compile('firefox.*%s$' % options.ext)
         urls = urllib.urlopen("%s" % ftp_url)
         lines = urls.read().splitlines()
@@ -175,6 +176,7 @@ if __name__ == '__main__':
         if directory is None:
             print "Error, no directory found to check for executables"
             sys.exit(4)
+        print "Using directory %s" % directory
         urls = urllib.urlopen("%s/%s" % (ftp_url, directory))
         filenames = urls.read().splitlines()
         executables = []
@@ -182,6 +184,7 @@ if __name__ == '__main__':
             f = filename.split(" ")[-1]
             if pat.match(f):
                 executables.append(f)
+
         # Only grab the most recent build (in case there's more than one in the
         # dir)
         if len(executables) > 0:
@@ -189,8 +192,10 @@ if __name__ == '__main__':
         else:
             print "Error: missing Firefox executable"
             sys.exit(4)
+
         info_file = exe.replace(
             options.ext, "%s.txt" % options.ext.split('.')[0])
+
         # Now get the branch revision
         for filename in filenames:
             if info_file in filename:
@@ -205,6 +210,7 @@ if __name__ == '__main__':
                         print "TinderboxPrint: <a href=\"https://hg.mozilla.org/%(branch)s/rev/%(branch_rev)s\">%(branch)s-rev:%(branch_rev)s</a>\n" % locals()
                 f.close()
         print "EXE_URL: %s/%s/%s" % (ftp_url, directory, exe)
+
         # Download the build
         urllib.urlretrieve("%s/%s/%s" % (ftp_url, directory, exe), exe)
     else:
