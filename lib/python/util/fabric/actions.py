@@ -263,11 +263,9 @@ def action_add_config_seta_symlinks(master):
             '%(master_dir)s/' % master)
 
 
-def action_add_config_seta_mobile_symlinks(master):
+def action_remove_config_seta_mobile_symlinks(master):
     with show('running'):
-        run('ln -s %(bbconfigs_dir)s/mozilla-tests/config_seta_mobile.py '
-            '%(master_dir)s/' % master)
-
+        run('rm -f %(master_dir)s/config_seta_mobile.py' % master)
 
 def action_update_exception_timestamp(master):
     with show('running'):
