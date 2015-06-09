@@ -34,7 +34,7 @@ update_platform_map = {
                  'Darwin_x86-gcc3', 'Darwin_x86_64-gcc3'],
     'win32': ['WINNT_x86-msvc'],
     'win64': ['WINNT_x86_64-msvc'],
-    'flame-kk': ['flame-kk'],
+    'flame-kk': ['flame-kk','flame'],
 }
 
 # These FTP -> other mappings are provided so that things interpreting patcher
