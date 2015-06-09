@@ -263,10 +263,6 @@ def action_add_config_seta_symlinks(master):
             '%(master_dir)s/' % master)
 
 
-def action_remove_config_seta_mobile_symlinks(master):
-    with show('running'):
-        run('rm -f %(master_dir)s/config_seta_mobile.py' % master)
-
 def action_update_exception_timestamp(master):
     with show('running'):
         run('date +%s > /home/cltbld/.{0}-last-time.txt'.format(master['name']))
