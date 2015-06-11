@@ -134,7 +134,7 @@ def action_reconfig(master):
             print FAIL, "lockfile (%s) found in %s:%s" % (RECONFIG_LOCKFILE,
                                                           master['hostname'],
                                                           master['basedir'])
-            return
+            raise Exception("Couldn't get lockfile to reconfig")
     with show('running'):
         action_create_reconfig_lockfile(master, notify=False)
         put(BUILDBOT_WRANGLER,
