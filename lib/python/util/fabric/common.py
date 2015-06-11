@@ -2,6 +2,7 @@ from os import path
 import logging
 
 from util.commands import run_cmd, run_cmd_periodic_poll
+from util.retry import retry
 
 FABRIC_SCRIPT = path.abspath(path.join(
     path.dirname(__file__),
@@ -56,7 +57,7 @@ class FabricHelper(object):
         self.fabric_cmd(['checkconfig'], **cmdKwargs)
 
     def reconfig(self, **cmdKwargs):
-        self.fabric_cmd(['reconfig'], **cmdKwargs)
+        retry(self.fabric_cmd, args=(['reconfig'], ), **cmdKwargs)
 
     def update_and_reconfig(self, **cmdKwargs):
         self.update(**cmdKwargs)
