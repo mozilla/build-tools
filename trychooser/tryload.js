@@ -14,7 +14,7 @@ function initLoad() {
     "ubuntu32-vm": 0,
     "ubuntu64-hw": 0,
     "ubuntu64-vm": 0,
-    "mac10.6": 0,    
+    "mac10.6": 0,
     "mac10.10": 0,
     "winxp-ix": 0,
     "win7-ix": 0,
@@ -78,7 +78,10 @@ function getTryLoads(callback) {
       totalBuildLoad["linux64_graphene"] = totalBuildLoad["linux64"];
       totalBuildLoad["macosx64_graphene"] = totalBuildLoad["macosx64"];
       totalBuildLoad["win64_graphene"] = totalBuildLoad["win64"];
-        
+      totalBuildLoad["linux64_horizon"] = totalBuildLoad["linux64"];
+      totalBuildLoad["macosx64_horizon"] = totalBuildLoad["macosx64"];
+      totalBuildLoad["win64_horizon"] = totalBuildLoad["win64"];
+
       var totalTestLoad = {};
       totalTestLoad["linux"] = load_test["ubuntu32-hw"] + load_test["ubuntu32-vm"];
       totalTestLoad["linux64"] = load_test["ubuntu64-hw"] + load_test["ubuntu64-vm"];
