@@ -170,7 +170,8 @@ PERBUILD_CLASSES = (
     "buildbotcustom.scheduler.MultiScheduler",
     "buildbotcustom.scheduler.BuilderChooserScheduler",
     "buildbotcustom.scheduler.Scheduler-props",
-    "buildbotcustom.scheduler.BuilderChooserScheduler-props")
+    "buildbotcustom.scheduler.BuilderChooserScheduler-props",
+    "buildbotcustom.scheduler.EveryNthScheduler")
 
 _change_cache = {}
 
