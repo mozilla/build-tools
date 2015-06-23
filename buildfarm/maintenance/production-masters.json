@@ -1031,7 +1031,7 @@
     "buildbot_version": "0.8.2",
     "datacentre": "scl3",
     "db_name": "buildbot-master81.bb.releng.scl3.mozilla.com:/builds/buildbot/tests_scheduler/master",
-    "enabled": false,
+    "enabled": true,
     "environment": "production",
     "hostname": "buildbot-master81.bb.releng.scl3.mozilla.com",
     "master_dir": "/builds/buildbot/tests_scheduler/master",
