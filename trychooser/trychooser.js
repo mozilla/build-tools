@@ -71,6 +71,7 @@ $(document).ready(function() {
     // Selecting anything should update the try syntax
     $(':checkbox').change(setresult);
     $(':radio').change(setresult);
+    $(':text').change(setresult);
 
     // Initialize the try syntax
     setresult();
@@ -159,6 +160,20 @@ function setresult() {
 
     if ($('.profile').is(':checked')) {
         args.push('mozharness: --spsProfile');
+    }
+
+    if ($('.no-retry').is(':checked')) {
+        args.push('--no-retry');
+    }
+
+    var tag = $('.tags').val();
+    if (tag) {
+        args.push('--tag ' + tag);
+    }
+
+    var rebuilds = parseInt($('.rebuilds').val(), 10);
+    if (rebuilds) {
+        args.push('--rebuild ' + rebuilds);
     }
 
     value = args.join(' ');
