@@ -132,8 +132,7 @@ def get_url_response(url, options):
 
         except (urllib2.HTTPError, urllib2.URLError) as e:
             if num == options.max_retries - 1:
-                log.exception("Could not get a valid response from archiver endpoint. "
-                              "Status response code: {}".format(response.code))
+                log.exception("Could not get a valid response from archiver endpoint.")
                 exit(INFRA_CODE)
         num += 1
 
