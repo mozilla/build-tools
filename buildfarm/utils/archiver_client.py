@@ -29,9 +29,9 @@ INFRA_CODE = 3
 
 ARCHIVER_CONFIGS = {
     'mozharness': {
-        'url_format': "archiver/hgmo/{repo}/{rev}?&preferred_region={region}&suffix={suffix}",
+        'url_format': "archiver/hgmo/%(repo)s/%(rev)s?&preferred_region=%(region)s&suffix=%(suffix)s",
         # the root path from within the archive
-        'extract_root_dir': "{repo}-{rev}",
+        'extract_root_dir': "%(repo)s-%(rev)s",
         # the subdir path from within the root
         'default_extract_subdir': "testing/mozharness",
     }
@@ -96,11 +96,11 @@ def get_response_from_task(url, options):
             return urllib2.urlopen(s3_url)
         else:
             log.error("An s3 URL could not be determined even though archiver task completed. Check"
-                      "archiver logs for errors. Task status: {}".format(task_result['status']))
+                      "archiver logs for errors. Task status: %s" % task_result['status'])
             exit(FAILURE_CODE)
     else:
         log.error("Archiver's task could not be resolved. Check archiver logs for errors. Task "
-                  "status: {}".format(task_result['status']))
+                  "status: %s" % task_result['status'])
         exit(FAILURE_CODE)
 
 
@@ -118,7 +118,7 @@ def get_url_response(url, options):
     for _ in retrier(attempts=options.max_retries, sleeptime=options.sleeptime,
                      max_sleeptime=options.max_retries * options.sleeptime):
         try:
-            log.info("Getting archive location from {}".format(url))
+            log.info("Getting archive location from %s" % url)
             response = urllib2.urlopen(url)
 
             if response.code == 202:
@@ -128,7 +128,7 @@ def get_url_response(url, options):
             if response.code == 200:
                 break
             else:
-                log.debug("got a bad response. response code: {}".format(response.code))
+                log.debug("got a bad response. response code: %s" % response.code)
 
         except (urllib2.HTTPError, urllib2.URLError) as e:
             if num == options.max_retries - 1:
@@ -138,8 +138,8 @@ def get_url_response(url, options):
 
     if not response.code == 200:
         content = response.read()
-        log.error("could not determine a valid url response. return code: '{}'"
-                  "return content: '{}".format(response.code, content))
+        log.error("could not determine a valid url response. return code: '%s'"
+                  "return content: %s" % (response.code, content))
         exit(INFRA_CODE)
     return response
 
@@ -156,17 +156,22 @@ def download_and_extract_archive(response, extract_root, destination):
     """
     # make sure our extracted root path has a trailing slash
     extract_root = os.path.join(extract_root, '')
+    # now convert any back slashes to forward slashes as tarfile's member path strings use posix
+    # forward slashes even if run on a windows machine
+    extract_root = extract_root.replace("\\", "/")
 
     try:
-        with tarfile.open(fileobj=response, mode='r|gz') as tar:
-            for member in tar:
-                if not member.name.startswith(extract_root):
-                    continue
-                member.name = member.name.replace(extract_root, '')
-                tar.extract(member, destination)
+        tar = tarfile.open(fileobj=response, mode='r|gz')
+        for member in tar:
+            if not member.name.startswith(extract_root):
+                continue
+            member.name = member.name.replace(extract_root, '')
+            tar.extract(member, destination)
     except tarfile.TarError as e:
         log.exception("Could not download and extract archive. See Traceback:")
         exit(INFRA_CODE)
+    finally:
+        tar.close()
 
 
 def archiver(url, config_key, options):
@@ -177,15 +182,11 @@ def archiver(url, config_key, options):
     archive_cfg = ARCHIVER_CONFIGS[config_key]  # specifics to the archiver endpoint
 
     response = get_url_response(url, options)
-    for h in response.headers:
-        print 'header: {}, {}'.format(h, response.headers[h])
-    print response.code
 
     # get the root path within the archive that will be the starting path of extraction
     subdir = options.subdir or archive_cfg.get('default_extract_subdir')
-    extract_root = archive_cfg['extract_root_dir'].format(
-        repo=os.path.basename(options.repo), rev=options.rev
-    )
+    extract_root = archive_cfg['extract_root_dir'] % {'repo': os.path.basename(options.repo),
+                                                      'rev': options.rev}
     if subdir:
         extract_root = os.path.join(extract_root, subdir)
 
@@ -227,7 +228,7 @@ def options_args():
 
     if not len(args) == 1:
         parser.error("archiver_client.py requires exactly 1 argument: the archiver config. "
-                     "Valid configs: {}".format(str(ARCHIVER_CONFIGS.keys())))
+                     "Valid configs: %s" % str(ARCHIVER_CONFIGS.keys()))
 
     if options.debug:
         log.setLevel(logging.DEBUG)
@@ -236,7 +237,7 @@ def options_args():
     config = args[0]
     if not ARCHIVER_CONFIGS.get(config):
         log.error("Config argument is unknown. "
-                  "Given: '{}', Valid: {}".format(config, str(ARCHIVER_CONFIGS.keys())))
+                  "Given: '%s', Valid: %s" % (config, str(ARCHIVER_CONFIGS.keys())))
         exit(FAILURE_CODE)
 
     return options, args
@@ -247,12 +248,12 @@ def main():
     config = args[0]
 
     api_url = RELENGAPI_HOST['staging' if options.staging else 'production']
-    api_url += ARCHIVER_CONFIGS[config]['url_format'].format(
-        rev=options.rev, repo=options.repo, region=options.region, suffix='tar.gz'
-    )
+    api_url += ARCHIVER_CONFIGS[config]['url_format'] % {
+        'rev': options.rev, 'repo': options.repo, 'region': options.region, 'suffix': 'tar.gz'
+    }
     subdir = options.subdir or ARCHIVER_CONFIGS[config].get('default_extract_subdir')
     if subdir:
-        api_url += "&subdir={}".format(subdir)
+        api_url += "&subdir=%s" % (subdir,)
 
     archiver(url=api_url, config_key=config, options=options)
 
