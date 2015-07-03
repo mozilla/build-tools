@@ -128,7 +128,7 @@ def get_url_response(url, options):
             if response.code == 200:
                 break
             else:
-                log.debug("got a bad response. response code: %s" % response.code)
+                log.debug("got a bad response. response code: %s", response.code)
 
         except (urllib2.HTTPError, urllib2.URLError) as e:
             if num == options.max_retries - 1:
@@ -162,10 +162,15 @@ def download_and_extract_archive(response, extract_root, destination):
 
     try:
         tar = tarfile.open(fileobj=response, mode='r|gz')
+        log.debug("unpacking tar archive at: %s", extract_root)
+        log.debug("checking path contents within tar")
         for member in tar:
+            log.info("checking if internal member %s of archive matches the start of extract_root "
+                     "path.", member.name)
             if not member.name.startswith(extract_root):
                 continue
             member.name = member.name.replace(extract_root, '')
+            log.debug("extracting member %s to destination %s", member.name, destination)
             tar.extract(member, destination)
     except tarfile.TarError as e:
         log.exception("Could not download and extract archive. See Traceback:")
@@ -190,7 +195,7 @@ def archiver(url, config_key, options):
     if subdir:
         extract_root = os.path.join(extract_root, subdir)
 
-    destination = options.destination or os.path.join(os.getcwd(), config_key)
+    destination = os.path.abspath(options.destination or config_key)
 
     download_and_extract_archive(response, extract_root, destination)
 
@@ -210,7 +215,7 @@ def options_args():
                       help="The path within the root of the archive of where to start extracting "
                            "from. If not supplied, the entire archive will be extracted.")
     parser.add_option("--destination", dest="destination",
-                      help="The path location of where to extract the archive to.")
+                      help="The relative directory of where to extract the archive to.")
     parser.add_option("--staging", dest='staging', action='store_true', default=False,
                       help="Use staging relengapi")
     parser.add_option("--timeout", dest="timeout", type="float", default=30,
