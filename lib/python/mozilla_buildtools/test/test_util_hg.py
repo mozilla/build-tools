@@ -254,7 +254,8 @@ class TestHg(unittest.TestCase):
     def testPullUnrelated(self):
         # Create a new repo
         repo2 = os.path.join(self.tmpdir, 'repo2')
-        run_cmd(['%s/init_hgrepo.sh' % os.path.dirname(__file__), repo2])
+        run_cmd(['%s/init_hgrepo.sh' % os.path.dirname(__file__), repo2],
+                env={'extra': 'unrelated'})
 
         self.assertNotEqual(self.revisions, getRevisions(repo2))
 
@@ -268,7 +269,8 @@ class TestHg(unittest.TestCase):
     def testShareUnrelated(self):
         # Create a new repo
         repo2 = os.path.join(self.tmpdir, 'repo2')
-        run_cmd(['%s/init_hgrepo.sh' % os.path.dirname(__file__), repo2])
+        run_cmd(['%s/init_hgrepo.sh' % os.path.dirname(__file__), repo2],
+            env={'extra': 'share_unrelated'})
 
         self.assertNotEqual(self.revisions, getRevisions(repo2))
 
@@ -322,7 +324,8 @@ class TestHg(unittest.TestCase):
 
         # Reset the repo
         run_cmd(
-            ['%s/init_hgrepo.sh' % os.path.dirname(__file__), self.repodir])
+            ['%s/init_hgrepo.sh' % os.path.dirname(__file__), self.repodir],
+            env={'extra': 'extra_files_reset'})
 
         # Make the working repo have a new file. We need it to have an earlier
         # timestamp (yesterday) to trigger the odd behavior in hg
@@ -346,7 +349,8 @@ class TestHg(unittest.TestCase):
 
         # Reset the repo
         run_cmd(
-            ['%s/init_hgrepo.sh' % os.path.dirname(__file__), self.repodir])
+            ['%s/init_hgrepo.sh' % os.path.dirname(__file__), self.repodir],
+            env={'extra': 'share_reset'})
 
         self.assertNotEqual(old_revs, getRevisions(self.repodir))
 
@@ -524,7 +528,8 @@ class TestHg(unittest.TestCase):
 
         try:
             repo2 = os.path.join(self.tmpdir, 'repo2')
-            run_cmd(['%s/init_hgrepo.sh' % os.path.dirname(__file__), repo2])
+            run_cmd(['%s/init_hgrepo.sh' % os.path.dirname(__file__), repo2],
+                    env={'extra': 'change_repo'})
 
             self.assertNotEqual(self.revisions, getRevisions(repo2))
 
@@ -784,7 +789,7 @@ class TestHg(unittest.TestCase):
         # Create an unrelated repo
         repo2 = os.path.join(self.tmpdir, 'repo2')
         run_cmd(['%s/init_hgrepo.sh' % os.path.dirname(__file__),
-                 repo2])
+                 repo2], env={'extra': 'clone_unrelated'})
 
         self.assertNotEqual(self.revisions, getRevisions(repo2))
 
@@ -959,7 +964,8 @@ class TestHg(unittest.TestCase):
 
     def testPullWithUnrelatedMirror(self):
         mirror = os.path.join(self.tmpdir, 'repo2')
-        run_cmd(['%s/init_hgrepo.sh' % os.path.dirname(__file__), mirror])
+        run_cmd(['%s/init_hgrepo.sh' % os.path.dirname(__file__), mirror],
+                env={'extra': 'pull_unrealted'})
 
         # Now clone from the original
         clone(self.repodir, self.wc)
