@@ -107,6 +107,8 @@ class TestHg(unittest.TestCase):
             tmpdir = "/dev/shm"
         self.tmpdir = tempfile.mkdtemp(dir=tmpdir)
         self.repodir = os.path.join(self.tmpdir, 'repo')
+        # Have a stable hgrc to test with
+        os.environ['HGRCPATH'] = os.path.join(os.path.dirname(__file__), "hgrc")
         run_cmd(['%s/init_hgrepo.sh' % os.path.dirname(__file__),
                 self.repodir])
 
@@ -115,8 +117,6 @@ class TestHg(unittest.TestCase):
         self.pwd = os.getcwd()
         self.sleep_patcher = patch('time.sleep')
         self.sleep_patcher.start()
-        # Have a stable hgrc to test with
-        os.environ['HGRCPATH'] = os.path.join(os.path.dirname(__file__), "hgrc")
         hg.RETRY_ATTEMPTS = 2
 
     def tearDown(self):
