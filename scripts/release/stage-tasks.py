@@ -251,8 +251,8 @@ def update_bouncer_alias(tuxedoServerUrl, auth, version,
 
     # Wrap the real call to hide credentials from retry's logging
     def do_update_bouncer_alias():
-        requests.post(url, data=data, auth=auth, config={'danger_mode': True},
-                      verify=False)
+        r = requests.post(url, data=data, auth=auth, verify=False)
+        r.raise_for_status()
 
     retry(do_update_bouncer_alias)
 
