@@ -106,6 +106,8 @@ class TestHg(unittest.TestCase):
         if os.path.isdir("/dev/shm"):
             tmpdir = "/dev/shm"
         self.tmpdir = tempfile.mkdtemp(dir=tmpdir)
+        self.pwd = os.getcwd()
+        os.chdir(self.tmpdir)
         self.repodir = os.path.join(self.tmpdir, 'repo')
         # Have a stable hgrc to test with
         os.environ['HGRCPATH'] = os.path.join(os.path.dirname(__file__), "hgrc")
@@ -114,7 +116,6 @@ class TestHg(unittest.TestCase):
 
         self.revisions = getRevisions(self.repodir)
         self.wc = os.path.join(self.tmpdir, 'wc')
-        self.pwd = os.getcwd()
         self.sleep_patcher = patch('time.sleep')
         self.sleep_patcher.start()
         hg.RETRY_ATTEMPTS = 2
