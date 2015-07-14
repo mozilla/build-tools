@@ -578,10 +578,10 @@ if [ "${USE_MC}" == "true" ]; then
 fi
 
 BROWSER_ARCHIVE="${PRODUCT}-${VERSION}.en-US.${PLATFORM}.${PLATFORM_EXT}"
-TESTS_ARCHIVE="${PRODUCT}-${VERSION}.en-US.${PLATFORM}.tests.zip"
+TESTS_ARCHIVE="${PRODUCT}-${VERSION}.en-US.${PLATFORM}.common.tests.zip"
 if [ "${USE_MC}" == "true" ]; then
     BROWSER_ARCHIVE="${PRODUCT}-${MCVERSION}.en-US.${PLATFORM}.${PLATFORM_EXT}"
-    TESTS_ARCHIVE="${PRODUCT}-${MCVERSION}.en-US.${PLATFORM}.tests.zip"
+    TESTS_ARCHIVE="${PRODUCT}-${MCVERSION}.en-US.${PLATFORM}.common.tests.zip"
 fi
 
 # Try to find hgtool if it hasn't been set.
@@ -590,7 +590,9 @@ if [ ! -f "${HGTOOL}" ]; then
 fi
 
 preflight_cleanup
-download_shared_artifacts
+if [ "${DO_HSTS}" == "true" -o "${DO_HPKP}" == "true" ]; then
+    download_shared_artifacts
+fi
 is_flattened
 if [ "${DO_HSTS}" == "true" ]; then
     compare_hsts_files
@@ -616,7 +618,7 @@ if [ "${HSTS_UPDATED}" == "false" -a "${HPKP_UPDATED}" == "false" -a "${BLOCKLIS
     exit 0
 else
     if [ "${DRY_RUN}" == "true" ]; then
-        echo "INFO: Updates are available, bot updating hg in dry-run mode."
+        echo "INFO: Updates are available, not updating hg in dry-run mode."
         exit 2
     fi
 fi
