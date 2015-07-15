@@ -295,6 +295,7 @@
     "limit_fx_platforms": [
       "linux64",
       "linux64-asan",
+      "linux64-tsan",
       "linux64-cc"
     ],
     "limit_fx_slave_platforms": {
@@ -303,6 +304,9 @@
       ],
       "linux64-asan": [
         "ubuntu64-asan_vm"
+      ],
+      "linux64-tsan": [
+        "ubuntu64_vm"
       ],
       "linux64-cc": [
         "ubuntu64_vm"
@@ -364,6 +368,7 @@
     "limit_fx_platforms": [
       "linux64",
       "linux64-asan",
+      "linux64-tsan",
       "linux64-cc"
     ],
     "limit_fx_slave_platforms": {
@@ -372,6 +377,9 @@
       ],
       "linux64-asan": [
         "ubuntu64-asan_vm"
+      ],
+      "linux64-tsan": [
+        "ubuntu64_vm"
       ],
       "linux64-cc": [
         "ubuntu64_vm"
@@ -433,6 +441,7 @@
     "limit_fx_platforms": [
       "linux64",
       "linux64-asan",
+      "linux64-tsan",
       "linux64-cc"
     ],
     "limit_fx_slave_platforms": {
@@ -441,6 +450,9 @@
       ],
       "linux64-asan": [
         "ubuntu64-asan_vm"
+      ],
+      "linux64-tsan": [
+        "ubuntu64_vm"
       ],
       "linux64-cc": [
         "ubuntu64_vm"
@@ -502,6 +514,7 @@
     "limit_fx_platforms": [
       "linux64",
       "linux64-asan",
+      "linux64-tsan",
       "linux64-cc"
     ],
     "limit_fx_slave_platforms": {
@@ -510,6 +523,9 @@
       ],
       "linux64-asan": [
         "ubuntu64-asan_vm"
+      ],
+      "linux64-tsan": [
+        "ubuntu64_vm"
       ],
       "linux64-cc": [
         "ubuntu64_vm"
@@ -571,6 +587,7 @@
     "limit_fx_platforms": [
       "linux64",
       "linux64-asan",
+      "linux64-tsan",
       "linux64-cc"
     ],
     "limit_fx_slave_platforms": {
@@ -579,6 +596,9 @@
       ],
       "linux64-asan": [
         "ubuntu64-asan_vm"
+      ],
+      "linux64-tsan": [
+        "ubuntu64_vm"
       ],
       "linux64-cc": [
         "ubuntu64_vm"
@@ -640,6 +660,7 @@
     "limit_fx_platforms": [
       "linux64",
       "linux64-asan",
+      "linux64-tsan",
       "linux64-cc"
     ],
     "limit_fx_slave_platforms": {
@@ -648,6 +669,9 @@
       ],
       "linux64-asan": [
         "ubuntu64-asan_vm"
+      ],
+      "linux64-tsan": [
+        "ubuntu64_vm"
       ],
       "linux64-cc": [
         "ubuntu64_vm"
@@ -1811,6 +1835,7 @@
     "limit_fx_platforms": [
       "linux64",
       "linux64-asan",
+      "linux64-tsan",
       "linux64-cc"
     ],
     "limit_fx_slave_platforms": {
@@ -1819,6 +1844,9 @@
       ],
       "linux64-asan": [
         "ubuntu64-asan_vm"
+      ],
+      "linux64-tsan": [
+        "ubuntu64_vm"
       ],
       "linux64-cc": [
         "ubuntu64_vm"
@@ -1880,6 +1908,7 @@
     "limit_fx_platforms": [
       "linux64",
       "linux64-asan",
+      "linux64-tsan",
       "linux64-cc"
     ],
     "limit_fx_slave_platforms": {
@@ -1888,6 +1917,9 @@
       ],
       "linux64-asan": [
         "ubuntu64-asan_vm"
+      ],
+      "linux64-tsan": [
+        "ubuntu64_vm"
       ],
       "linux64-cc": [
         "ubuntu64_vm"
@@ -1949,6 +1981,7 @@
     "limit_fx_platforms": [
       "linux64",
       "linux64-asan",
+      "linux64-tsan",
       "linux64-cc"
     ],
     "limit_fx_slave_platforms": {
@@ -1957,6 +1990,9 @@
       ],
       "linux64-asan": [
         "ubuntu64-asan_vm"
+      ],
+      "linux64-tsan": [
+        "ubuntu64_vm"
       ],
       "linux64-cc": [
         "ubuntu64_vm"
@@ -2018,6 +2054,7 @@
     "limit_fx_platforms": [
       "linux64",
       "linux64-asan",
+      "linux64-tsan",
       "linux64-cc"
     ],
     "limit_fx_slave_platforms": {
@@ -2026,6 +2063,9 @@
       ],
       "linux64-asan": [
         "ubuntu64-asan_vm"
+      ],
+      "linux64-tsan": [
+        "ubuntu64_vm"
       ],
       "linux64-cc": [
         "ubuntu64_vm"
@@ -2087,6 +2127,7 @@
     "limit_fx_platforms": [
       "linux64",
       "linux64-asan",
+      "linux64-tsan",
       "linux64-cc"
     ],
     "limit_fx_slave_platforms": {
@@ -2095,6 +2136,9 @@
       ],
       "linux64-asan": [
         "ubuntu64-asan_vm"
+      ],
+      "linux64-tsan": [
+        "ubuntu64_vm"
       ],
       "linux64-cc": [
         "ubuntu64_vm"
@@ -2156,6 +2200,7 @@
     "limit_fx_platforms": [
       "linux64",
       "linux64-asan",
+      "linux64-tsan",
       "linux64-cc"
     ],
     "limit_fx_slave_platforms": {
@@ -2164,6 +2209,9 @@
       ],
       "linux64-asan": [
         "ubuntu64-asan_vm"
+      ],
+      "linux64-tsan": [
+        "ubuntu64_vm"
       ],
       "linux64-cc": [
         "ubuntu64_vm"
@@ -2259,6 +2307,7 @@
     "limit_fx_platforms": [
       "linux64",
       "linux64-asan",
+      "linux64-tsan",
       "linux64-cc"
     ],
     "limit_fx_slave_platforms": {
@@ -2267,6 +2316,9 @@
       ],
       "linux64-asan": [
         "ubuntu64-asan_vm"
+      ],
+      "linux64-tsan": [
+        "ubuntu64_vm"
       ],
       "linux64-cc": [
         "ubuntu64_vm"
@@ -2328,6 +2380,7 @@
     "limit_fx_platforms": [
       "linux64",
       "linux64-asan",
+      "linux64-tsan",
       "linux64-cc"
     ],
     "limit_fx_slave_platforms": {
@@ -2336,6 +2389,9 @@
       ],
       "linux64-asan": [
         "ubuntu64-asan_vm"
+      ],
+      "linux64-tsan": [
+        "ubuntu64_vm"
       ],
       "linux64-cc": [
         "ubuntu64_vm"
@@ -2397,6 +2453,7 @@
     "limit_fx_platforms": [
       "linux64",
       "linux64-asan",
+      "linux64-tsan",
       "linux64-cc"
     ],
     "limit_fx_slave_platforms": {
@@ -2405,6 +2462,9 @@
       ],
       "linux64-asan": [
         "ubuntu64-asan_vm"
+      ],
+      "linux64-tsan": [
+        "ubuntu64_vm"
       ],
       "linux64-cc": [
         "ubuntu64_vm"
@@ -2466,6 +2526,7 @@
     "limit_fx_platforms": [
       "linux64",
       "linux64-asan",
+      "linux64-tsan",
       "linux64-cc"
     ],
     "limit_fx_slave_platforms": {
@@ -2474,6 +2535,9 @@
       ],
       "linux64-asan": [
         "ubuntu64-asan_vm"
+      ],
+      "linux64-tsan": [
+        "ubuntu64_vm"
       ],
       "linux64-cc": [
         "ubuntu64_vm"
