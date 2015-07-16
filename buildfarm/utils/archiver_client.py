@@ -86,9 +86,9 @@ def get_response_from_task(url, options):
     for _ in retrier(attempts=options.max_retries, sleeptime=options.sleeptime,
                      max_sleeptime=options.max_retries * options.sleeptime):
         task_result = get_task_result(url)
+        log.debug("current task status: %s state: %s", task_result['status'], task_result['state'])
         if task_result['state'] == "SUCCESS":
             break
-        log.info("current task status: " + task_result['status'])
 
     if task_result.get('state') == "SUCCESS":
         if task_result.get('s3_urls'):
@@ -101,7 +101,7 @@ def get_response_from_task(url, options):
             exit(FAILURE_CODE)
     else:
         log.error("Archiver's task could not be resolved. Check archiver logs for errors. Task "
-                  "status: %s" % task_result['status'])
+                  "status: %s Task state: %s", task_result['status'], task_result['state'])
         exit(FAILURE_CODE)
 
 
@@ -164,14 +164,10 @@ def download_and_extract_archive(response, extract_root, destination):
     try:
         tar = tarfile.open(fileobj=response, mode='r|gz')
         log.debug("unpacking tar archive at: %s", extract_root)
-        log.debug("checking path contents within tar")
         for member in tar:
-            log.info("checking if internal member %s of archive matches the start of extract_root "
-                     "path.", member.name)
             if not member.name.startswith(extract_root):
                 continue
             member.name = member.name.replace(extract_root, '')
-            log.debug("extracting member %s to destination %s", member.name, destination)
             tar.extract(member, destination)
     except tarfile.TarError as e:
         log.exception("Could not download and extract archive. See Traceback:")
@@ -236,6 +232,10 @@ def options_args():
     if not len(args) == 1:
         parser.error("archiver_client.py requires exactly 1 argument: the archiver config. "
                      "Valid configs: %s" % str(ARCHIVER_CONFIGS.keys()))
+
+    if options.rev and len(options.rev) > 12:
+        log.warning("truncating revision to first 12 chars")
+        options.rev = options.rev[0:12]
 
     if options.debug:
         log.setLevel(logging.DEBUG)
