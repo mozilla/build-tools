@@ -35,6 +35,7 @@ ARCHIVER_CONFIGS = {
         'extract_root_dir': "%(repo)s-%(rev)s",
         # the subdir path from within the root
         'default_extract_subdir': "testing/mozharness",
+        'src_url': "https://hg.mozilla.org/%(repo)s/archive/%(rev)s.tar.gz/testing/mozharness"
     }
 }
 
@@ -67,13 +68,13 @@ def retrier(attempts=5, sleeptime=7, max_sleeptime=300, sleepscale=1.5, jitter=1
 
 
 def get_task_result(url):
-    task_response = urllib2.urlopen(url)
+    task_response = urllib2.urlopen(url, timeout=60)
     task_content = task_response.read()
     task_response.close()
     return json.loads(task_content)['result']
 
 
-def get_response_from_task(url, options):
+def get_response_from_task(url, src_url, options):
     """
     gets and returns response from archiver task when the task is complete or retries are
     exhausted. Complete being the result's 'state' equals 'SUCCESS'
@@ -94,18 +95,47 @@ def get_response_from_task(url, options):
         if task_result.get('s3_urls'):
             # grab a s3 url using the preferred region if available
             s3_url = task_result['s3_urls'].get(options.region, task_result['s3_urls'].values()[0])
-            return urllib2.urlopen(s3_url)
+            return urllib2.urlopen(s3_url, timeout=60)
         else:
             log.error("An s3 URL could not be determined even though archiver task completed. Check"
                       "archiver logs for errors. Task status: %s" % task_result['status'])
-            exit(FAILURE_CODE)
+            return get_src_url_response(src_url)
     else:
         log.error("Archiver's task could not be resolved. Check archiver logs for errors. Task "
                   "status: %s Task state: %s", task_result['status'], task_result['state'])
-        exit(FAILURE_CODE)
+        return get_src_url_response(src_url)
 
 
-def get_url_response(url, options):
+def get_src_url_response(src_url):
+    num = 0
+    retries = 3  # only try 3 times for fallback url
+    response = None
+    for _ in retrier(attempts=retries):
+        try:
+            log.info("Trying src_url directly: %s", src_url)
+            response = urllib2.urlopen(src_url, timeout=60)
+
+            if response.code == 200:
+                break
+            else:
+                log.debug("got a bad response. response code: %s", response.code)
+
+        except (urllib2.HTTPError, urllib2.URLError) as e:
+            if num == retries - 1:
+                log.exception("Could not get a valid response.")
+                exit(INFRA_CODE)
+        num += 1
+
+    if not response.code == 200:
+        content = response.read()
+        log.error("could not determine a valid url response. return code: '%s'"
+                  "return content: %s" % (response.code, content))
+        exit(INFRA_CODE)
+
+    return response
+
+
+def get_url_response(api_url, src_url, options):
     """
     queries archiver endpoint and parses response for s3_url. if archiver returns a 202,
     a sub task url is polled until that response is complete.
@@ -119,12 +149,12 @@ def get_url_response(url, options):
     for _ in retrier(attempts=options.max_retries, sleeptime=options.sleeptime,
                      max_sleeptime=options.max_retries * options.sleeptime):
         try:
-            log.info("Getting archive location from %s" % url)
-            response = urllib2.urlopen(url)
+            log.info("Getting archive location from %s" % api_url)
+            response = urllib2.urlopen(api_url, timeout=60)
 
             if response.code == 202:
                 # archiver is taking a long time so it started a sub task
-                response = get_response_from_task(response.info()['location'], options)
+                response = get_response_from_task(response.info()['location'], src_url, options)
 
             if response.code == 200:
                 break
@@ -133,15 +163,16 @@ def get_url_response(url, options):
 
         except (urllib2.HTTPError, urllib2.URLError) as e:
             if num == options.max_retries - 1:
-                log.exception("Could not get a valid response from archiver endpoint.")
-                exit(INFRA_CODE)
+                log.exception("Could not get a valid response from archiver.")
+                return get_src_url_response(src_url)
         num += 1
 
     if not response.code == 200:
         content = response.read()
         log.error("could not determine a valid url response. return code: '%s'"
                   "return content: %s" % (response.code, content))
-        exit(INFRA_CODE)
+        return get_src_url_response(src_url)
+
     return response
 
 
@@ -176,14 +207,14 @@ def download_and_extract_archive(response, extract_root, destination):
         tar.close()
 
 
-def archiver(url, config_key, options):
+def archiver(api_url, src_url, config_key, options):
     """
     1) obtains valid s3 url for archive via relengapi's archiver
     2) downloads and extracts archive
     """
     archive_cfg = ARCHIVER_CONFIGS[config_key]  # specifics to the archiver endpoint
 
-    response = get_url_response(url, options)
+    response = get_url_response(api_url, src_url, options)
 
     # get the root path within the archive that will be the starting path of extraction
     subdir = options.subdir or archive_cfg.get('default_extract_subdir')
@@ -295,8 +326,11 @@ def main():
     subdir = options.subdir or ARCHIVER_CONFIGS[config].get('default_extract_subdir')
     if subdir:
         api_url += "&subdir=%s" % (subdir,)
+    src_url = ARCHIVER_CONFIGS[config]['src_url'] % {
+        'repo': options.repo, 'rev': options.rev
+    }
 
-    archiver(url=api_url, config_key=config, options=options)
+    archiver(api_url=api_url, src_url=src_url, config_key=config, options=options)
 
     exit(SUCCESS_CODE)
 
