@@ -62,7 +62,11 @@ class TestNightlySubmitterV4(unittest.TestCase):
                 'hashValue': 'abcd'
             }]})
 
+
 class TestUpdateMerger(unittest.TestCase):
+    # print the diff between large dicts
+    maxDiff = None
+
     def test_merge_updates(self):
         old_data = {
             'some_other_field': "123",
@@ -102,10 +106,10 @@ class TestUpdateMerger(unittest.TestCase):
             ],
             'partials': [
                 {
-                    'fileUrl': 'https://partial2',
+                    'fileUrl': 'https://partial2/differenturl',
                     'filesize': 112,
                     'from': '112',
-                    'hashValue': '223abc'
+                    'hashValue': '223abcd'
                 },
                 {
                     'fileUrl': 'https://partial3',
@@ -136,10 +140,10 @@ class TestUpdateMerger(unittest.TestCase):
                     'hashValue': '123abc'
                 },
                 {
-                    'fileUrl': 'https://partial2',
+                    'fileUrl': 'https://partial2/differenturl',
                     'filesize': 112,
                     'from': '112',
-                    'hashValue': '223abc'
+                    'hashValue': '223abcd'
                 },
                 {
                     'fileUrl': 'https://partial3',

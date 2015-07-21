@@ -13,7 +13,7 @@ def merge_partial_updates(base_obj, new_obj):
             "partials": {
                 "mergeStrategy": "arrayMergeById",
                 "mergeOptions": {
-                    "idRef": "fileUrl"
+                    "idRef": "from"
                 }
             },
             # Replace completes - we don't usually have more than one
