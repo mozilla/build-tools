@@ -97,7 +97,7 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
         for s in signingServers:
             env["MOZ_SIGN_CMD"] += " -H %s" % s.strip()
     build.misc.cleanupObjdir(sourceRepoName, objdir, appName)
-    retry(mercurial, args=(sourceRepo, sourceRepoName))
+    mercurial(sourceRepo, sourceRepoName)
     update(sourceRepoName, revision=revision)
     l10nRepackPrep(
         sourceRepoName, objdir, mozconfigPath, srcMozconfigPath, l10nRepoDir,
@@ -261,7 +261,7 @@ if __name__ == "__main__":
     parser.add_option("--balrog-username", dest="balrog_username")
 
     options, args = parser.parse_args()
-    retry(mercurial, args=(options.buildbotConfigs, "buildbot-configs"))
+    mercurial(options.buildbotConfigs, "buildbot-configs")
     update("buildbot-configs", revision=options.releaseTag)
     sys.path.append(os.getcwd())
     branchConfig, releaseConfig = validate(options, args)

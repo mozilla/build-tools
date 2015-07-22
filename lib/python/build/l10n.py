@@ -40,7 +40,7 @@ def getAllLocales(appName, sourceRepo, rev="default",
 
 def compareLocales(repo, locale, l10nRepoDir, localeSrcDir, l10nIni,
                    revision="default", merge=True):
-    retry(mercurial, args=(repo, "compare-locales"))
+    mercurial(repo, "compare-locales")
     update("compare-locales", revision=revision)
     mergeDir = path.join(localeSrcDir, "merged")
     if path.exists(mergeDir):
@@ -104,7 +104,7 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
                  mozillaDir=None, mozillaSrcDir=None):
     repo = "/".join([l10nBaseRepo, locale])
     localeDir = path.join(l10nRepoDir, locale)
-    retry(mercurial, args=(repo, localeDir))
+    mercurial(repo, localeDir)
     update(localeDir, revision=revision)
 
     # It's a bad assumption to make, but the source dir is currently always
