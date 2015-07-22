@@ -9,6 +9,7 @@ from release.platforms import buildbot2updatePlatforms, buildbot2bouncer, \
   buildbot2ftp
 from release.versions import getPrettyVersion
 from balrog.submitter.api import Release, SingleLocale, Rule
+from balrog.submitter.updates import merge_partial_updates
 from util.algorithms import recursive_update
 import logging
 
@@ -39,16 +40,14 @@ class ReleaseCreatorBase(object):
                       enUSPlatforms, schemaVersion, openURL=None,
                       **updateKwargs):
         assert schemaVersion in (3, 4), 'Unhandled schema version %s' % schemaVersion
-        self.name = get_release_blob_name(productName, version, buildNumber)
         data = {
-            'name': self.name,
             'detailsUrl': getProductDetails(productName.lower(), appVersion),
             'platforms': {},
             'fileUrls': {},
+            'appVersion': appVersion,
+            'platformVersion': appVersion,
+            'displayVersion': getPrettyVersion(version)
         }
-        data['appVersion'] = appVersion
-        data['platformVersion'] = appVersion
-        data['displayVersion'] = getPrettyVersion(version)
 
         actions = []
         if openURL:
@@ -87,16 +86,16 @@ class ReleaseCreatorBase(object):
             updateChannels, stagingServer, bouncerServer,
             enUSPlatforms, hashFunction, schemaVersion, openURL=None,
             **updateKwargs):
-        api = Release(auth=self.auth, api_root=self.api_root)
         data = self.generate_data(appVersion, productName, version,
                                   buildNumber, updateChannels,
                                   stagingServer, bouncerServer, enUSPlatforms,
                                   schemaVersion, openURL, **updateKwargs)
-        current_data, data_version = api.get_data(self.name)
+        name = get_release_blob_name(productName, version, buildNumber,
+                                     self.dummy)
+        api = Release(name=name, auth=self.auth, api_root=self.api_root)
+        current_data, data_version = api.get_data()
         data = recursive_update(current_data, data)
-        api = Release(auth=self.auth, api_root=self.api_root)
-        api.update_release(name=self.name,
-                           version=appVersion,
+        api.update_release(version=appVersion,
                            product=productName,
                            hashFunction=hashFunction,
                            releaseData=json.dumps(data),
@@ -264,13 +263,12 @@ class NightlySubmitterBase(object):
         alias = None
         if len(targets) > 1:
             alias = targets[1:]
-
         data = {
             'buildID': buildID,
+            'appVersion': appVersion,
+            'platformVersion': extVersion,
+            'displayVersion': appVersion,
         }
-        data['appVersion'] = appVersion
-        data['platformVersion'] = extVersion
-        data['displayVersion'] = appVersion
         if isOSUpdate:
             data['isOSUpdate'] = isOSUpdate
 
@@ -284,19 +282,31 @@ class NightlySubmitterBase(object):
         else:
             build_type = self.build_type
 
-        name = get_nightly_blob_name(productName, branch, build_type, buildID, self.dummy)
-        data = json.dumps(data)
-        api = SingleLocale(auth=self.auth, api_root=self.api_root)
-        copyTo = [get_nightly_blob_name(
-            productName, branch, build_type, 'latest', self.dummy)]
-        copyTo = json.dumps(copyTo)
+        name = get_nightly_blob_name(productName, branch, build_type, buildID,
+                                     self.dummy)
+        api = SingleLocale(name=name, build_target=build_target, locale=locale,
+                           auth=self.auth, api_root=self.api_root)
+        current_data, data_version = api.get_data()
+        # explicitly pass data version
+        data = json.dumps(merge_partial_updates(current_data, data))
         alias = json.dumps(alias)
-        api.update_build(name=name, product=productName,
-                         build_target=build_target,
-                         version=appVersion, locale=locale,
-                         hashFunction=hashFunction,
-                         buildData=data, copyTo=copyTo, alias=alias,
-                         schemaVersion=schemaVersion)
+        api.update_build(
+            product=productName, version=appVersion, hashFunction=hashFunction,
+            buildData=data, alias=alias, schemaVersion=schemaVersion,
+            data_version=data_version)
+        latest = SingleLocale(
+            api_root=self.api_root, auth=self.auth,
+            name=get_nightly_blob_name(productName, branch, build_type,
+                                       'latest', self.dummy),
+            build_target=build_target, locale=locale)
+        # copy everything over using target release's data version
+        _, latest_data_version = latest.get_data()
+        source_data, _ = api.get_data()
+        source_data = json.dumps(source_data)
+        latest.update_build(
+            product=productName, version=appVersion, hashFunction=hashFunction,
+            buildData=source_data, alias=alias, schemaVersion=schemaVersion,
+            data_version=latest_data_version)
 
 
 class MultipleUpdatesNightlyMixin(object):
@@ -363,23 +373,23 @@ class ReleaseSubmitterBase(object):
 
         name = get_release_blob_name(productName, version, build_number,
                                      self.dummy)
-
         data = {
             'buildID': buildID,
+            'appVersion': appVersion,
+            'platformVersion': extVersion,
+            'displayVersion': getPrettyVersion(version)
         }
-        data['appVersion'] = appVersion
-        data['platformVersion'] = extVersion
-        data['displayVersion'] = getPrettyVersion(version)
 
-        data.update(self._get_update_data(productName, version, build_number, **updateKwargs))
+        data.update(self._get_update_data(productName, version, build_number,
+                                          **updateKwargs))
 
         data = json.dumps(data)
-        api = SingleLocale(auth=self.auth, api_root=self.api_root)
+        api = SingleLocale(name=name, build_target=build_target, locale=locale,
+                           auth=self.auth, api_root=self.api_root)
         schemaVersion = json.dumps(schemaVersion)
-        api.update_build(name=name, product=productName,
-                         build_target=build_target, version=appVersion,
-                         locale=locale, hashFunction=hashFunction,
-                         buildData=data, schemaVersion=schemaVersion)
+        api.update_build(
+            product=productName, version=appVersion, hashFunction=hashFunction,
+            buildData=data, schemaVersion=schemaVersion)
 
 
 class MultipleUpdatesReleaseMixin(object):
@@ -392,7 +402,7 @@ class MultipleUpdatesReleaseMixin(object):
             for info in completeInfo:
                 if "previousVersion" in info:
                     from_ = get_release_blob_name(productName, version,
-                                                build_number, self.dummy)
+                                                  build_number, self.dummy)
                 else:
                     from_ = "*"
                 data["completes"].append({
@@ -434,9 +444,9 @@ class ReleasePusher(object):
     def run(self, productName, version, build_number, rule_ids):
         name = get_release_blob_name(productName, version, build_number,
                                      self.dummy)
-        api = Rule(auth=self.auth, api_root=self.api_root)
-        for id_ in rule_ids:
-            api.update_rule(id_, mapping=name)
+        for rule_id in rule_ids:
+            Rule(api_root=self.api_root, auth=self.auth, rule_id=rule_id
+                 ).update_rule(mapping=name)
 
 
 class BlobTweaker(object):
@@ -445,10 +455,12 @@ class BlobTweaker(object):
         self.auth = auth
 
     def run(self, name, data):
-        api = Release(auth=self.auth, api_root=self.api_root)
-        current_data, data_version = api.get_data(name)
+        api = Release(name=name, auth=self.auth, api_root=self.api_root)
+        current_data, data_version = api.get_data()
         data = recursive_update(current_data, data)
-        api.update_release(name, data['appVersion'], name.split('-')[0],
-                           data['hashFunction'], json.dumps(data), data_version,
-                           schemaVersion=current_data['schema_version'])
+        api.update_release(
+            version=data['appVersion'], product=name.split('-')[0],
+            hashFunction=data['hashFunction'], releaseData=json.dumps(data),
+            data_version=data_version,
+            schemaVersion=current_data['schema_version'])
 
