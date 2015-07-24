@@ -32,8 +32,8 @@ update_platform_map = {
                 # modify their builds in a way that has them report like these.
                 # See bug 1071576 for details.
                  'Darwin_x86-gcc3', 'Darwin_x86_64-gcc3'],
-    'win32': ['WINNT_x86-msvc'],
-    'win64': ['WINNT_x86_64-msvc'],
+    'win32': ['WINNT_x86-msvc', 'WINNT_x86-msvc-x86', 'WINNT_x86-msvc-x64'],
+    'win64': ['WINNT_x86_64-msvc', 'WINNT_x86_64-msvc-x64'],
 
     # This is for v2.1 and v2.2 branches.
     # Must be killed in the future.
