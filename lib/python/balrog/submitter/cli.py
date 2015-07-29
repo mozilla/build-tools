@@ -11,6 +11,7 @@ from release.versions import getPrettyVersion
 from balrog.submitter.api import Release, SingleLocale, Rule
 from balrog.submitter.updates import merge_partial_updates
 from util.algorithms import recursive_update
+from util.retry import retry
 import logging
 
 log = logging.getLogger(__name__)
@@ -286,27 +287,39 @@ class NightlySubmitterBase(object):
                                      self.dummy)
         api = SingleLocale(name=name, build_target=build_target, locale=locale,
                            auth=self.auth, api_root=self.api_root)
-        current_data, data_version = api.get_data()
-        # explicitly pass data version
-        data = json.dumps(merge_partial_updates(current_data, data))
-        alias = json.dumps(alias)
-        api.update_build(
-            product=productName, version=appVersion, hashFunction=hashFunction,
-            buildData=data, alias=alias, schemaVersion=schemaVersion,
-            data_version=data_version)
+
+        # wrap operations into "atomic" functions that can be retried
+        def update_dated():
+            current_data, data_version = api.get_data()
+            # explicitly pass data version
+            api.update_build(
+                product=productName, version=appVersion,
+                hashFunction=hashFunction,
+                buildData=json.dumps(merge_partial_updates(current_data,
+                                                           data)),
+                alias=json.dumps(alias),
+                schemaVersion=schemaVersion, data_version=data_version)
+
+        retry(update_dated, sleeptime=10)
+
         latest = SingleLocale(
             api_root=self.api_root, auth=self.auth,
             name=get_nightly_blob_name(productName, branch, build_type,
                                        'latest', self.dummy),
             build_target=build_target, locale=locale)
-        # copy everything over using target release's data version
-        _, latest_data_version = latest.get_data()
-        source_data, _ = api.get_data()
-        source_data = json.dumps(source_data)
-        latest.update_build(
-            product=productName, version=appVersion, hashFunction=hashFunction,
-            buildData=source_data, alias=alias, schemaVersion=schemaVersion,
-            data_version=latest_data_version)
+
+        def update_latest():
+            # copy everything over using target release's data version
+            _, latest_data_version = latest.get_data()
+            source_data, _ = api.get_data()
+            source_data = json.dumps(source_data)
+            latest.update_build(
+                product=productName, version=appVersion,
+                hashFunction=hashFunction, buildData=source_data,
+                alias=json.dumps(alias), schemaVersion=schemaVersion,
+                data_version=latest_data_version)
+
+        retry(update_latest, sleeptime=10)
 
 
 class MultipleUpdatesNightlyMixin(object):
