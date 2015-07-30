@@ -164,7 +164,7 @@ function download_shared_artifacts {
 
 # gtk3 is required to run xpcshell as of Gecko 42.
 function download_gtk3 {
-    sh ${SCRIPTDIR}/../tooltool/tooltool_wrapper.sh ${SCRIPTDIR}/periodic_file_updates.manifest https://api.pub.bild.mozilla.org/tooltool/ setup.sh /builds/tooltool.py --authentication-file /builds/relengapi.tok
+    sh ${SCRIPTDIR}/../tooltool/tooltool_wrapper.sh ${SCRIPTDIR}/periodic_file_updates.manifest https://api.pub.build.mozilla.org/tooltool/ setup.sh /builds/tooltool.py --authentication-file /builds/relengapi.tok
     LD_LIBRARY_PATH=${BASEDIR}/gtk3/usr/local/lib
 }
 
@@ -288,7 +288,7 @@ function compare_hpkp_files {
     # Run the script to get an updated preload list.
     echo "INFO: Generating new HPKP preload list..."
     cd "${BASEDIR}/${PRODUCT}"
-    echo INFO: Running \"LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. ./xpcshell ${BASEDIR}/${HPKP_PRELOAD_SCRIPT} ${BASEDIR}/${HPKP_PRELOAD_JSON} ${BASEDIR}/${HPKP_DER_TEST} ${BASEDIR}/${PRODUCT}/${HPKP_PRELOAD_OUTPUT}\" 
+    echo INFO: Running \"LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. ./xpcshell ${BASEDIR}/${HPKP_PRELOAD_SCRIPT} ${BASEDIR}/${HPKP_PRELOAD_JSON} ${BASEDIR}/${HPKP_DER_TEST} ${BASEDIR}/${PRODUCT}/${HPKP_PRELOAD_OUTPUT}\"
     LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. ./xpcshell "${BASEDIR}/${HPKP_PRELOAD_SCRIPT}" "${BASEDIR}/${HPKP_PRELOAD_JSON}" "${BASEDIR}/${HPKP_DER_TEST}" "${BASEDIR}/${PRODUCT}/${HPKP_PRELOAD_OUTPUT}" > "${HPKP_PRELOAD_ERRORS}" 2>&1
     # The created files should be non-empty.
     echo "INFO: Checking whether new HPKP preload list is valid..."
