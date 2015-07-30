@@ -70,6 +70,7 @@ WGET="wget -nv"
 UNZIP="unzip -q"
 DIFF="diff -up"
 BASEDIR=`pwd`
+SCRIPTDIR=`dirname $0`
 VERSION=''
 MCVERSION=''
 USE_MC=false
@@ -161,6 +162,12 @@ function download_shared_artifacts {
     cp tests/bin/xpcshell "${PRODUCT}"
 }
 
+# gtk3 is required to run xpcshell as of Gecko 42.
+function download_gtk3 {
+    sh ${SCRIPTDIR}/../tooltool/tooltool_wrapper.sh ${SCRIPTDIR}/periodic_file_updates.manifest https://api.pub.bild.mozilla.org/tooltool/ setup.sh /builds/tooltool.py --authentication-file /builds/relengapi.tok
+    LD_LIBRARY_PATH=${BASEDIR}/gtk3/usr/local/lib
+}
+
 # In bug 1164714, the public/src subdirectories were flattened away under security/manager.
 # We need to check whether the HGREPO were processing has had that change uplifted yet so
 # that we can find the files we need to update.
@@ -207,8 +214,8 @@ function compare_hsts_files {
     # Run the script to get an updated preload list.
     echo "INFO: Generating new HSTS preload list..."
     cd "${BASEDIR}/${PRODUCT}"
-    echo INFO: Running \"LD_LIBRARY_PATH=. ./xpcshell ${BASEDIR}/${HSTS_PRELOAD_SCRIPT} ${BASEDIR}/${PRHSTS_ELOAD_INC}\"
-    LD_LIBRARY_PATH=. ./xpcshell "${BASEDIR}/${HSTS_PRELOAD_SCRIPT}" "${BASEDIR}/${HSTS_PRELOAD_INC}"
+    echo INFO: Running \"LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. ./xpcshell ${BASEDIR}/${HSTS_PRELOAD_SCRIPT} ${BASEDIR}/${PRHSTS_ELOAD_INC}\"
+    LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. ./xpcshell "${BASEDIR}/${HSTS_PRELOAD_SCRIPT}" "${BASEDIR}/${HSTS_PRELOAD_INC}"
 
     # The created files should be non-empty.
     echo "INFO: Checking whether new HSTS preload list is valid..."
@@ -281,7 +288,8 @@ function compare_hpkp_files {
     # Run the script to get an updated preload list.
     echo "INFO: Generating new HPKP preload list..."
     cd "${BASEDIR}/${PRODUCT}"
-    LD_LIBRARY_PATH=. ./xpcshell "${BASEDIR}/${HPKP_PRELOAD_SCRIPT}" "${BASEDIR}/${HPKP_PRELOAD_JSON}" "${BASEDIR}/${HPKP_DER_TEST}" "${BASEDIR}/${PRODUCT}/${HPKP_PRELOAD_OUTPUT}" > "${HPKP_PRELOAD_ERRORS}" 2>&1
+    echo INFO: Running \"LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. ./xpcshell ${BASEDIR}/${HPKP_PRELOAD_SCRIPT} ${BASEDIR}/${HPKP_PRELOAD_JSON} ${BASEDIR}/${HPKP_DER_TEST} ${BASEDIR}/${PRODUCT}/${HPKP_PRELOAD_OUTPUT}\" 
+    LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. ./xpcshell "${BASEDIR}/${HPKP_PRELOAD_SCRIPT}" "${BASEDIR}/${HPKP_PRELOAD_JSON}" "${BASEDIR}/${HPKP_DER_TEST}" "${BASEDIR}/${PRODUCT}/${HPKP_PRELOAD_OUTPUT}" > "${HPKP_PRELOAD_ERRORS}" 2>&1
     # The created files should be non-empty.
     echo "INFO: Checking whether new HPKP preload list is valid..."
     if [ ! -s "${HPKP_PRELOAD_ERRORS}" ]; then
@@ -592,6 +600,7 @@ fi
 preflight_cleanup
 if [ "${DO_HSTS}" == "true" -o "${DO_HPKP}" == "true" ]; then
     download_shared_artifacts
+    download_gtk3
 fi
 is_flattened
 if [ "${DO_HSTS}" == "true" ]; then
