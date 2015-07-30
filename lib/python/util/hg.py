@@ -95,7 +95,12 @@ def get_hg_output(cmd, timeout=1800, **kwargs):
     else:
         env = {}
     env['HGPLAIN'] = '1'
-    return get_output(['hg'] + cmd, timeout=timeout, env=env, **kwargs)
+    try:
+        return get_output(['hg'] + cmd, timeout=timeout, env=env, **kwargs)
+    except subprocess.CalledProcessError:
+        # because we always want hg debug info
+        log.exception("Hit exception running hg:")
+        raise
 
 
 def get_revision(path):

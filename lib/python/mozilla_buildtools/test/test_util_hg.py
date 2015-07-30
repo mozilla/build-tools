@@ -1192,6 +1192,17 @@ class TestHg(unittest.TestCase):
                               clone, "http://nxdomain.nxnx", self.wc)
             self.assertEquals(num_calls, [2])
 
+    @patch("util.commands.get_output")
+    def testGetHgOutputAlwaysLogsException(self, get_output):
+        get_output.side_effect = subprocess.CalledProcessError(255, "kaboom!")
+
+        with patch("util.hg.log") as mocked_log:
+            try:
+                get_hg_output(["status"])
+                self.fail("CalledProcessError not raised")
+            except subprocess.CalledProcessError:
+                self.assertTrue(mocked_log.exception.called, "log.exception not called")
+
     def testHasRev(self):
         self.assertTrue(has_rev(self.repodir, self.revisions[0]))
         self.assertFalse(has_rev(self.repodir, self.revisions[0] + 'g'))
