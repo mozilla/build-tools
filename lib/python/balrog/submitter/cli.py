@@ -291,6 +291,9 @@ class NightlySubmitterBase(object):
         # wrap operations into "atomic" functions that can be retried
         def update_dated():
             current_data, data_version = api.get_data()
+            if data == current_data:
+                log.warn("Dated data didn't change, skipping update")
+                return
             # explicitly pass data version
             api.update_build(
                 product=productName, version=appVersion,
@@ -310,12 +313,14 @@ class NightlySubmitterBase(object):
 
         def update_latest():
             # copy everything over using target release's data version
-            _, latest_data_version = latest.get_data()
+            latest_data, latest_data_version = latest.get_data()
             source_data, _ = api.get_data()
-            source_data = json.dumps(source_data)
+            if source_data == latest_data:
+                log.warn("Latest data didn't change, skipping update")
+                return
             latest.update_build(
                 product=productName, version=appVersion,
-                hashFunction=hashFunction, buildData=source_data,
+                hashFunction=hashFunction, buildData=json.dumps(source_data),
                 alias=json.dumps(alias), schemaVersion=schemaVersion,
                 data_version=latest_data_version)
 
