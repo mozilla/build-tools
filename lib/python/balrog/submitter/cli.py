@@ -291,7 +291,14 @@ class NightlySubmitterBase(object):
         # wrap operations into "atomic" functions that can be retried
         def update_dated():
             current_data, data_version = api.get_data()
-            if data == current_data:
+            # If the  partials are already a subset of the blob and the
+            # complete MAR is the same, skip the submission
+            skip_submission = bool(
+                current_data and
+                current_data.get("completes") == data.get("completes") and
+                all(p in current_data.get("partials", [])
+                    for p in data.get("partials", [])))
+            if skip_submission:
                 log.warn("Dated data didn't change, skipping update")
                 return
             # explicitly pass data version

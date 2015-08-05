@@ -200,10 +200,16 @@ class TestUpdateIdempotency(unittest.TestCase):
     @patch.object(SingleLocale, 'update_build')
     @patch.object(SingleLocale, 'get_data')
     def test_same_dated_data(self, get_data, update_build):
-        partials = [{
-            "from": "pr1-b1-nightly-b0", "filesize": 1, "hashValue": "p_hash1",
-            "fileUrl": "p_url1"
-        }]
+        partials = [
+            {
+                "from": "pr1-b1-nightly-b0", "filesize": 1,
+                "hashValue": "p_hash1", "fileUrl": "p_url1"
+            },
+            {
+                "from": "pr1-b1-nightly-b1000", "filesize": 1000,
+                "hashValue": "p_hash1000", "fileUrl": "p_url1000"
+            },
+        ]
         completes = [{
             "from": "*", "filesize": 2, "hashValue": "c_hash1",
             "fileUrl": "c_url1"
