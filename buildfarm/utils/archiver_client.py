@@ -14,6 +14,7 @@
 import logging
 import os
 import random
+import ssl
 import subprocess
 import tarfile
 import time
@@ -131,7 +132,7 @@ def get_url_response(api_url, options):
             else:
                 log.debug("got a bad response. response code: %s", response.code)
 
-        except (urllib2.HTTPError, urllib2.URLError) as e:
+        except (urllib2.HTTPError, urllib2.URLError, ssl.SSLError) as e:
             log.exception("Could not get a valid response from archiver.")
             if num == options.max_retries - 1:
                 exit(INFRA_CODE)
