@@ -20,6 +20,7 @@ import tarfile
 import time
 import urllib2
 import json
+import sys
 from optparse import OptionParser
 
 SUCCESS_CODE = 0
@@ -170,6 +171,9 @@ def download_and_extract_archive(response, extract_root, destination):
             if not member.name.startswith(extract_root):
                 continue
             member.name = member.name.replace(extract_root, '')
+            if member.issym() and sys.platform in ('win32', 'cygwin'):
+                log.debug('skipping symlink on windows: %s', member.name)
+                continue
             tar.extract(member, destination)
     except tarfile.TarError as e:
         log.exception("Could not download and extract archive. See Traceback:")
