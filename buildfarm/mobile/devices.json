@@ -1513,12 +1513,7 @@
         "foopy": "foopy59",
         "relayhost": "panda-relay-030.p3.releng.scl3.mozilla.com",
         "relayid": "2:5"
-    },
-    "panda-0345": {
-        "foopy": "foopy59",
-        "relayhost": "panda-relay-030.p3.releng.scl3.mozilla.com",
-        "relayid": "2:7"
-    },
+    },   
     "panda-0346": {
         "foopy": "foopy60",
         "relayhost": "panda-relay-031.p4.releng.scl3.mozilla.com",
