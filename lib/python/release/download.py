@@ -5,6 +5,9 @@ import socket
 from urllib import urlretrieve
 from urllib2 import urlopen, HTTPError, URLError
 
+from redo import retrier
+import requests
+
 from release.platforms import ftp_platform_map, buildbot2ftp
 from release.l10n import makeReleaseRepackUrls
 from release.paths import makeCandidatesDir
@@ -45,7 +48,18 @@ def downloadReleaseBuilds(stageServer, productName, brandName, version,
         url = '/'.join([p.strip('/') for p in [candidatesDir,
                                                urllib.quote(remoteFile)]])
         log.info("Downloading %s to %s", url, fileName)
-        urlretrieve(url, fileName)
+        for _ in retrier():
+            with open(fileName, "wb") as f:
+                try:
+                    r = requests.get(url, stream=True)
+                    r.raise_for_status()
+                    for chunk in r.iter_content():
+                        f.write(chunk)
+                    r.close()
+                    break
+                except (requests.HTTPError, requests.ConnectionError):
+                    log.exception("Caught exception downloading")
+
         if fileName.endswith('exe'):
             if usePymake:
                 env['WIN32_INSTALLER_IN'] = msys2windows(path.join(os.getcwd(),
