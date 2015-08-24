@@ -22,7 +22,6 @@ class TestUpdateVerifyConfig(unittest.TestCase):
     def testEq(self):
         self.uvc.product = "foo"
         self.uvc.channel = "betatest"
-        self.uvc.platform = "bar"
         self.uvc.aus_server = "aus"
         self.uvc.ftp_server_from = "ftp"
         self.uvc.ftp_server_to = "ftp"
@@ -31,7 +30,6 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         uvc2 = UpdateVerifyConfig()
         uvc2.product = "foo"
         uvc2.channel = "betatest"
-        uvc2.platform = "bar"
         uvc2.aus_server = "aus"
         uvc2.ftp_server_form = "ftp"
         uvc2.ftp_server_to = "ftp"
@@ -209,7 +207,6 @@ class TestUpdateVerifyConfig(unittest.TestCase):
 
     def testGetChunkWithPathWithSpaces(self):
         self.uvc.product = "Firefox"
-        self.uvc.platform = "Linux_x86-gcc3"
         self.uvc.channel = "betatest"
         self.uvc.aus_server = "https://aus4.mozilla.org"
         self.uvc.ftp_server_from = "stage.mozilla.org/firefox"
@@ -221,7 +218,6 @@ class TestUpdateVerifyConfig(unittest.TestCase):
                             from_path="/firefox/Firefox 4.0 Beta 1.exe")
         uvc2 = UpdateVerifyConfig()
         uvc2.product = "Firefox"
-        uvc2.platform = "Linux_x86-gcc3"
         uvc2.channel = "betatest"
         uvc2.aus_server = "https://aus4.mozilla.org"
         uvc2.ftp_server_from = "stage.mozilla.org/firefox"
