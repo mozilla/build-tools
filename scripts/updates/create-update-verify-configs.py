@@ -87,7 +87,6 @@ if __name__ == "__main__":
     else:
         log.setLevel(logging.INFO)
 
-    update_platform = buildbot2updatePlatforms(options.platform)[0]
     ftp_platform = buildbot2ftp(options.platform)
     full_check_locales = options.full_check_locales
 
@@ -115,8 +114,8 @@ if __name__ == "__main__":
     candidates_dir = makeCandidatesDir(
         product_name, to_version, build_number, ftp_root='/')
     to_path = "%s%s" % (candidates_dir, to_)
-    uvc = UpdateVerifyConfig(product=app_name, platform=update_platform,
-                             channel=options.channel,
+
+    uvc = UpdateVerifyConfig(product=app_name, channel=options.channel,
                              aus_server=aus_server_url, to=to_path)
 
     # getUpdatePaths yields all of the update paths, but we need to know
@@ -139,6 +138,13 @@ if __name__ == "__main__":
         build_id = from_["platforms"][ftp_platform]
         mar_channel_IDs = from_.get('mar-channel-ids')
 
+        # Use new build targets for Windows, but only on compatible versions (42+)
+        # See bug 1185456 for additional context.
+        if options.platform not in ("win32", "win64") or LooseVersion(fromVersion) < LooseVersion("42.0"):
+            update_platform = buildbot2updatePlatforms(options.platform)[0]
+        else:
+            update_platform = buildbot2updatePlatforms(options.platform)[1]
+
         path_ = makeReleaseRepackUrls(
             product_name, app_name, fromVersion, options.platform,
             locale='%locale%', signed=True, exclude_secondary=True
@@ -160,7 +166,8 @@ if __name__ == "__main__":
                            patch_types=["complete", "partial"],
                            from_path=from_path, ftp_server_from=staging_server,
                            ftp_server_to=staging_server,
-                           mar_channel_IDs=mar_channel_IDs)
+                           mar_channel_IDs=mar_channel_IDs,
+                           platform=update_platform)
         else:
             if len(this_full_check_locales) > 0:
                 log.info("Generating full check configs for %s" % fromVersion)
@@ -168,12 +175,14 @@ if __name__ == "__main__":
                                locales=this_full_check_locales, from_path=from_path,
                                ftp_server_from=previous_releases_staging_server,
                                ftp_server_to=staging_server,
-                               mar_channel_IDs=mar_channel_IDs)
+                               mar_channel_IDs=mar_channel_IDs,
+                               platform=update_platform)
             # Quick test for other locales, no download
             if len(quick_check_locales) > 0:
                 log.info("Generating quick check configs for %s" % fromVersion)
                 uvc.addRelease(release=appVersion, build_id=build_id,
-                               locales=quick_check_locales)
+                               locales=quick_check_locales,
+                               platform=update_platform)
 
     f = open(options.output, 'w')
     uvc.write(f)
