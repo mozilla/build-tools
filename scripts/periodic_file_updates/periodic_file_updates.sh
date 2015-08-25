@@ -30,6 +30,7 @@ EXIT CODES for `basename $0`:
    11    Unknown command-line option provided
    12    Branch not specified on command-line
    13    No update action specified on command-line
+   14    Invalid product specified
    21    Unable to parse version from version.txt
    31    Missing downloaded browser artifact
    32    Missing downloaded tests artifact
@@ -59,9 +60,9 @@ REPODIR=''
 HGTOOL="$(dirname "${0}")/../../buildfarm/utils/hgtool.py"
 MIRROR=''
 BUNDLE=''
-APP_DIR="browser"
-APP_ID="%7Bec8030f7-c20a-464f-9b0e-13a3a9e97384%7D"
-APP_NAME="Firefox"
+APP_DIR=''
+APP_ID=''
+APP_NAME=''
 LOCALHOST=`/bin/hostname -s`
 HGHOST="hg.mozilla.org"
 STAGEHOST="stage.mozilla.org"
@@ -569,6 +570,25 @@ if [ "$DO_HSTS" == "false" -a "$DO_HPKP" == "false" -a "$DO_BLOCKLIST" == "false
     usage
     exit 13
 fi
+
+# per-product constants
+case "${PRODUCT}" in
+    thunderbird)
+        APP_DIR="mail"
+        APP_ID="%7B3550f703-e582-4d05-9a08-453d09bdfdc6%7D"
+        APP_NAME="Thunderbird"
+        ;;
+    firefox)
+        APP_DIR="browser"
+        APP_ID="%7Bec8030f7-c20a-464f-9b0e-13a3a9e97384%7D"
+        APP_NAME="Firefox"
+        ;;
+    *)
+        echo "Error: Invalid product specified"
+        usage
+        exit 14
+        ;;
+esac
 
 if [ "${REPODIR}" == "" ]; then
    REPODIR=`basename ${BRANCH}`
