@@ -166,6 +166,10 @@ function setresult() {
         args.push('--no-retry');
     }
 
+    if ($('.rebuild-talos').is(':checked')) {
+        args.push('--rebuild-talos 5');
+    }
+
     var tag = $('.tags').val();
     if (tag) {
         args.push('--tag ' + tag);
