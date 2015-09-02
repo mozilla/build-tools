@@ -215,7 +215,7 @@ function compare_hsts_files {
     # Run the script to get an updated preload list.
     echo "INFO: Generating new HSTS preload list..."
     cd "${BASEDIR}/${PRODUCT}"
-    echo INFO: Running \"LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. ./xpcshell ${BASEDIR}/${HSTS_PRELOAD_SCRIPT} ${BASEDIR}/${PRHSTS_ELOAD_INC}\"
+    echo INFO: Running \"LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. ./xpcshell ${BASEDIR}/${HSTS_PRELOAD_SCRIPT} ${BASEDIR}/${HSTS_PRELOAD_INC}\"
     LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. ./xpcshell "${BASEDIR}/${HSTS_PRELOAD_SCRIPT}" "${BASEDIR}/${HSTS_PRELOAD_INC}"
 
     # The created files should be non-empty.
