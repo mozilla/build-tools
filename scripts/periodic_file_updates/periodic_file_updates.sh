@@ -40,6 +40,8 @@ EXIT CODES for `basename $0`:
    52    Generated HPKP preload list is empty
    61    Downloaded AMO blocklist file isn't valid XML
    62    Downloaded hg blocklist file isn't valid XML
+   70    HSTS script failed
+   71    HPKP script failed
 
 EOF
 }
@@ -217,6 +219,12 @@ function compare_hsts_files {
     cd "${BASEDIR}/${PRODUCT}"
     echo INFO: Running \"LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. ./xpcshell ${BASEDIR}/${HSTS_PRELOAD_SCRIPT} ${BASEDIR}/${HSTS_PRELOAD_INC}\"
     LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. ./xpcshell "${BASEDIR}/${HSTS_PRELOAD_SCRIPT}" "${BASEDIR}/${HSTS_PRELOAD_INC}"
+    XPCSHELL_STATUS=$?
+    if [ ${XPCSHELL_STATUS} != 0 ]; then
+        cat ${HSTS_PRELOAD_ERRORS}
+        echo "ERROR: xpcshell exited with a non-zero exit code: ${XPCSHELL_STATUS}" >&2
+        exit 70
+    fi
 
     # The created files should be non-empty.
     echo "INFO: Checking whether new HSTS preload list is valid..."
@@ -291,6 +299,13 @@ function compare_hpkp_files {
     cd "${BASEDIR}/${PRODUCT}"
     echo INFO: Running \"LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. ./xpcshell ${BASEDIR}/${HPKP_PRELOAD_SCRIPT} ${BASEDIR}/${HPKP_PRELOAD_JSON} ${BASEDIR}/${HPKP_DER_TEST} ${BASEDIR}/${PRODUCT}/${HPKP_PRELOAD_OUTPUT}\"
     LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. ./xpcshell "${BASEDIR}/${HPKP_PRELOAD_SCRIPT}" "${BASEDIR}/${HPKP_PRELOAD_JSON}" "${BASEDIR}/${HPKP_DER_TEST}" "${BASEDIR}/${PRODUCT}/${HPKP_PRELOAD_OUTPUT}" > "${HPKP_PRELOAD_ERRORS}" 2>&1
+    XPCSHELL_STATUS=$?
+    if [ ${XPCSHELL_STATUS} != 0 ]; then
+        cat ${HPKP_PRELOAD_ERRORS}
+        echo "ERROR: xpcshell exited with a non-zero exit code: ${XPCSHELL_STATUS}" >&2
+        exit 71
+    fi
+
     # The created files should be non-empty.
     echo "INFO: Checking whether new HPKP preload list is valid..."
     if [ ! -s "${HPKP_PRELOAD_ERRORS}" ]; then
