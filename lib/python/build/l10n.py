@@ -92,8 +92,7 @@ def l10nRepackPrep(sourceRepoName, objdir, mozconfigPath, srcMozconfigPath,
                     env=env)
         else:
             target = []
-            if path.basename(dir) == 'config' and sourceRepoName.endswith('-beta'):
-                # similar to desktop continuous integration l10n builds, beta now requires 'export'
+            if path.basename(dir) == 'config':
                 # context: https://bugzil.la/1169937
                 target = ['export']
             run_cmd(make + target,
