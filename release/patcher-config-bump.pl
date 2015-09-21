@@ -227,8 +227,13 @@ sub BumpPatcherConfig {
                                   split(/[\s,]+/,
                                    $currentUpdateObj->{'channel'}));
 
-        push(@{$pastUpdateObj}, join(' ', $currentUpdateObj->{'from'},
-         $currentUpdateObj->{'to'}, @pastUpdateChannels));
+        if (grep(/^$currentUpdateObj->{'from'} /, @{$pastUpdateObj})) {
+            print "WARNING: we already have a past-update for $currentUpdateObj->{'from'}" .
+                  ", not adding another\n";
+        } else {
+            push(@{$pastUpdateObj}, join(' ', $currentUpdateObj->{'from'},
+              $currentUpdateObj->{'to'}, @pastUpdateChannels));
+        }
     }
 
     # Now we can replace information in the "current-update" object; start
