@@ -115,7 +115,7 @@ for branch in ('mozilla-beta', 'comm-beta'):
             'mk_add_options MOZ_MAKE_FLAGS="-j4"',
         ]
     for platform in all_desktop_platforms:
-        whitelist[branch][platform] = += ['MOZ_AUTOMATION_SDK=${MOZ_AUTOMATION_SDK-1}']
+        whitelist[branch][platform] += ['MOZ_AUTOMATION_SDK=${MOZ_AUTOMATION_SDK-1}']
     whitelist[branch]['linux'] += [
         'export MOZILLA_OFFICIAL=1',
         'export MOZ_TELEMETRY_REPORTING=1',
@@ -147,7 +147,7 @@ for branch in ('mozilla-release', 'comm-esr38'):
             'export BUILDING_RELEASE=1',
         ]
     for platform in all_desktop_platforms:
-        whitelist[branch][platform] = += ['MOZ_AUTOMATION_SDK=${MOZ_AUTOMATION_SDK-1}']
+        whitelist[branch][platform] += ['MOZ_AUTOMATION_SDK=${MOZ_AUTOMATION_SDK-1}']
     whitelist[branch]['win32'] += ['mk_add_options MOZ_PGO=1',]
     whitelist[branch]['win64'] += ['mk_add_options MOZ_PGO=1',]
     whitelist[branch]['linux'] += [
