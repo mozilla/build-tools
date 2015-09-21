@@ -51,13 +51,14 @@ def downloadReleaseBuilds(stageServer, productName, brandName, version,
         for _ in retrier():
             with open(fileName, "wb") as f:
                 try:
-                    r = requests.get(url, stream=True)
+                    r = requests.get(url, stream=True, timeout=15)
                     r.raise_for_status()
-                    for chunk in r.iter_content():
+                    for chunk in r.iter_content(chunk_size=5*1024**2):
                         f.write(chunk)
                     r.close()
                     break
-                except (requests.HTTPError, requests.ConnectionError):
+                except (requests.HTTPError, requests.ConnectionError,
+                        requests.Timeout):
                     log.exception("Caught exception downloading")
 
         if fileName.endswith('exe'):
