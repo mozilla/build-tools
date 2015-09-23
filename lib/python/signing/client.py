@@ -228,6 +228,7 @@ def buildValidatingOpener(ca_certs):
                                         self.cert_file,
                                         cert_reqs=ssl.CERT_REQUIRED,
                                         ca_certs=ca_certs,
+                                        ssl_version=ssl.PROTOCOL_TLSv1,
                                         )
 
     # wraps https connections with ssl certificate verification
