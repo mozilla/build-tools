@@ -14,9 +14,10 @@ site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 import requests
 from kickoff.api import Releases, Release, ReleaseL10n
 from release.info import readBranchConfig
+from release.l10n import parsePlainL10nChangesets
 from release.versions import getAppVersion
 from releasetasks import make_task_graph
-from taskcluster import Scheduler
+from taskcluster import Scheduler, Index
 from taskcluster.utils import slugId
 from util.hg import mercurial
 from util.retry import retry
@@ -125,6 +126,57 @@ def getPartials(release):
 #    sendmail(from_=From, to=To, subject=Subject, body=contentMail,
 #             smtp_server=smtpServer)
 
+# TODO: deal with platform-specific locales
+def get_platform_locales(l10n_changesets, platform):
+    return l10n_changesets.keys()
+
+
+def get_l10n_config(release, branch, platforms, l10n_changesets, index):
+    l10n_platforms = {}
+    for platform in platforms:
+        task = index.findTask("buildbot.revisions.{revision}.{branch}.{platform}".format(
+            revision=release["mozillaRevision"],
+            branch=branch,
+            platform=platform
+        ))
+
+        # TODO: Replace this with simple names
+        if platform.startswith("win"):
+            binary_fmt = "public/build/{product}-{version}.en-US.{platform}.installer.exe"
+        elif platform.startswith("mac"):
+            binary_fmt = "public/build/{product}-{version}.en-US.{platform}.dmg"
+        elif platform.startswith("linux"):
+            binary_fmt = "public/build/{product}-{version}.en-US.{platform}.tar.bz2"
+
+        filename = binary_fmt.format(
+            product=release["product"],
+            version=release["version"],
+            platform=platform
+        )
+        url = "https://queue.taskcluster.net/v1/task/{taskid}/artifacts/{filename}".format(
+            taskid=task["taskid"],
+            filename=filename
+        )
+        l10n_platforms[platform] = {
+            "locales": get_platform_locales(l10n_changesets, platform)
+            "en_us_binary_url": url
+        }
+
+    return {
+        "platforms": l10n_platforms,
+        "changesets": l10n_changesets,
+    }
+
+
+def validate_graph_kwargs(**kwargs):
+    # TODO: validate partials
+    # TODO: validate l10n changesets
+    # TODO: go through release sanity for other validations to do
+    for url in kwargs.get("l10n_platforms", {}).values():
+        ret = requests.head(url, allow_redirects=True)
+        if not ret.ok():
+            log.error("en_us_binary url (%s) not accessible (got http %s)", url, ret.status_code)
+
 
 def main(options):
     log.info('Loading config from %s' % options.config)
@@ -164,6 +216,8 @@ def main(options):
     # TODO: replace release sanity with direct checks of en-US and l10n revisions (and other things if needed)
 
     rr = ReleaseRunner(api_root=api_root, username=username, password=password)
+    scheduler = Scheduler(tc_config)
+    index = Index(tc_config)
 
     # Main loop waits for new releases, processes them and exits.
     while True:
@@ -202,55 +256,32 @@ def main(options):
     for release in rr.new_releases:
         try:
             rr.update_status(release, 'Generating task graph')
+            l10n_changesets = parsePlainL10nChangesets(rr.get_release_l10n(release["name"]))
 
-            # TODO: replace this interpretation of plain l10n changesets either
-            # hardcoded exceptions or shipped-locales parsing of platforms --
-            # because it's not possible to get Firefox l10n-changesets.json from
-            # the l10n dashboard
-            def parse_l10n_changesets(*args, **kwargs):
-                return {
-                    "af": {
-                        "revision": "default",
-                        "platforms": ["linux", "linux64", "macosx64", "win32", "win64"],
-                    },
-                    "de": {
-                        "revision": "default",
-                        "platforms": ["linux", "linux64", "macosx64", "win32", "win64"],
-                    },
-                    "ja": {
-                        "revision": "default",
-                        "platforms": ["linux", "linux64", "win32", "win64"],
-                    },
-                    "ja-JP-mac": {
-                        "revision": "default",
-                        "platforms": ["macosx64"],
-                    },
-                }
+            kwargs = {
+                "source_enabled": True,
+                "repo_path": release["branch"],
+                "revision": release["mozillaRevision"],
+                "product": release["product"],
+                "partial_updates": getPartials(release),
+                "branch": branch,
+                "updates_enabled": bool(release["partials"]),
+                "enUS_platforms": branchConfig["release_platforms"],
+                "l10n_config": get_l10n_config(release, branch, branchConfig["l10n_release_platforms"], l10n_changesets, index),
+                "balrog_api_root": branchConfig["balrog_api_root"],
+                "signing_class": "dep-signing",
+            }
 
-            l10n_changesets = parse_l10n_changesets(rr.get_release_l10n(release["name"]))
+            validate_graph_kwargs(kwargs)
 
             graph_id = slugId()
-            graph = make_task_graph(
-                source_enabled=True,
-                repo_path=release["branch"],
-                l10n_changesets=l10n_changesets,
-                revision=release["mozillaRevision"],
-                product=release["product"],
-                partial_updates=getPartials(release),
-                branch=branch,
-                updates_enabled=False,#bool(release["partials"]),
-                enUS_platforms=branchConfig["release_platforms"],
-                l10n_platforms=branchConfig["l10n_release_platforms"],
-                balrog_api_root=branchConfig["balrog_api_root"],
-                signing_class="dep-signing",
-            )
+            graph = make_task_graph(**kwargs)
 
             rr.update_status(release, "Submitting task graph")
 
             log.info("Task graph generated!")
             import pprint
             log.debug(pprint.pformat(graph, indent=4, width=160))
-            scheduler = Scheduler(tc_config)
             print scheduler.createTaskGraph(graph_id, graph)
 
             rr.mark_as_completed(release)
