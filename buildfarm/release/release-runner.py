@@ -158,7 +158,7 @@ def get_l10n_config(release, branch, platforms, l10n_changesets, index):
             filename=filename
         )
         l10n_platforms[platform] = {
-            "locales": get_platform_locales(l10n_changesets, platform)
+            "locales": get_platform_locales(l10n_changesets, platform),
             "en_us_binary_url": url
         }
 
