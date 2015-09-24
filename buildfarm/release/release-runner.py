@@ -131,13 +131,13 @@ def get_platform_locales(l10n_changesets, platform):
     return l10n_changesets.keys()
 
 
-def get_l10n_config(release, branch, platforms, l10n_changesets, index):
+def get_l10n_config(release, branchConfig, branch, l10n_changesets, index):
     l10n_platforms = {}
-    for platform in platforms:
+    for platform in branchConfig["release_platforms"]:
         task = index.findTask("buildbot.revisions.{revision}.{branch}.{platform}".format(
             revision=release["mozillaRevision"],
             branch=branch,
-            platform=platform
+            platform=platform,
         ))
 
         # TODO: Replace this with simple names
@@ -154,12 +154,13 @@ def get_l10n_config(release, branch, platforms, l10n_changesets, index):
             platform=platform
         )
         url = "https://queue.taskcluster.net/v1/task/{taskid}/artifacts/{filename}".format(
-            taskid=task["taskid"],
+            taskid=task["taskId"],
             filename=filename
         )
         l10n_platforms[platform] = {
             "locales": get_platform_locales(l10n_changesets, platform),
-            "en_us_binary_url": url
+            "en_us_binary_url": url,
+            "chunks": branchConfig["platforms"][platform].get("l10n_chunks", 6),
         }
 
     return {
@@ -259,6 +260,8 @@ def main(options):
             l10n_changesets = parsePlainL10nChangesets(rr.get_release_l10n(release["name"]))
 
             kwargs = {
+                "version": release["version"],
+                "buildNumber": release["buildNumber"],
                 "source_enabled": True,
                 "repo_path": release["branch"],
                 "revision": release["mozillaRevision"],
@@ -267,12 +270,12 @@ def main(options):
                 "branch": branch,
                 "updates_enabled": bool(release["partials"]),
                 "enUS_platforms": branchConfig["release_platforms"],
-                "l10n_config": get_l10n_config(release, branch, branchConfig["l10n_release_platforms"], l10n_changesets, index),
+                "l10n_config": get_l10n_config(release, branchConfig, branch, l10n_changesets, index),
                 "balrog_api_root": branchConfig["balrog_api_root"],
                 "signing_class": "dep-signing",
             }
 
-            validate_graph_kwargs(kwargs)
+            validate_graph_kwargs(**kwargs)
 
             graph_id = slugId()
             graph = make_task_graph(**kwargs)
