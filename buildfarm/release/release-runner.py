@@ -133,7 +133,7 @@ def get_platform_locales(l10n_changesets, platform):
 
 def get_l10n_config(release, branchConfig, branch, l10n_changesets, index):
     l10n_platforms = {}
-    for platform in branchConfig["release_platforms"]:
+    for platform in branchConfig["l10n_release_platforms"]:
         task = index.findTask("buildbot.revisions.{revision}.{branch}.{platform}".format(
             revision=release["mozillaRevision"],
             branch=branch,
