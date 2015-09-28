@@ -202,6 +202,8 @@ def main(options):
     sleeptime = config.getint('release-runner', 'sleeptime')
     notify_from = get_config(config, 'release-runner', 'notify_from', None)
     notify_to = get_config(config, 'release-runner', 'notify_to', None)
+    docker_worker_key = get_config(config, 'release-runner',
+                                   'docker_worker_key')
     if isinstance(notify_to, basestring):
         notify_to = [x.strip() for x in notify_to.split(',')]
     smtp_server = get_config(config, 'release-runner', 'smtp_server',
@@ -260,6 +262,7 @@ def main(options):
             l10n_changesets = parsePlainL10nChangesets(rr.get_release_l10n(release["name"]))
 
             kwargs = {
+                "public_key": docker_worker_key,
                 "version": release["version"],
                 "buildNumber": release["buildNumber"],
                 "source_enabled": True,
