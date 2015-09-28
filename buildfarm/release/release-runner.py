@@ -203,7 +203,7 @@ def main(options):
     notify_from = get_config(config, 'release-runner', 'notify_from', None)
     notify_to = get_config(config, 'release-runner', 'notify_to', None)
     docker_worker_key = get_config(config, 'release-runner',
-                                   'docker_worker_key')
+                                   'docker_worker_key', None)
     if isinstance(notify_to, basestring):
         notify_to = [x.strip() for x in notify_to.split(',')]
     smtp_server = get_config(config, 'release-runner', 'smtp_server',
