@@ -1526,9 +1526,6 @@
       "linux64"
     ],
     "limit_fx_slave_platforms": {
-      "linux": [
-        "ubuntu32_hw"
-      ],
       "linux64": [
         "ubuntu64_hw"
       ]
@@ -1580,9 +1577,6 @@
       "linux64"
     ],
     "limit_fx_slave_platforms": {
-      "linux": [
-        "ubuntu32_hw"
-      ],
       "linux64": [
         "ubuntu64_hw"
       ]
@@ -1634,9 +1628,6 @@
       "linux64"
     ],
     "limit_fx_slave_platforms": {
-      "linux": [
-        "ubuntu32_hw"
-      ],
       "linux64": [
         "ubuntu64_hw"
       ]
