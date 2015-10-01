@@ -150,7 +150,7 @@ def get_l10n_config(release, branchConfig, branch, l10n_changesets, index):
 
         filename = binary_fmt.format(
             product=release["product"],
-            version=release["version"],
+            version=release["appVersion"],
             platform=platform
         )
         url = "https://queue.taskcluster.net/v1/task/{taskid}/artifacts/{filename}".format(
