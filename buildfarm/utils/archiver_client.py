@@ -98,12 +98,13 @@ def get_response_from_task(url, options):
             s3_url = task_result['s3_urls'].get(options.region, task_result['s3_urls'].values()[0])
             return urllib2.urlopen(s3_url, timeout=60)
         else:
-            log.error("An s3 URL could not be determined even though archiver task completed. Check"
-                      "archiver logs for errors. Task status: %s" % task_result['status'])
+            log.error("Automation Error: s3 URL could not be determined even though archiver task completed")
+            log.error("Check archiver logs for errors. Task status: %s" % task_result['status'])
             exit(INFRA_CODE)
     else:
-        log.error("Archiver's task could not be resolved. Check archiver logs for errors. Task "
-                  "status: %s Task state: %s", task_result['status'], task_result['state'])
+        log.error("Automation Error: task state did not equal SUCCESS")
+        log.error("Check archiver logs for errors. Task status: %s Task state: %s",
+                  task_result['status'], task_result['state'])
         exit(INFRA_CODE)
 
 
@@ -116,6 +117,7 @@ def get_url_response(api_url, options):
     :param options: script options
     :return: response obj
     """
+    fatal_msg = "Automation Error: could not determine a valid url response."
     num = 0
     response = None
     for _ in retrier(attempts=options.max_retries, sleeptime=options.sleeptime,
@@ -134,15 +136,15 @@ def get_url_response(api_url, options):
                 log.debug("got a bad response. response code: %s", response.code)
 
         except (urllib2.HTTPError, urllib2.URLError, ssl.SSLError) as e:
-            log.exception("Could not get a valid response from archiver.")
+            log.exception(fatal_msg)
             if num == options.max_retries - 1:
                 exit(INFRA_CODE)
         num += 1
 
     if not response.code == 200:
         content = response.read()
-        log.error("could not determine a valid url response. return code: '%s'"
-                  "return content: %s" % (response.code, content))
+        log.error(fatal_msg)
+        log.error("return code: '%s' return content: %s" % (response.code, content))
         exit(INFRA_CODE)
 
     return response
@@ -176,7 +178,7 @@ def download_and_extract_archive(response, extract_root, destination):
                 continue
             tar.extract(member, destination)
     except tarfile.TarError as e:
-        log.exception("Could not download and extract archive. See Traceback:")
+        log.exception("Automation Error: Could not download and extract archive. See Traceback:")
         exit(INFRA_CODE)
     finally:
         tar.close()
