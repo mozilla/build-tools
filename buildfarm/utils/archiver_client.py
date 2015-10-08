@@ -136,8 +136,8 @@ def get_url_response(api_url, options):
                 log.debug("got a bad response. response code: %s", response.code)
 
         except (urllib2.HTTPError, urllib2.URLError, ssl.SSLError) as e:
-            log.exception(fatal_msg)
             if num == options.max_retries - 1:
+                log.exception(fatal_msg)
                 exit(INFRA_CODE)
         num += 1
 
