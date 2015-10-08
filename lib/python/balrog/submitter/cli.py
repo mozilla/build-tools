@@ -37,7 +37,7 @@ class ReleaseCreatorBase(object):
         self.dummy = dummy
 
     def generate_data(self, appVersion, productName, version, buildNumber,
-                      updateChannels, stagingServer, bouncerServer,
+                      updateChannels, ftpServer, bouncerServer,
                       enUSPlatforms, schemaVersion, openURL=None,
                       **updateKwargs):
         assert schemaVersion in (3, 4), 'Unhandled schema version %s' % schemaVersion
@@ -59,7 +59,7 @@ class ReleaseCreatorBase(object):
             data["actions"] = " ".join(actions)
 
         fileUrls = self._getFileUrls(productName, version, buildNumber,
-                                     updateChannels, stagingServer,
+                                     updateChannels, ftpServer,
                                      bouncerServer, **updateKwargs)
         if fileUrls:
             data.update(fileUrls)
@@ -84,12 +84,12 @@ class ReleaseCreatorBase(object):
         return data
 
     def run(self, appVersion, productName, version, buildNumber,
-            updateChannels, stagingServer, bouncerServer,
+            updateChannels, ftpServer, bouncerServer,
             enUSPlatforms, hashFunction, schemaVersion, openURL=None,
             **updateKwargs):
         data = self.generate_data(appVersion, productName, version,
                                   buildNumber, updateChannels,
-                                  stagingServer, bouncerServer, enUSPlatforms,
+                                  ftpServer, bouncerServer, enUSPlatforms,
                                   schemaVersion, openURL, **updateKwargs)
         name = get_release_blob_name(productName, version, buildNumber,
                                      self.dummy)
@@ -108,20 +108,13 @@ class ReleaseCreatorV3(ReleaseCreatorBase):
         return ReleaseCreatorBase.run(self, *args, schemaVersion=3, **kwargs)
 
     def _getFileUrls(self, productName, version, buildNumber, updateChannels,
-                     stagingServer, bouncerServer, partialUpdates):
+                     ftpServer, bouncerServer, partialUpdates):
         data = {}
-        # XXX: This is a hack for bug 1045583. We should remove it, and always
-        # use "candidates" for nightlyDir after the switch to Balrog is complete.
-        if productName.lower() == "mobile":
-            nightlyDir = "candidates"
-        else:
-            nightlyDir = "nightly"
 
         for channel in updateChannels:
             if channel in ('betatest', 'esrtest') or "localtest" in channel:
                 dir_ = makeCandidatesDir(productName.lower(), version,
-                                         buildNumber, server=stagingServer, protocol='http',
-                                         nightlyDir=nightlyDir)
+                                         buildNumber, server=ftpServer, protocol='http')
                 data["fileUrls"][channel] = '%supdate/%%OS_FTP%%/%%LOCALE%%/%%FILENAME%%' % dir_
             else:
                 url = 'http://%s/?product=%%PRODUCT%%&os=%%OS_BOUNCER%%&lang=%%LOCALE%%' % bouncerServer
@@ -167,7 +160,7 @@ class ReleaseCreatorV4(ReleaseCreatorBase):
         return None
 
     def _getFileUrls(self, productName, version, buildNumber, updateChannels,
-                     stagingServer, bouncerServer, partialUpdates,
+                     ftpServer, bouncerServer, partialUpdates,
                      requiresMirrors=True):
         data = {"fileUrls": {}}
 
@@ -194,7 +187,7 @@ class ReleaseCreatorV4(ReleaseCreatorBase):
             }
             if "localtest" in channel:
                 dir_ = makeCandidatesDir(productName.lower(), version,
-                                         buildNumber, server=stagingServer,
+                                         buildNumber, server=ftpServer,
                                          protocol='http')
                 filename = "%s-%s.complete.mar" % (productName.lower(), version)
                 data["fileUrls"][channel]["completes"]["*"] = "%supdate/%%OS_FTP%%/%%LOCALE%%/%s" % (dir_, filename)
@@ -221,7 +214,7 @@ class ReleaseCreatorV4(ReleaseCreatorBase):
                                                 self.dummy)
                 if "localtest" in channel:
                     dir_ = makeCandidatesDir(productName.lower(), version,
-                                            buildNumber, server=stagingServer,
+                                            buildNumber, server=ftpServer,
                                             protocol='http')
                     filename = "%s-%s-%s.partial.mar" % (productName.lower(), previousVersion, version)
                     data["fileUrls"][channel]["partials"][from_] = "%supdate/%%OS_FTP%%/%%LOCALE%%/%s" % (dir_, filename)

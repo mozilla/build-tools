@@ -165,18 +165,16 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
         candidates_dir = makeCandidatesDir(productName, version, buildNumber,
                                            protocol="http", server=stageServer)
         if not path.isfile(msys2windows(mar)):
-            marUrl = "%(c_dir)s/mar-tools/%(platform)s/%(mar)s" % \
-                dict(c_dir=candidates_dir, platform=platform,
-                     mar=path.basename(mar))
+            marUrl = '/'.join([p.strip('/') for p in [candidates_dir, 'mar-tools',
+                                                      platform, path.basename(mar)]])
             run_cmd(['mkdir', '-p', path.dirname(mar)])
             log.info("Downloading %s to %s", marUrl, mar)
             urlretrieve(marUrl, msys2windows(mar))
             if not sys.platform.startswith('win'):
                 run_cmd(['chmod', '755', mar])
         if not path.isfile(msys2windows(mbsdiff)):
-            mbsdiffUrl = "%(c_dir)s/mar-tools/%(platform)s/%(mbsdiff)s" % \
-                dict(c_dir=candidates_dir, platform=platform,
-                     mbsdiff=path.basename(mbsdiff))
+            mbsdiffUrl = '/'.join([p.strip('/') for p in [candidates_dir, 'mar-tools',
+                                                          platform, path.basename(mbsdiff)]])
             run_cmd(['mkdir', '-p', path.dirname(mbsdiff)])
             log.info("Downloading %s to %s", mbsdiffUrl, mbsdiff)
             urlretrieve(mbsdiffUrl, msys2windows(mbsdiff))

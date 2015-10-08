@@ -39,15 +39,15 @@ class RepackError(Exception):
 def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                   mozconfigPath, srcMozconfigPath, objdir, makeDirs, appName,
                   locales, product, version, buildNumber,
-                  stageServer, stageUsername, stageSshKey,
+                  stageServer, stageUsername, stageSshKey, ftpServer,
                   compareLocalesRepo, merge, platform, brand, appVersion,
                   generatePartials=False, partialUpdates=None,
                   usePymake=False, tooltoolManifest=None,
                   tooltool_script=None, tooltool_urls=None,
                   balrog_submitter=None, balrog_hash="sha512",
-                  mozillaDir=None, mozillaSrcDir=None):
+                  mozillaDir=None, mozillaSrcDir=None, bucket_prefix=None):
     buildid = retry(getBuildID, args=(platform, product, version,
-                                      buildNumber, 'candidates', stageServer))
+                                      buildNumber, 'candidates', ftpServer))
     log.info('Got buildid: %s' % buildid)
     sourceRepoName = path.split(sourceRepo)[-1]
     absObjdir = path.abspath(path.join(sourceRepoName, objdir))
@@ -58,6 +58,7 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
     env = {
         "MOZ_OBJDIR": objdir,
         "MOZ_MAKE_COMPLETE_MAR": "1",
+        "DOWNLOAD_HOST": ftpServer,
         "UPLOAD_HOST": stageServer,
         "UPLOAD_USER": stageUsername,
         "UPLOAD_SSH_KEY": stageSshKey,
@@ -80,6 +81,7 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
         version=version,
         buildNumber=buildNumber,
         signed=signed,
+        bucket_prefix=bucket_prefix,
     )
     if usePymake:
         env['USE_PYMAKE'] = "1"
@@ -104,7 +106,7 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
         sourceRepoName, objdir, mozconfigPath, srcMozconfigPath, l10nRepoDir,
         makeDirs, env, tooltoolManifest, tooltool_script, tooltool_urls)
     input_env = retry(downloadReleaseBuilds,
-                      args=(stageServer, product, brand, version, buildNumber,
+                      args=(ftpServer, product, brand, version, buildNumber,
                             platform),
                       kwargs={'signed': signed,
                               'usePymake': usePymake})
@@ -118,7 +120,7 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                     oldBuildNumber = partialUpdates[oldVersion]['buildNumber']
                     partialUpdates[oldVersion]['mar'] = retry(
                         downloadUpdateIgnore404,
-                        args=(stageServer, product, oldVersion, oldBuildNumber,
+                        args=(ftpServer, product, oldVersion, oldBuildNumber,
                               platform, l)
                     )
             checksums_file = repackLocale(locale=l, l10nRepoDir=l10nRepoDir,
@@ -128,7 +130,7 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                                           absObjdir=absObjdir, merge=merge,
                                           productName=product, platform=platform,
                                           version=version, partialUpdates=partialUpdates,
-                                          buildNumber=buildNumber, stageServer=stageServer,
+                                          buildNumber=buildNumber, stageServer=ftpServer,
                                           mozillaDir=mozillaDir, mozillaSrcDir=mozillaSrcDir)
 
             if balrog_submitter:
@@ -212,7 +214,9 @@ def validate(options, args):
         'hghost': options.hghost,
         'stage_server': options.stage_server,
         'stage_username': options.stage_username,
+        'ftp_server': options.ftp_server,
         'compare_locales_repo_path': options.compare_locales_repo_path,
+        'bucket_prefix': options.bucket_prefix,
     }
     return branchConfig, releaseConfig
 
@@ -247,6 +251,7 @@ if __name__ == "__main__":
     parser.add_option("--hghost", dest="hghost")
     parser.add_option("--stage-server", dest="stage_server")
     parser.add_option("--stage-username", dest="stage_username")
+    parser.add_option("--ftp-server", dest="ftp_server")
     parser.add_option(
         "--compare-locales-repo-path", dest="compare_locales_repo_path")
     parser.add_option("--properties-dir", dest="properties_dir")
@@ -260,6 +265,7 @@ if __name__ == "__main__":
     parser.add_option("--balrog-api-root", dest="balrog_api_root")
     parser.add_option("--credentials-file", dest="credentials_file")
     parser.add_option("--balrog-username", dest="balrog_username")
+    parser.add_option("--bucket-prefix", dest="bucket_prefix")
 
     options, args = parser.parse_args()
     mercurial(options.buildbotConfigs, "buildbot-configs")
@@ -361,6 +367,7 @@ if __name__ == "__main__":
         stageServer=branchConfig["stage_server"],
         stageUsername=branchConfig["stage_username"],
         stageSshKey=stageSshKey,
+        ftpServer=branchConfig["ftp_server"],
         compareLocalesRepo=make_hg_url(branchConfig["hghost"],
                                        branchConfig[
                                            "compare_locales_repo_path"]),
@@ -375,5 +382,6 @@ if __name__ == "__main__":
         tooltool_urls=options.tooltool_urls,
         balrog_submitter=balrog_submitter,
         mozillaDir=mozillaDir,
-        mozillaSrcDir=mozillaSrcDir
+        mozillaSrcDir=mozillaSrcDir,
+        bucket_prefix=branchConfig['bucket_prefix'],
     )

@@ -23,7 +23,7 @@ HG = "hg.mozilla.org"
 DEFAULT_BUILDBOT_CONFIGS_REPO = make_hg_url(HG, 'build/buildbot-configs')
 DEFAULT_MAX_PUSH_ATTEMPTS = 10
 REQUIRED_CONFIG = ('productName', 'buildNumber', 'ausServerUrl',
-                   'stagingServer')
+                   'ftpServer')
 FTP_SERVER_TEMPLATE = 'http://%s/pub/mozilla.org'
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s")
@@ -95,12 +95,12 @@ if __name__ == "__main__":
     update('buildbot-configs', revision=options.release_tag)
     release_config = validate(options)
     product_name = release_config['productName']
-    staging_server = FTP_SERVER_TEMPLATE % release_config['stagingServer']
+    ftp_server = FTP_SERVER_TEMPLATE % release_config['ftpServer']
     aus_server_url = release_config['ausServerUrl']
     build_number = release_config['buildNumber']
-    previous_releases_staging_server = FTP_SERVER_TEMPLATE % \
+    previous_releases_ftp_server = FTP_SERVER_TEMPLATE % \
         release_config.get('previousReleasesStagingServer',
-                           release_config['stagingServer'])
+                           release_config['ftpServer'])
 
     # Current version data
     pc = PatcherConfig(open(options.config).read())
@@ -164,8 +164,8 @@ if __name__ == "__main__":
             uvc.addRelease(release=appVersion, build_id=build_id,
                            locales=locales,
                            patch_types=["complete", "partial"],
-                           from_path=from_path, ftp_server_from=staging_server,
-                           ftp_server_to=staging_server,
+                           from_path=from_path, ftp_server_from=previous_releases_ftp_server,
+                           ftp_server_to=ftp_server,
                            mar_channel_IDs=mar_channel_IDs,
                            platform=update_platform)
         else:
@@ -173,8 +173,8 @@ if __name__ == "__main__":
                 log.info("Generating full check configs for %s" % fromVersion)
                 uvc.addRelease(release=appVersion, build_id=build_id,
                                locales=this_full_check_locales, from_path=from_path,
-                               ftp_server_from=previous_releases_staging_server,
-                               ftp_server_to=staging_server,
+                               ftp_server_from=previous_releases_ftp_server,
+                               ftp_server_to=ftp_server,
                                mar_channel_IDs=mar_channel_IDs,
                                platform=update_platform)
             # Quick test for other locales, no download
