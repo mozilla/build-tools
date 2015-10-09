@@ -304,7 +304,7 @@ sub BumpPatcherConfig {
           oldVersion => $partialVersion
         );
         $partialUpdate->{'betatest-url'} =
-        'http://' . $stagingServer. '/pub/mozilla.org/' . $product . 
+        'http://' . $ftpServer. '/pub/mozilla.org/' . $product .
         '/nightly/' .  $version . '-candidates/' . $buildStr . '/' .
         $pBetatestPath;
         $partialUpdate->{'esrtest-url'} = $partialUpdate->{'betatest-url'};
@@ -332,7 +332,7 @@ sub BumpPatcherConfig {
             );
         }
         $partialUpdate->{'beta-url'} =
-        'http://' . $ftpServer . '/pub/mozilla.org/' . $product. '/nightly/' . 
+        'http://' . $ftpServer . '/pub/mozilla.org/' . $product. '/nightly/' .
             $version . '-candidates/' . $buildStr . '/' . 
             $pBetaPath;
         }
@@ -365,7 +365,7 @@ sub BumpPatcherConfig {
       oldVersion => $oldVersion
     );
     $completeUpdate->{'betatest-url'} = 
-     'http://' . $stagingServer . '/pub/mozilla.org/' . $product . 
+     'http://' . $ftpServer . '/pub/mozilla.org/' . $product .
      '/nightly/' .  $version . '-candidates/' . $buildStr . '/' .
      $cBetatestPath;
     $completeUpdate->{'esrtest-url'} = $completeUpdate->{'betatest-url'};
