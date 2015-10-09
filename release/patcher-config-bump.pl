@@ -18,7 +18,7 @@ $|++;
 # my $RELEASE_CANDIDATE_CHANNELS = ['betatest', 'DisableCompleteJump'];
 
 my %config;
-my @DEFAULT_PLATFORMS = ('linux', 'linux64', 'macosx64', 'win32');
+my @DEFAULT_PLATFORMS = ('linux', 'linux64', 'macosx64', 'win32', 'win64');
 
 ProcessArgs();
 BumpPatcherConfig();
