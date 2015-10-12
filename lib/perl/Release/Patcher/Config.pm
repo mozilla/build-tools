@@ -75,11 +75,9 @@ sub GetReleaseBlock {
     $releaseBlock->{'locales'} = join(' ', sort (keys(%{$localeInfo})));
     
     $releaseBlock->{'completemarurl'} = 'http://' . $ftpServer . $candidateDir .
-      $buildStr . '/update/%platform%/%locale%/' . $product . '-' . $version .
-      '.complete.mar';
+      '/update/%platform%/%locale%/' . $product . '-' . $version . '.complete.mar';
     $releaseBlock->{'checksumsurl'} = 'http://' . $ftpServer . $candidateDir .
-      $buildStr . '/%platform%/%locale%/' . $product . '-' . $version .
-      '.checksums';
+      '/%platform%/%locale%/' . $product . '-' . $version . '.checksums';
     if (@marChannelIds) {
         $releaseBlock->{"mar-channel-ids"} = join(",", @marChannelIds);
     }
