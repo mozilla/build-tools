@@ -16,7 +16,6 @@ from kickoff.api import Releases, Release, ReleaseL10n
 from release.info import readBranchConfig
 from release.l10n import parsePlainL10nChangesets
 from release.versions import getAppVersion
-from release.platforms import buildbot2ftp
 from releasetasks import make_task_graph
 from taskcluster import Scheduler, Index
 from taskcluster.utils import slugId
@@ -140,23 +139,8 @@ def get_l10n_config(release, branchConfig, branch, l10n_changesets, index):
             branch=branch,
             platform=platform,
         ))
-
-        # TODO: Replace this with simple names
-        if platform.startswith("win"):
-            binary_fmt = "public/build/{product}-{version}.en-US.{stage_platform}.installer.exe"
-        elif platform.startswith("mac"):
-            binary_fmt = "public/build/{product}-{version}.en-US.{stage_platform}.dmg"
-        elif platform.startswith("linux"):
-            binary_fmt = "public/build/{product}-{version}.en-US.{stage_platform}.tar.bz2"
-
-        filename = binary_fmt.format(
-            product=release["product"],
-            version=getAppVersion(release["version"]),
-            stage_platform=buildbot2ftp(platform)
-        )
-        url = "https://queue.taskcluster.net/v1/task/{taskid}/artifacts/{filename}".format(
-            taskid=task["taskId"],
-            filename=filename
+        url = "https://queue.taskcluster.net/v1/task/{taskid}/artifacts/public/build".format(
+            taskid=task["taskId"]
         )
         l10n_platforms[platform] = {
             "locales": get_platform_locales(l10n_changesets, platform),
