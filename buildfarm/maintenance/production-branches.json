@@ -6,13 +6,6 @@
     ],
     "repo_type": "hg"
   },
-  "maple": {
-    "repo": "https://hg.mozilla.org/projects/maple",
-    "graph_branches": [
-      "Maple"
-    ],
-    "repo_type": "hg"
-  },
   "ash": {
     "repo": "https://hg.mozilla.org/projects/ash",
     "graph_branches": [
@@ -80,13 +73,6 @@
     "repo": "https://hg.mozilla.org/releases/comm-beta",
     "graph_branches": [
       "Thunderbird-Beta"
-    ],
-    "repo_type": "hg"
-  },
-  "holly": {
-    "repo": "https://hg.mozilla.org/projects/holly",
-    "graph_branches": [
-      "Holly"
     ],
     "repo_type": "hg"
   },
