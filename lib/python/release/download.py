@@ -8,30 +8,14 @@ from urllib2 import urlopen, HTTPError, URLError
 from redo import retrier
 import requests
 
-from release.platforms import ftp_platform_map, buildbot2ftp
+from release.platforms import buildbot2ftp
 from release.l10n import makeReleaseRepackUrls
 from release.paths import makeCandidatesDir
 from util.paths import windows2msys, msys2windows
-from util.file import directoryContains
 from util.commands import run_cmd
 
 import logging
 log = logging.getLogger(__name__)
-
-installer_ext_map = {
-    'win32': ".exe",
-    'win64': ".exe",
-    'macosx': ".dmg",
-    'macosx64': ".dmg",
-    'linux': ".tar.bz2",
-    'linux64': ".tar.bz2",
-}
-
-
-def getInstallerExt(platform):
-    """ Return the file extension of the installer file on a given platform,
-    raising a KeyError if the platform is not found """
-    return installer_ext_map[platform]
 
 
 def downloadReleaseBuilds(stageServer, productName, brandName, version,
@@ -105,22 +89,6 @@ def downloadUpdateIgnore404(*args, **kwargs):
             return None
         else:
             raise
-
-
-def rsyncFilesByPattern(server, userName, sshKey, source_dir, target_dir,
-                        pattern):
-    cmd = ['rsync', '-e',
-           'ssh -l %s -oIdentityFile=%s' % (userName, sshKey),
-           '-av', '--include=%s' % pattern, '--include=*/', '--exclude=*',
-           '%s:%s' % (server, source_dir), target_dir]
-    run_cmd(cmd)
-
-
-def rsyncFiles(files, server, userName, sshKey, target_dir):
-    cmd = ['rsync', '-e',
-           'ssh -l %s -oIdentityFile=%s' % (userName, sshKey),
-           '-av'] + files + ['%s:%s' % (server, target_dir)]
-    run_cmd(cmd)
 
 
 def url_exists(url, timeout=10):

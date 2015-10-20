@@ -1,4 +1,3 @@
-from copy import copy
 import os
 import re
 from util.algorithms import getChunk

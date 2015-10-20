@@ -37,24 +37,6 @@ def getBuildID(platform, product, version, buildNumber, nightlyDir='nightly',
             return value
 
 
-def findOldBuildIDs(product, version, buildNumber, platforms,
-                    nightlyDir='nightly', server='stage.mozilla.org'):
-    ids = {}
-    if buildNumber <= 1:
-        return ids
-    for n in range(1, buildNumber):
-        for platform in platforms:
-            if platform not in ids:
-                ids[platform] = []
-            try:
-                id = getBuildID(platform, product, version, n, nightlyDir,
-                                server)
-                ids[platform].append(id)
-            except Exception, e:
-                log.error("Hit exception: %s" % e)
-    return ids
-
-
 def getReleaseConfigName(product, branch, version, staging=False):
     if product in ("firefox", "fennec") and branch == "mozilla-release" and "b" in version:
         cfg = "release-%s-mozilla-beta.py" % product
@@ -67,20 +49,6 @@ def getReleaseConfigName(product, branch, version, staging=False):
 
 def readReleaseConfig(configfile, required=[]):
     return readConfig(configfile, keys=['releaseConfig'], required=required)
-
-
-def readBranchConfig(dir, localconfig=None, branch="mozilla-central", required=[]):
-    if localconfig:
-        shutil.copy(localconfig, path.join(dir, "localconfig.py"))
-    oldcwd = os.getcwd()
-    os.chdir(dir)
-    sys.path.append(".")
-    try:
-        return readConfig("config.py", keys=['BRANCHES', branch],
-                          required=required)
-    finally:
-        os.chdir(oldcwd)
-        sys.path.remove(".")
 
 
 def readConfig(configfile, keys=[], required=[]):

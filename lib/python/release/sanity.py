@@ -83,8 +83,6 @@ def verify_mozconfigs(branch, revision, hghost, product, mozconfigs,
         nightly_mozconfig = nightly_mozconfigs[platform]
         mozconfig_paths = [mozconfig, nightly_mozconfig]
         # Create links to the two mozconfigs.
-        releaseConfig = make_hg_url(hghost, branch, 'http', revision,
-                                    mozconfig)
         for c in mozconfig, nightly_mozconfig:
             urls.append(make_hg_url(hghost, branch, 'http', revision, c))
         for url in urls:
