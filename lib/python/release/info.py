@@ -51,6 +51,21 @@ def readReleaseConfig(configfile, required=[]):
     return readConfig(configfile, keys=['releaseConfig'], required=required)
 
 
+def readBranchConfig(directory, localconfig=None, branch="mozilla-central",
+                     required=[]):
+    if localconfig:
+        shutil.copy(localconfig, path.join(directory, "localconfig.py"))
+    oldcwd = os.getcwd()
+    os.chdir(directory)
+    sys.path.append(".")
+    try:
+        return readConfig("config.py", keys=['BRANCHES', branch],
+                          required=required)
+    finally:
+        os.chdir(oldcwd)
+        sys.path.remove(".")
+
+
 def readConfig(configfile, keys=[], required=[]):
     c = {}
     execfile(configfile, c)
