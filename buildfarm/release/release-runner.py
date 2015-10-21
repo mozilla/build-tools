@@ -217,6 +217,8 @@ def main(options):
         }
     }
     configs_workdir = 'buildbot-configs'
+    balrog_username = get_config(config, "balrog", "username", None)
+    balrog_password = get_config(config, "balrog", "password", None)
 
     # TODO: replace release sanity with direct checks of en-US and l10n revisions (and other things if needed)
 
@@ -279,6 +281,8 @@ def main(options):
                 "l10n_config": get_l10n_config(release, branchConfig, branch, l10n_changesets, index),
                 "en_US_config": get_en_US_config(release, branchConfig, branch, index),
                 "balrog_api_root": branchConfig["balrog_api_root"],
+                "balrog_username": balrog_username,
+                "balrog_password": balrog_password,
                 # TODO: stagin specific, make them configurable
                 "signing_class": "dep-signing",
             }
