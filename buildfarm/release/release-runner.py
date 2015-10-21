@@ -154,6 +154,23 @@ def get_l10n_config(release, branchConfig, branch, l10n_changesets, index):
     }
 
 
+def get_en_US_config(release, branchConfig, branch, index):
+    platforms = {}
+    for platform in branchConfig["release_platforms"]:
+        task = index.findTask("buildbot.revisions.{revision}.{branch}.{platform}".format(
+            revision=release["mozillaRevision"],
+            branch=branch,
+            platform=platform,
+        ))
+        platforms[platform] = {
+            "task_id": task["taskId"]
+        }
+
+    return {
+        "platforms": platforms,
+    }
+
+
 def validate_graph_kwargs(**kwargs):
     # TODO: validate partials
     # TODO: validate l10n changesets
@@ -249,6 +266,7 @@ def main(options):
             kwargs = {
                 "public_key": docker_worker_key,
                 "version": release["version"],
+                "appVersion": getAppVersion(release["version"]),
                 "buildNumber": release["buildNumber"],
                 "source_enabled": True,
                 "repo_path": release["branch"],
@@ -259,7 +277,9 @@ def main(options):
                 "updates_enabled": bool(release["partials"]),
                 "enUS_platforms": branchConfig["release_platforms"],
                 "l10n_config": get_l10n_config(release, branchConfig, branch, l10n_changesets, index),
+                "en_US_config": get_en_US_config(release, branchConfig, branch, index),
                 "balrog_api_root": branchConfig["balrog_api_root"],
+                # TODO: stagin specific, make them configurable
                 "signing_class": "dep-signing",
             }
 
