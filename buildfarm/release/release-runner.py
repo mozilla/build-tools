@@ -280,12 +280,20 @@ def main(options):
                 "enUS_platforms": branchConfig["release_platforms"],
                 "l10n_config": get_l10n_config(release, branchConfig, branch, l10n_changesets, index),
                 "en_US_config": get_en_US_config(release, branchConfig, branch, index),
+                "verifyConfigs": {},
                 "balrog_api_root": branchConfig["balrog_api_root"],
                 "balrog_username": balrog_username,
                 "balrog_password": balrog_password,
                 # TODO: stagin specific, make them configurable
                 "signing_class": "dep-signing",
             }
+            verifyConfigTemplate = "{branch}-{product}-{plat}.cfg"
+            for plat in branchConfig["release_platforms"]:
+                kwargs["verifyConfigs"][plat] = verifyConfigTemplate.format(
+                    branch=kwargs['branch'],
+                    product=kwargs['product'],
+                    plat=plat,
+                )
 
             validate_graph_kwargs(**kwargs)
 
