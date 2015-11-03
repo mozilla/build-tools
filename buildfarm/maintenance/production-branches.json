@@ -48,6 +48,13 @@
     ],
     "repo_type": "hg"
   },
+  "mozilla-b2g44_v2_5": {
+    "repo": "https://hg.mozilla.org/releases/mozilla-b2g44_v2_5",
+    "graph_branches": [
+      "Mozilla-B2g44-v2.5"
+    ],
+    "repo_type": "hg"
+  },
   "oak": {
     "repo": "https://hg.mozilla.org/projects/oak",
     "graph_branches": [
