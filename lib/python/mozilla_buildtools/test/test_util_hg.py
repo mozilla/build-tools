@@ -109,6 +109,8 @@ class TestHg(unittest.TestCase):
         self.pwd = os.getcwd()
         os.chdir(self.tmpdir)
         self.repodir = os.path.join(self.tmpdir, 'repo')
+        self._popen_orig = subprocess.Popen
+        subprocess.Popen = self._popen
         # Have a stable hgrc to test with
         os.environ['HGRCPATH'] = os.path.join(os.path.dirname(__file__), "hgrc")
         run_cmd(['%s/init_hgrepo.sh' % os.path.dirname(__file__),
@@ -120,10 +122,21 @@ class TestHg(unittest.TestCase):
         self.sleep_patcher.start()
         hg.RETRY_ATTEMPTS = 2
 
+
+    def _popen(self, *args, **kwargs):
+        # Wrapper for subprocess.Popen that makes output quiet by default
+        devnull = open(os.devnull, 'wb')
+        if kwargs.get('stderr') is None:
+            kwargs['stderr'] = devnull
+        if kwargs.get('stdout') is None:
+            kwargs['stdout'] = devnull
+        return self._popen_orig(*args, **kwargs)
+
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
         os.chdir(self.pwd)
         self.sleep_patcher.stop()
+        subprocess.Popen = self._popen_orig
 
     def testGetBranch(self):
         clone(self.repodir, self.wc)

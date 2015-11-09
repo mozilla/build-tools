@@ -7,7 +7,7 @@ import sys
 from urlparse import urlsplit
 from ConfigParser import RawConfigParser
 
-from util.commands import run_cmd, get_output, remove_path, TERMINATED_PROCESS_MSG
+from util.commands import run_cmd, run_quiet_cmd, get_output, remove_path, TERMINATED_PROCESS_MSG
 from util.retry import retry, retrier
 
 import logging
@@ -137,9 +137,9 @@ def has_rev(repo, rev):
         rev  (str):     revision identifier
     """
     log.info("checking to see if %s exists in %s", rev, repo)
-    cmd = ['log', '-r', rev, '--template', '{node}']
+    cmd = ['hg', 'log', '-r', rev, '--template', '{node}']
     try:
-        get_hg_output(cmd, cwd=repo, include_stderr=True)
+        run_quiet_cmd(cmd, cwd=repo)
         log.info("%s exists in %s", rev, repo)
         return True
     except subprocess.CalledProcessError:
