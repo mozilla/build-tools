@@ -45,7 +45,7 @@ chmod 755 $GIT_PRIVATE_SSH
 rm -rf $REPO_NAME lithium funfuzz-private
 $GITBIN clone $GIT_FUNFUZZ_REPO $REPO_NAME
 $GITBIN clone $GIT_LITHIUM_REPO lithium
-$GITBIN clone $GIT_FUZZMANAGER_REPO FuzzManager
+#$GITBIN clone $GIT_FUZZMANAGER_REPO FuzzManager
 GIT_SSH=$GIT_PRIVATE_SSH $GITBIN clone $GIT_FUNFUZZ_PRIVATE_REPO funfuzz-private
 
 $PYBIN $REPO_NAME/bot.py --remote-host "$FUZZ_REMOTE_HOST" --basedir "$FUZZ_BASE_DIR"
