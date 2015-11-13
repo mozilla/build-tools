@@ -2,6 +2,7 @@ import json
 import logging
 import requests
 import os
+import time
 
 CA_BUNDLE = os.path.join(os.path.dirname(__file__),
                          '../../../../misc/certs/ca-bundle.crt')
@@ -111,16 +112,26 @@ class API(object):
             logging.debug('Data sent: %s' % data)
         headers = {'Accept-Encoding': 'application/json',
                    'Accept': 'application/json'}
+        before = time.time()
+        req = self.session.request(
+            method=method, url=url, data=data, timeout=self.timeout,
+            verify=self.verify, auth=self.auth, headers=headers)
         try:
-            req = self.session.request(
-                method=method, url=url, data=data, timeout=self.timeout,
-                verify=self.verify, auth=self.auth, headers=headers)
             if self.raise_exceptions:
                 req.raise_for_status()
             return req
         except requests.HTTPError, e:
             logging.error('Caught HTTPError: %s' % e.response.content)
             raise
+        finally:
+            stats = {
+                "timestamp": time.time(),
+                "method": method,
+                "url": url,
+                "status_code": req.status_code,
+                "elapsed_secs": time.time() - before,
+            }
+            logging.debug('REQUEST STATS: %s', json.dumps(stats))
 
     def get_data(self):
         resp = self.request()
