@@ -64,7 +64,7 @@ check_updates () {
 
   if [ "$update_status" != "succeeded" ]
   then
-    echo "FAIL: update status was not succeeded: $update_status"
+    echo "FAIL: update status was not successful: $update_status"
     return 1
   fi
 
