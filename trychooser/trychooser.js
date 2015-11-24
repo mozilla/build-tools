@@ -64,12 +64,49 @@ $(document).ready(function() {
         group.find('.all-selector').prop('checked', unchecked_defaults.length == 0);
     });
 
+    // Track the last change. If shift is pressed when clicking one item,
+    // also apply the target state to all items in between.
+    var last_changed;
+    var all_items = $(':checkbox:not(.group-selector):not(.subgroup-selector)');
+    $('label').filter(function(index, elem) {
+        var checkbox = $(elem).children(':checkbox');
+        return checkbox.not('.group-selector, .subgroup-selector').size() > 0;
+    }).mouseup(function(evt) {
+        if (evt.shiftKey && last_changed >= 0) {
+            var checkbox = $(this).children(':checkbox');
+            var checked = !checkbox.prop('checked');
+            var index = all_items.index(checkbox);
+            var items;
+            if (last_changed < index) {
+                items = all_items.slice(last_changed + 1, index + 1);
+            } else if (last_changed > index) {
+                items = all_items.slice(index, last_changed);
+            }
+            if (items) {
+                // Use setTimeout to override the state of checkboxes to
+                // work around difference of default behavior between
+                // different browsers.
+                // More specifically, on Firefox, any click on checkboxs
+                // flips the state, while click on labels takes effect
+                // only if no modifier key is pressed. While on Chrome,
+                // any click on both elements always takes effect.
+                setTimeout(() => {
+                    items.prop('checked', checked);
+                    setresult();
+                }, 0);
+            }
+        }
+    });
+
     // Force initial update
     $('.all-selector:checked').change();
     $('.none-selector:checked').change();
 
     // Selecting anything should update the try syntax
-    $(':checkbox').change(setresult);
+    $(':checkbox').change(function() {
+        last_changed = all_items.index(this);
+        setresult();
+    });
     $(':radio').change(setresult);
     $(':text').change(setresult);
 
