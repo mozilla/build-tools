@@ -97,6 +97,13 @@
     ],
     "repo_type": "hg"
   },
+  "b2g-ota": {
+    "repo": "https://hg.mozilla.org/releases/b2g-ota",
+    "graph_branches": [
+      "B2g-Ota"
+    ],
+    "repo_type": "hg"
+  },
   "services-central": {
     "repo": "https://hg.mozilla.org/services/services-central",
     "graph_branches": [
