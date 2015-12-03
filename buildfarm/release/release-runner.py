@@ -287,14 +287,8 @@ def main(options):
                 # TODO: stagin specific, make them configurable
                 "signing_class": "dep-signing",
                 "bouncer_enabled": branchConfig["bouncer_enabled"],
+                "release_channels": branchConfig["release_channels"],
             }
-            verifyConfigTemplate = "{branch}-{product}-{plat}.cfg"
-            for plat in branchConfig["release_platforms"]:
-                kwargs["verifyConfigs"][plat] = verifyConfigTemplate.format(
-                    branch=kwargs['branch'],
-                    product=kwargs['product'],
-                    plat=plat,
-                )
 
             validate_graph_kwargs(**kwargs)
 
