@@ -104,11 +104,16 @@ def verify_mozconfigs(branch, revision, hghost, product, mozconfigs,
                     # compare to whitelist
                     message = ""
                     if line[0] == '-':
+                        # handle lines that move around in diff
+                        if '+' + line[1:] in diffList:
+                            continue
                         if platform in mozconfigWhitelist.get(branch_name, {}):
                             if clean_line in \
                                     mozconfigWhitelist[branch_name][platform]:
                                 continue
                     elif line[0] == '+':
+                        if '-' + line[1:] in diffList:
+                            continue
                         if platform in mozconfigWhitelist.get('nightly', {}):
                             if clean_line in \
                                     mozconfigWhitelist['nightly'][platform]:
