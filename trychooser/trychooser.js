@@ -98,10 +98,7 @@ function resolveFilters(filters) {
 }
 
 function setresult() {
-    var value = 'try: ';
     var args = [];
-
-    args.push('try:');
 
     $('.option-radio[try-section]').each(function() {
         var arg = '-' + $(this).attr('try-section') + ' ';
@@ -180,7 +177,7 @@ function setresult() {
         args.push('--rebuild ' + rebuilds);
     }
 
-    value = args.join(' ');
+    var value = args.join(' ');
     var incomplete = false;
 
     if (value.match(/-b none/)) {
@@ -199,7 +196,9 @@ function setresult() {
 
     if (incomplete) {
         value = "(NO JOBS CHOSEN)";
+        $('.result').val(value);
+    } else {
+        $('#result_try').val('try: ' + value);
+        $('#result_mach').val('mach try ' + value);
     }
-
-    $('.result_value').val(value);
 }
