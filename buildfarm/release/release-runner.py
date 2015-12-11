@@ -286,6 +286,7 @@ def main(options):
                 "balrog_password": balrog_password,
                 # TODO: stagin specific, make them configurable
                 "signing_class": "dep-signing",
+                "bouncer_enabled": branchConfig["bouncer_enabled"],
             }
             verifyConfigTemplate = "{branch}-{product}-{plat}.cfg"
             for plat in branchConfig["release_platforms"]:
