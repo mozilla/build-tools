@@ -553,7 +553,7 @@ else
     echo "  * Foopies updated"
 fi
 
-echo "  * Directory '${RECONFIG_DIR}' contains artefacts from reconfig process"
+echo "  * Directory '${RECONFIG_DIR}' contains artifacts from reconfig process"
 
 STOP_TIME="$(date +%s)"
 ELAPSED_TIME=$((STOP_TIME - START_TIME))
