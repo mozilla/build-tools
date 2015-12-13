@@ -72,12 +72,19 @@ def downloadUpdate(stageServer, productName, version, buildNumber,
     url = '/'.join([p.strip('/') for p in [
         candidatesDir, 'update', platformDir, locale, fileName]])
     log.info("Downloading %s to %s", url, destFileName)
-    remote_f = urlopen(url)
+    remote_f = urlopen(url, timeout=20)
     local_f = open(destFileName, "wb")
     local_f.write(remote_f.read())
     local_f.close()
-    return destFileName
 
+    expected_size = int(remote_f.info()['Content-Length'])
+    actual_size =  os.path.getsize(destFileName)
+    if expected_size != actual_size:
+        log.warn("File is truncated, got %s of %s bytes" % (actual_size,
+                                                            expected_size))
+        raise HTTPError
+
+    return destFileName
 
 def downloadUpdateIgnore404(*args, **kwargs):
     try:
