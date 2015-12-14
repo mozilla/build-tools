@@ -42,7 +42,7 @@ REPO_NAME="funfuzz"
 GIT_PRIVATE_SSH=./git_private_ssh.bash
 echo -e '#!/bin/bash\nssh -l gitolite3 $1 $2' > $GIT_PRIVATE_SSH
 chmod 755 $GIT_PRIVATE_SSH
-rm -rf $REPO_NAME lithium funfuzz-private
+rm -rf $REPO_NAME lithium FuzzManager funfuzz-private
 $GITBIN clone $GIT_FUNFUZZ_REPO $REPO_NAME
 $GITBIN clone $GIT_LITHIUM_REPO lithium
 $GITBIN clone $GIT_FUZZMANAGER_REPO FuzzManager
