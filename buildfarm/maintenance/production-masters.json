@@ -1093,7 +1093,7 @@
     "buildbot_setup": "/builds/buildbot/try1/buildbot/master/setup.py",
     "buildbot_version": "0.8.2",
     "datacentre": "aws-us-west-2",
-    "db_name": "buildbot-master78.b.releng.usw2.mozilla.com:/builds/buildbot/try1/master",
+    "db_name": "buildbot-master78.bb.releng.usw2.mozilla.com:/builds/buildbot/try1/master",
     "enabled": true,
     "environment": "production",
     "hostname": "buildbot-master78.bb.releng.usw2.mozilla.com",
