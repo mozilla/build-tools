@@ -80,7 +80,7 @@ def downloadUpdate(stageServer, productName, version, buildNumber,
     expected_size = int(remote_f.info()['Content-Length'])
     actual_size =  os.path.getsize(destFileName)
     if expected_size != actual_size:
-        log.warn("File is truncated, got %s of %s bytes" % (actual_size,
+        log.info("File is truncated, got %s of %s bytes" % (actual_size,
                                                             expected_size))
         raise HTTPError
 
