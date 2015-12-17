@@ -113,6 +113,10 @@ for branch in ('mozilla-beta', 'comm-beta'):
             'ac_add_options --enable-update-channel=beta',
             'ac_add_options --enable-official-branding',
             'mk_add_options MOZ_MAKE_FLAGS="-j4"',
+            'if [ -n "$ENABLE_RELEASE_PROMOTION" ]; then',
+            'MOZ_AUTOMATION_UPLOAD_SYMBOLS=1',
+            'MOZ_AUTOMATION_UPDATE_PACKAGING=1',
+            'fi',
         ]
     for platform in all_desktop_platforms:
         whitelist[branch][platform] += ['MOZ_AUTOMATION_SDK=${MOZ_AUTOMATION_SDK-1}']
