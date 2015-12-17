@@ -24,7 +24,7 @@ def makeCandidatesDir(product, version, buildNumber, nightlyDir='candidates',
 
 
 def makeReleasesDir(product, version=None, protocol=None, server=None,
-                    ftp_root='/pub/mozilla.org/'):
+                    ftp_root='/pub/'):
     if protocol:
         assert server is not None, "server is required with protocol"
 
