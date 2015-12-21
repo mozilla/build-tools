@@ -143,7 +143,8 @@ function setresult() {
         });
 
         var filters = [];
-        $('[try-filter=' + tryopt + '] :checked').each(function () {
+        var filter_tryopt = tryopt == 't' ? 'u' : tryopt;
+        $('[try-filter=' + filter_tryopt + '] :checked').each(function () {
             filters.push.apply(filters, $(this).attr('value').split(','));
         });
         if (filters.length > 0) {
