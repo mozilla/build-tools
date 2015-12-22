@@ -206,6 +206,7 @@ def main(options):
     notify_to = get_config(config, 'release-runner', 'notify_to', None)
     docker_worker_key = get_config(config, 'release-runner',
                                    'docker_worker_key', None)
+    signing_pvt_key = get_config(config, 'signing', 'pvt_key', None)
     if isinstance(notify_to, basestring):
         notify_to = [x.strip() for x in notify_to.split(',')]
     smtp_server = get_config(config, 'release-runner', 'smtp_server',
@@ -288,6 +289,7 @@ def main(options):
                 "signing_class": "dep-signing",
                 "bouncer_enabled": branchConfig["bouncer_enabled"],
                 "release_channels": branchConfig["release_channels"],
+                "signing_pvt_key": signing_pvt_key,
             }
 
             validate_graph_kwargs(**kwargs)
