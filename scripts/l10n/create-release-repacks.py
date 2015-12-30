@@ -69,6 +69,8 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
         "LD_LIBRARY_PATH": os.getenv("LD_LIBRARY_PATH", ""),
         "MBSDIFF_HOOK": os.getenv("MBSDIFF_HOOK", ""),
     }
+    if product == "thunderbird" and platform == "macosx64":
+        env["MOZ_CURRENT_PROJECT"] = objdir
     if appVersion is None or version != appVersion:
         env["MOZ_PKG_VERSION"] = version
     signed = False
