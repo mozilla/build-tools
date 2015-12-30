@@ -22,6 +22,7 @@ from release.info import readReleaseConfig, readConfig, fileInfo
 from release.l10n import getReleaseLocalesForChunk
 from util.hg import mercurial, update, make_hg_url
 from util.retry import retry
+from util.commands import run_cmd
 from release.info import getBuildID
 
 logging.basicConfig(
@@ -70,7 +71,11 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
         "MBSDIFF_HOOK": os.getenv("MBSDIFF_HOOK", ""),
     }
     if product == "thunderbird" and platform == "macosx64":
-        env["MOZ_CURRENT_PROJECT"] = os.path.basename(objdir)
+        # TODO: FIXME: HACK: KILLME:
+        # Terrible, terrible, terrible hack to work around bug 1234935 and make
+        # the build system happier
+        absMozillaSrcDir = path.abspath(path.join(sourceRepoName, mozillaSrcDir))
+        run_cmd(['ln', '-sf', '../obj-l10n', absMozillaSrcDir])
     if appVersion is None or version != appVersion:
         env["MOZ_PKG_VERSION"] = version
     signed = False
