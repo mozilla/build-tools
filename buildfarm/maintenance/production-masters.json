@@ -841,10 +841,10 @@
     "buildbot_setup": "/builds/buildbot/tests1-windows/buildbot/master/setup.py",
     "buildbot_version": "0.8.2",
     "datacentre": "aws-us-east-1",
-    "db_name": "buildbot-master69.srv.releng.use1.mozilla.com:/builds/buildbot/tests1-windows/master",
+    "db_name": "buildbot-master69.bb.releng.use1.mozilla.com:/builds/buildbot/tests1-windows/master",
     "enabled": false,
     "environment": "production",
-    "hostname": "buildbot-master69.srv.releng.use1.mozilla.com",
+    "hostname": "buildbot-master69.bb.releng.use1.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
       "win32",
