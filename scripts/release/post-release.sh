@@ -37,5 +37,5 @@ $PYTHON -u $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
   -s 0.3 -n info -n 'rel-*' -n 'tb-rel-*' -n $slavebuilddir
 cd $workdir
 
-$PYTHON $MY_DIR/stage-tasks.py -r $releaseConfig \
-  -b $BUILDBOT_CONFIGS -t $releaseTag $@
+$PYTHON $MY_DIR/post-release.py -r $releaseConfig \
+  -b $BUILDBOT_CONFIGS -t $releaseTag
