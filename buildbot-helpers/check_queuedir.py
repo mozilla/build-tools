@@ -9,6 +9,20 @@ import time
 
 OK, WARNING, CRITICAL, UNKNOWN = range(4)
 
+def oldest_mtime(files):
+    retval = None
+    for f in files:
+        try:
+            mtime = os.path.getmtime(f)
+            if retval is None:
+                retval = mtime
+            else:
+                retval = min(retval, mtime)
+        except OSError:
+            # The file probably went away
+            pass
+    return retval
+
 
 def check_queuedir(d, options):
     status = OK
@@ -28,8 +42,7 @@ def check_queuedir(d, options):
     new_files = os.listdir(os.path.join(d, 'new'))
     num_new = len(new_files)
     if num_new > 0:
-        oldest_new = min(
-            os.path.getmtime(os.path.join(d, 'new', f)) for f in new_files)
+        oldest_new = oldest_mtime([(os.path.join(d, 'new', f)) for f in new_files])
         if num_new >= options.crit_new:
             status = CRITICAL
             msgs.append("%i new items" % num_new)
