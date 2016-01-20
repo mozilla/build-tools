@@ -9,6 +9,7 @@ import time
 
 OK, WARNING, CRITICAL, UNKNOWN = range(4)
 
+
 def oldest_mtime(files):
     retval = None
     for f in files:
@@ -55,6 +56,23 @@ def check_queuedir(d, options):
             status = max(status, WARNING)
             msgs.append("oldest item is %is old" % age)
 
+    # Check 'cur'
+    cur_files = os.listdir(os.path.join(d, 'cur'))
+    num_cur = len(cur_files)
+    if num_cur > 0:
+        oldest_cur = oldest_mtime([(os.path.join(d, 'cur', f)) for f in cur_files])
+        if num_cur >= options.crit_cur:
+            status = CRITICAL
+            msgs.append("%i cur items" % num_cur)
+        elif num_cur >= options.warn_cur:
+            status = max(status, WARNING)
+            msgs.append("%i cur items" % num_cur)
+
+        age = int(time.time() - oldest_cur)
+        if age > options.max_age:
+            status = max(status, WARNING)
+            msgs.append("oldest item is %is old" % age)
+
     return status, msgs
 
 
@@ -64,14 +82,20 @@ def main():
     parser.set_defaults(
         warn_new=50,
         crit_new=100,
+        warn_cur=50,
+        crit_cur=100,
         max_age=900,
     )
     parser.add_option("-w", dest="warn_new", type="int",
                       help="warn when there are more than this number of items in new")
     parser.add_option("-c", dest="crit_new", type="int",
                       help="critical when there are more than this number of items in new")
+    parser.add_option("--warn-cur", dest="warn_cur", type="int",
+                      help="warn when there are more than this number of items in cur")
+    parser.add_option("--crit-cur", dest="crit_cur", type="int",
+                      help="critical when there are more than this number of items in cur")
     parser.add_option("-t", dest="max_age", type="int",
-                      help="warn when oldest item in new is more than this many seconds old")
+                      help="warn when oldest item in new/cur is more than this many seconds old")
 
     options, args = parser.parse_args()
 
