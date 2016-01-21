@@ -16,7 +16,6 @@ from kickoff.api import Releases, Release, ReleaseL10n
 from release.info import readBranchConfig
 from release.l10n import parsePlainL10nChangesets
 from release.versions import getAppVersion
-from release.platforms import buildbot2ftp
 from releasetasks import make_task_graph
 from taskcluster import Scheduler, Index
 from taskcluster.utils import slugId
@@ -165,7 +164,6 @@ def get_en_US_config(release, branchConfig, branch, index):
         ))
         platforms[platform] = {
             "task_id": task["taskId"],
-            "upload_platform": buildbot2ftp(platform),
         }
 
     return {
