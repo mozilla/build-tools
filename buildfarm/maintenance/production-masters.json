@@ -212,7 +212,7 @@
       "android-x86",
       "android-api-9",
       "android-api-11",
-      "android-api-15",
+      "android-api-15"
     ],
     "limit_tb_platforms": [
       "linux"
