@@ -298,7 +298,6 @@ def main(options):
                 "partial_updates": getPartials(release),
                 "branch": branch,
                 "updates_enabled": bool(release["partials"]),
-                "enUS_platforms": branchConfig["release_platforms"],
                 "l10n_config": get_l10n_config(release, branchConfig, branch, l10n_changesets, index),
                 "en_US_config": get_en_US_config(release, branchConfig, branch, index),
                 "verifyConfigs": {},
