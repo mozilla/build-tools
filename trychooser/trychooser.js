@@ -98,6 +98,15 @@ $(document).ready(function() {
         }
     });
 
+    //
+    $.getJSON('https://hg.mozilla.org/mozilla-central/raw-file/tip/testing/talos/talos.json',
+              function(data) {
+                  Object.keys(data.suites).forEach(function(suiteName) {
+                      var suite = data.suites[suiteName];
+                      $('input[value=' + suiteName + ']').parent().attr(
+                          'title', suite.tests.join(' '));
+                  });
+              });
     // Force initial update
     $('.all-selector:checked').change();
     $('.none-selector:checked').change();
