@@ -210,12 +210,17 @@ function setresult() {
         args.push('--rebuild-talos 5');
     }
 
-    var tag = $('.tags').val();
+    var tag = $('#tags').val();
     if (tag) {
         args.push('--tag ' + tag);
     }
 
-    var rebuilds = parseInt($('.rebuilds').val(), 10);
+    var setenv = $('#setenv').val();
+    if (setenv) {
+        args.push('--setenv ' + setenv);
+    }
+
+    var rebuilds = parseInt($('#rebuilds').val(), 10);
     if (rebuilds) {
         args.push('--rebuild ' + rebuilds);
     }
@@ -235,6 +240,13 @@ function setresult() {
         incomplete = true;
     } else {
         $('#platforms-none').removeClass('attention');
+    }
+
+    if (value.match(/mochitest-browser-screenshots/) && !value.match(/MOZSCREENSHOTS_SETS=./)) {
+        $('#setenv').addClass('attention');
+        incomplete = true;
+    } else {
+        $('#setenv').removeClass('attention');
     }
 
     if (incomplete) {
