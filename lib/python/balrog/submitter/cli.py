@@ -96,8 +96,7 @@ class ReleaseCreatorBase(object):
         api = Release(name=name, auth=self.auth, api_root=self.api_root)
         current_data, data_version = api.get_data()
         data = recursive_update(current_data, data)
-        api.update_release(version=appVersion,
-                           product=productName,
+        api.update_release(product=productName,
                            hashFunction=hashFunction,
                            releaseData=json.dumps(data),
                            data_version=data_version)
@@ -296,7 +295,7 @@ class NightlySubmitterBase(object):
                 return
             # explicitly pass data version
             api.update_build(
-                product=productName, version=appVersion,
+                product=productName,
                 hashFunction=hashFunction,
                 buildData=json.dumps(merge_partial_updates(current_data,
                                                            data)),
@@ -319,7 +318,7 @@ class NightlySubmitterBase(object):
                 log.warn("Latest data didn't change, skipping update")
                 return
             latest.update_build(
-                product=productName, version=appVersion,
+                product=productName,
                 hashFunction=hashFunction, buildData=json.dumps(source_data),
                 alias=json.dumps(alias), schemaVersion=schemaVersion,
                 data_version=latest_data_version)
@@ -406,7 +405,7 @@ class ReleaseSubmitterBase(object):
                            auth=self.auth, api_root=self.api_root)
         schemaVersion = json.dumps(schemaVersion)
         api.update_build(
-            product=productName, version=appVersion, hashFunction=hashFunction,
+            product=productName, hashFunction=hashFunction,
             buildData=data, schemaVersion=schemaVersion)
 
 
@@ -477,7 +476,7 @@ class BlobTweaker(object):
         current_data, data_version = api.get_data()
         data = recursive_update(current_data, data)
         api.update_release(
-            version=data['appVersion'], product=name.split('-')[0],
+            product=name.split('-')[0],
             hashFunction=data['hashFunction'], releaseData=json.dumps(data),
             data_version=data_version,
             schemaVersion=current_data['schema_version'])
