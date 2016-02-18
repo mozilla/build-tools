@@ -13,6 +13,7 @@ from balrog.submitter.updates import merge_partial_updates
 from util.algorithms import recursive_update
 from util.retry import retry
 import logging
+from requests.exceptions import HTTPError
 
 log = logging.getLogger(__name__)
 
@@ -94,11 +95,20 @@ class ReleaseCreatorBase(object):
         name = get_release_blob_name(productName, version, buildNumber,
                                      self.dummy)
         api = Release(name=name, auth=self.auth, api_root=self.api_root)
-        current_data, data_version = api.get_data()
+        try:
+            current_data, data_version = api.get_data()
+        except HTTPError, e:
+            if e.response.status_code == 404:
+                log.warning("Release blob doesn't exist, using empty data...")
+                current_data, data_version = {}, None
+            else:
+                raise
+
         data = recursive_update(current_data, data)
         api.update_release(product=productName,
                            hashFunction=hashFunction,
                            releaseData=json.dumps(data),
+                           schemaVersion=schemaVersion,
                            data_version=data_version)
 
 
