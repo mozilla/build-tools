@@ -26,11 +26,14 @@ if [ -z "$NO_BBCONFIG" -a -z "$BUILDBOT_CONFIGS" ]; then
     export BUILDBOT_CONFIGS="https://hg.mozilla.org/build/buildbot-configs"
 fi
 if [ -n "$PROPERTIES_FILE" -a -f "$PROPERTIES_FILE" ]; then
+    # Get the assumed slavebuilddir, and read in from buildbot if this is not
+    # Release promotion
+    SLAVEBUILDDIR=$(basename $(cd "$SCRIPTS_DIR/.."; pwd))
     if [ -z "$NO_BBCONFIG" ]; then
         RELEASE_CONFIG=$($JSONTOOL -k properties.release_config $PROPERTIES_FILE)
         TAG=$($JSONTOOL -k properties.release_tag $PROPERTIES_FILE)
+        SLAVEBUILDDIR=$($JSONTOOL -k properties.slavebuilddir $PROPERTIES_FILE)
     fi
-    SLAVEBUILDDIR=$($JSONTOOL -k properties.slavebuilddir $PROPERTIES_FILE)
 
     $PYTHON -u $SCRIPTS_DIR/buildfarm/maintenance/purge_builds.py \
         -s 16 -n info -n 'rel-*' -n 'tb-rel-*' -n $SLAVEBUILDDIR
