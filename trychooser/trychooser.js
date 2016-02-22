@@ -162,6 +162,10 @@ function setresult() {
         var tryopt = $(this).attr('try-section');
         var arg = '-' + tryopt + ' ';
         var names = [];
+        if ($(this).find(':checked').length == 0) {
+          // If nothing checked, ensure none-selector is checked.
+          $(this).find('.none-selector').prop('checked', true);
+        }
         if ($(this).find('.none-selector:checked').length > 0) {
             names = ['none'];
         } else if ($(this).find('.all-selector:checked').length > 0) {
