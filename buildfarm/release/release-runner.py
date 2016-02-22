@@ -318,6 +318,7 @@ def main(options):
                 "bouncer_enabled": branchConfig["bouncer_enabled"],
                 "release_channels": branchConfig["release_channels"],
                 "signing_pvt_key": signing_pvt_key,
+                "build_tools_repo_path": branchConfig['build_tools_repo_path'],
                 "push_to_candidates_enabled": branchConfig['push_to_candidates_enabled'],
                 "postrelease_version_bump_enabled": branchConfig['postrelease_version_bump_enabled'],
             }
