@@ -145,7 +145,13 @@ def getPartials(release):
 
 # TODO: deal with platform-specific locales
 def get_platform_locales(l10n_changesets, platform):
-    return l10n_changesets.keys()
+    # hardcode ja/ja-JP-mac exceptions
+    if platform == "macosx64":
+        ignore = "ja"
+    else:
+        ignore = "ja-JP-mac"
+
+    return [l for l in l10n_changesets.keys() if l != ignore]
 
 
 def get_l10n_config(release, branchConfig, branch, l10n_changesets, index):
