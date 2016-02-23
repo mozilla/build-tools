@@ -292,6 +292,7 @@ def main(options):
                 "appVersion": getAppVersion(release["version"]),
                 "buildNumber": release["buildNumber"],
                 "source_enabled": True,
+                "checksums_enabled": True,
                 "repo_path": release["branch"],
                 "revision": release["mozillaRevision"],
                 "product": release["product"],
