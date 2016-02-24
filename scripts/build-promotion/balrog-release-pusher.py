@@ -50,6 +50,10 @@ if __name__ == '__main__':
         "-v", "--verbose", action="store_const", dest="loglevel",
         const=logging.DEBUG, default=logging.INFO,
         help="Increase output verbosity")
+    parser.add_argument(
+        "--dummy", action="store_true", default=False,
+        help="Use dummy balrog blobs")
+
 
     args = parser.parse_args()
     logging.basicConfig(format="%(message)s", level=args.loglevel)
@@ -62,8 +66,8 @@ if __name__ == '__main__':
     credentials = {}
     execfile(args.credentials_file, credentials)
     auth = (args.username, credentials['balrog_credentials'][args.username])
-    creator = ReleaseCreatorV4(args.api_root, auth)
-    pusher = ReleasePusher(args.api_root, auth)
+    creator = ReleaseCreatorV4(args.api_root, auth, dummy=args.dummy)
+    pusher = ReleasePusher(args.api_root, auth, dummy=args.dummy)
 
     creator.run(
         appVersion=args.app_version,

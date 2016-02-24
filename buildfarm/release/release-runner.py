@@ -243,6 +243,7 @@ def main(options):
     configs_workdir = 'buildbot-configs'
     balrog_username = get_config(config, "balrog", "username", None)
     balrog_password = get_config(config, "balrog", "password", None)
+    extra_balrog_submitter_params = get_config(config, "balrog", "extra_balrog_submitter_params", None)
     beetmover_aws_access_key_id = get_config(config, "beetmover", "aws_access_key_id", None)
     beetmover_aws_secret_access_key = get_config(config, "beetmover", "aws_secret_access_key", None)
 
@@ -322,6 +323,8 @@ def main(options):
                 "push_to_candidates_enabled": branchConfig['push_to_candidates_enabled'],
                 "postrelease_version_bump_enabled": branchConfig['postrelease_version_bump_enabled'],
             }
+            if extra_balrog_submitter_params:
+                kwargs["extra_balrog_submitter_params"] = extra_balrog_submitter_params
 
             validate_graph_kwargs(**kwargs)
 
