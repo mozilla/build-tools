@@ -322,6 +322,9 @@ def main(options):
                 "build_tools_repo_path": branchConfig['build_tools_repo_path'],
                 "push_to_candidates_enabled": branchConfig['push_to_candidates_enabled'],
                 "postrelease_version_bump_enabled": branchConfig['postrelease_version_bump_enabled'],
+                "push_to_releases_enabled": True,
+                "push_to_releases_automatic": branchConfig['push_to_releases_automatic'],
+                "beetmover_candidates_bucket": branchConfig["beetmover_candidates_bucket"],
             }
             if extra_balrog_submitter_params:
                 kwargs["extra_balrog_submitter_params"] = extra_balrog_submitter_params
