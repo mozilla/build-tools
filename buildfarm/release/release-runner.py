@@ -5,25 +5,34 @@ import time
 import logging
 import sys
 import os
+import subprocess
+import hashlib
+import functools
+import shutil
+import tempfile
+import requests
 from os import path
 from optparse import OptionParser
 from twisted.python.lockfile import FilesystemLock
 
 site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 
-import requests
 from kickoff.api import Releases, Release, ReleaseL10n
 from release.info import readBranchConfig
 from release.l10n import parsePlainL10nChangesets
 from release.versions import getAppVersion
 from releasetasks import make_task_graph
-from taskcluster import Scheduler, Index
+from taskcluster import Scheduler, Index, Queue
 from taskcluster.utils import slugId
 from util.hg import mercurial
 from util.retry import retry
 from util.file import load_config, get_config
 
 log = logging.getLogger(__name__)
+
+
+class SanityException(Exception):
+    pass
 
 
 # FIXME: the following function should be removed and we should use
@@ -194,14 +203,143 @@ def get_en_US_config(release, branchConfig, branch, index):
     }
 
 
-def validate_graph_kwargs(**kwargs):
+def validate_signatures(checksums, signature, dir_path, gpg_key_path):
+    try:
+        cmd = ['gpg', '--batch', '--homedir', dir_path, '--import',
+               gpg_key_path]
+        subprocess.check_call(cmd)
+        cmd = ['gpg', '--homedir', dir_path, '--verify', signature, checksums]
+        subprocess.check_call(cmd)
+    except subprocess.CalledProcessError:
+        log.exception("GPG signature check failed")
+        raise SanityException("GPG signature check failed")
+
+
+def parse_sha512(checksums):
+    # parse the checksums file and store all sha512 digests
+    _dict = dict()
+    with open(checksums, 'rb') as fd:
+        lines = fd.readlines()
+        for line in lines:
+            digest, alg, _, name = line.split()
+            if alg != 'sha512':
+                continue
+            _dict[os.path.basename(name)] = digest
+    return _dict
+
+
+def download_all_artifacts(queue, artifacts, task_id, dir_path):
+    failed_downloads = False
+
+    for artifact in artifacts:
+        name = os.path.basename(artifact['name'])
+        build_url = queue.buildSignedUrl(
+            'getLatestArtifact',
+            task_id,
+            artifact['name']
+        )
+        if name.endswith(".checksums"):
+            continue
+
+        log.debug('Downloading %s', name)
+        try:
+            r = requests.get(build_url, timeout=60)
+            r.raise_for_status()
+        except requests.HTTPError:
+            log.exception("Failed to download %s", name)
+            failed_downloads = True
+        else:
+            filepath = os.path.join(dir_path, name)
+            with open(filepath, 'wb') as fd:
+                for chunk in r.iter_content(1024):
+                    fd.write(chunk)
+
+    if failed_downloads:
+        raise SanityException('Downloading artifacts failed')
+
+
+def validate_checksums(_dict, dir_path):
+    for name in _dict.keys():
+        filepath = os.path.join(dir_path, name)
+        computed_hash = get_hash(filepath)
+        correct_hash = _dict[name]
+        if computed_hash != correct_hash:
+            log.error("failed to validate checksum for %s", name, exc_info=True)
+            raise SanityException("Failed to check digest for %s" % name)
+
+
+def sanitize_en_US_binary(queue, task_id, gpg_key_path):
+    # each platform en-US gets its own tempdir workground
+    tempdir = tempfile.mkdtemp()
+    log.debug('Temporary playground is %s', tempdir)
+
+    artifacts = queue.listLatestArtifacts(task_id)['artifacts']
+    # iterate in artifacts and grab checksums and its signature only
+    log.info("Retrieve the checksums file and its signature ...")
+    for artifact in artifacts:
+        name = os.path.basename(artifact['name'])
+        if not (name.endswith(".checksums") or name.endswith(".checksums.asc")):
+            continue
+        build_url = queue.buildSignedUrl(
+            'getLatestArtifact',
+            task_id,
+            artifact['name']
+        )
+        try:
+            r = requests.get(build_url, timeout=60)
+            r.raise_for_status()
+        except requests.HTTPError:
+            log.exception("Failed to download %s file", name)
+            raise SanityException("Failed to download %s file" % name)
+        filepath = os.path.join(tempdir, name)
+        with open(filepath, 'wb') as fd:
+            for chunk in r.iter_content(1024):
+                fd.write(chunk)
+        if name.endswith(".checksums.asc"):
+            signature = filepath
+        else:
+            checksums = filepath
+
+    # perform the signatures validation test
+    log.info("Attempt to validate signatures ...")
+    validate_signatures(checksums, signature, tempdir, gpg_key_path)
+    log.info("Signatures validated correctly!")
+
+    log.info("Download all artifacts ...")
+    download_all_artifacts(queue, artifacts, task_id, tempdir)
+    log.info("All downloads completed!")
+
+    log.info("Retrieve all sha512 from checksums file...")
+    sha512_dict = parse_sha512(checksums)
+    log.info("All sha512 digests retrieved")
+
+    log.info("Validating checksums for each artifact ...")
+    validate_checksums(sha512_dict, tempdir)
+    log.info("All checksums validated!")
+
+    # remove entire playground before moving forward
+    log.debug("Deleting the temporary playground ...")
+    shutil.rmtree(tempdir)
+
+
+def get_hash(path, hash_type="sha512"):
+    h = hashlib.new(hash_type)
+    with open(path, "rb") as f:
+        for chunk in iter(functools.partial(f.read, 4096), ''):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def validate_graph_kwargs(queue, gpg_key_path, **kwargs):
     # TODO: validate partials
     # TODO: validate l10n changesets
-    # TODO: go through release sanity for other validations to do
-    for url in kwargs.get("l10n_platforms", {}).values():
-        ret = requests.head(url, allow_redirects=True)
-        if not ret.ok():
-            log.error("en_us_binary url (%s) not accessible (got http %s)", url, ret.status_code)
+    platforms = kwargs.get('en_US_config', {}).get('platforms', {})
+    for platform in platforms.keys():
+        task_id = platforms.get(platform).get('task_id', {})
+        log.info('Performing release sanity for %s en-US binary', platform)
+        sanitize_en_US_binary(queue, task_id, gpg_key_path)
+
+    log.info("Release sanity for all en-US is now completed!")
 
 
 def main(options):
@@ -246,12 +384,14 @@ def main(options):
     extra_balrog_submitter_params = get_config(config, "balrog", "extra_balrog_submitter_params", None)
     beetmover_aws_access_key_id = get_config(config, "beetmover", "aws_access_key_id", None)
     beetmover_aws_secret_access_key = get_config(config, "beetmover", "aws_secret_access_key", None)
+    gpg_key_path = get_config(config, "signing", "gpg_key_path", None)
 
     # TODO: replace release sanity with direct checks of en-US and l10n revisions (and other things if needed)
 
     rr = ReleaseRunner(api_root=api_root, username=username, password=password)
     scheduler = Scheduler(tc_config)
     index = Index(tc_config)
+    queue = Queue(tc_config)
 
     # Main loop waits for new releases, processes them and exits.
     while True:
@@ -331,7 +471,7 @@ def main(options):
             if extra_balrog_submitter_params:
                 kwargs["extra_balrog_submitter_params"] = extra_balrog_submitter_params
 
-            validate_graph_kwargs(**kwargs)
+            validate_graph_kwargs(queue, gpg_key_path, **kwargs)
 
             graph_id = slugId()
             graph = make_task_graph(**kwargs)
