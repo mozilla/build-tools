@@ -222,11 +222,6 @@
     ],
     "repo_type": "hg"
   },
-  "addon-sdk": {
-    "repo": "https://hg.mozilla.org/projects/addon-sdk",
-    "graph_branches": [],
-    "repo_type": "hg"
-  },
   "date": {
     "repo": "https://hg.mozilla.org/projects/date",
     "graph_branches": [
