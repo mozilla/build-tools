@@ -31,6 +31,23 @@ from util.file import load_config, get_config
 log = logging.getLogger(__name__)
 
 
+CHECKSUMS = set([
+    '.checksums',
+    '.checksums.asc',
+])
+
+
+ALL_FILES = set([
+    '.checksums',
+    '.checksums.asc',
+    '.complete.mar',
+    '.exe',
+    '.dmg',
+    'i686.tar.bz2',
+    'x86_64.tar.bz2',
+])
+
+
 class SanityException(Exception):
     pass
 
@@ -215,7 +232,7 @@ def validate_signatures(checksums, signature, dir_path, gpg_key_path):
         raise SanityException("GPG signature check failed")
 
 
-def parse_sha512(checksums):
+def parse_sha512(checksums, files):
     # parse the checksums file and store all sha512 digests
     _dict = dict()
     with open(checksums, 'rb') as fd:
@@ -225,22 +242,20 @@ def parse_sha512(checksums):
             if alg != 'sha512':
                 continue
             _dict[os.path.basename(name)] = digest
-    return _dict
+    wdict = {k: _dict[k] for k in _dict.keys() if file_in_whitelist(k, files)}
+    return wdict
 
 
 def download_all_artifacts(queue, artifacts, task_id, dir_path):
     failed_downloads = False
 
     for artifact in artifacts:
-        name = os.path.basename(artifact['name'])
+        name = os.path.basename(artifact)
         build_url = queue.buildSignedUrl(
             'getLatestArtifact',
             task_id,
-            artifact['name']
+            artifact
         )
-        if name.endswith(".checksums"):
-            continue
-
         log.debug('Downloading %s', name)
         try:
             r = requests.get(build_url, timeout=60)
@@ -268,23 +283,32 @@ def validate_checksums(_dict, dir_path):
             raise SanityException("Failed to check digest for %s" % name)
 
 
+def file_in_whitelist(artifact, whitelist):
+    return any([artifact.endswith(x) for x in whitelist])
+
+
 def sanitize_en_US_binary(queue, task_id, gpg_key_path):
     # each platform en-US gets its own tempdir workground
     tempdir = tempfile.mkdtemp()
     log.debug('Temporary playground is %s', tempdir)
 
-    artifacts = queue.listLatestArtifacts(task_id)['artifacts']
+    # get all artifacts and trim but 'name' field from the json entries
+    all_artifacts = [k['name'] for k in queue.listLatestArtifacts(task_id)['artifacts']]
+    # filter files to hold the whitelist-related only
+    artifacts = filter(lambda k: file_in_whitelist(k, ALL_FILES), all_artifacts)
+    # filter out everything but the checkums artifacts
+    checksums_artifacts = filter(lambda k: file_in_whitelist(k, CHECKSUMS), all_artifacts)
+    other_artifacts = list(set(artifacts) - set(checksums_artifacts))
     # iterate in artifacts and grab checksums and its signature only
     log.info("Retrieve the checksums file and its signature ...")
-    for artifact in artifacts:
-        name = os.path.basename(artifact['name'])
-        if not (name.endswith(".checksums") or name.endswith(".checksums.asc")):
-            continue
+    for artifact in checksums_artifacts:
+        name = os.path.basename(artifact)
         build_url = queue.buildSignedUrl(
             'getLatestArtifact',
             task_id,
-            artifact['name']
+            artifact
         )
+        log.debug('Downloading %s', name)
         try:
             r = requests.get(build_url, timeout=60)
             r.raise_for_status()
@@ -306,11 +330,11 @@ def sanitize_en_US_binary(queue, task_id, gpg_key_path):
     log.info("Signatures validated correctly!")
 
     log.info("Download all artifacts ...")
-    download_all_artifacts(queue, artifacts, task_id, tempdir)
+    download_all_artifacts(queue, other_artifacts, task_id, tempdir)
     log.info("All downloads completed!")
 
     log.info("Retrieve all sha512 from checksums file...")
-    sha512_dict = parse_sha512(checksums)
+    sha512_dict = parse_sha512(checksums, ALL_FILES - CHECKSUMS)
     log.info("All sha512 digests retrieved")
 
     log.info("Validating checksums for each artifact ...")
