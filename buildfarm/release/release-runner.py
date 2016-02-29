@@ -481,7 +481,7 @@ def main(options):
                 "beetmover_aws_access_key_id": beetmover_aws_access_key_id,
                 "beetmover_aws_secret_access_key": beetmover_aws_secret_access_key,
                 # TODO: stagin specific, make them configurable
-                "signing_class": "dep-signing",
+                "signing_class": "release-signing",
                 "bouncer_enabled": branchConfig["bouncer_enabled"],
                 "release_channels": branchConfig["release_channels"],
                 "signing_pvt_key": signing_pvt_key,
