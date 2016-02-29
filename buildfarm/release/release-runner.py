@@ -194,7 +194,7 @@ def get_l10n_config(release, branchConfig, branch, l10n_changesets, index):
         l10n_platforms[platform] = {
             "locales": get_platform_locales(l10n_changesets, platform),
             "en_us_binary_url": url,
-            "chunks": branchConfig["platforms"][platform].get("l10n_chunks", 6),
+            "chunks": branchConfig["platforms"][platform].get("l10n_chunks", 10),
         }
 
     return {
