@@ -490,7 +490,7 @@ def main(options):
                 "postrelease_version_bump_enabled": branchConfig['postrelease_version_bump_enabled'],
                 "push_to_releases_enabled": True,
                 "push_to_releases_automatic": branchConfig['push_to_releases_automatic'],
-                "beetmover_candidates_bucket": branchConfig["beetmover_candidates_bucket"],
+                "beetmover_candidates_bucket": branchConfig["beetmover_buckets"][release["product"]],
             }
             if extra_balrog_submitter_params:
                 kwargs["extra_balrog_submitter_params"] = extra_balrog_submitter_params
