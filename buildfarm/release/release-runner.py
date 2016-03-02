@@ -5,6 +5,7 @@ import time
 import logging
 import sys
 import os
+import re
 import subprocess
 import hashlib
 import functools
@@ -31,6 +32,8 @@ from util.file import load_config, get_config
 log = logging.getLogger(__name__)
 
 
+# both CHECKSUMS and ALL_FILES have been defined to improve the release sanity
+# en-US binaries timing by whitelisting artifacts of interest - bug 1251761
 CHECKSUMS = set([
     '.checksums',
     '.checksums.asc',
@@ -46,6 +49,14 @@ ALL_FILES = set([
     'i686.tar.bz2',
     'x86_64.tar.bz2',
 ])
+
+
+# temporary regex to filter out anything but firefox beta releases within
+# release promotion. Once migration from buildbot to promotion is completed
+# for all types of releases, we will backout this filtering  - bug 1252333
+RELEASE_PATTERNS = [
+    r"Firefox-\d+\.0b\d+-build\d+"
+]
 
 
 class SanityException(Exception):
@@ -69,6 +80,10 @@ def bump_version(version):
     return split_by.join(v)
 
 
+def matches(name, patterns):
+    return any([re.search(p, name) for p in patterns])
+
+
 class ReleaseRunner(object):
     def __init__(self, api_root=None, username=None, password=None,
                  timeout=60):
@@ -83,9 +98,17 @@ class ReleaseRunner(object):
     def get_release_requests(self):
         new_releases = self.releases_api.getReleases()
         if new_releases['releases']:
-            self.new_releases = [self.release_api.getRelease(name) for name in
-                                 new_releases['releases']]
-            return True
+            new_releases = [self.release_api.getRelease(name) for name in
+                            new_releases['releases']]
+            our_releases = [r for r in new_releases if
+                            matches(r['name'], RELEASE_PATTERNS)]
+            if our_releases:
+                self.new_releases = our_releases
+                log.info("Releases to handle are %s", our_releases)
+                return True
+            else:
+                log.info("No releases to handle in %s", new_releases)
+                return False
         else:
             log.info("No new releases: %s" % new_releases)
             return False
