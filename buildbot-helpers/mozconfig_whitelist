@@ -194,6 +194,16 @@ for branch in ('mozilla-esr38', 'mozilla-esr45'):
             'mk_add_options MOZ_PGO=1',
             'export BUILDING_RELEASE=1',
         ]
+    if branch == 'mozilla-esr45':
+        for platform in all_desktop_platforms:
+            whitelist[branch][platform] += [
+                'if [ -n "$ENABLE_RELEASE_PROMOTION" ]; then',
+                'MOZ_AUTOMATION_UPLOAD_SYMBOLS=1',
+                'MOZ_AUTOMATION_UPDATE_PACKAGING=1',
+                'fi',
+            ]
+            whitelist[branch][platform] += ['MOZ_AUTOMATION_SDK=${MOZ_AUTOMATION_SDK-1}']
+
 
 if __name__ == '__main__':
     import pprint
