@@ -5,6 +5,7 @@ import time
 import logging
 import sys
 import os
+import re
 import json
 from os import path
 from optparse import OptionParser
@@ -33,6 +34,24 @@ from util.file import load_config, get_config
 log = logging.getLogger(__name__)
 
 
+# temporary regex to filter out firefox desktop beta releases as they're
+# handled separately within release promotion. Once migration from buildbot
+# to promotion is completed for all types of releases, we will backout this
+# filtering  - bug 1252333
+RELEASE_PATTERNS = [
+    # all Firefox non-betas
+    r"Firefox-\d+\.\d+(\.\d+)?(esr)?-build\d+",
+    # all Fennec betas
+    r"Fennec-\d+\.0b\d+-build\d+",
+    # all Fennec non-betas
+    r"Fennec-\d+\.\d+(\.\d+)?-build\d+",
+    # all Thunderbird betas
+    r"Thunderbird-\d+\.0b\d+-build\d+",
+    # all Thunderbird non-betas
+    r"Thunderbird-\d+\.\d+(\.\d+)?-build\d+",
+]
+
+
 def reconfig_warning(from_, to, smtp_server, rr, start_time, elapsed,
                      proc):
     """Called when the buildbot master reconfigs are taking a long time."""
@@ -55,6 +74,10 @@ def reconfig_warning(from_, to, smtp_server, rr, start_time, elapsed,
         log.error("Cannot send email", exc_info=True)
 
 
+def matches(name, patterns):
+    return any([re.search(p, name) for p in patterns])
+
+
 class ReleaseRunner(object):
     def __init__(self, api_root=None, username=None, password=None,
                  timeout=60):
@@ -69,9 +92,17 @@ class ReleaseRunner(object):
     def get_release_requests(self):
         new_releases = self.releases_api.getReleases()
         if new_releases['releases']:
-            self.new_releases = [self.release_api.getRelease(name) for name in
-                                 new_releases['releases']]
-            return True
+            new_releases = [self.release_api.getRelease(name) for name in
+                            new_releases['releases']]
+            our_releases = [r for r in new_releases if
+                            matches(r['name'], RELEASE_PATTERNS)]
+            if our_releases:
+                self.new_releases = our_releases
+                log.info("Releases to handle are %s", our_releases)
+                return True
+            else:
+                log.info("No releases to handle in %s", new_releases)
+                return False
         else:
             log.info("No new releases: %s" % new_releases)
             return False
