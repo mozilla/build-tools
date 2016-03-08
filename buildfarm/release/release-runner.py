@@ -499,6 +499,7 @@ def main(options):
                 "en_US_config": get_en_US_config(release, branchConfig, branch, index),
                 "verifyConfigs": {},
                 "balrog_api_root": branchConfig["balrog_api_root"],
+                "funsize_balrog_api_root": branchConfig["funsize_balrog_api_root"],
                 "balrog_username": balrog_username,
                 "balrog_password": balrog_password,
                 "beetmover_aws_access_key_id": beetmover_aws_access_key_id,
