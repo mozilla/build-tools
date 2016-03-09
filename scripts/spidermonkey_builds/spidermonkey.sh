@@ -129,7 +129,11 @@ else
           exit 1
       fi
       TT_WRAPPER=$SCRIPTS_DIR/scripts/tooltool/tooltool_wrapper.sh
-      TT_MANIFEST=$SOURCE/browser/config/tooltool-manifests/${platform%-debug}/releng.manifest
+      manifest_platform=${platform%-debug}
+      if [ "$manifest_platform" = linux ]; then
+          manifest_platform=linux32
+      fi
+      TT_MANIFEST=$SOURCE/browser/config/tooltool-manifests/$manifest_platform/releng.manifest
       TT_BOOTSTRAP=setup.sh
       if [ "$OSTYPE" = "msys" ]; then
           $TT_WRAPPER $TT_MANIFEST $TT_SERVER $TT_BOOTSTRAP 'c:\mozilla-build\python27\python.exe' C:/mozilla-build/tooltool.py
