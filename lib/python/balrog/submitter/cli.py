@@ -410,13 +410,15 @@ class ReleaseSubmitterBase(object):
         data.update(self._get_update_data(productName, version, build_number,
                                           **updateKwargs))
 
-        data = json.dumps(data)
         api = SingleLocale(name=name, build_target=build_target, locale=locale,
                            auth=self.auth, api_root=self.api_root)
         schemaVersion = json.dumps(schemaVersion)
+        current_data, data_version = api.get_data()
         api.update_build(
+            data_version=data_version,
             product=productName, hashFunction=hashFunction,
-            buildData=data, schemaVersion=schemaVersion)
+            buildData=json.dumps(merge_partial_updates(current_data, data)),
+            schemaVersion=schemaVersion)
 
 
 class MultipleUpdatesReleaseMixin(object):
