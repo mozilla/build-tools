@@ -72,8 +72,18 @@ def main():
     parser.add_option("--properties-file", dest="propertiesFile")
 
     options, args = parser.parse_args()
-    # making this file a no-op since we will be posting to perfherder
-    return
+
+    # TODO: check params
+    properties = json.load(open(options.propertiesFile))
+    testresults = properties['properties']['testresults']
+
+    for testresult in testresults:
+        gp = GraphPost(server=options.server, selector=options.selector,
+                       branch=options.branch, resultsname=options.resultsname,
+                       testresult=testresult,
+                       sourcestamp=options.sourcestamp, buildid=options.buildid,
+                       timestamp=options.timestamp)
+        gp.postResult()
 
 if __name__ == '__main__':
     main()

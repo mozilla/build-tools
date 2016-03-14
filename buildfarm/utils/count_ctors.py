@@ -1,6 +1,5 @@
 #!/usr/bin/python
 import subprocess
-import json
 import re
 import sys
 
@@ -48,6 +47,4 @@ def count_ctors(filename):
 
 if __name__ == '__main__':
     for f in sys.argv[1:]:
-        output = {"framework": {"name": "build_metrics"}, "suites": [{"name": "compiler_metrics", "subtests": [{"name": "num_constructors", "value": count_ctors(f)}] } ]}
-        print "PERFHERDER_DATA: %s" % json.dumps(output)
-
+        print "%s\t%s" % (count_ctors(f), f)
