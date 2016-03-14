@@ -43,6 +43,11 @@ while [ $# -gt 0 ]; do
             TT_SERVER="$1"
             shift
             ;;
+        --ttauthfile)
+            shift
+            httool_args+=(--authentication-file "$1")
+            shift
+            ;;
         -r|--rev)
             shift
             hgtool_args+=(--clone-by-revision -r "$1")
