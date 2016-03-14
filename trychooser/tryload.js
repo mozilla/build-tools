@@ -95,7 +95,6 @@ function getTryLoads(callback) {
       totalTestLoad["win32-mulet"] = totalTestLoad["win32"];
       totalTestLoad["win64"] = load_test["win8-ix"];
       totalTestLoad["android-api-9"] = load_test["ubuntu64-vm"];
-      totalTestLoad["android-api-15"] = load_test["panda"];
       totalTestLoad["android-x86"] = load_test["ubuntu64-hw"];
       totalTestLoad["emulator"] = load_test["ubuntu64-vm"];
       // emulator-jb: N/A

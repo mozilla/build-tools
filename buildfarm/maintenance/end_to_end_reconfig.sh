@@ -539,23 +539,6 @@ if [ -f "${RECONFIG_DIR}/${RECONFIG_UPDATE_FILE}" ]; then
     cat "${RECONFIG_DIR}/${RECONFIG_UPDATE_FILE}" | sed 's/^/        /'
 fi
 
-# Manage foopies after everything else.
-# No easy way to see if there are changes to the tools repo since there is no production branch
-# and we do not tag it - so aside from running show_revision and then checking if every version
-# is already on the latest commit, we should probably just run it regardless.
-devices_json_url='http://hg.mozilla.org/build/tools/raw-file/tip/buildfarm/mobile/devices.json'
-if [ "${PREPARE_ONLY}" != '0' ]; then
-    echo "  * Preparing foopy update only; not running: '$(pwd)/manage_foopies.py' -f '${devices_json_url}' -j16 -H all show_revision update"
-    echo "  * Preparing foopy update only; not running: '$(pwd)/manage_foopies.py' -f '${devices_json_url}' -j16 -H all show_revision"
-else
-    echo "  * Fabric log for foopies: '${RECONFIG_DIR}/manage_foopies-${START_TIME}.log'"
-    echo "  * Running: '$(pwd)/manage_foopies.py' -f '${devices_json_url}' -j16 -H all show_revision update"
-    ./manage_foopies.py -f "${devices_json_url}" -j16 -H all show_revision update >>"${RECONFIG_DIR}/manage_foopies-${START_TIME}.log" 2>&1
-    echo "  * Running: '$(pwd)/manage_foopies.py' -f '${devices_json_url}' -j16 -H all show_revision"
-    ./manage_foopies.py -f "${devices_json_url}" -j16 -H all show_revision >>"${RECONFIG_DIR}/manage_foopies-${START_TIME}.log" 2>&1
-    echo "  * Foopies updated"
-fi
-
 echo "  * Directory '${RECONFIG_DIR}' contains artifacts from reconfig process"
 
 STOP_TIME="$(date +%s)"
