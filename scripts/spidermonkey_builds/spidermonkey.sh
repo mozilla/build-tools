@@ -43,11 +43,6 @@ while [ $# -gt 0 ]; do
             TT_SERVER="$1"
             shift
             ;;
-        --ttauthfile)
-            shift
-            httool_args+=(--authentication-file "$1")
-            shift
-            ;;
         -r|--rev)
             shift
             hgtool_args+=(--clone-by-revision -r "$1")
@@ -141,9 +136,9 @@ else
       TT_MANIFEST=$SOURCE/browser/config/tooltool-manifests/$manifest_platform/releng.manifest
       TT_BOOTSTRAP=setup.sh
       if [ "$OSTYPE" = "msys" ]; then
-          $TT_WRAPPER $TT_MANIFEST $TT_SERVER $TT_BOOTSTRAP 'c:\mozilla-build\python27\python.exe' C:/mozilla-build/tooltool.py
+          $TT_WRAPPER $TT_MANIFEST $TT_SERVER $TT_BOOTSTRAP 'c:\mozilla-build\python27\python.exe' C:/mozilla-build/tooltool.py --authentication-file c:/builds/relengapi.tok
       else
-          $TT_WRAPPER $TT_MANIFEST $TT_SERVER $TT_BOOTSTRAP /builds/tooltool.py
+          $TT_WRAPPER $TT_MANIFEST $TT_SERVER $TT_BOOTSTRAP /builds/tooltool.py --authentication-file /builds/relengapi.tok
       fi
 
       if [[ "$OSTYPE" == darwin* ]]; then
