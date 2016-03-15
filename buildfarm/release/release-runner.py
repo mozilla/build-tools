@@ -491,7 +491,7 @@ def main(options):
                 "revision": release["mozillaRevision"],
                 "product": release["product"],
                 # if mozharness_revision is not passed, use 'revision'
-                "mozharness_changeset": release.get('mh_changeset', release['mozillaRevision']),
+                "mozharness_changeset": release.get('mh_changeset') or release['mozillaRevision'],
                 "partial_updates": getPartials(release),
                 "branch": branch,
                 "updates_enabled": bool(release["partials"]),
