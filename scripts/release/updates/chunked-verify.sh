@@ -28,6 +28,12 @@ if [ -n "$PROPERTIES_FILE" -a -f "$PROPERTIES_FILE" ]; then
     if $JSONTOOL -k properties.VERIFY_CONFIG $PROPERTIES_FILE; then
        VERIFY_CONFIG=$($JSONTOOL -k properties.VERIFY_CONFIG $PROPERTIES_FILE);
     fi
+    if $JSONTOOL -k properties.TOTAL_CHUNKS $PROPERTIES_FILE; then
+       chunks=$($JSONTOOL -k properties.TOTAL_CHUNKS $PROPERTIES_FILE);
+    fi
+    if $JSONTOOL -k properties.THIS_CHUNK $PROPERTIES_FILE; then
+       thisChunk=$($JSONTOOL -k properties.THIS_CHUNK $PROPERTIES_FILE);
+    fi
     if [ -z "$NO_BBCONFIG" -a -z "$BUILDBOT_CONFIGS" ]; then
         export BUILDBOT_CONFIGS="https://hg.mozilla.org/build/buildbot-configs"
     fi

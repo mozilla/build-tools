@@ -84,6 +84,20 @@ def matches(name, patterns):
     return any([re.search(p, name) for p in patterns])
 
 
+def update_channels(version, mappings):
+    """Return a list of update channels for a version using version mapping
+
+    >>> update_channels("40.0", [(r"^\d+\.0$", ["beta", "release"]), (r"^\d+\.\d+\.\d+$", ["release"])])
+    ["beta", "release"]
+    >>> update_channels("40.0.1", [(r"^\d+\.0$", ["beta", "release"]), (r"^\d+\.\d+\.\d+$", ["release"])])
+    ["release"]
+    """
+    for pattern, channels in mappings:
+        if re.match(pattern, version):
+            return channels
+    raise RuntimeError("Cannot find update channels for %s" % version)
+
+
 class ReleaseRunner(object):
     def __init__(self, api_root=None, username=None, password=None,
                  timeout=60):
@@ -507,7 +521,7 @@ def main(options):
                 # TODO: stagin specific, make them configurable
                 "signing_class": "release-signing",
                 "bouncer_enabled": branchConfig["bouncer_enabled"],
-                "release_channels": branchConfig["release_channels"],
+                "release_channels": update_channels(release["version"], branchConfig["release_channel_mappings"]),
                 "signing_pvt_key": signing_pvt_key,
                 "build_tools_repo_path": branchConfig['build_tools_repo_path'],
                 "push_to_candidates_enabled": branchConfig['push_to_candidates_enabled'],
