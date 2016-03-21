@@ -28,6 +28,7 @@ from taskcluster.utils import slugId
 from util.hg import mercurial
 from util.retry import retry
 from util.file import load_config, get_config
+from util.sendmail import sendmail
 
 log = logging.getLogger(__name__)
 
@@ -164,7 +165,6 @@ class ReleaseRunner(object):
         log.info('mark as completed %s' % release['name'])
         self.release_api.update(release['name'], complete=True,
                                 status='Started')
-                                #enUSPlatforms=json.dumps(enUSPlatforms))
 
     def mark_as_failed(self, release, why):
         log.info('mark as failed %s' % release['name'])
@@ -182,53 +182,39 @@ def getPartials(release):
     return partials
 
 
-# TODO: actually do this. figure out how to get the right info without having a release config.
-# maybe we don't need revision info any more? or maybe we have from some other source like branch config?
-#def sendMailRD(smtpServer, From, cfgFile, r):
-#    # Send an email to the mailing after the build
-#    contentMail = ""
-#    release_config = readReleaseConfig(cfgFile)
-#    sources = release_config['sourceRepositories']
-#    To = release_config['ImportantRecipients']
-#    comment = r.get("comment")
-#
-#    if comment:
-#        contentMail += "Comment:\n" + comment + "\n\n"
-#
-#    contentMail += "A new build has been submitted through ship-it:\n"
-#
-#    for name, source in sources.items():
-#
-#        if name == "comm":
-#            # Thunderbird
-#            revision = source["revision"]
-#            path = source["path"]
-#        else:
-#            revision = source["revision"]
-#            path = source["path"]
-#
-#        # For now, firefox has only one source repo but Thunderbird has two
-#        contentMail += name + " commit: https://hg.mozilla.org/" + path + "/rev/" + revision + "\n"
-#
-#    contentMail += "\nCreated by " + r["submitter"] + "\n"
-#
-#    contentMail += "\nStarted by " + r["starter"] + "\n"
-#
-#    subjectPrefix = ""
-#
-#    # On r-d, we prefix the subject of the email in order to simplify filtering
-#    # We don't do it for thunderbird
-#    if "Fennec" in r["name"]:
-#        subjectPrefix = "[mobile] "
-#    if "Firefox" in r["name"]:
-#        subjectPrefix = "[desktop] "
-#
-#    Subject = subjectPrefix + 'Build of %s' % r["name"]
-#
-#    sendmail(from_=From, to=To, subject=Subject, body=contentMail,
-#             smtp_server=smtpServer)
+def email_release_drivers(smtp_server, from_, to, release, graph_id):
+    # Send an email to the mailing after the build
 
-# TODO: deal with platform-specific locales
+    content = """\
+A new build has been submitted through ship-it:
+
+Commit: https://hg.mozilla.org/{path}/rev/{revision}
+Task graph: https://tools.taskcluster.net/task-graph-inspector/#{task_graph_id}/
+
+Created by {submitter}
+Started by {starter}
+
+
+""".format(path=release["branch"], revision=release["mozillaRevision"],
+           submitter=release["submitter"], starter=release["starter"],
+           task_graph_id=graph_id)
+
+    comment = release.get("comment")
+    if comment:
+        content += "Comment:\n" + comment + "\n\n"
+
+    # On r-d, we prefix the subject of the email in order to simplify filtering
+    if "Fennec" in release["name"]:
+        subject_prefix = "[mobile] "
+    if "Firefox" in release["name"]:
+        subject_prefix = "[desktop] "
+
+    subject = subject_prefix + 'Build of %s' % release["name"]
+
+    sendmail(from_=from_, to=to, subject=subject, body=content,
+             smtp_server=smtp_server)
+
+
 def get_platform_locales(l10n_changesets, platform):
     # hardcode ja/ja-JP-mac exceptions
     if platform == "macosx64":
@@ -568,6 +554,9 @@ def main(options):
             print scheduler.createTaskGraph(graph_id, graph)
 
             rr.mark_as_completed(release)
+            email_release_drivers(smtp_server=smtp_server, from_=notify_from,
+                                  to=notify_to, release=release,
+                                  graph_id=graph_id)
         except:
             # We explicitly do not raise an error here because there's no
             # reason not to start other releases if creating the Task Graph
