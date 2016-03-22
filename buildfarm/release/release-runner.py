@@ -98,6 +98,25 @@ def update_channels(version, mappings):
     raise RuntimeError("Cannot find update channels for %s" % version)
 
 
+def long_revision(repo, revision):
+    """Convert short revision to long using JSON API
+
+    >>> long_revision("releases/mozilla-beta", "59f372c35b24")
+    u'59f372c35b2416ac84d6572d64c49227481a8a6c'
+
+    >>> long_revision("releases/mozilla-beta", "59f372c35b2416ac84d6572d64c49227481a8a6c")
+    u'59f372c35b2416ac84d6572d64c49227481a8a6c'
+    """
+    url = "https://hg.mozilla.org/{}/json-rev/{}".format(repo, revision)
+
+    def _get():
+        req = requests.get(url, timeout=60)
+        req.raise_for_status()
+        return req.json()["node"]
+
+    return retry(_get)
+
+
 class ReleaseRunner(object):
     def __init__(self, api_root=None, username=None, password=None,
                  timeout=60):
@@ -117,8 +136,11 @@ class ReleaseRunner(object):
             our_releases = [r for r in new_releases if
                             matches(r['name'], RELEASE_PATTERNS)]
             if our_releases:
+                # make sure to use long revision
+                for r in our_releases:
+                    r["mozillaRevision"] = long_revision(r["branch"], r["mozillaRevision"])
                 self.new_releases = our_releases
-                log.info("Releases to handle are %s", our_releases)
+                log.info("Releases to handle are %s", self.new_releases)
                 return True
             else:
                 log.info("No releases to handle in %s", new_releases)
