@@ -99,6 +99,27 @@ def update_channels(version, mappings):
     raise RuntimeError("Cannot find update channels for %s" % version)
 
 
+def get_display_version(repo_path, revision):
+    """Get display version from remote repository
+
+    >>> get_display_version("releases/mozilla-beta", "59f372c35b24")
+    '46.0b3'
+
+    >>> get_display_version("releases/mozilla-beta", "59f372c35b2416ac84d6572d64c49227481a8a6c")
+    '46.0b3'
+    """
+    # The location is the same for both Firefox and Fennec
+    url = "https://hg.mozilla.org/{repo_path}/raw-file/{revision}/browser/config/version_display.txt"
+    url = url.format(repo_path=repo_path, revision=revision)
+
+    def _get():
+        req = requests.get(url, timeout=60)
+        req.raise_for_status()
+        return req.content.strip()
+
+    return retry(_get)
+
+
 def long_revision(repo, revision):
     """Convert short revision to long using JSON API
 
@@ -265,6 +286,17 @@ def get_en_US_config(release, branchConfig, branch, index):
     }
 
 
+def validate_version(repo_path, revision, version):
+    actual_version = get_display_version(repo_path, revision)
+    if version != actual_version:
+        raise SanityException(
+            "In-tree version '%s' doesn't match ship-it version '%s'" %
+            (actual_version, version))
+    else:
+        log.info("In-tree version '%s' matches ship-it version '%s'",
+                 actual_version, version)
+
+
 def validate_signatures(checksums, signature, dir_path, gpg_key_path):
     try:
         cmd = ['gpg', '--batch', '--homedir', dir_path, '--import',
@@ -400,6 +432,8 @@ def get_hash(path, hash_type="sha512"):
 
 
 def validate_graph_kwargs(queue, gpg_key_path, **kwargs):
+    validate_version(repo_path=kwargs["repo_path"],
+                     revision=kwargs["revision"], version=kwargs["version"])
     # TODO: validate partials
     # TODO: validate l10n changesets
     platforms = kwargs.get('en_US_config', {}).get('platforms', {})
