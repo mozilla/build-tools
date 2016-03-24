@@ -35,11 +35,11 @@ function usage {
     echo
     echo "This script can be used to reconfig interactively, or non-interactively. It will merge"
     echo "buildbotcustom, buildbot-configs from default to production(-0.8)."
-    echo "It will then reconfig the buildbot masters, update the foopies with the latest tools"
-    echo "changes, and afterwards if all was successful, it will also update the wiki page"
-    echo "https://wiki.mozilla.org/ReleaseEngineering/Maintenance and additionally post comments"
-    echo "on the Bugzilla bugs it finds in the commit messages of merged changes, providing a link"
-    echo "to the hg web interface of the commits that have been deployed to production."
+    echo "It will then reconfig the buildbot masters. Afterwards, if all was successful, the script will"
+    echo "update the maintenance wiki (https://wiki.mozilla.org/ReleaseEngineering/Maintenance) and"
+    echo "will additionally post comments to bugzilla for bugs it finds in the commit messages of"
+    echo "merged changes, providing a link to the hg web interface of the commits that have been"
+    echo "deployed to production."
     echo
     echo "USAGE"
     echo "     1) $(basename "${0}") -h"
