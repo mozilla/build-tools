@@ -84,6 +84,16 @@ def bump_version(version):
 def matches(name, patterns):
     return any([re.search(p, name) for p in patterns])
 
+def is_candidate_release(channels):
+    """determine if this is a candidate release or not
+
+    Because ship-it can not tell us if this is a candidate release (yet!), we assume it is when we
+    have determined, based on version, that we are planning to ship to more than one update_channel
+    e.g. for candidate releases we have:
+     1) one channel to test the 'candidate' release with: to 'beta' channel users
+     2) once verified, we ship to the main channel: to 'release' channel users
+    """
+    return len(channels) > 1
 
 def update_channels(version, mappings):
     """Return a list of update channels for a version using version mapping
@@ -92,6 +102,7 @@ def update_channels(version, mappings):
     ["beta", "release"]
     >>> update_channels("40.0.1", [(r"^\d+\.0$", ["beta", "release"]), (r"^\d+\.\d+\.\d+$", ["release"])])
     ["release"]
+
     """
     for pattern, channels in mappings:
         if re.match(pattern, version):
@@ -529,6 +540,28 @@ def main(options):
     branch = release["branch"].split("/")[-1]
     branchConfig = readBranchConfig(path.join(configs_workdir, "mozilla"), branch=branch)
 
+    release_channels = update_channels(release["version"], branchConfig["release_channel_mappings"])
+    # candidate releases are split in two graphs and release-runner only handles the first
+    # graph of tasks. so parts like postrelease, push_to_releases/mirrors, and mirror dependant
+    # channels are handled in the second generated graph outside of release-runner.
+    # This is not elegant but it should do the job for now
+    candidate_release = is_candidate_release(release_channels)
+    if candidate_release:
+        postrelease_enabled = False
+        final_verify_channels = [
+            c for c in release_channels if c not in branchConfig.get('mirror_requiring_channels', [])
+        ]
+        # TODO - use publish_to_balrog_channels once releasetasks publishes to balrog
+        publish_to_balrog_channels = [
+            c for c in release_channels if c not in branchConfig.get('mirror_requiring_channels', [])
+        ]
+        push_to_releases_enabled = False
+    else:
+        postrelease_enabled = branchConfig['postrelease_version_bump_enabled']
+        final_verify_channels = release_channels
+        publish_to_balrog_channels = release_channels
+        push_to_releases_enabled = True
+
     rc = 0
     for release in rr.new_releases:
         graph_id = slugId()
@@ -564,14 +597,15 @@ def main(options):
                 # TODO: stagin specific, make them configurable
                 "signing_class": "release-signing",
                 "bouncer_enabled": branchConfig["bouncer_enabled"],
-                "release_channels": update_channels(release["version"], branchConfig["release_channel_mappings"]),
+                "release_channels": release_channels,
+                "final_verify_channels": final_verify_channels,
                 "signing_pvt_key": signing_pvt_key,
                 "build_tools_repo_path": branchConfig['build_tools_repo_path'],
                 "push_to_candidates_enabled": branchConfig['push_to_candidates_enabled'],
-                "postrelease_version_bump_enabled": branchConfig['postrelease_version_bump_enabled'],
                 "postrelease_bouncer_aliases_enabled": branchConfig['postrelease_bouncer_aliases_enabled'],
                 "tuxedo_server_url": branchConfig['tuxedoServerUrl'],
-                "push_to_releases_enabled": True,
+                "postrelease_version_bump_enabled": postrelease_enabled,
+                "push_to_releases_enabled": push_to_releases_enabled,
                 "push_to_releases_automatic": branchConfig['push_to_releases_automatic'],
                 "beetmover_candidates_bucket": branchConfig["beetmover_buckets"][release["product"]],
             }
