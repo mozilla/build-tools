@@ -569,6 +569,8 @@ def main(options):
                 "build_tools_repo_path": branchConfig['build_tools_repo_path'],
                 "push_to_candidates_enabled": branchConfig['push_to_candidates_enabled'],
                 "postrelease_version_bump_enabled": branchConfig['postrelease_version_bump_enabled'],
+                "postrelease_bouncer_aliases_enabled": branchConfig['postrelease_bouncer_aliases_enabled'],
+                "tuxedo_server_url": branchConfig['tuxedoServerUrl'],
                 "push_to_releases_enabled": True,
                 "push_to_releases_automatic": branchConfig['push_to_releases_automatic'],
                 "beetmover_candidates_bucket": branchConfig["beetmover_buckets"][release["product"]],
