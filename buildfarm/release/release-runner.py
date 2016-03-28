@@ -531,6 +531,7 @@ def main(options):
 
     rc = 0
     for release in rr.new_releases:
+        graph_id = slugId()
         try:
             rr.update_status(release, 'Generating task graph')
             l10n_changesets = parsePlainL10nChangesets(rr.get_release_l10n(release["name"]))
@@ -576,12 +577,8 @@ def main(options):
                 kwargs["extra_balrog_submitter_params"] = extra_balrog_submitter_params
 
             validate_graph_kwargs(queue, gpg_key_path, **kwargs)
-
-            graph_id = slugId()
             graph = make_task_graph(**kwargs)
-
             rr.update_status(release, "Submitting task graph")
-
             log.info("Task graph generated!")
             import pprint
             log.debug(pprint.pformat(graph, indent=4, width=160))
@@ -597,8 +594,11 @@ def main(options):
             # fails for another one. We _do_ need to set this in order to exit
             # with the right code, though.
             rc = 2
-            rr.update_status(release, 'Failed to start release promotion')
-            log.exception("Failed to start release promotion for {}: ".format(release))
+            rr.mark_as_failed(
+                release,
+                'Failed to start release promotion (graph ID: %s)' % graph_id)
+            log.exception("Failed to start release promotion for graph %s %s",
+                          graph_id, release)
 
     if rc != 0:
         sys.exit(rc)
