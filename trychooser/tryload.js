@@ -6,21 +6,21 @@ var TEST_LOAD_URL =  "http://builddata.pub.build.mozilla.org/reports/pending/pen
 function initLoad() {
   return {
     // compile
-    "linux64": 0,
-    "macosx64": 0,
-    "win64": 0,
+    "linux64": "?",
+    "macosx64": "?",
+    "win64": "?",
     // test
-    "ubuntu32-hw": 0,
-    "ubuntu32-vm": 0,
-    "ubuntu64-hw": 0,
-    "ubuntu64-vm": 0,
-    "mac10.6": 0,
-    "mac10.10": 0,
-    "winxp-ix": 0,
-    "win7-ix": 0,
-    "win8-ix": 0,
-    "win2012x64": 0,
-    "panda": 0,
+    "ubuntu32-hw": "?",
+    "ubuntu32-vm": "?",
+    "ubuntu64-hw": "?",
+    "ubuntu64-vm": "?",
+    "mac10.6": "?",
+    "mac10.10": "?",
+    "winxp-ix": "?",
+    "win7-ix": "?",
+    "win8-ix": "?",
+    "win2012x64": "?",
+    "panda": "?",
   };
 }
 
