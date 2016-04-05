@@ -608,6 +608,7 @@ def main(options):
                 "push_to_releases_enabled": push_to_releases_enabled,
                 "push_to_releases_automatic": branchConfig['push_to_releases_automatic'],
                 "beetmover_candidates_bucket": branchConfig["beetmover_buckets"][release["product"]],
+                "partner_repacks_platforms": branchConfig.get("partner_repacks_platforms", []),
             }
             if extra_balrog_submitter_params:
                 kwargs["extra_balrog_submitter_params"] = extra_balrog_submitter_params
