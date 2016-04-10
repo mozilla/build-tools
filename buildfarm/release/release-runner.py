@@ -203,13 +203,18 @@ class ReleaseRunner(object):
         self.release_api.update(release['name'], ready=False, status=why)
 
 
-def getPartials(release):
+def getPartials(rr, release):
     partials = {}
     for p in release['partials'].split(','):
         partialVersion, buildNumber = p.split('build')
+        partial_release_name = '{}-{}-build{}'.format(
+            release['product'].capitalize(), partialVersion, buildNumber,
+        )
         partials[partialVersion] = {
             'appVersion': getAppVersion(partialVersion),
             'buildNumber': buildNumber,
+            'locales': parsePlainL10nChangesets(
+                rr.get_release_l10n(partial_release_name)).keys(),
         }
     return partials
 
@@ -582,7 +587,7 @@ def main(options):
                 "product": release["product"],
                 # if mozharness_revision is not passed, use 'revision'
                 "mozharness_changeset": release.get('mh_changeset') or release['mozillaRevision'],
-                "partial_updates": getPartials(release),
+                "partial_updates": getPartials(rr, release),
                 "branch": branch,
                 "updates_enabled": bool(release["partials"]),
                 "l10n_config": get_l10n_config(release, branchConfig, branch, l10n_changesets, index),
