@@ -42,13 +42,13 @@ master_ids = {}
 progress_elapsed = 0
 start_time = time.time()
 SLEEP_INTERVAL = 60
-username = "cltbld"
 PROGRESS_INTERVAL = 60*60
 slavealloc_api_url = "https://secure.pub.build.mozilla.org/slavealloc/api/masters"
 credentials = {
     "ldap_username": "",
     "ldap_password": "",
     "cltbld_password": "",
+    "root_password": "",
 }
 
 def IgnorePolicy():
@@ -83,12 +83,19 @@ def masters_remain():
     return False
 
 class MasterConsole(ssh.SSHConsole):
-    def connect(self, timeout=30):
+    def connect(self, timeout=30, as_root=False):
+        if as_root:
+            username = "root"
+            password = credentials["root_password"]
+        else:
+            username = "cltbld"
+            password = credentials["cltbld_password"]
+
         try:
             log.debug("Attempting to connect to %s as %s" % (self.fqdn, username))
             self.client.load_system_host_keys()
-            if credentials["cltbld_password"] != "":
-                self.client.connect(hostname=self.fqdn, username=username, password=credentials["cltbld_password"], allow_agent=True)
+            if password != "":
+                self.client.connect(hostname=self.fqdn, username=username, password=password, allow_agent=True)
             else:
                 self.client.connect(hostname=self.fqdn, username=username, allow_agent=True)
             log.debug("Connection as %s succeeded!", username)
@@ -107,10 +114,10 @@ class MasterConsole(ssh.SSHConsole):
             log.warning("Couldn't connect with any credentials.")
             raise Exception
 
-def get_console(hostname):
+def get_console(hostname, as_root=False):
     console = MasterConsole(hostname, None)
     try:
-        console.connect()  # Make sure we can connect properly
+        console.connect(as_root=as_root)  # Make sure we can connect properly
         return console
     except (socket.error, ssh.SSHException), e:
         log.error(e)
@@ -153,6 +160,8 @@ def get_credentials_from_config_file(config_file):
                     credentials["ldap_password"] = parse_bash_env_var_from_string('LDAP_PASSWORD', line)
                 elif 'CLTBLD_PASSWORD' in line:
                     credentials["cltbld_password"] = parse_bash_env_var_from_string('CLTBLD_PASSWORD', line)
+                elif 'ROOT_PASSWORD' in line:
+                    credentials["root_password"] = parse_bash_env_var_from_string('ROOT_PASSWORD', line)
         f.closed
         if not credentials["ldap_username"] or not credentials["ldap_password"]:
             log.error("Unable to parse LDAP credentials from config file: %s" % config_file)
@@ -163,6 +172,7 @@ def get_credentials_from_user():
     credentials["ldap_username"] = raw_input("Enter LDAP username: ")
     credentials["ldap_password"] = getpass.getpass(prompt='Enter LDAP password: ')
     credentials["cltbld_password"] = getpass.getpass(prompt='Enter cltbld password: ')
+    credentials["root_password"] = getpass.getpass(prompt='Enter root password: ')
 
 def get_credentials(config_file=None):
     if config_file:
@@ -283,6 +293,25 @@ def restart_master(master):
         log.error("Couldn't get console to %s" % master['hostname'])
     return False
 
+def reboot_master(master):
+    # Reboots the remote master. Buildbot is configured to start automatically,
+    # so we just need to re-enable the master in slavealloc.
+    log.debug("Attempting to reboot master: %s" % master['hostname'])
+    cmd = "cd %s; rm -f reconfig.lock; reboot" % master['basedir']
+    console = get_console(master['hostname'], as_root=True)
+    if console:
+        try:
+            rc, output = console.run_cmd(cmd)
+            if rc == 0:
+                log.debug("Master %s rebooted successfully." % master['hostname'])
+                return True
+            log.warning("Reboot of master %s failed." % master['hostname'])
+        except ssh.RemoteCommandError:
+            log.warning("Caught exception while attempting to reboot_master.")
+    else:
+        log.error("Couldn't get console to %s" % master['hostname'])
+    return False
+
 def display_remaining():
     if not buckets:
         return
@@ -344,6 +373,12 @@ def display_progress():
     display_running()
     display_remaining()
 
+def pprint_buckets():
+    import pprint
+    pp = pprint.PrettyPrinter(indent=4)
+    pp.pprint(buckets)
+
+
 signal.signal(signal.SIGINFO, display_progress)
 
 
@@ -359,7 +394,8 @@ if __name__ == '__main__':
     parser.add_argument("-m", "--masters-json", action="store", dest="masters_json", help="JSON file containing complete list of masters", required=True)
     parser.add_argument("-l", "--limit-to-masters", action="store", dest="limit_to_masters", help="Test file containing list of masters to restart, one per line", default=None)
     parser.add_argument("-c", "--config", action="store", dest="config_file", help="Text file containing config variables in bash format", required=False)
-
+    parser.add_argument("-r", "--reboot", dest="reboot", action="store_true",
+                        help="Reboot machine once master is stopped.")
     args = parser.parse_args()
 
     # Setup logging
@@ -402,11 +438,6 @@ if __name__ == '__main__':
 
     put_masters_in_buckets(masters_json, master_list)
 
-    #import pprint
-    #pp = pprint.PrettyPrinter(indent=4)
-    #pp.pprint(buckets)
-    #sys.exit(1)
-
     interval_start_time = time.time()
     while masters_remain():
         # Refill our running buckets.
@@ -440,19 +471,28 @@ if __name__ == '__main__':
 
         for key in running_buckets:
             if check_shutdown_status(running_buckets[key]):
-                if not restart_master(running_buckets[key]):
-                    log.warning("Failed to restart master (%s). Please investigate by hand." % running_buckets[key]['hostname'])
+                if args.reboot and running_buckets[key]['role'] != "scheduler":
+                    if not reboot_master(running_buckets[key]):
+                        log.debug("Failed to reboot master (%s). Please investigate by hand." % running_buckets[key]['hostname'])
+                        running_buckets[key]['issue'] = "Failed to reboot master. May also need to be re-enabled in slavealloc"
+                else:
+                    if not restart_master(running_buckets[key]):
+                        log.debug("Failed to restart master (%s). Please investigate by hand." % running_buckets[key]['hostname'])
+                        running_buckets[key]['issue'] = "Failed to restart master. May also need to be re-enabled in slavealloc"
                 # Either way, we re-enable and remove this master so we can proceed.
                 if running_buckets[key]['role'] != "scheduler":
-                    if enable_master(running_buckets[key]):
-                        log.debug("Re-enabled %s in slavealloc" % running_buckets[key]['hostname'])
-                    else:
-                        running_buckets[key]['issue'] = "Unable to re-enable in slavealloc"
-                        if key not in problem_masters:
-                            problem_masters[key] = []
+                    if 'issue' not in running_buckets[key]:
+                        if enable_master(running_buckets[key]):
+                            log.debug("Re-enabled %s in slavealloc" % running_buckets[key]['hostname'])
+                        else:
+                            log.debug("Unable to re-enable master (%s) in slavealloc." % running_buckets[key]['hostname'])
+                            running_buckets[key]['issue'] = "Unable to re-enable in slavealloc"
+                if 'issue' in running_buckets[key]:
+                    if key not in problem_masters:
+                        problem_masters[key] = []
                         problem_masters[key].append(running_buckets[key].copy())
-                        del running_buckets[key]
-                        continue
+                    del running_buckets[key]
+                    continue
                 if key not in completed_masters:
                     completed_masters[key] = []
                 completed_masters[key].append(running_buckets[key].copy())
