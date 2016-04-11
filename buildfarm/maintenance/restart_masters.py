@@ -25,6 +25,7 @@ import requests
 import simplejson as json
 import socket
 import time
+import signal
 
 from furl import furl
 from paramiko import AuthenticationException
@@ -38,8 +39,11 @@ running_buckets = {}
 completed_masters = {}
 problem_masters = {}
 master_ids = {}
+progress_elapsed = 0
+start_time = time.time()
 SLEEP_INTERVAL = 60
 username = "cltbld"
+PROGRESS_INTERVAL = 60*60
 slavealloc_api_url = "https://secure.pub.build.mozilla.org/slavealloc/api/masters"
 credentials = {
     "ldap_username": "",
@@ -87,7 +91,7 @@ class MasterConsole(ssh.SSHConsole):
                 self.client.connect(hostname=self.fqdn, username=username, password=credentials["cltbld_password"], allow_agent=True)
             else:
                 self.client.connect(hostname=self.fqdn, username=username, allow_agent=True)
-            log.info("Connection as %s succeeded!", username)
+            log.debug("Connection as %s succeeded!", username)
             self.connected = True
         except AuthenticationException, e:
             log.debug("Authentication failure.")
@@ -100,7 +104,7 @@ class MasterConsole(ssh.SSHConsole):
             log.debug("Socket Error (%s) - %s", errorcode[e[0]], e[1])
             raise e
         if not self.connected:
-            log.info("Couldn't connect with any credentials.")
+            log.warning("Couldn't connect with any credentials.")
             raise Exception
 
 def get_console(hostname):
@@ -116,14 +120,14 @@ def get_console(hostname):
 
 def stop_master(master):
     # For scheduler masters, we just stop them.
-    log.info("Stopping %s" % master['hostname'])
+    log.debug("Stopping %s" % master['hostname'])
     cmd = "cd %s; source bin/activate; touch reconfig.lock; make stop" % master['basedir']
     console = get_console(master['hostname'])
     if console:
         try:
             rc, output = console.run_cmd(cmd)
             if rc == 0:
-                log.info("%s stopped successfully." % master['hostname'])
+                log.debug("%s stopped successfully." % master['hostname'])
                 return True
             log.warning("Failed to stop %s, or never saw stop finish." % master['hostname'])
         except ssh.RemoteCommandError:
@@ -202,7 +206,7 @@ def disable_master(master):
     # Disable the master in slavealloc while we're restarting.
     # This shuold avoid new slaves from connecting during shutdown
     # and possibly getting hung.
-    log.info("Disabling %s in slavealloc." % master['hostname'])
+    log.debug("Disabling %s in slavealloc." % master['hostname'])
     disable_url = furl(slavealloc_api_url + "/" + str(master_ids[master['name']]))
     put_data = {"enabled": 0}
     error_msg = "Failed to disable %s" % master['hostname']
@@ -210,7 +214,7 @@ def disable_master(master):
 
 def enable_master(master):
     # Re-enable the master in slavealloc after it has been restarted.
-    log.info("Re-enabling %s in slavealloc." % master['hostname'])
+    log.debug("Re-enabling %s in slavealloc." % master['hostname'])
     enable_url = furl(slavealloc_api_url + "/" + str(master_ids[master['name']]))
     put_data = {"enabled": 1}
     error_msg = "Failed to re-enable %s" % master['hostname']
@@ -218,20 +222,20 @@ def enable_master(master):
 
 def graceful_shutdown(master):
     # We do graceful shutdowns through the master's web interface
-    log.info("Initiating graceful shutdown for %s" % master['hostname'])
+    log.debug("Initiating graceful shutdown for %s" % master['hostname'])
     shutdown_url = furl("http://" + master['hostname'])
     shutdown_url.port = master['http_port']
     shutdown_url.path = "shutdown"
     error_msg = "Failed to initiate graceful shutdown for %s" % master['hostname']
     if http_post(str(shutdown_url), error_msg):
-        log.info("Creating reconfig lockfile for master: %s" % master['hostname'])
+        log.debug("Creating reconfig lockfile for master: %s" % master['hostname'])
         cmd = "cd %s; touch reconfig.lock" % master['basedir']
         console = get_console(master['hostname'])
         if console:
             try:
                 rc, output = console.run_cmd(cmd)
                 if rc == 0:
-                    log.info("Created lockfile on master: %s." % master['hostname'])
+                    log.debug("Created lockfile on master: %s." % master['hostname'])
                     return True
                 log.warning("Error creating lockfile on master: %s" % master['hostname'])
             except ssh.RemoteCommandError:
@@ -245,16 +249,16 @@ def check_shutdown_status(master):
     # Returns true when there is no matching master process.
     # Example process:
     # /builds/buildbot/coop/tests-master/bin/python /builds/buildbot/coop/tests-master/bin/buildbot start /builds/buildbot/coop/tests-master/master
-    log.info("Checking shutdown status of master: %s" % master['hostname'])
+    log.debug("Checking shutdown status of master: %s" % master['hostname'])
     cmd="ps auxww | grep python | grep start | grep %s" % master['master_dir']
     console = get_console(master['hostname'])
     if console:
         try:
             rc, output = console.run_cmd(cmd)
             if rc != 0:
-                log.info("No master process found on %s." % master['hostname'])
+                log.debug("No master process found on %s." % master['hostname'])
                 return True
-            log.info("Master process still exists on %s." % master['hostname'])
+            log.debug("Master process still exists on %s." % master['hostname'])
         except ssh.RemoteCommandError:
             log.warning("Caught exception while checking shutdown status. Will retry on next pass.")
     else:
@@ -263,14 +267,14 @@ def check_shutdown_status(master):
 
 def restart_master(master):
     # Restarts buildbot on the remote master
-    log.info("Attempting to restart master: %s" % master['hostname'])
+    log.debug("Attempting to restart master: %s" % master['hostname'])
     cmd = "cd %s; source bin/activate; make start; rm -f reconfig.lock" % master['basedir']
     console = get_console(master['hostname'])
     if console:
         try:
             rc, output = console.run_cmd(cmd)
             if rc == 0:
-                log.info("Master %s restarted successfully." % master['hostname'])
+                log.debug("Master %s restarted successfully." % master['hostname'])
                 return True
             log.warning("Restart of master %s failed, or never saw restart finish." % master['hostname'])
         except ssh.RemoteCommandError:
@@ -323,16 +327,25 @@ def display_completed():
 def display_problems():
     if not problem_masters:
         return
-    log.info("")
-    log.info("Masters that hit problems")
-    log.info("{:<30} {} {}".format("bucket","master URL","issue"))
-    log.info("{:<30} {} {}".format("======","==========","====="))
+    log.warning("")
+    log.warning("Masters that hit problems")
+    log.warning("{:<30} {} {}".format("bucket","master URL","issue"))
+    log.warning("{:<30} {} {}".format("======","==========","====="))
     for bucket in sorted(problem_masters.iterkeys()):
         for master in sorted(problem_masters[bucket], key=operator.itemgetter('hostname')):
-	    if master['role'] == 'scheduler':
-	        log.info("{:<30} {} {}".format(bucket, master['hostname'], master['issue']))
-	    else:
-	        log.info("{:<30} http://{}:{} {}".format(bucket, master['hostname'], master['http_port'], master['issue']))
+            if master['role'] == 'scheduler':
+                log.warning("{:<30} {} {}".format(bucket, master['hostname'], master['issue']))
+            else:
+                log.warning("{:<30} http://{}:{} {}".format(bucket, master['hostname'], master['http_port'], master['issue']))
+
+def display_progress():
+    display_completed()
+    display_problems()
+    display_running()
+    display_remaining()
+
+signal.signal(signal.SIGINFO, display_progress)
+
 
 if __name__ == '__main__':
     import argparse
@@ -394,6 +407,7 @@ if __name__ == '__main__':
     #pp.pprint(buckets)
     #sys.exit(1)
 
+    interval_start_time = time.time()
     while masters_remain():
         # Refill our running buckets.
         # If we add a new master, we need to kick off the graceful shutdown too.
@@ -408,7 +422,7 @@ if __name__ == '__main__':
                         stop_master(running_buckets[key])
                     else:
                         if disable_master(running_buckets[key]):
-                            log.info("Disabled %s in slavealloc." % running_buckets[key]['hostname'])
+                            log.debug("Disabled %s in slavealloc." % running_buckets[key]['hostname'])
                         else:
                             running_buckets[key]['issue'] = "Unable to disable in slavealloc"
                             if key not in problem_masters:
@@ -416,7 +430,7 @@ if __name__ == '__main__':
                             problem_masters[key].append(running_buckets[key].copy())
                             del running_buckets[key]
                         if graceful_shutdown(running_buckets[key]):
-                            log.info("Initiated graceful_shutdown of %s." % running_buckets[key]['hostname'])
+                            log.debug("Initiated graceful_shutdown of %s." % running_buckets[key]['hostname'])
                         else:
                             running_buckets[key]['issue'] = "Unable to initiate graceful_shutdown"
                             if key not in problem_masters:
@@ -431,7 +445,7 @@ if __name__ == '__main__':
                 # Either way, we re-enable and remove this master so we can proceed.
                 if running_buckets[key]['role'] != "scheduler":
                     if enable_master(running_buckets[key]):
-                        log.info("Re-enabled %s in slavealloc" % running_buckets[key]['hostname'])
+                        log.debug("Re-enabled %s in slavealloc" % running_buckets[key]['hostname'])
                     else:
                         running_buckets[key]['issue'] = "Unable to re-enable in slavealloc"
                         if key not in problem_masters:
@@ -448,11 +462,12 @@ if __name__ == '__main__':
             del running_buckets[key]
 
         if masters_remain():
-            display_completed()
-            display_problems()
-            display_running()
-            display_remaining()
-            log.info("Sleeping for %ds" % SLEEP_INTERVAL)
+            now = time.time()
+            current_interval = now - interval_start_time
+            if current_interval >= PROGRESS_INTERVAL:
+                display_progress()
+                interval_start_time = now
+            log.debug("Sleeping for %ds" % SLEEP_INTERVAL)
             time.sleep(SLEEP_INTERVAL)
 
     log.info("All masters processed. Exiting")
