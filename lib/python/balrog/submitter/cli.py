@@ -187,7 +187,8 @@ class ReleaseCreatorV4(ReleaseCreatorBase):
             # set to False. This is typically used when generating beta channel
             # updates as part of RC builds, which get shipped prior to the
             # release being pushed to mirrors. This is a bit of a hack.
-            if not requiresMirrors and c in ("beta", "beta-cdntest"):
+            if not requiresMirrors and c in ("beta", "beta-cdntest",
+                                             "beta-dev", "beta-dev-cdntest"):
                 uniqueChannels.append(c)
 
         for channel in uniqueChannels:
@@ -202,7 +203,7 @@ class ReleaseCreatorV4(ReleaseCreatorBase):
                 data["fileUrls"][channel]["completes"]["*"] = "%supdate/%%OS_FTP%%/%%LOCALE%%/%s" % (dir_, filename)
             else:
                 # See comment above about these channels for explanation.
-                if not requiresMirrors and channel in ("beta", "beta-cdntest"):
+                if not requiresMirrors and channel in ("beta", "beta-cdntest", "beta-dev", "beta-dev-cdntest"):
                     bouncerProduct = "%s-%sbuild%s-complete" % (productName.lower(), version, buildNumber)
                 else:
                     if productName.lower() == "fennec":
@@ -229,7 +230,7 @@ class ReleaseCreatorV4(ReleaseCreatorBase):
                     data["fileUrls"][channel]["partials"][from_] = "%supdate/%%OS_FTP%%/%%LOCALE%%/%s" % (dir_, filename)
                 else:
                     # See comment above about these channels for explanation.
-                    if not requiresMirrors and channel in ("beta", "beta-cdntest"):
+                    if not requiresMirrors and channel in ("beta", "beta-cdntest", "beta-dev", "beta-dev-cdntest"):
                         bouncerProduct = "%s-%sbuild%s-partial-%sbuild%s" % (productName.lower(), version, buildNumber, previousVersion, previousInfo["buildNumber"])
                     else:
                         bouncerProduct = "%s-%s-partial-%s" % (productName.lower(), version, previousVersion)
