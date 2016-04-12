@@ -18,17 +18,18 @@ from twisted.python.lockfile import FilesystemLock
 
 site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 
-from kickoff.api import Releases, Release, ReleaseL10n
+from kickoff import get_partials, ReleaseRunner, make_task_graph_strict_kwargs
+from kickoff import get_l10n_config, get_en_US_config
+from kickoff import email_release_drivers
+from kickoff import bump_version
 from release.info import readBranchConfig
 from release.l10n import parsePlainL10nChangesets
 from release.versions import getAppVersion
-from releasetasks import make_task_graph
 from taskcluster import Scheduler, Index, Queue
 from taskcluster.utils import slugId
 from util.hg import mercurial
 from util.retry import retry
 from util.file import load_config, get_config
-from util.sendmail import sendmail
 
 log = logging.getLogger(__name__)
 
@@ -52,40 +53,8 @@ ALL_FILES = set([
 ])
 
 
-# temporary regex to filter out anything but mozilla-beta and mozilla-release
-# within release promotion. Once migration to release promotion is completed
-# for all types of releases, we will backout this filtering
-# regex beta tracking bug is 1252333,
-# regex release tracking bug is 1263976
-RELEASE_PATTERNS = [
-    r"Firefox-\d+\.0b\d+-build\d+",
-    r"Firefox-\d+\.\d+(\.\d+)?-build\d+"
-]
-
-
 class SanityException(Exception):
     pass
-
-
-# FIXME: the following function should be removed and we should use
-# next_version provided by ship-it
-def bump_version(version):
-    """Bump last digit"""
-    split_by = "."
-    digit_index = 2
-    if "b" in version:
-        split_by = "b"
-        digit_index = 1
-    v = version.split(split_by)
-    if len(v) < digit_index + 1:
-        # 45.0 is 45.0.0 actually
-        v.append("0")
-    v[-1] = str(int(v[-1]) + 1)
-    return split_by.join(v)
-
-
-def matches(name, patterns):
-    return any([re.search(p, name) for p in patterns])
 
 
 def is_candidate_release(channels):
@@ -134,177 +103,6 @@ def get_display_version(repo_path, revision):
         return req.content.strip()
 
     return retry(_get)
-
-
-def long_revision(repo, revision):
-    """Convert short revision to long using JSON API
-
-    >>> long_revision("releases/mozilla-beta", "59f372c35b24")
-    u'59f372c35b2416ac84d6572d64c49227481a8a6c'
-
-    >>> long_revision("releases/mozilla-beta", "59f372c35b2416ac84d6572d64c49227481a8a6c")
-    u'59f372c35b2416ac84d6572d64c49227481a8a6c'
-    """
-    url = "https://hg.mozilla.org/{}/json-rev/{}".format(repo, revision)
-
-    def _get():
-        req = requests.get(url, timeout=60)
-        req.raise_for_status()
-        return req.json()["node"]
-
-    return retry(_get)
-
-
-class ReleaseRunner(object):
-    def __init__(self, api_root=None, username=None, password=None,
-                 timeout=60):
-        self.new_releases = []
-        self.releases_api = Releases((username, password), api_root=api_root,
-                                     timeout=timeout)
-        self.release_api = Release((username, password), api_root=api_root,
-                                   timeout=timeout)
-        self.release_l10n_api = ReleaseL10n((username, password),
-                                            api_root=api_root, timeout=timeout)
-
-    def get_release_requests(self):
-        new_releases = self.releases_api.getReleases()
-        if new_releases['releases']:
-            new_releases = [self.release_api.getRelease(name) for name in
-                            new_releases['releases']]
-            our_releases = [r for r in new_releases if
-                            matches(r['name'], RELEASE_PATTERNS)]
-            if our_releases:
-                # make sure to use long revision
-                for r in our_releases:
-                    r["mozillaRevision"] = long_revision(r["branch"], r["mozillaRevision"])
-                self.new_releases = our_releases
-                log.info("Releases to handle are %s", self.new_releases)
-                return True
-            else:
-                log.info("No releases to handle in %s", new_releases)
-                return False
-        else:
-            log.info("No new releases: %s" % new_releases)
-            return False
-
-    def get_release_l10n(self, release):
-        return self.release_l10n_api.getL10n(release)
-
-    def update_status(self, release, status):
-        log.info('updating status for %s to %s' % (release['name'], status))
-        try:
-            self.release_api.update(release['name'], status=status)
-        except requests.HTTPError, e:
-            log.warning('Caught HTTPError: %s' % e.response.content)
-            log.warning('status update failed, continuing...', exc_info=True)
-
-    def mark_as_completed(self, release):#, enUSPlatforms):
-        log.info('mark as completed %s' % release['name'])
-        self.release_api.update(release['name'], complete=True,
-                                status='Started')
-
-    def mark_as_failed(self, release, why):
-        log.info('mark as failed %s' % release['name'])
-        self.release_api.update(release['name'], ready=False, status=why)
-
-
-def getPartials(rr, release):
-    partials = {}
-    for p in release['partials'].split(','):
-        partialVersion, buildNumber = p.split('build')
-        partial_release_name = '{}-{}-build{}'.format(
-            release['product'].capitalize(), partialVersion, buildNumber,
-        )
-        partials[partialVersion] = {
-            'appVersion': getAppVersion(partialVersion),
-            'buildNumber': buildNumber,
-            'locales': parsePlainL10nChangesets(
-                rr.get_release_l10n(partial_release_name)).keys(),
-        }
-    return partials
-
-
-def email_release_drivers(smtp_server, from_, to, release, graph_id):
-    # Send an email to the mailing after the build
-
-    content = """\
-A new build has been submitted through ship-it:
-
-Commit: https://hg.mozilla.org/{path}/rev/{revision}
-Task graph: https://tools.taskcluster.net/task-graph-inspector/#{task_graph_id}/
-
-Created by {submitter}
-Started by {starter}
-
-
-""".format(path=release["branch"], revision=release["mozillaRevision"],
-           submitter=release["submitter"], starter=release["starter"],
-           task_graph_id=graph_id)
-
-    comment = release.get("comment")
-    if comment:
-        content += "Comment:\n" + comment + "\n\n"
-
-    # On r-d, we prefix the subject of the email in order to simplify filtering
-    if "Fennec" in release["name"]:
-        subject_prefix = "[mobile] "
-    if "Firefox" in release["name"]:
-        subject_prefix = "[desktop] "
-
-    subject = subject_prefix + 'Build of %s' % release["name"]
-
-    sendmail(from_=from_, to=to, subject=subject, body=content,
-             smtp_server=smtp_server)
-
-
-def get_platform_locales(l10n_changesets, platform):
-    # hardcode ja/ja-JP-mac exceptions
-    if platform == "macosx64":
-        ignore = "ja"
-    else:
-        ignore = "ja-JP-mac"
-
-    return [l for l in l10n_changesets.keys() if l != ignore]
-
-
-def get_l10n_config(release, branchConfig, branch, l10n_changesets, index):
-    l10n_platforms = {}
-    for platform in branchConfig["l10n_release_platforms"]:
-        task = index.findTask("buildbot.revisions.{revision}.{branch}.{platform}".format(
-            revision=release["mozillaRevision"],
-            branch=branch,
-            platform=platform,
-        ))
-        url = "https://queue.taskcluster.net/v1/task/{taskid}/artifacts/public/build".format(
-            taskid=task["taskId"]
-        )
-        l10n_platforms[platform] = {
-            "locales": get_platform_locales(l10n_changesets, platform),
-            "en_us_binary_url": url,
-            "chunks": branchConfig["platforms"][platform].get("l10n_chunks", 10),
-        }
-
-    return {
-        "platforms": l10n_platforms,
-        "changesets": l10n_changesets,
-    }
-
-
-def get_en_US_config(release, branchConfig, branch, index):
-    platforms = {}
-    for platform in branchConfig["release_platforms"]:
-        task = index.findTask("buildbot.revisions.{revision}.{branch}.{platform}".format(
-            revision=release["mozillaRevision"],
-            branch=branch,
-            platform=platform,
-        ))
-        platforms[platform] = {
-            "task_id": task["taskId"],
-        }
-
-    return {
-        "platforms": platforms,
-    }
 
 
 def validate_version(repo_path, revision, version):
@@ -594,11 +392,16 @@ def main(options):
                 "product": release["product"],
                 # if mozharness_revision is not passed, use 'revision'
                 "mozharness_changeset": release.get('mh_changeset') or release['mozillaRevision'],
-                "partial_updates": getPartials(rr, release),
+                "partial_updates": get_partials(rr, release['partials'], release['product']),
                 "branch": branch,
                 "updates_enabled": bool(release["partials"]),
-                "l10n_config": get_l10n_config(release, branchConfig, branch, l10n_changesets, index),
-                "en_US_config": get_en_US_config(release, branchConfig, branch, index),
+                "l10n_config": get_l10n_config(
+                    release['mozillaRevision'], branchConfig['platforms'],
+                    branchConfig['l10n_release_platforms'], branch, l10n_changesets, index
+                ),
+                "en_US_config": get_en_US_config(
+                    release['mozillaRevision'], branchConfig['release_platforms'], branch, index
+                ),
                 "verifyConfigs": {},
                 "balrog_api_root": branchConfig["balrog_api_root"],
                 "funsize_balrog_api_root": branchConfig["funsize_balrog_api_root"],
@@ -609,8 +412,11 @@ def main(options):
                 # TODO: stagin specific, make them configurable
                 "signing_class": "release-signing",
                 "bouncer_enabled": branchConfig["bouncer_enabled"],
+                "updates_builder_enabled": branchConfig["updates_builder_enabled"],
+                "update_verify_enabled": branchConfig["update_verify_enabled"],
                 "release_channels": release_channels,
                 "final_verify_channels": final_verify_channels,
+                "final_verify_platforms": branchConfig['release_platforms'],
                 "signing_pvt_key": signing_pvt_key,
                 "build_tools_repo_path": branchConfig['build_tools_repo_path'],
                 "push_to_candidates_enabled": branchConfig['push_to_candidates_enabled'],
@@ -622,12 +428,11 @@ def main(options):
                 "beetmover_candidates_bucket": branchConfig["beetmover_buckets"][release["product"]],
                 "partner_repacks_platforms": branchConfig.get("partner_repacks_platforms", []),
                 "l10n_changesets": l10n_changesets,
+                "extra_balrog_submitter_params": extra_balrog_submitter_params,
             }
-            if extra_balrog_submitter_params:
-                kwargs["extra_balrog_submitter_params"] = extra_balrog_submitter_params
 
             validate_graph_kwargs(queue, gpg_key_path, **kwargs)
-            graph = make_task_graph(**kwargs)
+            graph = make_task_graph_strict_kwargs(**kwargs)
             rr.update_status(release, "Submitting task graph")
             log.info("Task graph generated!")
             import pprint
