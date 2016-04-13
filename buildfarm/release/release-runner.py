@@ -553,6 +553,7 @@ def main(options):
     candidate_release = is_candidate_release(release_channels)
     if candidate_release:
         postrelease_enabled = False
+        postrelease_bouncer_aliases_enabled = False
         final_verify_channels = [
             c for c in release_channels if c not in branchConfig.get('mirror_requiring_channels', [])
         ]
@@ -563,6 +564,7 @@ def main(options):
         push_to_releases_enabled = False
     else:
         postrelease_enabled = branchConfig['postrelease_version_bump_enabled']
+        postrelease_bouncer_aliases_enabled = branchConfig['postrelease_bouncer_aliases_enabled']
         final_verify_channels = release_channels
         publish_to_balrog_channels = release_channels
         push_to_releases_enabled = True
@@ -607,7 +609,7 @@ def main(options):
                 "signing_pvt_key": signing_pvt_key,
                 "build_tools_repo_path": branchConfig['build_tools_repo_path'],
                 "push_to_candidates_enabled": branchConfig['push_to_candidates_enabled'],
-                "postrelease_bouncer_aliases_enabled": branchConfig['postrelease_bouncer_aliases_enabled'],
+                "postrelease_bouncer_aliases_enabled": postrelease_bouncer_aliases_enabled,
                 "tuxedo_server_url": branchConfig['tuxedoServerUrl'],
                 "postrelease_version_bump_enabled": postrelease_enabled,
                 "push_to_releases_enabled": push_to_releases_enabled,
