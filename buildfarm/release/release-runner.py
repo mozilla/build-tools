@@ -52,11 +52,14 @@ ALL_FILES = set([
 ])
 
 
-# temporary regex to filter out anything but firefox beta releases within
-# release promotion. Once migration from buildbot to promotion is completed
-# for all types of releases, we will backout this filtering  - bug 1252333
+# temporary regex to filter out anything but mozilla-beta and mozilla-release
+# within release promotion. Once migration to release promotion is completed
+# for all types of releases, we will backout this filtering
+# regex beta tracking bug is 1252333,
+# regex release tracking bug is 1263976
 RELEASE_PATTERNS = [
-    r"Firefox-\d+\.0b\d+-build\d+"
+    r"Firefox-\d+\.0b\d+-build\d+",
+    r"Firefox-\d+\.\d+(\.\d+)?-build\d+"
 ]
 
 
@@ -84,6 +87,7 @@ def bump_version(version):
 def matches(name, patterns):
     return any([re.search(p, name) for p in patterns])
 
+
 def is_candidate_release(channels):
     """determine if this is a candidate release or not
 
@@ -94,6 +98,7 @@ def is_candidate_release(channels):
      2) once verified, we ship to the main channel: to 'release' channel users
     """
     return len(channels) > 1
+
 
 def update_channels(version, mappings):
     """Return a list of update channels for a version using version mapping
