@@ -34,13 +34,14 @@ from util.file import load_config, get_config
 log = logging.getLogger(__name__)
 
 
-# temporary regex to filter out firefox desktop beta releases as they're
-# handled separately within release promotion. Once migration from buildbot
-# to promotion is completed for all types of releases, we will backout this
-# filtering  - bug 1252333
+# temporary regex to filter out firefox desktop beta, release and dot release
+# as they're handled separately within release promotion. Once migration to
+# promotion is completed for all types of releases, we will backout this
+# regex beta tracking bug is 1252333
+# regex release tracking bug is 1263976
 RELEASE_PATTERNS = [
-    # all Firefox non-betas
-    r"Firefox-\d+\.\d+(\.\d+)?(esr)?-build\d+",
+    # all Firefox non(mozilla-beta or mozilla-release)
+    r"Firefox-\d+\.\d+(\.\d+)?esr-build\d+",
     # all Fennec betas
     r"Fennec-\d+\.0b\d+-build\d+",
     # all Fennec non-betas
