@@ -96,6 +96,8 @@ def remote_signfile(options, urls, filename, fmt, token, dest=None):
             urls.pop(0)
             urls.append(url)
             errors += 1
+            # Pendings needs to be reset to give the next server a fair shake.
+            pendings = 0
         if errors >= max_errors:
             log.error("%s: giving up after %i tries", filehash, errors)
             return False
