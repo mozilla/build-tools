@@ -90,13 +90,6 @@
     ],
     "repo_type": "hg"
   },
-  "b2g-inbound": {
-    "repo": "https://hg.mozilla.org/integration/b2g-inbound",
-    "graph_branches": [
-      "B2g-Inbound"
-    ],
-    "repo_type": "hg"
-  },
   "services-central": {
     "repo": "https://hg.mozilla.org/services/services-central",
     "graph_branches": [
