@@ -47,7 +47,7 @@ RELEASE_PATTERNS = [
     # all Fennec non-betas
     r"Fennec-\d+\.\d+(\.\d+)?-build\d+",
     # all Thunderbird betas
-    r"Thunderbird-\d+\.0b\d+-build\d+",
+    r"Thunderbird-\d+\.\db\d+-build\d+",
     # all Thunderbird non-betas
     r"Thunderbird-\d+\.\d+(\.\d+)?-build\d+",
 ]
