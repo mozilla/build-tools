@@ -421,6 +421,7 @@ def main(options):
                 "build_tools_repo_path": branchConfig['build_tools_repo_path'],
                 "push_to_candidates_enabled": branchConfig['push_to_candidates_enabled'],
                 "postrelease_bouncer_aliases_enabled": postrelease_bouncer_aliases_enabled,
+                "uptake_monitoring_enabled": branchConfig['uptake_monitoring_enabled'],
                 "tuxedo_server_url": branchConfig['tuxedoServerUrl'],
                 "postrelease_version_bump_enabled": postrelease_enabled,
                 "push_to_releases_enabled": push_to_releases_enabled,
