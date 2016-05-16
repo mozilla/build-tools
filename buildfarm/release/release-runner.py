@@ -396,11 +396,16 @@ def main(options):
                 "branch": branch,
                 "updates_enabled": bool(release["partials"]),
                 "l10n_config": get_l10n_config(
-                    release['mozillaRevision'], branchConfig['platforms'],
-                    branchConfig['l10n_release_platforms'], branch, l10n_changesets, index
+                    index=index, product=release["product"], branch=branch,
+                    revision=release['mozillaRevision'],
+                    platforms=branchConfig['platforms'],
+                    l10n_platforms=branchConfig['l10n_release_platforms'],
+                    l10n_changesets=l10n_changesets
                 ),
                 "en_US_config": get_en_US_config(
-                    release['mozillaRevision'], branchConfig['release_platforms'], branch, index
+                    index=index, product=release["product"], branch=branch,
+                    revision=release['mozillaRevision'],
+                    platforms=branchConfig['release_platforms']
                 ),
                 "verifyConfigs": {},
                 "balrog_api_root": branchConfig["balrog_api_root"],

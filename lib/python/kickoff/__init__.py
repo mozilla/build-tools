@@ -157,14 +157,17 @@ def get_platform_locales(l10n_changesets, platform):
     return [l for l in l10n_changesets.keys() if l != ignore]
 
 
-def get_l10n_config(mozilla_revision, platforms, l10n_platforms, branch, l10n_changesets, index):
+def task_for_revision(index, branch, revision, product, platform):
+    return index.findTask(
+        "gecko.v2.{branch}.revision.{rev}.{product}.{platform}-opt".format(
+        rev=revision, branch=branch, product=product, platform=platform))
+
+
+def get_l10n_config(index, product, branch, revision, platforms,
+                    l10n_platforms, l10n_changesets):
     l10n_platform_configs = {}
     for platform in l10n_platforms:
-        task = index.findTask("buildbot.revisions.{revision}.{branch}.{platform}".format(
-            revision=mozilla_revision,
-            branch=branch,
-            platform=platform,
-        ))
+        task = task_for_revision(index, branch, revision, product, platform)
         url = "https://queue.taskcluster.net/v1/task/{taskid}/artifacts/public/build".format(
             taskid=task["taskId"]
         )
@@ -180,16 +183,12 @@ def get_l10n_config(mozilla_revision, platforms, l10n_platforms, branch, l10n_ch
     }
 
 
-def get_en_US_config(mozilla_revision, platforms, branch, index):
+def get_en_US_config(index, product, branch, revision, platforms):
     platform_configs = {}
     for platform in platforms:
-        task = index.findTask("buildbot.revisions.{revision}.{branch}.{platform}".format(
-            revision=mozilla_revision,
-            branch=branch,
-            platform=platform,
-        ))
+        task = task_for_revision(index, branch, revision, product, platform)
         platform_configs[platform] = {
-            "task_id": task["taskId"],
+            "task_id": task["taskId"]
         }
 
     return {
