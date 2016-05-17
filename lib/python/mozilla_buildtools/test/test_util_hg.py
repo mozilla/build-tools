@@ -1054,21 +1054,6 @@ class TestHg(unittest.TestCase):
             getRevisions(self.repodir), getRevisions(sharerepo))
         self.assertEquals(getRevisions(mirror), getRevisions(self.wc))
 
-    def testMercurialByRevWithShareAndMirror(self):
-        # First create the mirror
-        mirror = os.path.join(self.tmpdir, 'repo2')
-        clone(self.repodir, mirror)
-
-        shareBase = os.path.join(self.tmpdir, 'share')
-        sharerepo = os.path.join(shareBase, self.repodir.lstrip("/"))
-        os.mkdir(shareBase)
-        mercurial(self.repodir, self.wc, shareBase=shareBase, mirrors=[
-                  mirror], clone_by_rev=True, revision=self.revisions[-1])
-
-        # We should only have the one revision
-        self.assertEquals(getRevisions(sharerepo), self.revisions[-1:])
-        self.assertEquals(getRevisions(self.wc), self.revisions[-1:])
-
     def testMercurialSkipPull(self):
         # Clone once into our working copy
         mercurial(self.repodir, self.wc)
