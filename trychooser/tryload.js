@@ -57,7 +57,6 @@ function getTryLoads(callback) {
       totalBuildLoad["linux64-valgrind"] = totalBuildLoad["linux"];
       totalBuildLoad["linux64-br-haz"] = totalBuildLoad["linux"];
       totalBuildLoad["linux64-sh-haz"] = totalBuildLoad["linux"];
-      totalBuildLoad["linux64-mulet"] = totalBuildLoad["linux"];
       totalBuildLoad["macosx64"] = load_try_build["macosx64"];
       totalBuildLoad["macosx64-st-an"] = load_try_build["macosx64"];
       totalBuildLoad["win32"] = load_try_build["win64"];
@@ -65,45 +64,18 @@ function getTryLoads(callback) {
       totalBuildLoad["android-api-9"] = totalBuildLoad["linux"];
       totalBuildLoad["android-api-15"] = totalBuildLoad["linux"];
       totalBuildLoad["android-x86"] = totalBuildLoad["linux"];
-      totalBuildLoad["emulator"] = totalBuildLoad["linux"];
-      totalBuildLoad["emulator-jb"] = totalBuildLoad["linux"];
-      totalBuildLoad["emulator-kk"] = totalBuildLoad["linux"];
-      totalBuildLoad["emulator-l"] = totalBuildLoad["linux"];
-      totalBuildLoad["linux32_gecko"] = totalBuildLoad["linux"];
-      totalBuildLoad["linux64_gecko"] = totalBuildLoad["linux"];
-      totalBuildLoad["macosx64_gecko"] = totalBuildLoad["macosx64"];
-      totalBuildLoad["macosx64-mulet"] = totalBuildLoad["macosx64"];
-      totalBuildLoad["win32_gecko"] = totalBuildLoad["win32"];
-      totalBuildLoad["win32-mulet"] = totalBuildLoad["win32"];
-      totalBuildLoad["linux64_graphene"] = totalBuildLoad["linux64"];
-      totalBuildLoad["macosx64_graphene"] = totalBuildLoad["macosx64"];
-      totalBuildLoad["win64_graphene"] = totalBuildLoad["win64"];
-      totalBuildLoad["linux64_horizon"] = totalBuildLoad["linux64"];
-      totalBuildLoad["macosx64_horizon"] = totalBuildLoad["macosx64"];
-      totalBuildLoad["win64_horizon"] = totalBuildLoad["win64"];
 
       var totalTestLoad = {};
       totalTestLoad["linux"] = load_test["ubuntu32-hw"] + load_test["ubuntu32-vm"];
       totalTestLoad["linux64"] = load_test["ubuntu64-hw"] + load_test["ubuntu64-vm"];
-      totalTestLoad["linux64-mulet"] = totalTestLoad["linux64"];
       totalTestLoad["linux64-asan"] = totalTestLoad["linux64"];
       // linux64-st-an: N/A
       totalTestLoad["macosx64"] = Math.max(load_test["mac10.6"], load_test["mac10.10"]);
       // macosx64-st-an: N/A
-      totalTestLoad["macosx64-mulet"] = totalTestLoad["macosx64"];
       totalTestLoad["win32"] = Math.max(load_test["winxp-ix"], load_test["win7-ix"]);
-      totalTestLoad["win32-mulet"] = totalTestLoad["win32"];
       totalTestLoad["win64"] = load_test["win8-ix"];
       totalTestLoad["android-api-9"] = load_test["ubuntu64-vm"];
       totalTestLoad["android-x86"] = load_test["ubuntu64-hw"];
-      totalTestLoad["emulator"] = load_test["ubuntu64-vm"];
-      // emulator-jb: N/A
-      // emulator-kk: N/A
-      // emulator-l: N/A
-      totalTestLoad["linux32_gecko"] = totalTestLoad["linux"];
-      totalTestLoad["linux64_gecko"] = totalTestLoad["linux64"];
-      totalTestLoad["macosx64_gecko"] = totalTestLoad["macosx64"];
-      // win32_gecko: N/A
       callback(totalBuildLoad, totalTestLoad);
     });
   });

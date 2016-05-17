@@ -26,7 +26,6 @@ if __name__ == '__main__':
         loglevel=logging.INFO,
         configfile=None,
         mar_cmd=None,
-        b2gmar_cmd=None,
         signcode_timestamp=None,
         jar_keystore=None,
         jar_keyname=None,
@@ -136,12 +135,6 @@ if __name__ == '__main__':
         safe_unlink(tmpfile)
         mar_signfile(
             inputfile, tmpfile, options.mar_cmd, options.fake, passphrase)
-    elif format_ == "b2gmar":
-        if not options.b2gmar_cmd:
-            parser.error("b2gmar_cmd is required when format is b2gmar")
-        safe_unlink(tmpfile)
-        mar_signfile(
-            inputfile, tmpfile, options.b2gmar_cmd, options.fake, passphrase)
     elif format_ == "dmg":
         if not options.dmg_keychain:
             parser.error("dmg_keychain required when format is dmg")

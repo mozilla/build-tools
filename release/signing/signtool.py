@@ -41,7 +41,7 @@ def is_authenticode_signed(filename):
 
 def main():
     allowed_formats = ("sha2signcode", "signcode", "osslsigncode", "gpg", "mar", "dmg",
-                       "dmgv2", "jar", "b2gmar", "emevoucher")
+                       "dmgv2", "jar", "emevoucher")
 
     from optparse import OptionParser
     import random

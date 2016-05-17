@@ -33,10 +33,6 @@
     "limit_tb_platforms": [
       "linux"
     ],
-    "limit_b2g_platforms": [
-    ],
-    "limit_b2g_slave_platforms": {
-    },
     "master_dir": "/builds/buildbot/tests1-linux32/master",
     "name": "bm01-tests1-linux32",
     "pb_port": 9201,
@@ -79,10 +75,6 @@
     "limit_tb_platforms": [
       "linux"
     ],
-    "limit_b2g_platforms": [
-    ],
-    "limit_b2g_slave_platforms": {
-    },
     "master_dir": "/builds/buildbot/tests1-linux32/master",
     "name": "bm02-tests1-linux32",
     "pb_port": 9201,
@@ -125,10 +117,6 @@
     "limit_tb_platforms": [
       "linux"
     ],
-    "limit_b2g_platforms": [
-    ],
-    "limit_b2g_slave_platforms": {
-    },
     "master_dir": "/builds/buildbot/tests1-linux32/master",
     "name": "bm03-tests1-linux32",
     "pb_port": 9201,
@@ -171,10 +159,6 @@
     "limit_tb_platforms": [
       "linux"
     ],
-    "limit_b2g_platforms": [
-    ],
-    "limit_b2g_slave_platforms": {
-    },
     "master_dir": "/builds/buildbot/tests1-linux32/master",
     "name": "bm04-tests1-linux32",
     "pb_port": 9201,
@@ -217,10 +201,6 @@
     "limit_tb_platforms": [
       "linux"
     ],
-    "limit_b2g_platforms": [
-    ],
-    "limit_b2g_slave_platforms": {
-    },
     "master_dir": "/builds/buildbot/tests1-linux32/master",
     "name": "bm05-tests1-linux32",
     "pb_port": 9201,
@@ -263,10 +243,6 @@
     "limit_tb_platforms": [
       "linux"
     ],
-    "limit_b2g_platforms": [
-    ],
-    "limit_b2g_slave_platforms": {
-    },
     "master_dir": "/builds/buildbot/tests1-linux32/master",
     "name": "bm06-tests1-linux32",
     "pb_port": 9201,
@@ -309,10 +285,6 @@
     "limit_tb_platforms": [
       "linux"
     ],
-    "limit_b2g_platforms": [
-    ],
-    "limit_b2g_slave_platforms": {
-    },
     "master_dir": "/builds/buildbot/tests1-linux32/master",
     "name": "bm07-tests1-linux32",
     "pb_port": 9201,
@@ -355,10 +327,6 @@
     "limit_tb_platforms": [
       "linux"
     ],
-    "limit_b2g_platforms": [
-    ],
-    "limit_b2g_slave_platforms": {
-    },
     "master_dir": "/builds/buildbot/tests1-linux32/master",
     "name": "bm08-tests1-linux32",
     "pb_port": 9201,
@@ -416,22 +384,6 @@
     "limit_tb_platforms": [
       "linux64"
     ],
-    "limit_b2g_platforms": [
-      "emulator-jb",
-      "emulator-kk",
-      "emulator"
-    ],
-    "limit_b2g_slave_platforms": {
-      "emulator-jb": [
-        "ubuntu64_vm-b2g-emulator-jb"
-      ],
-      "emulator-kk": [
-        "ubuntu64_vm-b2g-emulator-kk"
-      ],
-      "emulator": [
-        "ubuntu64_vm-b2g-emulator"
-      ]
-    },
     "master_dir": "/builds/buildbot/tests1-linux64/master",
     "name": "bm51-tests1-linux64",
     "pb_port": 9201,
@@ -489,22 +441,6 @@
     "limit_tb_platforms": [
       "linux64"
     ],
-    "limit_b2g_platforms": [
-      "emulator-jb",
-      "emulator-kk",
-      "emulator"
-    ],
-    "limit_b2g_slave_platforms": {
-      "emulator-jb": [
-        "ubuntu64_vm-b2g-emulator-jb"
-      ],
-      "emulator-kk": [
-        "ubuntu64_vm-b2g-emulator-kk"
-      ],
-      "emulator": [
-        "ubuntu64_vm-b2g-emulator"
-      ]
-    },
     "master_dir": "/builds/buildbot/tests1-linux64/master",
     "name": "bm52-tests1-linux64",
     "pb_port": 9201,
@@ -562,22 +498,6 @@
     "limit_tb_platforms": [
       "linux64"
     ],
-    "limit_b2g_platforms": [
-      "emulator-jb",
-      "emulator-kk",
-      "emulator"
-    ],
-    "limit_b2g_slave_platforms": {
-      "emulator-jb": [
-        "ubuntu64_vm-b2g-emulator-jb"
-      ],
-      "emulator-kk": [
-        "ubuntu64_vm-b2g-emulator-kk"
-      ],
-      "emulator": [
-        "ubuntu64_vm-b2g-emulator"
-      ]
-    },
     "master_dir": "/builds/buildbot/tests1-linux64/master",
     "name": "bm53-tests1-linux64",
     "pb_port": 9201,
@@ -635,22 +555,6 @@
     "limit_tb_platforms": [
       "linux64"
     ],
-    "limit_b2g_platforms": [
-      "emulator-jb",
-      "emulator-kk",
-      "emulator"
-    ],
-    "limit_b2g_slave_platforms": {
-      "emulator-jb": [
-        "ubuntu64_vm-b2g-emulator-jb"
-      ],
-      "emulator-kk": [
-        "ubuntu64_vm-b2g-emulator-kk"
-      ],
-      "emulator": [
-        "ubuntu64_vm-b2g-emulator"
-      ]
-    },
     "master_dir": "/builds/buildbot/tests1-linux64/master",
     "name": "bm54-tests1-linux64",
     "pb_port": 9201,
@@ -708,22 +612,6 @@
     "limit_tb_platforms": [
       "linux64"
     ],
-    "limit_b2g_platforms": [
-      "emulator-jb",
-      "emulator-kk",
-      "emulator"
-    ],
-    "limit_b2g_slave_platforms": {
-      "emulator-jb": [
-        "ubuntu64_vm-b2g-emulator-jb"
-      ],
-      "emulator-kk": [
-        "ubuntu64_vm-b2g-emulator-kk"
-      ],
-      "emulator": [
-        "ubuntu64_vm-b2g-emulator"
-      ]
-    },
     "master_dir": "/builds/buildbot/tests1-linux64/master",
     "name": "bm67-tests1-linux64",
     "pb_port": 9201,
@@ -781,22 +669,6 @@
     "limit_tb_platforms": [
       "linux64"
     ],
-    "limit_b2g_platforms": [
-      "emulator-jb",
-      "emulator-kk",
-      "emulator"
-    ],
-    "limit_b2g_slave_platforms": {
-      "emulator-jb": [
-        "ubuntu64_vm-b2g-emulator-jb"
-      ],
-      "emulator-kk": [
-        "ubuntu64_vm-b2g-emulator-kk"
-      ],
-      "emulator": [
-        "ubuntu64_vm-b2g-emulator"
-      ]
-    },
     "master_dir": "/builds/buildbot/tests1-linux64/master",
     "name": "bm68-tests1-linux64",
     "pb_port": 9201,
@@ -830,7 +702,6 @@
     "limit_tb_platforms": [
       "win32"
     ],
-    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-windows/master",
     "name": "bm69-tests1-windows",
     "pb_port": 9201,
@@ -1410,15 +1281,6 @@
       "linux",
       "linux64"
     ],
-    "limit_b2g_platforms": [
-      "emulator"
-    ],
-    "limit_b2g_slave_platforms": {
-      "emulator": [
-        "ubuntu64_hw-b2g-emulator"
-      ]
-    },
-    "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm103-tests1-linux",
     "pb_port": 9201,
     "role": "tests",
@@ -1460,14 +1322,6 @@
       "linux",
       "linux64"
     ],
-    "limit_b2g_platforms": [
-      "emulator"
-    ],
-    "limit_b2g_slave_platforms": {
-      "emulator": [
-        "ubuntu64_hw-b2g-emulator"
-      ]
-    },
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm104-tests1-linux",
     "pb_port": 9201,
@@ -1510,14 +1364,6 @@
       "linux",
       "linux64"
     ],
-    "limit_b2g_platforms": [
-      "emulator"
-    ],
-    "limit_b2g_slave_platforms": {
-      "emulator": [
-        "ubuntu64_hw-b2g-emulator"
-      ]
-    },
     "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm105-tests1-linux",
     "pb_port": 9201,
@@ -1549,8 +1395,6 @@
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
         "macosx64"
-    ],
-    "limit_b2g_platforms": [
     ],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm106-tests1-macosx",
@@ -1584,8 +1428,6 @@
     "limit_tb_platforms": [
         "macosx64"
     ],
-    "limit_b2g_platforms": [
-    ],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm107-tests1-macosx",
     "pb_port": 9201,
@@ -1617,8 +1459,6 @@
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
         "macosx64"
-    ],
-    "limit_b2g_platforms": [
     ],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm108-tests1-macosx",
@@ -1653,7 +1493,6 @@
     "limit_tb_platforms": [
       "win32"
     ],
-    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-windows/master",
     "name": "bm109-tests1-windows",
     "pb_port": 9201,
@@ -1687,7 +1526,6 @@
     "limit_tb_platforms": [
       "win32"
     ],
-    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-windows/master",
     "name": "bm110-tests1-windows",
     "pb_port": 9201,
@@ -1721,7 +1559,6 @@
     "limit_tb_platforms": [
       "win32"
     ],
-    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-windows/master",
     "name": "bm111-tests1-windows",
     "pb_port": 9201,
@@ -1755,7 +1592,6 @@
     "limit_tb_platforms": [
       "win32"
     ],
-    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-windows/master",
     "name": "bm112-tests1-windows",
     "pb_port": 9201,
@@ -1813,22 +1649,6 @@
     "limit_tb_platforms": [
       "linux64"
     ],
-    "limit_b2g_platforms": [
-      "emulator-jb",
-      "emulator-kk",
-      "emulator"
-    ],
-    "limit_b2g_slave_platforms": {
-      "emulator-jb": [
-        "ubuntu64_vm-b2g-emulator-jb"
-      ],
-      "emulator-kk": [
-        "ubuntu64_vm-b2g-emulator-kk"
-      ],
-      "emulator": [
-        "ubuntu64_vm-b2g-emulator"
-      ]
-    },
     "master_dir": "/builds/buildbot/tests1-linux64/master",
     "name": "bm113-tests1-linux64",
     "pb_port": 9201,
@@ -1886,22 +1706,6 @@
     "limit_tb_platforms": [
       "linux64"
     ],
-    "limit_b2g_platforms": [
-      "emulator-jb",
-      "emulator-kk",
-      "emulator"
-    ],
-    "limit_b2g_slave_platforms": {
-      "emulator-jb": [
-        "ubuntu64_vm-b2g-emulator-jb"
-      ],
-      "emulator-kk": [
-        "ubuntu64_vm-b2g-emulator-kk"
-      ],
-      "emulator": [
-        "ubuntu64_vm-b2g-emulator"
-      ]
-    },
     "master_dir": "/builds/buildbot/tests1-linux64/master",
     "name": "bm114-tests1-linux64",
     "pb_port": 9201,
@@ -1959,22 +1763,6 @@
     "limit_tb_platforms": [
       "linux64"
     ],
-    "limit_b2g_platforms": [
-      "emulator-jb",
-      "emulator-kk",
-      "emulator"
-    ],
-    "limit_b2g_slave_platforms": {
-      "emulator-jb": [
-        "ubuntu64_vm-b2g-emulator-jb"
-      ],
-      "emulator-kk": [
-        "ubuntu64_vm-b2g-emulator-kk"
-      ],
-      "emulator": [
-        "ubuntu64_vm-b2g-emulator"
-      ]
-    },
     "master_dir": "/builds/buildbot/tests1-linux64/master",
     "name": "bm115-tests1-linux64",
     "pb_port": 9201,
@@ -2032,22 +1820,6 @@
     "limit_tb_platforms": [
       "linux64"
     ],
-    "limit_b2g_platforms": [
-      "emulator-jb",
-      "emulator-kk",
-      "emulator"
-    ],
-    "limit_b2g_slave_platforms": {
-      "emulator-jb": [
-        "ubuntu64_vm-b2g-emulator-jb"
-      ],
-      "emulator-kk": [
-        "ubuntu64_vm-b2g-emulator-kk"
-      ],
-      "emulator": [
-        "ubuntu64_vm-b2g-emulator"
-      ]
-    },
     "master_dir": "/builds/buildbot/tests1-linux64/master",
     "name": "bm116-tests1-linux64",
     "pb_port": 9201,
@@ -2105,22 +1877,6 @@
     "limit_tb_platforms": [
       "linux64"
     ],
-    "limit_b2g_platforms": [
-      "emulator-jb",
-      "emulator-kk",
-      "emulator"
-    ],
-    "limit_b2g_slave_platforms": {
-      "emulator-jb": [
-        "ubuntu64_vm-b2g-emulator-jb"
-      ],
-      "emulator-kk": [
-        "ubuntu64_vm-b2g-emulator-kk"
-      ],
-      "emulator": [
-        "ubuntu64_vm-b2g-emulator"
-      ]
-    },
     "master_dir": "/builds/buildbot/tests1-linux64/master",
     "name": "bm117-tests1-linux64",
     "pb_port": 9201,
@@ -2178,22 +1934,6 @@
     "limit_tb_platforms": [
       "linux64"
     ],
-    "limit_b2g_platforms": [
-      "emulator-jb",
-      "emulator-kk",
-      "emulator"
-    ],
-    "limit_b2g_slave_platforms": {
-      "emulator-jb": [
-        "ubuntu64_vm-b2g-emulator-jb"
-      ],
-      "emulator-kk": [
-        "ubuntu64_vm-b2g-emulator-kk"
-      ],
-      "emulator": [
-        "ubuntu64_vm-b2g-emulator"
-      ]
-    },
     "master_dir": "/builds/buildbot/tests1-linux64/master",
     "name": "bm118-tests1-linux64",
     "pb_port": 9201,
@@ -2227,7 +1967,6 @@
     "limit_tb_platforms": [
       "win32"
     ],
-    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-windows/master",
     "name": "bm119-tests1-windows",
     "pb_port": 9201,
@@ -2285,22 +2024,6 @@
     "limit_tb_platforms": [
       "linux64"
     ],
-    "limit_b2g_platforms": [
-      "emulator-jb",
-      "emulator-kk",
-      "emulator"
-    ],
-    "limit_b2g_slave_platforms": {
-      "emulator-jb": [
-        "ubuntu64_vm-b2g-emulator-jb"
-      ],
-      "emulator-kk": [
-        "ubuntu64_vm-b2g-emulator-kk"
-      ],
-      "emulator": [
-        "ubuntu64_vm-b2g-emulator"
-      ]
-    },
     "master_dir": "/builds/buildbot/tests1-linux64/master",
     "name": "bm120-tests1-linux64",
     "pb_port": 9201,
@@ -2358,22 +2081,6 @@
     "limit_tb_platforms": [
       "linux64"
     ],
-    "limit_b2g_platforms": [
-      "emulator-jb",
-      "emulator-kk",
-      "emulator"
-    ],
-    "limit_b2g_slave_platforms": {
-      "emulator-jb": [
-        "ubuntu64_vm-b2g-emulator-jb"
-      ],
-      "emulator-kk": [
-        "ubuntu64_vm-b2g-emulator-kk"
-      ],
-      "emulator": [
-        "ubuntu64_vm-b2g-emulator"
-      ]
-    },
     "master_dir": "/builds/buildbot/tests1-linux64/master",
     "name": "bm121-tests1-linux64",
     "pb_port": 9201,
@@ -2431,22 +2138,6 @@
     "limit_tb_platforms": [
       "linux64"
     ],
-    "limit_b2g_platforms": [
-      "emulator-jb",
-      "emulator-kk",
-      "emulator"
-    ],
-    "limit_b2g_slave_platforms": {
-      "emulator-jb": [
-        "ubuntu64_vm-b2g-emulator-jb"
-      ],
-      "emulator-kk": [
-        "ubuntu64_vm-b2g-emulator-kk"
-      ],
-      "emulator": [
-        "ubuntu64_vm-b2g-emulator"
-      ]
-    },
     "master_dir": "/builds/buildbot/tests1-linux64/master",
     "name": "bm122-tests1-linux64",
     "pb_port": 9201,
@@ -2504,22 +2195,6 @@
     "limit_tb_platforms": [
       "linux64"
     ],
-    "limit_b2g_platforms": [
-      "emulator-jb",
-      "emulator-kk",
-      "emulator"
-    ],
-    "limit_b2g_slave_platforms": {
-      "emulator-jb": [
-        "ubuntu64_vm-b2g-emulator-jb"
-      ],
-      "emulator-kk": [
-        "ubuntu64_vm-b2g-emulator-kk"
-      ],
-      "emulator": [
-        "ubuntu64_vm-b2g-emulator"
-      ]
-   },     
      "master_dir": "/builds/buildbot/tests1-linux64/master",
      "name": "bm123-tests1-linux64",
      "pb_port": 9201,
@@ -2577,22 +2252,6 @@
     "limit_tb_platforms": [
       "linux64"
     ],
-    "limit_b2g_platforms": [
-      "emulator-jb",
-      "emulator-kk",
-      "emulator"
-    ],
-    "limit_b2g_slave_platforms": {
-      "emulator-jb": [
-        "ubuntu64_vm-b2g-emulator-jb"
-      ],
-      "emulator-kk": [
-        "ubuntu64_vm-b2g-emulator-kk"
-      ],
-      "emulator": [
-        "ubuntu64_vm-b2g-emulator"
-      ]
-    },
     "master_dir": "/builds/buildbot/tests1-linux64/master",
     "name": "bm124-tests1-linux64",
     "pb_port": 9201,
@@ -2650,22 +2309,6 @@
     "limit_tb_platforms": [
       "linux64"
     ],
-    "limit_b2g_platforms": [
-      "emulator-jb",
-      "emulator-kk",
-      "emulator"
-    ],
-    "limit_b2g_slave_platforms": {
-      "emulator-jb": [
-        "ubuntu64_vm-b2g-emulator-jb"
-      ],
-      "emulator-kk": [
-        "ubuntu64_vm-b2g-emulator-kk"
-      ],
-      "emulator": [
-        "ubuntu64_vm-b2g-emulator"
-      ]
-    },
     "master_dir": "/builds/buildbot/tests1-linux64/master",
     "name": "bm125-tests1-linux64",
     "pb_port": 9201,
@@ -2699,7 +2342,6 @@
     "limit_tb_platforms": [
       "win32"
     ],
-    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-windows/master",
     "name": "bm126-tests1-windows",
     "pb_port": 9201,
@@ -2733,7 +2375,6 @@
     "limit_tb_platforms": [
       "win32"
     ],
-    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-windows/master",
     "name": "bm127-tests1-windows",
     "pb_port": 9201,
@@ -2767,7 +2408,6 @@
     "limit_tb_platforms": [
       "win32"
     ],
-    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-windows/master",
     "name": "bm128-tests1-windows",
     "pb_port": 9201,
@@ -2801,7 +2441,6 @@
     "limit_tb_platforms": [
       "win32"
     ],
-    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-windows/master",
     "name": "bm129-tests1-windows",
     "pb_port": 9201,
@@ -2859,22 +2498,6 @@
     "limit_tb_platforms": [
       "linux64"
     ],
-    "limit_b2g_platforms": [
-      "emulator-jb",
-      "emulator-kk",
-      "emulator"
-    ],
-    "limit_b2g_slave_platforms": {
-      "emulator-jb": [
-        "ubuntu64_vm-b2g-emulator-jb"
-      ],
-      "emulator-kk": [
-        "ubuntu64_vm-b2g-emulator-kk"
-      ],
-      "emulator": [
-        "ubuntu64_vm-b2g-emulator"
-      ]
-    },
     "master_dir": "/builds/buildbot/tests1-linux64/master",
     "name": "bm130-tests1-linux64",
     "pb_port": 9201,
@@ -2932,22 +2555,6 @@
     "limit_tb_platforms": [
       "linux64"
     ],
-    "limit_b2g_platforms": [
-      "emulator-jb",
-      "emulator-kk",
-      "emulator"
-    ],
-    "limit_b2g_slave_platforms": {
-      "emulator-jb": [
-        "ubuntu64_vm-b2g-emulator-jb"
-      ],
-      "emulator-kk": [
-        "ubuntu64_vm-b2g-emulator-kk"
-      ],
-      "emulator": [
-        "ubuntu64_vm-b2g-emulator"
-      ]
-    },
     "master_dir": "/builds/buildbot/tests1-linux64/master",
     "name": "bm131-tests1-linux64",
     "pb_port": 9201,
@@ -2979,8 +2586,6 @@
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
         "macosx64"
-    ],
-    "limit_b2g_platforms": [
     ],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm132-tests1-macosx",
@@ -3014,8 +2619,6 @@
     "limit_tb_platforms": [
         "macosx64"
     ],
-    "limit_b2g_platforms": [
-    ],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm133-tests1-macosx",
     "pb_port": 9201,
@@ -3047,8 +2650,6 @@
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
         "macosx64"
-    ],
-    "limit_b2g_platforms": [
     ],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm134-tests1-macosx",
@@ -3082,8 +2683,6 @@
     "limit_tb_platforms": [
         "macosx64"
     ],
-    "limit_b2g_platforms": [
-    ],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm135-tests1-macosx",
     "pb_port": 9201,
@@ -3115,8 +2714,6 @@
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
         "macosx64"
-    ],
-    "limit_b2g_platforms": [
     ],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm136-tests1-macosx",
@@ -3151,7 +2748,6 @@
     "limit_tb_platforms": [
       "win32"
     ],
-    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-windows/master",
     "name": "bm137-tests1-windows",
     "pb_port": 9201,
@@ -3185,7 +2781,6 @@
     "limit_tb_platforms": [
       "win32"
     ],
-    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-windows/master",
     "name": "bm138-tests1-windows",
     "pb_port": 9201,
@@ -3219,7 +2814,6 @@
     "limit_tb_platforms": [
       "win32"
     ],
-    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-windows/master",
     "name": "bm139-tests1-windows",
     "pb_port": 9201,
@@ -3253,7 +2847,6 @@
     "limit_tb_platforms": [
       "win32"
     ],
-    "limit_b2g_platforms": [],
     "master_dir": "/builds/buildbot/tests1-windows/master",
     "name": "bm140-tests1-windows",
     "pb_port": 9201,

@@ -1,11 +1,4 @@
 {
-  "ionmonkey": {
-    "repo": "https://hg.mozilla.org/projects/ionmonkey",
-    "graph_branches": [
-      "Ionmonkey"
-    ],
-    "repo_type": "hg"
-  },
   "ash": {
     "repo": "https://hg.mozilla.org/projects/ash",
     "graph_branches": [
@@ -48,13 +41,6 @@
     ],
     "repo_type": "hg"
   },
-  "mozilla-b2g44_v2_5": {
-    "repo": "https://hg.mozilla.org/releases/mozilla-b2g44_v2_5",
-    "graph_branches": [
-      "Mozilla-B2g44-v2.5"
-    ],
-    "repo_type": "hg"
-  },
   "oak": {
     "repo": "https://hg.mozilla.org/projects/oak",
     "graph_branches": [
@@ -87,13 +73,6 @@
     "repo": "https://hg.mozilla.org/integration/mozilla-inbound",
     "graph_branches": [
       "Mozilla-Inbound"
-    ],
-    "repo_type": "hg"
-  },
-  "services-central": {
-    "repo": "https://hg.mozilla.org/services/services-central",
-    "graph_branches": [
-      "Services-Central"
     ],
     "repo_type": "hg"
   },
@@ -175,11 +154,6 @@
     ],
     "repo_type": "hg"
   },
-  "gaia-try": {
-    "repo": "https://hg.mozilla.org/integration/gaia-try",
-    "graph_branches": [],
-    "repo_type": "hg"
-  },
   "try-comm-central": {
     "repo": "https://hg.mozilla.org/try-comm-central",
     "graph_branches": [
@@ -191,13 +165,6 @@
     "repo": "https://hg.mozilla.org/projects/larch",
     "graph_branches": [
       "Larch"
-    ],
-    "repo_type": "hg"
-  },
-  "build-system": {
-    "repo": "https://hg.mozilla.org/projects/build-system",
-    "graph_branches": [
-      "Build-System"
     ],
     "repo_type": "hg"
   },
