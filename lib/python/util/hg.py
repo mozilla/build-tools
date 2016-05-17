@@ -456,18 +456,13 @@ def push(src, remote, push_new_branches=True, force=False, **kwargs):
 
 
 def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
-              shareBase=DefaultShareBase, allowUnsharedLocalClones=False,
-              clone_by_rev=False, mirrors=None, bundles=None, autoPurge=False):
+              shareBase=DefaultShareBase, clone_by_rev=False, mirrors=None,
+              bundles=None, autoPurge=False):
     """Makes sure that `dest` is has `revision` or `branch` checked out from
     `repo`.
 
     Do what it takes to make that happen, including possibly clobbering
     dest.
-
-    If allowUnsharedLocalClones is True and we're trying to use the share
-    extension but fail, then we will be able to clone from the shared repo to
-    our destination.  If this is False, the default, then if we don't have the
-    share extension we will just clone from the remote repository.
 
     If `clone_by_rev` is True, use 'hg clone -r <rev>' instead of 'hg clone'.
     This is slower, but useful when cloning repos with lots of heads.
@@ -592,25 +587,8 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
                         purge(dest)
                     return update(dest, branch=branch, revision=revision)
 
-            try:
-                log.info("Trying to share %s to %s", sharedRepo, dest)
-                return share(sharedRepo, dest, branch=branch, revision=revision)
-            except subprocess.CalledProcessError:
-                if not allowUnsharedLocalClones:
-                    # Re-raise the exception so it gets caught below.
-                    # We'll then clobber dest, and clone from original repo
-                    raise
-
-                log.warning("Error calling hg share from %s to %s;"
-                            "falling back to normal clone from shared repo",
-                            sharedRepo, dest)
-                # Do a full local clone first, and then update to the
-                # revision we want
-                # This lets us use hardlinks for the local clone if the OS
-                # supports it
-                clone(sharedRepo, dest, update_dest=False,
-                      mirrors=mirrors, bundles=bundles)
-                return update(dest, branch=branch, revision=revision)
+            log.info("Trying to share %s to %s", sharedRepo, dest)
+            return share(sharedRepo, dest, branch=branch, revision=revision)
         except subprocess.CalledProcessError:
             log.warning(
                 "Error updating %s from sharedRepo (%s): ", dest, sharedRepo)
