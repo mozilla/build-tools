@@ -482,41 +482,6 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
     cmd = ['hg', '-q', 'version']
     run_cmd(cmd, cwd='.')
 
-    # New code path: if a share base directory is specified, use the
-    # robustcheckout extension/command for doing everything.
-    if shareBase and update_dest and (revision or branch):
-        robustcheckout_ext = get_hg_ext('robustcheckout.py')
-        cmd = [
-            'hg',
-            '--config', 'extensions.robustcheckout=%s' % robustcheckout_ext,
-            'robustcheckout', repo, dest,
-            '--sharebase', shareBase,
-        ]
-        if revision:
-            cmd.extend(['--revision', revision])
-        elif branch:
-            cmd.extend(['--branch', branch])
-
-        if autoPurge:
-            cmd.append('--purge')
-
-        # We only take the first mirror because that's all robustcheckout can
-        # take.
-        if mirrors:
-            cmd.extend(['--upstream', mirrors[0]])
-
-        try:
-            out = get_output(cmd, include_stderr=True)
-            for line in out.splitlines():
-                m = re.match('^updated to ([a-f0-9]{40})$', line)
-                if m:
-                    return m.group(1)
-
-            raise HgUtilError('unable to find updated to revision')
-        except subprocess.CalledProcessError as e:
-            log.info('OUTPUT: %s' % e.output)
-            raise
-
     if shareBase:
         # Check that 'hg share' works
         try:
@@ -532,7 +497,7 @@ def mercurial(repo, dest, branch=None, revision=None, update_dest=True,
                 shareBase = None
         except subprocess.CalledProcessError:
             # The command failed, so disable sharing
-            log.warning("Disabling sharing since share extension doesn't seem to work (3)")
+            log.info("Disabling sharing since share extension doesn't seem to work (3)")
             shareBase = None
 
     # Check that our default path is correct
