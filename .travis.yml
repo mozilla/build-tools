@@ -8,10 +8,7 @@ env:
   global:
     - PIP_FIND_LINKS=file://$HOME/.cache/pip
     - PIP_CACHE_DIR=$HOME/.cache/pip
-  matrix:
-    - TOX_ENV=py27-hg2.6
-    - TOX_ENV=py26-hg2.6
-    - TOX_ENV=py27-hg3.2
+    - TOX_ENV=py27-hg3.7
 
 cache:
   directories:
