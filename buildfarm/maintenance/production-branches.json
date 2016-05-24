@@ -203,4 +203,11 @@
     ],
     "repo_type": "hg"
   }
+   "autoland": {
+    "repo": "https://hg.mozilla.org/integration/autoland",
+    "graph_branches": [
+      "Autoland"
+    ],
+    "repo_type": "hg"
+  },
 }
