@@ -25,17 +25,17 @@ check_updates () {
   case $update_platform in
       Darwin_ppc-gcc | Darwin_Universal-gcc3 | Darwin_x86_64-gcc3 | Darwin_x86-gcc3-u-ppc-i386 | Darwin_x86-gcc3-u-i386-x86_64 | Darwin_x86_64-gcc3-u-i386-x86_64) 
           platform_dirname="*.app"
-          updater="Contents/MacOS/updater.app/Contents/MacOS/updater"
+          updaters="Contents/MacOS/updater.app/Contents/MacOS/updater Contents/MacOS/updater.app/Contents/MacOS/org.mozilla.updater"
           binary_file_pattern='^Binary files'
           ;;
       WINNT*) 
           platform_dirname="bin"
-          updater="updater.exe"
+          updaters="updater.exe"
           binary_file_pattern='^Files.*and.*differ$'
           ;;
       Linux_x86-gcc | Linux_x86-gcc3 | Linux_x86_64-gcc3) 
           platform_dirname=`echo $product | tr '[A-Z]' '[a-z]'`
-          updater="updater"
+          updaters="updater"
           binary_file_pattern='^Binary files'
           # Bug 1209376. Linux updater linked against other libraries in the installation directory
           export LD_LIBRARY_PATH=$PWD/source/$platform_dirname
@@ -47,7 +47,13 @@ check_updates () {
 
   if [ -d source/$platform_dirname ]; then
     cd source/$platform_dirname;
-    cp $updater ../../update
+    for updater in $updaters; do
+        if [ -e "$updater" ]; then
+            echo "Found updater at $updater"
+            cp $updater ../../update
+            break
+        fi
+    done
     if [ "$use_old_updater" = "1" ]; then
         ../../update/updater ../../update . 0
     else
