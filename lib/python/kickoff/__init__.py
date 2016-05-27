@@ -199,18 +199,36 @@ def get_en_US_config(index, product, branch, revision, platforms):
 # FIXME: the following function should be removed and we should use
 # next_version provided by ship-it
 def bump_version(version):
-    """Bump last digit"""
+    """Bump last digit
+
+    >>> bump_version("45.0")
+    '45.0.1'
+    >>> bump_version("45.0.1")
+    '45.0.2'
+    >>> bump_version("45.0b3")
+    '45.0b4'
+    >>> bump_version("45.0esr")
+    '45.0.1esr'
+    >>> bump_version("45.0.1esr")
+    '45.0.2esr'
+    >>> bump_version("45.2.1esr")
+    '45.2.2esr'
+    """
     split_by = "."
     digit_index = 2
+    suffix = ""
     if "b" in version:
         split_by = "b"
         digit_index = 1
+    if "esr" in version:
+        version = version.replace("esr", "")
+        suffix = "esr"
     v = version.split(split_by)
     if len(v) < digit_index + 1:
         # 45.0 is 45.0.0 actually
         v.append("0")
     v[-1] = str(int(v[-1]) + 1)
-    return split_by.join(v)
+    return split_by.join(v) + suffix
 
 
 def make_task_graph_strict_kwargs(appVersion, balrog_api_root, balrog_password, balrog_username,
