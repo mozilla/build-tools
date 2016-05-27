@@ -251,8 +251,10 @@ def get_hash(path, hash_type="sha512"):
 
 
 def validate_graph_kwargs(queue, gpg_key_path, **kwargs):
+    # We don't export "esr" in the version
     validate_version(repo_path=kwargs["repo_path"],
-                     revision=kwargs["revision"], version=kwargs["version"])
+                     revision=kwargs["revision"],
+                     version=kwargs["version"].replace("esr", ""))
     # TODO: validate partials
     # TODO: validate l10n changesets
     platforms = kwargs.get('en_US_config', {}).get('platforms', {})
