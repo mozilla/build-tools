@@ -55,6 +55,7 @@ def main(release_runner_config, release_config, tc_config):
         "balrog_api_root": release_config["balrog_api_root"],
         "build_tools_repo_path": release_config['build_tools_repo_path'],
         "tuxedo_server_url": release_config['tuxedo_server_url'],
+        "uptake_monitoring_enabled": release_config['uptake_monitoring_enabled'],
         "beetmover_candidates_bucket": release_config["beetmover_candidates_bucket"],
         "bouncer_enabled": release_config["bouncer_enabled"],
         "updates_builder_enabled": release_config["updates_builder_enabled"],
@@ -84,13 +85,18 @@ def main(release_runner_config, release_config, tc_config):
         # in release-runner.py world we have a concept of branchConfig and release (shipit) vars
         # todo fix get_en_US_config and en_US_config helper methods to not require both
         "l10n_config": get_l10n_config(
-            release_config["mozilla_revision"], release_config['platforms'],
-            release_config['l10n_release_platforms'] or {}, release_config["branch"],
-            release_config["l10n_changesets"], index
+            index=index, product=release_config["product"],
+            branch=release_config["branch"],
+            revision=release_config["mozilla_revision"],
+            platforms=release_config['platforms'],
+            l10n_platforms=release_config['l10n_release_platforms'] or {},
+            l10n_changesets=release_config["l10n_changesets"]
         ),
         "en_US_config": get_en_US_config(
-            release_config["mozilla_revision"], release_config['release_platforms'] or [],
-            release_config["branch"], index
+            index=index, product=release_config["product"],
+            branch=release_config["branch"],
+            revision=release_config["mozilla_revision"],
+            platforms=release_config['platforms']
         ),
         "extra_balrog_submitter_params": release_config['extra_balrog_submitter_params']
     }
