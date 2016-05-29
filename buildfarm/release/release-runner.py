@@ -384,7 +384,8 @@ def main(options):
             kwargs = {
                 "public_key": docker_worker_key,
                 "version": release["version"],
-                "next_version": bump_version(release["version"]),
+                # ESR should not use "esr" suffix here:
+                "next_version": bump_version(release["version"].replace("esr", "")),
                 "appVersion": getAppVersion(release["version"]),
                 "buildNumber": release["buildNumber"],
                 "source_enabled": True,
