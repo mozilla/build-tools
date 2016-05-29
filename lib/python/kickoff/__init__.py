@@ -17,7 +17,9 @@ log = logging.getLogger(__name__)
 # regex release tracking bug is 1263976
 RELEASE_PATTERNS = [
     r"Firefox-\d+\.0b\d+-build\d+",
-    r"Firefox-\d+\.\d+(\.\d+)?-build\d+"
+    r"Firefox-\d+\.\d+(\.\d+)?-build\d+",
+    # TODO: update the following when ESR38 dies
+    r"Firefox-45.\d+(\.\d+)?esr-build\d+",
 ]
 
 
