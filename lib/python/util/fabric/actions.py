@@ -239,18 +239,6 @@ def action_fix_makefile_symlink(master):
     print OK, "updated Makefile symlink in %(hostname)s:%(basedir)s" % master
 
 
-def action_add_esr38_symlinks(master):
-    with show('running'):
-        run('ln -s %(bbconfigs_dir)s/mozilla/release-firefox-mozilla-esr38.py '
-            '%(master_dir)s/' % master)
-        run('ln -s %(bbconfigs_dir)s/mozilla/l10n-changesets_mozilla-esr38 '
-            '%(master_dir)s/' % master)
-        run('ln -s %(bbconfigs_dir)s/mozilla/release-thunderbird-comm-esr38.py '
-            '%(master_dir)s/' % master)
-        run('ln -s %(bbconfigs_dir)s/mozilla/l10n-changesets_thunderbird-esr38 '
-            '%(master_dir)s/' % master)
-    print OK, "Added esr38 symlinks in %(hostname)s:%(basedir)s" % master
-
 def action_add_esr45_symlinks(master):
     with show('running'):
         run('ln -s %(bbconfigs_dir)s/mozilla/release-firefox-mozilla-esr45.py '

@@ -347,7 +347,7 @@ if __name__ == "__main__":
 
     partialUpdates = releaseConfig.get('partialUpdates', {}).copy()
     # FIXME: the follwong hack can be removed when win64 has the same list of
-    # partial update as other platforms. Check mozilla-esr38 to be sure.
+    # partial update as other platforms. Check mozilla-esr45 to be sure.
     if platform in releaseConfig.get('HACK_first_released_version', {}):
         partialUpdates_copy = {}
         for k, v in partialUpdates.iteritems():

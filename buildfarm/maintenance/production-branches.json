@@ -13,24 +13,10 @@
     ],
     "repo_type": "hg"
   },
-  "mozilla-esr38": {
-    "repo": "https://hg.mozilla.org/releases/mozilla-esr38",
-    "graph_branches": [
-      "Mozilla-Esr38"
-    ],
-    "repo_type": "hg"
-  },
   "mozilla-esr45": {
     "repo": "https://hg.mozilla.org/releases/mozilla-esr45",
     "graph_branches": [
       "Mozilla-Esr45"
-    ],
-    "repo_type": "hg"
-  },
-  "comm-esr38": {
-    "repo": "https://hg.mozilla.org/releases/comm-esr38",
-    "graph_branches": [
-      "Thunderbird-Esr38"
     ],
     "repo_type": "hg"
   },
