@@ -76,6 +76,7 @@ if __name__ == "__main__":
     partials = pc['current-update']['partials'].keys()
     app_name = pc['appName']
     to_version = pc['current-update']['to']
+    to_release = pc['release'][to_version]
     to_ = makeReleaseRepackUrls(
         product_name, app_name, to_version, args.platform,
         locale='%locale%', signed=True, exclude_secondary=True
@@ -86,7 +87,10 @@ if __name__ == "__main__":
 
     uvc = UpdateVerifyConfig(
         product=app_name, channel=args.update_verify_channel,
-        aus_server=aus_server_url, to=to_path)
+        aus_server=aus_server_url, to=to_path,
+        to_build_id=to_release["platforms"][ftp_platform],
+        to_app_version=to_release["version"],
+        to_display_version=to_release["prettyVersion"])
 
     # getUpdatePaths yields all of the update paths, but we need to know
     # everything about a fromVersion before we can add it to the update
