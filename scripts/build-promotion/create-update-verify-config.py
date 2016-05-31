@@ -4,6 +4,7 @@ import site
 from os import path
 import logging
 import argparse
+import math
 
 site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 site.addsitedir(path.join(path.dirname(__file__), "../../lib/python/vendor"))
@@ -16,6 +17,29 @@ from release.paths import makeReleasesDir, makeCandidatesDir
 from release.updates.verify import UpdateVerifyConfig
 
 log = logging.getLogger()
+
+
+def is_triangualar(x):
+    """Check if a number is triangular (0, 1, 3, 6, 10, 15, ...)
+    see: https://en.wikipedia.org/wiki/Triangular_number#Triangular_roots_and_tests_for_triangular_numbers
+
+    >>> is_triangualar(0)
+    True
+    >>> is_triangualar(1)
+    True
+    >>> is_triangualar(2)
+    False
+    >>> is_triangualar(3)
+    True
+    >>> is_triangualar(4)
+    False
+    >>> all(is_triangualar(x) for x in [0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105])
+    True
+    >>> all(not is_triangualar(x) for x in [4, 5, 8, 9, 11, 17, 25, 29, 39, 44, 59, 61, 72, 98, 112])
+    True
+    """
+    n = (math.sqrt(8*x + 1) - 1)/2
+    return n == int(n)
 
 
 if __name__ == "__main__":
@@ -37,7 +61,6 @@ if __name__ == "__main__":
     parser.add_argument("--previous-archive-prefix")
     parser.add_argument("--balrog-url", required=True)
     parser.add_argument("--build-number", required=True)
-
     args = parser.parse_args()
     logging.basicConfig(format="%(message)s", level=args.loglevel)
 
@@ -78,6 +101,7 @@ if __name__ == "__main__":
             updatePaths[fromVersion] = []
         updatePaths[fromVersion].append(locale)
 
+    completes_only_index = 0
     for fromVersion in reversed(sorted(updatePaths, key=LooseVersion)):
         locales = updatePaths[fromVersion]
         from_ = pc["release"][fromVersion]
@@ -119,7 +143,7 @@ if __name__ == "__main__":
                            mar_channel_IDs=mar_channel_IDs,
                            platform=update_platform)
         else:
-            if len(this_full_check_locales) > 0:
+            if this_full_check_locales and is_triangualar(completes_only_index):
                 log.info("Generating full check configs for %s" % fromVersion)
                 uvc.addRelease(release=appVersion, build_id=build_id,
                                locales=this_full_check_locales,
@@ -134,5 +158,6 @@ if __name__ == "__main__":
                 uvc.addRelease(release=appVersion, build_id=build_id,
                                locales=quick_check_locales,
                                platform=update_platform)
+            completes_only_index += 1
 
     uvc.write(args.output)
