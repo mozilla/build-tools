@@ -40,8 +40,6 @@ log = logging.getLogger(__name__)
 # regex beta tracking bug is 1252333
 # regex release tracking bug is 1263976
 RELEASE_PATTERNS = [
-    # Firefox esr38
-    r"Firefox-38\.\d+(\.\d+)?esr-build\d+",
     # all Fennec betas
     r"Fennec-\d+\.0b\d+-build\d+",
     # all Fennec non-betas
