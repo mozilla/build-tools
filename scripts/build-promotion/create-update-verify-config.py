@@ -159,8 +159,14 @@ if __name__ == "__main__":
             # Quick test for other locales, no download
             if len(quick_check_locales) > 0:
                 log.info("Generating quick check configs for %s" % fromVersion)
+                if not is_triangualar(completes_only_index):
+                    # Assuming we skipped full check locales, using all locales
+                    _locales = locales
+                else:
+                    # Excluding full check locales from the quick check
+                    _locales = quick_check_locales
                 uvc.addRelease(release=appVersion, build_id=build_id,
-                               locales=quick_check_locales,
+                               locales=_locales,
                                platform=update_platform)
             completes_only_index += 1
 
