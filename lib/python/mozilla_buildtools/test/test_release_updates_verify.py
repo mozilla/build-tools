@@ -27,6 +27,9 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         self.uvc.ftp_server_to = "ftp"
         self.uvc.to = "/firefox/4.0rc2.tar.bz2"
         self.uvc.mar_channel_IDs = 'baz'
+        self.uvc.to_build_id = "999"
+        self.uvc.to_display_version = "99.0 Zeta 9"
+        self.uvc.to_app_version = "99.0"
         uvc2 = UpdateVerifyConfig()
         uvc2.product = "foo"
         uvc2.channel = "betatest"
@@ -35,6 +38,9 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         uvc2.ftp_server_to = "ftp"
         uvc2.to = "/firefox/4.0rc2.tar.bz2"
         uvc2.mar_channel_IDs = 'baz'
+        uvc2.to_build_id = "999"
+        uvc2.to_display_version = "99.0 Zeta 9"
+        uvc2.to_app_version = "99.0"
         self.assertEquals(self.uvc, uvc2)
 
     def testNe(self):
@@ -112,6 +118,9 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         uvc2.channel = "betatest"
         uvc2.aus_server = "https://aus4.mozilla.org"
         uvc2.to = "/firefox/4.0rc2.tar.bz2"
+        uvc2.to_build_id = "999"
+        uvc2.to_display_version = "99.0 Zeta 9"
+        uvc2.to_app_version = "99.0"
         uvc2.addRelease("4.0", build_id="888", platform="Linux_x86-gcc3",
                         locales=["af", "de", "en-US", "ja", "zh-TW"],
                         patch_types=["partial", "complete"],
@@ -142,6 +151,9 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         self.uvc.channel = "betatest"
         self.uvc.aus_server = "https://aus4.mozilla.org"
         self.uvc.to = "/firefox/4.0rc2.tar.bz2"
+        self.uvc.to_build_id = "999"
+        self.uvc.to_display_version = "99.0 Zeta 9"
+        self.uvc.to_app_version = "99.0"
         self.uvc.addRelease("4.0", build_id="888", platform="Linux_x86-gcc3",
                             locales=("af", "de", "en-US", "ja", "zh-TW"),
                             patch_types=("partial", "complete"),
@@ -189,6 +201,9 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         uvc2.channel = "betatest"
         uvc2.aus_server = "https://aus4.mozilla.org"
         uvc2.to = "/firefox/4.0rc2.tar.bz2"
+        uvc2.to_build_id = "999"
+        uvc2.to_display_version = "99.0 Zeta 9"
+        uvc2.to_app_version = "99.0"
         uvc2.addRelease("4.0", build_id="888", platform="Linux_x86-gcc3",
                         locales=["af", "de", "en-US"],
                         patch_types=["partial", "complete"],
@@ -212,6 +227,9 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         self.uvc.ftp_server_from = "stage.mozilla.org/firefox"
         self.uvc.ftp_server_to = "stage.mozilla.org/firefox"
         self.uvc.to = "/firefox/Firefox 4.0 Beta 2.exe"
+        self.uvc.to_build_id = "999"
+        self.uvc.to_display_version = "99.0 Zeta 9"
+        self.uvc.to_app_version = "99.0"
         self.uvc.addRelease("4.0b1", build_id="222", platform="Linux_x86-gcc3",
                             locales=["en-US", "ja", "zh-TW"],
                             patch_types=["complete"],
@@ -223,6 +241,9 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         uvc2.ftp_server_from = "stage.mozilla.org/firefox"
         uvc2.ftp_server_to = "stage.mozilla.org/firefox"
         uvc2.to = "/firefox/Firefox 4.0 Beta 2.exe"
+        uvc2.to_build_id = "999"
+        uvc2.to_display_version = "99.0 Zeta 9"
+        uvc2.to_app_version = "99.0"
         uvc2.addRelease("4.0b1", build_id="222", platform="Linux_x86-gcc3",
                         locales=["en-US", "ja"],
                         patch_types=["complete"],
@@ -262,6 +283,9 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         uvc2.channel = "betatest"
         uvc2.aus_server = "https://aus4.mozilla.org"
         uvc2.to = "/firefox/4.0rc2.tar.bz2"
+        uvc2.to_build_id = "999"
+        uvc2.to_display_version = "99.0 Zeta 9"
+        uvc2.to_app_version = "99.0"
         uvc2.addRelease("4.0", build_id="888", platform="Linux_x86-gcc3",
                         locales=["af", "de", "en-US", "ja", "zh-TW"],
                         patch_types=["partial", "complete"],
@@ -286,6 +310,9 @@ class TestUpdateVerifyConfig(unittest.TestCase):
         uvc2.channel = "betatest"
         uvc2.aus_server = "https://aus4.mozilla.org"
         uvc2.to = "/firefox/4.0rc2.tar.bz2"
+        uvc2.to_build_id = "999"
+        uvc2.to_display_version = "99.0 Zeta 9"
+        uvc2.to_app_version = "99.0"
         uvc2.addRelease("4.0b12", build_id="777", platform="Linux_x86-gcc3",
                         locales=["de", "ja", "zh-TW"],
                         patch_types=["complete"],

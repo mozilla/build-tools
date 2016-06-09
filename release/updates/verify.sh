@@ -14,6 +14,9 @@ ftp_server_to="http://stage.mozilla.org/pub/mozilla.org"
 ftp_server_from="http://stage.mozilla.org/pub/mozilla.org"
 aus_server="https://aus4.mozilla.org"
 to=""
+to_build_id=""
+to_app_version=""
+to_display_version=""
 
 pushd `dirname $0` &>/dev/null
 MY_DIR=$(pwd)
@@ -121,10 +124,12 @@ do
       then
         if [ "$runmode" == "$TEST_ONLY" ]
         then
-          download_mars "${aus_server}/update/3/$product/$release/$build_id/$platform/$locale/$channel/default/default/default/update.xml?force=1" $patch_type 1
+          download_mars "${aus_server}/update/3/$product/$release/$build_id/$platform/$locale/$channel/default/default/default/update.xml?force=1" $patch_type 1 \
+            "${to_build_id}" "${to_app_version}" "${to_display_version}"
           err=$?
         else
-          download_mars "${aus_server}/update/3/$product/$release/$build_id/$platform/$locale/$channel/default/default/default/update.xml?force=1" $patch_type
+          download_mars "${aus_server}/update/3/$product/$release/$build_id/$platform/$locale/$channel/default/default/default/update.xml?force=1" $patch_type 0 \
+            "${to_build_id}" "${to_app_version}" "${to_display_version}"
           err=$?
         fi
         if [ "$err" != "0" ]; then

@@ -1281,6 +1281,7 @@
       "linux",
       "linux64"
     ],
+    "master_dir": "/builds/buildbot/tests1-linux/master",
     "name": "bm103-tests1-linux",
     "pb_port": 9201,
     "role": "tests",
