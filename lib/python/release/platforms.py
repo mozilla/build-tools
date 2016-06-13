@@ -4,6 +4,7 @@ try:
     import simplejson as json
 except:
     import json
+import six
 bouncer_platform_map = {'win32': 'win', 'win64': 'win64', 'macosx': 'osx',
                         'linux': 'linux', 'linux64': 'linux64',
                         'macosx64': 'osx'}
@@ -85,7 +86,7 @@ def shippedlocales2buildbot(platform):
     matches = []
     try:
         [matches.append(
-            k) for k, v in sl_platform_map.iteritems() if v == platform][0]
+            k) for k, v in six.iteritems(sl_platform_map) if v == platform][0]
         return matches
     except IndexError:
         return [platform]

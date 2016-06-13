@@ -2,7 +2,8 @@ import difflib
 import logging
 import re
 from release.info import readConfig
-import urllib2
+from six.moves.urllib.request import urlopen
+from six.moves.urllib.error import HTTPError
 from util.commands import run_cmd, get_output
 from util.hg import get_repo_name, make_hg_url
 from subprocess import CalledProcessError
@@ -87,8 +88,8 @@ def verify_mozconfigs(branch, revision, hghost, product, mozconfigs,
             urls.append(make_hg_url(hghost, branch, 'http', revision, c))
         for url in urls:
             try:
-                mozconfigs.append(urllib2.urlopen(url).readlines())
-            except urllib2.HTTPError as e:
+                mozconfigs.append(urlopen(url).readlines())
+            except HTTPError as e:
                 log.error("MISSING: %s - ERROR: %s" % (url, e.msg))
                 # Nothing to compare against
                 return False

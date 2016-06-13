@@ -64,7 +64,7 @@ class API(object):
                          retry_exceptions=(requests.HTTPError,
                                            requests.ConnectionError),
                          attempts=self.retries)
-        except requests.HTTPError, e:
+        except requests.HTTPError as e:
             log.error('Caught HTTPError: %d %s' % 
                      (e.response.status_code, e.response.content), 
                      exc_info=True)

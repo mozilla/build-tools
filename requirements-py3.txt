@@ -1,0 +1,2 @@
+-e git+https://github.com/mrd1no/poster-0.8.1-for-Python-3.4.git@d4df9af9f06c2b09a1cba871b3dc95dbc36e5b2d#egg=poster
+-e git+https://github.com/escapewindow/redo.git@7ede957b0fdd9447221725178b573104b317aae6#egg=redo

@@ -1,6 +1,34 @@
 #! /usr/bin/env python
 
+from pip.req import parse_requirements
 from setuptools import setup, find_packages
+import os
+import sys
+
+deps = [
+    'sqlalchemy',
+    'argparse',
+    'simplejson',
+    'furl',
+    'requests',
+    'docopt',
+    'python-dateutil',
+    'jinja2',
+    'redo',
+    'six',
+]
+
+if sys.version_info[:2] == (2, 7):
+    deps.extend([
+        'poster',
+        'Twisted==10.1.0',
+    ])
+
+if sys.version_info >= (3, 5):
+    """If running on py3, you need to `pip install -r requirements-py3.txt` after
+    running setup.py, until the dependencies either support py3 or we drop their
+    use."""
+    pass
 
 setup(
     name="buildtools",
@@ -17,18 +45,7 @@ setup(
 
     test_suite='mozilla_buildtools.test',
 
-    install_requires=[
-        'sqlalchemy',
-        'argparse',
-        'Twisted==10.1.0',
-        'simplejson',
-        'furl',
-        'requests',
-        'docopt',
-        'python-dateutil',
-        'jinja2',
-        'redo',
-    ],
+    install_requires=deps,
 
     entry_points={
         'console_scripts': [

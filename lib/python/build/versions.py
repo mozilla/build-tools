@@ -1,4 +1,5 @@
 import re
+import six
 
 from release.info import isFinalRelease
 
@@ -28,7 +29,7 @@ BUMP_FILES = {
 def bumpFile(filename, contents, version):
     # First, find the right regex for this file
     newContents = []
-    for fileRegex, versionRegex in BUMP_FILES.iteritems():
+    for fileRegex, versionRegex in six.iteritems(BUMP_FILES):
         if re.match(fileRegex, filename):
             # Second, find the line with the version in it
             for line in contents.splitlines():

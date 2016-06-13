@@ -88,7 +88,7 @@ class API(object):
                 # we've already made the request.
                 data['csrf_token'] = self.csrf_token = res.headers[
                     'X-CSRF-Token']
-            except requests.HTTPError, e:
+            except requests.HTTPError as e:
                 # However, if the resource doesn't exist yet we may as well
                 # not bother doing another request solely for a token unless
                 # we don't have a valid one already.
@@ -120,7 +120,7 @@ class API(object):
             if self.raise_exceptions:
                 req.raise_for_status()
             return req
-        except requests.HTTPError, e:
+        except requests.HTTPError as e:
             logging.error('Caught HTTPError: %s' % e.response.content)
             raise
         finally:
@@ -183,7 +183,7 @@ class SingleLocale(API):
         # Use data version from the top level blob
         try:
             _, data_version = top_level.get_data()
-        except requests.HTTPError, e:
+        except requests.HTTPError as e:
             if e.response.status_code == 404:
                 # top level blob doesn't exist, assume there is no data
                 return data, data_version
@@ -196,7 +196,7 @@ class SingleLocale(API):
         try:
             data, _ = super(SingleLocale, self).get_data()
             return data, data_version
-        except requests.HTTPError, e:
+        except requests.HTTPError as e:
             if e.response.status_code == 404:
                 # locale blob doesn't exist, no data
                 return data, data_version

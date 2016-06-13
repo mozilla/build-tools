@@ -10,6 +10,8 @@ rm -rf $dest
 mkdir $dest
 cd $dest
 git init -q
+git config user.email "you@example.com"
+git config user.name "your name"
 
 echo "Hello world $RANDOM" > hello.txt
 git add hello.txt

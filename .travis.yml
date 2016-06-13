@@ -1,6 +1,6 @@
 language: python
 python:
-  - "2.7"
+  - 3.5.1
 
 sudo: false
 
@@ -8,7 +8,7 @@ env:
   global:
     - PIP_FIND_LINKS=file://$HOME/.cache/pip
     - PIP_CACHE_DIR=$HOME/.cache/pip
-    - TOX_ENV=py27-hg3.7
+    - TOX_ENV="py27-hg3.7,py35"
 
 cache:
   directories:

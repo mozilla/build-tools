@@ -2,6 +2,7 @@ try:
     import simplejson as json
 except ImportError:
     import json
+import six
 
 from release.info import getProductDetails
 from release.paths import makeCandidatesDir
@@ -97,7 +98,7 @@ class ReleaseCreatorBase(object):
         api = Release(name=name, auth=self.auth, api_root=self.api_root)
         try:
             current_data, data_version = api.get_data()
-        except HTTPError, e:
+        except HTTPError as e:
             if e.response.status_code == 404:
                 log.warning("Release blob doesn't exist, using empty data...")
                 current_data, data_version = {}, None
@@ -148,7 +149,7 @@ class ReleaseCreatorV3(ReleaseCreatorBase):
         if partialUpdates:
             data["ftpFilenames"]["partials"] = {}
             data["bouncerProducts"]["partials"] = {}
-            for previousVersion, previousInfo in partialUpdates.iteritems():
+            for previousVersion, previousInfo in six.iteritems(partialUpdates):
                 from_ = get_release_blob_name(productName, previousVersion,
                                               previousInfo["buildNumber"],
                                               self.dummy)
@@ -218,7 +219,7 @@ class ReleaseCreatorV4(ReleaseCreatorBase):
 
         for channel in uniqueChannels:
             data["fileUrls"][channel]["partials"] = {}
-            for previousVersion, previousInfo in partialUpdates.iteritems():
+            for previousVersion, previousInfo in six.iteritems(partialUpdates):
                 from_ = get_release_blob_name(productName, previousVersion,
                                                 previousInfo["buildNumber"],
                                                 self.dummy)

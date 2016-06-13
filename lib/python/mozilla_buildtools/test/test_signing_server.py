@@ -1,22 +1,40 @@
-from __future__ import with_statement
+from __future__ import with_statement, print_function
 # We don't support python2.5 for the server
 from nose import SkipTest
 import sys
 if sys.version_info < (2, 6, 0):
     raise SkipTest
 
-
 import time
+import base64
 import hashlib
 import shutil
 import tempfile
 from unittest import TestCase
-from StringIO import StringIO
-from ConfigParser import RawConfigParser
+from six import StringIO
+from six.moves.configparser import RawConfigParser
+import six
 import mock
 import webob
 
 import signing.server as ss
+
+
+def to_string(obj):
+    if six.PY3 and isinstance(obj, six.binary_type):
+        obj = obj.decode('utf-8')
+    return obj
+
+
+def to_bytes(obj):
+    if six.PY3 and isinstance(obj, six.string_types):
+        obj = obj.encode('utf-8')
+    return obj
+
+
+def encode_userpass(userpass):
+    auth = to_string(base64.encodestring(to_bytes(userpass))).rstrip('\n')
+    return "Basic {}".format(auth)
 
 
 class TestTokens(TestCase):
@@ -121,33 +139,35 @@ class TestSigningServer(TestCase):
     def testNewToken(self):
         req = webob.Request.blank("/token")
         req.environ['REMOTE_ADDR'] = '127.1.0.1'
-        req.headers['Authorization'] = "Basic %s" % "foo:bar".encode("base64")
+        req.headers['Authorization'] = encode_userpass("foo:bar")
         req.method = 'POST'
         req.POST['slave_ip'] = "1.2.3.4"
         req.POST['duration'] = "300"
         resp = req.get_response(self.server)
 
         self.assertEquals(resp.status_code, 200)
-        token = resp.body
+        # For some reason resp.body dies in py3
+        token = resp.app_iter
         self.assertTrue(self.server.verify_token(token, "1.2.3.4"))
 
     def testNewTokenAuth2(self):
         req = webob.Request.blank("/token")
         req.environ['REMOTE_ADDR'] = '127.1.0.1'
-        req.headers['Authorization'] = "Basic %s" % "fuz:baz".encode("base64")
+        req.headers['Authorization'] = encode_userpass("fuz:baz")
         req.method = 'POST'
         req.POST['slave_ip'] = "1.2.3.4"
         req.POST['duration'] = "300"
         resp = req.get_response(self.server)
 
         self.assertEquals(resp.status_code, 200)
-        token = resp.body
+        # For some reason resp.body dies in py3
+        token = resp.app_iter
         self.assertTrue(self.server.verify_token(token, "1.2.3.4"))
 
     def testNewTokenBadIp(self):
         req = webob.Request.blank("/token")
         req.environ['REMOTE_ADDR'] = '127.0.0.1'
-        req.headers['Authorization'] = "Basic %s" % "foo:bar".encode("base64")
+        req.headers['Authorization'] = encode_userpass("foo:bar")
         req.method = 'POST'
         req.POST['slave_ip'] = "1.2.3.4"
         req.POST['duration'] = "300"
@@ -158,7 +178,7 @@ class TestSigningServer(TestCase):
     def testNewTokenBadAuth(self):
         req = webob.Request.blank("/token")
         req.environ['REMOTE_ADDR'] = '127.1.0.1'
-        req.headers['Authorization'] = "Basic %s" % "faz:faz".encode("base64")
+        req.headers['Authorization'] = encode_userpass("faz:faz")
         req.method = 'POST'
         req.POST['slave_ip'] = "1.2.3.4"
         req.POST['duration'] = "300"
@@ -173,16 +193,18 @@ class TestSigningServer(TestCase):
         def new_token():
             req = webob.Request.blank("/token")
             req.environ['REMOTE_ADDR'] = master
-            req.headers['Authorization'] = "Basic %s" % "foo:bar".encode("base64")
+            req.headers['Authorization'] = encode_userpass("foo:bar")
             req.method = 'POST'
             req.POST['slave_ip'] = slave
             req.POST['duration'] = "300"
             resp = req.get_response(self.server)
             self.assertEquals(resp.status_code, 200)
-            return resp.body
+            # For some reason resp.body dies in py3
+            return to_string(resp.app_iter)
 
         def sign(token, nonce, filename, data, slave=slave, expect_fail=False):
             h = hashlib.new('sha1')
+            data = to_bytes(data)
             h.update(data)
             sha1 = h.hexdigest()
             req = webob.Request.blank("/sign/gpg", POST={

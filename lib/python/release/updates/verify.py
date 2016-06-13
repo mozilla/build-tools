@@ -1,6 +1,8 @@
 import os
 import re
+import six
 from util.algorithms import getChunk
+from util import to_bytes
 
 
 class UpdateVerifyError(Exception):
@@ -95,15 +97,15 @@ class UpdateVerifyConfig(object):
                 else:
                     value = None
                 if value is not None:
-                    fh.write(key)
-                    fh.write("=")
+                    fh.write(to_bytes(key))
+                    fh.write(b"=")
                     if isinstance(value, (list, tuple)):
-                        fh.write('"%s" ' % " ".join(value))
+                        fh.write(to_bytes('"%s" ' % " ".join(value)))
                     else:
-                        fh.write('"%s" ' % str(value))
+                        fh.write(to_bytes('"%s" ' % str(value)))
             # Rewind one character to avoid having a trailing space
             fh.seek(-1, os.SEEK_CUR)
-            fh.write("\n")
+            fh.write(b"\n")
             first = False
 
     def addRelease(self, release=None, build_id=None, locales=[],
@@ -115,9 +117,9 @@ class UpdateVerifyConfig(object):
            storage"""
         if self.getRelease(build_id, from_path):
             raise UpdateVerifyError("Couldn't add release identified by build_id '%s' and from_path '%s': already exists in config" % (build_id, from_path))
-        if isinstance(locales, basestring):
+        if isinstance(locales, six.string_types):
             locales = sorted(list(locales.split()))
-        if isinstance(patch_types, basestring):
+        if isinstance(patch_types, six.string_types):
             patch_types = list(patch_types.split())
         self.releases.append({
             "release": release,

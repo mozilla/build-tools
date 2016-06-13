@@ -1,10 +1,11 @@
 """Functions for interacting with hg"""
 import os
 import subprocess
-import urlparse
-import urllib
+import six
+from six.moves.urllib import parse as urlparse
 import re
 
+from util import to_string
 from util.commands import run_cmd, remove_path, run_quiet_cmd
 from util.file import safe_unlink
 
@@ -29,8 +30,8 @@ def _make_absolute(repo):
 
 def get_repo_name(repo):
     bits = urlparse.urlsplit(repo)
-    host = urllib.quote(bits.netloc, "")
-    path = urllib.quote(bits.path.lstrip("/"), "")
+    host = urlparse.quote(bits.netloc, "")
+    path = urlparse.quote(bits.path.lstrip("/"), "")
     return os.path.join(host, path)
 
 
@@ -74,7 +75,7 @@ def init(dest, bare=False):
     # Let's create all the directories first
     try:
         os.makedirs(dest)
-    except OSError, e:
+    except OSError as e:
         if e.errno == 20:
             # Not a directory error...one of the parents of dest isn't a
             # directory
@@ -98,7 +99,7 @@ def is_git_repo(dest):
         proc = subprocess.Popen(["git", "rev-parse", "--git-dir"], cwd=dest, stdout=subprocess.PIPE)
         if proc.wait() != 0:
             return False
-        output = proc.stdout.read().strip()
+        output = to_string(proc.stdout.read()).strip()
         git_dir = os.path.normpath(os.path.join(dest, output))
         retval = (git_dir == dest or git_dir == os.path.join(dest, ".git"))
         return retval
@@ -113,7 +114,7 @@ def get_git_dir(dest):
     cmd = ['git', 'config', '--bool', '--get', 'core.bare']
     proc = subprocess.Popen(cmd, cwd=dest, stdout=subprocess.PIPE)
     proc.wait()
-    is_bare = proc.stdout.read().strip()
+    is_bare = to_string(proc.stdout.read()).strip()
     if is_bare == "false":
         d = os.path.join(dest, ".git")
     else:
@@ -153,9 +154,9 @@ def get_remote(repo, remote_name):
     proc = subprocess.Popen(cmd, cwd=repo, stdout=subprocess.PIPE)
     proc.wait()
     for line in proc.stdout.readlines():
-        m = re.match(r"%s\s+(\S+) \(fetch\)$" % re.escape(remote_name), line)
+        m = re.match(r"%s\s+(\S+) \(fetch\)$" % re.escape(remote_name), to_string(line))
         if m:
-            return m.group(1)
+            return to_string(m.group(1))
 
 
 def set_remote(repo, remote_name, remote_repo):
@@ -411,4 +412,4 @@ def get_revision(path):
     """Returns which revision directory `path` currently has checked out."""
     proc = subprocess.Popen(['git', 'rev-parse', 'HEAD'], cwd=path, stdout=subprocess.PIPE)
     proc.wait()
-    return proc.stdout.read().strip()
+    return to_string(proc.stdout.read()).strip()

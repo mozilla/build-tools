@@ -4,8 +4,8 @@ import re
 import subprocess
 import time
 import sys
-from urlparse import urlsplit
-from ConfigParser import RawConfigParser
+from six.moves.urllib.parse import urlsplit
+from six.moves.configparser import RawConfigParser
 
 from util.commands import run_cmd, run_quiet_cmd, get_output, remove_path, TERMINATED_PROCESS_MSG
 from util.retry import retry, retrier
@@ -186,7 +186,7 @@ def purge(dest):
 
     try:
         run_cmd(cmd, cwd=dest)
-    except subprocess.CalledProcessError, e:
+    except subprocess.CalledProcessError as e:
         log.debug('purge failed: %s' % e)
         raise
 
@@ -308,7 +308,7 @@ def clone(repo, dest, branch=None, revision=None, update_dest=True,
         try:
             get_hg_output(cmd=cmd, include_stderr=True, timeout=timeout)
             break
-        except subprocess.CalledProcessError, e:
+        except subprocess.CalledProcessError as e:
             exc = sys.exc_info()
 
             if any(s in e.output for s in TRANSIENT_HG_ERRORS_EXTRA_WAIT):
@@ -325,7 +325,8 @@ def clone(repo, dest, branch=None, revision=None, update_dest=True,
                 continue
             raise
     else:
-        raise exc[0], exc[1], exc[2]
+        exc[1].__traceback__ = exc[2]
+        raise exc[1]
 
     if update_dest:
         return update(dest, branch, revision)
@@ -390,7 +391,7 @@ def pull(repo, dest, update_dest=True, mirrors=None, **kwargs):
         try:
             get_hg_output(cmd=cmd, cwd=dest, include_stderr=True)
             break
-        except subprocess.CalledProcessError, e:
+        except subprocess.CalledProcessError as e:
             exc = sys.exc_info()
 
             if any(s in e.output for s in TRANSIENT_HG_ERRORS_EXTRA_WAIT):
@@ -403,7 +404,8 @@ def pull(repo, dest, update_dest=True, mirrors=None, **kwargs):
                 continue
             raise
     else:
-        raise exc[0], exc[1], exc[2]
+        exc[1].__traceback__ = exc[2]
+        raise exc[1]
 
     if update_dest:
         branch = None
@@ -436,7 +438,7 @@ def out(src, remote, **kwargs):
                     branch = "default"
                 revs.append((rev, branch))
             return revs
-        except subprocess.CalledProcessError, inst:
+        except subprocess.CalledProcessError as inst:
             # In some situations, some versions of Mercurial return "1"
             # if no changes are found, so we need to ignore this return code
             if inst.returncode == 1:
@@ -626,7 +628,7 @@ def apply_and_push(localrepo, remote, changer, max_attempts=10,
             push(src=localrepo, remote=remote, ssh_username=ssh_username,
                  ssh_key=ssh_key, force=force)
             return
-        except subprocess.CalledProcessError, e:
+        except subprocess.CalledProcessError as e:
             log.debug("Hit error when trying to push: %s" % str(e))
             if n == max_attempts:
                 log.debug("Tried %d times, giving up" % max_attempts)
@@ -641,14 +643,14 @@ def apply_and_push(localrepo, remote, changer, max_attempts=10,
             try:
                 run_cmd(['hg', '--config', 'ui.merge=internal:merge',
                          'rebase'], cwd=localrepo)
-            except subprocess.CalledProcessError, e:
+            except subprocess.CalledProcessError as e:
                 log.debug("Failed to rebase: %s" % str(e))
                 # abort failed rebase
                 run_cmd(['hg', 'rebase', '--abort'], cwd=localrepo)
-                update(localrepo, branch=branch)
                 for r in reversed(new_revs):
                     run_cmd(['hg', '--config', 'extensions.mq=', 'strip',
                              '--no-backup', r[REVISION]], cwd=localrepo)
+                update(localrepo, branch=branch)
                 changer(localrepo, n + 1)
 
 

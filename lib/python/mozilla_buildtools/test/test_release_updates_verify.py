@@ -1,4 +1,4 @@
-from md5 import md5
+from hashlib import md5
 import os
 from os import path
 from tempfile import mkstemp
@@ -13,7 +13,7 @@ class TestUpdateVerifyConfig(unittest.TestCase):
     def setUp(self):
         self.uvc = UpdateVerifyConfig()
         fd, self.tmpfilename = mkstemp()
-        self.tmpfile = os.fdopen(fd, "w")
+        self.tmpfile = os.fdopen(fd, "wb")
 
     def tearDown(self):
         self.tmpfile.close()
@@ -177,8 +177,8 @@ class TestUpdateVerifyConfig(unittest.TestCase):
 
         self.uvc.write(self.tmpfile)
         self.tmpfile.close()
-        self.assertEquals(md5(open(self.config).read()).hexdigest(),
-                          md5(open(self.tmpfilename).read()).hexdigest())
+        self.assertEquals(md5(open(self.config, "rb").read()).hexdigest(),
+                          md5(open(self.tmpfilename, "rb").read()).hexdigest())
 
     def testReadInvalidKey(self):
         invalidLine = 'foo="bar"'

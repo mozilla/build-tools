@@ -2,8 +2,9 @@ import os
 from os import path
 import urllib
 import socket
-from urllib import urlretrieve
-from urllib2 import urlopen, HTTPError, URLError
+import six
+from six.moves.urllib.request import urlopen, urlretrieve
+from six.moves.urllib.error import HTTPError, URLError
 
 from redo import retrier
 import requests
@@ -28,7 +29,7 @@ def downloadReleaseBuilds(stageServer, productName, brandName, version,
                                   signed=signed)
 
     env = {}
-    for fileName, remoteFile in files.iteritems():
+    for fileName, remoteFile in six.iteritems(files):
         url = '/'.join([p.strip('/') for p in [candidatesDir,
                                                urllib.quote(remoteFile)]])
         log.info("Downloading %s to %s", url, fileName)
@@ -89,7 +90,7 @@ def downloadUpdate(stageServer, productName, version, buildNumber,
 def downloadUpdateIgnore404(*args, **kwargs):
     try:
         return downloadUpdate(*args, **kwargs)
-    except HTTPError, e:
+    except HTTPError as e:
         if e.code == 404:
             # New locale
             log.warning('Got 404. Skipping %s' % e.geturl())

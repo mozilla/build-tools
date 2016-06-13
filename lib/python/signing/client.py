@@ -1,10 +1,11 @@
 import base64
-import urllib2
+from six.moves.urllib.request import urlopen, Request, build_opener, install_opener
+from six.moves.urllib.error import HTTPError, URLError
 import os
 import hashlib
 import time
 import socket
-import httplib
+import six.moves.http_client as httplib
 import urllib
 
 # TODO: Use util.command
@@ -21,8 +22,8 @@ log = logging.getLogger(__name__)
 def getfile(baseurl, filehash, format_):
     url = "%s/sign/%s/%s" % (baseurl, format_, filehash)
     log.debug("%s: GET %s", filehash, url)
-    r = urllib2.Request(url)
-    return urllib2.urlopen(r)
+    r = Request(url)
+    return urlopen(r)
 
 
 def get_token(baseurl, username, password, slave_ip, duration):
@@ -36,8 +37,8 @@ def get_token(baseurl, username, password, slave_ip, duration):
         'Authorization': 'Basic %s' % auth,
         'Content-Length': str(len(data)),
     }
-    r = urllib2.Request(url, data, headers)
-    return urllib2.urlopen(r).read()
+    r = Request(url, data, headers)
+    return urlopen(r).read()
 
 
 def remote_signfile(options, urls, filename, fmt, token, dest=None):
@@ -143,7 +144,7 @@ def remote_signfile(options, urls, filename, fmt, token, dest=None):
                 log.info("Copying %s to cache %s", dest, cached_fn)
                 copyfile(dest, cached_fn)
             break
-        except urllib2.HTTPError, e:
+        except HTTPError as e:
             try:
                 if 'X-Pending' in e.headers:
                     log.debug("%s: pending; try again in a bit", filehash)
@@ -166,7 +167,7 @@ def remote_signfile(options, urls, filename, fmt, token, dest=None):
                 req = uploadfile(url, filename, fmt, token, nonce=nonce)
                 nonce = req.info()['X-Nonce']
                 open(options.noncefile, 'wb').write(nonce)
-            except urllib2.HTTPError, e:
+            except HTTPError as e:
                 # python2.5 doesn't think 202 is ok...but really it is!
                 if 'X-Nonce' in e.headers:
                     log.debug("updating nonce")
@@ -177,7 +178,7 @@ def remote_signfile(options, urls, filename, fmt, token, dest=None):
                                   filehash, e.code, e.msg)
                     urls.pop(0)
                     urls.append(url)
-            except (urllib2.URLError, socket.error, httplib.BadStatusLine):
+            except (URLError, socket.error, httplib.BadStatusLine):
                 # Try again in a little while
                 log.exception("%s: connection error; trying again soon", filehash)
                 # Move the current url to the back
@@ -185,7 +186,7 @@ def remote_signfile(options, urls, filename, fmt, token, dest=None):
                 urls.append(url)
             time.sleep(1)
             continue
-        except (urllib2.URLError, socket.error):
+        except (URLError, socket.error):
             # Try again in a little while
             log.exception("%s: connection error; trying again soon", filehash)
             # Move the current url to the back
@@ -210,8 +211,8 @@ def buildValidatingOpener(ca_certs):
         assert HTTPSHandler  # pyflakes
         assert HTTPSConnection  # pyflakes
     except ImportError:
-        from httplib import HTTPSConnection
-        from urllib2 import HTTPSHandler
+        from six.moves.http_client import HTTPSConnection
+        from six.moves.urllib.request import HTTPSHandler
 
     import ssl
 
@@ -248,8 +249,8 @@ def buildValidatingOpener(ca_certs):
             return self.do_open(self.specialized_conn_class, req)
 
     https_handler = VerifiedHTTPSHandler()
-    opener = urllib2.build_opener(https_handler)
-    urllib2.install_opener(opener)
+    opener = build_opener(https_handler)
+    install_opener(opener)
 
 
 def uploadfile(baseurl, filename, format_, token, nonce):
@@ -258,7 +259,6 @@ def uploadfile(baseurl, filename, format_, token, nonce):
     `sesson_key` and `nonce` are string values that get passed as POST
     parameters.
     """
-    from poster.encode import multipart_encode
     filehash = sha1sum(filename)
 
     try:
@@ -273,8 +273,8 @@ def uploadfile(baseurl, filename, format_, token, nonce):
         }
 
         datagen, headers = multipart_encode(params)
-        r = urllib2.Request(
+        r = Request(
             "%s/sign/%s" % (baseurl, format_), datagen, headers)
-        return urllib2.urlopen(r)
+        return urlopen(r)
     finally:
         fp.close()

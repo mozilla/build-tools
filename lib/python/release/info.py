@@ -4,7 +4,7 @@ from os import path
 import re
 import shutil
 import sys
-from urllib2 import urlopen
+from six.moves.urllib.request import urlopen
 
 from release.paths import makeCandidatesDir
 

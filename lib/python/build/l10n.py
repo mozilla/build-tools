@@ -4,9 +4,8 @@ import os
 from os import path
 import shutil
 import sys
-from urllib import urlretrieve
-from urllib2 import urlopen
-from urlparse import urljoin
+from six.moves.urllib.request import urlretrieve, urlopen
+from six.moves.urllib.parse import urljoin
 
 from release.platforms import getPlatformLocales, buildbot2ftp
 from release.paths import makeCandidatesDir

@@ -1,9 +1,12 @@
+from __future__ import print_function
+import base64
 import os
 import hashlib
 import hmac
 import shlex
 import time
 import signal
+import six
 import re
 import tempfile
 # TODO: use util.command
@@ -16,7 +19,7 @@ from gevent import pywsgi
 from IPy import IP
 import webob
 
-from util import b64
+from util import b64, to_bytes, to_string
 from util.file import safe_unlink, sha1sum, safe_copyfile
 
 import logging
@@ -27,7 +30,7 @@ def make_token_data(slave_ip, valid_from, valid_to, chaff_bytes=16):
     """Return a string suitable for using as token data. This string will
     be signed, and the signature passed back to clients as the token
     key."""
-    chaff = b64(os.urandom(chaff_bytes))
+    chaff = to_string(b64(os.urandom(chaff_bytes)))
     block = "%s:%s:%s:%s" % (slave_ip, valid_from, valid_to,
             chaff)
     return block
@@ -35,8 +38,11 @@ def make_token_data(slave_ip, valid_from, valid_to, chaff_bytes=16):
 
 def sign_data(data, secret, hsh=hashlib.sha256):
     """Returns b64(hmac(secret, data))"""
+    data = to_bytes(data)
+    secret = to_bytes(secret)
     h = hmac.new(secret, data, hsh)
-    return b64(h.digest())
+    signed = to_string(b64(h.digest()))
+    return signed
 
 
 def verify_token(token_data, token, secret):
@@ -48,7 +54,7 @@ def verify_token(token_data, token, secret):
 def unpack_token_data(token_data):
     """Reverse of make_token_data: takes an encoded string and returns a
     dictionary with token parameters as keys."""
-    bits = token_data.split(":")
+    bits = to_string(token_data).split(":")
     return dict(
         slave_ip=bits[0],
         valid_from=int(bits[1]),
@@ -299,7 +305,7 @@ class SigningServer:
         self._cleanup_loop_thead.kill()
 
     def load_config(self, config):
-        from ConfigParser import NoOptionError
+        from six.moves.configparser import NoOptionError
 
         # For generating new tokens
         self.token_secret = config.get('security', 'token_secret')
@@ -348,7 +354,7 @@ class SigningServer:
                              self.passphrases)
 
     def verify_token(self, token, slave_ip):
-        token_data, token_sig = token.split('!', 1)
+        token_data, token_sig = to_string(token).split('!', 1)
 
         # validate the signature, so we know token_data is reliable
         for secret in self.token_secrets:
@@ -364,7 +370,7 @@ class SigningServer:
             log.info("Invalid time window")
             return False
 
-        if info['slave_ip'] != slave_ip:
+        if to_string(info['slave_ip']) != to_string(slave_ip):
             log.info("Invalid slave ip")
             return False
 
@@ -380,9 +386,10 @@ class SigningServer:
         valid_to = now + duration
         log.info("request for token for slave %s for %i seconds",
                  slave_ip, duration)
-        data = make_token_data(slave_ip, valid_from, valid_to)
-        token = data + '!' + sign_data(data, self.token_secret)
-        return token
+        data = to_string(make_token_data(slave_ip, valid_from, valid_to))
+        signed_data = to_string(sign_data(data, self.token_secret))
+        token = "{}!{}".format(data, signed_data)
+        return to_bytes(token)
 
     def cleanup_loop(self):
         try:
@@ -461,7 +468,7 @@ class SigningServer:
         filename_fn = os.path.join(self.unsigned_dir, filehash + ".fn")
         fd, tmpname = tempfile.mkstemp(dir=self.unsigned_dir)
         fp = os.fdopen(fd, 'wb')
-        fp.write(filename)
+        fp.write(to_bytes(filename))
         fp.close()
         os.rename(tmpname, filename_fn)
 
@@ -674,14 +681,15 @@ class SigningServer:
                     return ""
                 try:
                     basic, auth = req.headers['Authorization'].split()
-                    if basic != "Basic" or auth.decode("base64") not in self.token_auths:
+                    auth = to_string(base64.b64decode(auth))
+                    if basic != "Basic" or auth not in self.token_auths:
                         start_response("401 Authorization Required", [])
                         return ""
                 except:
                     start_response("401 Authorization Required", [])
                     return ""
 
-                return self.handle_token(environ, start_response, values)
+                return to_bytes(self.handle_token(environ, start_response, values))
             elif magic == 'sign':
                 # Validate token
                 if 'token' not in values:
@@ -698,7 +706,7 @@ class SigningServer:
                 next_nonce = 'UNUSED'
                 headers.append(('X-Nonce', 'UNUSED'))
 
-                return self.handle_upload(environ, start_response, values, rest, next_nonce)
+                return to_string(self.handle_upload(environ, start_response, values, rest, next_nonce))
         except:
             log.exception("ISE")
             start_response("500 Internal Server Error", headers)

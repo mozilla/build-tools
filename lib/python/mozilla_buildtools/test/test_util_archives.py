@@ -18,7 +18,7 @@ class TestSigningUtils(TestCase):
         open(fn, "w").write("hello")
         bzip2(fn)
         proc = subprocess.Popen(["bzcat", fn], stdout=subprocess.PIPE)
-        self.assertEquals("hello", proc.stdout.read())
+        self.assertEquals(b"hello", proc.stdout.read())
 
         bunzip2(fn)
-        self.assertEquals("hello", open(fn, 'rb').read())
+        self.assertEquals(b"hello", open(fn, 'rb').read())

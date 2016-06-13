@@ -1,5 +1,6 @@
-from urllib2 import urlopen
-from urlparse import urljoin
+from six.moves.urllib.request import urlopen
+from six.moves.urllib.parse import urljoin
+import six
 try:
     import simplejson as json
 except ImportError:
@@ -48,7 +49,7 @@ def getL10nRepositories(changesets, l10nRepoPath, relbranch=None):
         l10nRepoPath = l10nRepoPath + '/'
     repositories = {}
     try:
-        for locale, data in json.loads(changesets).iteritems():
+        for locale, data in six.iteritems(json.loads(changesets)):
             locale = urljoin(l10nRepoPath, locale)
             repositories[locale] = {
                 'revision': data['revision'],
@@ -56,7 +57,7 @@ def getL10nRepositories(changesets, l10nRepoPath, relbranch=None):
                 'bumpFiles': []
             }
     except (TypeError, ValueError):
-        for locale, revision in parsePlainL10nChangesets(changesets).iteritems():
+        for locale, revision in six.iteritems(parsePlainL10nChangesets(changesets)):
             if revision == 'FIXME':
                 raise Exception('Found FIXME in changesets for locale "%s"' % locale)
             locale = urljoin(l10nRepoPath, locale)

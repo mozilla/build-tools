@@ -1,8 +1,9 @@
 import unittest
-import tempfile
-import shutil
 import os
+import shutil
 import subprocess
+import sys
+import tempfile
 import time
 import util.hg as hg
 from util.hg import clone, pull, update, hg_ver, mercurial, _make_absolute, \
@@ -11,6 +12,7 @@ from util.hg import clone, pull, update, hg_ver, mercurial, _make_absolute, \
     get_hg_output, has_rev
 from util.file import touch
 from util.commands import run_cmd, get_output
+from six.moves import range as xrange
 
 from mock import patch
 
@@ -395,7 +397,7 @@ class TestHg(unittest.TestCase):
     def testPurgeUntrackedFile(self):
         clone(self.repodir, self.wc)
         fileToPurge = os.path.join(self.wc, 'fileToPurge')
-        with file(fileToPurge, 'a') as f:
+        with open(fileToPurge, 'a') as f:
             f.write('purgeme')
         purge(self.wc)
         self.assertFalse(os.path.exists(fileToPurge))

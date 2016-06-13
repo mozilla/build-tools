@@ -6,13 +6,11 @@
 # This recipe is covered under the Python license:
 # http://www.python.org/license
 
-import httplib
+import six.moves.http_client as httplib
 import mimetypes
-import urllib2
 import socket
 from socket import error, herror, gaierror, timeout
 socket.setdefaulttimeout(None)
-import urlparse
 
 
 def post_multipart(host, selector, fields, files):
@@ -39,7 +37,7 @@ def post_multipart(host, selector, fields, files):
         h.send(body)
         errcode, errmsg, headers = h.getreply()
         return h.file.read()
-    except (httplib.HTTPException, error, herror, gaierror, timeout), e:
+    except (httplib.HTTPException, error, herror, gaierror, timeout) as e:
         print "FAIL: graph server unreachable"
         print "FAIL: " + str(e)
         raise

@@ -2,6 +2,7 @@ import os.path
 import sys
 import fnmatch
 import logging
+import six
 # TODO: Use util.commands
 from subprocess import PIPE, Popen
 
@@ -54,7 +55,7 @@ def convertPath(srcpath, dstdir):
 
 def findfiles(roots, includes=['*'], excludes=[]):
     retval = []
-    if isinstance(roots, basestring):
+    if isinstance(roots, six.string_types):
         roots = [roots]
     for fn in roots:
         if os.path.isdir(fn):

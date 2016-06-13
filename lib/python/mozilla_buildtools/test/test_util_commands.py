@@ -93,7 +93,7 @@ class TestGetOutput(unittest.TestCase):
            themselves. This test is to ensure that get_output always does."""
         try:
             get_output(['bash', '-c', 'echo hello && false'])
-        except subprocess.CalledProcessError, e:
+        except subprocess.CalledProcessError as e:
             self.assertEquals(e.output, 'hello\n')
         else:
             self.fail("get_output did not raise CalledProcessError")
@@ -102,7 +102,7 @@ class TestGetOutput(unittest.TestCase):
         try:
             get_output(['bash', '-c', 'sleep 5'],
                        timeout=1)
-        except subprocess.CalledProcessError, e:
+        except subprocess.CalledProcessError as e:
             self.assertTrue(e.output.startswith(TERMINATED_PROCESS_MSG))
         else:
             self.fail("get_output did not raise CalledProcessError")

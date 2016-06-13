@@ -2,6 +2,7 @@ import unittest
 import tempfile
 import shutil
 import os
+import six
 import subprocess
 from util.commands import run_cmd, get_output
 

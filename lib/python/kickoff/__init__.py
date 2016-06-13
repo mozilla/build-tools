@@ -82,7 +82,7 @@ class ReleaseRunner(object):
         log.info('updating status for %s to %s' % (release['name'], status))
         try:
             self.release_api.update(release['name'], status=status)
-        except requests.HTTPError, e:
+        except requests.HTTPError as e:
             log.warning('Caught HTTPError: %s' % e.response.content)
             log.warning('status update failed, continuing...', exc_info=True)
 
