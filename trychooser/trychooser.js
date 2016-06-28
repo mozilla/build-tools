@@ -258,6 +258,6 @@ function setresult() {
         $('.result').val(value);
     } else {
         $('#result_try').val('try: ' + value);
-        $('#result_mach').val('mach try ' + value);
+        $('#result_mach').val('./mach try ' + value);
     }
 }
