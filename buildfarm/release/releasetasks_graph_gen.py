@@ -72,6 +72,7 @@ def main(release_runner_config, release_config, tc_config):
         "release_channels": release_config['channels'],
         "final_verify_channels": release_config['final_verify_channels'],
         "final_verify_platforms": release_config['final_verify_platforms'],
+        "uptake_monitoring_platforms": release_config['uptake_monitoring_platforms'],
         "source_enabled": release_config["source_enabled"],
         "checksums_enabled": release_config["checksums_enabled"],
         "updates_enabled": release_config["updates_enabled"],
@@ -116,6 +117,7 @@ def get_items_from_common_tc_task(common_task_id, tc_config):
     tc_task_items["version"] = task["extra"]["build_props"]["version"]
     tc_task_items["build_number"] = task["extra"]["build_props"]["build_number"]
     tc_task_items["mozilla_revision"] = task["extra"]["build_props"]["revision"]
+    tc_task_items["partials"] = task["extra"]["build_props"]["partials"]
     return tc_task_items
 
 
@@ -125,14 +127,14 @@ def get_unique_release_items(options, tc_config):
     if options.common_task_id:
         # sometimes, we make a release based on a previous release. e.g. a graph that represents
         # part 2 of a Firefox Release Candidate release
-        # TODO extract partials, mozharness_revision, and l10n_changesets from common taskgroup
+        # TODO extract mozharness_revision, and l10n_changesets from common taskgroup
         unique_items.update(get_items_from_common_tc_task(options.common_task_id, tc_config))
     else:
         unique_items['version'] = options.version
         unique_items['build_number'] = options.build_number
         unique_items['mozilla_revision'] = options.mozilla_revision
+        unique_items['partials'] = options.partials
 
-    unique_items['partials'] = options.partials
     unique_items['mozharness_revision'] = options.mozharness_revision
     # TODO have ability to pass l10n_changesets whether based on previous release or new one
     unique_items["l10n_changesets"] = {}
