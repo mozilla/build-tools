@@ -425,6 +425,7 @@ def main(options):
                 "release_channels": release_channels,
                 "final_verify_channels": final_verify_channels,
                 "final_verify_platforms": branchConfig['release_platforms'],
+                "uptake_monitoring_platforms": branchConfig['release_platforms'],
                 "signing_pvt_key": signing_pvt_key,
                 "build_tools_repo_path": branchConfig['build_tools_repo_path'],
                 "push_to_candidates_enabled": branchConfig['push_to_candidates_enabled'],
