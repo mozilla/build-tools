@@ -50,6 +50,26 @@ credentials = {
     "cltbld_password": "",
     "root_password": "",
 }
+MAX_DURATION_DEFAULT = 60*60*3 # 3 hours
+bucket_config = {
+    "build_scheduler": {"max_duration": 60*5, "concurrent": 1},
+    "tests_scheduler": {"max_duration": 60*5, "concurrent": 1},
+    "build1": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 1},
+    "build1-aws-us-east-1": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 1},
+    "build1-aws-us-west-2": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 1},
+    "try1": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 1},
+    "try1-aws-us-east-1": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 1},
+    "try1-aws-us-west-2": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 1},
+    "tests1-linux": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 1},
+    "tests1-macosx": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 1},
+    "tests1-windows": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 1},
+    "tests1-linux32-aws-us-east-1": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 2},
+    "tests1-linux32-aws-us-west-2": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 2},
+    "tests1-linux64-aws-us-east-1": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 3},
+    "tests1-linux64-aws-us-west-2": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 3},
+    "tests1-windows-aws-us-east-1": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 2},
+    "tests1-windows-aws-us-west-2": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 2},
+}
 
 def IgnorePolicy():
     def missing_host_key(self, *args):
@@ -73,10 +93,23 @@ def put_masters_in_buckets(masters_json, master_list=None):
         buckets[bucket_key].append(master)
     return
 
-def masters_remain():
-    for key in running_buckets:
-        if running_buckets[key]:
+def check_available_slots(key_to_match):
+    if key_to_match in running_buckets:
+        if not key_to_match in bucket_config:
+            # We don't recognize this bucket, so limit to 1 running at a time.
+            return False
+        if len(running_buckets[key_to_match]) < bucket_config[key_to_match]['concurrent']:
             return True
+        else:
+            return False
+    # We can run 1 of anything.
+    return True
+
+def masters_remain():
+    for key in running_buckets.iterkeys():
+        for master_name in running_buckets[key]:
+            if running_buckets[key][master_name]:
+                return True
     for key in buckets:
         if buckets[key]:
             return True
@@ -124,6 +157,17 @@ def get_console(hostname, as_root=False):
         console.disconnect() # Don't hold a connection
         return None  # No valid console
     return None  # How did we get here?
+
+def exceeded_max_shutdown_duration(bucket_name, current_master):
+    if bucket_name in bucket_config:
+        max_duration = bucket_config[bucket_name]['max_duration']
+    else:
+        max_duration = MAX_DURATION_DEFAULT
+    now = time.time()
+    if now - current_master['start_time'] > max_duration:
+        return True
+    else:
+        return False
 
 def stop_master(master):
     # For scheduler masters, we just stop them.
@@ -313,7 +357,7 @@ def reboot_master(master):
     return False
 
 def display_remaining():
-    if not buckets:
+    if not buckets or len(buckets) == 0:
         return
     log.info("")
     log.info("Masters not processed yet")
@@ -322,25 +366,27 @@ def display_remaining():
     for bucket in sorted(buckets.iterkeys()):
         for master in sorted(buckets[bucket], key=operator.itemgetter('hostname')):
             if master['role'] == 'scheduler':
-	        log.info("{:<30} {}".format(bucket, master['hostname']))
+	            log.info("{:<30} {}".format(bucket, master['hostname']))
             else:
-	        log.info("{:<30} http://{}:{}".format(bucket, master['hostname'], master['http_port']))
+	            log.info("{:<30} http://{}:{}".format(bucket, master['hostname'], master['http_port']))
 
 def display_running():
-    if not running_buckets:
+    if not running_buckets or len(running_buckets) == 0:
         return
     log.info("")
     log.info("Masters still being processed")
     log.info("{:<30} {}".format("bucket","master URL"))
     log.info("{:<30} {}".format("======","=========="))
     for bucket in sorted(running_buckets.iterkeys()):
-        if running_buckets[bucket]['role'] == 'scheduler':
-            log.info("{:<30} {}".format(bucket, running_buckets[bucket]['hostname']))
-        else:
-            log.info("{:<30} http://{}:{}".format(bucket, running_buckets[bucket]['hostname'], running_buckets[bucket]['http_port']))
+        for master_name in sorted(running_buckets[bucket].iterkeys()):
+            master = running_buckets[bucket][master_name]
+            if master['role'] == 'scheduler':
+                log.info("{:<30} {}".format(bucket, master['hostname']))
+            else:
+                log.info("{:<30} http://{}:{}".format(bucket, master['hostname'], master['http_port']))
 
 def display_completed():
-    if not completed_masters:
+    if not completed_masters or len(completed_masters) == 0:
         return
     log.info("")
     log.info("Masters restarted (or at least attempted)")
@@ -354,7 +400,7 @@ def display_completed():
                 log.info("{:<30} http://{}:{}".format(bucket, master['hostname'], master['http_port']))
 
 def display_problems():
-    if not problem_masters:
+    if not problem_masters or len(problem_masters) == 0:
         return
     log.warning("")
     log.warning("Masters that hit problems")
@@ -367,7 +413,7 @@ def display_problems():
             else:
                 log.warning("{:<30} http://{}:{} {}".format(bucket, master['hostname'], master['http_port'], master['issue']))
 
-def display_progress():
+def display_progress(signal_number=None, signal_context=None):
     display_completed()
     display_problems()
     display_running()
@@ -378,8 +424,7 @@ def pprint_buckets():
     pp = pprint.PrettyPrinter(indent=4)
     pp.pprint(buckets)
 
-
-signal.signal(signal.SIGINFO, display_progress)
+signal.signal(signal.SIGUSR1, display_progress)
 
 
 if __name__ == '__main__':
@@ -444,62 +489,77 @@ if __name__ == '__main__':
         # If we add a new master, we need to kick off the graceful shutdown too.
         keys_processed = []
         for key in buckets:
-            if key in running_buckets:
-                continue
-            else:
-                if buckets[key]:
-                    running_buckets[key] = buckets[key].pop()
-                    if running_buckets[key]['role'] == "scheduler":
-                        stop_master(running_buckets[key])
-                    else:
-                        if disable_master(running_buckets[key]):
-                            log.debug("Disabled %s in slavealloc." % running_buckets[key]['hostname'])
-                        else:
-                            running_buckets[key]['issue'] = "Unable to disable in slavealloc"
-                            if key not in problem_masters:
-                                problem_masters[key] = []
-                            problem_masters[key].append(running_buckets[key].copy())
-                            del running_buckets[key]
-                        if graceful_shutdown(running_buckets[key]):
-                            log.debug("Initiated graceful_shutdown of %s." % running_buckets[key]['hostname'])
-                        else:
-                            running_buckets[key]['issue'] = "Unable to initiate graceful_shutdown"
-                            if key not in problem_masters:
-                                problem_masters[key] = []
-                            problem_masters[key].append(running_buckets[key].copy())
-                            del running_buckets[key]
-
-        for key in running_buckets:
-            if check_shutdown_status(running_buckets[key]):
-                if args.reboot and running_buckets[key]['role'] != "scheduler":
-                    if not reboot_master(running_buckets[key]):
-                        log.debug("Failed to reboot master (%s). Please investigate by hand." % running_buckets[key]['hostname'])
-                        running_buckets[key]['issue'] = "Failed to reboot master. May also need to be re-enabled in slavealloc"
+            while check_available_slots(key):
+                if not buckets[key]:
+                    break
                 else:
-                    if not restart_master(running_buckets[key]):
-                        log.debug("Failed to restart master (%s). Please investigate by hand." % running_buckets[key]['hostname'])
-                        running_buckets[key]['issue'] = "Failed to restart master. May also need to be re-enabled in slavealloc"
-                # Either way, we re-enable and remove this master so we can proceed.
-                if running_buckets[key]['role'] != "scheduler":
-                    if 'issue' not in running_buckets[key]:
-                        if enable_master(running_buckets[key]):
-                            log.debug("Re-enabled %s in slavealloc" % running_buckets[key]['hostname'])
+                    current_master = buckets[key].pop()
+                    master_name = current_master['name']
+                    if key not in running_buckets:
+                        running_buckets[key] = {}
+                    running_buckets[key][master_name] = current_master
+                    running_buckets[key][master_name]['start_time'] = time.time()
+                    if current_master['role'] == "scheduler":
+                        stop_master(current_master)
+                    else:
+                        if disable_master(current_master):
+                            log.debug("Disabled %s in slavealloc." % current_master['hostname'])
                         else:
-                            log.debug("Unable to re-enable master (%s) in slavealloc." % running_buckets[key]['hostname'])
-                            running_buckets[key]['issue'] = "Unable to re-enable in slavealloc"
-                if 'issue' in running_buckets[key]:
-                    if key not in problem_masters:
-                        problem_masters[key] = []
-                        problem_masters[key].append(running_buckets[key].copy())
-                    del running_buckets[key]
-                    continue
-                if key not in completed_masters:
-                    completed_masters[key] = []
-                completed_masters[key].append(running_buckets[key].copy())
-                keys_processed.append(key)
+                            current_master['issue'] = "Unable to disable in slavealloc"
+                            if key not in problem_masters:
+                                problem_masters[key] = []
+                            problem_masters[key].append(current_master.copy())
+                            del running_buckets[key][master_name]
+                        if graceful_shutdown(current_master):
+                            log.debug("Initiated graceful_shutdown of %s." % current_master['hostname'])
+                        else:
+                            current_master['issue'] = "Unable to initiate graceful_shutdown"
+                            if key not in problem_masters:
+                                problem_masters[key] = []
+                            problem_masters[key].append(current_master.copy())
+                            del running_buckets[key][master_name]
 
-        for key in keys_processed:
-            del running_buckets[key]
+        for key in running_buckets.iterkeys():
+            for master_name in running_buckets[key]:
+                current_master = running_buckets[key][master_name]
+                if not current_master:
+                    continue
+                if exceeded_max_shutdown_duration(key, current_master):
+                    log.debug("%s has exceeded the max shutdown duration for bucket type %s. Stopping master more forcibly." % current_master['hostname'])
+                    if not stop_master(current_master):
+                        log.debug("Failed to stop master (%s). Please investigate by hand." % current_master['hostname'])
+                        current_master['issue'] = "Failed to stop master. May also need to be re-enabled in slavealloc"
+                if check_shutdown_status(current_master):
+                    if args.reboot and current_master['role'] != "scheduler":
+                        if not reboot_master(current_master):
+                            log.debug("Failed to reboot master (%s). Please investigate by hand." % current_master['hostname'])
+                            current_master['issue'] = "Failed to reboot master. May also need to be re-enabled in slavealloc"
+                    else:
+                        if not restart_master(current_master):
+                            log.debug("Failed to restart master (%s). Please investigate by hand." % current_master['hostname'])
+                            current_master['issue'] = "Failed to restart master. May also need to be re-enabled in slavealloc"
+                    # Either way, we re-enable and remove this master so we can proceed.
+                    if current_master['role'] != "scheduler":
+                        if 'issue' not in current_master:
+                            if enable_master(current_master):
+                                log.debug("Re-enabled %s in slavealloc" % current_master['hostname'])
+                            else:
+                                log.debug("Unable to re-enable master (%s) in slavealloc." % current_master['hostname'])
+                                current_master['issue'] = "Unable to re-enable in slavealloc"
+                    if 'issue' in current_master:
+                        if master_name not in problem_masters:
+                            problem_masters[master_name] = []
+                            problem_masters[master_name].append(current_master.copy())
+                        del current_master
+                        continue
+                    if master_name not in completed_masters:
+                        completed_masters[master_name] = []
+                    completed_masters[master_name].append(current_master.copy())
+                    keys_processed.append(master_name)
+
+            for master_name in keys_processed:
+                del running_buckets[key][master_name]
+            keys_processed = []
 
         if masters_remain():
             now = time.time()
