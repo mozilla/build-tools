@@ -79,7 +79,8 @@ def main(release_runner_config, release_config, tc_config):
         "push_to_releases_enabled": release_config["push_to_releases_enabled"],
 
         "verifyConfigs": {},
-        "next_version": bump_version(release_config["version"]),
+        # ESR should not use "esr" suffix here:
+        "next_version": bump_version(release_config["version"].replace("esr", "")),
         "appVersion": getAppVersion(release_config["version"]),
         "partial_updates": get_partials(rr, release_config["partials"],
                                         release_config['product']),
