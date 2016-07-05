@@ -362,7 +362,6 @@ def main(options):
         final_verify_channels = [
             c for c in release_channels if c not in branchConfig.get('mirror_requiring_channels', [])
         ]
-        # TODO - use publish_to_balrog_channels once releasetasks publishes to balrog
         publish_to_balrog_channels = [
             c for c in release_channels if c not in branchConfig.get('mirror_requiring_channels', [])
         ]
@@ -439,6 +438,7 @@ def main(options):
                 "partner_repacks_platforms": branchConfig.get("partner_repacks_platforms", []),
                 "l10n_changesets": l10n_changesets,
                 "extra_balrog_submitter_params": extra_balrog_submitter_params,
+                "publish_to_balrog_channels": publish_to_balrog_channels,
             }
 
             validate_graph_kwargs(queue, gpg_key_path, **kwargs)

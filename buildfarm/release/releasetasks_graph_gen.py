@@ -46,7 +46,7 @@ def main(release_runner_config, release_config, tc_config):
         # ship-it items
         "version": release_config["version"],
         "revision": release_config["mozilla_revision"],
-        "mozharness_changeset": release_config["mozharness_revision"] or release_config["mozilla_revision"],
+        "mozharness_changeset": release_config["mozharness_changeset"] or release_config["mozilla_revision"],
         "buildNumber": release_config["build_number"],
         "l10n_changesets": release_config["l10n_changesets"],
 
@@ -100,7 +100,8 @@ def main(release_runner_config, release_config, tc_config):
             revision=release_config["mozilla_revision"],
             platforms=release_config['platforms']
         ),
-        "extra_balrog_submitter_params": release_config['extra_balrog_submitter_params']
+        "extra_balrog_submitter_params": release_config['extra_balrog_submitter_params'],
+        "publish_to_balrog_channels": release_config["publish_to_balrog_channels"],
     }
 
     graph = make_task_graph_strict_kwargs(**kwargs)
@@ -119,6 +120,7 @@ def get_items_from_common_tc_task(common_task_id, tc_config):
     tc_task_items["build_number"] = task["extra"]["build_props"]["build_number"]
     tc_task_items["mozilla_revision"] = task["extra"]["build_props"]["revision"]
     tc_task_items["partials"] = task["extra"]["build_props"]["partials"]
+    tc_task_items["mozharness_changeset"] = task["extra"]["build_props"]["mozharness_changeset"]
     return tc_task_items
 
 
@@ -128,7 +130,6 @@ def get_unique_release_items(options, tc_config):
     if options.common_task_id:
         # sometimes, we make a release based on a previous release. e.g. a graph that represents
         # part 2 of a Firefox Release Candidate release
-        # TODO extract mozharness_revision, and l10n_changesets from common taskgroup
         unique_items.update(get_items_from_common_tc_task(options.common_task_id, tc_config))
     else:
         unique_items['version'] = options.version
@@ -136,7 +137,6 @@ def get_unique_release_items(options, tc_config):
         unique_items['mozilla_revision'] = options.mozilla_revision
         unique_items['partials'] = options.partials
 
-    unique_items['mozharness_revision'] = options.mozharness_revision
     # TODO have ability to pass l10n_changesets whether based on previous release or new one
     unique_items["l10n_changesets"] = {}
 
@@ -173,8 +173,6 @@ if __name__ == '__main__':
                       help='list of partials for the release')
     parser.add_option('--mozilla-revision', dest='mozilla_revision',
                       help='gecko revision to build ff from')
-    parser.add_option('--mozharness-revision', dest='mozharness_revision',
-                      help='gecko revision for mozharness')
     parser.add_option('--common-task-id', dest='common_task_id',
                       help='a task id of a task that shares the same release info')
     parser.add_option('--dry-run', dest='dry_run', action='store_true', default=False,
