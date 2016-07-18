@@ -65,8 +65,8 @@ class API(object):
                                            requests.ConnectionError),
                          attempts=self.retries)
         except requests.HTTPError, e:
-            log.error('Caught HTTPError: %d %s' % 
-                     (e.response.status_code, e.response.content), 
+            log.error('Caught HTTPError: %d %s' %
+                     (e.response.status_code, e.response.content),
                      exc_info=True)
             raise
 
@@ -104,7 +104,7 @@ class Release(API):
 
     def update(self, name, **data):
         url_template_vars = {'name': name}
-        return self.request(method='POST', data=data, 
+        return self.request(method='POST', data=data,
                             url_template_vars=url_template_vars).content
 
 
@@ -113,11 +113,3 @@ class ReleaseL10n(API):
 
     def getL10n(self, name):
         return self.request(url_template_vars={'name': name}).content
-
-
-class Status(API):
-    url_template = '/releases/%(name)s/status'
-
-    def update(self, name, data):
-        return self.request(method='POST', data=data,
-                            url_template_vars={'name': name}).content
