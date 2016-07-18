@@ -159,9 +159,9 @@ class ReleaseSanitizerTestSuite(OpsMixin):
         log.info("Testing repo and revision in tree ...")
         try:
             make_hg_get_request(self.repo_path, self.revision).strip()
-        except requests.HTTPError:
-            err_msg = "{path} repo does not exist with {rev} revision".format(
-                path=self.repo_path, rev=self.revision)
+        except requests.HTTPError as err:
+            err_msg = "{path} repo does not exist with {rev} revision. URL: {url}".format(
+                path=self.repo_path, rev=self.revision, url=err.request.url)
             result.add_error(err_msg, sys.exc_info())
 
     def test_versions_display_validation_in_tree(self, result):
@@ -176,11 +176,12 @@ class ReleaseSanitizerTestSuite(OpsMixin):
         try:
             display_version = make_hg_get_request(self.repo_path, self.revision,
                                                   filename=VERSION_DISPLAY_CONFIG_URI).strip()
-        except requests.HTTPError:
-            err_msg = ("display version config file not found in {path} under"
-                       "{rev} revision").format(
+        except requests.HTTPError as err:
+            err_msg = ("display_version config file not found in {path} under"
+                       " {rev} revision. URL: {url}").format(
                            path=self.repo_path,
-                           rev=self.revision)
+                           rev=self.revision,
+                           url=err.request.url)
             result.add_error(err_msg, sys.exc_info())
             return
 
@@ -246,9 +247,10 @@ class ReleaseSanitizerTestSuite(OpsMixin):
             releases_sha = grab_partial_sha(_url)
 
             err_msg = ("{version}-build{build_number} is a good candidate"
-                       " build but not the one we shipped!").format(
+                       " build, but not the one we shipped! URL: {url}").format(
                            version=pversion,
-                           build_number=buildno)
+                           build_number=buildno,
+                           url=_url)
             self.assertEqual(result, releases_sha, candidate_sha, err_msg)
 
     def test_l10n_shipped_locales(self, result):
@@ -261,11 +263,12 @@ class ReleaseSanitizerTestSuite(OpsMixin):
             # TODO: mind that we will need something similar for Fennec
             ret = make_hg_get_request(self.repo_path, self.revision,
                                       filename=SHIPPED_LOCALES_CONFIG_URI).strip()
-        except requests.HTTPError:
+        except requests.HTTPError as err:
             err_msg = ("Shipped locale file not found in {path} repo under rev"
-                       "{revision}").format(
+                       " {revision}. URL: {url}").format(
                            path=self.repo_path,
-                           revision=self.revision)
+                           revision=self.revision,
+                           url=err.request.url)
             result.add_error(err_msg, sys.exc_info())
             return
 
@@ -294,12 +297,13 @@ class ReleaseSanitizerTestSuite(OpsMixin):
             ret = get_single_locale_config(self.repo_path,
                                            self.revision,
                                            self.branch).strip()
-        except requests.HTTPError:
+        except requests.HTTPError as err:
             err_msg = ("Failed to retrieve single locale config file for"
-                       "{path}, revision {rev}, {branch} branch").format(
+                       " {path}, revision {rev}. URL: {url}").format(
                            path=self.repo_path,
                            rev=self.revision,
-                           branch=self.branch)
+                           branch=self.branch,
+                           url=err.request.url)
             result.add_error(err_msg, sys.exc_info())
             return
 
@@ -318,7 +322,7 @@ class ReleaseSanitizerTestSuite(OpsMixin):
             try:
                 make_generic_head_request(locale_url)
             except requests.HTTPError:
-                err_msg = "{locale} not found".format(locale=locale_url)
+                err_msg = "Locale {locale} not found".format(locale=locale_url)
                 result.add_error(err_msg, sys.exc_info())
 
     def test_l10n_dashboard(self, result):
@@ -333,11 +337,12 @@ class ReleaseSanitizerTestSuite(OpsMixin):
         try:
             dash_changesets = get_l10_dashboard_changeset(self.version,
                                                           self.product)
-        except requests.HTTPError:
+        except requests.HTTPError as err:
             err_msg = ("Failed to retrieve l10n dashboard changes for"
-                       "{product} product, version {version}").format(
+                       " {product} product, version {version}. URL: {url}").format(
                            product=self.product,
-                           version=self.version)
+                           version=self.version,
+                           url=err.request.url)
             result.add_error(err_msg, sys.exc_info())
             return
 
