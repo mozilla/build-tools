@@ -9,7 +9,6 @@ world regulations and constraints.
 import sys
 import site
 import logging
-import pprint
 from os import path
 
 import requests
@@ -110,7 +109,6 @@ class SanityException(Exception):
 class OpsMixin(object):
     """Helper class Mixin to enrich ReleaseSanitizerTestSuite behavior
     """
-
     def assertEqual(self, result, first, second, err_msg):
         """Method inspired from unittest implementation
         The :result is the aggregation object to collect all potential errors
@@ -133,7 +131,6 @@ class ReleaseSanitizerTestSuite(OpsMixin):
     To add more testing methods, please prefix the method with 'test_' in
     order to have it run by sanitize() main method.
     """
-
     def __init__(self, **kwargs):
         self.kwargs = kwargs
         self.repo_path = self.kwargs["repo_path"]
@@ -324,14 +321,15 @@ class ReleaseSanitizerTestSuite(OpsMixin):
                 err_msg = "{locale} not found".format(locale=locale_url)
                 result.add_error(err_msg, sys.exc_info())
 
-    def _test_l10n_dashboard(self, result):
+    def test_l10n_dashboard(self, result):
         """test_l10n method
         Tests if l10n dashboard changesets match the current l10n changesets
         """
-        # TODO: this should be turned on for all betas and turned off for all
-        # other releases. Skip this test for now till we find a better
-        # approach to nicely tweak the test on/off depending on the branch
         log.info("Testing l10n dashboard changesets ...")
+        if not self.kwargs["dashboard_check"]:
+            log.info("Skipping l10n dashboard check")
+            return
+
         try:
             dash_changesets = get_l10_dashboard_changeset(self.version,
                                                           self.product)
@@ -359,15 +357,27 @@ class ReleaseSanitizerResult(object):
     def add_error(self, err_msg, err=None):
         """Method to collect a new errors. It collects the exception
         stacktrace and stores the exception value along with the message"""
+        # each error consist of a tuple containing the error message and any
+        # other potential information we might get useful from the
+        # sys.exc_info(). If there is no such, explanatory string will be added
         self.errors.append((err_msg, self._exc_info_to_string(err)))
+        # append an empty line after each exceptions to have a nicer output
         log.info("Collecting a new exception: %s", err_msg)
 
     def _exc_info_to_string(self, err):
         if err is None:
-            return 'No more details to show'
+            return "Result of assertion, no exception stacktrace available"
         # trim the traceback part from the exc_info result tuple
         _, value = err[:2]
         return value
+
+    def __str__(self):
+        """Define the output to be user-friendly readable"""
+        # make some room to separate the output from the exception stacktrace
+        ret = "\n\n"
+        for msg, err in self.errors:
+            ret += "* {msg}:\n{err}\n\n".format(msg=msg, err=err)
+        return ret
 
 
 class ReleaseSanitizerRunner(object):
@@ -384,7 +394,7 @@ class ReleaseSanitizerRunner(object):
         self.result = self.resultClass()
 
     def run(self):
-        """Main method to call for the actual tests to perform release sanity"""
+        """Main method to call for the actual test of release sanity"""
         test_suite = self.testSuite(**self.kwargs)
         log.info("Attempting to sanitize ...")
         test_suite.sanitize(self.result)
@@ -397,4 +407,4 @@ class ReleaseSanitizerRunner(object):
         """Retrieves the list of errors from the result objecti
         in a nicely-formatted string
         """
-        return pprint.pformat(self.result.errors)
+        return self.result
