@@ -22,6 +22,7 @@ from kickoff import get_partials, ReleaseRunner, make_task_graph_strict_kwargs
 from kickoff import get_l10n_config, get_en_US_config
 from kickoff import email_release_drivers
 from kickoff import bump_version
+from kickoff.sanity import ReleaseSanitizerRunner, SanityException
 from release.info import readBranchConfig
 from release.l10n import parsePlainL10nChangesets
 from release.versions import getAppVersion
@@ -53,10 +54,6 @@ ALL_FILES = set([
 ])
 
 
-class SanityException(Exception):
-    pass
-
-
 def is_candidate_release(channels):
     """determine if this is a candidate release or not
 
@@ -82,38 +79,6 @@ def update_channels(version, mappings):
         if re.match(pattern, version):
             return channels
     raise RuntimeError("Cannot find update channels for %s" % version)
-
-
-def get_display_version(repo_path, revision):
-    """Get display version from remote repository
-
-    >>> get_display_version("releases/mozilla-beta", "59f372c35b24")
-    '46.0b3'
-
-    >>> get_display_version("releases/mozilla-beta", "59f372c35b2416ac84d6572d64c49227481a8a6c")
-    '46.0b3'
-    """
-    # The location is the same for both Firefox and Fennec
-    url = "https://hg.mozilla.org/{repo_path}/raw-file/{revision}/browser/config/version_display.txt"
-    url = url.format(repo_path=repo_path, revision=revision)
-
-    def _get():
-        req = requests.get(url, timeout=60)
-        req.raise_for_status()
-        return req.content.strip()
-
-    return retry(_get)
-
-
-def validate_version(repo_path, revision, version):
-    actual_version = get_display_version(repo_path, revision)
-    if version != actual_version:
-        raise SanityException(
-            "In-tree version '%s' doesn't match ship-it version '%s'" %
-            (actual_version, version))
-    else:
-        log.info("In-tree version '%s' matches ship-it version '%s'",
-                 actual_version, version)
 
 
 def validate_signatures(checksums, signature, dir_path, gpg_key_path):
@@ -251,12 +216,8 @@ def get_hash(path, hash_type="sha512"):
 
 
 def validate_graph_kwargs(queue, gpg_key_path, **kwargs):
-    # We don't export "esr" in the version
-    validate_version(repo_path=kwargs["repo_path"],
-                     revision=kwargs["revision"],
-                     version=kwargs["version"].replace("esr", ""))
-    # TODO: validate partials
-    # TODO: validate l10n changesets
+    # TODO: to be moved under kickoff soon, once new relpro sanity is in place
+    # bug 1282959
     platforms = kwargs.get('en_US_config', {}).get('platforms', {})
     for platform in platforms.keys():
         task_id = platforms.get(platform).get('task_id', {})
@@ -264,6 +225,13 @@ def validate_graph_kwargs(queue, gpg_key_path, **kwargs):
         sanitize_en_US_binary(queue, task_id, gpg_key_path)
 
     log.info("Release sanity for all en-US is now completed!")
+
+    log.info("Sanitizing the rest of the release ...")
+    sanitizer = ReleaseSanitizerRunner(**kwargs)
+    sanitizer.run()
+    if not sanitizer.was_successful():
+        errors = sanitizer.get_errors()
+        raise SanityException("Issues on release sanity %s" % errors)
 
 
 def main(options):
@@ -409,6 +377,7 @@ def main(options):
                     revision=release['mozillaRevision'],
                     platforms=branchConfig['release_platforms']
                 ),
+                "dashboard_check": release['dashboardCheck'],
                 "verifyConfigs": {},
                 "balrog_api_root": branchConfig["balrog_api_root"],
                 "funsize_balrog_api_root": branchConfig["funsize_balrog_api_root"],
