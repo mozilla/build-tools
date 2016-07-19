@@ -17,6 +17,7 @@ site.addsitedir(path.join(path.dirname(__file__), ".."))
 from util.retry import retry
 from util.hg import make_hg_url
 from release.versions import getL10nDashboardVersion
+from kickoff import matches
 
 log = logging.getLogger(__name__)
 
@@ -27,6 +28,7 @@ LOCALE_BASE_URL_TEMPLATE = "{hg_l10n_base}/{locale}/raw-file/{revision}"
 SINGLE_LOCALE_CONFIG_URI_TEMPLATE = "testing/mozharness/configs/single_locale/{branch}.py"
 VERSION_DISPLAY_CONFIG_URI = "browser/config/version_display.txt"
 SHIPPED_LOCALES_CONFIG_URI = "browser/locales/shipped-locales"
+BETA_PATTERNS = [r"\d+\.0b\d+"]
 
 
 def make_generic_head_request(page_url):
@@ -53,6 +55,19 @@ def make_hg_get_request(repo_path, revision,
     """Wrapper to make a GET request for a specific URI under hg repo"""
     url = make_hg_url(hg_url, repo_path, revision=revision, filename=filename)
     return make_generic_get_request(url)
+
+
+def is_candidate_release(channels):
+    """Determine if this is a candidate release or not
+
+    Because ship-it can not tell us if this is a candidate release (yet!),
+    we assume it is when we have determined, based on version,
+    that we are planning to ship to more than one update_channel
+    e.g. for candidate releases we have:
+     1) one channel to test the 'candidate' release with: 'beta' channel
+     2) once verified, we ship to the main channel: 'release' channel
+    """
+    return len(channels) > 1
 
 
 def get_l10_dashboard_changeset(version, product):
@@ -139,6 +154,7 @@ class ReleaseSanitizerTestSuite(OpsMixin):
         self.branch = self.kwargs["branch"]
         self.locales = self.kwargs["l10n_changesets"]
         self.product = self.kwargs["product"]
+        self.partial_updates = self.kwargs["partial_updates"]
 
     def sanitize(self, result):
         """Main method to run all the sanity checks. It collects all the
@@ -252,6 +268,29 @@ class ReleaseSanitizerTestSuite(OpsMixin):
                            build_number=buildno,
                            url=_url)
             self.assertEqual(result, releases_sha, candidate_sha, err_msg)
+
+    def test_partials_release_candidate_validity(self, result):
+        """test_partials method
+        Tests if a RC contains both beta and release in list of partials.
+        We hit this issue in bug 1265579 in which the updates builder failed
+        if partials were all-beta OR if no-beta at all
+        """
+        log.info("Testing RC partials ...")
+        if not is_candidate_release(self.kwargs["release_channels"]):
+            log.info("Skipping this test as we're not dealing with a RC now")
+            return
+
+        ret = [matches(name, BETA_PATTERNS) for name in self.partial_updates]
+        at_least_one_beta = any(ret)
+        all_betas = all(ret) and ret != []
+
+        partials = ["{name}".format(name=p) for p in self.partial_updates]
+        err_msg = "No beta found in the RC list of partials: {l}".format(l=partials)
+        self.assertEqual(result, at_least_one_beta, True, err_msg)
+
+        err_msg = ("All partials in the RC list are betas. At least a non-beta"
+                   " release is needed in {l}").format(l=partials)
+        self.assertEqual(result, all_betas, False, err_msg)
 
     def test_l10n_shipped_locales(self, result):
         """test_l10n method
