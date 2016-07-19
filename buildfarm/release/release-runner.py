@@ -22,7 +22,7 @@ from kickoff import get_partials, ReleaseRunner, make_task_graph_strict_kwargs
 from kickoff import get_l10n_config, get_en_US_config
 from kickoff import email_release_drivers
 from kickoff import bump_version
-from kickoff.sanity import ReleaseSanitizerRunner, SanityException
+from kickoff.sanity import ReleaseSanitizerRunner, SanityException, is_candidate_release
 from release.info import readBranchConfig
 from release.l10n import parsePlainL10nChangesets
 from release.versions import getAppVersion
@@ -52,18 +52,6 @@ ALL_FILES = set([
     'i686.tar.bz2',
     'x86_64.tar.bz2',
 ])
-
-
-def is_candidate_release(channels):
-    """determine if this is a candidate release or not
-
-    Because ship-it can not tell us if this is a candidate release (yet!), we assume it is when we
-    have determined, based on version, that we are planning to ship to more than one update_channel
-    e.g. for candidate releases we have:
-     1) one channel to test the 'candidate' release with: to 'beta' channel users
-     2) once verified, we ship to the main channel: to 'release' channel users
-    """
-    return len(channels) > 1
 
 
 def update_channels(version, mappings):
