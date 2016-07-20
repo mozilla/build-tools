@@ -248,9 +248,11 @@ function setresult() {
 
     if (value.match(/mochitest-browser-screenshots/) && !value.match(/MOZSCREENSHOTS_SETS=./)) {
         $('#setenv').addClass('attention');
+        $('#mochitest-browser-screenshots').addClass('attention');
         incomplete = true;
     } else {
         $('#setenv').removeClass('attention');
+        $('#mochitest-browser-screenshots').removeClass('attention');
     }
 
     if (incomplete) {
