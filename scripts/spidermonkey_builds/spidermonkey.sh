@@ -6,6 +6,7 @@ SCRIPTS_DIR=$PWD
 popd > /dev/null
 
 SPIDERDIR=$SCRIPTS_DIR/scripts/spidermonkey_builds
+ROBUSTCHECKOUT=${SCRIPTS_DIR}/hgext/robustcheckout.py
 
 DEFAULT_REPO="https://hg.mozilla.org/integration/mozilla-inbound"
 
@@ -16,23 +17,17 @@ function usage() {
   fi
 }
 
-# It doesn't work to just pull from try. If you try to pull the full repo,
-# it'll error out because it's too big. Even if you restrict to a particular
-# revision, the pull is painfully slow (as in, it could take days) without
-# --bundle and/or --mirror.
-hgtool_args=()
+HG_REV=
 noclean=""
 VARIANT=""
 while [ $# -gt 0 ]; do
     case "$1" in
         -m|--mirror)
             shift
-            hgtool_args+=(--mirror "$1")
             shift
             ;;
         -b|--bundle)
             shift
-            hgtool_args+=(--bundle "$1")
             shift
             ;;
         --ttserver)
@@ -45,7 +40,7 @@ while [ $# -gt 0 ]; do
             ;;
         -r|--rev)
             shift
-            hgtool_args+=(--clone-by-revision -r "$1")
+            HG_REV=$1
             shift
             ;;
         --dep)
@@ -118,7 +113,26 @@ fi
 if [ -z "$HG_REPO" ] || [ "$HG_REPO" = none ]; then
   SOURCE=.
 else
-  $PYTHON $SCRIPTS_DIR/buildfarm/utils/hgtool.py "${hgtool_args[@]}" $HG_REPO src || exit 2
+  if [ -z "${HG_SHARE_BASE_DIR}" ]; then
+      echo "HG_SHARE_BASE_DIR must be defined"
+      exit 1
+  fi
+  if [ -z "${HG_REV}" ]; then
+      echo "Must pass -r/--rev to specify revision to update to"
+      exit 1
+  fi
+
+  hg --version
+  hgargs="--sharebase ${HG_SHARE_BASE_DIR}"
+  hgargs="${hgargs} --revision ${HG_REV}"
+  hgargs="${hgargs} --upstream https://hg.mozilla.org/mozilla-unified"
+  if [ -z "${noclean}" ]; then
+      hgargs="${hgargs} --purge"
+  fi
+
+  hg --config extensions.robustcheckout=${ROBUSTCHECKOUT} robustcheckout \
+      ${hgargs} ${HG_REPO} src || exit 2
+
   SOURCE=src
 
   # Pull down some standard tools that the build now requires, eg mozmake on
