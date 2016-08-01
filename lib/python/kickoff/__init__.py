@@ -132,7 +132,7 @@ def get_partials(rr, partial_versions, product):
     partials = {}
     if not partial_versions:
         return partials
-    for p in partial_versions.split(','):
+    for p in [stripped.strip() for stripped in partial_versions.split(',')]:
         partialVersion, buildNumber = p.split('build')
         partial_release_name = '{}-{}-build{}'.format(
             product.capitalize(), partialVersion, buildNumber,
