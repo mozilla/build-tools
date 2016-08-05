@@ -30,6 +30,7 @@ import signal
 from furl import furl
 from paramiko import AuthenticationException
 from slaveapi.clients import ssh
+from datetime import datetime
 
 import logging
 log = logging.getLogger(__name__)
@@ -262,7 +263,7 @@ def disable_master(master):
     # and possibly getting hung.
     log.debug("Disabling %s in slavealloc." % master['hostname'])
     disable_url = furl(slavealloc_api_url + "/" + str(master_ids[master['name']]))
-    put_data = {"enabled": 0}
+    put_data = {"enabled": 0, "notes": "master disabled at %s " %datetime.datetime.now().strftime("%y-%m-%d %H:%M")}
     error_msg = "Failed to disable %s" % master['hostname']
     return http_put(str(disable_url), put_data, error_msg)
 
@@ -270,7 +271,7 @@ def enable_master(master):
     # Re-enable the master in slavealloc after it has been restarted.
     log.debug("Re-enabling %s in slavealloc." % master['hostname'])
     enable_url = furl(slavealloc_api_url + "/" + str(master_ids[master['name']]))
-    put_data = {"enabled": 1}
+    put_data = {"enabled": 1, "notes": None}
     error_msg = "Failed to re-enable %s" % master['hostname']
     return http_put(str(enable_url), put_data, error_msg)
 
