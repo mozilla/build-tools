@@ -263,7 +263,7 @@ def disable_master(master):
     # and possibly getting hung.
     log.debug("Disabling %s in slavealloc." % master['hostname'])
     disable_url = furl(slavealloc_api_url + "/" + str(master_ids[master['name']]))
-    put_data = {"enabled": 0, "notes": "master disabled at %s " %datetime.datetime.now().strftime("%y-%m-%d %H:%M")}
+    put_data = {"enabled": 0, "notes": "[restart_masters] Master disabled at %s " % datetime.now().strftime("%Y-%m-%d %H:%M")}
     error_msg = "Failed to disable %s" % master['hostname']
     return http_put(str(disable_url), put_data, error_msg)
 
@@ -526,7 +526,7 @@ if __name__ == '__main__':
                 if not current_master:
                     continue
                 if exceeded_max_shutdown_duration(key, current_master):
-                    log.debug("%s has exceeded the max shutdown duration for bucket type %s. Stopping master more forcibly." % current_master['hostname'])
+                    log.debug("%s has exceeded the max shutdown duration for bucket type %s. Stopping master more forcibly." % (current_master['hostname'], key))
                     if not stop_master(current_master):
                         log.debug("Failed to stop master (%s). Please investigate by hand." % current_master['hostname'])
                         current_master['issue'] = "Failed to stop master. May also need to be re-enabled in slavealloc"
