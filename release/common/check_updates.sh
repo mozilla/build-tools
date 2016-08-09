@@ -47,17 +47,19 @@ check_updates () {
 
   if [ -d source/$platform_dirname ]; then
     cd source/$platform_dirname;
+    updater_bin="updater"
     for updater in $updaters; do
         if [ -e "$updater" ]; then
             echo "Found updater at $updater"
             cp $updater ../../update
+            updater_bin=$(basename $updater)
             break
         fi
     done
     if [ "$use_old_updater" = "1" ]; then
-        ../../update/updater ../../update . 0
+        ../../update/$updater_bin ../../update . 0
     else
-        ../../update/updater ../../update . . 0
+        ../../update/$updater_bin ../../update . . 0
     fi
     cd ../..
   else
