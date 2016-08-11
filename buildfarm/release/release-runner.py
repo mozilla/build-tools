@@ -258,6 +258,13 @@ def main(options):
             "accessToken": get_config(config, "taskcluster", "access_token", None),
         }
     }
+    # Extend tc_config for retries, see Bug 1293744
+    # https://github.com/taskcluster/taskcluster-client.py/blob/0.0.24/taskcluster/client.py#L30
+    # This is a stopgap until Bug 1259627 is fixed.
+    retrying_tc_config = tc_config.copy()
+    retrying_tc_config = retrying_tc_config.update({
+        "maxRetries": 12
+    })
     configs_workdir = 'buildbot-configs'
     balrog_username = get_config(config, "balrog", "username", None)
     balrog_password = get_config(config, "balrog", "password", None)
@@ -269,7 +276,7 @@ def main(options):
     # TODO: replace release sanity with direct checks of en-US and l10n revisions (and other things if needed)
 
     rr = ReleaseRunner(api_root=api_root, username=username, password=password)
-    scheduler = Scheduler(tc_config)
+    scheduler = Scheduler(retrying_tc_config)
     index = Index(tc_config)
     queue = Queue(tc_config)
 
