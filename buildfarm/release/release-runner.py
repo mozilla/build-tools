@@ -365,7 +365,6 @@ def main(options):
                     revision=release['mozillaRevision'],
                     platforms=branchConfig['release_platforms']
                 ),
-                "dashboard_check": release['dashboardCheck'],
                 "verifyConfigs": {},
                 "balrog_api_root": branchConfig["balrog_api_root"],
                 "funsize_balrog_api_root": branchConfig["funsize_balrog_api_root"],

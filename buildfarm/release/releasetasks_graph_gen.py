@@ -49,7 +49,6 @@ def main(release_runner_config, release_config, tc_config):
         "mozharness_changeset": release_config["mozharness_changeset"] or release_config["mozilla_revision"],
         "buildNumber": release_config["build_number"],
         "l10n_changesets": release_config["l10n_changesets"],
-        "dashboard_check": False,
 
         # was branchConfig items
         "funsize_balrog_api_root": release_config["funsize_balrog_api_root"],

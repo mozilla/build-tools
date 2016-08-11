@@ -364,31 +364,6 @@ class ReleaseSanitizerTestSuite(OpsMixin):
                 err_msg = "Locale {locale} not found".format(locale=locale_url)
                 result.add_error(err_msg, sys.exc_info())
 
-    def test_l10n_dashboard(self, result):
-        """test_l10n method
-        Tests if l10n dashboard changesets match the current l10n changesets
-        """
-        log.info("Testing l10n dashboard changesets ...")
-        if not self.kwargs["dashboard_check"]:
-            log.info("Skipping l10n dashboard check")
-            return
-
-        try:
-            dash_changesets = get_l10_dashboard_changeset(self.version,
-                                                          self.product)
-        except requests.HTTPError as err:
-            err_msg = ("Failed to retrieve l10n dashboard changes for"
-                       " {product} product, version {version}. URL: {url}").format(
-                           product=self.product,
-                           version=self.version,
-                           url=err.request.url)
-            result.add_error(err_msg, sys.exc_info())
-            return
-
-        err_msg = ("Current ship-it changesets are not the same as the l10n"
-                   " dashboard changesets")
-        self.assertEqual(result, self.locales, dash_changesets, err_msg)
-
 
 class ReleaseSanitizerResult(object):
     """Aggregate exceptions result-object like. It's passed down in all
