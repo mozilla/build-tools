@@ -234,8 +234,6 @@ def get_release_sanity_args(configs_workdir, release, cfgFile, masters_json,
         '--configs-dir', configs_workdir,
         '--configs-branch', buildbot_configs_branch,
     ]
-    if not release['dashboardCheck']:
-        args.append('--bypass-l10n-dashboard-check')
     return args
 
 
