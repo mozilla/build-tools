@@ -262,9 +262,7 @@ def main(options):
     # https://github.com/taskcluster/taskcluster-client.py/blob/0.0.24/taskcluster/client.py#L30
     # This is a stopgap until Bug 1259627 is fixed.
     retrying_tc_config = tc_config.copy()
-    retrying_tc_config = retrying_tc_config.update({
-        "maxRetries": 12
-    })
+    retrying_tc_config.update({"maxRetries": 12})
     configs_workdir = 'buildbot-configs'
     balrog_username = get_config(config, "balrog", "username", None)
     balrog_password = get_config(config, "balrog", "password", None)
