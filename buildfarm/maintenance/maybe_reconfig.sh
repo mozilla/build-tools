@@ -137,6 +137,7 @@ if reconfig_needed; then
     fi
     if [ "${RC}" == "0" ]; then
         log_info "Reconfig completed successfuly. - ${START_TIME}"
+        echo "Reconfig completed successfuly. - ${START_TIME}"
     else
         log_error "Reconfig failed. - ${START_TIME}"
         exit 5
