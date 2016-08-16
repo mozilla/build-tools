@@ -271,6 +271,9 @@ def action_add_config_seta_symlinks(master):
         run('ln -s %(bbconfigs_dir)s/mozilla-tests/config_seta.py '
             '%(master_dir)s/' % master)
 
+def action_remote_config_seta_symlinks(master):
+    with show('running'):
+        run('rm %(master_dir)s/config_seta.py') 
 
 def action_update_exception_timestamp(master):
     with show('running'):
