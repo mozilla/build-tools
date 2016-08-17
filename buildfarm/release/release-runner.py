@@ -244,7 +244,7 @@ def main(options):
                                          'buildbot_configs_branch')
     sleeptime = config.getint('release-runner', 'sleeptime')
     notify_from = get_config(config, 'release-runner', 'notify_from', None)
-    notify_to = get_config(config, 'release-runner', 'notify_to', None)
+    notify_to = get_config(config, 'release-runner', 'notify_to_announce', None)
     docker_worker_key = get_config(config, 'release-runner',
                                    'docker_worker_key', None)
     signing_pvt_key = get_config(config, 'signing', 'pvt_key', None)
