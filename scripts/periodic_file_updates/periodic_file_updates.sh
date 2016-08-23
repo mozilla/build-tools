@@ -166,9 +166,15 @@ function download_shared_artifacts {
 }
 
 # gtk3 is required to run xpcshell as of Gecko 42.
-function download_gtk3 {
+function run_tooltool {
     sh ${SCRIPTDIR}/../tooltool/tooltool_wrapper.sh ${SCRIPTDIR}/periodic_file_updates.manifest https://api.pub.build.mozilla.org/tooltool/ setup.sh /builds/tooltool.py --authentication-file /builds/relengapi.tok
     LD_LIBRARY_PATH=${BASEDIR}/gtk3/usr/local/lib
+    if [ -f "${BASEDIR}/gcc/lib/libstdc++.so" ]; then
+        # We put both 32-bits and 64-bits library path in LD_LIBRARY_PATH: ld.so
+        # will prefer the files in the 32-bits path when loading 32-bits executables,
+        # and the files in the 64-bits path when loading 64-bits executables.
+        LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${BASEDIR}/gcc/lib64:${BASEDIR}/gcc/lib
+    fi
 }
 
 # In bug 1164714, the public/src subdirectories were flattened away under security/manager.
@@ -635,7 +641,7 @@ fi
 preflight_cleanup
 if [ "${DO_HSTS}" == "true" -o "${DO_HPKP}" == "true" ]; then
     download_shared_artifacts
-    download_gtk3
+    run_tooltool
 fi
 is_flattened
 if [ "${DO_HSTS}" == "true" ]; then
