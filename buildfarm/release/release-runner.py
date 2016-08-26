@@ -327,9 +327,11 @@ def main(options):
             c for c in release_channels if c not in branchConfig.get('mirror_requiring_channels', [])
         ]
         push_to_releases_enabled = False
+        postrelease_mark_as_shipped_enabled = False
     else:
         postrelease_enabled = branchConfig['postrelease_version_bump_enabled']
         postrelease_bouncer_aliases_enabled = branchConfig['postrelease_bouncer_aliases_enabled']
+        postrelease_mark_as_shipped_enabled = branchConfig['postrelease_mark_as_shipped_enabled']
         final_verify_channels = release_channels
         publish_to_balrog_channels = release_channels
         push_to_releases_enabled = True
@@ -393,6 +395,7 @@ def main(options):
                 "uptake_monitoring_enabled": branchConfig['uptake_monitoring_enabled'],
                 "tuxedo_server_url": branchConfig['tuxedoServerUrl'],
                 "postrelease_version_bump_enabled": postrelease_enabled,
+                "postrelease_mark_as_shipped_enabled": postrelease_mark_as_shipped_enabled,
                 "push_to_releases_enabled": push_to_releases_enabled,
                 "push_to_releases_automatic": branchConfig['push_to_releases_automatic'],
                 "beetmover_candidates_bucket": branchConfig["beetmover_buckets"][release["product"]],
