@@ -416,7 +416,7 @@ def main(options):
             rr.mark_as_completed(release)
             email_release_drivers(smtp_server=smtp_server, from_=notify_from,
                                   to=notify_to, release=release,
-                                  graph_id=graph_id)
+                                  task_group_id=graph_id)
         except:
             # We explicitly do not raise an error here because there's no
             # reason not to start other releases if creating the Task Graph
