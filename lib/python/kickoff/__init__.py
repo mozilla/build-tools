@@ -95,14 +95,14 @@ class ReleaseRunner(object):
         log.info('mark as failed %s' % release['name'])
         self.release_api.update(release['name'], ready=False, status=why)
 
-def email_release_drivers(smtp_server, from_, to, release, graph_id):
+def email_release_drivers(smtp_server, from_, to, release, task_group_id):
     # Send an email to the mailing after the build
 
     content = """\
 A new build has been submitted through ship-it:
 
 Commit: https://hg.mozilla.org/{path}/rev/{revision}
-Task graph: https://tools.taskcluster.net/task-graph-inspector/#{task_graph_id}/
+Task group: https://tools.taskcluster.net/push-inspector/#/{task_group_id}/
 
 Created by {submitter}
 Started by {starter}
@@ -110,7 +110,7 @@ Started by {starter}
 
 """.format(path=release["branch"], revision=release["mozillaRevision"],
            submitter=release["submitter"], starter=release["starter"],
-           task_graph_id=graph_id)
+           task_group_id=task_group_id)
 
     comment = release.get("comment")
     if comment:
