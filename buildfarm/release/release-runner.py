@@ -448,6 +448,9 @@ def main(options):
     if rc != 0:
         sys.exit(rc)
 
+    log.debug('Sleeping for %s seconds before polling again', sleeptime)
+    time.sleep(sleeptime)
+
 if __name__ == '__main__':
     parser = OptionParser(__doc__)
     parser.add_option('-l', '--lockfile', dest='lockfile',
