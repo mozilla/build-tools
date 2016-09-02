@@ -31,6 +31,7 @@ from taskcluster.utils import slugId
 from util.hg import mercurial
 from util.retry import retry
 from util.file import load_config, get_config
+from build_status import are_en_us_builds_completed
 
 log = logging.getLogger(__name__)
 
@@ -309,6 +310,7 @@ def main(options):
 
     # TODO: this won't work for Thunderbird...do we care?
     branch = release["branch"].split("/")[-1]
+    release['branchShortName'] = branch
     branchConfig = readBranchConfig(path.join(configs_workdir, "mozilla"), branch=branch)
 
     release_channels = update_channels(release["version"], branchConfig["release_channel_mappings"])
@@ -338,6 +340,20 @@ def main(options):
 
     rc = 0
     for release in rr.new_releases:
+        ship_it_product_name = release['product']
+        tc_product_name = branchConfig['stage_product'][ship_it_product_name]
+        # XXX: Doesn't work with neither Fennec nor Thunderbird
+        platforms = branchConfig['release_platforms']
+        log.debug('Will check these platforms in order to know if builds are completed: %s', platforms)
+
+        if not are_en_us_builds_completed(index, queue, release_name=release['name'], branch=branch,
+                                          revision=release['mozillaRevision'], tc_product_name=tc_product_name,
+                                          platforms=platforms):
+            log.info('Builds are not completed yet, skipping release "%s" for now', release['name'])
+            rr.update_status(release, 'Waiting for builds to be completed')
+            continue
+
+        log.info('Every build is completed for release: %s', release['name'])
         graph_id = slugId()
         try:
             rr.update_status(release, 'Generating task graph')
