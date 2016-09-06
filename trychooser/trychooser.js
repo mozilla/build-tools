@@ -1,4 +1,10 @@
 $(document).ready(function() {
+    var isEmbedded = false;
+    if (window.location.search === "?embed") {
+        isEmbedded = true;
+        $('.extra-text').hide();
+        $('#wrapper').addClass('no-margin');
+    }
     // Call out nondefault options
     $('<span> (not run by default)</span>')
         .addClass('info')
@@ -121,145 +127,155 @@ $(document).ready(function() {
 
     // Initialize the try syntax
     setresult();
-});
 
-function resolveFilters(filters) {
-    // The linux32 hack requires cancelling out mutually-exclusive options
-    var want = {};
-    for (var i in filters) {
-        if (filters[i].charAt(0) != '-') {
-            want[filters[i]] = true;
-        }
-    }
-    for (var i in filters) {
-        if (filters[i].charAt(0) == '-') {
-            var name = filters[i].substring(1);
-            if (name in want)
-                delete want[name];
-            else
+
+    function resolveFilters(filters) {
+        // The linux32 hack requires cancelling out mutually-exclusive options
+        var want = {};
+        for (var i in filters) {
+            if (filters[i].charAt(0) != '-') {
                 want[filters[i]] = true;
+            }
         }
+        for (var i in filters) {
+            if (filters[i].charAt(0) == '-') {
+                var name = filters[i].substring(1);
+                if (name in want)
+                    delete want[name];
+                else
+                    want[filters[i]] = true;
+            }
+        }
+        return Object.keys(want);
     }
-    return Object.keys(want);
-}
 
-function setresult() {
-    var args = [];
+    function setresult() {
+        var args = [];
 
-    $('.option-radio[try-section]').each(function() {
-        var arg = '-' + $(this).attr('try-section') + ' ';
-        arg += $(this).find(':checked').attr('value');
-        args.push(arg);
-    });
-
-    $('.option-email').each(function() {
-        var arg = $(this).find(':checked').attr('value');
-        if (arg != 'on')
+        $('.option-radio[try-section]').each(function() {
+            var arg = '-' + $(this).attr('try-section') + ' ';
+            arg += $(this).find(':checked').attr('value');
             args.push(arg);
-    });
+        });
 
-    $('.option-group[try-section]').each(function() {
-        var tryopt = $(this).attr('try-section');
-        var arg = '-' + tryopt + ' ';
-        var names = [];
-        if ($(this).find(':checked').length == 0) {
-          // If nothing checked, ensure none-selector is checked.
-          $(this).find('.none-selector').prop('checked', true);
-        }
-        if ($(this).find('.none-selector:checked').length > 0) {
-            names = ['none'];
-        } else if ($(this).find('.all-selector:checked').length > 0) {
-            names = ['all'];
-        } else {
-            var group = $(this).closest('.option-group');
-            var options = group.find(':checked:not(.group-selector):not(.subgroup-selector):not(.nondefault)');
-            group.find('.subgroup-all-selector:checked').each(function(i, elm) {
-                options = options.add($(elm));
-                var subgroup = $(this).closest('.option-subgroup');
-                options = options.not(subgroup.find(':checked:not(.group-selector):not(.subgroup-selector):not(.nondefault)'))
-            })
-            options.each(function(i,elt){
+        $('.option-email').each(function() {
+            var arg = $(this).find(':checked').attr('value');
+            if (arg != 'on')
+                args.push(arg);
+        });
+
+        $('.option-group[try-section]').each(function() {
+            var tryopt = $(this).attr('try-section');
+            var arg = '-' + tryopt + ' ';
+            var names = [];
+            if ($(this).find(':checked').length == 0) {
+              // If nothing checked, ensure none-selector is checked.
+              $(this).find('.none-selector').prop('checked', true);
+            }
+            if ($(this).find('.none-selector:checked').length > 0) {
+                names = ['none'];
+            } else if ($(this).find('.all-selector:checked').length > 0) {
+                names = ['all'];
+            } else {
+                var group = $(this).closest('.option-group');
+                var options = group.find(':checked:not(.group-selector):not(.subgroup-selector):not(.nondefault)');
+                group.find('.subgroup-all-selector:checked').each(function(i, elm) {
+                    options = options.add($(elm));
+                    var subgroup = $(this).closest('.option-subgroup');
+                    options = options.not(subgroup.find(':checked:not(.group-selector):not(.subgroup-selector):not(.nondefault)'))
+                })
+                options.each(function(i,elt){
+                    names.push($(elt).attr('value'));
+                });
+            }
+
+            // Add in the nondefault builders
+            $(this).find(':checked.nondefault').each(function(i,elt) {
                 names.push($(elt).attr('value'));
             });
-        }
 
-        // Add in the nondefault builders
-        $(this).find(':checked.nondefault').each(function(i,elt) {
-            names.push($(elt).attr('value'));
+            var filters = [];
+            var filter_tryopt = tryopt == 't' ? 'u' : tryopt;
+            $('[try-filter=' + filter_tryopt + '] :checked').each(function () {
+                filters.push.apply(filters, $(this).attr('value').split(','));
+            });
+            if (filters.length > 0) {
+                filters = resolveFilters(filters).join(',');
+                names = names.map(function (n) { return n + '[' + filters + ']'; });
+            }
+
+            arg += names.join(',');
+            args.push(arg);
         });
 
-        var filters = [];
-        var filter_tryopt = tryopt == 't' ? 'u' : tryopt;
-        $('[try-filter=' + filter_tryopt + '] :checked').each(function () {
-            filters.push.apply(filters, $(this).attr('value').split(','));
-        });
-        if (filters.length > 0) {
-            filters = resolveFilters(filters).join(',');
-            names = names.map(function (n) { return n + '[' + filters + ']'; });
+        if ($('.profile').is(':checked')) {
+            args.push('mozharness: --spsProfile');
         }
 
-        arg += names.join(',');
-        args.push(arg);
-    });
+        if ($('.no-retry').is(':checked')) {
+            args.push('--no-retry');
+        }
 
-    if ($('.profile').is(':checked')) {
-        args.push('mozharness: --spsProfile');
+        if ($('.rebuild-talos').is(':checked')) {
+            args.push('--rebuild-talos 5');
+        }
+
+        var tag = $('#tags').val();
+        if (tag) {
+            args.push('--tag ' + tag);
+        }
+
+        var setenv = $('#setenv').val();
+        if (setenv) {
+            args.push('--setenv ' + setenv);
+        }
+
+        var rebuilds = parseInt($('#rebuilds').val(), 10);
+        if (rebuilds) {
+            args.push('--rebuild ' + rebuilds);
+        }
+
+        var value = args.join(' ');
+        var incomplete = false;
+
+        if (value.match(/-b none/)) {
+            $('#build_type-none').addClass('attention')
+            incomplete = true;
+        } else {
+            $('#build_type-none').removeClass('attention')
+        }
+
+        if (value.match(/-p none/)) {
+            $('#platforms-none').addClass('attention');
+            incomplete = true;
+        } else {
+            $('#platforms-none').removeClass('attention');
+        }
+
+        if (value.match(/mochitest-browser-screenshots/) && !value.match(/MOZSCREENSHOTS_SETS=./)) {
+            $('#setenv').addClass('attention');
+            $('#mochitest-browser-screenshots').addClass('attention');
+            incomplete = true;
+        } else {
+            $('#setenv').removeClass('attention');
+            $('#mochitest-browser-screenshots').removeClass('attention');
+        }
+
+        if (incomplete) {
+            value = "(NO JOBS CHOSEN)";
+            $('.result').val(value);
+        } else {
+            $('#result_try').val('try: ' + value);
+            $('#result_mach').val('./mach try ' + value);
+        }
+        if (isEmbedded && window.parent) {
+            if (incomplete) {
+                window.parent.postMessage("", "*")
+            } else {
+                window.parent.postMessage(value, "*");
+            }
+        }
+
     }
+});
 
-    if ($('.no-retry').is(':checked')) {
-        args.push('--no-retry');
-    }
-
-    if ($('.rebuild-talos').is(':checked')) {
-        args.push('--rebuild-talos 5');
-    }
-
-    var tag = $('#tags').val();
-    if (tag) {
-        args.push('--tag ' + tag);
-    }
-
-    var setenv = $('#setenv').val();
-    if (setenv) {
-        args.push('--setenv ' + setenv);
-    }
-
-    var rebuilds = parseInt($('#rebuilds').val(), 10);
-    if (rebuilds) {
-        args.push('--rebuild ' + rebuilds);
-    }
-
-    var value = args.join(' ');
-    var incomplete = false;
-
-    if (value.match(/-b none/)) {
-        $('#build_type-none').addClass('attention')
-        incomplete = true;
-    } else {
-        $('#build_type-none').removeClass('attention')
-    }
-
-    if (value.match(/-p none/)) {
-        $('#platforms-none').addClass('attention');
-        incomplete = true;
-    } else {
-        $('#platforms-none').removeClass('attention');
-    }
-
-    if (value.match(/mochitest-browser-screenshots/) && !value.match(/MOZSCREENSHOTS_SETS=./)) {
-        $('#setenv').addClass('attention');
-        $('#mochitest-browser-screenshots').addClass('attention');
-        incomplete = true;
-    } else {
-        $('#setenv').removeClass('attention');
-        $('#mochitest-browser-screenshots').removeClass('attention');
-    }
-
-    if (incomplete) {
-        value = "(NO JOBS CHOSEN)";
-        $('.result').val(value);
-    } else {
-        $('#result_try').val('try: ' + value);
-        $('#result_mach').val('./mach try ' + value);
-    }
-}

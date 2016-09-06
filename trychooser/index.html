@@ -12,16 +12,17 @@
 </head>
 <body>
 <div id="wrapper">
-    <h1>TryChooser Syntax Builder</h1>
+    <h1 class="extra-text">TryChooser Syntax Builder</h1>
 
     <form name="trychooser" method="get" action="#">
+    <div class="extra-text">
     <p>Trychooser is also a mercurial extension, <a href="https://bitbucket.org/sfink/trychooser">trychooser</a>, can help you use a CLI and also will push to try for you.</p>
     <p>By using the mach try command, you can automatically generate parts of try syntax and restrict tests to certain directories. <br>Learn more by running |./mach help try|.</p>
     <strong>Computed Syntax:</strong><br>
     <textarea id="result_try" class="result" cols="80"></textarea><br><br>
     <strong>Computed Command:</strong><br>
     <textarea id="result_mach" class="result" cols="80"></textarea>
-
+    </div>
     <div id='try-options'>
         <div id="col1">
             <h4>Build Types</h4>

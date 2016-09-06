@@ -60,6 +60,11 @@ label {
     margin: 0 auto;
     width: 985px;
 }
+
+#wrapper.no-margin {
+    margin: 0 auto auto 0;
+}
+
 #col1 {
     float:left;
     width:385px;
