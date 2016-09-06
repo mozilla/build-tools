@@ -40,7 +40,15 @@ def long_revision(repo, revision):
         req.raise_for_status()
         return req.json()["node"]
 
-    return retry(_get)
+    try:
+        return retry(_get)
+    except HTTPError, error:
+        if error.response.status_code == 404:
+            raise NotFoundError(error)
+
+
+class NotFoundError(HTTPError):
+    pass
 
 
 class ReleaseRunner(object):
@@ -62,9 +70,9 @@ class ReleaseRunner(object):
             our_releases = [r for r in new_releases if
                             matches(r['name'], RELEASE_PATTERNS)]
             if our_releases:
-                # make sure to use long revision
                 for r in our_releases:
-                    r["mozillaRevision"] = long_revision(r["branch"], r["mozillaRevision"])
+                    self._assign_long_revision(r)
+
                 self.new_releases = our_releases
                 log.info("Releases to handle are %s", self.new_releases)
                 return True
@@ -74,6 +82,14 @@ class ReleaseRunner(object):
         else:
             log.info("No new releases: %s" % new_releases)
             return False
+
+    def _assign_long_revision(self, release):
+        revision = release['mozillaRevision']
+        branch = release['branch']
+        try:
+            release['mozillaRevision'] = long_revision(branch, revision)
+        except NotFoundError:
+            self.mark_as_failed(r, 'Revision "%s" does not exist in branch "%s"' % (revision, branch))
 
     def get_release_l10n(self, release):
         return self.release_l10n_api.getL10n(release)

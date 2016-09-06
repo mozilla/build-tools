@@ -433,7 +433,7 @@ def main(options):
             email_release_drivers(smtp_server=smtp_server, from_=notify_from,
                                   to=notify_to, release=release,
                                   task_group_id=graph_id)
-        except:
+        except Exception, exception:
             # We explicitly do not raise an error here because there's no
             # reason not to start other releases if creating the Task Graph
             # fails for another one. We _do_ need to set this in order to exit
@@ -441,9 +441,11 @@ def main(options):
             rc = 2
             rr.mark_as_failed(
                 release,
-                'Failed to start release promotion (graph ID: %s)' % graph_id)
-            log.exception("Failed to start release promotion for graph %s %s",
-                          graph_id, release)
+                'Failed to start release promotion (graph ID: %s). Error(s): %s' % (graph_id, exception)
+            )
+            log.exception('Failed to start release "%s" promotion for graph %s. Error(s): %s',
+                          release['name'], graph_id, exception)
+            log.debug('Release failed: %s', release)
 
     if rc != 0:
         sys.exit(rc)
