@@ -18,11 +18,14 @@ from twisted.python.lockfile import FilesystemLock
 
 site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 
-from kickoff import get_partials, ReleaseRunner, make_task_graph_strict_kwargs
+from kickoff import get_partials, ReleaseRunner, make_task_graph_strict_kwargs, long_revision
 from kickoff import get_l10n_config, get_en_US_config
 from kickoff import email_release_drivers
 from kickoff import bump_version
-from kickoff.sanity import ReleaseSanitizerRunner, SanityException, is_candidate_release
+from kickoff.sanity.base import SanityException, is_candidate_release
+from kickoff.sanity.revisions import RevisionsSanitizer
+from kickoff.sanity.l10n import L10nSanitizer
+from kickoff.sanity.partials import PartialsSanitizer
 from kickoff.build_status import are_en_us_builds_completed
 from release.info import readBranchConfig
 from release.l10n import parsePlainL10nChangesets
@@ -53,6 +56,48 @@ ALL_FILES = set([
     'i686.tar.bz2',
     'x86_64.tar.bz2',
 ])
+
+CONFIGS_WORKDIR = 'buildbot-configs'
+
+def run_prebuild_sanity_checks(release_runner):
+    new_valid_releases = []
+    for release in release_runner.new_releases:
+        log.info('Got a new release request: %s' % release)
+        try:
+            # TODO: this won't work for Thunderbird...do we care?
+            release['branchShortName'] = release['branch'].split("/")[-1]
+
+            check_and_assign_long_revision(release)
+            assign_and_check_l10n_changesets(release_runner, release)
+            assign_and_check_partial_updates(release_runner, release)
+
+            new_valid_releases.append(release)
+        except Exception as e:
+            release_runner.mark_as_failed(release, 'Sanity checks failed. Errors: %s' % e)
+            log.exception('Sanity checks failed. Errors: %s. Release: %s', e, release)
+    return new_valid_releases
+
+
+def check_and_assign_long_revision(release):
+    # Revisions must be checked before trying to get the long one.
+    RevisionsSanitizer(**release).run()
+    release['mozillaRevision'] = long_revision(release['branch'], release['mozillaRevision'])
+
+
+def assign_and_check_l10n_changesets(release_runner, release):
+    release['l10n_changesets'] = parsePlainL10nChangesets(release_runner.get_release_l10n(release['name']))
+    L10nSanitizer(**release).run()
+
+
+def assign_and_check_partial_updates(release_runner, release):
+    release['partial_updates'] = get_partials(release_runner, release['partials'], release['product'])
+    branchConfig = get_branch_config(release)
+    release['release_channels'] = update_channels(release['version'], branchConfig['release_channel_mappings'])
+    PartialsSanitizer(**release).run()
+
+
+def get_branch_config(release):
+    return readBranchConfig(path.join(CONFIGS_WORKDIR, "mozilla"), branch=release['branchShortName'])
 
 
 def update_channels(version, mappings):
@@ -215,13 +260,6 @@ def validate_graph_kwargs(queue, gpg_key_path, **kwargs):
 
     log.info("Release sanity for all en-US is now completed!")
 
-    log.info("Sanitizing the rest of the release ...")
-    sanitizer = ReleaseSanitizerRunner(**kwargs)
-    sanitizer.run()
-    if not sanitizer.was_successful():
-        errors = sanitizer.get_errors()
-        raise SanityException("Issues on release sanity %s" % errors)
-
 
 def main(options):
     log.info('Loading config from %s' % options.config)
@@ -264,7 +302,6 @@ def main(options):
     # This is a stopgap until Bug 1259627 is fixed.
     retrying_tc_config = tc_config.copy()
     retrying_tc_config.update({"maxRetries": 12})
-    configs_workdir = 'buildbot-configs'
     balrog_username = get_config(config, "balrog", "username", None)
     balrog_password = get_config(config, "balrog", "password", None)
     extra_balrog_submitter_params = get_config(config, "balrog", "extra_balrog_submitter_params", None)
@@ -285,8 +322,7 @@ def main(options):
             log.debug('Fetching release requests')
             rr.get_release_requests()
             if rr.new_releases:
-                for release in rr.new_releases:
-                    log.info('Got a new release request: %s' % release)
+                new_releases = run_prebuild_sanity_checks(rr)
                 break
             else:
                 log.debug('Sleeping for %d seconds before polling again' %
@@ -296,10 +332,10 @@ def main(options):
             log.error("Caught exception when polling:", exc_info=True)
             sys.exit(5)
 
-    retry(mercurial, args=(buildbot_configs, configs_workdir), kwargs=dict(branch=buildbot_configs_branch))
+    retry(mercurial, args=(buildbot_configs, CONFIGS_WORKDIR), kwargs=dict(branch=buildbot_configs_branch))
 
     if 'symlinks' in config.sections():
-        format_dict = dict(buildbot_configs=configs_workdir)
+        format_dict = dict(buildbot_configs=CONFIGS_WORKDIR)
         for target in config.options('symlinks'):
             symlink = config.get('symlinks', target).format(**format_dict)
             if path.exists(symlink):
@@ -307,39 +343,34 @@ def main(options):
             else:
                 log.info("Adding %s -> %s symlink" % (symlink, target))
                 os.symlink(target, symlink)
-
-    # TODO: this won't work for Thunderbird...do we care?
-    branch = release["branch"].split("/")[-1]
-    release['branchShortName'] = branch
-    branchConfig = readBranchConfig(path.join(configs_workdir, "mozilla"), branch=branch)
-
-    release_channels = update_channels(release["version"], branchConfig["release_channel_mappings"])
-    # candidate releases are split in two graphs and release-runner only handles the first
-    # graph of tasks. so parts like postrelease, push_to_releases/mirrors, and mirror dependant
-    # channels are handled in the second generated graph outside of release-runner.
-    # This is not elegant but it should do the job for now
-    candidate_release = is_candidate_release(release_channels)
-    if candidate_release:
-        postrelease_enabled = False
-        postrelease_bouncer_aliases_enabled = False
-        final_verify_channels = [
-            c for c in release_channels if c not in branchConfig.get('mirror_requiring_channels', [])
-        ]
-        publish_to_balrog_channels = [
-            c for c in release_channels if c not in branchConfig.get('mirror_requiring_channels', [])
-        ]
-        push_to_releases_enabled = False
-        postrelease_mark_as_shipped_enabled = False
-    else:
-        postrelease_enabled = branchConfig['postrelease_version_bump_enabled']
-        postrelease_bouncer_aliases_enabled = branchConfig['postrelease_bouncer_aliases_enabled']
-        postrelease_mark_as_shipped_enabled = branchConfig['postrelease_mark_as_shipped_enabled']
-        final_verify_channels = release_channels
-        publish_to_balrog_channels = release_channels
-        push_to_releases_enabled = True
-
     rc = 0
-    for release in rr.new_releases:
+    for release in new_releases:
+        branchConfig = get_branch_config(release)
+        # candidate releases are split in two graphs and release-runner only handles the first
+        # graph of tasks. so parts like postrelease, push_to_releases/mirrors, and mirror dependant
+        # channels are handled in the second generated graph outside of release-runner.
+        # This is not elegant but it should do the job for now
+        release_channels = release['release_channels']
+        candidate_release = is_candidate_release(release_channels)
+        if candidate_release:
+            postrelease_enabled = False
+            postrelease_bouncer_aliases_enabled = False
+            final_verify_channels = [
+                c for c in release_channels if c not in branchConfig.get('mirror_requiring_channels', [])
+            ]
+            publish_to_balrog_channels = [
+                c for c in release_channels if c not in branchConfig.get('mirror_requiring_channels', [])
+            ]
+            push_to_releases_enabled = False
+            postrelease_mark_as_shipped_enabled = False
+        else:
+            postrelease_enabled = branchConfig['postrelease_version_bump_enabled']
+            postrelease_bouncer_aliases_enabled = branchConfig['postrelease_bouncer_aliases_enabled']
+            postrelease_mark_as_shipped_enabled = branchConfig['postrelease_mark_as_shipped_enabled']
+            final_verify_channels = release_channels
+            publish_to_balrog_channels = release_channels
+            push_to_releases_enabled = True
+
         ship_it_product_name = release['product']
         tc_product_name = branchConfig['stage_product'][ship_it_product_name]
         # XXX: Doesn't work with neither Fennec nor Thunderbird
@@ -347,7 +378,7 @@ def main(options):
 
         try:
             if not are_en_us_builds_completed(index, release_name=release['name'], submitted_at=release['submittedAt'],
-                                              branch=branch, revision=release['mozillaRevision'],
+                                              branch=release['branchShortName'], revision=release['mozillaRevision'],
                                               tc_product_name=tc_product_name, platforms=platforms):
                 log.info('Builds are not completed yet, skipping release "%s" for now', release['name'])
                 rr.update_status(release, 'Waiting for builds to be completed')
@@ -357,7 +388,6 @@ def main(options):
             graph_id = slugId()
 
             rr.update_status(release, 'Generating task graph')
-            l10n_changesets = parsePlainL10nChangesets(rr.get_release_l10n(release["name"]))
 
             kwargs = {
                 "public_key": docker_worker_key,
@@ -373,18 +403,18 @@ def main(options):
                 "product": release["product"],
                 # if mozharness_revision is not passed, use 'revision'
                 "mozharness_changeset": release.get('mh_changeset') or release['mozillaRevision'],
-                "partial_updates": get_partials(rr, release['partials'], release['product']),
-                "branch": branch,
+                "partial_updates": release['partial_updates'],
+                "branch": release['branchShortName'],
                 "updates_enabled": bool(release["partials"]),
                 "l10n_config": get_l10n_config(
-                    index=index, product=release["product"], branch=branch,
+                    index=index, product=release["product"], branch=release['branchShortName'],
                     revision=release['mozillaRevision'],
                     platforms=branchConfig['platforms'],
                     l10n_platforms=branchConfig['l10n_release_platforms'],
-                    l10n_changesets=l10n_changesets
+                    l10n_changesets=release['l10n_changesets']
                 ),
                 "en_US_config": get_en_US_config(
-                    index=index, product=release["product"], branch=branch,
+                    index=index, product=release["product"], branch=release['branchShortName'],
                     revision=release['mozillaRevision'],
                     platforms=branchConfig['release_platforms']
                 ),
@@ -416,7 +446,7 @@ def main(options):
                 "push_to_releases_automatic": branchConfig['push_to_releases_automatic'],
                 "beetmover_candidates_bucket": branchConfig["beetmover_buckets"][release["product"]],
                 "partner_repacks_platforms": branchConfig.get("partner_repacks_platforms", []),
-                "l10n_changesets": l10n_changesets,
+                "l10n_changesets": release['l10n_changesets'],
                 "extra_balrog_submitter_params": extra_balrog_submitter_params,
                 "publish_to_balrog_channels": publish_to_balrog_channels,
             }
@@ -433,7 +463,7 @@ def main(options):
             email_release_drivers(smtp_server=smtp_server, from_=notify_from,
                                   to=notify_to, release=release,
                                   task_group_id=graph_id)
-        except:
+        except Exception as exception:
             # We explicitly do not raise an error here because there's no
             # reason not to start other releases if creating the Task Graph
             # fails for another one. We _do_ need to set this in order to exit
@@ -441,9 +471,11 @@ def main(options):
             rc = 2
             rr.mark_as_failed(
                 release,
-                'Failed to start release promotion (graph ID: %s)' % graph_id)
-            log.exception("Failed to start release promotion for graph %s %s",
-                          graph_id, release)
+                'Failed to start release promotion (graph ID: %s). Error(s): %s' % (graph_id, exception)
+            )
+            log.exception('Failed to start release "%s" promotion for graph %s. Error(s): %s',
+                          release['name'], graph_id, exception)
+            log.debug('Release failed: %s', release)
 
     if rc != 0:
         sys.exit(rc)

@@ -62,9 +62,6 @@ class ReleaseRunner(object):
             our_releases = [r for r in new_releases if
                             matches(r['name'], RELEASE_PATTERNS)]
             if our_releases:
-                # make sure to use long revision
-                for r in our_releases:
-                    r["mozillaRevision"] = long_revision(r["branch"], r["mozillaRevision"])
                 self.new_releases = our_releases
                 log.info("Releases to handle are %s", self.new_releases)
                 return True
