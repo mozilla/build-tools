@@ -460,9 +460,10 @@ def main(options):
             print scheduler.createTaskGraph(graph_id, graph)
 
             rr.mark_as_completed(release)
+            l10n_url = rr.release_l10n_api.getL10nFullUrl(release['name'])
             email_release_drivers(smtp_server=smtp_server, from_=notify_from,
                                   to=notify_to, release=release,
-                                  task_group_id=graph_id)
+                                  task_group_id=graph_id, l10n_url=l10n_url)
         except Exception as exception:
             # We explicitly do not raise an error here because there's no
             # reason not to start other releases if creating the Task Graph

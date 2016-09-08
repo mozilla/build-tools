@@ -38,8 +38,10 @@ class API(object):
         self.csrf_token = None
         self.retries = retry_attempts
 
-    def request(self, params=None, data=None, method='GET', url_template_vars={}):
-        url = self.api_root + self.url_template % url_template_vars
+    def request(self, params=None, data=None, method='GET', url_template_vars=None):
+        url_template_vars = {} if url_template_vars is None else url_template_vars
+
+        url = self._getFullUrl(url_template_vars)
         if method != 'GET' and method != 'HEAD':
             if not self.csrf_token or is_csrf_token_expired(self.csrf_token):
                 res = self.session.request(
@@ -69,6 +71,9 @@ class API(object):
                      (e.response.status_code, e.response.content),
                      exc_info=True)
             raise
+
+    def _getFullUrl(self, url_template_vars):
+        return self.api_root + self.url_template % url_template_vars
 
 
 class Releases(API):
@@ -113,3 +118,6 @@ class ReleaseL10n(API):
 
     def getL10n(self, name):
         return self.request(url_template_vars={'name': name}).content
+
+    def getL10nFullUrl(self, name):
+        return self._getFullUrl(url_template_vars={'name': name})

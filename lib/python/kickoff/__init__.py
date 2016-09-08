@@ -92,14 +92,16 @@ class ReleaseRunner(object):
         log.info('mark as failed %s' % release['name'])
         self.release_api.update(release['name'], ready=False, status=why)
 
-def email_release_drivers(smtp_server, from_, to, release, task_group_id):
+
+def email_release_drivers(smtp_server, from_, to, release, task_group_id, l10n_url):
     # Send an email to the mailing after the build
 
     content = """\
 A new build has been submitted through ship-it:
 
 Commit: https://hg.mozilla.org/{path}/rev/{revision}
-Task group: https://tools.taskcluster.net/push-inspector/#/{task_group_id}/
+Task group: https://tools.taskcluster.net/push-inspector/#/{task_group_id}
+Locales: {l10n_url} (requires VPN access)
 
 Created by {submitter}
 Started by {starter}
@@ -107,7 +109,7 @@ Started by {starter}
 
 """.format(path=release["branch"], revision=release["mozillaRevision"],
            submitter=release["submitter"], starter=release["starter"],
-           task_group_id=task_group_id)
+           task_group_id=task_group_id, l10n_url=l10n_url)
 
     comment = release.get("comment")
     if comment:
