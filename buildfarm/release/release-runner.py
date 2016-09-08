@@ -23,6 +23,7 @@ from kickoff import get_l10n_config, get_en_US_config
 from kickoff import email_release_drivers
 from kickoff import bump_version
 from kickoff.sanity import ReleaseSanitizerRunner, SanityException, is_candidate_release
+from kickoff.build_status import are_en_us_builds_completed
 from release.info import readBranchConfig
 from release.l10n import parsePlainL10nChangesets
 from release.versions import getAppVersion
@@ -31,7 +32,6 @@ from taskcluster.utils import slugId
 from util.hg import mercurial
 from util.retry import retry
 from util.file import load_config, get_config
-from build_status import are_en_us_builds_completed
 
 log = logging.getLogger(__name__)
 
@@ -344,18 +344,18 @@ def main(options):
         tc_product_name = branchConfig['stage_product'][ship_it_product_name]
         # XXX: Doesn't work with neither Fennec nor Thunderbird
         platforms = branchConfig['release_platforms']
-        log.debug('Will check these platforms in order to know if builds are completed: %s', platforms)
 
-        if not are_en_us_builds_completed(index, queue, release_name=release['name'], branch=branch,
-                                          revision=release['mozillaRevision'], tc_product_name=tc_product_name,
-                                          platforms=platforms):
-            log.info('Builds are not completed yet, skipping release "%s" for now', release['name'])
-            rr.update_status(release, 'Waiting for builds to be completed')
-            continue
-
-        log.info('Every build is completed for release: %s', release['name'])
-        graph_id = slugId()
         try:
+            if not are_en_us_builds_completed(index, release_name=release['name'], submitted_at=release['submittedAt'],
+                                              branch=branch, revision=release['mozillaRevision'],
+                                              tc_product_name=tc_product_name, platforms=platforms):
+                log.info('Builds are not completed yet, skipping release "%s" for now', release['name'])
+                rr.update_status(release, 'Waiting for builds to be completed')
+                continue
+
+            log.info('Every build is completed for release: %s', release['name'])
+            graph_id = slugId()
+
             rr.update_status(release, 'Generating task graph')
             l10n_changesets = parsePlainL10nChangesets(rr.get_release_l10n(release["name"]))
 
