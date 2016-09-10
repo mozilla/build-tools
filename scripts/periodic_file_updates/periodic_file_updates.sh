@@ -8,12 +8,13 @@ Usage: `basename $0` -x # lists exit codes
 Usage: `basename $0` [-n] [-c] [-d] [-a]
            [-p product]
            [--hgtool hgtool_location]
-           [--mirror hg_mirror --bundle bundle_location]
            [-u hg_ssh_user]
            [-k hg_ssh_key]
            [-r existing_repo_dir]
            # Use mozilla-central builds to check HSTS & HPKP
            [--use-mozilla-central]
+           # Use archive.m.o instead of the taskcluster index to get xpcshell
+           [--use-ftp-builds]
            # One (or more) of the following actions must be specified.
            --hsts | --hpkp | --blocklist
            -b branch
@@ -32,6 +33,7 @@ EXIT CODES for `basename $0`:
    13    No update action specified on command-line
    14    Invalid product specified
    21    Unable to parse version from version.txt
+   22    Unable to retrieve latest taskId
    31    Missing downloaded browser artifact
    32    Missing downloaded tests artifact
    41    Missing downloaded HSTS file
@@ -60,8 +62,6 @@ HG_SSH_USER='ffxbld'
 HG_SSH_KEY='~cltbld/.ssh/ffxbld_rsa'
 REPODIR=''
 HGTOOL="$(dirname "${0}")/../../buildfarm/utils/hgtool.py"
-MIRROR=''
-BUNDLE=''
 APP_DIR=''
 APP_ID=''
 APP_NAME=''
@@ -77,7 +77,9 @@ SCRIPTDIR=`dirname $0`
 VERSION=''
 MCVERSION=''
 USE_MC=false
+USE_TC=true
 FLATTENED=true
+JSONTOOL="python ${SCRIPTDIR}/../../buildfarm/utils/jsontool.py"
 
 DO_HSTS=false
 HSTS_PRELOAD_SCRIPT="getHSTSPreloadList.js"
@@ -106,7 +108,7 @@ function get_version {
     cd "${BASEDIR}"
     VERSION_URL_HG="${VERSION_REPO}/raw-file/default/${APP_DIR}/config/version.txt"
     rm -f ${VERSION_FILE}
-    ${WGET} --no-check-certificate -O ${VERSION_FILE} ${VERSION_URL_HG}
+    ${WGET} -O ${VERSION_FILE} ${VERSION_URL_HG}
     WGET_STATUS=$?
     if [ ${WGET_STATUS} != 0 ]; then
         echo "ERROR: wget exited with a non-zero exit code: $WGET_STATUS" >&2
@@ -127,27 +129,58 @@ function preflight_cleanup {
     rm -rf "${PRODUCT}" tests "${BROWSER_ARCHIVE}" "${TESTS_ARCHIVE}"
 }
 
-function download_shared_artifacts {
+function download_shared_artifacts_from_ftp {
     cd "${BASEDIR}"
 
-    # Download everything we need: browser, tests, updater script, existing preload list and errors.
-    echo "INFO: Downloading all the necessary pieces..."
-    POSSIBLE_ARTIFACT_DIRS="nightly/latest-${REPODIR} tinderbox-builds/${REPODIR}-${TBOX_BUILDS_PLATFORM}/latest"
+    # Download everything we need to run js with xpcshell
+    echo "INFO: Downloading all the necessary pieces from ${STAGEHOST}..."
+    POSSIBLE_ARTIFACT_DIRS="nightly/latest-${REPODIR}"
     if [ "${USE_MC}" == "true" ]; then
         POSSIBLE_ARTIFACT_DIRS="nightly/latest-mozilla-central"
     fi
     for ARTIFACT_DIR in ${POSSIBLE_ARTIFACT_DIRS}; do
-        BROWSER_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/${ARTIFACT_DIR}/${BROWSER_ARCHIVE}"
-        TESTS_ARCHIVE_URL="http://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/${ARTIFACT_DIR}/${TESTS_ARCHIVE}"
+        BROWSER_ARCHIVE_URL="https://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/${ARTIFACT_DIR}/${BROWSER_ARCHIVE}"
+        TESTS_ARCHIVE_URL="https://${STAGEHOST}/pub/mozilla.org/${PRODUCT}/${ARTIFACT_DIR}/${TESTS_ARCHIVE}"
 
-	echo "INFO: ${WGET} --no-check-certificate ${BROWSER_ARCHIVE_URL}"
-        ${WGET} --no-check-certificate ${BROWSER_ARCHIVE_URL}
-	echo "INFO: ${WGET} --no-check-certificate ${TESTS_ARCHIVE_URL}"
-        ${WGET} --no-check-certificate ${TESTS_ARCHIVE_URL}
+	echo "INFO: ${WGET} ${BROWSER_ARCHIVE_URL}"
+        ${WGET} ${BROWSER_ARCHIVE_URL}
+	echo "INFO: ${WGET} ${TESTS_ARCHIVE_URL}"
+        ${WGET} ${TESTS_ARCHIVE_URL}
         if [ -f ${BROWSER_ARCHIVE} -a -f ${TESTS_ARCHIVE} ]; then
             break
 	fi
     done
+}
+
+function download_shared_artifacts_from_tc {
+    cd "${BASEDIR}"
+    TASKID_FILE="taskId.json"
+
+    # Download everything we need to run js with xpcshell
+    echo "INFO: Downloading all the necessary pieces from the taskcluster index..."
+    TASKID_URL="https://index.taskcluster.net/v1/task/gecko.v2.${REPODIR}.latest.${PRODUCT}.linux64-opt"
+    if [ "${USE_MC}" == "true" ]; then
+        TASKID_URL="https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.latest.${PRODUCT}.linux64-opt"
+    fi
+    ${WGET} -O ${TASKID_FILE} ${TASKID_URL}
+    TASKID=$($JSONTOOL -k taskId ${TASKID_FILE})
+    if [ -z ${TASKID} ]; then
+        echo "Failed to look up taskId at ${TASKID_URL}"
+        exit 22
+    else
+        echo "INFO: Got taskId of $TASKID"
+    fi
+    # hack! really want the last run, which may not be the first (zeroth)
+    BROWSER_ARCHIVE_URL="https://queue.taskcluster.net/v1/task/${TASKID}/runs/0/artifacts/public/build/${BROWSER_ARCHIVE}"
+    TESTS_ARCHIVE_URL="https://queue.taskcluster.net/v1/task/${TASKID}/runs/0/artifacts/public/build/${TESTS_ARCHIVE}"
+    echo "INFO: ${WGET} ${BROWSER_ARCHIVE_URL}"
+    ${WGET} ${BROWSER_ARCHIVE_URL}
+    echo "INFO: ${WGET} ${TESTS_ARCHIVE_URL}"
+    ${WGET} ${TESTS_ARCHIVE_URL}
+}
+
+function unpack_artifacts {
+    cd "${BASEDIR}"
     if [ ! -f ${BROWSER_ARCHIVE} ]; then
         echo "Downloaded file '${BROWSER_ARCHIVE}' not found in directory '$(pwd)'." >&2
         exit 31
@@ -203,12 +236,12 @@ function compare_hsts_files {
         HSTS_PRELOAD_INC_HG="${HGREPO}/raw-file/default/security/manager/boot/src/${HSTS_PRELOAD_INC}"
     fi
 
-    # Download everything we need: browser, tests, updater script, existing preload list and errors.
+    # Download everything we need: updater script, existing preload list and errors.
     echo "INFO: Downloading all the necessary pieces to update HSTS..."
     rm -rf "${HSTS_PRELOAD_SCRIPT}" "${HSTS_PRELOAD_ERRORS}" "${HSTS_PRELOAD_INC}"
     for URL in "${HSTS_PRELOAD_SCRIPT_HG}" "${HSTS_PRELOAD_ERRORS_HG}" "${HSTS_PRELOAD_INC_HG}"; do
-        echo "INFO: ${WGET} --no-check-certificate ${URL}"
-        ${WGET} --no-check-certificate ${URL}
+        echo "INFO: ${WGET} ${URL}"
+        ${WGET} ${URL}
         WGET_STATUS=$?
         if [ ${WGET_STATUS} != 0 ]; then
             echo "ERROR: wget exited with a non-zero exit code: ${WGET_STATUS}" >&2
@@ -283,12 +316,12 @@ function compare_hpkp_files {
         HPKP_PRELOAD_OUTPUT_HG="${HGREPO}/raw-file/default/security/manager/boot/src/${HPKP_PRELOAD_OUTPUT}"
     fi
 
-    # Download everything we need: browser, tests, updater script, existing preload list and errors.
+    # Download everything we need: updater script, existing preload list and errors.
     echo "INFO: Downloading all the necessary pieces to update HPKP..."
     rm -f "${HPKP_PRELOAD_SCRIPT}" "${HPKP_PRELOAD_JSON}" "${HPKP_DER_TEST}" "${HPKP_PRELOAD_OUTPUT}" "${HPKP_PRELOAD_ERRORS}"
     for URL in "${HPKP_PRELOAD_SCRIPT_HG}" "${HPKP_PRELOAD_JSON_HG}" "${HPKP_DER_TEST_HG}" "${HPKP_PRELOAD_OUTPUT_HG}" "${HPKP_PRELOAD_ERRORS_HG}"; do
-        echo "INFO: ${WGET} --no-check-certificate ${URL}"
-        ${WGET} --no-check-certificate ${URL}
+        echo "INFO: ${WGET} ${URL}"
+        ${WGET} ${URL}
         WGET_STATUS=$?
         if [ ${WGET_STATUS} != 0 ]; then
             echo "ERROR: wget exited with a non-zero exit code: ${WGET_STATUS}" >&2
@@ -355,8 +388,8 @@ function compare_blocklist_files {
 
     cd "${BASEDIR}"
     rm -f blocklist_amo.xml
-    echo "INFO: ${WGET} --no-check-certificate -O blocklist_amo.xml ${BLOCKLIST_URL_AMO}"
-    ${WGET} --no-check-certificate -O blocklist_amo.xml ${BLOCKLIST_URL_AMO}
+    echo "INFO: ${WGET} -O blocklist_amo.xml ${BLOCKLIST_URL_AMO}"
+    ${WGET} -O blocklist_amo.xml ${BLOCKLIST_URL_AMO}
     WGET_STATUS=$?
     if [ ${WGET_STATUS} != 0 ]; then
         echo "ERROR: wget exited with a non-zero exit code: ${WGET_STATUS}"
@@ -407,12 +440,6 @@ function clone_repo {
             # Need to pass the default branch here to avoid pollution from buildprops.json
             # when hgtool.py is run in production.
             CLONE_CMD="${HGTOOL} --branch default"
-            if [ "${MIRROR}" != "" ]; then
-                CLONE_CMD="${CLONE_CMD} --mirror ${MIRROR}"
-            fi
-            if [ "${BUNDLE}" != "" ]; then
-                CLONE_CMD="${CLONE_CMD} --bundle ${BUNDLE}"
-            fi
         else
             # Fallback on vanilla hg
             echo "INFO: hgtool.py not found. Falling back to vanilla hg."
@@ -568,9 +595,8 @@ while [ $# -gt 0 ]; do
         -u) HG_SSH_USER="$2"; shift;;
         -k) HG_SSH_KEY="$2"; shift;;
         -r) REPODIR="$2"; shift;;
-        --mirror) MIRROR="$2"; shift;;
-        --bundle) BUNDLE="$2"; shift;;
         --use-mozilla-central) USE_MC=true;;
+        --use-ftp-builds) USE_TC=false;;
         -*) usage
             exit 11;;
         *)  break;; # terminate while loop
@@ -615,9 +641,9 @@ if [ "${REPODIR}" == "" ]; then
    REPODIR=`basename ${BRANCH}`
 fi
 
-HGREPO="http://${HGHOST}/${BRANCH}"
+HGREPO="https://${HGHOST}/${BRANCH}"
 HGPUSHREPO="ssh://${HGHOST}/${BRANCH}"
-MCREPO="http://${HGHOST}/mozilla-central"
+MCREPO="https://${HGHOST}/mozilla-central"
 
 VERSION=$(get_version ${HGREPO})
 echo "INFO: parsed version is ${VERSION}"
@@ -640,7 +666,12 @@ fi
 
 preflight_cleanup
 if [ "${DO_HSTS}" == "true" -o "${DO_HPKP}" == "true" ]; then
-    download_shared_artifacts
+    if [ "${USE_TC}" == "true" ]; then
+        download_shared_artifacts_from_tc
+    else
+        download_shared_artifacts_from_ftp
+    fi
+    unpack_artifacts
     run_tooltool
 fi
 is_flattened
