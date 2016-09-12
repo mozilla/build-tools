@@ -313,7 +313,10 @@ class NightlySubmitterBase(object):
                 alias=json.dumps(alias),
                 schemaVersion=schemaVersion, data_version=data_version)
 
-        retry(update_dated, sleeptime=10)
+        # Most retries are caused by losing a data race. In these cases,
+        # there's no point in waiting a long time to retry, so we reduce
+        # sleeptime and increase the number of attempts instead.
+        retry(update_dated, sleeptime=2, max_sleeptime=2, attempts=30)
 
         latest = SingleLocale(
             api_root=self.api_root, auth=self.auth,
@@ -334,7 +337,7 @@ class NightlySubmitterBase(object):
                 alias=json.dumps(alias), schemaVersion=schemaVersion,
                 data_version=latest_data_version)
 
-        retry(update_latest, sleeptime=10)
+        retry(update_latest, sleeptime=2, max_sleeptime=2, attempts=30)
 
 
 class MultipleUpdatesNightlyMixin(object):
