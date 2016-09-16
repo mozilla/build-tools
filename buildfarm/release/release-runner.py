@@ -449,6 +449,7 @@ def main(options):
                 "l10n_changesets": release['l10n_changesets'],
                 "extra_balrog_submitter_params": extra_balrog_submitter_params,
                 "publish_to_balrog_channels": publish_to_balrog_channels,
+                "snap_enabled": branchConfig.get("snap_enabled", False),
             }
 
             validate_graph_kwargs(queue, gpg_key_path, **kwargs)
