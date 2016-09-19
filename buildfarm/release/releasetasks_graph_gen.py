@@ -102,6 +102,9 @@ def main(release_runner_config, release_config, tc_config):
         ),
         "extra_balrog_submitter_params": release_config['extra_balrog_submitter_params'],
         "publish_to_balrog_channels": release_config["publish_to_balrog_channels"],
+        "postrelease_mark_as_shipped_enabled": release_config["postrelease_mark_as_shipped_enabled"],
+        # TODO: use [] when snaps_enabled is landed
+        "snap_enabled": release_config.get("snap_enabled", False),
     }
 
     graph = make_task_graph_strict_kwargs(**kwargs)
