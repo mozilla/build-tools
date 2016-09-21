@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <title>TryChooser Syntax Builder</title>
@@ -115,13 +115,13 @@
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="android-api-15-gradle-dependencies">android api 15+ gradle deps</label>
-                <span id="test_android-api-15" class="test_queue">N/A</span>
-                <span id="build_android-api-15" class="build_queue">N/A</span>
+                <span id="test_android-api-15-gradle" class="test_queue">N/A</span>
+                <span id="build_android-api-15-gradle" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="android-api-15-frontend">android api 15+ frontend</label>
-                <span id="test_android-api-15" class="test_queue">N/A</span>
-                <span id="build_android-api-15" class="build_queue">N/A</span>
+                <span id="test_android-api-15-frontend" class="test_queue">N/A</span>
+                <span id="build_android-api-15-frontend" class="build_queue">N/A</span>
             </li>
             <li>
                 <label><input type="checkbox" name="platform" value="android-x86">android-x86 (Android 4.2)</label>
@@ -401,7 +401,7 @@
             <p><label for="rebuilds">Retrigger all test jobs (up to 20 times):</label></p>
             <input type="text" id="rebuilds">
             <p><label for="tags">Restrict tests to tag:</label></p>
-            <label><input type="text" id="tags">
+            <input type="text" id="tags">
             <p><label for="setenv">Set environment variables:</label></p>
             <input id="setenv" type="text" placeholder="e.g. FOO=bar" size="40" pattern=".*\w=.*" list="setenv_suggestions">
             <datalist id="setenv_suggestions">
