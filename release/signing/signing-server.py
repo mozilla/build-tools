@@ -205,6 +205,12 @@ if __name__ == '__main__':
     if len(args) != 1:
         parser.error("Need just one server.ini file to read")
 
+    # anything past here should only be done as user cltsign, remove
+    # footgun
+    if getpass.getuser() != 'cltsign':
+        log.error("Must run as user 'cltsign' for remaining actions")
+        sys.exit(1)
+
     config = load_config(args[0])
     if not config:
         parser.error("Error reading config file: %s" % args[0])
