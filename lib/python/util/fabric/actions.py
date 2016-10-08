@@ -195,7 +195,7 @@ def action_graceful_stop(master):
     print OK, "gracefully stopped %(hostname)s:%(basedir)s" % master
 
 
-def start(master):
+def action_start(master):
     with show('running'):
         put(BUILDBOT_WRANGLER,
             '%s/buildbot-wrangler.py' % master['basedir'])
