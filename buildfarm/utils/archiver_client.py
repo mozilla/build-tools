@@ -22,6 +22,7 @@ import urllib2
 import json
 import sys
 from optparse import OptionParser
+import httplib
 
 SUCCESS_CODE = 0
 # This is not an infra error and we can't recover from it
