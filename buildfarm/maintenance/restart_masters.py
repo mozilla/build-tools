@@ -214,7 +214,7 @@ def get_credentials_from_config_file(config_file):
     return True
 
 def get_credentials_from_user():
-    credentials["ldap_username"] = raw_input("Enter LDAP username: ")
+    credentials["ldap_username"] = getpass.getpass("Enter LDAP username: ")
     credentials["ldap_password"] = getpass.getpass(prompt='Enter LDAP password: ')
     credentials["cltbld_password"] = getpass.getpass(prompt='Enter cltbld password: ')
     credentials["root_password"] = getpass.getpass(prompt='Enter root password: ')
