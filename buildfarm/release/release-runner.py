@@ -379,7 +379,7 @@ def main(options):
         try:
             if not are_en_us_builds_completed(index, release_name=release['name'], submitted_at=release['submittedAt'],
                                               branch=release['branchShortName'], revision=release['mozillaRevision'],
-                                              tc_product_name=tc_product_name, platforms=platforms):
+                                              tc_product_name=tc_product_name, platforms=platforms, queue=queue):
                 log.info('Builds are not completed yet, skipping release "%s" for now', release['name'])
                 rr.update_status(release, 'Waiting for builds to be completed')
                 continue

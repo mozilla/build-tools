@@ -11,12 +11,15 @@ log = logging.getLogger(__name__)
 _BUILD_WATCHERS = {}
 
 
-# TODO: Bug 1300147. Avoid having 7 parameters by using a release object that contains only what's needed.
-def are_en_us_builds_completed(index, release_name, submitted_at, branch, revision, tc_product_name, platforms):
+# TODO: Bug 1300147. Avoid having 7 parameters by using a release object that
+# contains only what's needed.
+def are_en_us_builds_completed(index, release_name, submitted_at, branch,
+                               revision, tc_product_name, platforms, queue):
     try:
         watcher = _BUILD_WATCHERS[release_name]
     except KeyError:
-        watcher = EnUsBuildsWatcher(index, release_name, submitted_at, branch, revision, tc_product_name, platforms)
+        watcher = EnUsBuildsWatcher(index, release_name, submitted_at, branch,
+                                    revision, tc_product_name, platforms, queue)
         _BUILD_WATCHERS[release_name] = watcher
         log.debug('New watcher created for "%s"', release_name)
 
@@ -37,7 +40,8 @@ class LoggedError(Exception):
 
 class EnUsBuildsWatcher:
     # TODO: Bug 1300147 as well
-    def __init__(self, index, release_name, submitted_at, branch, revision, tc_product_name, platforms):
+    def __init__(self, index, release_name, submitted_at, branch, revision,
+                 tc_product_name, platforms, queue):
         self.taskcluster_index = index
         self.taskcluster_product_name = tc_product_name
 
@@ -45,6 +49,7 @@ class EnUsBuildsWatcher:
         self.branch = branch
         self.revision = revision
         self.task_per_platform = {p: None for p in platforms}
+        self.queue = queue
 
         self._timeout_watcher = TimeoutWatcher(start_timestamp=submitted_at)
 
@@ -67,6 +72,13 @@ class EnUsBuildsWatcher:
                 task_id = task_for_revision(
                     self.taskcluster_index, self.branch, self.revision, self.taskcluster_product_name, platform
                 )['taskId']
+                # Bug 1307326 - consider only tasks indexed with rank > 0
+                task = self.queue.task(task_id)
+                rank = task["extra"]["index"]["rank"]
+                if rank == 0:
+                    log.debug("Ignoring task %s because the rank is set to 0",
+                              task_id)
+                    continue
             except TaskclusterRestFailure:
                 log.debug('Task for platform "%s" is not yet created for release "%s"', platform, self.release_name)
                 continue
