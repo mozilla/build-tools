@@ -61,8 +61,14 @@ if [ -z "$NO_BBCONFIG" ]; then
   --config-dict $configDict --release-channel $channel \
     2>&1 | tee $SCRIPTS_DIR/../verify_log.txt
 else
+  # release promotion
+  if [ -n "$CHANNEL" ]; then
+    EXTRA_PARAMS="--verify-channel $CHANNEL"
+  else
+    EXTRA_PARAMS=""
+  fi
   $PYTHON $MY_DIR/chunked-verify.py --chunks $chunks --this-chunk $thisChunk \
-  --verify-config $VERIFY_CONFIG \
+  --verify-config $VERIFY_CONFIG $EXTRA_PARAMS \
   2>&1 | tee $SCRIPTS_DIR/../verify_log.txt
 fi
 
