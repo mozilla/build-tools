@@ -316,6 +316,12 @@ def action_master_health(master):
         run('free -m')
 
 
+def action_check_queues(master):
+    """Check for command queue jobs that are running or pending"""
+    with hide('running'):
+        run('find /dev/shm/queue/commands/{cur,new} -type f')
+
+
 def action_create_reconfig_lockfile(master, notify=True):
     with hide('stdout', 'stderr', 'running'):
         run('touch %s' % RECONFIG_LOCKFILE, workdir=master['basedir'])
