@@ -40,6 +40,7 @@ EXIT CODES for `basename $0`:
    42    Generated HSTS preload list is empty
    51    Missing downloaded HPKP file
    52    Generated HPKP preload list is empty
+   60    xmllint is not in PATH
    61    Downloaded AMO blocklist file isn't valid XML
    62    Downloaded hg blocklist file isn't valid XML
    70    HSTS script failed
@@ -99,6 +100,8 @@ DO_BLOCKLIST=false
 BLOCKLIST_URL_AMO=''
 BLOCKLIST_URL_HG=''
 BLOCKLIST_UPDATED=false
+BLOCKLIST_LOCAL_AMO="blocklist_amo.xml"
+BLOCKLIST_LOCAL_HG="blocklist_hg.xml"
 
 # Get the current in-tree version for a code branch.
 function get_version {
@@ -379,6 +382,17 @@ function compare_hpkp_files {
     return ${DIFF_STATUS}
 }
 
+function is_valid_xml {
+   xmlfile=$1
+   XMLLINT=`which xmllint 2>/dev/null | head -n1`
+   if [ ! -e ${XMLLINT} ]; then
+       echo "ERROR: xmllint not found in PATH"
+       exit 60
+   fi
+   ${XMLLINT} --nonet --noout ${xmlfile}
+   return $?
+}
+
 # Downloads the current in-tree blocklist file.
 # Downloads the current blocklist file from AMO.
 # Compares the AMO blocklist with the in-tree blocklist to determine whether we need to update.
@@ -387,18 +401,18 @@ function compare_blocklist_files {
     BLOCKLIST_URL_HG="${HGREPO}/raw-file/default/${APP_DIR}/app/blocklist.xml"
 
     cd "${BASEDIR}"
-    rm -f blocklist_amo.xml
-    echo "INFO: ${WGET} -O blocklist_amo.xml ${BLOCKLIST_URL_AMO}"
-    ${WGET} -O blocklist_amo.xml ${BLOCKLIST_URL_AMO}
+    rm -f ${BLOCKLIST_LOCAL_AMO}
+    echo "INFO: ${WGET} -O ${BLOCKLIST_LOCAL_AMO} ${BLOCKLIST_URL_AMO}"
+    ${WGET} -O ${BLOCKLIST_LOCAL_AMO} ${BLOCKLIST_URL_AMO}
     WGET_STATUS=$?
     if [ ${WGET_STATUS} != 0 ]; then
         echo "ERROR: wget exited with a non-zero exit code: ${WGET_STATUS}"
         exit ${WGET_STATUS}
     fi
 
-    rm -f blocklist_hg.xml
-    echo "INFO: ${WGET} -O blocklist_hg.xml ${BLOCKLIST_URL_HG}"
-    ${WGET} -O blocklist_hg.xml ${BLOCKLIST_URL_HG}
+    rm -f ${BLOCKLIST_LOCAL_HG}
+    echo "INFO: ${WGET} -O ${BLOCKLIST_LOCAL_HG} ${BLOCKLIST_URL_HG}"
+    ${WGET} -O ${BLOCKLIST_LOCAL_AMO} ${BLOCKLIST_URL_HG}
     WGET_STATUS=$?
     if [ ${WGET_STATUS} != 0 ]; then
         echo "ERROR: wget exited with a non-zero exit code: ${WGET_STATUS}" >&2
@@ -407,20 +421,17 @@ function compare_blocklist_files {
 
     # The downloaded files should be non-empty and have a valid xml header
     # if they were retrieved properly, and some random HTML garbage if not.
-    XML_HEADER='<?xml version="1.0"?>'
-    AMO_HEADER=`head -n1 blocklist_amo.xml`
-    HG_HEADER=`head -n1 blocklist_hg.xml`
-    if [ ! -s "blocklist_amo.xml" -o "${XML_HEADER}" != "${AMO_HEADER}" ]; then
+    if ! is_valid_xml ${BLOCKLIST_LOCAL_AMO}; then
         echo "AMO blocklist does not appear to be an XML file. wget error?" >&2
         exit 61
     fi
-    if [ ! -s "blocklist_hg.xml" -o "${XML_HEADER}" != "${HG_HEADER}" ]; then
+    if ! is_valid_xml ${BLOCKLIST_LOCAL_HG}; then
         echo "HG blocklist does not appear to be an XML file. wget error?" >&2
         exit 62
     fi
 
     echo "INFO: diffing in-tree blocklist against the blocklist from AMO..."
-    ${DIFF} blocklist_hg.xml blocklist_amo.xml >/dev/null 2>&1
+    ${DIFF} ${BLOCKLIST_LOCAL_HG} ${BLOCKLIST_LOCAL_AMO} >/dev/null 2>&1
     DIFF_STATUS=$?
     case "${DIFF_STATUS}" in
         0) echo "INFO: AMO blocklist is identical to the one in-tree.";;
@@ -533,7 +544,7 @@ function commit_hpkp_files {
 # Copies new blocklist file in place, and commits it.
 function commit_blocklist_files {
     cd "${BASEDIR}"
-    cp -f blocklist_amo.xml ${REPODIR}/${APP_DIR}/app/blocklist.xml
+    cp -f ${BLOCKLIST_LOCAL_AMO} ${REPODIR}/${APP_DIR}/app/blocklist.xml
     COMMIT_MESSAGE="No bug, Automated blocklist update from host ${LOCALHOST}"
     if [ ${DONTBUILD} == true ]; then
         COMMIT_MESSAGE="${COMMIT_MESSAGE} - (DONTBUILD)"
