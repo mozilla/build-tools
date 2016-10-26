@@ -412,7 +412,7 @@ function compare_blocklist_files {
 
     rm -f ${BLOCKLIST_LOCAL_HG}
     echo "INFO: ${WGET} -O ${BLOCKLIST_LOCAL_HG} ${BLOCKLIST_URL_HG}"
-    ${WGET} -O ${BLOCKLIST_LOCAL_AMO} ${BLOCKLIST_URL_HG}
+    ${WGET} -O ${BLOCKLIST_LOCAL_HG} ${BLOCKLIST_URL_HG}
     WGET_STATUS=$?
     if [ ${WGET_STATUS} != 0 ]; then
         echo "ERROR: wget exited with a non-zero exit code: ${WGET_STATUS}" >&2
