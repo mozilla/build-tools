@@ -8,11 +8,12 @@ import os
 from os import path
 import logging
 import sys
+import site
 
 # Use explicit version of python-requests
 sys.path.insert(0, path.join(path.dirname(__file__),
                              "../../lib/python/vendor/requests-2.7.0"))
-sys.path.insert(0, path.join(path.dirname(__file__), "../../lib/python"))
+site.addsitedir(os.path.join(os.path.dirname(__file__), "../../lib/python"))
 
 from balrog.submitter.cli import ReleasePusher
 from release.info import readReleaseConfig
