@@ -154,13 +154,6 @@
     ],
     "repo_type": "hg"
   },
-  "fx-team": {
-    "repo": "https://hg.mozilla.org/integration/fx-team",
-    "graph_branches": [
-      "Fx-Team"
-    ],
-    "repo_type": "hg"
-  },
   "date": {
     "repo": "https://hg.mozilla.org/projects/date",
     "graph_branches": [
