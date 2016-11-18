@@ -450,6 +450,8 @@ def main(options):
                 "extra_balrog_submitter_params": extra_balrog_submitter_params,
                 "publish_to_balrog_channels": publish_to_balrog_channels,
                 "snap_enabled": branchConfig.get("snap_enabled", False),
+                "update_verify_channel": branchConfig.get("snap_enabled"),
+                "update_verify_requires_cdn_push": branchConfig.get("update_verify_requires_cdn_push", False),
             }
 
             validate_graph_kwargs(queue, gpg_key_path, **kwargs)
