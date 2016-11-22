@@ -479,7 +479,7 @@ if merge_to_production; then
 fi
 
 if [ "${FORCE_RECONFIG}" == '1' ]; then
-    production_masters_url='http://hg.mozilla.org/build/tools/raw-file/tip/buildfarm/maintenance/production-masters.json'
+    production_masters_url='http://hg.mozilla.org/build/tools/raw-file/default/buildfarm/maintenance/production-masters.json'
     if [ "${PREPARE_ONLY}" != '0' ]; then
         echo "  * Preparing reconfig only; not running: '$(pwd)/manage_masters.py' -f '${production_masters_url}' -j16 -R scheduler -R build -R try -R tests show_revisions update"
         echo "  * Preparing reconfig only; not running: '$(pwd)/manage_masters.py' -f '${production_masters_url}' -j16 -R scheduler -R build -R try -R tests update_master_config"
