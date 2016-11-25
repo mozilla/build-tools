@@ -105,6 +105,8 @@ def main(release_runner_config, release_config, tc_config):
         "postrelease_mark_as_shipped_enabled": release_config["postrelease_mark_as_shipped_enabled"],
         # TODO: use [] when snaps_enabled is landed
         "snap_enabled": release_config.get("snap_enabled", False),
+        "update_verify_channel": release_config["update_verify_channel"],
+        "update_verify_requires_cdn_push": release_config["update_verify_requires_cdn_push"],
     }
 
     graph = make_task_graph_strict_kwargs(**kwargs)
