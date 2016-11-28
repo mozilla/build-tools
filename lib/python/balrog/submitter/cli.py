@@ -43,6 +43,7 @@ class ReleaseCreatorBase(object):
                       **updateKwargs):
         assert schemaVersion in (3, 4), 'Unhandled schema version %s' % schemaVersion
         data = {
+            'product': productName,
             'detailsUrl': getProductDetails(productName.lower(), appVersion),
             'platforms': {},
             'fileUrls': {},
@@ -268,6 +269,7 @@ class NightlySubmitterBase(object):
         if len(targets) > 1:
             alias = targets[1:]
         data = {
+            'product': productName,
             'buildID': buildID,
             'appVersion': appVersion,
             'platformVersion': extVersion,
@@ -405,6 +407,7 @@ class ReleaseSubmitterBase(object):
         name = get_release_blob_name(productName, version, build_number,
                                      self.dummy)
         data = {
+            'product': productName,
             'buildID': buildID,
             'appVersion': appVersion,
             'platformVersion': extVersion,
