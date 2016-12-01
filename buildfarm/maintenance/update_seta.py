@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 from util.hg import mercurial, clone, commit, run_cmd
 
-seta_branches = ['mozilla-inbound', 'autoland']
+seta_branches = ['mozilla-inbound', 'autoland', 'graphics']
 
 def wfetch(url, retries=5):
     while True:
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     msg = "updating seta data for " + today
 
     if os.path.exists(localrepo):
-        oshutil.rmtree(localrepo)
+        shutil.rmtree(localrepo)
     os.mkdir(localrepo)
     clone(remote, localrepo, revision)
     #assume data could not be fetched
