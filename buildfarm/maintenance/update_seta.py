@@ -12,7 +12,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../../lib/python"))
 import logging
 log = logging.getLogger(__name__)
 
-from util.hg import mercurial, clone, commit, run_cmd
+from util.hg import mercurial, commit, run_cmd
 
 seta_branches = ['mozilla-inbound', 'autoland', 'graphics']
 
@@ -83,19 +83,26 @@ if __name__ == '__main__':
     localrepo = "/tmp/buildbot-configs"
     configs_path = localrepo + "/mozilla-tests/"
     msg = "updating seta data for " + today
+    ssh_line = "\"ssh -l " + ssh_username + " -i " + ssh_key + "\""
 
     if os.path.exists(localrepo):
         shutil.rmtree(localrepo)
     os.mkdir(localrepo)
-    clone(remote, localrepo, revision)
+    #clone(remote, localrepo, revision)
+    # hg -R ssh://hg.mozilla.org/build/buildbot-configs clone -e "ssh -l ffxbld
+    # -i /home/cltbld/.ssh/ffxbld_rsa"
+    # ssh://hg.mozilla.org/build/buildbot-configs
     #assume data could not be fetched
+    clone_cmd = ['hg', '-R', remote, 'clone', '-e', ssh_line, remote]
+    clone_value = run_cmd(clone_cmd, cwd=localrepo)
+
     status = False
     for branch in seta_branches:
         status = update_seta_data(branch, configs_path)
     if not status:
         log.warning("Could not fetch seta data")
     revision = commit(localrepo, msg, user=ssh_username)
-    push_cmd = ['hg', 'push']
+    push_cmd = ['hg', 'push', ssh_line]
     push_value = run_cmd(push_cmd, cwd=localrepo)
     if push_value != 0:
         log.warning("Could not push new seta data")
