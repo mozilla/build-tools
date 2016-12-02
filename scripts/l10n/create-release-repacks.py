@@ -57,7 +57,7 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
     # compare-locales doesn"t work any other way
     l10nIni = "/".join([sourceRepoName, appName, "locales", "l10n.ini"])
     env = {
-        "MOZ_OBJDIR": objdir,
+        "MOZ_OBJDIR": absObjdir,
         "MOZ_MAKE_COMPLETE_MAR": "1",
         "DOWNLOAD_HOST": ftpServer,
         "UPLOAD_HOST": stageServer,
