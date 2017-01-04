@@ -29,6 +29,7 @@ max_filesize_mar = 52428800
 max_filesize_signcode = 52428800
 max_filesize_osslsigncode = 52428800
 max_filesize_sha2signcode = 52428800
+max_filesize_sha2signcodestub = 52428800
 max_filesize_emevoucher = 52428800
 # Secret for signing tokens. This should be kept private!
 # It should also be the same on all equivalent signing servers.
@@ -55,7 +56,7 @@ unsigned_dir = unsigned-files
 
 [signing]
 # What signing formats we support
-formats = mar,gpg,sha2signcode,signcode,osslsigncode,emevoucher
+formats = mar,gpg,sha2signcode,sha2signcodestub,signcode,osslsigncode,emevoucher
 # Which script to run to sign files
 signscript = python ./signscript.py -c signing.ini
 # How many files to sign at once
@@ -66,6 +67,7 @@ concurrency = 4
 testfile_signcode = test.exe
 testfile_osslsigncode = test64.exe
 testfile_sha2signcode = test.exe
+testfile_sha2signcodestub = test.exe
 testfile_mar = test.mar
 testfile_gpg = test.mar
 testfile_emevoucher = test.bin

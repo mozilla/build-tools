@@ -72,13 +72,12 @@ def signfile(filename, keydir, fake=False, passphrase=None, timestamp=True):
         raise
 
 
-def osslsigncode_signfile(inputfile, outputfile, keydir, fake=False, passphrase=None, timestamp=None):
+def osslsigncode_signfile(inputfile, outputfile, keydir, fake=False, passphrase=None,
+                          timestamp=None, includedummycert=False):
     """Perform Authenticode signing on "inputfile", writing a signed version
-    to "outputfile". See signcode_signfile for a description of other
-    arguments.
-
-    See https://bugzilla.mozilla.org/show_bug.cgi?id=711210#c15 for background
-    on why we want both methods.
+    to "outputfile". includedummycert controls the inclusion of the extra cert from bug
+    1261140, intended for stub installers only. See signfile() for a description
+    of other arguments.
     """
     if fake:
         time.sleep(1)
@@ -95,6 +94,9 @@ def osslsigncode_signfile(inputfile, outputfile, keydir, fake=False, passphrase=
     ]
     if timestamp:
         args.extend(['-t', 'http://timestamp.verisign.com/scripts/timestamp.dll'])
+    # requires osslsigncode >= 1.6
+    if includedummycert:
+        args.extend(['-ac', '%s/StubDummy.cert' % keydir])
 
     try:
         import pexpect
