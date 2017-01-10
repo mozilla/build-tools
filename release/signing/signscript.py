@@ -26,6 +26,7 @@ if __name__ == '__main__':
         loglevel=logging.INFO,
         configfile=None,
         mar_cmd=None,
+        mar_sha384_cmd=None,
         signcode_timestamp=None,
         jar_keystore=None,
         jar_keyname=None,
@@ -138,6 +139,12 @@ if __name__ == '__main__':
         safe_unlink(tmpfile)
         mar_signfile(
             inputfile, tmpfile, options.mar_cmd, options.fake, passphrase)
+    elif format_ == "mar_sha384":
+        if not options.mar_sha384_cmd:
+            parser.error("mar_sha384_cmd is required when format is mar_sha384")
+        safe_unlink(tmpfile)
+        mar_signfile(
+            inputfile, tmpfile, options.mar_sha384_cmd, options.fake, passphrase)
     elif format_ == "dmg":
         if not options.dmg_keychain:
             parser.error("dmg_keychain required when format is dmg")
