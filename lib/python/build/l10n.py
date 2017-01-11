@@ -186,7 +186,7 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
     compareLocales(compareLocalesRepo, locale, l10nRepoDir, localeSrcDir,
                    l10nIni, revision=revision, merge=merge)
 
-    make_installers_env = env.deepcopy()
+    make_installers_env = env.copy()
     make_installers_env['MOZ_OBJDIR'] = absObjdir
     run_cmd(make + ["installers-%s" % locale], cwd=localeSrcDir, env=make_installers_env)
 
