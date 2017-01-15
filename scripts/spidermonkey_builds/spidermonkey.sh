@@ -11,7 +11,7 @@ ROBUSTCHECKOUT=${SCRIPTS_DIR}/hgext/robustcheckout.py
 DEFAULT_REPO="https://hg.mozilla.org/integration/mozilla-inbound"
 
 function usage() {
-  echo "Usage: $0 [-m mirror_url] [-b bundle_url] [-r revision] [--dep] variant"
+  echo "Usage: $0 [-r revision] [--dep] variant"
   if [ -z "$PROPERTIES_FILE" ]; then
     echo "PROPERTIES_FILE must be set for an automation build"
   fi
@@ -22,14 +22,6 @@ noclean=""
 VARIANT=""
 while [ $# -gt 0 ]; do
     case "$1" in
-        -m|--mirror)
-            shift
-            shift
-            ;;
-        -b|--bundle)
-            shift
-            shift
-            ;;
         --ttserver)
             # Note that this script (and tooltool_wrapper.sh, and tooltool.py)
             # only accepts a single tooltool server, so all but the last will
