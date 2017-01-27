@@ -669,6 +669,10 @@ if [ "${USE_MC}" == "true" ]; then
     BROWSER_ARCHIVE="${PRODUCT}-${MCVERSION}.en-US.${PLATFORM}.${PLATFORM_EXT}"
     TESTS_ARCHIVE="${PRODUCT}-${MCVERSION}.en-US.${PLATFORM}.common.tests.zip"
 fi
+if [ "${USE_TC}" == "true" ] ; then
+    BROWSER_ARCHIVE="target.${PLATFORM_EXT}"
+    TESTS_ARCHIVE="target.common.tests.zip"
+fi
 
 # Try to find hgtool if it hasn't been set.
 if [ ! -f "${HGTOOL}" ]; then
