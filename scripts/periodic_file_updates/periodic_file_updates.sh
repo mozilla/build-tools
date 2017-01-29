@@ -657,10 +657,12 @@ HGPUSHREPO="ssh://${HGHOST}/${BRANCH}"
 MCREPO="https://${HGHOST}/mozilla-central"
 
 VERSION=$(get_version ${HGREPO})
+MAJOR_VERSION=`echo $VERSION | sed -e 's/\..*//'`
 echo "INFO: parsed version is ${VERSION}"
 if [ "${USE_MC}" == "true" ]; then
     MCVERSION=$(get_version ${MCREPO})
     echo "INFO: parsed mozilla-central version is ${MCVERSION}"
+    MAJOR_VERSION=`echo $MCVERSION | sed -e 's/\..*//'`
 fi
 
 BROWSER_ARCHIVE="${PRODUCT}-${VERSION}.en-US.${PLATFORM}.${PLATFORM_EXT}"
@@ -669,7 +671,8 @@ if [ "${USE_MC}" == "true" ]; then
     BROWSER_ARCHIVE="${PRODUCT}-${MCVERSION}.en-US.${PLATFORM}.${PLATFORM_EXT}"
     TESTS_ARCHIVE="${PRODUCT}-${MCVERSION}.en-US.${PLATFORM}.common.tests.zip"
 fi
-if [ "${USE_TC}" == "true" ] ; then
+# Simple name builds on >=53.0.0
+if [ ${MAJOR_VERSION} -ge 53 ] ; then
     BROWSER_ARCHIVE="target.${PLATFORM_EXT}"
     TESTS_ARCHIVE="target.common.tests.zip"
 fi
