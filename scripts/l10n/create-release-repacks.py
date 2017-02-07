@@ -346,16 +346,6 @@ if __name__ == "__main__":
         balrog_submitter = None
 
     partialUpdates = releaseConfig.get('partialUpdates', {}).copy()
-    # FIXME: the follwong hack can be removed when win64 has the same list of
-    # partial update as other platforms. Check mozilla-esr45 to be sure.
-    if platform in releaseConfig.get('HACK_first_released_version', {}):
-        partialUpdates_copy = {}
-        for k, v in partialUpdates.iteritems():
-            if LooseVersion(k) >= LooseVersion(releaseConfig['HACK_first_released_version'][platform]):
-                partialUpdates_copy[k] = v
-        partialUpdates = partialUpdates_copy
-    # FIXME: end of hack
-
     createRepacks(
         sourceRepo=make_hg_url(branchConfig["hghost"], sourceRepoInfo["path"]),
         revision=options.releaseTag,
