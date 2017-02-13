@@ -198,18 +198,12 @@ def verify_options(cmd_options, config):
 
 
 def verify_partial(platforms, product, version, build_number,
-                   HACK_first_released_versions=None, protocol='http',
-                   server='ftp.mozilla.org'):
+                   protocol='http', server='archive.mozilla.org'):
 
-    from distutils.version import LooseVersion
     partial = Partial(product, version, build_number, protocol, server)
     log.info("Checking for existence of %s complete mar file..." % partial)
     complete_mar_name = partial.complete_mar_name()
     for platform in platforms:
-        if HACK_first_released_versions and platform in HACK_first_released_versions:
-            if LooseVersion(version) < LooseVersion(HACK_first_released_versions[platform]):
-                # No partial for this!
-                continue
         log.info("Platform: %s" % platform)
         complete_mar_url = partial.complete_mar_url(platform=platform)
         if partial.exists(platform=platform):
@@ -472,7 +466,6 @@ if __name__ == '__main__':
                     # unreleased builds see bug 1091694 c2)
                     if not verify_partial(platforms, product, partial,
                                           build_number,
-                                          releaseConfig.get("HACK_first_released_version"),
                                           server=releaseConfig['ftpServer']):
                         test_success = False
                         log.error("Error verifying partials")
