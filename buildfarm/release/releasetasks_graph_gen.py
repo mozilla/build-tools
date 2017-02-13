@@ -65,7 +65,8 @@ def main(release_runner_config, release_config, tc_config):
         "postrelease_version_bump_enabled": release_config['postrelease_version_bump_enabled'],
         "push_to_releases_automatic": release_config['push_to_releases_automatic'],
         "partner_repacks_platforms": release_config["partner_repacks_platforms"],
-
+        "eme_free_repacks_platforms": release_config["eme_free_repacks_platforms"],
+        "sha1_repacks_platforms": release_config["sha1_repacks_platforms"],
         "repo_path": release_config["repo_path"],
         "branch": release_config["branch"],
         "product": release_config["product"],
