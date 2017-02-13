@@ -311,10 +311,10 @@ def main(options):
     buildbot_configs = rr_config['buildbot_configs']
     buildbot_configs_branch = rr_config['buildbot_configs_branch']
     sleeptime = rr_config['sleeptime']
-    notify_from = rr_config['notify_from']
-    notify_to = rr_config['notify_to_announce']
-    docker_worker_key = rr_config['docker_worker_key']
-    signing_pvt_key = config['signing']['pvt_key']
+    notify_from = rr_config.get('notify_from')
+    notify_to = rr_config.get('notify_to_announce')
+    docker_worker_key = rr_config.get('docker_worker_key')
+    signing_pvt_key = config['signing'].get('pvt_key')
     if isinstance(notify_to, basestring):
         notify_to = [x.strip() for x in notify_to.split(',')]
     smtp_server = rr_config.get('smtp_server', 'localhost')
@@ -329,12 +329,12 @@ def main(options):
     # This is a stopgap until Bug 1259627 is fixed.
     retrying_tc_config = tc_config.copy()
     retrying_tc_config.update({"maxRetries": 12})
-    balrog_username = config['balrog']["username"]
-    balrog_password = config["balrog"]["password"]
-    extra_balrog_submitter_params = config["balrog"]["extra_balrog_submitter_params"]
-    beetmover_aws_access_key_id = config["beetmover"]["aws_access_key_id"]
-    beetmover_aws_secret_access_key = config["beetmover"]["aws_secret_access_key"]
-    gpg_key_path = config["signing"]["gpg_key_path"]
+    balrog_username = config['balrog'].get("username")
+    balrog_password = config["balrog"].get("password")
+    extra_balrog_submitter_params = config["balrog"].get("extra_balrog_submitter_params")
+    beetmover_aws_access_key_id = config["beetmover"].get("aws_access_key_id")
+    beetmover_aws_secret_access_key = config["beetmover"].get("aws_secret_access_key")
+    gpg_key_path = config["signing"].get("gpg_key_path")
 
     # TODO: replace release sanity with direct checks of en-US and l10n
     # revisions (and other things if needed)
