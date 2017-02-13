@@ -34,7 +34,7 @@ from taskcluster import Scheduler, Index, Queue
 from taskcluster.utils import slugId
 from util.hg import mercurial
 from util.retry import retry
-from util.file import load_config, get_config
+import yaml
 
 log = logging.getLogger(__name__)
 
@@ -59,41 +59,63 @@ ALL_FILES = set([
 
 CONFIGS_WORKDIR = 'buildbot-configs'
 
-def run_prebuild_sanity_checks(release_runner):
+
+def check_and_assign_long_revision(release_runner, release):
+    # Revisions must be checked before trying to get the long one.
+    RevisionsSanitizer(**release).run()
+    release['mozillaRevision'] = long_revision(
+        release['branch'], release['mozillaRevision'])
+
+
+def assign_and_check_l10n_changesets(release_runner, release):
+    release['l10n_changesets'] = parsePlainL10nChangesets(
+        release_runner.get_release_l10n(release['name']))
+    L10nSanitizer(**release).run()
+
+
+def assign_and_check_partial_updates(release_runner, release):
+    release['partial_updates'] = get_partials(
+        release_runner, release['partials'], release['product'])
+    branchConfig = get_branch_config(release)
+    release['release_channels'] = update_channels(
+        release['version'], branchConfig['release_channel_mappings'])
+    PartialsSanitizer(**release).run()
+
+
+# So people can't run arbitrary functions
+CHECKS_MAPPING = {
+    'long_revision': check_and_assign_long_revision,
+    'l10n_changesets': assign_and_check_l10n_changesets,
+    'partial_updates': assign_and_check_partial_updates,
+}
+
+
+def run_prebuild_sanity_checks(release_runner, releases_config):
     new_valid_releases = []
+
+    # results in:
+    # { 'firefox': ['long_revision', 'l10n_changesets', 'partial_updates']}
+    checks = {r['product'].lower(): r['checks'] for r in releases_config}
+
     for release in release_runner.new_releases:
         log.info('Got a new release request: %s' % release)
         try:
             # TODO: this won't work for Thunderbird...do we care?
             release['branchShortName'] = release['branch'].split("/")[-1]
 
-            check_and_assign_long_revision(release)
-            assign_and_check_l10n_changesets(release_runner, release)
-            assign_and_check_partial_updates(release_runner, release)
+            for check in checks[release['product']]:
+                if check not in CHECKS_MAPPING:
+                    log.error("Check %s not found", check)
+                    continue
+                CHECKS_MAPPING[check](release_runner, release)
 
             new_valid_releases.append(release)
         except Exception as e:
-            release_runner.mark_as_failed(release, 'Sanity checks failed. Errors: %s' % e)
-            log.exception('Sanity checks failed. Errors: %s. Release: %s', e, release)
+            release_runner.mark_as_failed(
+                release, 'Sanity checks failed. Errors: %s' % e)
+            log.exception(
+                'Sanity checks failed. Errors: %s. Release: %s', e, release)
     return new_valid_releases
-
-
-def check_and_assign_long_revision(release):
-    # Revisions must be checked before trying to get the long one.
-    RevisionsSanitizer(**release).run()
-    release['mozillaRevision'] = long_revision(release['branch'], release['mozillaRevision'])
-
-
-def assign_and_check_l10n_changesets(release_runner, release):
-    release['l10n_changesets'] = parsePlainL10nChangesets(release_runner.get_release_l10n(release['name']))
-    L10nSanitizer(**release).run()
-
-
-def assign_and_check_partial_updates(release_runner, release):
-    release['partial_updates'] = get_partials(release_runner, release['partials'], release['product'])
-    branchConfig = get_branch_config(release)
-    release['release_channels'] = update_channels(release['version'], branchConfig['release_channel_mappings'])
-    PartialsSanitizer(**release).run()
 
 
 def get_branch_config(release):
@@ -174,7 +196,8 @@ def validate_checksums(_dict, dir_path):
         computed_hash = get_hash(filepath)
         correct_hash = _dict[name]
         if computed_hash != correct_hash:
-            log.error("failed to validate checksum for %s", name, exc_info=True)
+            log.error("failed to validate checksum for %s",
+                      name, exc_info=True)
             raise SanityException("Failed to check digest for %s" % name)
 
 
@@ -188,11 +211,14 @@ def sanitize_en_US_binary(queue, task_id, gpg_key_path):
     log.debug('Temporary playground is %s', tempdir)
 
     # get all artifacts and trim but 'name' field from the json entries
-    all_artifacts = [k['name'] for k in queue.listLatestArtifacts(task_id)['artifacts']]
+    all_artifacts = [k['name']
+                     for k in queue.listLatestArtifacts(task_id)['artifacts']]
     # filter files to hold the whitelist-related only
-    artifacts = filter(lambda k: file_in_whitelist(k, ALL_FILES), all_artifacts)
+    artifacts = filter(lambda k: file_in_whitelist(
+        k, ALL_FILES), all_artifacts)
     # filter out everything but the checkums artifacts
-    checksums_artifacts = filter(lambda k: file_in_whitelist(k, CHECKSUMS), all_artifacts)
+    checksums_artifacts = filter(
+        lambda k: file_in_whitelist(k, CHECKSUMS), all_artifacts)
     other_artifacts = list(set(artifacts) - set(checksums_artifacts))
     # iterate in artifacts and grab checksums and its signature only
     log.info("Retrieve the checksums file and its signature ...")
@@ -263,9 +289,11 @@ def validate_graph_kwargs(queue, gpg_key_path, **kwargs):
 
 def main(options):
     log.info('Loading config from %s' % options.config)
-    config = load_config(options.config)
 
-    if config.getboolean('release-runner', 'verbose'):
+    with open(options.config, 'r') as config_file:
+        config = yaml.load(config_file)
+
+    if config['release-runner'].get('verbose', False):
         log_level = logging.DEBUG
     else:
         log_level = logging.INFO
@@ -274,27 +302,26 @@ def main(options):
     # Suppress logging of retry(), see bug 925321 for the details
     logging.getLogger("util.retry").setLevel(logging.WARN)
 
-    # Shorthand
-    api_root = config.get('api', 'api_root')
-    username = config.get('api', 'username')
-    password = config.get('api', 'password')
-    buildbot_configs = config.get('release-runner', 'buildbot_configs')
-    buildbot_configs_branch = config.get('release-runner',
-                                         'buildbot_configs_branch')
-    sleeptime = config.getint('release-runner', 'sleeptime')
-    notify_from = get_config(config, 'release-runner', 'notify_from', None)
-    notify_to = get_config(config, 'release-runner', 'notify_to_announce', None)
-    docker_worker_key = get_config(config, 'release-runner',
-                                   'docker_worker_key', None)
-    signing_pvt_key = get_config(config, 'signing', 'pvt_key', None)
+    api_root = config['api']['api_root']
+    username = config['api']['username']
+    password = config['api']['password']
+
+    rr_config = config['release-runner']
+
+    buildbot_configs = rr_config['buildbot_configs']
+    buildbot_configs_branch = rr_config['buildbot_configs_branch']
+    sleeptime = rr_config['sleeptime']
+    notify_from = rr_config['notify_from']
+    notify_to = rr_config['notify_to_announce']
+    docker_worker_key = rr_config['docker_worker_key']
+    signing_pvt_key = config['signing']['pvt_key']
     if isinstance(notify_to, basestring):
         notify_to = [x.strip() for x in notify_to.split(',')]
-    smtp_server = get_config(config, 'release-runner', 'smtp_server',
-                             'localhost')
+    smtp_server = rr_config.get('smtp_server', 'localhost')
     tc_config = {
         "credentials": {
-            "clientId": get_config(config, "taskcluster", "client_id", None),
-            "accessToken": get_config(config, "taskcluster", "access_token", None),
+            "clientId": config['taskcluster'].get('client_id'),
+            "accessToken": config['taskcluster'].get('access_token'),
         }
     }
     # Extend tc_config for retries, see Bug 1293744
@@ -302,14 +329,15 @@ def main(options):
     # This is a stopgap until Bug 1259627 is fixed.
     retrying_tc_config = tc_config.copy()
     retrying_tc_config.update({"maxRetries": 12})
-    balrog_username = get_config(config, "balrog", "username", None)
-    balrog_password = get_config(config, "balrog", "password", None)
-    extra_balrog_submitter_params = get_config(config, "balrog", "extra_balrog_submitter_params", None)
-    beetmover_aws_access_key_id = get_config(config, "beetmover", "aws_access_key_id", None)
-    beetmover_aws_secret_access_key = get_config(config, "beetmover", "aws_secret_access_key", None)
-    gpg_key_path = get_config(config, "signing", "gpg_key_path", None)
+    balrog_username = config['balrog']["username"]
+    balrog_password = config["balrog"]["password"]
+    extra_balrog_submitter_params = config["balrog"]["extra_balrog_submitter_params"]
+    beetmover_aws_access_key_id = config["beetmover"]["aws_access_key_id"]
+    beetmover_aws_secret_access_key = config["beetmover"]["aws_secret_access_key"]
+    gpg_key_path = config["signing"]["gpg_key_path"]
 
-    # TODO: replace release sanity with direct checks of en-US and l10n revisions (and other things if needed)
+    # TODO: replace release sanity with direct checks of en-US and l10n
+    # revisions (and other things if needed)
 
     rr = ReleaseRunner(api_root=api_root, username=username, password=password)
     scheduler = Scheduler(retrying_tc_config)
@@ -320,9 +348,10 @@ def main(options):
     while True:
         try:
             log.debug('Fetching release requests')
-            rr.get_release_requests()
+            rr.get_release_requests([r['pattern'] for r in config['releases']])
             if rr.new_releases:
-                new_releases = run_prebuild_sanity_checks(rr)
+                new_releases = run_prebuild_sanity_checks(
+                    rr, config['releases'])
                 break
             else:
                 log.debug('Sleeping for %d seconds before polling again' %
@@ -332,12 +361,13 @@ def main(options):
             log.error("Caught exception when polling:", exc_info=True)
             sys.exit(5)
 
-    retry(mercurial, args=(buildbot_configs, CONFIGS_WORKDIR), kwargs=dict(branch=buildbot_configs_branch))
+    retry(mercurial, args=(buildbot_configs, CONFIGS_WORKDIR),
+          kwargs=dict(branch=buildbot_configs_branch))
 
-    if 'symlinks' in config.sections():
+    if 'symlinks' in config:
         format_dict = dict(buildbot_configs=CONFIGS_WORKDIR)
-        for target in config.options('symlinks'):
-            symlink = config.get('symlinks', target).format(**format_dict)
+        for target in config['symlinks']:
+            symlink = config['symlinks'].get(target).format(**format_dict)
             if path.exists(symlink):
                 log.warning("Skipping %s -> %s symlink" % (symlink, target))
             else:
@@ -364,9 +394,12 @@ def main(options):
             push_to_releases_enabled = False
             postrelease_mark_as_shipped_enabled = False
         else:
-            postrelease_enabled = branchConfig['postrelease_version_bump_enabled']
-            postrelease_bouncer_aliases_enabled = branchConfig['postrelease_bouncer_aliases_enabled']
-            postrelease_mark_as_shipped_enabled = branchConfig['postrelease_mark_as_shipped_enabled']
+            postrelease_enabled = branchConfig[
+                'postrelease_version_bump_enabled']
+            postrelease_bouncer_aliases_enabled = branchConfig[
+                'postrelease_bouncer_aliases_enabled']
+            postrelease_mark_as_shipped_enabled = branchConfig[
+                'postrelease_mark_as_shipped_enabled']
             final_verify_channels = release_channels
             publish_to_balrog_channels = release_channels
             push_to_releases_enabled = True
@@ -378,13 +411,16 @@ def main(options):
 
         try:
             if not are_en_us_builds_completed(index, release_name=release['name'], submitted_at=release['submittedAt'],
-                                              branch=release['branchShortName'], revision=release['mozillaRevision'],
+                                              branch=release['branchShortName'], revision=release[
+                                                  'mozillaRevision'],
                                               tc_product_name=tc_product_name, platforms=platforms, queue=queue):
-                log.info('Builds are not completed yet, skipping release "%s" for now', release['name'])
+                log.info(
+                    'Builds are not completed yet, skipping release "%s" for now', release['name'])
                 rr.update_status(release, 'Waiting for builds to be completed')
                 continue
 
-            log.info('Every build is completed for release: %s', release['name'])
+            log.info('Every build is completed for release: %s',
+                     release['name'])
             graph_id = slugId()
 
             rr.update_status(release, 'Generating task graph')
@@ -403,18 +439,20 @@ def main(options):
                 "product": release["product"],
                 # if mozharness_revision is not passed, use 'revision'
                 "mozharness_changeset": release.get('mh_changeset') or release['mozillaRevision'],
-                "partial_updates": release['partial_updates'],
+                "partial_updates": release.get('partial_updates', list()),
                 "branch": release['branchShortName'],
                 "updates_enabled": bool(release["partials"]),
                 "l10n_config": get_l10n_config(
-                    index=index, product=release["product"], branch=release['branchShortName'],
+                    index=index, product=release[
+                        "product"], branch=release['branchShortName'],
                     revision=release['mozillaRevision'],
                     platforms=branchConfig['platforms'],
                     l10n_platforms=branchConfig['l10n_release_platforms'],
                     l10n_changesets=release['l10n_changesets']
                 ),
                 "en_US_config": get_en_US_config(
-                    index=index, product=release["product"], branch=release['branchShortName'],
+                    index=index, product=release[
+                        "product"], branch=release['branchShortName'],
                     revision=release['mozillaRevision'],
                     platforms=branchConfig['release_platforms']
                 ),
@@ -475,7 +513,8 @@ def main(options):
             rc = 2
             rr.mark_as_failed(
                 release,
-                'Failed to start release promotion (graph ID: %s). Error(s): %s' % (graph_id, exception)
+                'Failed to start release promotion (graph ID: %s). Error(s): %s' % (
+                    graph_id, exception)
             )
             log.exception('Failed to start release "%s" promotion for graph %s. Error(s): %s',
                           release['name'], graph_id, exception)
