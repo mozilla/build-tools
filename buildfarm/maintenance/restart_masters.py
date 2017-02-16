@@ -63,13 +63,13 @@ bucket_config = {
     "try1-aws-us-west-2": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 1},
     "tests1-linux": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 1},
     "tests1-macosx": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 1},
-    "tests1-windows": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 1},
-    "tests1-linux32-aws-us-east-1": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 2},
-    "tests1-linux32-aws-us-west-2": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 2},
-    "tests1-linux64-aws-us-east-1": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 3},
-    "tests1-linux64-aws-us-west-2": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 3},
-    "tests1-windows-aws-us-east-1": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 2},
-    "tests1-windows-aws-us-west-2": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 2},
+    "tests1-windows": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 2},
+    "tests1-linux32-aws-us-east-1": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 1},
+    "tests1-linux32-aws-us-west-2": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 1},
+    "tests1-linux64-aws-us-east-1": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 1},
+    "tests1-linux64-aws-us-west-2": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 1},
+    "tests1-windows-aws-us-east-1": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 1},
+    "tests1-windows-aws-us-west-2": {"max_duration": MAX_DURATION_DEFAULT, "concurrent": 1},
 }
 
 def IgnorePolicy():
