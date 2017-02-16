@@ -253,7 +253,13 @@ def jar_signfile(filename, keystore, keyname, fake=False, passphrase=None):
     """
     # unsign first
     jar_unsignfile(filename)
-    command = ["jarsigner", "-keystore", keystore, filename]
+    command = [
+        "jarsigner",
+        "-keystore", keystore,
+        "-digestalg", "SHA1",
+        "-sigalg", "SHA1withDSA",
+        filename
+    ]
     if keyname:
         command.append(keyname)
     stdout = tempfile.TemporaryFile()
