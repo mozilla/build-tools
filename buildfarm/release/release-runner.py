@@ -34,14 +34,9 @@ from util.file import load_config, get_config
 log = logging.getLogger(__name__)
 
 
-# temporary regex to filter out firefox desktop beta, release and dot release
-# as they're handled separately within release promotion. Once migration to
-# promotion is completed for all types of releases, we will backout this
-# regex beta tracking bug is 1252333
-# regex release tracking bug is 1263976
+# Filters out Firefox Desktop and Fennec betas as they're handled
+# separately within release promotion.
 RELEASE_PATTERNS = [
-    # all Fennec betas
-    r"Fennec-\d+\.0b\d+-build\d+",
     # all Fennec non-betas
     r"Fennec-\d+\.\d+(\.\d+)?-build\d+",
     # all Thunderbird betas
