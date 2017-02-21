@@ -20,10 +20,24 @@
     ],
     "repo_type": "hg"
   },
+  "mozilla-esr52": {
+    "repo": "https://hg.mozilla.org/releases/mozilla-esr52",
+    "graph_branches": [
+      "Mozilla-Esr52"
+    ],
+    "repo_type": "hg"
+  },
   "comm-esr45": {
     "repo": "https://hg.mozilla.org/releases/comm-esr45",
     "graph_branches": [
       "Thunderbird-Esr45"
+    ],
+    "repo_type": "hg"
+  },
+  "comm-esr52": {
+    "repo": "https://hg.mozilla.org/releases/comm-esr52",
+    "graph_branches": [
+      "Thunderbird-Esr52"
     ],
     "repo_type": "hg"
   },

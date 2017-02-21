@@ -239,17 +239,14 @@ def action_fix_makefile_symlink(master):
     print OK, "updated Makefile symlink in %(hostname)s:%(basedir)s" % master
 
 
-def action_add_esr45_symlinks(master):
+def action_add_esr52_symlinks(master):
     with show('running'):
-        run('ln -s %(bbconfigs_dir)s/mozilla/release-firefox-mozilla-esr45.py '
+        run('ln -s %(bbconfigs_dir)s/mozilla/release-thunderbird-comm-esr52.py '
             '%(master_dir)s/' % master)
-        run('ln -s %(bbconfigs_dir)s/mozilla/l10n-changesets_mozilla-esr45 '
+        run('ln -s %(bbconfigs_dir)s/mozilla/l10n-changesets_thunderbird-esr52 '
             '%(master_dir)s/' % master)
-        run('ln -s %(bbconfigs_dir)s/mozilla/release-thunderbird-comm-esr45.py '
-            '%(master_dir)s/' % master)
-        run('ln -s %(bbconfigs_dir)s/mozilla/l10n-changesets_thunderbird-esr45 '
-            '%(master_dir)s/' % master)
-    print OK, "Added esr45 symlinks in %(hostname)s:%(basedir)s" % master
+    print OK, "Added esr52 symlinks in %(hostname)s:%(basedir)s" % master
+
 
 def action_rm_34_1_symlinks(master):
     with show('running'):
@@ -270,7 +267,7 @@ def action_add_config_seta_symlinks(master):
      with show('running'):
          run('ln -s %(bbconfigs_dir)s/mozilla-tests/config_seta.py '
              '%(master_dir)s/' % master)
- 
+
 def action_remove_config_seta_symlinks(master):
      with show('running'):
          run('rm %(master_dir)s/config_seta.py '
