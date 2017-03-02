@@ -1,213 +1,272 @@
 {
   "ash": {
     "repo": "https://hg.mozilla.org/projects/ash",
-    "graph_branches": [
-      "Ash"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_2",
+    "features": {
+        "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
   },
   "mozilla-release": {
     "repo": "https://hg.mozilla.org/releases/mozilla-release",
-    "graph_branches": [
-      "Mozilla-Release"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_3",
+    "features": {
+        "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
   },
   "mozilla-esr45": {
     "repo": "https://hg.mozilla.org/releases/mozilla-esr45",
-    "graph_branches": [
-      "Mozilla-Esr45"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_3",
+    "features": {
+        "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
   },
   "mozilla-esr52": {
     "repo": "https://hg.mozilla.org/releases/mozilla-esr52",
-    "graph_branches": [
-      "Mozilla-Esr52"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_3",
+    "features": {
+        "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
   },
   "comm-esr45": {
     "repo": "https://hg.mozilla.org/releases/comm-esr45",
-    "graph_branches": [
-      "Thunderbird-Esr45"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_3",
+    "features": {
+        "taskcluster-cron": false,
+        "taskcluster-push": false
+    }
   },
   "comm-esr52": {
     "repo": "https://hg.mozilla.org/releases/comm-esr52",
-    "graph_branches": [
-      "Thunderbird-Esr52"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_3",
+    "features": {
+        "taskcluster-cron": false,
+        "taskcluster-push": false
+    }
   },
   "oak": {
     "repo": "https://hg.mozilla.org/projects/oak",
-    "graph_branches": [
-      "Oak"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_2",
+    "features": {
+        "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
   },
   "pine": {
     "repo": "https://hg.mozilla.org/projects/pine",
-    "graph_branches": [
-      "Pine"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_2",
+    "features": {
+        "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
   },
   "mozilla-beta": {
     "repo": "https://hg.mozilla.org/releases/mozilla-beta",
-    "graph_branches": [
-      "Mozilla-Beta"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_3",
+    "features": {
+        "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
   },
   "comm-beta": {
     "repo": "https://hg.mozilla.org/releases/comm-beta",
-    "graph_branches": [
-      "Thunderbird-Beta"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_3",
+    "features": {
+        "taskcluster-cron": false,
+        "taskcluster-push": false
+    }
   },
   "mozilla-inbound": {
     "repo": "https://hg.mozilla.org/integration/mozilla-inbound",
-    "graph_branches": [
-      "Mozilla-Inbound"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_3",
+    "features": {
+        "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
   },
   "mozilla-central": {
     "repo": "https://hg.mozilla.org/mozilla-central",
-    "graph_branches": [
-      "Firefox",
-      "mobile"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_3",
+    "features": {
+        "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
   },
   "comm-central": {
     "repo": "https://hg.mozilla.org/comm-central",
-    "graph_branches": [
-      "Thunderbird-Trunk"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_3",
+    "features": {
+        "taskcluster-cron": false,
+        "taskcluster-push": false
+    }
   },
   "alder": {
     "repo": "https://hg.mozilla.org/projects/alder",
-    "graph_branches": [
-      "Alder"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_2",
+    "features": {
+        "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
   },
   "cedar": {
     "repo": "https://hg.mozilla.org/projects/cedar",
-    "graph_branches": [
-      "Cedar"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_2",
+    "features": {
+        "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
   },
   "birch": {
     "repo": "https://hg.mozilla.org/projects/birch",
-    "graph_branches": [
-      "Birch"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_2",
+    "features": {
+        "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
   },
   "cypress": {
     "repo": "https://hg.mozilla.org/projects/cypress",
-    "graph_branches": [
-      "Cypress"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_2",
+    "features": {
+        "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
   },
   "mozilla-aurora": {
     "repo": "https://hg.mozilla.org/releases/mozilla-aurora",
-    "graph_branches": [
-      "Mozilla-Aurora"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_3",
+    "features": {
+        "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
   },
   "comm-aurora": {
     "repo": "https://hg.mozilla.org/releases/comm-aurora",
-    "graph_branches": [
-      "Thunderbird-Aurora"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_3",
+    "features": {
+        "taskcluster-cron": false,
+        "taskcluster-push": false
+    }
   },
   "ux": {
     "repo": "https://hg.mozilla.org/projects/ux",
-    "graph_branches": [
-      "UX"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_3",
+    "features": {
+        "taskcluster-cron": false,
+        "taskcluster-push": false
+    }
   },
   "elm": {
     "repo": "https://hg.mozilla.org/projects/elm",
-    "graph_branches": [
-      "Elm"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_2",
+    "features": {
+        "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
   },
   "graphics": {
     "repo": "https://hg.mozilla.org/projects/graphics",
-    "graph_branches": [
-      "Graphics"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_2",
+    "features": {
+        "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
   },
   "try": {
     "repo": "https://hg.mozilla.org/try",
-    "graph_branches": [
-      "Try"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_1",
+    "features": {
+        "taskcluster-cron": false,
+        "taskcluster-push": true
+    }
   },
   "try-comm-central": {
     "repo": "https://hg.mozilla.org/try-comm-central",
-    "graph_branches": [
-      "Try-Comm-Central"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_1",
+    "features": {
+        "taskcluster-cron": false,
+        "taskcluster-push": false
+    }
   },
   "larch": {
     "repo": "https://hg.mozilla.org/projects/larch",
-    "graph_branches": [
-      "Larch"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_2",
+    "features": {
+        "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
   },
   "date": {
     "repo": "https://hg.mozilla.org/projects/date",
-    "graph_branches": [
-      "Date"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_3",
+    "features": {
+        "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
   },
   "fig": {
     "repo": "https://hg.mozilla.org/projects/fig",
-    "graph_branches": [
-      "Fig"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_2",
+    "features": {
+        "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
   },
   "gum": {
     "repo": "https://hg.mozilla.org/projects/gum",
-    "graph_branches": [
-      "Gum"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_2",
+    "features": {
+        "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
   },
   "jamun": {
     "repo": "https://hg.mozilla.org/projects/jamun",
-    "graph_branches": [
-      "Jamun"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_level_2",
+    "features": {
+        "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
   },
    "autoland": {
     "repo": "https://hg.mozilla.org/integration/autoland",
-    "graph_branches": [
-      "Autoland"
-    ],
-    "repo_type": "hg"
+    "repo_type": "hg",
+    "access": "scm_autoland",
+    "features": {
+        "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
   }
 }
