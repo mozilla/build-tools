@@ -46,7 +46,7 @@ def main(release_runner_config, release_config, tc_config):
         # ship-it items
         "version": release_config["version"],
         "revision": release_config["mozilla_revision"],
-        "mozharness_changeset": release_config["mozharness_changeset"] or release_config["mozilla_revision"],
+        "mozharness_changeset": release_config.get("mozharness_changeset") or release_config["mozilla_revision"],
         "buildNumber": release_config["build_number"],
         "l10n_changesets": release_config["l10n_changesets"],
 
