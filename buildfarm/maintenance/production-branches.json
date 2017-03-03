@@ -206,6 +206,15 @@
         "taskcluster-push": true
     }
   },
+  "stylo-try": {
+    "repo": "https://hg.mozilla.org/incubator/stylo-try",
+    "repo_type": "hg",
+    "access": "scm_level_1",
+    "features": {
+        "taskcluster-cron": false,
+        "taskcluster-push": true
+    }
+  },
   "try-comm-central": {
     "repo": "https://hg.mozilla.org/try-comm-central",
     "repo_type": "hg",
@@ -266,6 +275,15 @@
     "access": "scm_autoland",
     "features": {
         "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
+  },
+  "stylo": {
+    "repo": "https://hg.mozilla.org/incubator/stylo",
+    "repo_type": "hg",
+    "access": "scm_level_2",
+    "features": {
+        "taskcluster-cron": false,
         "taskcluster-push": true
     }
   }
