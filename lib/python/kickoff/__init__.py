@@ -18,8 +18,9 @@ log = logging.getLogger(__name__)
 # This is now a default
 RELEASE_PATTERNS = [
     r"Firefox-.*",
-#     r"Fennec-.*",
+    # r"Fennec-.*",
 ]
+
 
 def matches(name, patterns):
     return any([re.search(p, name) for p in patterns])
@@ -80,11 +81,11 @@ class ReleaseRunner(object):
         log.info('updating status for %s to %s' % (release['name'], status))
         try:
             self.release_api.update(release['name'], status=status)
-        except requests.HTTPError, e:
+        except requests.HTTPError as e:
             log.warning('Caught HTTPError: %s' % e.response.content)
             log.warning('status update failed, continuing...', exc_info=True)
 
-    def mark_as_completed(self, release):#, enUSPlatforms):
+    def mark_as_completed(self, release):
         log.info('mark as completed %s' % release['name'])
         self.release_api.update(release['name'], complete=True,
                                 status='Started')
@@ -156,23 +157,30 @@ def get_platform_locales(l10n_changesets, platform):
     return [l for l in l10n_changesets.keys() if l != ignore]
 
 
-def task_for_revision(index, branch, revision, product, platform):
-    return index.findTask(
-        "gecko.v2.{branch}.revision.{rev}.{product}.{platform}-opt".format(
-        rev=revision, branch=branch, product=product, platform=platform))
-
-
 def get_l10n_config(index, product, branch, revision, platforms,
-                    l10n_platforms, l10n_changesets):
+                    l10n_platforms, l10n_changesets, tc_task_indexes):
     l10n_platform_configs = {}
     for platform in l10n_platforms:
-        task = task_for_revision(index, branch, revision, product, platform)
-        url = "https://queue.taskcluster.net/v1/task/{taskid}/artifacts/public/build".format(
-            taskid=task["taskId"]
+        route = tc_task_indexes[platform]['signed'].format(rev=revision)
+        signed_task = index.findTask(route)
+        en_us_binary_url = "https://queue.taskcluster.net/v1/task/{taskid}/artifacts/public/build".format(
+            taskid=signed_task["taskId"]
         )
+        if tc_task_indexes[platform]['unsigned'] != tc_task_indexes[platform]['signed']:
+            # TC based builds use different tasks for en-US (signed) and
+            # martools (unsigned)
+            unsigned_route = tc_task_indexes[platform]['unsigned'].format(rev=revision)
+            unsigned_task = index.findTask(unsigned_route)
+            mar_tools_url = "https://queue.taskcluster.net/v1/task/{taskid}/artifacts/public/build/host/bin".format(
+                taskid=unsigned_task["taskId"]
+            )
+        else:
+            mar_tools_url = en_us_binary_url
+
         l10n_platform_configs[platform] = {
             "locales": get_platform_locales(l10n_changesets, platform),
-            "en_us_binary_url": url,
+            "en_us_binary_url": en_us_binary_url,
+            "mar_tools_url": mar_tools_url,
             "chunks": platforms[platform].get("l10n_chunks", 10),
         }
 
@@ -182,12 +190,17 @@ def get_l10n_config(index, product, branch, revision, platforms,
     }
 
 
-def get_en_US_config(index, product, branch, revision, platforms):
+def get_en_US_config(index, product, branch, revision, platforms,
+                     tc_task_indexes):
     platform_configs = {}
     for platform in platforms:
-        task = task_for_revision(index, branch, revision, product, platform)
+        signed_route = tc_task_indexes[platform]['signed'].format(rev=revision)
+        signed_task = index.findTask(signed_route)
+        unsigned_route = tc_task_indexes[platform]['unsigned'].format(rev=revision)
+        unsigned_task = index.findTask(unsigned_route)
         platform_configs[platform] = {
-            "task_id": task["taskId"]
+            "signed_task_id": signed_task["taskId"],
+            "unsigned_task_id": unsigned_task["taskId"],
         }
 
     return {

@@ -93,13 +93,15 @@ def main(release_runner_config, release_config, tc_config):
             revision=release_config["mozilla_revision"],
             platforms=release_config['platforms'],
             l10n_platforms=release_config['l10n_release_platforms'] or {},
-            l10n_changesets=release_config["l10n_changesets"]
+            l10n_changesets=release_config["l10n_changesets"],
+            tc_task_indexes=None,
         ),
         "en_US_config": get_en_US_config(
             index=index, product=release_config["product"],
             branch=release_config["branch"],
             revision=release_config["mozilla_revision"],
-            platforms=release_config['platforms']
+            platforms=release_config['platforms'],
+            tc_task_indexes=None,
         ),
         "extra_balrog_submitter_params": release_config['extra_balrog_submitter_params'],
         "publish_to_balrog_channels": release_config["publish_to_balrog_channels"],

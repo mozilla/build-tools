@@ -15,13 +15,16 @@ import requests
 from os import path
 from optparse import OptionParser
 from twisted.python.lockfile import FilesystemLock
+from taskcluster import Scheduler, Index, Queue
+from taskcluster.utils import slugId
+import yaml
 
 site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 
-from kickoff import get_partials, ReleaseRunner, make_task_graph_strict_kwargs, long_revision
-from kickoff import get_l10n_config, get_en_US_config
-from kickoff import email_release_drivers
-from kickoff import bump_version
+from kickoff import (get_partials, ReleaseRunner,
+                     make_task_graph_strict_kwargs, long_revision,
+                     get_l10n_config, get_en_US_config, email_release_drivers,
+                     bump_version)
 from kickoff.sanity.base import SanityException, is_candidate_release
 from kickoff.sanity.revisions import RevisionsSanitizer
 from kickoff.sanity.l10n import L10nSanitizer
@@ -30,11 +33,8 @@ from kickoff.build_status import are_en_us_builds_completed
 from release.info import readBranchConfig
 from release.l10n import parsePlainL10nChangesets
 from release.versions import getAppVersion
-from taskcluster import Scheduler, Index, Queue
-from taskcluster.utils import slugId
 from util.hg import mercurial
 from util.retry import retry
-import yaml
 
 log = logging.getLogger(__name__)
 
@@ -53,8 +53,7 @@ ALL_FILES = set([
     '.complete.mar',
     '.exe',
     '.dmg',
-    'i686.tar.bz2',
-    'x86_64.tar.bz2',
+    'tar.bz2',
 ])
 
 CONFIGS_WORKDIR = 'buildbot-configs'
@@ -278,9 +277,13 @@ def get_hash(path, hash_type="sha512"):
 def validate_graph_kwargs(queue, gpg_key_path, **kwargs):
     # TODO: to be moved under kickoff soon, once new relpro sanity is in place
     # bug 1282959
-    platforms = kwargs.get('en_US_config', {}).get('platforms', {})
-    for platform in platforms.keys():
-        task_id = platforms.get(platform).get('task_id', {})
+    platforms = kwargs['en_US_config']['platforms']
+    for platform in platforms:
+        # FIXME: enable sanity check later for TC platforms
+        if platforms[platform]["signed_task_id"] != platforms[platform]["unsigned_task_id"]:
+            log.warning("Skipping en-US sanity for %s, TC platform", platform)
+            continue
+        task_id = platforms[platform]['signed_task_id']
         log.info('Performing release sanity for %s en-US binary', platform)
         sanitize_en_US_binary(queue, task_id, gpg_key_path)
 
@@ -404,16 +407,18 @@ def main(options):
             publish_to_balrog_channels = release_channels
             push_to_releases_enabled = True
 
-        ship_it_product_name = release['product']
-        tc_product_name = branchConfig['stage_product'][ship_it_product_name]
         # XXX: Doesn't work with neither Fennec nor Thunderbird
         platforms = branchConfig['release_platforms']
 
         try:
-            if not are_en_us_builds_completed(index, release_name=release['name'], submitted_at=release['submittedAt'],
-                                              branch=release['branchShortName'], revision=release[
-                                                  'mozillaRevision'],
-                                              tc_product_name=tc_product_name, platforms=platforms, queue=queue):
+            graph_id = slugId()
+            done = are_en_us_builds_completed(
+                index=index, release_name=release['name'],
+                submitted_at=release['submittedAt'],
+                revision=release['mozillaRevision'],
+                platforms=platforms, queue=queue,
+                tc_task_indexes=branchConfig['tc_indexes'][release['product']])
+            if not done:
                 log.info(
                     'Builds are not completed yet, skipping release "%s" for now', release['name'])
                 rr.update_status(release, 'Waiting for builds to be completed')
@@ -421,8 +426,6 @@ def main(options):
 
             log.info('Every build is completed for release: %s',
                      release['name'])
-            graph_id = slugId()
-
             rr.update_status(release, 'Generating task graph')
 
             kwargs = {
@@ -448,13 +451,15 @@ def main(options):
                     revision=release['mozillaRevision'],
                     platforms=branchConfig['platforms'],
                     l10n_platforms=branchConfig['l10n_release_platforms'],
-                    l10n_changesets=release['l10n_changesets']
+                    l10n_changesets=release['l10n_changesets'],
+                    tc_task_indexes=branchConfig['tc_indexes'][release['product']],
                 ),
                 "en_US_config": get_en_US_config(
                     index=index, product=release[
                         "product"], branch=release['branchShortName'],
                     revision=release['mozillaRevision'],
-                    platforms=branchConfig['release_platforms']
+                    platforms=branchConfig['release_platforms'],
+                    tc_task_indexes=branchConfig['tc_indexes'][release['product']],
                 ),
                 "verifyConfigs": {},
                 "balrog_api_root": branchConfig["balrog_api_root"],
@@ -500,7 +505,7 @@ def main(options):
             log.info("Task graph generated!")
             import pprint
             log.debug(pprint.pformat(graph, indent=4, width=160))
-            print scheduler.createTaskGraph(graph_id, graph)
+            print(scheduler.createTaskGraph(graph_id, graph))
 
             rr.mark_as_completed(release)
             l10n_url = rr.release_l10n_api.getL10nFullUrl(release['name'])
