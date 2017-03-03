@@ -10,10 +10,13 @@ from kickoff.build_status import are_en_us_builds_completed, EnUsBuildsWatcher, 
 class BuildsCompletedBase(unittest.TestCase):
     def setUp(self):
         self.index = MagicMock()
-        self.branch = 'mozilla-release'
         self.revision = 'abcdef123456'
-        self.tc_product_name = 'firefox'
         self.platforms = ('linux', 'win32', 'win64')
+        self.tc_task_indexes = {
+            "linux": { "signed": "linux_signed_task", "unsigned": "linux_unsigned_task"},
+            "win32": { "signed": "signed_task", "unsigned": "unsigned_task"},
+            "win64": { "signed": "signed_task", "unsigned": "unsigned_task"},
+        }
         self.queue = MagicMock()
 
         self.now = datetime.now(tz.tzutc())
@@ -30,9 +33,8 @@ class AreEnUsBuildsCompletedTest(BuildsCompletedBase):
 
         release_name = 'Firefox-32.0b1-build1'
         self.assertTrue(are_en_us_builds_completed(
-            self.index, release_name, self.submitted_at, self.branch,
-            self.revision, self.tc_product_name, self.platforms,
-            self.queue
+            self.index, release_name, self.submitted_at, self.revision,
+            self.platforms, self.queue, self.tc_task_indexes
         ))
 
     def test_returns_false_if_one_task_is_missing(self):
@@ -40,9 +42,8 @@ class AreEnUsBuildsCompletedTest(BuildsCompletedBase):
 
         release_name = 'Firefox-32.0b1-build2'
         self.assertFalse(are_en_us_builds_completed(
-            self.index, release_name, self.submitted_at, self.branch,
-            self.revision, self.tc_product_name, self.platforms,
-            self.queue
+            self.index, release_name, self.submitted_at, self.revision,
+            self.platforms, self.queue, self.tc_task_indexes
         ))
 
     def test_stores_results_of_the_previous_call(self):
@@ -50,16 +51,14 @@ class AreEnUsBuildsCompletedTest(BuildsCompletedBase):
 
         release_name = 'Firefox-32.0b1-build5'
         are_en_us_builds_completed(
-            self.index, release_name, self.submitted_at, self.branch,
-            self.revision, self.tc_product_name, self.platforms,
-            self.queue
+            self.index, release_name, self.submitted_at, self.revision,
+            self.platforms, self.queue, self.tc_task_indexes
         )
         self.assertEqual(self.index.findTask.call_count, len(self.platforms))
 
         are_en_us_builds_completed(
-            self.index, release_name, self.submitted_at, self.branch,
-            self.revision, self.tc_product_name, self.platforms,
-            self.queue
+            self.index, release_name, self.submitted_at, self.revision,
+            self.platforms, self.queue, self.tc_task_indexes
         )
         self.assertEqual(self.index.findTask.call_count, len(self.platforms) + 1)
 
@@ -68,17 +67,15 @@ class AreEnUsBuildsCompletedTest(BuildsCompletedBase):
 
         release_name = 'Firefox-32.0b1-build6'
         are_en_us_builds_completed(
-            self.index, release_name, self.submitted_at, self.branch,
-            self.revision, self.tc_product_name, self.platforms,
-            self.queue
+            self.index, release_name, self.submitted_at, self.revision,
+            self.platforms, self.queue, self.tc_task_indexes
         )
         self.assertEqual(self.index.findTask.call_count, len(self.platforms))
 
         release_name = 'Firefox-32.0b1-build99'
         are_en_us_builds_completed(
-            self.index, release_name, self.submitted_at, self.branch,
-            self.revision, self.tc_product_name, self.platforms,
-            self.queue
+            self.index, release_name, self.submitted_at, self.revision,
+            self.platforms, self.queue, self.tc_task_indexes
         )
         self.assertEqual(self.index.findTask.call_count, len(self.platforms) * 2)
 
@@ -87,16 +84,14 @@ class AreEnUsBuildsCompletedTest(BuildsCompletedBase):
 
         release_name = 'Firefox-32.0b1-build7'
         are_en_us_builds_completed(
-            self.index, release_name, self.submitted_at, self.branch,
-            self.revision, self.tc_product_name, self.platforms,
-            self.queue
+            self.index, release_name, self.submitted_at, self.revision,
+            self.platforms, self.queue, self.tc_task_indexes
         )
         self.assertEqual(self.index.findTask.call_count, len(self.platforms))
 
         are_en_us_builds_completed(
-            self.index, release_name, self.submitted_at, self.branch,
-            self.revision, self.tc_product_name, self.platforms,
-            self.queue
+            self.index, release_name, self.submitted_at, self.revision,
+            self.platforms, self.queue, self.tc_task_indexes
         )
         self.assertEqual(self.index.findTask.call_count, len(self.platforms) * 2)
 
@@ -106,8 +101,8 @@ class EnUsBuildsWatcherTest(BuildsCompletedBase):
         BuildsCompletedBase.setUp(self)
         release_name = 'Firefox-46.0b8-build1'
         self.watcher = EnUsBuildsWatcher(
-            self.index, release_name, self.submitted_at, self.branch,
-            self.revision, self.tc_product_name, self.platforms, self.queue
+            self.index, release_name, self.submitted_at, self.revision,
+            self.platforms, self.queue, self.tc_task_indexes
         )
 
     def test_returns_true_when_everything_is_ready(self):
