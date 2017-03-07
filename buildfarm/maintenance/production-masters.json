@@ -949,6 +949,9 @@
     "limit_fx_slave_platforms": {
       "linux64": [
         "ubuntu64_hw"
+      ],
+      "linux64-stylo": [
+        "ubuntu64_hw_stylo"
       ]
     },
     "limit_mobile_platforms": [
@@ -991,6 +994,9 @@
     "limit_fx_slave_platforms": {
       "linux64": [
         "ubuntu64_hw"
+      ],
+      "linux64-stylo": [
+        "ubuntu64_hw_stylo"
       ]
     },
     "limit_mobile_platforms": [
@@ -1033,6 +1039,9 @@
     "limit_fx_slave_platforms": {
       "linux64": [
         "ubuntu64_hw"
+      ],
+      "linux64-stylo": [
+        "ubuntu64_hw_stylo"
       ]
     },
     "limit_mobile_platforms": [
