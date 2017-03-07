@@ -106,6 +106,25 @@ def check_available_slots(key_to_match):
     # We can run 1 of anything.
     return True
 
+def check_credentials(master):
+    cmd='whoami'
+    if master:
+        log.debug("Checking connection to master: %s" % master['hostname'])
+        console = get_console(master['hostname'])
+        if console:
+            try:
+                rc, output = console.run_cmd(cmd)
+                if rc == 0:
+                    log.debug("Successfully connected to master: %s" % master['hostname'])
+                    return True
+                else:
+                    log.warning("Error running remote command '%s' on master: %s" % (cmd, master['hostname']))
+            except ssh.RemoteCommandError:
+                log.warning("Caught exception while attempting remote command '%s' on master: %s" % (cmd, master['hostname']))
+        else:
+            log.error("Couldn't get console to %s" % master['hostname'])
+    return False
+
 def masters_remain():
     for key in running_buckets.iterkeys():
         for master_name in running_buckets[key]:
@@ -357,6 +376,12 @@ def reboot_master(master):
         log.error("Couldn't get console to %s" % master['hostname'])
     return False
 
+def mark_master_as_problem(key, master):
+    if key not in problem_masters:
+        problem_masters[key] = []
+    problem_masters[key].append(master.copy())
+    del running_buckets[key][master['name']]
+
 def display_remaining():
     if not buckets or len(buckets) == 0:
         return
@@ -484,6 +509,12 @@ if __name__ == '__main__':
 
     put_masters_in_buckets(masters_json, master_list)
 
+    # Connect to a single master, just to make sure our supplied credentials are valid.
+    log.debug("Verifying SSH credentials by connecting to a single master...")
+    master = buckets.itervalues().next()[0]
+    if master and not check_credentials(master):
+        sys.exit(4)
+
     interval_start_time = time.time()
     while masters_remain():
         # Refill our running buckets.
@@ -500,6 +531,10 @@ if __name__ == '__main__':
                         running_buckets[key] = {}
                     running_buckets[key][master_name] = current_master
                     running_buckets[key][master_name]['start_time'] = time.time()
+                    # Make sure we can connect to this master before initiating shutdown.
+                    if current_master and not check_credentials(current_master):
+                        mark_master_as_problem(key, current_master)
+                        continue
                     if current_master['role'] == "scheduler":
                         stop_master(current_master)
                     else:
@@ -507,18 +542,13 @@ if __name__ == '__main__':
                             log.debug("Disabled %s in slavealloc." % current_master['hostname'])
                         else:
                             current_master['issue'] = "Unable to disable in slavealloc"
-                            if key not in problem_masters:
-                                problem_masters[key] = []
-                            problem_masters[key].append(current_master.copy())
-                            del running_buckets[key][master_name]
+                            mark_master_as_problem(key, current_master)
+                            # This is not fatal, so we can continue to graceful shutdown.
                         if graceful_shutdown(current_master):
                             log.debug("Initiated graceful_shutdown of %s." % current_master['hostname'])
                         else:
                             current_master['issue'] = "Unable to initiate graceful_shutdown"
-                            if key not in problem_masters:
-                                problem_masters[key] = []
-                            problem_masters[key].append(current_master.copy())
-                            del running_buckets[key][master_name]
+                            mark_master_as_problem(key, current_master)
 
         for key in running_buckets.iterkeys():
             for master_name in running_buckets[key]:
