@@ -61,6 +61,7 @@ def main(release_runner_config, release_config, tc_config):
         "updates_builder_enabled": release_config["updates_builder_enabled"],
         "update_verify_enabled": release_config["update_verify_enabled"],
         "push_to_candidates_enabled": release_config['push_to_candidates_enabled'],
+        "stage_product": release_config['stage_product'],
         "postrelease_bouncer_aliases_enabled": release_config['postrelease_bouncer_aliases_enabled'],
         "postrelease_version_bump_enabled": release_config['postrelease_version_bump_enabled'],
         "push_to_releases_automatic": release_config['push_to_releases_automatic'],
