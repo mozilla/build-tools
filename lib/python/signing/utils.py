@@ -132,7 +132,7 @@ I am ur signature!
         return
 
     command = ['gpg', '--homedir', gpgdir, '-bsa', '-o', sigfile, '-q',
-               '--batch']
+               '--batch', '--personal-digest-preferences', 'SHA256']
     if passphrase:
         command.extend(['--passphrase-fd', '0'])
     command.append(filename)
