@@ -480,6 +480,8 @@ def main(options):
                 "signing_pvt_key": signing_pvt_key,
                 "build_tools_repo_path": branchConfig['build_tools_repo_path'],
                 "push_to_candidates_enabled": branchConfig['push_to_candidates_enabled'],
+                # TODO: temporary config enabled during 53 Fennec beta cycle
+                "candidates_fennec_enabled": branchConfig.get('candidates_fennec_enabled'),
                 "stage_product": branchConfig['stage_product'][release['product']],
                 "postrelease_bouncer_aliases_enabled": postrelease_bouncer_aliases_enabled,
                 "uptake_monitoring_enabled": branchConfig['uptake_monitoring_enabled'],
