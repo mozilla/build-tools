@@ -248,7 +248,7 @@ def jar_unsignfile(filename):
         raise ValueError("Couldn't remove previous signature")
 
 
-def jar_signfile(filename, keystore, keyname, fake=False, passphrase=None):
+def jar_signfile(filename, keystore, keyname, digestalg, sigalg, fake=False, passphrase=None):
     """Sign a jar file
     """
     # unsign first
@@ -256,8 +256,8 @@ def jar_signfile(filename, keystore, keyname, fake=False, passphrase=None):
     command = [
         "jarsigner",
         "-keystore", keystore,
-        "-digestalg", "SHA1",
-        "-sigalg", "SHA1withDSA",
+        "-digestalg", digestalg,
+        "-sigalg", sigalg,
         filename
     ]
     if keyname:

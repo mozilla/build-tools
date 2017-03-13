@@ -30,6 +30,8 @@ if __name__ == '__main__':
         signcode_timestamp=None,
         jar_keystore=None,
         jar_keyname=None,
+        jar_sigalg=None,
+        jar_digestalg=None,
         emevoucher_key=None,
         emevoucher_chain=None,
     )
@@ -51,6 +53,10 @@ if __name__ == '__main__':
                       help="keystore for signing jar_")
     parser.add_option("--jar_keyname", dest="jar_keyname",
                       help="which key to use from jar_keystore")
+    parser.add_option("--jar_digestalg", dest="jar_digestalg",
+                      help="which digest algorithm to use for signing jar files")
+    parser.add_option("--jar_sigalg", dest="jar_sigalg",
+                      help="which signature algorithm to use for signing jar files")
     parser.add_option("--emevoucher_key", dest="emevoucher_key",
                       help="The certificate to use for signing the eme voucher")
     parser.add_option("--emevoucher_chain", dest="emevoucher_chain",
@@ -159,6 +165,7 @@ if __name__ == '__main__':
             parser.error("jar_keyname required when format is jar")
         copyfile(inputfile, tmpfile)
         jar_signfile(tmpfile, options.jar_keystore,
-                     options.jar_keyname, options.fake, passphrase)
+                     options.jar_keyname, options.jar_digestalg, options.jar_sigalg,
+                     options.fake, passphrase)
 
     os.rename(tmpfile, destfile)
