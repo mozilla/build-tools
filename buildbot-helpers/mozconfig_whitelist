@@ -17,6 +17,7 @@ all_platforms = all_desktop_platforms + all_mobile_platforms
 for platform in all_platforms:
     whitelist['nightly'][platform] = [
         'ac_add_options --enable-update-channel=nightly',
+        'ac_add_options --enable-profiling',
         'mk_add_options CLIENT_PY_ARGS="--hg-options=\'--verbose --time\' --hgtool=../tools/buildfarm/utils/hgtool.py --skip-chatzilla --skip-comm --skip-inspector --skip-venkman --tinderbox-print"'
     ]
 
