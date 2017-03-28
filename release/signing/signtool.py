@@ -42,7 +42,7 @@ def is_authenticode_signed(filename):
 def main():
     allowed_formats = ("sha2signcode", "sha2signcodestub", "signcode",
                        "osslsigncode", "gpg", "mar", "mar_sha384", "dmg",
-                       "dmgv2", "jar", "emevoucher")
+                       "dmgv2", "macapp", "jar", "emevoucher")
 
     from optparse import OptionParser
     import random
@@ -185,10 +185,10 @@ def main():
         urls = format_urls[fmt]
         random.shuffle(urls)
 
-        # The only difference between dmg and dmgv2 are the servers they use.
+        # The only difference between dmg, dmgv2, and macapp are the servers they use.
         # The server side code only understands "dmg" as a format, so we need
         # to translate this now that we've chosen our URLs
-        if fmt == "dmgv2":
+        if fmt in ("dmgv2", "macapp"):
             fmt = "dmg"
 
         log.debug("doing %s signing", fmt)
