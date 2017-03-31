@@ -7,11 +7,9 @@ import sys
 # Use explicit version of python-requests
 sys.path.insert(0, path.join(path.dirname(__file__),
                              "../../lib/python/vendor/requests-2.7.0"))
-sys.path.insert(0, path.join(path.dirname(__file__),
-                             "../../lib/python/vendor/arrow-0.10.0"))
 sys.path.insert(0, path.join(path.dirname(__file__), "../../lib/python"))
 
-from balrog.submitter.cli import ReleasePusher, ReleaseScheduler
+from balrog.submitter.cli import ReleasePusher
 
 if __name__ == '__main__':
 
@@ -24,8 +22,6 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--product", dest="product_name", required=True)
     parser.add_argument("-b", "--build-number", dest="build_number", required=True)
     parser.add_argument("-R", "--rules", dest="rule_ids", action="append", required=True)
-    parser.add_argument("-s", "--schedule-at", dest="schedule_at", default=None)
-    parser.add_argument("-B", "--background-rate", dest="backgroundRate", default=None)
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true")
     args = parser.parse_args()
 
@@ -39,15 +35,6 @@ if __name__ == '__main__':
     execfile(args.credentials_file, credentials)
     auth = (args.username, credentials['balrog_credentials'][args.username])
 
-    if args.schedule_at:
-        scheduler = ReleaseScheduler(args.api_root, auth)
-        if args.backgroundRate:
-            scheduler.run(args.product_name.capitalize(), args.version,
-                          args.build_number, args.rule_ids, args.schedule_at, args.backgroundRate)
-        else:
-            scheduler.run(args.product_name.capitalize(), args.version,
-                          args.build_number, args.rule_ids, args.schedule_at)
-    else:
-        pusher = ReleasePusher(args.api_root, auth)
-        pusher.run(args.product_name.capitalize(), args.version,
-                args.build_number, args.rule_ids, args.backgroundRate)
+    pusher = ReleasePusher(args.api_root, auth)
+    pusher.run(args.product_name.capitalize(), args.version,
+               args.build_number, args.rule_ids)
