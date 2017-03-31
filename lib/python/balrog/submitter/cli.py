@@ -1,3 +1,4 @@
+import arrow
 try:
     import simplejson as json
 except ImportError:
@@ -8,7 +9,7 @@ from release.paths import makeCandidatesDir
 from release.platforms import buildbot2updatePlatforms, buildbot2bouncer, \
   buildbot2ftp
 from release.versions import getPrettyVersion
-from balrog.submitter.api import Release, SingleLocale, Rule
+from balrog.submitter.api import Release, SingleLocale, Rule, ScheduledRuleChange
 from balrog.submitter.updates import merge_partial_updates
 from util.algorithms import recursive_update
 from util.retry import retry
@@ -474,12 +475,40 @@ class ReleasePusher(object):
         self.auth = auth
         self.dummy = dummy
 
-    def run(self, productName, version, build_number, rule_ids):
+    def run(self, productName, version, build_number, rule_ids, backgroundRate=None):
         name = get_release_blob_name(productName, version, build_number,
                                      self.dummy)
         for rule_id in rule_ids:
+            data = {"mapping": name}
+            if backgroundRate:
+                data["backgroundRate"] = backgroundRate
             Rule(api_root=self.api_root, auth=self.auth, rule_id=rule_id
-                 ).update_rule(mapping=name)
+                 ).update_rule(**data)
+
+
+class ReleaseScheduler(object):
+    def __init__(self, api_root, auth, dummy=False):
+        self.api_root = api_root
+        self.auth = auth
+        self.dummy = dummy
+
+    def run(self, productName, version, build_number, rule_ids, when, backgroundRate=None):
+        name = get_release_blob_name(productName, version, build_number,
+                                     self.dummy)
+        for rule_id in rule_ids:
+            data, data_version = Rule(api_root=self.api_root, auth=self.auth, rule_id=rule_id).get_data()
+            data["fallbackMapping"] = data["mapping"]
+            data["mapping"] = name
+            data["data_verison"] = data_version
+            data["rule_id"] = rule_id
+            data["change_type"] = "update"
+            # We receive an iso8601 datetime, but what Balrog needs is a to-the-millisecond epoch timestamp
+            data["when"] = arrow.get(when).timestamp * 1000
+            if backgroundRate:
+                data["backgroundRate"] = backgroundRate
+
+            ScheduledRuleChange(api_root=self.api_root, auth=self.auth, rule_id=rule_id
+                               ).add_scheduled_rule_change(**data)
 
 
 class BlobTweaker(object):
