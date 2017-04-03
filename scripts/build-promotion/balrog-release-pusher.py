@@ -7,6 +7,12 @@ import argparse
 # Use explicit version of python-requests
 sys.path.insert(0, path.join(path.dirname(__file__),
                              "../../lib/python/vendor/requests-2.7.0"))
+sys.path.insert(0, path.join(path.dirname(__file__),
+                             "../../lib/python/vendor/arrow-0.10.0"))
+sys.path.insert(0, path.join(path.dirname(__file__),
+                             "../../lib/python/vendor/python-dateutil-2.6.0"))
+sys.path.insert(0, path.join(path.dirname(__file__),
+                             "../../lib/python/vendor/six-1.10.0"))
 sys.path.insert(0, path.join(path.dirname(__file__), "../../lib/python"))
 
 from balrog.submitter.cli import ReleaseCreatorV4, ReleasePusher
