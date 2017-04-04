@@ -272,7 +272,7 @@
    "autoland": {
     "repo": "https://hg.mozilla.org/integration/autoland",
     "repo_type": "hg",
-    "access": "scm_autoland",
+    "access": "scm_level_3",
     "features": {
         "taskcluster-cron": true,
         "taskcluster-push": true
