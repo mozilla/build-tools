@@ -34,11 +34,9 @@ from util.file import load_config, get_config
 log = logging.getLogger(__name__)
 
 
-# Filters out Firefox Desktop and Fennec betas as they're handled
+# Filters out Firefox Desktop and Fennec releases as they're handled
 # separately within release promotion.
 RELEASE_PATTERNS = [
-    # all Fennec non-betas
-    r"Fennec-\d+\.\d+(\.\d+)?-build\d+",
     # all Thunderbird betas
     r"Thunderbird-\d+\.\db\d+-build\d+",
     # all Thunderbird non-betas
