@@ -5,7 +5,6 @@ unset DRY_RUN
 
 INCREMENT_TITLES="Template:Version/Gecko/release/next \
     Template:Version/Gecko/central/current \
-    Template:Version/Gecko/aurora/current \
     Template:Version/Gecko/beta/current \
     Template:Version/Gecko/release/current"
 
