@@ -134,6 +134,15 @@
         "taskcluster-push": true
     }
   },
+  "holly": {
+    "repo": "https://hg.mozilla.org/projects/holly",
+    "repo_type": "hg",
+    "access": "scm_level_2",
+    "features": {
+        "taskcluster-cron": true,
+        "taskcluster-push": true
+    }
+  },
   "birch": {
     "repo": "https://hg.mozilla.org/projects/birch",
     "repo_type": "hg",
