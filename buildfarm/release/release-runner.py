@@ -469,7 +469,11 @@ def main(options):
                 "beetmover_aws_access_key_id": beetmover_aws_access_key_id,
                 "beetmover_aws_secret_access_key": beetmover_aws_secret_access_key,
                 # TODO: stagin specific, make them configurable
-                "signing_class": "release-signing",
+                "signing_class": branchConfig['signing_class'][release["product"]],
+                "accepted_mar_channel_id": branchConfig.get('accepted_mar_channel_id'{}).get(release["product"]),
+                "signing_cert": branchConfig['signing_cert'][release["product"]],
+                "moz_disable_mar_cert_verification": branchConfig.get('moz_disable_mar_cert_verification'),
+                "root_home_dir": branchConfig['root_home_dir'][release["product"]],
                 "bouncer_enabled": branchConfig["bouncer_enabled"],
                 "updates_builder_enabled": branchConfig["updates_builder_enabled"],
                 "update_verify_enabled": branchConfig["update_verify_enabled"],

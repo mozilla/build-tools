@@ -41,8 +41,6 @@ def main(release_runner_config, release_config, tc_config):
         "balrog_password": release_config['balrog_password'],
         "beetmover_aws_access_key_id": release_config['beetmover_aws_access_key_id'],
         "beetmover_aws_secret_access_key": release_config['beetmover_aws_secret_access_key'],
-        "signing_class": "release-signing",  # TODO: stagin specific, make them configurable
-
         # ship-it items
         "version": release_config["version"],
         "revision": release_config["mozilla_revision"],
@@ -57,6 +55,11 @@ def main(release_runner_config, release_config, tc_config):
         "tuxedo_server_url": release_config['tuxedo_server_url'],
         "uptake_monitoring_enabled": release_config['uptake_monitoring_enabled'],
         "beetmover_candidates_bucket": release_config["beetmover_candidates_bucket"],
+        "signing_class": release_config["signing_class"],
+        "accepted_mar_channel_id": release_config.get("accepted_mar_channel_id"),
+        "signing_cert": release_config["signing_cert"],
+        "moz_disable_mar_cert_verification": release_config.get("moz_disable_mar_cert_verification"),
+        "root_home_dir": release_config["root_home_dir"],
         "bouncer_enabled": release_config["bouncer_enabled"],
         "updates_builder_enabled": release_config["updates_builder_enabled"],
         "update_verify_enabled": release_config["update_verify_enabled"],
