@@ -46,6 +46,7 @@ check_updates () {
   if [ -f update/update.log ]; then rm update/update.log; fi
 
   if [ -d source/$platform_dirname ]; then
+    update_abspath="$PWD/update"
     cd source/$platform_dirname;
     updater_bin="updater"
     for updater in $updaters; do
@@ -57,9 +58,9 @@ check_updates () {
         fi
     done
     if [ "$use_old_updater" = "1" ]; then
-        ../../update/$updater_bin ../../update . 0
+        "$update_abspath/$updater_bin" "$update_abspath" "$PWD" 0
     else
-        ../../update/$updater_bin ../../update . . 0
+        "$update_abspath/$updater_bin" "$update_abspath" "$PWD" "$PWD" 0
     fi
     cd ../..
   else
