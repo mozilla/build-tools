@@ -374,7 +374,9 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "win32",
-      "win64"
+      "win32-devedition",
+      "win64",
+      "win64-devedition"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -1081,11 +1083,12 @@
     "hostname": "buildbot-master106.bb.releng.scl3.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-        "macosx64"
+      "macosx64",
+      "macosx64-devedition"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
-        "macosx64"
+      "macosx64"
     ],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm106-tests1-macosx",
@@ -1113,11 +1116,12 @@
     "hostname": "buildbot-master107.bb.releng.scl3.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-        "macosx64"
+      "macosx64",
+      "macosx64-devedition"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
-        "macosx64"
+      "macosx64"
     ],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm107-tests1-macosx",
@@ -1145,11 +1149,12 @@
     "hostname": "buildbot-master108.bb.releng.scl3.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-        "macosx64"
+      "macosx64",
+      "macosx64-devedition"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
-        "macosx64"
+      "macosx64"
     ],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm108-tests1-macosx",
@@ -1178,7 +1183,9 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "win32",
-      "win64"
+      "win32-devedition",
+      "win64",
+      "win64-devedition"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -1211,7 +1218,9 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "win32",
-      "win64"
+      "win32-devedition",
+      "win64",
+      "win64-devedition"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -1244,7 +1253,9 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "win32",
-      "win64"
+      "win32-devedition",
+      "win64",
+      "win64-devedition"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -1277,7 +1288,9 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "win32",
-      "win64"
+      "win32-devedition",
+      "win64",
+      "win64-devedition"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -1310,7 +1323,9 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "win32",
-      "win64"
+      "win32-devedition",
+      "win64",
+      "win64-devedition"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -1343,7 +1358,9 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "win32",
-      "win64"
+      "win32-devedition",
+      "win64",
+      "win64-devedition"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -1376,7 +1393,9 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "win32",
-      "win64"
+      "win32-devedition",
+      "win64",
+      "win64-devedition"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -1409,7 +1428,9 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "win32",
-      "win64"
+      "win32-devedition",
+      "win64",
+      "win64-devedition"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -1442,7 +1463,9 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "win32",
-      "win64"
+      "win32-devedition",
+      "win64",
+      "win64-devedition"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -1474,11 +1497,12 @@
     "hostname": "buildbot-master132.bb.releng.scl3.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-        "macosx64"
+      "macosx64",
+      "macosx64-devedition"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
-        "macosx64"
+      "macosx64"
     ],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm132-tests1-macosx",
@@ -1506,11 +1530,12 @@
     "hostname": "buildbot-master133.bb.releng.scl3.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-        "macosx64"
+      "macosx64",
+      "macosx64-devedition"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
-        "macosx64"
+      "macosx64"
     ],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm133-tests1-macosx",
@@ -1538,11 +1563,12 @@
     "hostname": "buildbot-master134.bb.releng.scl3.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-        "macosx64"
+      "macosx64",
+      "macosx64-devedition"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
-        "macosx64"
+      "macosx64"
     ],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm134-tests1-macosx",
@@ -1570,11 +1596,12 @@
     "hostname": "buildbot-master135.bb.releng.scl3.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-        "macosx64"
+      "macosx64",
+      "macosx64-devedition"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
-        "macosx64"
+      "macosx64"
     ],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm135-tests1-macosx",
@@ -1602,11 +1629,12 @@
     "hostname": "buildbot-master136.bb.releng.scl3.mozilla.com",
     "http_port": 8201,
     "limit_fx_platforms": [
-        "macosx64"
+      "macosx64",
+      "macosx64-devedition"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
-        "macosx64"
+      "macosx64"
     ],
     "master_dir": "/builds/buildbot/tests1-macosx/master",
     "name": "bm136-tests1-macosx",
@@ -1635,7 +1663,9 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "win32",
-      "win64"
+      "win32-devedition",
+      "win64",
+      "win64-devedition"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -1668,7 +1698,9 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "win32",
-      "win64"
+      "win32-devedition",
+      "win64",
+      "win64-devedition"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -1701,7 +1733,9 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "win32",
-      "win64"
+      "win32-devedition",
+      "win64",
+      "win64-devedition"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
@@ -1734,7 +1768,9 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "win32",
-      "win64"
+      "win32-devedition",
+      "win64",
+      "win64-devedition"
     ],
     "limit_mobile_platforms": [],
     "limit_tb_platforms": [
