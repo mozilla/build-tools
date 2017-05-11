@@ -32,6 +32,7 @@ check_updates () {
           platform_dirname="bin"
           updaters="updater.exe"
           binary_file_pattern='^Files.*and.*differ$'
+          is_windows=1
           ;;
       Linux_x86-gcc | Linux_x86-gcc3 | Linux_x86_64-gcc3) 
           platform_dirname=`echo $product | tr '[A-Z]' '[a-z]'`
@@ -46,7 +47,18 @@ check_updates () {
   if [ -f update/update.log ]; then rm update/update.log; fi
 
   if [ -d source/$platform_dirname ]; then
-    update_abspath="$PWD/update"
+    if [ ".$is_windows" = "." ] ; then
+      # not windows
+      cwd="$PWD/source/$platform_dirname"
+      update_abspath="$PWD/update"
+    else
+      # windows
+      # change /c/path/to/pwd to c:\\path\\to\\pwd
+      four_backslash_pwd=$(echo $PWD | sed -e 's,^/\([a-zA-Z]\)/,\1:/,' | sed -e 's,/,\\\\,g')
+      two_backslash_pwd=$(echo $PWD | sed -e 's,^/\([a-zA-Z]\)/,\1:/,' | sed -e 's,/,\\,g')
+      cwd="$two_backslash_pwd\\source\\$platform_dirname"
+      update_abspath="$two_backslash_pwd\\update"
+    fi
     cd source/$platform_dirname;
     updater_bin="updater"
     for updater in $updaters; do
@@ -57,10 +69,18 @@ check_updates () {
             break
         fi
     done
-    if [ "$use_old_updater" = "1" ]; then
-        "$update_abspath/$updater_bin" "$update_abspath" "$PWD" 0
+    # we need to define updater_abspath after defining updater_bin
+    if [ ".$is_windows" = "." ] ; then
+      # not windows
+      updater_abspath="$update_abspath/$updater_bin"
     else
-        "$update_abspath/$updater_bin" "$update_abspath" "$PWD" "$PWD" 0
+      # windows
+      updater_abspath="$four_backslash_pwd\\\\update\\\\$updater_bin"
+    fi
+    if [ "$use_old_updater" = "1" ]; then
+        "$updater_abspath" "$update_abspath" "$cwd" 0
+    else
+        "$updater_abspath" "$update_abspath" "$cwd" "$cwd" 0
     fi
     cd ../..
   else
