@@ -27,13 +27,11 @@ check_updates () {
           platform_dirname="*.app"
           updaters="Contents/MacOS/updater.app/Contents/MacOS/updater Contents/MacOS/updater.app/Contents/MacOS/org.mozilla.updater"
           binary_file_pattern='^Binary files'
-          is_windows=0
           ;;
       WINNT*) 
           platform_dirname="bin"
           updaters="updater.exe"
           binary_file_pattern='^Files.*and.*differ$'
-          is_windows=1
           ;;
       Linux_x86-gcc | Linux_x86-gcc3 | Linux_x86_64-gcc3) 
           platform_dirname=`echo $product | tr '[A-Z]' '[a-z]'`
@@ -41,7 +39,6 @@ check_updates () {
           binary_file_pattern='^Binary files'
           # Bug 1209376. Linux updater linked against other libraries in the installation directory
           export LD_LIBRARY_PATH=$PWD/source/$platform_dirname
-          is_windows=0
           ;;
   esac
 
@@ -49,17 +46,7 @@ check_updates () {
   if [ -f update/update.log ]; then rm update/update.log; fi
 
   if [ -d source/$platform_dirname ]; then
-    # abspaths, with backslashes for windows, to address the changes in
-    # https://hg.mozilla.org/mozilla-central/rev/702bca2e601f#l9.79
-    if [ $is_windows -ne 0 ]; then
-      cwd=$(echo $PWD/source/$platform_dirname | sed -e 's,/,\\\\,g')
-      update_abspath=$(echo $PWD/update | sed -e 's,/,\\\\,g')
-      updater_abspath="$update_abspath\\$updater_bin"
-    else
-      cwd="$PWD/source/$platform_dirname"
-      update_abspath="$PWD/update"
-      updater_abspath="$update_abspath/$updater_bin"
-    fi
+    update_abspath="$PWD/update"
     cd source/$platform_dirname;
     updater_bin="updater"
     for updater in $updaters; do
@@ -71,9 +58,9 @@ check_updates () {
         fi
     done
     if [ "$use_old_updater" = "1" ]; then
-        "$updater_abspath" "$update_abspath" "$cwd" 0
+        "$update_abspath/$updater_bin" "$update_abspath" "$PWD" 0
     else
-        "$updater_abspath" "$update_abspath" "$cwd" "$cwd" 0
+        "$update_abspath/$updater_bin" "$update_abspath" "$PWD" "$PWD" 0
     fi
     cd ../..
   else
