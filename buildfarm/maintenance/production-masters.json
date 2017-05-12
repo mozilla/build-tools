@@ -947,7 +947,8 @@
     "limit_fx_platforms": [
       "linux",
       "linux64",
-      "linux64-stylo"
+      "linux64-stylo",
+      "linux64-styloseq"
     ],
     "limit_fx_slave_platforms": {
       "linux64": [
@@ -955,6 +956,9 @@
       ],
       "linux64-stylo": [
         "ubuntu64_hw_stylo"
+      ],
+      "linux64-stylo-seq": [
+        "ubuntu64_hw_styloseq"
       ]
     },
     "limit_mobile_platforms": [
@@ -993,7 +997,8 @@
     "limit_fx_platforms": [
       "linux",
       "linux64",
-      "linux64-stylo"
+      "linux64-stylo",
+      "linux64-styloseq"
     ],
     "limit_fx_slave_platforms": {
       "linux64": [
@@ -1001,6 +1006,9 @@
       ],
       "linux64-stylo": [
         "ubuntu64_hw_stylo"
+      ],
+      "linux64-stylo-seq": [
+        "ubuntu64_hw_styloseq"
       ]
     },
     "limit_mobile_platforms": [
@@ -1039,7 +1047,8 @@
     "limit_fx_platforms": [
       "linux",
       "linux64",
-      "linux64-stylo"
+      "linux64-stylo",
+      "linux64-styloseq"
     ],
     "limit_fx_slave_platforms": {
       "linux64": [
@@ -1047,6 +1056,9 @@
       ],
       "linux64-stylo": [
         "ubuntu64_hw_stylo"
+      ],
+      "linux64-stylo-seq": [
+        "ubuntu64_hw_styloseq"
       ]
     },
     "limit_mobile_platforms": [
