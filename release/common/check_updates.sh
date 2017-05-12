@@ -49,7 +49,8 @@ check_updates () {
   if [ -d source/$platform_dirname ]; then
     if [ ".$is_windows" = "." ] ; then
       # not windows
-      cwd="$PWD/source/$platform_dirname"
+      # use ls here, because mac uses *.app, and we need to expand it
+      cwd=$(\ls -d $PWD/source/$platform_dirname)
       update_abspath="$PWD/update"
     else
       # windows
