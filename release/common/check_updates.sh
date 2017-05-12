@@ -77,11 +77,13 @@ check_updates () {
       # windows
       updater_abspath="$four_backslash_pwd\\\\update\\\\$updater_bin"
     fi
+    set -x
     if [ "$use_old_updater" = "1" ]; then
         "$updater_abspath" "$update_abspath" "$cwd" 0
     else
         "$updater_abspath" "$update_abspath" "$cwd" "$cwd" 0
     fi
+    set +x
     cd ../..
   else
     echo "FAIL: no dir in source/$platform_dirname"
