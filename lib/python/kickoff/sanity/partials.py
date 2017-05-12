@@ -9,9 +9,9 @@ from kickoff import matches
 log = logging.getLogger(__name__)
 
 
-CANDIDATES_SHA512_URL_TEMPLATE = "https://archive.mozilla.org/pub/firefox/candidates/" \
+CANDIDATES_SHA512_URL_TEMPLATE = "https://archive.mozilla.org/pub/{product}/candidates/" \
                                  "{version}-candidates/build{build_number}/SHA512SUMS"
-RELEASES_SHA512_URL_TEMPLATE = "https://archive.mozilla.org/pub/firefox/releases/{version}/SHA512SUMS"
+RELEASES_SHA512_URL_TEMPLATE = "https://archive.mozilla.org/pub/{product}/releases/{version}/SHA512SUMS"
 BETA_PATTERNS = [r"\d+\.0b\d+"]
 
 
@@ -69,12 +69,13 @@ class PartialsTestSuite(ReleaseSanitizerTestSuite):
             buildno = info["buildNumber"]
 
             # make sure partial is valid and shipped correctly to /candidates
-            _url = CANDIDATES_SHA512_URL_TEMPLATE.format(version=pversion,
-                                                         build_number=buildno)
+            _url = CANDIDATES_SHA512_URL_TEMPLATE.format(
+                product=self.kwargs["product"], version=pversion, build_number=buildno)
             candidate_sha = grab_partial_sha(_url)
 
             # make sure partial has a shipped release under /releases
-            _url = RELEASES_SHA512_URL_TEMPLATE.format(version=pversion)
+            _url = RELEASES_SHA512_URL_TEMPLATE.format(
+                product=self.kwargs["product"], version=pversion)
             releases_sha = grab_partial_sha(_url)
 
             err_msg = ("{version}-build{build_number} is a good candidate"

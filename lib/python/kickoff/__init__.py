@@ -10,17 +10,6 @@ from util.retry import retry
 
 log = logging.getLogger(__name__)
 
-# temporary regex to filter out anything but mozilla-beta and mozilla-release
-# within release promotion. Once migration to release promotion is completed
-# for all types of releases, we will backout this filtering
-# regex beta tracking bug is 1252333,
-# regex release tracking bug is 1263976
-# This is now a default
-RELEASE_PATTERNS = [
-    r"Firefox-.*",
-    # r"Fennec-.*",
-]
-
 
 def matches(name, patterns):
     return any([re.search(p, name) for p in patterns])
@@ -56,7 +45,7 @@ class ReleaseRunner(object):
         self.release_l10n_api = ReleaseL10n((username, password),
                                             api_root=api_root, timeout=timeout)
 
-    def get_release_requests(self, release_patterns=RELEASE_PATTERNS):
+    def get_release_requests(self, release_patterns):
         new_releases = self.releases_api.getReleases()
         if new_releases['releases']:
             new_releases = [self.release_api.getRelease(name) for name in
