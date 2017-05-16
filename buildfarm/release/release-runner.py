@@ -77,7 +77,7 @@ def assign_and_check_partial_updates(release_runner, release):
         release_runner, release['partials'], release['product'])
     branchConfig = get_branch_config(release)
     release['release_channels'] = update_channels(
-        release['version'], branchConfig['release_channel_mappings'])
+        release['version'], branchConfig['release_channel_mappings'][release['product']])
     PartialsSanitizer(**release).run()
 
 
@@ -398,7 +398,7 @@ def main(options):
             postrelease_mark_as_shipped_enabled = False
         else:
             postrelease_enabled = branchConfig[
-                'postrelease_version_bump_enabled']
+                'postrelease_version_bump_enabled'][release['product']]
             postrelease_bouncer_aliases_enabled = branchConfig[
                 'postrelease_bouncer_aliases_enabled']
             postrelease_mark_as_shipped_enabled = branchConfig[
@@ -495,14 +495,14 @@ def main(options):
                 "push_to_releases_enabled": push_to_releases_enabled,
                 "push_to_releases_automatic": branchConfig['push_to_releases_automatic'],
                 "beetmover_candidates_bucket": branchConfig["beetmover_buckets"][release["product"]],
-                "partner_repacks_platforms": branchConfig.get("partner_repacks_platforms", []),
-                "eme_free_repacks_platforms": branchConfig.get("eme_free_repacks_platforms", []),
+                "partner_repacks_platforms": branchConfig.get("partner_repacks_platforms", {}).get(release["product"], []),
+                "eme_free_repacks_platforms": branchConfig.get("eme_free_repacks_platforms", {}).get(release["product"], []),
                 "sha1_repacks_platforms": branchConfig.get("sha1_repacks_platforms", []),
                 "l10n_changesets": release['l10n_changesets'],
                 "extra_balrog_submitter_params": extra_balrog_submitter_params,
                 "publish_to_balrog_channels": publish_to_balrog_channels,
-                "snap_enabled": branchConfig.get("snap_enabled", False),
-                "update_verify_channel": branchConfig.get("update_verify_channel"),
+                "snap_enabled": branchConfig.get("snap_enabled", {}).get(release["product"], False),
+                "update_verify_channel": branchConfig.get("update_verify_channel", {}).get(release["product"]),
                 "update_verify_requires_cdn_push": branchConfig.get("update_verify_requires_cdn_push", False),
             }
 
