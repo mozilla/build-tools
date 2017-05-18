@@ -948,7 +948,7 @@
       "linux",
       "linux64",
       "linux64-stylo",
-      "linux64-styloseq"
+      "linux64-stylosequential"
     ],
     "limit_fx_slave_platforms": {
       "linux64": [
@@ -998,7 +998,7 @@
       "linux",
       "linux64",
       "linux64-stylo",
-      "linux64-styloseq"
+      "linux64-stylosequential"
     ],
     "limit_fx_slave_platforms": {
       "linux64": [
@@ -1048,7 +1048,7 @@
       "linux",
       "linux64",
       "linux64-stylo",
-      "linux64-styloseq"
+      "linux64-stylosequential"
     ],
     "limit_fx_slave_platforms": {
       "linux64": [
