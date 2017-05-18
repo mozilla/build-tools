@@ -279,11 +279,11 @@ class NightlySubmitterBase(object):
 
         data.update(self._get_update_data(productName, branch, **updateKwargs))
 
-        if platform == 'android-api-9':
-            # Bug 1080749 - a hack to support api-9 and api-10+ split builds.
+        if 'old-id' in platform:
+            # bug 1366034: support old-id builds
             # Like 1055305, this is a hack to support two builds with same build target that
             # require differed't release blobs and rules
-            build_type = 'api-9-%s' % self.build_type
+            build_type = 'old-id-%s' % self.build_type
         else:
             build_type = self.build_type
 

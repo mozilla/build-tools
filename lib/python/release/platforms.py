@@ -21,10 +21,11 @@ sl_platform_map = {'win32': 'win32', 'win64': 'win32', 'macosx': 'osx',
 # buildbot -> update platform mapping
 update_platform_map = {
     'android': ['Android_arm-eabi-gcc3'],
-    'android-api-9': ['Android_arm-eabi-gcc3'],
     'android-api-11': ['Android_arm-eabi-gcc3'],
     'android-api-15': ['Android_arm-eabi-gcc3'],
+    'android-api-15-old-id': ['Android_arm-eabi-gcc3'],
     'android-x86': ['Android_x86-gcc3'],
+    'android-x86-old-id': ['Android_x86-gcc3'],
     'linux': ['Linux_x86-gcc3'],
     'linux64': ['Linux_x86_64-gcc3'],
     'macosx64': ['Darwin_x86_64-gcc3-u-i386-x86_64',  # The main platofrm
