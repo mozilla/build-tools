@@ -98,14 +98,14 @@ class TestBuglistCreator(unittest.TestCase):
         }
 
         test_tuples = [
-            ('48.0b4', 'FIREFOX_48_0b3_RELEASE'),
-            ('48.0b9', 'FIREFOX_48_0b7_RELEASE'),
-            ('48.0.2', 'FIREFOX_48_0_1_RELEASE'),
-            ('48.0.1', 'FIREFOX_48_0_RELEASE'),
+            ('48.0b4', 'FIREFOX_48_0b4_RELEASE', 'FIREFOX_48_0b3_RELEASE'),
+            ('48.0b9', 'FIREFOX_48_0b9_RELEASE', 'FIREFOX_48_0b7_RELEASE'),
+            ('48.0.2', 'FIREFOX_48_0_2_RELEASE', 'FIREFOX_48_0_1_RELEASE'),
+            ('48.0.1', 'FIREFOX_48_0_1_RELEASE', 'FIREFOX_48_0_RELEASE'),
         ]
 
-        assert all(get_previous_tag_version(product, version, mock_hg_json) == expected
-                   for version, expected in test_tuples)
+        assert all(get_previous_tag_version(product, dot_version, tag_version, mock_hg_json) == expected
+                   for dot_version, tag_version, expected in test_tuples)
 
     def test_get_bugs_in_changeset(self):
         changeset_data = {
