@@ -5,12 +5,14 @@ from operator import itemgetter
 from pkg_resources import parse_version
 from simplejson import JSONDecodeError
 
+BUGLIST_PREFIX = 'Bugs since previous changeset: '
 BACKOUT_REGEX = r'back(\s?)out|backed out|backing out'
+BACKOUT_PREFIX = 'Backouts since previous changeset: '
 BUGZILLA_BUGLIST_TEMPLATE = 'https://bugzilla.mozilla.org/buglist.cgi?bug_id={bugs}'
 BUG_NUMBER_REGEX = r'bug \d+'
 CHANGELOG_TO_FROM_STRING = '{product}_{version}_RELEASE'
 CHANGESET_URL_TEMPLATE = 'https://hg.mozilla.org/{release_branch}/{logtype}?fromchange={from_version}&tochange={to_version}&full=1'
-FULL_CHANGESET_PREFIX = 'Full Mercurial changeset: '
+FULL_CHANGESET_PREFIX = 'Full Mercurial changelog: '
 LIST_DESCRIPTION_TEMPLATE = 'Comparing Mercurial tag {from_version} to {to_version}:'
 MAX_BUGS_IN_BUGLIST = 250
 MERCURIAL_TAGS_URL_TEMPLATE = 'https://hg.mozilla.org/{release_branch}/json-tags'
@@ -109,8 +111,7 @@ def is_backout_bug(changeset_description_lowercase):
 def create_short_url_with_prefix(buglist, backout_buglist):
     # Create link if there are bugs, else empty string
     urls = []
-    for set_of_bugs, prefix in ((buglist, 'Bugs since previous changeset: ',),
-                               (backout_buglist, 'Backouts since previous changeset: ',)):
+    for set_of_bugs, prefix in [(buglist, BUGLIST_PREFIX), (backout_buglist, BACKOUT_PREFIX)]:
         if set_of_bugs and len(set_of_bugs) < MAX_BUGS_IN_BUGLIST:
             try:
                 long_bugzilla_link = BUGZILLA_BUGLIST_TEMPLATE.format(bugs='%2C'.join(set_of_bugs))
