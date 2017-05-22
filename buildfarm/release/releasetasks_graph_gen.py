@@ -76,6 +76,7 @@ def main(release_runner_config, release_config, tc_config):
         "repo_path": release_config["repo_path"],
         "branch": release_config["branch"],
         "product": release_config["product"],
+        "funsize_product": release_config["funsize_product"],
         "release_channels": release_config['channels'],
         "final_verify_channels": release_config['final_verify_channels'],
         "final_verify_platforms": release_config['final_verify_platforms'],

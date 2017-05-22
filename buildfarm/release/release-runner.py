@@ -24,7 +24,7 @@ site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 from kickoff import (get_partials, ReleaseRunner,
                      make_task_graph_strict_kwargs, long_revision,
                      get_l10n_config, get_en_US_config, email_release_drivers,
-                     bump_version)
+                     bump_version, get_funsize_product)
 from kickoff.sanity.base import SanityException, is_candidate_release
 from kickoff.sanity.revisions import RevisionsSanitizer
 from kickoff.sanity.l10n import L10nSanitizer
@@ -440,6 +440,7 @@ def main(options):
                 "repo_path": release["branch"],
                 "revision": release["mozillaRevision"],
                 "product": release["product"],
+                "funsize_product": get_funsize_product(release["product"]),
                 # if mozharness_revision is not passed, use 'revision'
                 "mozharness_changeset": release.get('mh_changeset') or release['mozillaRevision'],
                 "partial_updates": release.get('partial_updates', list()),

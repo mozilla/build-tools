@@ -248,8 +248,8 @@ def make_task_graph_strict_kwargs(appVersion, balrog_api_root, balrog_password, 
                                   eme_free_repacks_platforms, sha1_repacks_platforms,
                                   postrelease_bouncer_aliases_enabled, uptake_monitoring_enabled,
                                   postrelease_version_bump_enabled, moz_disable_mar_cert_verification,
-                                  postrelease_mark_as_shipped_enabled, accepted_mar_channel_id,
-                                  product, public_key, stage_product, push_to_candidates_enabled,
+                                  postrelease_mark_as_shipped_enabled, accepted_mar_channel_id, public_key,
+                                  product, stage_product, funsize_product, push_to_candidates_enabled,
                                   push_to_releases_automatic, push_to_releases_enabled, release_channels,
                                   repo_path, revision, signing_class, signing_pvt_key, source_enabled,
                                   tuxedo_server_url, update_verify_enabled, updates_builder_enabled,
@@ -322,3 +322,9 @@ def make_task_graph_strict_kwargs(appVersion, balrog_api_root, balrog_password, 
     # during nosetests
     from releasetasks import make_task_graph
     return make_task_graph(**kwargs)
+
+
+def get_funsize_product(product_name):
+    if product_name == 'devedition':    # See bug 1366075
+        return 'firefox'
+    return product_name
