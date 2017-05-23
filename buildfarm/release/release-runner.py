@@ -334,7 +334,7 @@ def main(options):
     retrying_tc_config.update({"maxRetries": 12})
     balrog_username = config['balrog'].get("username")
     balrog_password = config["balrog"].get("password")
-    extra_balrog_submitter_params = config["balrog"].get("extra_balrog_submitter_params")
+    extra_balrog_submitter_params = config["balrog"].get("extra_balrog_submitter_params", "")
     beetmover_aws_access_key_id = config["beetmover"].get("aws_access_key_id")
     beetmover_aws_secret_access_key = config["beetmover"].get("aws_secret_access_key")
     gpg_key_path = config["signing"].get("gpg_key_path")
@@ -500,7 +500,7 @@ def main(options):
                 "eme_free_repacks_platforms": branchConfig.get("eme_free_repacks_platforms", {}).get(release["product"], []),
                 "sha1_repacks_platforms": branchConfig.get("sha1_repacks_platforms", []),
                 "l10n_changesets": release['l10n_changesets'],
-                "extra_balrog_submitter_params": extra_balrog_submitter_params,
+                "extra_balrog_submitter_params": extra_balrog_submitter_params + " --product " + release["product"].capitalize(),
                 "publish_to_balrog_channels": publish_to_balrog_channels,
                 "snap_enabled": branchConfig.get("snap_enabled", {}).get(release["product"], False),
                 "update_verify_channel": branchConfig.get("update_verify_channel", {}).get(release["product"]),
