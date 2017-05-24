@@ -57,6 +57,7 @@ if __name__ == "__main__":
                         default=logging.INFO,
                         help="Increase output verbosity")
     parser.add_argument("--product", required=True, help="Product name")
+    parser.add_argument("--stage-product", help="Stage product name")
     parser.add_argument("--archive-prefix", required=True)
     parser.add_argument("--previous-archive-prefix")
     parser.add_argument("--balrog-url", required=True)
@@ -67,6 +68,7 @@ if __name__ == "__main__":
     ftp_platform = buildbot2ftp(args.platform)
     full_check_locales = args.full_check_locales
     product_name = args.product
+    stage_product_name = args.stage_product or product_name
     prev_archive_prefix = args.previous_archive_prefix or args.archive_prefix
     aus_server_url = args.balrog_url
     build_number = args.build_number
@@ -82,7 +84,7 @@ if __name__ == "__main__":
         locale='%locale%', signed=True, exclude_secondary=True
     ).values()[0]
     candidates_dir = makeCandidatesDir(
-        product_name, to_version, build_number, ftp_root='/')
+        stage_product_name, to_version, build_number, ftp_root='/')
     to_path = "%s%s" % (candidates_dir, to_)
 
     uvc = UpdateVerifyConfig(
@@ -125,7 +127,7 @@ if __name__ == "__main__":
             product_name, app_name, fromVersion, args.platform,
             locale='%locale%', signed=True, exclude_secondary=True
         ).values()[0]
-        release_dir = makeReleasesDir(product_name, fromVersion, ftp_root='/')
+        release_dir = makeReleasesDir(stage_product_name, fromVersion, ftp_root='/')
         from_path = "%s%s" % (release_dir, path_)
 
         # Exclude locales being full checked
