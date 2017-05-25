@@ -314,6 +314,7 @@ def make_task_graph_strict_kwargs(appVersion, balrog_api_root, balrog_password, 
         snap_enabled=snap_enabled,
         update_verify_channel=update_verify_channel,
         update_verify_requires_cdn_push=update_verify_requires_cdn_push,
+        funsize_product=funsize_product,
     )
     if extra_balrog_submitter_params:
         kwargs["extra_balrog_submitter_params"] = extra_balrog_submitter_params
