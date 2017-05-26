@@ -43,8 +43,12 @@ class ReleaseCreatorBase(object):
                       enUSPlatforms, schemaVersion, openURL=None,
                       **updateKwargs):
         assert schemaVersion in (3, 4), 'Unhandled schema version %s' % schemaVersion
+        details_product = productName.lower()
+        if details_product == "devedition":
+            details_product = "firefox"
+
         data = {
-            'detailsUrl': getProductDetails(productName.lower(), appVersion),
+            'detailsUrl': getProductDetails(details_product, appVersion),
             'platforms': {},
             'fileUrls': {},
             'appVersion': appVersion,
@@ -133,15 +137,19 @@ class ReleaseCreatorV3(ReleaseCreatorBase):
         return data
 
     def _get_update_data(self, productName, version, partialUpdates):
+        file_prefix = productName.lower()
+        if file_prefix == "devedition":
+            file_prefix = "firefox"
+
         data = {
             "ftpFilenames": {
                 "completes": {
-                    "*": "%s-%s.complete.mar" % (productName.lower(), version),
+                    "*": "%s-%s.complete.mar" % (file_prefix, version),
                 }
             },
             "bouncerProducts": {
                 "completes": {
-                    "*": "%s-%s-complete" % (productName.lower(), version),
+                    "*": "%s-%s-complete" % (file_prefix, version),
                 }
             }
         }
@@ -153,7 +161,7 @@ class ReleaseCreatorV3(ReleaseCreatorBase):
                 from_ = get_release_blob_name(productName, previousVersion,
                                               previousInfo["buildNumber"],
                                               self.dummy)
-                filename = "%s-%s-%s.partial.mar" % (productName.lower(), previousVersion, version)
+                filename = "%s-%s-%s.partial.mar" % (file_prefix, previousVersion, version)
                 bouncerProduct = "%s-%s-partial-%s" % (productName.lower(), version, previousVersion)
                 data["ftpFilenames"]["partials"][from_] = filename
                 data["bouncerProducts"]["partials"][from_] = bouncerProduct
@@ -173,6 +181,10 @@ class ReleaseCreatorV4(ReleaseCreatorBase):
                      ftpServer, bouncerServer, partialUpdates,
                      requiresMirrors=True):
         data = {"fileUrls": {}}
+        file_prefix = productName.lower()
+        if file_prefix == "devedition":
+            file_prefix = "firefox"
+
 
         # "*" is for the default set of fileUrls, which generally points at
         # bouncer. It's helpful to have this to reduce duplication between
@@ -200,7 +212,7 @@ class ReleaseCreatorV4(ReleaseCreatorBase):
                 dir_ = makeCandidatesDir(productName.lower(), version,
                                          buildNumber, server=ftpServer,
                                          protocol='http')
-                filename = "%s-%s.complete.mar" % (productName.lower(), version)
+                filename = "%s-%s.complete.mar" % (file_prefix, version)
                 data["fileUrls"][channel]["completes"]["*"] = "%supdate/%%OS_FTP%%/%%LOCALE%%/%s" % (dir_, filename)
             else:
                 # See comment above about these channels for explanation.
@@ -227,7 +239,7 @@ class ReleaseCreatorV4(ReleaseCreatorBase):
                     dir_ = makeCandidatesDir(productName.lower(), version,
                                             buildNumber, server=ftpServer,
                                             protocol='http')
-                    filename = "%s-%s-%s.partial.mar" % (productName.lower(), previousVersion, version)
+                    filename = "%s-%s-%s.partial.mar" % (file_prefix, previousVersion, version)
                     data["fileUrls"][channel]["partials"][from_] = "%supdate/%%OS_FTP%%/%%LOCALE%%/%s" % (dir_, filename)
                 else:
                     # See comment above about these channels for explanation.
@@ -525,4 +537,3 @@ class BlobTweaker(object):
             hashFunction=data['hashFunction'], releaseData=json.dumps(data),
             data_version=data_version,
             schemaVersion=current_data['schema_version'])
-
