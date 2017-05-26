@@ -110,9 +110,10 @@ Started by {starter}
         content += "Comment:\n" + comment + "\n\n"
 
     # On r-d, we prefix the subject of the email in order to simplify filtering
+    subject_prefix = ""
     if "Fennec" in release["name"]:
         subject_prefix = "[mobile] "
-    if "Firefox" in release["name"]:
+    if "Firefox" in release["name"] or "Devedition" in release["name"]:
         subject_prefix = "[desktop] "
 
     subject = subject_prefix + 'Build of %s' % release["name"]
