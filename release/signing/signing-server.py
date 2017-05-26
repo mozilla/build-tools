@@ -242,9 +242,11 @@ if __name__ == '__main__':
     passphrases = {}
     formats = [f.strip() for f in config.get('signing', 'formats').split(',')]
     for format_ in formats:
-        passphrase = getpass.getpass("%s passphrase: " % format_)
-        if not passphrase:
-            passphrase = None
+        passphrase = get_config(config, 'signing', '{}_passphrase'.format(format_), None)
+        if passphrase is None:
+            passphrase = getpass.getpass("%s passphrase: " % format_)
+            if not passphrase:
+                passphrase = None
         tmpdir = tempfile.mkdtemp()
         try:
             log.info("checking %s passphrase", format_)
