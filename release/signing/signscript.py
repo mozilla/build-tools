@@ -114,6 +114,7 @@ if __name__ == '__main__':
             sys.exit(1)
     elif format_ in ("sha2signcode", "sha2signcodestub"):
         safe_unlink(tmpfile)
+        # add zipfile support
         if not options.sha2signcode_keydir:
             parser.error("sha2signcode_keydir required when format is sha2signcode")
         includedummycert = False
