@@ -17,15 +17,6 @@
         "taskcluster-push": true
     }
   },
-  "mozilla-esr45": {
-    "repo": "https://hg.mozilla.org/releases/mozilla-esr45",
-    "repo_type": "hg",
-    "access": "scm_level_3",
-    "features": {
-        "taskcluster-cron": true,
-        "taskcluster-push": true
-    }
-  },
   "mozilla-esr52": {
     "repo": "https://hg.mozilla.org/releases/mozilla-esr52",
     "repo_type": "hg",
@@ -33,15 +24,6 @@
     "features": {
         "taskcluster-cron": true,
         "taskcluster-push": true
-    }
-  },
-  "comm-esr45": {
-    "repo": "https://hg.mozilla.org/releases/comm-esr45",
-    "repo_type": "hg",
-    "access": "scm_level_3",
-    "features": {
-        "taskcluster-cron": false,
-        "taskcluster-push": false
     }
   },
   "comm-esr52": {
