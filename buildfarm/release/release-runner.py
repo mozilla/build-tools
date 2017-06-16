@@ -435,6 +435,7 @@ def main(options):
                 "next_version": bump_version(release["version"].replace("esr", "")),
                 "appVersion": getAppVersion(release["version"]),
                 "buildNumber": release["buildNumber"],
+                "release_eta": release.get("release_eta"),
                 "source_enabled": True,
                 "checksums_enabled": True,
                 "repo_path": release["branch"],

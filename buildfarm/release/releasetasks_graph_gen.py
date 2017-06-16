@@ -117,6 +117,7 @@ def main(release_runner_config, release_config, tc_config):
         "snap_enabled": release_config.get("snap_enabled", False),
         "update_verify_channel": release_config["update_verify_channel"],
         "update_verify_requires_cdn_push": release_config["update_verify_requires_cdn_push"],
+        "release_eta": release_config.get("release_eta"),
     }
 
     graph = make_task_graph_strict_kwargs(**kwargs)
@@ -136,6 +137,7 @@ def get_items_from_common_tc_task(common_task_id, tc_config):
     tc_task_items["mozilla_revision"] = task["extra"]["build_props"]["revision"]
     tc_task_items["partials"] = task["extra"]["build_props"]["partials"]
     tc_task_items["mozharness_changeset"] = task["extra"]["build_props"]["mozharness_changeset"]
+    tc_task_items["release_eta"] = task["extra"]["build_props"].get("release_eta")
     return tc_task_items
 
 
