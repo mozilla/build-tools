@@ -429,7 +429,6 @@ class ReleaseSubmitterBase(object):
 
         api = SingleLocale(name=name, build_target=build_target, locale=locale,
                            auth=self.auth, api_root=self.api_root)
-        schemaVersion = json.dumps(schemaVersion)
         current_data, data_version = api.get_data()
         api.update_build(
             data_version=data_version,
