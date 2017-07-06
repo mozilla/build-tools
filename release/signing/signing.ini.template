@@ -24,7 +24,6 @@ allowed_filenames = .*
 min_filesize = 10
 # Maximum filesize, per format. 52428800 = 50MB, 524288000 = 500MB
 max_filesize_gpg = 524288000
-max_filesize_gpg2017 = 524288000
 max_filesize_dmg = 52428800
 max_filesize_mar = 52428800
 max_filesize_mar_sha384 = 52428800
@@ -58,7 +57,7 @@ unsigned_dir = unsigned-files
 
 [signing]
 # What signing formats we support
-formats = mar,mar_sha384,gpg,gpg2017,sha2signcode,sha2signcodestub,signcode,osslsigncode,emevoucher
+formats = mar,mar_sha384,gpg,sha2signcode,sha2signcodestub,signcode,osslsigncode,emevoucher
 # Which script to run to sign files
 signscript = python ./signscript.py -c signing.ini
 # How many files to sign at once
@@ -73,7 +72,6 @@ testfile_sha2signcodestub = test.exe
 testfile_mar = test.mar
 testfile_mar_sha384 = test.mar
 testfile_gpg = test.mar
-testfile_gpg2017 = test.mar
 testfile_emevoucher = test.bin
 
 [signscript]
@@ -84,7 +82,6 @@ osslsigncode_keydir = /path/to/keys
 sha2signcode_keydir = /path/to/keys
 # Where is the gpg directory with our private key
 gpg_homedir = /path/to/.gpg
-gpg2017_homedir = /path/to/.gpg
 # Where is the eme voucher private key
 emevoucher_key = /path/to/cert.pem
 emevoucher_chain = /path/to/chain.pem
