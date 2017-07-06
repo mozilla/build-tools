@@ -84,6 +84,7 @@ osslsigncode_keydir = /path/to/keys
 sha2signcode_keydir = /path/to/keys
 # Where is the gpg directory with our private key
 gpg_homedir = /path/to/.gpg
+gpg2017_homedir = /path/to/.gpg
 # Where is the eme voucher private key
 emevoucher_key = /path/to/cert.pem
 emevoucher_chain = /path/to/chain.pem

@@ -130,11 +130,11 @@ if __name__ == '__main__':
             parser.error("Invalid file for signing: %s" % filename)
             sys.exit(1)
     elif format_ in ("gpg", "gpg2017"):
-        if not options.gpg_homedir:
-            parser.error("gpgdir required when format is gpg")
+        home_dir = options.gpg_homedir if format_ == "gpg" else options.gpg2017_homedir
+        if not home_dir:
+            parser.error("gpgdir required when format is {}" % format_)
         safe_unlink(tmpfile)
-        gpg_signfile(
-            inputfile, tmpfile, options.gpg_homedir, options.fake, passphrase)
+        gpg_signfile(inputfile, tmpfile, home_dir, options.fake, passphrase)
     elif format_ == "emevoucher":
         safe_unlink(tmpfile)
         emevoucher_signfile(
