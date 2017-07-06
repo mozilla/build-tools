@@ -45,7 +45,7 @@ def remote_signfile(options, urls, filename, fmt, token, dest=None):
     if dest is None:
         dest = filename
 
-    if fmt == 'gpg':
+    if fmt in ('gpg', 'gpg2017'):
         dest += '.asc'
 
     parent_dir = os.path.dirname(os.path.abspath(dest))

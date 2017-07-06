@@ -129,7 +129,7 @@ if __name__ == '__main__':
         else:
             parser.error("Invalid file for signing: %s" % filename)
             sys.exit(1)
-    elif format_ == "gpg":
+    elif format_ in ("gpg", "gpg2017"):
         if not options.gpg_homedir:
             parser.error("gpgdir required when format is gpg")
         safe_unlink(tmpfile)

@@ -41,7 +41,7 @@ def is_authenticode_signed(filename):
 
 def main():
     allowed_formats = ("sha2signcode", "sha2signcodestub", "signcode",
-                       "osslsigncode", "gpg", "mar", "mar_sha384", "dmg",
+                       "osslsigncode", "gpg", "gpg2017", "mar", "mar_sha384", "dmg",
                        "dmgv2", "macapp", "jar", "emevoucher")
 
     from optparse import OptionParser
@@ -134,9 +134,10 @@ def main():
     # bug 1164456
     # GPG signing must happen last because it will be invalid if done prior to
     # any format that modifies the file in-place.
-    if "gpg" in formats:
-        formats.remove("gpg")
-        formats.append("gpg")
+    for gpg_option in ("gpg", "gpg2017"):
+        if gpg_option in formats:
+            formats.remove(gpg_option)
+            formats.append(gpg_option)
 
     if options.output_file and (len(args) > 1 or os.path.isdir(args[0])):
         parser.error(
