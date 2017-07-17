@@ -186,8 +186,7 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "linux64",
-      "linux64-asan",
-      "linux64-devedition"
+      "linux64-asan"
     ],
     "limit_fx_slave_platforms": {
       "linux64": [
@@ -197,9 +196,6 @@
       "linux64-asan": [
         "ubuntu64-asan_vm",
         "ubuntu64-asan_vm_lnx_large"
-      ],
-      "linux64-devedition": [
-        "ubuntu64-hw_devedition"
       ]
     },
     "limit_mobile_platforms": [
@@ -237,8 +233,7 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "linux64",
-      "linux64-asan",
-      "linux64-devedition"
+      "linux64-asan"
     ],
     "limit_fx_slave_platforms": {
       "linux64": [
@@ -248,9 +243,6 @@
       "linux64-asan": [
         "ubuntu64-asan_vm",
         "ubuntu64-asan_vm_lnx_large"
-      ],
-      "linux64-devedition": [
-        "ubuntu64_hw_devedition"
       ]
     },
     "limit_mobile_platforms": [
@@ -288,8 +280,7 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "linux64",
-      "linux64-asan",
-      "linux64-devedition"
+      "linux64-asan"
     ],
     "limit_fx_slave_platforms": {
       "linux64": [
@@ -299,9 +290,6 @@
       "linux64-asan": [
         "ubuntu64-asan_vm",
         "ubuntu64-asan_vm_lnx_large"
-      ],
-      "linux64-devedition": [
-        "ubuntu64_hw_devedition"
       ]
     },
     "limit_mobile_platforms": [
@@ -339,8 +327,7 @@
     "http_port": 8201,
     "limit_fx_platforms": [
       "linux64",
-      "linux64-asan",
-      "linux64-devedition"
+      "linux64-asan"
     ],
     "limit_fx_slave_platforms": {
       "linux64": [
@@ -350,9 +337,6 @@
       "linux64-asan": [
         "ubuntu64-asan_vm",
         "ubuntu64-asan_vm_lnx_large"
-      ],
-      "linux64-devedition": [
-        "ubuntu64_hw_devedition"
       ]
     },
     "limit_mobile_platforms": [
@@ -964,7 +948,8 @@
       "linux",
       "linux64",
       "linux64-stylo",
-      "linux64-stylosequential"
+      "linux64-stylosequential",
+      "linux64-devedition"
     ],
     "limit_fx_slave_platforms": {
       "linux64": [
@@ -975,6 +960,9 @@
       ],
       "linux64-stylo-seq": [
         "ubuntu64_hw_styloseq"
+      ],
+      "linux64-devedition": [
+        "ubuntu64_hw_devedition"
       ]
     },
     "limit_mobile_platforms": [
@@ -1014,7 +1002,8 @@
       "linux",
       "linux64",
       "linux64-stylo",
-      "linux64-stylosequential"
+      "linux64-stylosequential",
+      "linux64-devedition"
     ],
     "limit_fx_slave_platforms": {
       "linux64": [
@@ -1025,6 +1014,9 @@
       ],
       "linux64-stylo-seq": [
         "ubuntu64_hw_styloseq"
+      ],
+      "linux64-devedition": [
+        "ubuntu64_hw_devedition"
       ]
     },
     "limit_mobile_platforms": [
@@ -1064,7 +1056,8 @@
       "linux",
       "linux64",
       "linux64-stylo",
-      "linux64-stylosequential"
+      "linux64-stylosequential",
+      "linux64-devedition"
     ],
     "limit_fx_slave_platforms": {
       "linux64": [
@@ -1075,6 +1068,9 @@
       ],
       "linux64-stylo-seq": [
         "ubuntu64_hw_styloseq"
+      ],
+      "linux64-devedition": [
+        "ubuntu64_hw_devedition"
       ]
     },
     "limit_mobile_platforms": [
