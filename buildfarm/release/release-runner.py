@@ -508,7 +508,8 @@ def main(options):
                 "update_verify_requires_cdn_push": branchConfig.get("update_verify_requires_cdn_push", False),
             }
 
-            validate_graph_kwargs(queue, gpg_key_path, **kwargs)
+            # TODO: en-US validation for multiple tasks
+            # validate_graph_kwargs(queue, gpg_key_path, **kwargs)
             graph = make_task_graph_strict_kwargs(**kwargs)
             rr.update_status(release, "Submitting task graph")
             log.info("Task graph generated!")

@@ -154,21 +154,37 @@ def get_l10n_config(index, product, branch, revision, platforms,
                     l10n_platforms, l10n_changesets, tc_task_indexes):
     l10n_platform_configs = {}
     for platform in l10n_platforms:
-        route = tc_task_indexes[platform]['signed'].format(rev=revision)
+        # mar_tools lives in the unsigned task
+        unsigned_route = tc_task_indexes[platform]['unsigned'].format(rev=revision)
+        unsigned_task = index.findTask(unsigned_route)
+        if tc_task_indexes[platform]['ci_system'] == 'bb':
+            mar_tools_url = "https://queue.taskcluster.net/v1/task/{taskid}/artifacts/public/build".format(
+                taskid=unsigned_task["taskId"]
+            )
+        else:
+            mar_tools_url = "https://queue.taskcluster.net/v1/task/{taskid}/artifacts/public/build/host/bin".format(
+                taskid=unsigned_task["taskId"]
+            )
+            if platform.startswith("mac"):
+                # FIXME: dirty dirty hack
+                mar_tools_url = "https://archive.mozilla.org/pub/firefox/nightly/2017/06/2017-06-21-03-02-08-mozilla-central"
+
+        # en-US binary lives all over the places!
+        if platform.startswith("linux"):
+            route = tc_task_indexes[platform]['signed'].format(rev=revision)
+        elif platform.startswith("mac"):
+            if tc_task_indexes[platform]['ci_system'] == 'bb':
+                route = tc_task_indexes[platform]['signed'].format(rev=revision)
+            else:
+                route = tc_task_indexes[platform]['repackage'].format(rev=revision)
+        elif platform.startswith("win"):
+            # BB has all binaries in one task
+            # TC generates target.zip in this task, the installer is set below
+            route = tc_task_indexes[platform]['signed'].format(rev=revision)
         signed_task = index.findTask(route)
         en_us_binary_url = "https://queue.taskcluster.net/v1/task/{taskid}/artifacts/public/build".format(
             taskid=signed_task["taskId"]
         )
-        if tc_task_indexes[platform]['unsigned'] != tc_task_indexes[platform]['signed']:
-            # TC based builds use different tasks for en-US (signed) and
-            # martools (unsigned)
-            unsigned_route = tc_task_indexes[platform]['unsigned'].format(rev=revision)
-            unsigned_task = index.findTask(unsigned_route)
-            mar_tools_url = "https://queue.taskcluster.net/v1/task/{taskid}/artifacts/public/build/host/bin".format(
-                taskid=unsigned_task["taskId"]
-            )
-        else:
-            mar_tools_url = en_us_binary_url
 
         l10n_platform_configs[platform] = {
             "locales": get_platform_locales(l10n_changesets, platform),
@@ -176,6 +192,14 @@ def get_l10n_config(index, product, branch, revision, platforms,
             "mar_tools_url": mar_tools_url,
             "chunks": platforms[platform].get("l10n_chunks", 10),
         }
+        # Windows installer is a different beast
+        if platform.startswith("win") and tc_task_indexes[platform]['ci_system'] == 'tc':
+            route = tc_task_indexes[platform]['repackage-signing'].format(rev=revision)
+            installer_task = index.findTask(route)
+            en_us_installer_binary_url = "https://queue.taskcluster.net/v1/task/{taskid}/artifacts/public/build".format(
+                taskid=installer_task["taskId"]
+            )
+            l10n_platform_configs[platform]['en_us_installer_binary_url'] = en_us_installer_binary_url
 
     return {
         "platforms": l10n_platform_configs,
@@ -194,7 +218,13 @@ def get_en_US_config(index, product, branch, revision, platforms,
         platform_configs[platform] = {
             "signed_task_id": signed_task["taskId"],
             "unsigned_task_id": unsigned_task["taskId"],
+            "ci_system": tc_task_indexes[platform]["ci_system"],
         }
+        for t in ("repackage", "repackage-signing"):
+            if t in tc_task_indexes[platform]:
+                route = tc_task_indexes[platform][t].format(rev=revision)
+                task = index.findTask(route)
+                platform_configs[platform]['{}_task_id'.format(t)] = task['taskId']
 
     return {
         "platforms": platform_configs,
