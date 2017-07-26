@@ -83,6 +83,7 @@ def main(release_runner_config, release_config, tc_config):
         "uptake_monitoring_platforms": release_config['uptake_monitoring_platforms'],
         "source_enabled": release_config["source_enabled"],
         "checksums_enabled": release_config["checksums_enabled"],
+        "binary_transparency_enabled": release_config.get("binary_transparency_enabled", False),
         "updates_enabled": release_config["updates_enabled"],
         "push_to_releases_enabled": release_config["push_to_releases_enabled"],
 

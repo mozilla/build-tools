@@ -438,6 +438,7 @@ def main(options):
                 "release_eta": release.get("release_eta"),
                 "source_enabled": True,
                 "checksums_enabled": True,
+                "binary_transparency_enabled": branchConfig.get("binary_transparency_enabled", False),
                 "repo_path": release["branch"],
                 "revision": release["mozillaRevision"],
                 "product": release["product"],
