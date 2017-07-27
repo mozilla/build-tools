@@ -262,11 +262,6 @@ def action_add_gecko_version_symlinks(master):
         run('ln -s %(bbconfigs_dir)s/mozilla/gecko_versions.json '
             '%(master_dir)s/' % master)
 
-def action_remove_config_seta_symlinks(master):
-     with show('running'):
-         run('rm %(master_dir)s/config_seta.py '
-             '%(master_dir)s/' % master)
-
 def action_update_exception_timestamp(master):
     with show('running'):
         run('date +%s > /home/cltbld/.{0}-last-time.txt'.format(master['name']))
