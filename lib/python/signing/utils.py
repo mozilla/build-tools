@@ -368,6 +368,55 @@ def dmg_signfile(filename, keychain, signing_identity, subject_ou, fake=False):
         raise
 
 
+def widevine_signfile(filename, sigfile, key, cert, widevine_cmd, fake=False,
+                      passphrase=None, blessed="0"):
+    """Sign the given file with the widevine key and cert. The signature is
+    written to sigfile.
+
+    If fake is True, generate a fake signature and sleep for a bit.
+
+    If passphrase is set, it will be passed to the script on stdin
+    """
+    if fake:
+        open(sigfile, "wb").write("""
+-----BEGIN FAKE SIGNATURE-----
+Version: 1.2.3.4
+
+I am ur signature!
+-----END FAKE SIGNATURE-----""")
+        time.sleep(1)
+        return
+
+    stdout = tempfile.TemporaryFile()
+
+    if isinstance(widevine_cmd, basestring):
+        widevine_cmd = shlex.split(widevine_cmd)
+    repl_dict = {
+        "widevine_key": key,
+        "widevine_cert": cert,
+        "input": filename,
+        "output": sigfile,
+        "blessed": blessed,
+    }
+    for i, item in enumerate(widevine_cmd):
+        widevine_cmd[i] = item % repl_dict
+
+    log.info('Running %s', widevine_cmd)
+    try:
+        import pexpect
+        proc = pexpect.spawn(widevine_cmd[0], widevine_cmd[1:])
+        # We use logfile_read because we only want stdout/stderr, _not_ stdin.
+        proc.logfile_read = stdout
+        proc.expect('Private key passphrase:')
+        proc.sendline(passphrase)
+        proc.wait()
+    except:
+        stdout.seek(0)
+        data = stdout.read()
+        log.exception(data)
+        raise
+
+
 def dmg_signpackage(pkgfile, dstfile, keychain, mac_id, subject_ou, fake=False, passphrase=None):
     """ Sign a mac build, putting results into `dstfile`.
         pkgfile must be a tar, which gets unpacked, signed, and repacked.

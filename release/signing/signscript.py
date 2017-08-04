@@ -12,7 +12,7 @@ import sys
 from util.file import copyfile, safe_unlink
 from signing.utils import shouldSign, signfile, osslsigncode_signfile
 from signing.utils import gpg_signfile, mar_signfile, dmg_signpackage
-from signing.utils import jar_signfile, emevoucher_signfile
+from signing.utils import jar_signfile, emevoucher_signfile, widevine_signfile
 
 if __name__ == '__main__':
     from optparse import OptionParser
@@ -34,6 +34,9 @@ if __name__ == '__main__':
         jar_digestalg=None,
         emevoucher_key=None,
         emevoucher_chain=None,
+        widevine_key=None,
+        widevine_cert=None,
+        widevine_cmd=None,
     )
     parser.add_option("--keydir", dest="signcode_keydir",
                       help="where MozAuthenticode.spc, MozAuthenticode.spk can be found")
@@ -61,6 +64,12 @@ if __name__ == '__main__':
                       help="The certificate to use for signing the eme voucher")
     parser.add_option("--emevoucher_chain", dest="emevoucher_chain",
                       help="Certificate chain to include in EME voucher signatures")
+    parser.add_option("--widevine_key", dest="widevine_key",
+                      help="The key to use for signing widevine files")
+    parser.add_option("--widevine_cert", dest="widevine_cert",
+                      help="Certificate to use for signing widevine files")
+    parser.add_option("--widevine_cmd", dest="widevine_cmd",
+                      help="Command to use for signing widevine files")
     parser.add_option(
         "-v", action="store_const", dest="loglevel", const=logging.DEBUG)
 
@@ -168,5 +177,17 @@ if __name__ == '__main__':
         jar_signfile(tmpfile, options.jar_keystore,
                      options.jar_keyname, options.jar_digestalg, options.jar_sigalg,
                      options.fake, passphrase)
+    elif format_ in ("widevine", "widevine_blessed"):
+        safe_unlink(tmpfile)
+        if not options.widevine_key:
+            parser.error("widevine_key required when format is %s" % format_)
+        blessed = "0"
+        if format_ == "widevine_blessed":
+            blessed = "1"
+        widevine_signfile(
+            inputfile, tmpfile, options.widevine_key, options.widevine_cert,
+            options.widevine_cmd, fake=options.fake, passphrase=passphrase,
+            blessed=blessed
+        )
 
     os.rename(tmpfile, destfile)

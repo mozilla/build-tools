@@ -47,6 +47,8 @@ def remote_signfile(options, urls, filename, fmt, token, dest=None):
 
     if fmt == 'gpg':
         dest += '.asc'
+    elif fmt in ('widevine', 'widevine_blessed'):
+        dest += '.sig'
 
     parent_dir = os.path.dirname(os.path.abspath(dest))
     if not os.path.exists(parent_dir):
