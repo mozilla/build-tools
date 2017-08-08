@@ -165,9 +165,6 @@ def get_l10n_config(index, product, branch, revision, platforms,
             mar_tools_url = "https://queue.taskcluster.net/v1/task/{taskid}/artifacts/public/build/host/bin".format(
                 taskid=unsigned_task["taskId"]
             )
-            if platform.startswith("mac"):
-                # FIXME: dirty dirty hack
-                mar_tools_url = "https://archive.mozilla.org/pub/firefox/nightly/2017/06/2017-06-21-03-02-08-mozilla-central"
 
         # en-US binary lives all over the places!
         if platform.startswith("linux"):
