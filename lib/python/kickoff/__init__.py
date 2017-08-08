@@ -169,9 +169,9 @@ def get_l10n_config(index, product, branch, revision, platforms,
                 # FIXME: dirty dirty hack
                 if branch == "mozilla-beta":
                     if product == "devedition":
-                        mar_tools_url = "https://archive.mozilla.org/pub/devedition/candidates/55.0b14-candidates/build1/mar-tools/macosx64/"
+                        mar_tools_url = "https://archive.mozilla.org/pub/devedition/candidates/55.0b14-candidates/build1/mar-tools/macosx64"
                     elif product == "firefox":
-                        mar_tools_url = "https://archive.mozilla.org/pub/firefox/candidates/55.0b13-candidates/build1/mar-tools/macosx64/"
+                        mar_tools_url = "https://archive.mozilla.org/pub/firefox/candidates/55.0b13-candidates/build1/mar-tools/macosx64"
                 elif branch == "mozilla-release":
                     # if we don't get releasetasks in-tree by the time 56 get
                     # to release, we need to add here the last working release,
