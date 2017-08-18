@@ -283,7 +283,7 @@ def make_task_graph_strict_kwargs(appVersion, balrog_api_root, balrog_password, 
                                   checksums_enabled, binary_transparency_enabled, en_US_config,
                                   root_home_dir, extra_balrog_submitter_params, final_verify_channels,
                                   final_verify_platforms, uptake_monitoring_platforms,
-                                  funsize_balrog_api_root, l10n_config, signing_cert,
+                                  funsize_balrog_api_root, l10n_config, signing_cert, mar_signing_format,
                                   l10n_changesets, mozharness_changeset, next_version,
                                   partial_updates, partner_repacks_platforms,
                                   eme_free_repacks_platforms, sha1_repacks_platforms,
@@ -342,6 +342,7 @@ def make_task_graph_strict_kwargs(appVersion, balrog_api_root, balrog_password, 
         signing_class=signing_class,
         accepted_mar_channel_id=accepted_mar_channel_id,
         signing_cert=signing_cert,
+        mar_signing_format=mar_signing_format,
         moz_disable_mar_cert_verification=moz_disable_mar_cert_verification,
         root_home_dir=root_home_dir,
         signing_pvt_key=signing_pvt_key,
@@ -373,3 +374,9 @@ def get_funsize_product(product_name):
     if product_name == 'devedition':    # See bug 1366075
         return 'firefox'
     return product_name
+
+
+def get_mar_signing_format(version):
+    # XXX mar_sha384 was introduced in 56.0b4. That version wasn't used for comparison because
+    # the string '56.0.1' is considered smaller than '56.0b4'
+    return 'mar' if version < '56.0' else 'mar_sha384'

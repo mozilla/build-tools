@@ -9,7 +9,7 @@ import yaml
 site.addsitedir(os.path.join(os.path.dirname(__file__), "../../lib/python"))
 
 from kickoff import get_partials, ReleaseRunner, make_task_graph_strict_kwargs
-from kickoff import get_l10n_config, get_en_US_config
+from kickoff import get_l10n_config, get_en_US_config, get_mar_signing_format
 from kickoff import bump_version
 
 from release.versions import getAppVersion
@@ -58,6 +58,7 @@ def main(release_runner_config, release_config, tc_config):
         "signing_class": release_config["signing_class"],
         "accepted_mar_channel_id": release_config.get("accepted_mar_channel_id"),
         "signing_cert": release_config["signing_cert"],
+        "mar_signing_format": get_mar_signing_format(release_config["version"]),
         "moz_disable_mar_cert_verification": release_config.get("moz_disable_mar_cert_verification"),
         "root_home_dir": release_config["root_home_dir"],
         "bouncer_enabled": release_config["bouncer_enabled"],

@@ -24,7 +24,7 @@ site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 from kickoff import (get_partials, ReleaseRunner,
                      make_task_graph_strict_kwargs, long_revision,
                      get_l10n_config, get_en_US_config, email_release_drivers,
-                     bump_version, get_funsize_product)
+                     bump_version, get_funsize_product, get_mar_signing_format)
 from kickoff.sanity.base import SanityException, is_candidate_release
 from kickoff.sanity.revisions import RevisionsSanitizer
 from kickoff.sanity.l10n import L10nSanitizer
@@ -475,6 +475,7 @@ def main(options):
                 "signing_class": branchConfig['signing_class'][release["product"]],
                 "accepted_mar_channel_id": branchConfig.get('accepted_mar_channel_id', {}).get(release["product"]),
                 "signing_cert": branchConfig['signing_cert'][release["product"]],
+                "mar_signing_format": get_mar_signing_format(release["version"]),
                 "moz_disable_mar_cert_verification": branchConfig.get('moz_disable_mar_cert_verification'),
                 "root_home_dir": branchConfig['root_home_dir'][release["product"]],
                 "bouncer_enabled": branchConfig["bouncer_enabled"],
