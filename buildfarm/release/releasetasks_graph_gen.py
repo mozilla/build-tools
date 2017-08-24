@@ -11,11 +11,12 @@ site.addsitedir(os.path.join(os.path.dirname(__file__), "../../lib/python"))
 from kickoff import get_partials, ReleaseRunner, make_task_graph_strict_kwargs
 from kickoff import get_l10n_config, get_en_US_config, get_mar_signing_format
 from kickoff import bump_version
+from kickoff.tc import resolve_task, submit_parallelized
 
 from release.versions import getAppVersion
 from util.file import load_config, get_config
 
-from taskcluster import Scheduler, Index, Queue
+from taskcluster import Index, Queue
 from taskcluster.utils import slugId
 
 log = logging.getLogger(__name__)
@@ -27,11 +28,10 @@ def main(release_runner_config, release_config, tc_config):
     username = release_runner_config.get('api', 'username')
     password = release_runner_config.get('api', 'password')
 
-    scheduler = Scheduler(tc_config)
+    queue = Queue(tc_config)
     index = Index(tc_config)
 
     rr = ReleaseRunner(api_root=api_root, username=username, password=password)
-    graph_id = slugId()
     log.info('Generating task graph')
     kwargs = {
         # release-runner.ini
@@ -122,12 +122,16 @@ def main(release_runner_config, release_config, tc_config):
         "release_eta": release_config.get("release_eta"),
     }
 
-    graph = make_task_graph_strict_kwargs(**kwargs)
-    log.info("Submitting task graph")
+    task_group_id, toplevel_task_id, tasks = make_task_graph_strict_kwargs(**kwargs)
+    log.info("Tasks generated!")
     import pprint
-    log.info(pprint.pformat(graph, indent=4, width=160))
+    for task_id, task_def in tasks.items():
+        log.debug("%s ->\n%s", task_id,
+                  pprint.pformat(task_def, indent=4, width=160))
+
     if not options.dry_run:
-        print scheduler.createTaskGraph(graph_id, graph)
+        submit_parallelized(queue, tasks)
+        resolve_task(queue, toplevel_task_id)
 
 
 def get_items_from_common_tc_task(common_task_id, tc_config):
@@ -210,7 +214,8 @@ if __name__ == '__main__':
         "credentials": {
             "clientId": get_config(release_runner_config, "taskcluster", "client_id", None),
             "accessToken": get_config(release_runner_config, "taskcluster", "access_token", None),
-        }
+        },
+        "maxRetries": 12,
     }
     branch_product_config = load_branch_and_product_config(options.branch_and_product_config)
 

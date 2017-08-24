@@ -364,10 +364,10 @@ def make_task_graph_strict_kwargs(appVersion, balrog_api_root, balrog_password, 
     if extra_balrog_submitter_params:
         kwargs["extra_balrog_submitter_params"] = extra_balrog_submitter_params
 
-    # don't import releasetasks until required within function impl to avoid global failures
-    # during nosetests
-    from releasetasks import make_task_graph
-    return make_task_graph(**kwargs)
+    # don't import releasetasks until required within function impl to avoid
+    # global failures during nosetests
+    from releasetasks import make_tasks
+    return make_tasks(**kwargs)
 
 
 def get_funsize_product(product_name):

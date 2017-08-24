@@ -15,7 +15,7 @@ import requests
 from os import path
 from optparse import OptionParser
 from twisted.python.lockfile import FilesystemLock
-from taskcluster import Scheduler, Index, Queue
+from taskcluster import Index, Queue
 from taskcluster.utils import slugId
 import yaml
 
@@ -30,6 +30,7 @@ from kickoff.sanity.revisions import RevisionsSanitizer
 from kickoff.sanity.l10n import L10nSanitizer
 from kickoff.sanity.partials import PartialsSanitizer
 from kickoff.build_status import are_en_us_builds_completed
+from kickoff.tc import resolve_task, submit_parallelized
 from release.info import readBranchConfig
 from release.l10n import parsePlainL10nChangesets
 from release.versions import getAppVersion
@@ -343,9 +344,8 @@ def main(options):
     # revisions (and other things if needed)
 
     rr = ReleaseRunner(api_root=api_root, username=username, password=password)
-    scheduler = Scheduler(retrying_tc_config)
     index = Index(tc_config)
-    queue = Queue(tc_config)
+    queue = Queue(retrying_tc_config)
 
     # Main loop waits for new releases, processes them and exits.
     while True:
@@ -411,7 +411,7 @@ def main(options):
         platforms = branchConfig['release_platforms']
 
         try:
-            graph_id = slugId()
+            task_group_id = None
             done = are_en_us_builds_completed(
                 index=index, release_name=release['name'],
                 submitted_at=release['submittedAt'],
@@ -512,18 +512,21 @@ def main(options):
 
             # TODO: en-US validation for multiple tasks
             # validate_graph_kwargs(queue, gpg_key_path, **kwargs)
-            graph = make_task_graph_strict_kwargs(**kwargs)
-            rr.update_status(release, "Submitting task graph")
-            log.info("Task graph generated!")
+            task_group_id, toplevel_task_id, tasks = make_task_graph_strict_kwargs(**kwargs)
+            rr.update_status(release, "Submitting tasks")
+            log.info("Tasks generated!")
             import pprint
-            log.debug(pprint.pformat(graph, indent=4, width=160))
-            print(scheduler.createTaskGraph(graph_id, graph))
+            for task_id, task_def in tasks.items():
+                log.debug("%s ->\n%s", task_id,
+                          pprint.pformat(task_def, indent=4, width=160))
+            submit_parallelized(queue, tasks)
+            resolve_task(queue, toplevel_task_id)
 
             rr.mark_as_completed(release)
             l10n_url = rr.release_l10n_api.getL10nFullUrl(release['name'])
             email_release_drivers(smtp_server=smtp_server, from_=notify_from,
                                   to=notify_to, release=release,
-                                  task_group_id=graph_id, l10n_url=l10n_url)
+                                  task_group_id=task_group_id, l10n_url=l10n_url)
         except Exception as exception:
             # We explicitly do not raise an error here because there's no
             # reason not to start other releases if creating the Task Graph
@@ -533,10 +536,10 @@ def main(options):
             rr.mark_as_failed(
                 release,
                 'Failed to start release promotion (graph ID: %s). Error(s): %s' % (
-                    graph_id, exception)
+                    task_group_id, exception)
             )
             log.exception('Failed to start release "%s" promotion for graph %s. Error(s): %s',
-                          release['name'], graph_id, exception)
+                          release['name'], task_group_id, exception)
             log.debug('Release failed: %s', release)
 
     if rc != 0:
@@ -544,6 +547,7 @@ def main(options):
 
     log.debug('Sleeping for %s seconds before polling again', sleeptime)
     time.sleep(sleeptime)
+
 
 if __name__ == '__main__':
     parser = OptionParser(__doc__)
