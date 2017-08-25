@@ -24,6 +24,8 @@ update_platform_map = {
     'android-api-11': ['Android_arm-eabi-gcc3'],
     'android-api-15': ['Android_arm-eabi-gcc3'],
     'android-api-15-old-id': ['Android_arm-eabi-gcc3'],
+    'android-api-16': ['Android_arm-eabi-gcc3'],
+    'android-api-16-old-id': ['Android_arm-eabi-gcc3'],
     'android-x86': ['Android_x86-gcc3'],
     'android-x86-old-id': ['Android_x86-gcc3'],
     'linux': ['Linux_x86-gcc3'],
