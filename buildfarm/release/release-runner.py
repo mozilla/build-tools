@@ -60,20 +60,20 @@ ALL_FILES = set([
 CONFIGS_WORKDIR = 'buildbot-configs'
 
 
-def check_and_assign_long_revision(release_runner, release):
+def check_and_assign_long_revision(release_runner, release, releases_config):
     # Revisions must be checked before trying to get the long one.
     RevisionsSanitizer(**release).run()
     release['mozillaRevision'] = long_revision(
         release['branch'], release['mozillaRevision'])
 
 
-def assign_and_check_l10n_changesets(release_runner, release):
+def assign_and_check_l10n_changesets(release_runner, release, releases_config):
     release['l10n_changesets'] = parsePlainL10nChangesets(
         release_runner.get_release_l10n(release['name']))
     L10nSanitizer(**release).run()
 
 
-def assign_and_check_partial_updates(release_runner, release):
+def assign_and_check_partial_updates(release_runner, release, releases_config):
     release['partial_updates'] = get_partials(
         release_runner, release['partials'], release['product'])
     branchConfig = get_branch_config(release)
@@ -82,11 +82,22 @@ def assign_and_check_partial_updates(release_runner, release):
     PartialsSanitizer(**release).run()
 
 
+def check_allowed_branches(release_runner, release, releases_config):
+    product = release['product']
+    branch = release['branch']
+    allowed_branches = releases_config[product]['allowed_branches']
+    for pattern in allowed_branches:
+        if re.match(pattern, branch):
+            return
+    raise RuntimeError("%s branch is not allowed: %s", branch, allowed_branches)
+
+
 # So people can't run arbitrary functions
 CHECKS_MAPPING = {
     'long_revision': check_and_assign_long_revision,
     'l10n_changesets': assign_and_check_l10n_changesets,
     'partial_updates': assign_and_check_partial_updates,
+    'check_allowed_branches': check_allowed_branches,
 }
 
 
@@ -107,7 +118,7 @@ def run_prebuild_sanity_checks(release_runner, releases_config):
                 if check not in CHECKS_MAPPING:
                     log.error("Check %s not found", check)
                     continue
-                CHECKS_MAPPING[check](release_runner, release)
+                CHECKS_MAPPING[check](release_runner, release, releases_config)
 
             new_valid_releases.append(release)
         except Exception as e:

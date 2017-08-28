@@ -25,7 +25,7 @@ release-runner:
   ssh_username: cltbld
   ssh_key: /home/cltbld/.ssh/release-runner
   docker_worker_key: /home/cltbld/docker-worker-public.pem
-  
+
 symlinks:
   production_config.py: "{buildbot_configs}/mozilla/localconfig.py"
   thunderbird_production_config.py: "{buildbot_configs}/mozilla/thunderbird_localconfig.py"
@@ -37,7 +37,17 @@ releases:
       - long_revision
       - l10n_changesets
       - partial_updates
+      - check_allowed_branches
+    allowed_branches:
+      - mozilla-beta
+      - mozilla-release
+      - mozilla-esr*
   - product: fennec
     pattern: Fennec-.*
     checks:
       - long_revision
+      - check_allowed_branches
+    allowed_branches:
+      - mozilla-beta
+      - mozilla-release
+      - mozilla-esr*
