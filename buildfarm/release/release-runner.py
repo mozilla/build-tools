@@ -85,10 +85,12 @@ def assign_and_check_partial_updates(release_runner, release, releases_config):
 def check_allowed_branches(release_runner, release, releases_config):
     product = release['product']
     branch = release['branch']
-    allowed_branches = releases_config[product]['allowed_branches']
-    for pattern in allowed_branches:
-        if re.match(pattern, branch):
-            return
+    for entry in releases_config:
+        if entry['product'] == product:
+            allowed_branches = entry['allowed_branches']
+            for pattern in allowed_branches:
+                if re.match(pattern, branch):
+                    return
     raise RuntimeError("%s branch is not allowed: %s", branch, allowed_branches)
 
 
