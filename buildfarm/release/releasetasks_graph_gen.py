@@ -123,7 +123,7 @@ def main(release_runner_config, release_config, tc_config):
     }
 
     task_group_id, toplevel_task_id, tasks = make_task_graph_strict_kwargs(**kwargs)
-    log.info("Tasks generated!")
+    log.info('Tasks generated, but not yet submitted to Taskcluster.')
     import pprint
     for task_id, task_def in tasks.items():
         log.debug("%s ->\n%s", task_id,
@@ -132,6 +132,11 @@ def main(release_runner_config, release_config, tc_config):
     if not options.dry_run:
         submit_parallelized(queue, tasks)
         resolve_task(queue, toplevel_task_id)
+        log_line = 'Task graph submitted: https://tools.taskcluster.net/groups/{}'.format(task_group_id)
+        log.info(log_line)
+        # TODO: We shouldn't need this extra print, but at the moment, calling the script in verbose
+        # mode doesn't output anything.
+        print log_line
 
 
 def get_items_from_common_tc_task(common_task_id, tc_config):
