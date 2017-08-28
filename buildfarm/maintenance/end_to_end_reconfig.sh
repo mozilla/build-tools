@@ -256,6 +256,14 @@ if ! python --version 2>&1 | grep -q '^Python 2\.7'; then
     exit 66
 fi
 
+run_virtualenv() {
+    if hash virtualenv2 2>/dev/null; then
+        virtualenv2 "$@"
+    else
+        virtualenv "$@"
+    fi
+}
+
 for package in fabric requests; do
     installed_package=false
     echo "  * Checking ${package} package is available in python environment..."
@@ -264,7 +272,7 @@ for package in fabric requests; do
         if [ ! -e "${RECONFIG_DIR}/reconfig-virtual-env" ]; then
             echo "  * Creating virtualenv directory '${RECONFIG_DIR}/reconfig-virtual-env' for reconfig tool..."
             echo "  * Logging to: '${RECONFIG_DIR}/virtualenv-installation.log'..."
-            virtualenv "${RECONFIG_DIR}/reconfig-virtual-env" >"${RECONFIG_DIR}/virtualenv-installation.log" 2>&1
+            run_virtualenv "${RECONFIG_DIR}/reconfig-virtual-env" >"${RECONFIG_DIR}/virtualenv-installation.log" 2>&1
             set +u
             source "${RECONFIG_DIR}/reconfig-virtual-env/bin/activate"
             set -u
