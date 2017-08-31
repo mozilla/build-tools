@@ -14,7 +14,6 @@ from kickoff import bump_version
 from kickoff.tc import resolve_task, submit_parallelized
 
 from release.versions import getAppVersion
-from util.file import load_config, get_config
 
 from taskcluster import Index, Queue
 from taskcluster.utils import slugId
@@ -24,9 +23,9 @@ log = logging.getLogger(__name__)
 
 def main(release_runner_config, release_config, tc_config):
 
-    api_root = release_runner_config.get('api', 'api_root')
-    username = release_runner_config.get('api', 'username')
-    password = release_runner_config.get('api', 'password')
+    api_root = release_runner_config['api']['api_root']
+    username = release_runner_config['api']['username']
+    password = release_runner_config['api']['password']
 
     queue = Queue(tc_config)
     index = Index(tc_config)
@@ -171,16 +170,15 @@ def get_unique_release_items(options, tc_config):
     return unique_items
 
 
-def get_release_items_from_runner_config(release_runner_ini):
+def get_release_items_from_runner_config(release_runner_config):
     ini_items = {}
-    ini_items['signing_pvt_key'] = release_runner_ini.get('signing', 'pvt_key')
-    ini_items['docker_worker_key'] = release_runner_ini.get('release-runner', 'docker_worker_key')
-    ini_items['balrog_username'] = release_runner_ini.get("balrog", "username")
-    ini_items['balrog_password'] = release_runner_ini.get("balrog", "password")
-    ini_items['beetmover_aws_access_key_id'] = release_runner_ini.get("beetmover", "aws_access_key_id")
-    ini_items['beetmover_aws_secret_access_key'] = release_runner_ini.get("beetmover", "aws_secret_access_key")
-    ini_items['extra_balrog_submitter_params'] = get_config(release_runner_ini, "balrog",
-                                                            "extra_balrog_submitter_params", None)
+    ini_items['signing_pvt_key'] = release_runner_config['signing']['pvt_key']
+    ini_items['docker_worker_key'] = release_runner_config['release-runner']['docker_worker_key']
+    ini_items['balrog_username'] = release_runner_config["balrog"]["username"]
+    ini_items['balrog_password'] = release_runner_config["balrog"]["password"]
+    ini_items['beetmover_aws_access_key_id'] = release_runner_config["beetmover"]["aws_access_key_id"]
+    ini_items['beetmover_aws_secret_access_key'] = release_runner_config["beetmover"]["aws_secret_access_key"]
+    ini_items['extra_balrog_submitter_params'] = release_runner_config["balrog"].get("extra_balrog_submitter_params")
     return ini_items
 
 
@@ -191,7 +189,7 @@ def load_branch_and_product_config(config_file):
 
 if __name__ == '__main__':
     parser = OptionParser(__doc__)
-    parser.add_option('--release-runner-ini', dest='release_runner_ini',
+    parser.add_option('--release-runner-config', dest='release_runner_config',
                       help='ini file that contains things like sensitive credentials')
     parser.add_option('--branch-and-product-config', dest='branch_and_product_config',
                       help='config items specific to certain product and branch')
@@ -208,23 +206,23 @@ if __name__ == '__main__':
 
     options = parser.parse_args()[0]
 
-    if not options.release_runner_ini:
+    if not options.release_runner_config:
         parser.error('Need to pass a release runner config')
     if not options.branch_and_product_config:
         parser.error('Need to pass a branch and product config')
 
     # load config files
-    release_runner_config = load_config(options.release_runner_ini)
+    release_runner_config = yaml.safe_load(open(options.release_runner_config))
     tc_config = {
         "credentials": {
-            "clientId": get_config(release_runner_config, "taskcluster", "client_id", None),
-            "accessToken": get_config(release_runner_config, "taskcluster", "access_token", None),
+            "clientId": release_runner_config["taskcluster"].get("client_id"),
+            "accessToken": release_runner_config["taskcluster"].get("access_token"),
         },
         "maxRetries": 12,
     }
     branch_product_config = load_branch_and_product_config(options.branch_and_product_config)
 
-    if release_runner_config.getboolean('release-runner', 'verbose'):
+    if release_runner_config['release-runner']['verbose']:
         log_level = logging.DEBUG
     else:
         log_level = logging.INFO
