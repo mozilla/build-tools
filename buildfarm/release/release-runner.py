@@ -525,7 +525,8 @@ def main(options):
 
             # TODO: en-US validation for multiple tasks
             # validate_graph_kwargs(queue, gpg_key_path, **kwargs)
-            task_group_id, toplevel_task_id, tasks = make_task_graph_strict_kwargs(**kwargs)
+            task_group_id, tasks, _ = make_task_graph_strict_kwargs(**kwargs)
+            decision_task_id = task_group_id
             rr.update_status(release, "Submitting tasks")
             log.info("Tasks generated!")
             import pprint
@@ -533,7 +534,7 @@ def main(options):
                 log.debug("%s ->\n%s", task_id,
                           pprint.pformat(task_def, indent=4, width=160))
             submit_parallelized(queue, tasks)
-            resolve_task(queue, toplevel_task_id)
+            resolve_task(queue, decision_task_id)
 
             rr.mark_as_completed(release)
             l10n_url = rr.release_l10n_api.getL10nFullUrl(release['name'])

@@ -121,7 +121,8 @@ def main(release_runner_config, release_config, tc_config):
         "release_eta": release_config.get("release_eta"),
     }
 
-    task_group_id, toplevel_task_id, tasks = make_task_graph_strict_kwargs(**kwargs)
+    task_group_id, tasks, second_task_group_id = make_task_graph_strict_kwargs(**kwargs)
+    toplevel_task_id = task_group_id
     log.info('Tasks generated, but not yet submitted to Taskcluster.')
     import pprint
     for task_id, task_def in tasks.items():
@@ -131,11 +132,19 @@ def main(release_runner_config, release_config, tc_config):
     if not options.dry_run:
         submit_parallelized(queue, tasks)
         resolve_task(queue, toplevel_task_id)
-        log_line = 'Task graph submitted: https://tools.taskcluster.net/groups/{}'.format(task_group_id)
-        log.info(log_line)
-        # TODO: We shouldn't need this extra print, but at the moment, calling the script in verbose
-        # mode doesn't output anything.
-        print log_line
+
+        _print_task_group_id(task_group_id)
+        if second_task_group_id:
+            _print_task_group_id(second_task_group_id, index=2)
+
+
+def _print_task_group_id(group_id, index=''):
+    index = index if index == '' else ' {}'.format(index)
+    log_line = 'Task graph{} submitted: https://tools.taskcluster.net/groups/{}'.format(index, group_id)
+    log.info(log_line)
+    # TODO: We shouldn't need this extra print, but at the moment, calling the script in verbose
+    # mode doesn't output anything.
+    print log_line
 
 
 def get_items_from_common_tc_task(common_task_id, tc_config):
