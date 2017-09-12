@@ -136,6 +136,7 @@ def main(release_runner_config, release_config, tc_config):
         # TODO: We shouldn't need this extra print, but at the moment, calling the script in verbose
         # mode doesn't output anything.
         print log_line
+        # TODO: import logic to send an email with task id
 
 
 def get_items_from_common_tc_task(common_task_id, tc_config):
