@@ -119,7 +119,7 @@ def main(options):
     rc = 0
     for release in new_releases:
         try:
-            relconfigs_tmpl = '{}_{}_fennec_full_graph.yml'.format(rr_config['releasetasks_relconfigs_prefix',
+            relconfigs_tmpl = '{}_{}_fennec_full_graph.yml'.format(rr_config['releasetasks_relconfigs_prefix'],
                                                                              release['branchShortName'])
             configs = '/'.join([rr_config['relconfigs_root'], relconfigs_tmpl])
 
