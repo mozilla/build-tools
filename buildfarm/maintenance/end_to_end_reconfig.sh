@@ -260,7 +260,7 @@ run_virtualenv() {
     if hash virtualenv2 2>/dev/null; then
         virtualenv2 "$@"
     else
-        virtualenv "$@"
+        virtualenv -p python2 "$@"
     fi
 }
 
