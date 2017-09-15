@@ -3,7 +3,6 @@
 import site
 import time
 import logging
-import subprocess
 import sys
 import os
 import re
@@ -14,8 +13,12 @@ import yaml
 
 site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 
-from kickoff import ReleaseRunner, long_revision
+from kickoff import ReleaseRunner, long_revision, email_release_drivers
 from kickoff.sanity.revisions import RevisionsSanitizer
+from releasetasks_graph_gen import (get_release_items_from_runner_config,
+                                    get_unique_release_items,
+                                    load_branch_and_product_config)
+from releasetasks_graph_gen import main as gen_main
 
 
 log = logging.getLogger(__name__)
@@ -96,10 +99,14 @@ def main(options):
 
     rr_config = config['release-runner']
     sleeptime = rr_config['sleeptime']
+    smtp_server = rr_config.get('smtp_server', 'localhost')
+    notify_from = rr_config.get('notify_from')
+    notify_to = rr_config.get('notify_to_announce')
+    if isinstance(notify_to, basestring):
+        notify_to = [x.strip() for x in notify_to.split(',')]
 
     rr = ReleaseRunner(api_root=api_root, username=username, password=password)
 
-    # Main loop waits for new releases, processes them and exits.
     while True:
         try:
             log.debug('Fetching release requests')
@@ -123,29 +130,43 @@ def main(options):
                                                                              release['branchShortName'])
             configs = '/'.join([rr_config['relconfigs_root'], relconfigs_tmpl])
 
-            cmd = [
-                rr_config['python'],
-                rr_config['gen_script'],
-                '--release-runner-config',
-                rr_config['release_runner_config'],
-                '--branch-and-product-config={}'.format(configs),
-                '--version={}'.format(release['version']),
-                '--build-number={}'.format(release['buildNumber']),
-                '--mozilla-revision={}'.format(release["mozillaRevision"]),
-            ]
+            # process stuff for releasetasks_graph_gen.py script
+            release_runner_config = yaml.safe_load(open(rr_config['release_runner_config']))
+            tc_config = {
+                "credentials": {
+                    "clientId": release_runner_config["taskcluster"].get("client_id"),
+                    "accessToken": release_runner_config["taskcluster"].get("access_token"),
+                },
+                "maxRetries": 12,
+            }
+            branch_product_config = load_branch_and_product_config(configs)
+
+            # hack: we simulate the options argument for the
+            # releasetasks_graph_gen.py script in order to reuse some of the
+            # functions defined there
+            fake_options = OptionParser()
+            fake_options.version = release['version']
+            fake_options.build_number = release['buildNumber']
+            fake_options.mozilla_revision = release['mozillaRevision']
+            fake_options.common_task_id = None
+            fake_options.partials = ''
+            fake_options.dry_run = False
+
+            releasetasks_kwargs = {}
+            releasetasks_kwargs.update(branch_product_config)
+            releasetasks_kwargs.update(get_release_items_from_runner_config(release_runner_config))
+            releasetasks_kwargs.update(get_unique_release_items(fake_options, tc_config))
 
             rr.update_status(release, 'Generating task graph')
 
-            # TODO: might want to investigate if we can just call a function
-            # here instead of the entire script, so that we can send the email
-            # directly from this script, and not the gen.py one
-            subprocess.check_call(cmd)
+            task_group_id = gen_main(release_runner_config, releasetasks_kwargs, tc_config, options=fake_options)
 
             rr.mark_as_completed(release)
-            # TODO: normally sending the email should be done here but
-            # since we don't have the actual Taskgroup ID, we need to munge
-            # the other script to do that
-        except subprocess.CalledProcessError as exception:
+            l10n_url = rr.release_l10n_api.getL10nFullUrl(release['name'])
+            email_release_drivers(smtp_server=smtp_server, from_=notify_from,
+                                  to=notify_to, release=release,
+                                  task_group_id=task_group_id, l10n_url=l10n_url)
+        except Exception as exception:
             # We explicitly do not raise an error here because there's no
             # reason not to start other releases if creating the Task Graph
             # fails for another one. We _do_ need to set this in order to exit

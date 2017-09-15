@@ -21,7 +21,7 @@ from taskcluster.utils import slugId
 log = logging.getLogger(__name__)
 
 
-def main(release_runner_config, release_config, tc_config):
+def main(release_runner_config, release_config, tc_config, options):
 
     api_root = release_runner_config['api']['api_root']
     username = release_runner_config['api']['username']
@@ -136,7 +136,8 @@ def main(release_runner_config, release_config, tc_config):
         # TODO: We shouldn't need this extra print, but at the moment, calling the script in verbose
         # mode doesn't output anything.
         print log_line
-        # TODO: import logic to send an email with task id
+
+    return task_group_id
 
 
 def get_items_from_common_tc_task(common_task_id, tc_config):
@@ -238,4 +239,4 @@ if __name__ == '__main__':
     releasetasks_kwargs.update(get_release_items_from_runner_config(release_runner_config))
     releasetasks_kwargs.update(get_unique_release_items(options, tc_config))
 
-    main(release_runner_config, releasetasks_kwargs, tc_config)
+    main(release_runner_config, releasetasks_kwargs, tc_config, options=options)
