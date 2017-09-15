@@ -449,7 +449,8 @@ def main(options):
                 "appVersion": getAppVersion(release["version"]),
                 "buildNumber": release["buildNumber"],
                 "release_eta": release.get("release_eta"),
-                "source_enabled": True,
+                # XXX Bug 1400157 hotfix
+                "source_enabled": False if '57' in release["version"] else True,
                 "checksums_enabled": True,
                 "binary_transparency_enabled": branchConfig.get("binary_transparency_enabled", False),
                 "repo_path": release["branch"],
