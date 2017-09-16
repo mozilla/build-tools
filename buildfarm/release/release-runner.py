@@ -522,6 +522,7 @@ def main(options):
                 "snap_enabled": branchConfig.get("snap_enabled", {}).get(release["product"], False),
                 "update_verify_channel": branchConfig.get("update_verify_channel", {}).get(release["product"]),
                 "update_verify_requires_cdn_push": branchConfig.get("update_verify_requires_cdn_push", False),
+                "lzma_to_bz2": branchConfig.get("lzma_to_bz2", False),
             }
 
             # TODO: en-US validation for multiple tasks

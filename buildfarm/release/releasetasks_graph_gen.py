@@ -119,6 +119,7 @@ def main(release_runner_config, release_config, tc_config, options):
         "update_verify_channel": release_config["update_verify_channel"],
         "update_verify_requires_cdn_push": release_config["update_verify_requires_cdn_push"],
         "release_eta": release_config.get("release_eta"),
+        "lzma_to_bz2": release_config.get("lzma_to_bz2", False),
     }
 
     task_group_id, toplevel_task_id, tasks = make_task_graph_strict_kwargs(**kwargs)

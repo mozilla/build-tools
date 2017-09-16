@@ -296,7 +296,7 @@ def make_task_graph_strict_kwargs(appVersion, balrog_api_root, balrog_password, 
                                   tuxedo_server_url, update_verify_enabled, updates_builder_enabled,
                                   updates_enabled, verifyConfigs, version, publish_to_balrog_channels,
                                   snap_enabled, update_verify_channel, update_verify_requires_cdn_push,
-                                  release_eta):
+                                  release_eta, lzma_to_bz2):
     """simple wrapper that sanitizes whatever calls make_task_graph uses universally known kwargs"""
 
     kwargs = dict(
@@ -360,6 +360,7 @@ def make_task_graph_strict_kwargs(appVersion, balrog_api_root, balrog_password, 
         update_verify_requires_cdn_push=update_verify_requires_cdn_push,
         funsize_product=funsize_product,
         release_eta=release_eta,
+        lzma_to_bz2=lzma_to_bz2,
     )
     if extra_balrog_submitter_params:
         kwargs["extra_balrog_submitter_params"] = extra_balrog_submitter_params
