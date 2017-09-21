@@ -25,18 +25,20 @@ def get_nightly_blob_name(productName, branch, build_type, suffix, dummy=False):
     return '%s-%s-%s-%s' % (productName, branch, build_type, suffix)
 
 
-def get_release_blob_name(productName, version, build_number, dummy=False):
-    name = '%s-%s-build%s' % (productName, version, build_number)
-    if dummy:
-        name += '-dummy'
-    return name
+def get_release_blob_name(productName, version, build_number, suffix=""):
+    return '%s-%s-build%s%s' % (productName, version, build_number, suffix)
 
 
 class ReleaseCreatorBase(object):
-    def __init__(self, api_root, auth, dummy=False):
+    def __init__(self, api_root, auth, dummy=False, suffix=""):
         self.api_root = api_root
         self.auth = auth
-        self.dummy = dummy
+        self.suffix = suffix
+        if dummy and not suffix:
+            self.suffix = "-dummy"
+        else:
+            self.suffix = suffix
+
 
     def generate_data(self, appVersion, productName, version, buildNumber,
                       updateChannels, ftpServer, bouncerServer,
@@ -98,7 +100,7 @@ class ReleaseCreatorBase(object):
                                   ftpServer, bouncerServer, enUSPlatforms,
                                   schemaVersion, openURL, **updateKwargs)
         name = get_release_blob_name(productName, version, buildNumber,
-                                     self.dummy)
+                                     self.suffix)
         api = Release(name=name, auth=self.auth, api_root=self.api_root)
         try:
             current_data, data_version = api.get_data()
@@ -160,7 +162,7 @@ class ReleaseCreatorV3(ReleaseCreatorBase):
             for previousVersion, previousInfo in partialUpdates.iteritems():
                 from_ = get_release_blob_name(productName, previousVersion,
                                               previousInfo["buildNumber"],
-                                              self.dummy)
+                                              self.suffix)
                 filename = "%s-%s-%s.partial.mar" % (file_prefix, previousVersion, version)
                 bouncerProduct = "%s-%s-partial-%s" % (productName.lower(), version, previousVersion)
                 data["ftpFilenames"]["partials"][from_] = filename
@@ -234,7 +236,7 @@ class ReleaseCreatorV4(ReleaseCreatorBase):
             for previousVersion, previousInfo in partialUpdates.iteritems():
                 from_ = get_release_blob_name(productName, previousVersion,
                                                 previousInfo["buildNumber"],
-                                                self.dummy)
+                                                self.suffix)
                 if "localtest" in channel:
                     dir_ = makeCandidatesDir(productName.lower(), version,
                                             buildNumber, server=ftpServer,
@@ -402,10 +404,13 @@ class NightlySubmitterV4(NightlySubmitterBase, MultipleUpdatesNightlyMixin):
 
 
 class ReleaseSubmitterBase(object):
-    def __init__(self, api_root, auth, dummy=False):
+    def __init__(self, api_root, auth, dummy=False, suffix=""):
         self.api_root = api_root
         self.auth = auth
-        self.dummy = dummy
+        if dummy and not suffix:
+            self.suffix = "-dummy"
+        else:
+            self.suffix = suffix
 
     def run(self, platform, productName, appVersion, version, build_number, locale,
             hashFunction, extVersion, buildID, schemaVersion, **updateKwargs):
@@ -416,7 +421,7 @@ class ReleaseSubmitterBase(object):
         build_target = targets[0]
 
         name = get_release_blob_name(productName, version, build_number,
-                                     self.dummy)
+                                     self.suffix)
         data = {
             'buildID': buildID,
             'appVersion': appVersion,
@@ -447,7 +452,7 @@ class MultipleUpdatesReleaseMixin(object):
             for info in completeInfo:
                 if "previousVersion" in info:
                     from_ = get_release_blob_name(productName, version,
-                                                  build_number, self.dummy)
+                                                  build_number, self.suffix)
                 else:
                     from_ = "*"
                 data["completes"].append({
@@ -461,8 +466,8 @@ class MultipleUpdatesReleaseMixin(object):
                 data["partials"].append({
                     "from": get_release_blob_name(productName,
                                                   info["previousVersion"],
-                                                  info["previousBuildNumber"] ,
-                                                  self.dummy),
+                                                  info["previousBuildNumber"],
+                                                  self.suffix),
                     "filesize": info["size"],
                     "hashValue": info["hash"],
                 })
@@ -481,14 +486,17 @@ class ReleaseSubmitterV4(ReleaseSubmitterBase, MultipleUpdatesReleaseMixin):
 
 
 class ReleasePusher(object):
-    def __init__(self, api_root, auth, dummy=False):
+    def __init__(self, api_root, auth, dummy=False, suffix=""):
         self.api_root = api_root
         self.auth = auth
-        self.dummy = dummy
+        if dummy and not suffix:
+            self.suffix = "-dummy"
+        else:
+            self.suffix = suffix
 
     def run(self, productName, version, build_number, rule_ids, backgroundRate=None):
         name = get_release_blob_name(productName, version, build_number,
-                                     self.dummy)
+                                     self.suffix)
         for rule_id in rule_ids:
             data = {"mapping": name}
             if backgroundRate:
@@ -498,14 +506,17 @@ class ReleasePusher(object):
 
 
 class ReleaseScheduler(object):
-    def __init__(self, api_root, auth, dummy=False):
+    def __init__(self, api_root, auth, dummy=False, suffix=""):
         self.api_root = api_root
         self.auth = auth
-        self.dummy = dummy
+        if dummy and not suffix:
+            self.suffix = "-dummy"
+        else:
+            self.suffix = suffix
 
     def run(self, productName, version, build_number, rule_ids, when, backgroundRate=None):
         name = get_release_blob_name(productName, version, build_number,
-                                     self.dummy)
+                                     self.suffix)
         for rule_id in rule_ids:
             data, data_version = Rule(api_root=self.api_root, auth=self.auth, rule_id=rule_id).get_data()
             data["fallbackMapping"] = data["mapping"]
