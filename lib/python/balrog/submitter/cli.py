@@ -25,7 +25,9 @@ def get_nightly_blob_name(productName, branch, build_type, suffix, dummy=False):
     return '%s-%s-%s-%s' % (productName, branch, build_type, suffix)
 
 
-def get_release_blob_name(productName, version, build_number, suffix=""):
+def get_release_blob_name(productName, version, build_number, suffix=None):
+    if suffix is None:
+        suffix = ""
     return '%s-%s-build%s%s' % (productName, version, build_number, suffix)
 
 
