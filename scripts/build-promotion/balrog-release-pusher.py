@@ -59,7 +59,13 @@ if __name__ == '__main__':
     parser.add_argument(
         "--dummy", action="store_true", default=False,
         help="Use dummy balrog blobs")
-
+    parser.add_argument("--suffix", help="Balrog blob suffix")
+    parser.add_argument(
+        "--complete-mar-filename-pattern",
+        help="Override complete MAR file name pattern, e.g. '%s-%s.bz2.complete.mar'")
+    parser.add_argument(
+        "--complete-mar-bouncer-product-pattern",
+        help="Override Bouncer product name pattern, e.g. '%s-%s-complete-bz2'")
 
     args = parser.parse_args()
     logging.basicConfig(format="%(message)s", level=args.loglevel)
@@ -72,8 +78,11 @@ if __name__ == '__main__':
     credentials = {}
     execfile(args.credentials_file, credentials)
     auth = (args.username, credentials['balrog_credentials'][args.username])
-    creator = ReleaseCreatorV4(args.api_root, auth, dummy=args.dummy)
-    pusher = ReleasePusher(args.api_root, auth, dummy=args.dummy)
+    creator = ReleaseCreatorV4(
+        args.api_root, auth, dummy=args.dummy, suffix=args.suffix,
+        complete_mar_filename_pattern=args.complete_mar_filename_pattern,
+        complete_mar_bouncer_product_pattern=args.complete_mar_bouncer_product_pattern)
+    pusher = ReleasePusher(args.api_root, auth, dummy=args.dummy, suffix=args.suffix)
 
     creator.run(
         appVersion=args.app_version,

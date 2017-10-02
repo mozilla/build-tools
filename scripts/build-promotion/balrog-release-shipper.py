@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
     from argparse import ArgumentParser
     parser = ArgumentParser()
-    parser.add_argument("-a", "--api-root", dest="api_root",required=True)
+    parser.add_argument("-a", "--api-root", dest="api_root", required=True)
     parser.add_argument("-c", "--credentials-file", dest="credentials_file", required=True)
     parser.add_argument("-u", "--username", dest="username", required=True)
     parser.add_argument("-V", "--version", dest="version", required=True)
@@ -31,6 +31,7 @@ if __name__ == '__main__':
     parser.add_argument("-s", "--schedule-at", dest="schedule_at", default=None)
     parser.add_argument("-B", "--background-rate", dest="backgroundRate", default=None)
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true")
+    parser.add_argument("--suffix", dest="suffix", help="Balrog blob suffix")
     args = parser.parse_args()
 
     logging_level = logging.INFO
@@ -44,7 +45,7 @@ if __name__ == '__main__':
     auth = (args.username, credentials['balrog_credentials'][args.username])
 
     if args.schedule_at:
-        scheduler = ReleaseScheduler(args.api_root, auth)
+        scheduler = ReleaseScheduler(args.api_root, auth, suffix=args.suffix)
         if args.backgroundRate:
             scheduler.run(args.product_name.capitalize(), args.version,
                           args.build_number, args.rule_ids, args.schedule_at, args.backgroundRate)
@@ -52,6 +53,6 @@ if __name__ == '__main__':
             scheduler.run(args.product_name.capitalize(), args.version,
                           args.build_number, args.rule_ids, args.schedule_at)
     else:
-        pusher = ReleasePusher(args.api_root, auth)
+        pusher = ReleasePusher(args.api_root, auth, suffix=args.suffix)
         pusher.run(args.product_name.capitalize(), args.version,
                 args.build_number, args.rule_ids, args.backgroundRate)

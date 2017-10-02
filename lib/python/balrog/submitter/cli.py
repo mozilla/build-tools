@@ -30,7 +30,9 @@ def get_release_blob_name(productName, version, build_number, suffix=""):
 
 
 class ReleaseCreatorBase(object):
-    def __init__(self, api_root, auth, dummy=False, suffix=""):
+    def __init__(self, api_root, auth, dummy=False, suffix="",
+                 complete_mar_filename_pattern=None,
+                 complete_mar_bouncer_product_pattern=None):
         self.api_root = api_root
         self.auth = auth
         self.suffix = suffix
@@ -38,7 +40,8 @@ class ReleaseCreatorBase(object):
             self.suffix = "-dummy"
         else:
             self.suffix = suffix
-
+        self.complete_mar_filename_pattern = complete_mar_filename_pattern or '%s-%s.complete.mar'
+        self.complete_mar_bouncer_product_pattern = complete_mar_bouncer_product_pattern or '%s-%s-complete'
 
     def generate_data(self, appVersion, productName, version, buildNumber,
                       updateChannels, ftpServer, bouncerServer,
@@ -146,7 +149,7 @@ class ReleaseCreatorV3(ReleaseCreatorBase):
         data = {
             "ftpFilenames": {
                 "completes": {
-                    "*": "%s-%s.complete.mar" % (file_prefix, version),
+                    "*": self.complete_mar_filename_pattern % (file_prefix, version),
                 }
             },
             "bouncerProducts": {
@@ -187,7 +190,6 @@ class ReleaseCreatorV4(ReleaseCreatorBase):
         if file_prefix == "devedition":
             file_prefix = "firefox"
 
-
         # "*" is for the default set of fileUrls, which generally points at
         # bouncer. It's helpful to have this to reduce duplication between
         # the live channel and the cdntest channel (which eliminates the
@@ -214,7 +216,7 @@ class ReleaseCreatorV4(ReleaseCreatorBase):
                 dir_ = makeCandidatesDir(productName.lower(), version,
                                          buildNumber, server=ftpServer,
                                          protocol='http')
-                filename = "%s-%s.complete.mar" % (file_prefix, version)
+                filename = self.complete_mar_filename_pattern % (file_prefix, version)
                 data["fileUrls"][channel]["completes"]["*"] = "%supdate/%%OS_FTP%%/%%LOCALE%%/%s" % (dir_, filename)
             else:
                 # See comment above about these channels for explanation.
@@ -224,7 +226,7 @@ class ReleaseCreatorV4(ReleaseCreatorBase):
                     if productName.lower() == "fennec":
                         bouncerProduct = "%s-%s" % (productName.lower(), version)
                     else:
-                        bouncerProduct = "%s-%s-complete" % (productName.lower(), version)
+                        bouncerProduct = self.complete_mar_bouncer_product_pattern % (productName.lower(), version)
                 url = 'http://%s/?product=%s&os=%%OS_BOUNCER%%&lang=%%LOCALE%%' % (bouncerServer, bouncerProduct)
                 data["fileUrls"][channel]["completes"]["*"] = url
 
