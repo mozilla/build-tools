@@ -410,13 +410,14 @@ class NightlySubmitterV4(NightlySubmitterBase, MultipleUpdatesNightlyMixin):
 
 
 class ReleaseSubmitterBase(object):
-    def __init__(self, api_root, auth, dummy=False, suffix=""):
+    def __init__(self, api_root, auth, dummy=False, suffix="", from_suffix=""):
         self.api_root = api_root
         self.auth = auth
         if dummy and not suffix:
             self.suffix = "-dummy"
         else:
             self.suffix = suffix
+        self.from_suffix = from_suffix
 
     def run(self, platform, productName, appVersion, version, build_number, locale,
             hashFunction, extVersion, buildID, schemaVersion, **updateKwargs):
