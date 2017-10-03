@@ -33,11 +33,13 @@ def get_release_blob_name(productName, version, build_number, suffix=None):
 
 class ReleaseCreatorBase(object):
     def __init__(self, api_root, auth, dummy=False, suffix="",
+                 from_suffix="",
                  complete_mar_filename_pattern=None,
                  complete_mar_bouncer_product_pattern=None):
         self.api_root = api_root
         self.auth = auth
         self.suffix = suffix
+        self.from_suffix = from_suffix
         if dummy and not suffix:
             self.suffix = "-dummy"
         else:
@@ -167,7 +169,7 @@ class ReleaseCreatorV3(ReleaseCreatorBase):
             for previousVersion, previousInfo in partialUpdates.iteritems():
                 from_ = get_release_blob_name(productName, previousVersion,
                                               previousInfo["buildNumber"],
-                                              self.suffix)
+                                              self.from_suffix)
                 filename = "%s-%s-%s.partial.mar" % (file_prefix, previousVersion, version)
                 bouncerProduct = "%s-%s-partial-%s" % (productName.lower(), version, previousVersion)
                 data["ftpFilenames"]["partials"][from_] = filename
@@ -239,8 +241,8 @@ class ReleaseCreatorV4(ReleaseCreatorBase):
             data["fileUrls"][channel]["partials"] = {}
             for previousVersion, previousInfo in partialUpdates.iteritems():
                 from_ = get_release_blob_name(productName, previousVersion,
-                                                previousInfo["buildNumber"],
-                                                self.suffix)
+                                              previousInfo["buildNumber"],
+                                              self.from_suffix)
                 if "localtest" in channel:
                     dir_ = makeCandidatesDir(productName.lower(), version,
                                             buildNumber, server=ftpServer,
@@ -456,7 +458,7 @@ class MultipleUpdatesReleaseMixin(object):
             for info in completeInfo:
                 if "previousVersion" in info:
                     from_ = get_release_blob_name(productName, version,
-                                                  build_number, self.suffix)
+                                                  build_number, self.from_suffix)
                 else:
                     from_ = "*"
                 data["completes"].append({
@@ -471,7 +473,7 @@ class MultipleUpdatesReleaseMixin(object):
                     "from": get_release_blob_name(productName,
                                                   info["previousVersion"],
                                                   info["previousBuildNumber"],
-                                                  self.suffix),
+                                                  self.from_suffix),
                     "filesize": info["size"],
                     "hashValue": info["hash"],
                 })
