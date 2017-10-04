@@ -167,7 +167,7 @@ def get_l10n_config(index, product, branch, revision, platforms,
             )
             if platform.startswith("mac"):
                 # FIXME: dirty dirty hack
-                if branch == "mozilla-beta":
+                if branch in ("mozilla-beta", "jamun", "maple"):
                     if product == "devedition":
                         mar_tools_url = "https://archive.mozilla.org/pub/devedition/candidates/55.0b14-candidates/build1/mar-tools/macosx64"
                     elif product == "firefox":
