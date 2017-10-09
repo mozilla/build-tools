@@ -196,7 +196,7 @@
     "access": "scm_level_1",
     "features": {
         "taskcluster-cron": false,
-        "taskcluster-push": false
+        "taskcluster-push": true
     }
   },
   "larch": {
