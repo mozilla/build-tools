@@ -3,6 +3,7 @@
 from os import path
 import logging
 import sys
+import os
 
 # Use explicit version of python-requests
 sys.path.insert(0, path.join(path.dirname(__file__),
@@ -31,7 +32,6 @@ if __name__ == '__main__':
     parser.add_argument("-s", "--schedule-at", dest="schedule_at", default=None)
     parser.add_argument("-B", "--background-rate", dest="backgroundRate", default=None)
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true")
-    parser.add_argument("--suffix", dest="suffix", help="Balrog blob suffix")
     args = parser.parse_args()
 
     logging_level = logging.INFO
@@ -43,9 +43,10 @@ if __name__ == '__main__':
     credentials = {}
     execfile(args.credentials_file, credentials)
     auth = (args.username, credentials['balrog_credentials'][args.username])
+    suffix = os.environ.get("BALROG_BLOB_SUFFIX")
 
     if args.schedule_at:
-        scheduler = ReleaseScheduler(args.api_root, auth, suffix=args.suffix)
+        scheduler = ReleaseScheduler(args.api_root, auth, suffix=suffix)
         if args.backgroundRate:
             scheduler.run(args.product_name.capitalize(), args.version,
                           args.build_number, args.rule_ids, args.schedule_at, args.backgroundRate)
@@ -53,6 +54,6 @@ if __name__ == '__main__':
             scheduler.run(args.product_name.capitalize(), args.version,
                           args.build_number, args.rule_ids, args.schedule_at)
     else:
-        pusher = ReleasePusher(args.api_root, auth, suffix=args.suffix)
+        pusher = ReleasePusher(args.api_root, auth, suffix=suffix)
         pusher.run(args.product_name.capitalize(), args.version,
                 args.build_number, args.rule_ids, args.backgroundRate)

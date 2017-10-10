@@ -3,6 +3,7 @@ from os import path
 import logging
 import sys
 import argparse
+import os
 
 # Use explicit version of python-requests
 sys.path.insert(0, path.join(path.dirname(__file__),
@@ -59,7 +60,6 @@ if __name__ == '__main__':
     parser.add_argument(
         "--dummy", action="store_true", default=False,
         help="Use dummy balrog blobs")
-    parser.add_argument("--suffix", help="Balrog blob suffix")
     parser.add_argument(
         "--complete-mar-filename-pattern",
         help="Override complete MAR file name pattern, e.g. '%s-%s.bz2.complete.mar'")
@@ -78,11 +78,12 @@ if __name__ == '__main__':
     credentials = {}
     execfile(args.credentials_file, credentials)
     auth = (args.username, credentials['balrog_credentials'][args.username])
+    suffix = os.environ.get("BALROG_BLOB_SUFFIX")
     creator = ReleaseCreatorV4(
-        args.api_root, auth, dummy=args.dummy, suffix=args.suffix,
+        args.api_root, auth, dummy=args.dummy, suffix=suffix,
         complete_mar_filename_pattern=args.complete_mar_filename_pattern,
         complete_mar_bouncer_product_pattern=args.complete_mar_bouncer_product_pattern)
-    pusher = ReleasePusher(args.api_root, auth, dummy=args.dummy, suffix=args.suffix)
+    pusher = ReleasePusher(args.api_root, auth, dummy=args.dummy, suffix=suffix)
 
     creator.run(
         appVersion=args.app_version,
