@@ -46,7 +46,8 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                   usePymake=False, tooltoolManifest=None,
                   tooltool_script=None, tooltool_urls=None,
                   balrog_submitter=None, balrog_hash="sha512",
-                  mozillaDir=None, mozillaSrcDir=None, bucket_prefix=None):
+                  mozillaDir=None, mozillaSrcDir=None, bucket_prefix=None,
+                  marSignatureFormat='mar'):
     buildid = retry(getBuildID, args=(platform, product, version,
                                       buildNumber, 'candidates', ftpServer))
     log.info('Got buildid: %s' % buildid)
@@ -139,7 +140,8 @@ def createRepacks(sourceRepo, revision, l10nRepoDir, l10nBaseRepo,
                                           productName=product, platform=platform,
                                           version=version, partialUpdates=partialUpdates,
                                           buildNumber=buildNumber, stageServer=ftpServer,
-                                          mozillaDir=mozillaDir, mozillaSrcDir=mozillaSrcDir)
+                                          mozillaDir=mozillaDir, mozillaSrcDir=mozillaSrcDir,
+                                          marSignatureFormat=marSignatureFormat)
 
             if balrog_submitter:
                 # TODO: partials, after bug 797033 is fixed
@@ -382,4 +384,5 @@ if __name__ == "__main__":
         mozillaDir=mozillaDir,
         mozillaSrcDir=mozillaSrcDir,
         bucket_prefix=branchConfig['bucket_prefix'],
+        marSignatureFormat=releaseConfig.get('marSignatureFormat', 'mar')
     )

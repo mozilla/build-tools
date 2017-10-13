@@ -105,7 +105,8 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
                  productName=None, platform=None,
                  version=None, partialUpdates=None,
                  buildNumber=None, stageServer=None,
-                 mozillaDir=None, mozillaSrcDir=None):
+                 mozillaDir=None, mozillaSrcDir=None,
+                 marSignatureFormat='mar'):
     repo = "/".join([l10nBaseRepo, locale])
     localeDir = path.join(l10nRepoDir, locale)
     mercurial(repo, localeDir)
@@ -212,8 +213,8 @@ def repackLocale(locale, l10nRepoDir, l10nBaseRepo, revision, localeSrcDir,
                     current], cwd=nativeDistDir, env=env)
             if os.environ.get('MOZ_SIGN_CMD'):
                 run_cmd(['bash', '-c',
-                        '%s -f mar "%s"' %
-                        (os.environ['MOZ_SIGN_CMD'], partial_mar)],
+                        '%s -f %s "%s"' %
+                        (os.environ['MOZ_SIGN_CMD'], marSignatureFormat, partial_mar)],
                         env=env)
                 UPLOAD_EXTRA_FILES.append(
                     '%s/%s.asc' % (updateDir, partial_mar_name))
