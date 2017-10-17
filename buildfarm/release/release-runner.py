@@ -478,6 +478,7 @@ def main(options):
                     tc_task_indexes=branchConfig['tc_indexes'][release['product']],
                 ),
                 "verifyConfigs": {},
+                "balrog_vpn_proxy": branchConfig["balrog_vpn_proxy"],
                 "balrog_api_root": branchConfig["balrog_api_root"],
                 "funsize_balrog_api_root": branchConfig["funsize_balrog_api_root"],
                 "balrog_username": balrog_username,

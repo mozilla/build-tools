@@ -48,6 +48,7 @@ def main(release_runner_config, release_config, tc_config, options):
         "l10n_changesets": release_config["l10n_changesets"],
 
         # was branchConfig items
+        "balrog_vpn_proxy": release_config["balrog_vpn_proxy"],
         "funsize_balrog_api_root": release_config["funsize_balrog_api_root"],
         "balrog_api_root": release_config["balrog_api_root"],
         "build_tools_repo_path": release_config['build_tools_repo_path'],

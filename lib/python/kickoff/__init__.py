@@ -293,7 +293,7 @@ def make_task_graph_strict_kwargs(appVersion, balrog_api_root, balrog_password, 
                                   tuxedo_server_url, update_verify_enabled, updates_builder_enabled,
                                   updates_enabled, verifyConfigs, version, publish_to_balrog_channels,
                                   snap_enabled, update_verify_channel, update_verify_requires_cdn_push,
-                                  release_eta, lzma_to_bz2):
+                                  release_eta, lzma_to_bz2, balrog_vpn_proxy):
     """simple wrapper that sanitizes whatever calls make_task_graph uses universally known kwargs"""
 
     kwargs = dict(
@@ -301,6 +301,7 @@ def make_task_graph_strict_kwargs(appVersion, balrog_api_root, balrog_password, 
         balrog_api_root=balrog_api_root,
         balrog_password=balrog_password,
         balrog_username=balrog_username,
+        balrog_vpn_proxy=balrog_vpn_proxy,
         beetmover_aws_access_key_id=beetmover_aws_access_key_id,
         beetmover_aws_secret_access_key=beetmover_aws_secret_access_key,
         beetmover_candidates_bucket=beetmover_candidates_bucket,
