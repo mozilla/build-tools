@@ -1,4 +1,5 @@
 import copy
+import json
 import jsone
 import logging
 import requests
@@ -53,5 +54,5 @@ def generate_action_task(project, revision, next_version, build_number, release_
 def submit_action_task(queue, action_task_id, action_task):
     result = queue.createTask(action_task_id, action_task)
     log.info("Submitted action task %s", action_task_id)
-    log.info("Action task:\n%s", action_task)
+    log.info("Action task:\n%s", json.dumps(action_task, sort_keys=True, indent=2))
     log.info("Result:\n%s", result)
