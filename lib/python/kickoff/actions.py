@@ -25,22 +25,20 @@ def fetch_actions_json(task_id):
     return q.json()
 
 
-def generate_action_task(project, revision, next_version, build_number, release_promotion_flavor):
+def find_decision_task_id(project, revision):
     decision_task_route = "gecko.v2.{project}.revision.{revision}.firefox.decision".format(
          project=project, revision=revision)
     index = taskcluster.Index()
-    decision_task_id = index.findTask(decision_task_route)["taskId"]
-    actions = fetch_actions_json(decision_task_id)
+    return index.findTask(decision_task_route)["taskId"]
 
+
+def generate_action_task(project, revision, action_task_input):
+    actions = fetch_actions_json(find_decision_task_id(project, revision))
     relpro = find_action("release-promotion", actions)
     context = copy.deepcopy(actions["variables"])  # parameters
     action_task_id = slugid.nice()
     context.update({
-        "input": {
-            "build_number": build_number,
-            "next_version": next_version,
-            "release_promotion_flavor": release_promotion_flavor,
-        },
+        "input": action_task_input,
         "ownTaskId": action_task_id,
         "taskId": None,
         "task": None,

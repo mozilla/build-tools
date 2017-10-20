@@ -9,7 +9,7 @@ from os import path
 
 site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 
-from kickoff.actions import generate_action_task, submit_action_task
+from kickoff.actions import generate_action_task, submit_action_task, find_decision_task_id
 
 log = logging.getLogger(__name__)
 SUPPORTED_ACTIONS = ["publish_fennec"]
@@ -45,21 +45,29 @@ def main():
     queue = taskcluster.Queue(tc_config)
 
     task = get_task(args.action_task_id)
-    action_input = task["extra"]["action"]["context"]["input"]
+    prev_action_input = task["extra"]["action"]["context"]["input"]
     parameters = task["extra"]["action"]["context"]["parameters"]
+    project = parameters["project"]
+    revision = parameters["head_rev"]
+    decision_task_id = find_decision_task_id(project, revision)
+    action_task_input = {
+        "build_number": prev_action_input["build_number"],
+        "next_version": prev_action_input["next_version"],
+        "release_promotion_flavor": args.action_flavor,
+        # TODO: previous_graph_ids for Firefox may contain more then 2 items.
+        "previous_graph_ids": [decision_task_id, args.action_task_id],
+    }
     action_task_id, action_task = generate_action_task(
             project=parameters["project"],
             revision=parameters["head_rev"],
-            next_version=action_input["next_version"],
-            build_number=action_input["build_number"],
-            release_promotion_flavor=args.action_flavor
+            action_task_input=action_task_input,
     )
 
     log.info("Submitting action task %s for %s", action_task_id, args.action_flavor)
-    log.info("Project: %s", parameters["project"])
-    log.info("Revision: %s", parameters["head_rev"])
-    log.info("Next version: %s", action_input["next_version"])
-    log.info("Build number: %s", action_input["build_number"])
+    log.info("Project: %s", project)
+    log.info("Revision: %s", revision)
+    log.info("Next version: %s", prev_action_input["next_version"])
+    log.info("Build number: %s", prev_action_input["build_number"])
     log.info("Task definition:\n%s", json.dumps(action_task, sort_keys=True, indent=2))
     if not args.force:
         yes_no = raw_input("Submit the task? [y/N]: ")

@@ -20,7 +20,7 @@ site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 
 from kickoff import ReleaseRunner, long_revision, email_release_drivers, bump_version
 from kickoff.sanity.revisions import RevisionsSanitizer
-from kickoff.actions import generate_action_task, submit_action_task
+from kickoff.actions import generate_action_task, submit_action_task, find_decision_task_id
 
 
 log = logging.getLogger(__name__)
@@ -136,12 +136,19 @@ def main(options):
     for release in new_releases:
         try:
             next_version = bump_version(release["version"].replace("esr", ""))
+            project = release["branchShortName"]
+            revision = release["mozillaRevision"]
+            decision_task_id = find_decision_task_id(project, revision)
+            action_task_input = {
+                "build_number": release["buildNumber"],
+                "next_version": next_version,
+                "release_promotion_flavor": "promote_{}".format(release["product"]),
+                "previous_graph_ids": [decision_task_id],
+            }
             action_task_id, action_task = generate_action_task(
-                    project=release["branchShortName"],
-                    revision=release["mozillaRevision"],
-                    next_version=next_version,
-                    build_number=release["buildNumber"],
-                    release_promotion_flavor="promote_{}".format(release["product"])
+                project=release["branchShortName"],
+                revision=release["mozillaRevision"],
+                action_task_input=action_task_input,
             )
             submit_action_task(queue=queue, action_task_id=action_task_id,
                                action_task=action_task)
