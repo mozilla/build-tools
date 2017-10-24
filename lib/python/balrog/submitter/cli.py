@@ -520,9 +520,17 @@ class ReleaseScheduler(object):
         else:
             self.suffix = suffix
 
-    def run(self, productName, version, build_number, rule_ids, when, backgroundRate=None):
+    def run(self, productName, version, build_number, rule_ids, when=None, backgroundRate=None):
         name = get_release_blob_name(productName, version, build_number,
                                      self.suffix)
+
+        if when is not None:
+            when = arrow.get(when)
+
+        soon = arrow.now().shift(minutes=2)
+        if when is None or when < soon:
+            when = soon
+
         for rule_id in rule_ids:
             data, data_version = Rule(api_root=self.api_root, auth=self.auth, rule_id=rule_id).get_data()
             data["fallbackMapping"] = data["mapping"]
@@ -531,7 +539,7 @@ class ReleaseScheduler(object):
             data["rule_id"] = rule_id
             data["change_type"] = "update"
             # We receive an iso8601 datetime, but what Balrog needs is a to-the-millisecond epoch timestamp
-            data["when"] = arrow.get(when).timestamp * 1000
+            data["when"] = when.timestamp * 1000
             if backgroundRate:
                 data["backgroundRate"] = backgroundRate
 

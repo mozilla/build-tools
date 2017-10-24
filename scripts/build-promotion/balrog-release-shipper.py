@@ -16,7 +16,7 @@ sys.path.insert(0, path.join(path.dirname(__file__),
                              "../../lib/python/vendor/six-1.10.0"))
 sys.path.insert(0, path.join(path.dirname(__file__), "../../lib/python"))
 
-from balrog.submitter.cli import ReleasePusher, ReleaseScheduler
+from balrog.submitter.cli import ReleaseScheduler
 
 if __name__ == '__main__':
 
@@ -45,15 +45,10 @@ if __name__ == '__main__':
     auth = (args.username, credentials['balrog_credentials'][args.username])
     suffix = os.environ.get("BALROG_BLOB_SUFFIX")
 
-    if args.schedule_at:
-        scheduler = ReleaseScheduler(args.api_root, auth, suffix=suffix)
-        if args.backgroundRate:
-            scheduler.run(args.product_name.capitalize(), args.version,
-                          args.build_number, args.rule_ids, args.schedule_at, args.backgroundRate)
-        else:
-            scheduler.run(args.product_name.capitalize(), args.version,
-                          args.build_number, args.rule_ids, args.schedule_at)
+    scheduler = ReleaseScheduler(args.api_root, auth, suffix=suffix)
+    if args.backgroundRate:
+        scheduler.run(args.product_name.capitalize(), args.version,
+                      args.build_number, args.rule_ids, args.schedule_at, args.backgroundRate)
     else:
-        pusher = ReleasePusher(args.api_root, auth, suffix=suffix)
-        pusher.run(args.product_name.capitalize(), args.version,
-                args.build_number, args.rule_ids, args.backgroundRate)
+        scheduler.run(args.product_name.capitalize(), args.version,
+                      args.build_number, args.rule_ids, args.schedule_at)
