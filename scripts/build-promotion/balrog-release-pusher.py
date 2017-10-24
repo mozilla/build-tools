@@ -42,7 +42,7 @@ if __name__ == '__main__':
         help="Buildbot-style platforms")
     parser.add_argument(
         "--partial-update", dest="partial_updates", action="append",
-        required=True, help="List of partials, including build number (44.0b1build2)")
+        help="List of partials, including build number (44.0b1build2)")
     parser.add_argument(
         "--requires-mirrors", action="store_true", default=False)
     parser.add_argument(
@@ -71,9 +71,10 @@ if __name__ == '__main__':
     logging.basicConfig(format="%(message)s", level=args.loglevel)
 
     partials = {}
-    for v in args.partial_updates:
-        version, build_number = v.split("build")
-        partials[version] = {"buildNumber": build_number}
+    if args.partial_updates:
+        for v in args.partial_updates:
+            version, build_number = v.split("build")
+            partials[version] = {"buildNumber": build_number}
 
     credentials = {}
     execfile(args.credentials_file, credentials)
