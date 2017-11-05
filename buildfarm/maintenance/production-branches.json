@@ -5,6 +5,9 @@
     "access": "scm_level_2",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "taskcluster-cron": true,
         "taskcluster-push": true
     }
@@ -15,6 +18,9 @@
     "access": "scm_level_3",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "taskcluster-cron": true,
         "taskcluster-push": true
     }
@@ -25,6 +31,9 @@
     "access": "scm_level_3",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "taskcluster-cron": true,
         "taskcluster-push": true
     }
@@ -45,6 +54,9 @@
     "access": "scm_level_3",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "taskcluster-cron": true,
         "taskcluster-push": true
     }
@@ -55,6 +67,9 @@
     "access": "scm_level_2",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "taskcluster-cron": true,
         "taskcluster-push": true
     }
@@ -65,6 +80,9 @@
     "access": "scm_level_3",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "taskcluster-cron": true,
         "taskcluster-push": true
     }
@@ -85,6 +103,9 @@
     "access": "scm_level_3",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "is-trunk": true,
         "taskcluster-cron": true,
         "taskcluster-push": true
@@ -96,6 +117,9 @@
     "access": "scm_level_3",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "is-trunk": true,
         "taskcluster-cron": true,
         "taskcluster-push": true
@@ -117,6 +141,9 @@
     "access": "scm_level_2",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "taskcluster-cron": true,
         "taskcluster-push": true
     }
@@ -127,6 +154,9 @@
     "access": "scm_level_2",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "taskcluster-cron": true,
         "taskcluster-push": true
     }
@@ -137,6 +167,9 @@
     "access": "scm_level_2",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "taskcluster-cron": true,
         "taskcluster-push": true
     }
@@ -147,6 +180,9 @@
     "access": "scm_level_2",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "taskcluster-cron": true,
         "taskcluster-push": true
     }
@@ -167,6 +203,9 @@
     "access": "scm_level_3",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "taskcluster-cron": false,
         "taskcluster-push": false
     }
@@ -177,6 +216,9 @@
     "access": "scm_level_2",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "taskcluster-cron": true,
         "taskcluster-push": true
     }
@@ -187,6 +229,9 @@
     "access": "scm_level_2",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "taskcluster-cron": true,
         "taskcluster-push": true
     }
@@ -197,6 +242,9 @@
     "access": "scm_level_1",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "taskcluster-cron": false,
         "taskcluster-push": true
     }
@@ -207,6 +255,9 @@
     "access": "scm_level_1",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "taskcluster-cron": false,
         "taskcluster-push": true
     }
@@ -227,6 +278,9 @@
     "access": "scm_level_2",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "taskcluster-cron": true,
         "taskcluster-push": true
     }
@@ -237,6 +291,9 @@
     "access": "scm_level_3",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "taskcluster-cron": true,
         "taskcluster-push": true
     }
@@ -247,6 +304,9 @@
     "access": "scm_level_2",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "taskcluster-cron": true,
         "taskcluster-push": true
     }
@@ -257,6 +317,9 @@
     "access": "scm_level_2",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "taskcluster-cron": true,
         "taskcluster-push": true
     }
@@ -267,6 +330,9 @@
     "access": "scm_level_3",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "taskcluster-cron": true,
         "taskcluster-push": true
     }
@@ -277,6 +343,9 @@
     "access": "scm_level_3",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "is-trunk": true,
         "taskcluster-cron": true,
         "taskcluster-push": true
@@ -288,6 +357,9 @@
     "access": "scm_level_2",
     "trust_domain": "gecko",
     "features": {
+        "buildbot": true,
+        "taskcluster-docker-routes-v1": true,
+        "taskcluster-docker-routes-v2": true,
         "taskcluster-cron": false,
         "taskcluster-push": true
     }
