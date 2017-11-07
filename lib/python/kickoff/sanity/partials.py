@@ -92,7 +92,7 @@ class PartialsTestSuite(ReleaseSanitizerTestSuite):
         if partials were all-beta OR if no-beta at all
         """
         log.info("Testing RC partials ...")
-        if not is_candidate_release(self.kwargs["release_channels"]):
+        if not is_candidate_release(self.kwargs.get("release_channels")):
             log.info("Skipping this test as we're not dealing with a RC now")
             return
 

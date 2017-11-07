@@ -18,7 +18,9 @@ from twisted.python.lockfile import FilesystemLock
 
 site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 
-from kickoff import ReleaseRunner, long_revision, email_release_drivers, bump_version
+from kickoff import (ReleaseRunner, long_revision, email_release_drivers,
+                     bump_version, get_partials)
+from kickoff.sanity.partials import PartialsSanitizer
 from kickoff.sanity.revisions import RevisionsSanitizer
 from kickoff.actions import generate_action_task, submit_action_task, find_decision_task_id
 
@@ -45,10 +47,17 @@ def check_allowed_branches(release_runner, release, releases_config):
     raise RuntimeError("%s branch not allowed: %s", branch, allowed_branches)
 
 
+def assign_and_check_partial_updates(release_runner, release, releases_config):
+    release['partial_updates'] = get_partials(
+        release_runner, release['partials'], release['product'])
+    PartialsSanitizer(**release).run()
+
+
 # So people can't run arbitrary functions
 CHECKS_MAPPING = {
     'long_revision': check_and_assign_long_revision,
     'check_allowed_branches': check_allowed_branches,
+    'partial_updates': assign_and_check_partial_updates,
 }
 
 
@@ -145,6 +154,13 @@ def main(options):
                 "release_promotion_flavor": "promote_{}".format(release["product"]),
                 "previous_graph_ids": [decision_task_id],
             }
+            if "partial_updates" in release:
+                action_task_input["partial_updates"] = {}
+                for version, info in release["partial_updates"].items():
+                    action_task_input["partial_updates"][version] = {
+                        "buildNumber": info["buildNumber"],
+                        "locales": info["locales"]
+                    }
             action_task_id, action_task = generate_action_task(
                 project=release["branchShortName"],
                 revision=release["mozillaRevision"],

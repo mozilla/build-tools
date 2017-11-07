@@ -48,7 +48,7 @@ def is_candidate_release(channels):
      1) one channel to test the 'candidate' release with: 'beta' channel
      2) once verified, we ship to the main channel: 'release' channel
     """
-    return len(channels) > 1
+    return channels and len(channels) > 1
 
 
 class SanityException(Exception):
