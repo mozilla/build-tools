@@ -28,6 +28,8 @@ def main():
         "--action-task-id", required=True,
         help="Task ID of the initial action task (promote_fennec or promote_firefox"
     )
+    parser.add_argument("--previous-graph-ids",
+                        help="Override previous graphs, inlcuding the decision task")
     parser.add_argument("--release-runner-config", required=True, type=argparse.FileType('r'),
                         help="Release runner config")
     parser.add_argument("--action-flavor", required=True, choices=SUPPORTED_ACTIONS)
@@ -49,13 +51,15 @@ def main():
     parameters = task["extra"]["action"]["context"]["parameters"]
     project = parameters["project"]
     revision = parameters["head_rev"]
-    decision_task_id = find_decision_task_id(project, revision)
+    previous_graph_ids = args.previous_graph_ids
+    if not previous_graph_ids:
+        previous_graph_ids = [find_decision_task_id(project, revision)]
     action_task_input = {
         "build_number": prev_action_input["build_number"],
         "next_version": prev_action_input["next_version"],
         "release_promotion_flavor": args.action_flavor,
         # TODO: previous_graph_ids for Firefox may contain more then 2 items.
-        "previous_graph_ids": [decision_task_id, args.action_task_id],
+        "previous_graph_ids": previous_graph_ids + [args.action_task_id],
     }
     action_task_id, action_task = generate_action_task(
             project=parameters["project"],
