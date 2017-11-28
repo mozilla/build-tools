@@ -12,7 +12,14 @@ site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 from kickoff.actions import generate_action_task, submit_action_task, find_decision_task_id
 
 log = logging.getLogger(__name__)
-SUPPORTED_ACTIONS = ["publish_fennec"]
+SUPPORTED_ACTIONS = [
+    "publish_fennec",
+    "push_devedition",
+    "push_firefox",
+    "ship_devedition",
+    "ship_fennec",
+    "ship_firefox",
+]
 
 
 def get_task(task_id):
