@@ -18,6 +18,8 @@ from twisted.python.lockfile import FilesystemLock
 
 site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 
+from release.info import isFinalRelease
+
 from kickoff import (ReleaseRunner, long_revision, email_release_drivers,
                      bump_version, get_partials)
 from kickoff.sanity.partials import PartialsSanitizer
@@ -161,6 +163,29 @@ def main(options):
                         "buildNumber": info["buildNumber"],
                         "locales": info["locales"]
                     }
+            if release["product"] == "firefox":
+                if "b" in release["version"]:
+                    action_task_input["desktop_release_type"] = "beta"
+                elif "esr" in release["version"]:
+                    action_task_input["desktop_release_type"] = "esr"
+                else:
+                    # RC release types will enable beta-channel testing &
+                    # shipping. We need this for all "final" releases
+                    # and also any releases that include a beta as a partial.
+                    # The assumption than "shipping to beta channel" always
+                    # implies other RC behaviour is bound to break at some
+                    # point, but this works for now.
+                    if isFinalRelease(release["version"]):
+                        action_task_input["desktop_release_type"] = "rc"
+                    else:
+                        for version in release["partial_updates"]:
+                            if "b" in version:
+                                action_task_input["desktop_release_type"] = "rc"
+                                break
+                        else:
+                            action_task_input["desktop_release_type"] = "release"
+            elif release["product"] == "devedition":
+                action_task_input["desktop_release_type"] = "devedition"
             action_task_id, action_task = generate_action_task(
                 project=release["branchShortName"],
                 revision=release["mozillaRevision"],
