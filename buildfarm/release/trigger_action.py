@@ -4,6 +4,7 @@ import logging
 import site
 import taskcluster
 import yaml
+import copy
 
 from os import path
 
@@ -54,20 +55,18 @@ def main():
     queue = taskcluster.Queue(tc_config)
 
     task = get_task(args.action_task_id)
-    prev_action_input = task["extra"]["action"]["context"]["input"]
+    action_task_input = copy.deepcopy(task["extra"]["action"]["context"]["input"])
     parameters = task["extra"]["action"]["context"]["parameters"]
     project = parameters["project"]
     revision = parameters["head_rev"]
     previous_graph_ids = args.previous_graph_ids
     if not previous_graph_ids:
         previous_graph_ids = [find_decision_task_id(project, revision)]
-    action_task_input = {
-        "build_number": prev_action_input["build_number"],
-        "next_version": prev_action_input["next_version"],
+    action_task_input.update({
         "release_promotion_flavor": args.action_flavor,
         # TODO: previous_graph_ids for Firefox may contain more then 2 items.
         "previous_graph_ids": previous_graph_ids + [args.action_task_id],
-    }
+    })
     action_task_id, action_task = generate_action_task(
             project=parameters["project"],
             revision=parameters["head_rev"],
@@ -77,8 +76,8 @@ def main():
     log.info("Submitting action task %s for %s", action_task_id, args.action_flavor)
     log.info("Project: %s", project)
     log.info("Revision: %s", revision)
-    log.info("Next version: %s", prev_action_input["next_version"])
-    log.info("Build number: %s", prev_action_input["build_number"])
+    log.info("Next version: %s", action_task_input["next_version"])
+    log.info("Build number: %s", action_task_input["build_number"])
     log.info("Task definition:\n%s", json.dumps(action_task, sort_keys=True, indent=2))
     if not args.force:
         yes_no = raw_input("Submit the task? [y/N]: ")
