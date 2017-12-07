@@ -62,9 +62,10 @@ def main():
     previous_graph_ids = args.previous_graph_ids
     if not previous_graph_ids:
         previous_graph_ids = [find_decision_task_id(project, revision)]
+    else:
+        previous_graph_ids = previous_graph_ids.split(',')
     action_task_input.update({
         "release_promotion_flavor": args.action_flavor,
-        # TODO: previous_graph_ids for Firefox may contain more then 2 items.
         "previous_graph_ids": previous_graph_ids + [args.action_task_id],
     })
     action_task_id, action_task = generate_action_task(
