@@ -25,6 +25,9 @@ if [ -n "$PROPERTIES_FILE" -a -f "$PROPERTIES_FILE" ]; then
     if $JSONTOOL -k properties.NO_BBCONFIG $PROPERTIES_FILE; then
        NO_BBCONFIG=$($JSONTOOL -k properties.NO_BBCONFIG $PROPERTIES_FILE);
     fi
+    if $JSONTOOL -k properties.CHANNEL $PROPERTIES_FILE; then
+       CHANNEL=$($JSONTOOL -k properties.CHANNEL $PROPERTIES_FILE);
+    fi
     if $JSONTOOL -k properties.VERIFY_CONFIG $PROPERTIES_FILE; then
        VERIFY_CONFIG=$($JSONTOOL -k properties.VERIFY_CONFIG $PROPERTIES_FILE);
     fi
