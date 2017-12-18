@@ -5,6 +5,10 @@ import site
 import taskcluster
 import yaml
 import copy
+from urllib import unquote
+import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
 from os import path
 
@@ -28,6 +32,35 @@ def get_task(task_id):
     return queue.task(task_id)
 
 
+# https://www.peterbe.com/plog/best-practice-with-retries-with-requests
+def requests_retry_session(
+    retries=5,
+    backoff_factor=0.3,
+    status_forcelist=(500, 502, 504),
+    session=None,
+):
+    session = session or requests.Session()
+    retry = Retry(
+        total=retries,
+        read=retries,
+        connect=retries,
+        backoff_factor=backoff_factor,
+        status_forcelist=status_forcelist,
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('http://', adapter)
+    session.mount('https://', adapter)
+    return session
+
+
+def get_artifact_text(queue, task_id, path):
+    """Retries download + returns the contents of the artifact"""
+    url = unquote(queue.buildUrl('getLatestArtifact', task_id, path))
+    r = requests_retry_session().get(url, timeout=5)
+    r.raise_for_status()
+    return r.text
+
+
 def main():
     logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
                         level=logging.INFO)
@@ -36,8 +69,15 @@ def main():
         "--action-task-id", required=True,
         help="Task ID of the initial action task (promote_fennec or promote_firefox"
     )
+    parser.add_argument(
+        "--decision-task-id",
+        help="(Optional) Specify the decision task of the revision to use. "
+        "Normally we would use the revision from the action_task_id, but "
+        "we may want to specify a separate revision for this action, e.g. when "
+        "we land a fix for the push or ship phases but don't want to re-promote."
+    )
     parser.add_argument("--previous-graph-ids",
-                        help="Override previous graphs, inlcuding the decision task")
+                        help="Override previous graphs.")
     parser.add_argument("--release-runner-config", required=True, type=argparse.FileType('r'),
                         help="Release runner config")
     parser.add_argument("--action-flavor", required=True, choices=SUPPORTED_ACTIONS)
@@ -54,23 +94,33 @@ def main():
     }
     queue = taskcluster.Queue(tc_config)
 
-    task = get_task(args.action_task_id)
-    action_task_input = copy.deepcopy(task["extra"]["action"]["context"]["input"])
-    parameters = task["extra"]["action"]["context"]["parameters"]
+    prev_action_task = get_task(args.action_task_id)
+    action_task_input = copy.deepcopy(prev_action_task["extra"]["action"]["context"]["input"])
+
+    decision_task_id = args.decision_task_id
+    if decision_task_id:
+        params_yaml = get_artifact_text(queue, decision_task_id, 'public/parameters.yml')
+    else:
+        params_yaml = get_artifact_text(queue, args.action_task_id, 'public/parameters.yml')
+
+    parameters = yaml.safe_load(params_yaml)
     project = parameters["project"]
     revision = parameters["head_rev"]
-    previous_graph_ids = args.previous_graph_ids
-    if not previous_graph_ids:
-        previous_graph_ids = [find_decision_task_id(project, revision)]
-    else:
-        previous_graph_ids = previous_graph_ids.split(',')
+
+    if not decision_task_id:
+        decision_task_id = find_decision_task_id(project, revision)
+
+    previous_graph_ids = args.previous_graph_ids or ""
+    previous_graph_ids = previous_graph_ids.split(',')
+    if decision_task_id not in previous_graph_ids:
+        previous_graph_ids = [decision_task_id] + previous_graph_ids
     action_task_input.update({
         "release_promotion_flavor": args.action_flavor,
         "previous_graph_ids": previous_graph_ids + [args.action_task_id],
     })
     action_task_id, action_task = generate_action_task(
-            project=parameters["project"],
-            revision=parameters["head_rev"],
+            project=project,
+            revision=revision,
             action_task_input=action_task_input,
     )
 
