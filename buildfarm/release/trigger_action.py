@@ -110,13 +110,12 @@ def main():
     if not decision_task_id:
         decision_task_id = find_decision_task_id(project, revision)
 
-    previous_graph_ids = args.previous_graph_ids or ""
-    previous_graph_ids = previous_graph_ids.split(',')
-    if decision_task_id not in previous_graph_ids:
-        previous_graph_ids = [decision_task_id] + previous_graph_ids
+    previous_graph_ids = set([decision_task_id])
+    if args.previous_graph_ids:
+        previous_graph_ids.update(args.previous_graph_ids.split(','))
     action_task_input.update({
         "release_promotion_flavor": args.action_flavor,
-        "previous_graph_ids": previous_graph_ids + [args.action_task_id],
+        "previous_graph_ids": list(previous_graph_ids) + [args.action_task_id],
     })
     action_task_id, action_task = generate_action_task(
             project=project,
