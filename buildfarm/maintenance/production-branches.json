@@ -177,7 +177,7 @@
   "birch": {
     "repo": "https://hg.mozilla.org/projects/birch",
     "repo_type": "hg",
-    "access": "scm_level_2",
+    "access": "scm_level_3",
     "trust_domain": "gecko",
     "features": {
         "buildbot": true,
