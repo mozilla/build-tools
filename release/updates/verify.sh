@@ -2,7 +2,7 @@
 #set -x
 
 . ../common/cached_download.sh
-. ../common/unpack.sh
+. ../common/unpack.sh 
 . ../common/download_mars.sh
 . ../common/download_builds.sh
 . ../common/check_updates.sh
@@ -91,10 +91,10 @@ fi
 while read entry
 do
   # initialize all config variables
-  release=""
-  product=""
-  platform=""
-  build_id=""
+  release="" 
+  product="" 
+  platform="" 
+  build_id="" 
   locales=""
   channel=""
   from=""
@@ -102,27 +102,6 @@ do
   use_old_updater=0
   mar_channel_IDs=""
   eval $entry
-
-   os_version="default"
-   system_capabilities="default"
-   case `echo $platform | cut -c-12` in
-     Linux*)
-       os_version="Linux%204.4.0-83-generic%20(GTK 3.18.9,libpulse 8.0.0)"
-       system_capabilities="ISET:SSE3,MEM:4096,JAWS:0"
-       ;;
-     Darwi*)
-       os_version="Darwin%2014.1.1"
-       system_capabilities="ISET:SSE3,MEM:4096,JAWS:0"
-       ;;
-     WINNT_x86*)
-       os_version="Windows_NT%2010.0.0.0%20(x86)"
-       system_capabilities="ISET:SSE3,MEM:4096,JAWS:0"
-       ;;
-     WINNT_x86_64)
-       os_version="Windows_NT%2010.0.0.0%20(x64)"
-       system_capabilities="ISET:SSE3,MEM:4096,JAWS:0"
-       ;;
-   esac
 
   # the arguments for updater changed in Gecko 34/SeaMonkey 2.31
   major_version=`echo $release | cut -f1 -d.`
@@ -145,11 +124,11 @@ do
       then
         if [ "$runmode" == "$TEST_ONLY" ]
         then
-          download_mars "${aus_server}/update/6/$product/$release/$build_id/$platform/$locale/$channel/$os_version/$system_capabilities/default/default/update.xml?force=1" $patch_type 1 \
+          download_mars "${aus_server}/update/3/$product/$release/$build_id/$platform/$locale/$channel/default/default/default/update.xml?force=1" $patch_type 1 \
             "${to_build_id}" "${to_app_version}" "${to_display_version}"
           err=$?
         else
-          download_mars "${aus_server}/update/6/$product/$release/$build_id/$platform/$locale/$channel/$os_version/$system_capabilities/default/default/update.xml?force=1" $patch_type 0 \
+          download_mars "${aus_server}/update/3/$product/$release/$build_id/$platform/$locale/$channel/default/default/default/update.xml?force=1" $patch_type 0 \
             "${to_build_id}" "${to_app_version}" "${to_display_version}"
           err=$?
         fi
@@ -158,10 +137,10 @@ do
           continue
         fi
       else
-        update_path="$product/$release/$build_id/$platform/$locale/$channel/$os_version/$system_capabilities/default/default"
+        update_path="$product/$release/$build_id/$platform/$locale/$channel/default/default/default"
         mkdir -p updates/$update_path/complete
         mkdir -p updates/$update_path/partial
-        $retry wget --no-check-certificate -q -O $patch_type updates/$update_path/$patch_type/update.xml "${aus_server}/update/6/$update_path/update.xml?force=1"
+        $retry wget --no-check-certificate -q -O $patch_type updates/$update_path/$patch_type/update.xml "${aus_server}/update/3/$update_path/update.xml?force=1"
 
       fi
       if [ "$runmode" == "$COMPLETE" ]
