@@ -62,7 +62,6 @@ if __name__ == "__main__":
     parser.add_argument("--previous-archive-prefix")
     parser.add_argument("--balrog-url", required=True)
     parser.add_argument("--build-number", required=True)
-    parser.add_argument("--updater-platform", dest="updater_platform", default=None)
     args = parser.parse_args()
     logging.basicConfig(format="%(message)s", level=args.loglevel)
 
@@ -73,7 +72,6 @@ if __name__ == "__main__":
     prev_archive_prefix = args.previous_archive_prefix or args.archive_prefix
     aus_server_url = args.balrog_url
     build_number = args.build_number
-    updater_platform = args.updater_platform
 
     # Current version data
     pc = PatcherConfig(args.config.read())
@@ -116,8 +114,6 @@ if __name__ == "__main__":
         appVersion = from_["extension-version"]
         build_id = from_["platforms"][ftp_platform]
         mar_channel_IDs = from_.get('mar-channel-ids')
-        if not updater_platform:
-            updater_platform = args.platform
 
         # Use new build targets for Windows, but only on compatible
         #  versions (42+). See bug 1185456 for additional context.
@@ -133,10 +129,6 @@ if __name__ == "__main__":
         ).values()[0]
         release_dir = makeReleasesDir(stage_product_name, fromVersion, ftp_root='/')
         from_path = "%s%s" % (release_dir, path_)
-        updater_package = "%s%s" % (release_dir, makeReleaseRepackUrls(
-            product_name, app_name, fromVersion, updater_platform,
-            locale='%locale%', signed=True, exclude_secondary=True
-        ).values()[0])
 
         # Exclude locales being full checked
         quick_check_locales = [l for l in locales
@@ -155,8 +147,7 @@ if __name__ == "__main__":
                            ftp_server_from=prev_archive_prefix,
                            ftp_server_to=args.archive_prefix,
                            mar_channel_IDs=mar_channel_IDs,
-                           platform=update_platform,
-                           updater_package=updater_package)
+                           platform=update_platform)
         else:
             if this_full_check_locales and is_triangualar(completes_only_index):
                 log.info("Generating full check configs for %s" % fromVersion)
@@ -166,8 +157,7 @@ if __name__ == "__main__":
                                ftp_server_from=prev_archive_prefix,
                                ftp_server_to=args.archive_prefix,
                                mar_channel_IDs=mar_channel_IDs,
-                               platform=update_platform,
-                               updater_package=updater_package)
+                               platform=update_platform)
             # Quick test for other locales, no download
             if len(quick_check_locales) > 0:
                 log.info("Generating quick check configs for %s" % fromVersion)

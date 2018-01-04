@@ -60,8 +60,7 @@ class TestUpdateVerifyConfig(unittest.TestCase):
                 "from": "/pub/firefox/foo.bz2",
                 "ftp_server_from": "from",
                 "ftp_server_to": "to",
-                "mar_channel_IDs": "firefox-mozilla-booyah",
-                "updater_package": None,
+                "mar_channel_IDs": "firefox-mozilla-booyah"
             }
         ]
         self.uvc.addRelease("4.0", build_id=555, locales=["af", "de"],
@@ -83,8 +82,7 @@ class TestUpdateVerifyConfig(unittest.TestCase):
                 "from": "/pub/firefox/foo.bz2",
                 "ftp_server_from": "from",
                 "ftp_server_to": "to",
-                "mar_channel_IDs": "firefox-mozilla-booyah",
-                "updater_package": None,
+                "mar_channel_IDs": "firefox-mozilla-booyah"
             },
             {
                 "release": "5.0",
@@ -95,8 +93,7 @@ class TestUpdateVerifyConfig(unittest.TestCase):
                 "from": "/pub/firefox/foo2.bz2",
                 "ftp_server_from": "from",
                 "ftp_server_to": "to",
-                "mar_channel_IDs": "firefox-mozilla-booyah",
-                "updater_package": None,
+                "mar_channel_IDs": "firefox-mozilla-booyah"
             }
         ]
         self.uvc.addRelease("4.0", build_id=555, locales=["af", "de"],

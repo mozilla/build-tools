@@ -21,32 +21,27 @@ unpack_build () {
     pushd $dir_name > /dev/null
     case $unpack_platform in
         mac|mac64|mac-ppc|Darwin_ppc-gcc|Darwin_Universal-gcc3|Darwin_x86_64-gcc3|Darwin_x86-gcc3-u-ppc-i386|Darwin_x86-gcc3-u-i386-x86_64|Darwin_x86_64-gcc3-u-i386-x86_64)
-            os=`uname`
-            # How we unpack a dmg differs depending on which platform we're on.
-            if [[ "$os" == "Darwin" ]]
+            # Thunderbird 2.0.0.x (and others) have a license file and build on
+            # 10.4. For these, we need to use an expect script to mount them.
+            osver=`uname -r | cut -f1 -d.`
+            if [ $osver -eq 8 ]
             then
+                cd ../
+                mkdir -p mnt
+                echo "mounting $pkg_file"
+                expect ../common/installdmg.ex "$pkg_file" > hdi.output || cleanup 1;
+                DEV_NAME=`perl -n -e 'if($_=~/(\/dev\/disk[^ ]*)/) {print $1."\n";exit;}'< hdi.output`;
+                if [ ! $DEV_NAME -o "$DEV_NAME" = "" ]; then cleanup 1; fi
+                MOUNTPOINT=`perl -n -e 'split(/\/dev\/disk[^ ]*/,$_,2);if($_[1]=~/(\/.[^\r]*)/) {print $1;exit;}'< hdi.output`;
+                if [ ! $MOUNTPOINT -o "$MOUNTPOINT" = "" ]; then 
+                    cleanup 1; 
+                fi
+                rsync -a ${MOUNTPOINT}/* $dir_name/ || cleanup 1;
+                cleanup 0;
+            else
                 cd ../
                 echo "installing $pkg_file"
                 ../common/unpack-diskimage.sh "$pkg_file" mnt $dir_name
-            else
-                7z x ../"$pkg_file" > /dev/null
-                if [ `ls -1 | wc -l` -ne 1 ]
-                then
-                    echo "Couldn't find .app package"
-                    return 1
-                fi
-                unpack_dir=`ls -1`
-                mv ${unpack_dir}/*.app .
-                rm -rf $unpack_dir
-                appdir=`ls -1`
-                # The updater guesses the location of these files based on
-                # its own target architecture, not the mar. If we're not
-                # unpacking mac-on-mac, we need to copy them so it can find
-                # them. It's important to copy (and not move), because when
-                # we diff the installer vs updated build afterwards, the
-                # installer version will have them in their original place.
-                cp "${appdir}/Contents/Resources/update-settings.ini" "${appdir}/update-settings.ini"
-                cp "${appdir}/Contents/Resources/precomplete" "${appdir}/precomplete"
             fi
             update_settings_file=`find . -name update-settings.ini`
             ;;
