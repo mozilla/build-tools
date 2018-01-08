@@ -2,7 +2,7 @@
 #set -x
 
 . ../common/cached_download.sh
-. ../common/unpack.sh 
+. ../common/unpack.sh
 . ../common/download_mars.sh
 . ../common/download_builds.sh
 . ../common/check_updates.sh
@@ -101,6 +101,7 @@ do
   patch_types="complete"
   use_old_updater=0
   mar_channel_IDs=""
+  updater_package=""
   eval $entry
 
   # the arguments for updater changed in Gecko 34/SeaMonkey 2.31
@@ -112,6 +113,12 @@ do
     fi
   elif [[ $major_version -lt 34 ]]; then
       use_old_updater=1
+  fi
+
+  # Note: cross platform tests seem to work for everything except Mac-on-Windows.
+  # We probably don't care about this use case.
+  if [[ "$updater_package" == "" ]]; then
+    updater_package="$from"
   fi
 
   for locale in $locales
@@ -149,6 +156,56 @@ do
         then
           continue
         fi
+
+        updater_platform=""
+        updater_package_url=`echo "${ftp_server_from}${updater_package}" | sed "s/%locale%/${locale}/"`
+        updater_package_filename=`basename "$updater_package_url"`
+        case $updater_package_filename in
+          *dmg)
+            platform_dirname="*.app"
+            updater_bins="Contents/MacOS/updater.app/Contents/MacOS/updater Contents/MacOS/updater.app/Contents/MacOS/org.mozilla.updater"
+            updater_platform="mac"
+            ;;
+          *exe)
+            updater_package_url=`echo "${updater_package_url}" | sed "s/ja-JP-mac/ja/"`
+            platform_dirname="bin"
+            updater_bins="updater.exe"
+            updater_platform="win32"
+            ;;
+          *bz2)
+            updater_package_url=`echo "${updater_package_url}" | sed "s/ja-JP-mac/ja/"`
+            platform_dirname=`echo $product | tr '[A-Z]' '[a-z]'`
+            updater_bins="updater"
+            updater_platform="linux"
+            ;;
+          *)
+            echo "Couldn't detect updater platform"
+            exit 1
+            ;;
+        esac
+
+        rm -rf updater/*
+        cached_download "${updater_package_filename}" "${updater_package_url}"
+        unpack_build "$updater_platform" updater "$updater_package_filename" "$locale"
+
+        # Even on Windows, we want Unix-style paths for the updater, because of MSYS.
+        cwd=$(\ls -d $PWD/updater/$platform_dirname)
+        # Bug 1209376. Linux updater linked against other libraries in the installation directory
+        export LD_LIBRARY_PATH=$cwd
+        updater="null"
+        for updater_bin in $updater_bins; do
+            if [ -e "$cwd/$updater_bin" ]; then
+                echo "Found updater at $updater_bin"
+                updater="$cwd/$updater_bin"
+                break
+            fi
+        done
+
+        if [ "$updater" == "null" ]; then
+            echo "Couldn't find updater binary"
+            continue
+        fi
+
         from_path=`echo $from | sed "s/%locale%/${locale}/"`
         to_path=`echo $to | sed "s/%locale%/${locale}/"`
         download_builds "${ftp_server_from}${from_path}" "${ftp_server_to}${to_path}"
@@ -159,7 +216,7 @@ do
         fi
         source_file=`basename "$from_path"`
         target_file=`basename "$to_path"`
-        check_updates "$platform" "downloads/$source_file" "downloads/$target_file" $locale $use_old_updater $mar_channel_IDs
+        check_updates "$platform" "downloads/$source_file" "downloads/$target_file" $locale $use_old_updater $updater $mar_channel_IDs
         err=$?
         if [ "$err" == "0" ]; then
           continue
