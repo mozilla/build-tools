@@ -36,7 +36,7 @@ unpack_build () {
                     return 1
                 fi
                 unpack_dir=`ls -1`
-                mv ${unpack_dir}/*.app .
+                mv "${unpack_dir}"/*.app .
                 rm -rf $unpack_dir
                 appdir=`ls -1`
                 # The updater guesses the location of these files based on
