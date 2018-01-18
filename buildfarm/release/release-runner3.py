@@ -155,6 +155,7 @@ def main(options):
                 "next_version": next_version,
                 "release_promotion_flavor": "promote_{}".format(release["product"]),
                 "previous_graph_ids": [decision_task_id],
+                "release_eta": release.get("release_eta"),
             }
             if "partial_updates" in release:
                 action_task_input["partial_updates"] = {}
