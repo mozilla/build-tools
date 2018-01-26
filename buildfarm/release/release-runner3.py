@@ -176,35 +176,42 @@ def main(options):
     rc = 0
     for release in new_releases:
         try:
-            next_version = bump_version(release["version"].replace("esr", ""))
+            version = release["version"]
+            # XXX we may want to move next_version logic to the release_promotion action.
+            next_version = bump_version(version.replace("esr", ""))
             project = release["branchShortName"]
             revision = release["mozillaRevision"]
+            # XXX we probably want to find a decision task ID for the action, and a separate
+            # one for the revision-to-promote, to allow for https://trello.com/c/u6MHrz8y .
             decision_task_id = find_decision_task_id(project, revision)
             action_task_input = {
                 "build_number": release["buildNumber"],
                 "next_version": next_version,
+                # specify version rather than relying on in-tree version,
+                # so if a version bump happens between the build and an action task
+                # revision, we still use the correct version.
+                "version": version,
                 "release_promotion_flavor": "promote_{}".format(release["product"]),
                 "previous_graph_ids": [decision_task_id],
                 "release_eta": release.get("release_eta"),
             }
             if "partial_updates" in release:
                 action_task_input["partial_updates"] = {}
-                for version, info in release["partial_updates"].items():
-                    action_task_input["partial_updates"][version] = {
+                for partial_version, info in release["partial_updates"].items():
+                    action_task_input["partial_updates"][partial_version] = {
                         "buildNumber": info["buildNumber"],
                         "locales": info["locales"]
                     }
             if release["product"] == "firefox":
-                if is_beta(release["version"]):
-                    action_task_input["desktop_release_type"] = "beta"
-                elif is_esr(release["version"]):
-                    action_task_input["desktop_release_type"] = "esr"
-                elif is_rc(release):
-                    action_task_input["desktop_release_type"] = "rc"
-                else:
-                    action_task_input["desktop_release_type"] = "release"
-            elif release["product"] == "devedition":
-                action_task_input["desktop_release_type"] = "devedition"
+                if is_rc(release):
+                    # XXX The current plan is to run promote_firefox_rc, then
+                    # ship_firefox_rc, then push_firefox, then ship_firefox.
+                    # We need to support this workflow. However, rr3 doesn't
+                    # support anything more than the first action task yet,
+                    # so this isn't a missing feature for RCs specifically.
+                    action_task_input["release_promotion_flavor"] = "{}_rc".format(
+                        action_task_input["release_promotion_flavor"]
+                    )
             action_task_id, action_task = generate_action_task(
                 project=release["branchShortName"],
                 revision=release["mozillaRevision"],
