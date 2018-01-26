@@ -90,6 +90,36 @@ def run_prebuild_sanity_checks(release_runner, releases_config):
     return new_valid_releases
 
 
+def is_beta(version):
+    return "b" in version
+
+
+def is_esr(version):
+    return "esr" in version
+
+
+def is_rc(release):
+    if not is_beta(release['version']) and not is_esr(release['version']):
+        if isFinalRelease(release["version"]):
+            return True
+        # RC release types will enable beta-channel testing &
+        # shipping. We need this for all "final" releases
+        # and also any releases that include a beta as a partial.
+        # The assumption that "shipping to beta channel" always
+        # implies other RC behaviour is bound to break at some
+        # point, but this works for now.
+        for version in release["partial_updates"]:
+            if is_beta(version):
+                return True
+    return False
+
+
+def get_beta_num(version):
+    if is_beta(version):
+        parts = version.split('b')
+        return int(parts[-1])
+
+
 def main(options):
     log.info('Loading config from %s' % options.config)
 
@@ -165,26 +195,14 @@ def main(options):
                         "locales": info["locales"]
                     }
             if release["product"] == "firefox":
-                if "b" in release["version"]:
+                if is_beta(release["version"]):
                     action_task_input["desktop_release_type"] = "beta"
-                elif "esr" in release["version"]:
+                elif is_esr(release["version"]):
                     action_task_input["desktop_release_type"] = "esr"
+                elif is_rc(release):
+                    action_task_input["desktop_release_type"] = "rc"
                 else:
-                    # RC release types will enable beta-channel testing &
-                    # shipping. We need this for all "final" releases
-                    # and also any releases that include a beta as a partial.
-                    # The assumption than "shipping to beta channel" always
-                    # implies other RC behaviour is bound to break at some
-                    # point, but this works for now.
-                    if isFinalRelease(release["version"]):
-                        action_task_input["desktop_release_type"] = "rc"
-                    else:
-                        for version in release["partial_updates"]:
-                            if "b" in version:
-                                action_task_input["desktop_release_type"] = "rc"
-                                break
-                        else:
-                            action_task_input["desktop_release_type"] = "release"
+                    action_task_input["desktop_release_type"] = "release"
             elif release["product"] == "devedition":
                 action_task_input["desktop_release_type"] = "devedition"
             action_task_id, action_task = generate_action_task(
