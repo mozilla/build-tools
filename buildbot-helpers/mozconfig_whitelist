@@ -35,6 +35,7 @@ for platform in ['linux', 'linux64', 'macosx64', 'win32', 'win64']:
     whitelist['nightly'][platform] += ['ac_add_options --enable-signmar']
     whitelist['nightly'][platform] += ['ac_add_options --enable-js-diagnostics']
     whitelist['nightly'][platform] += ['ac_add_options --with-branding=browser/branding/nightly']
+    whitelist['nightly'][platform] += ['. "$commtopsrcdir/build/mozconfig.sccache"']
 
 whitelist['nightly']['linux'] += [
     'CXX=$REAL_CXX',
