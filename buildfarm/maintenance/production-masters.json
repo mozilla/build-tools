@@ -333,6 +333,7 @@
       "win32-devedition",
       "win32-stylo-disabled",
       "win64",
+      "win64-ccov",
       "win64-devedition",
       "win64-stylo-disabled"
     ],
@@ -970,6 +971,7 @@
       "win32-devedition",
       "win32-stylo-disabled",
       "win64",
+      "win64-ccov",
       "win64-devedition",
       "win64-stylo-disabled"
     ],
@@ -1006,6 +1008,7 @@
       "win32-devedition",
       "win32-stylo-disabled",
       "win64",
+      "win64-ccov",
       "win64-devedition",
       "win64-stylo-disabled"
     ],
@@ -1042,6 +1045,7 @@
       "win32-devedition",
       "win32-stylo-disabled",
       "win64",
+      "win64-ccov",
       "win64-devedition",
       "win64-stylo-disabled"
     ],
@@ -1078,6 +1082,7 @@
       "win32-devedition",
       "win32-stylo-disabled",
       "win64",
+      "win64-ccov",
       "win64-devedition",
       "win64-stylo-disabled"
     ],
@@ -1114,6 +1119,7 @@
       "win32-devedition",
       "win32-stylo-disabled",
       "win64",
+      "win64-ccov",
       "win64-devedition",
       "win64-stylo-disabled"
     ],
@@ -1150,6 +1156,7 @@
       "win32-devedition",
       "win32-stylo-disabled",
       "win64",
+      "win64-ccov",
       "win64-devedition",
       "win64-stylo-disabled"
     ],
@@ -1186,6 +1193,7 @@
       "win32-devedition",
       "win32-stylo-disabled",
       "win64",
+      "win64-ccov",
       "win64-devedition",
       "win64-stylo-disabled"
     ],
@@ -1222,6 +1230,7 @@
       "win32-devedition",
       "win32-stylo-disabled",
       "win64",
+      "win64-ccov",
       "win64-devedition",
       "win64-stylo-disabled"
     ],
