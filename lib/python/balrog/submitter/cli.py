@@ -533,7 +533,17 @@ class ReleaseScheduler(object):
 
         for rule_id in rule_ids:
             data, data_version = Rule(api_root=self.api_root, auth=self.auth, rule_id=rule_id).get_data()
-            data["fallbackMapping"] = data["mapping"]
+            # If the _currently_ shipped release is at a background rate of
+            # 100%, it's safe to set it as the fallback mapping. (Everyone
+            # was getting it anyways, so it's OK for them to fall back to
+            # it if they don't get the even newer one.)
+            # If it was _not_ shipped at 100%, we can't set it as the fallback.
+            # If we did, it would mean users on the wrong side of the die roll
+            # would either get the even newer release, or the release that
+            # previously wasn't shipped to everyone - which we can't assume is
+            # safe.
+            if data["backgroundRate"] == 100:
+                data["fallbackMapping"] = data["mapping"]
             data["mapping"] = name
             data["data_verison"] = data_version
             data["rule_id"] = rule_id
