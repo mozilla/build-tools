@@ -24,6 +24,7 @@ SUPPORTED_ACTIONS = [
     "ship_devedition",
     "ship_fennec",
     "ship_firefox",
+    "ship_firefox_rc",
 ]
 
 
