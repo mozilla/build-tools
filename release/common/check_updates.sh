@@ -65,7 +65,7 @@ check_updates () {
       update_abspath="$PWD/update"
     fi
 
-    cd "source/$platform_dirname"
+    cd source/$platform_dirname
     set -x
     "$updater" "$update_abspath" "$cwd" "$cwd" 0
     set +x
