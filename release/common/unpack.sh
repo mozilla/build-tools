@@ -35,10 +35,11 @@ unpack_build () {
                     echo "Couldn't find .app package"
                     return 1
                 fi
-                unpack_dir=`ls -1`
+                unpack_dir=$(ls -1)
+                unpack_dir=$(ls -d $unpack_dir)
                 mv "${unpack_dir}"/*.app .
-                rm -rf $unpack_dir
-                appdir=`ls -1`
+                rm -rf "$unpack_dir"
+                appdir=`ls -1d *.app`
                 # The updater guesses the location of these files based on
                 # its own target architecture, not the mar. If we're not
                 # unpacking mac-on-mac, we need to copy them so it can find
