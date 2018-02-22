@@ -53,6 +53,11 @@ if [ -n "$PROPERTIES_FILE" -a -f "$PROPERTIES_FILE" ]; then
         -s 16 -n info -n 'rel-*' -n 'tb-rel-*' -n $SLAVEBUILDDIR
 fi
 
+if [ -n "$TASKCLUSTER_VERIFY_CONFIG" ]; then
+    wget -O "$SCRIPTS_DIR/release/updates/update-verify.cfg" "$TASKCLUSTER_VERIFY_CONFIG"
+    VERIFY_CONFIG="update-verify.cfg"
+fi
+
 if [ -z "$VERIFY_CONFIG" -a -n "$NO_BBCONFIG" ]; then
     echo "Unable to run without VERIFY_CONFIG specified when using NO_BBCONFIG"
     exit 1
