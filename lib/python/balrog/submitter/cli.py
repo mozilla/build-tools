@@ -527,7 +527,7 @@ class ReleaseScheduler(object):
         if when is not None:
             when = arrow.get(when)
 
-        soon = arrow.now().shift(minutes=2)
+        soon = arrow.now().shift(minutes=5)
         if when is None or when < soon:
             when = soon
 
