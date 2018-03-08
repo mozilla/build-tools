@@ -23,6 +23,7 @@ SUPPORTED_ACTIONS = [
     "push_firefox",
     "ship_devedition",
     "ship_fennec",
+    "ship_fennec_rc",
     "ship_firefox",
     "ship_firefox_rc",
 ]
