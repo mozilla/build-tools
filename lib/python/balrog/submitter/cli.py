@@ -178,14 +178,7 @@ class ReleaseCreatorV3(ReleaseCreatorBase):
         return data
 
 
-class ReleaseCreatorV4(ReleaseCreatorBase):
-    def run(self, *args, **kwargs):
-        return ReleaseCreatorBase.run(self, *args, schemaVersion=4, **kwargs)
-
-    # Replaced by _get_fileUrls
-    def _get_update_data(self, *args, **kwargs):
-        return None
-
+class ReleaseCreatorFileUrlsMixin(object):
     def _getFileUrls(self, productName, version, buildNumber, updateChannels,
                      ftpServer, bouncerServer, partialUpdates,
                      requiresMirrors=True):
@@ -258,6 +251,106 @@ class ReleaseCreatorV4(ReleaseCreatorBase):
                     data["fileUrls"][channel]["partials"][from_] = url
 
         return data
+
+
+class ReleaseCreatorV4(ReleaseCreatorBase, ReleaseCreatorFileUrlsMixin):
+    def run(self, *args, **kwargs):
+        return ReleaseCreatorBase.run(self, *args, schemaVersion=4, **kwargs)
+
+    # Replaced by _get_fileUrls
+    def _get_update_data(self, *args, **kwargs):
+        return None
+
+
+class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
+    schemaVersion=9
+
+    def __init__(self, api_root, auth, dummy=False, suffix="",
+                 from_suffix="",
+                 complete_mar_filename_pattern=None,
+                 complete_mar_bouncer_product_pattern=None):
+        self.api_root = api_root
+        self.auth = auth
+        self.suffix = suffix
+        self.from_suffix = from_suffix
+        if dummy and not suffix:
+            self.suffix = "-dummy"
+        else:
+            self.suffix = suffix
+        self.complete_mar_filename_pattern = complete_mar_filename_pattern or '%s-%s.complete.mar'
+        self.complete_mar_bouncer_product_pattern = complete_mar_bouncer_product_pattern or '%s-%s-complete'
+
+    def generate_data(self, appVersion, productName, version, buildNumber,
+                      updateChannels, ftpServer, bouncerServer,
+                      enUSPlatforms, **updateKwargs):
+        details_product = productName.lower()
+        if details_product == "devedition":
+            details_product = "firefox"
+
+        data = {
+            'platforms': {},
+            'fileUrls': {},
+            'appVersion': appVersion,
+            'displayVersion': getPrettyVersion(version),
+            'updateLine': [
+                {
+                    'for': {},
+                    'fields': {
+                        'detailsURL': getProductDetails(details_product, appVersion),
+                        'type': 'minor',
+                    },
+                },
+            ]
+        }
+
+        actions = []
+
+        fileUrls = self._getFileUrls(productName, version, buildNumber,
+                                     updateChannels, ftpServer,
+                                     bouncerServer, **updateKwargs)
+        if fileUrls:
+            data.update(fileUrls)
+
+        for platform in enUSPlatforms:
+            updatePlatforms = buildbot2updatePlatforms(platform)
+            bouncerPlatform = buildbot2bouncer(platform)
+            ftpPlatform = buildbot2ftp(platform)
+            data['platforms'][updatePlatforms[0]] = {
+                'OS_BOUNCER': bouncerPlatform,
+                'OS_FTP': ftpPlatform
+            }
+            for aliasedPlatform in updatePlatforms[1:]:
+                data['platforms'][aliasedPlatform] = {
+                    'alias': updatePlatforms[0]
+                }
+
+        return data
+
+    def run(self, appVersion, productName, version, buildNumber,
+            updateChannels, ftpServer, bouncerServer,
+            enUSPlatforms, hashFunction, **updateKwargs):
+        data = self.generate_data(appVersion, productName, version,
+                                  buildNumber, updateChannels,
+                                  ftpServer, bouncerServer, enUSPlatforms,
+                                  **updateKwargs)
+        name = get_release_blob_name(productName, version, buildNumber,
+                                     self.suffix)
+        api = Release(name=name, auth=self.auth, api_root=self.api_root)
+        try:
+            current_data, data_version = api.get_data()
+        except HTTPError, e:
+            if e.response.status_code == 404:
+                log.warning("Release blob doesn't exist, using empty data...")
+                current_data, data_version = {}, None
+            else:
+                raise
+
+        data = recursive_update(current_data, data)
+        api.update_release(product=productName,
+                           hashFunction=hashFunction,
+                           releaseData=json.dumps(data),
+                           schemaVersion=self.schemaVersion,
+                           data_version=data_version)
 
 
 class NightlySubmitterBase(object):
@@ -489,6 +582,44 @@ class ReleaseSubmitterV3(ReleaseSubmitterBase, MultipleUpdatesReleaseMixin):
 class ReleaseSubmitterV4(ReleaseSubmitterBase, MultipleUpdatesReleaseMixin):
     def run(self, *args, **kwargs):
         return ReleaseSubmitterBase.run(self, *args, schemaVersion=4, **kwargs)
+
+
+class ReleaseSubmitterV9(MultipleUpdatesReleaseMixin):
+    def __init__(self, api_root, auth, dummy=False, suffix="", from_suffix=""):
+        self.api_root = api_root
+        self.auth = auth
+        if dummy and not suffix:
+            self.suffix = "-dummy"
+        else:
+            self.suffix = suffix
+        self.from_suffix = from_suffix
+
+    def run(self, platform, productName, appVersion, version, build_number, locale,
+            hashFunction, extVersion, buildID, **updateKwargs):
+        targets = buildbot2updatePlatforms(platform)
+        # Some platforms may have alias', but those are set-up elsewhere
+        # for release blobs.
+        build_target = targets[0]
+
+        name = get_release_blob_name(productName, version, build_number,
+                                     self.suffix)
+        data = {
+            'buildID': buildID,
+            'appVersion': appVersion,
+            'displayVersion': getPrettyVersion(version)
+        }
+
+        data.update(self._get_update_data(productName, version, build_number,
+                                          **updateKwargs))
+
+        api = SingleLocale(name=name, build_target=build_target, locale=locale,
+                           auth=self.auth, api_root=self.api_root)
+        current_data, data_version = api.get_data()
+        api.update_build(
+            data_version=data_version,
+            product=productName, hashFunction=hashFunction,
+            buildData=json.dumps(merge_partial_updates(current_data, data)),
+            schemaVersion=9)
 
 
 class ReleasePusher(object):
