@@ -16,7 +16,7 @@ sys.path.insert(0, path.join(path.dirname(__file__),
                              "../../lib/python/vendor/six-1.10.0"))
 sys.path.insert(0, path.join(path.dirname(__file__), "../../lib/python"))
 
-from balrog.submitter.cli import ReleaseCreatorV4, ReleasePusher
+from balrog.submitter.cli import ReleaseCreatorV4, ReleaseCreatorV9, ReleasePusher
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -80,25 +80,44 @@ if __name__ == '__main__':
     execfile(args.credentials_file, credentials)
     auth = (args.username, credentials['balrog_credentials'][args.username])
     suffix = os.environ.get("BALROG_BLOB_SUFFIX")
-    creator = ReleaseCreatorV4(
-        args.api_root, auth, dummy=args.dummy, suffix=suffix,
-        complete_mar_filename_pattern=args.complete_mar_filename_pattern,
-        complete_mar_bouncer_product_pattern=args.complete_mar_bouncer_product_pattern)
     pusher = ReleasePusher(args.api_root, auth, dummy=args.dummy, suffix=suffix)
+    if "release" in args.channels:
+        creator = ReleaseCreatorV9(
+            args.api_root, auth, dummy=args.dummy, suffix=suffix,
+            complete_mar_filename_pattern=args.complete_mar_filename_pattern,
+            complete_mar_bouncer_product_pattern=args.complete_mar_bouncer_product_pattern)
 
-    creator.run(
-        appVersion=args.app_version,
-        productName=args.product.capitalize(),
-        version=args.version,
-        buildNumber=args.build_number,
-        updateChannels=args.channels,
-        ftpServer=args.archive_domain,
-        bouncerServer=args.download_domain,
-        enUSPlatforms=args.platforms,
-        hashFunction=args.hash_function,
-        openURL=args.open_url,
-        partialUpdates=partials,
-        requiresMirrors=args.requires_mirrors)
+        creator.run(
+            appVersion=args.app_version,
+            productName=args.product.capitalize(),
+            version=args.version,
+            buildNumber=args.build_number,
+            updateChannels=args.channels,
+            ftpServer=args.archive_domain,
+            bouncerServer=args.download_domain,
+            enUSPlatforms=args.platforms,
+            hashFunction=args.hash_function,
+            partialUpdates=partials,
+            requiresMirrors=args.requires_mirrors)
+    else:
+        creator = ReleaseCreatorV4(
+            args.api_root, auth, dummy=args.dummy, suffix=suffix,
+            complete_mar_filename_pattern=args.complete_mar_filename_pattern,
+            complete_mar_bouncer_product_pattern=args.complete_mar_bouncer_product_pattern)
+
+        creator.run(
+            appVersion=args.app_version,
+            productName=args.product.capitalize(),
+            version=args.version,
+            buildNumber=args.build_number,
+            updateChannels=args.channels,
+            ftpServer=args.archive_domain,
+            bouncerServer=args.download_domain,
+            enUSPlatforms=args.platforms,
+            hashFunction=args.hash_function,
+            openURL=args.open_url,
+            partialUpdates=partials,
+            requiresMirrors=args.requires_mirrors)
 
     pusher.run(
         productName=args.product.capitalize(),
