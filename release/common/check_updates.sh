@@ -1,13 +1,15 @@
 check_updates () {
-  # called with 7 args - platform, source package, target package, update package, old updater boolean,
-  # a path to the updater binary to use for the tests, and update-settings.ini values
+  # called with 8 args - platform, source package, target package, update package, old updater boolean,
+  # a path to the updater binary to use for the tests, a file to write diffs to,
+  # and (sometimes) update-settings.ini values
   update_platform=$1
   source_package=$2
   target_package=$3
   locale=$4
   use_old_updater=$5
   updater=$6
-  mar_channel_IDs=$7
+  diff_file=$7
+  mar_channel_IDs=$8
 
   # cleanup
   rm -rf source/*
@@ -65,7 +67,8 @@ check_updates () {
       update_abspath="$PWD/update"
     fi
 
-    cd source/$platform_dirname
+    cd_dir=$(ls -d ${PWD}/source/${platform_dirname})
+    cd "${cd_dir}"
     set -x
     "$updater" "$update_abspath" "$cwd" "$cwd" 0
     set +x
@@ -106,17 +109,17 @@ check_updates () {
   fi
   cd ../..
 
-  diff -r source/$platform_dirname target/$platform_dirname  > results.diff
+  diff -r source/${platform_dirname} target/${platform_dirname}  > "${diff_file}"
   diffErr=$?
-  cat results.diff
-  grep ^Only results.diff | sed 's/^Only in \(.*\): \(.*\)/\1\/\2/' | \
+  cat "${diff_file}"
+  grep ^Only "${diff_file}" | sed 's/^Only in \(.*\): \(.*\)/\1\/\2/' | \
   while read to_test; do
     if [ -d "$to_test" ]; then 
       echo Contents of $to_test dir only in source or target
       find "$to_test" -ls | grep -v "${to_test}$"
     fi
   done
-  grep "$binary_file_pattern" results.diff > /dev/null
+  grep "${binary_file_pattern}" "${diff_file}" > /dev/null
   grepErr=$?
   if [ $grepErr == 0 ]
   then
@@ -124,7 +127,7 @@ check_updates () {
     return 1
   elif [ $grepErr == 1 ]
   then
-    if [ -s results.diff ]
+    if [ -s "${diff_file}" ]
     then
       echo "WARN: non-binary files found in diff"
       return 2

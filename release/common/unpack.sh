@@ -35,10 +35,12 @@ unpack_build () {
                     echo "Couldn't find .app package"
                     return 1
                 fi
-                unpack_dir=`ls -1`
+                unpack_dir=$(ls -1)
+                unpack_dir=$(ls -d "${unpack_dir}")
                 mv "${unpack_dir}"/*.app .
-                rm -rf $unpack_dir
-                appdir=`ls -1`
+                rm -rf "${unpack_dir}"
+                appdir=$(ls -1)
+                appdir=$(ls -d *.app)
                 # The updater guesses the location of these files based on
                 # its own target architecture, not the mar. If we're not
                 # unpacking mac-on-mac, we need to copy them so it can find
@@ -48,7 +50,7 @@ unpack_build () {
                 cp "${appdir}/Contents/Resources/update-settings.ini" "${appdir}/update-settings.ini"
                 cp "${appdir}/Contents/Resources/precomplete" "${appdir}/precomplete"
             fi
-            update_settings_file=`find . -name update-settings.ini`
+            update_settings_file="${appdir}/update-settings.ini"
             ;;
         win32|win64|WINNT_x86-msvc|WINNT_x86-msvc-x86|WINNT_x86-msvc-x64|WINNT_x86_64-msvc|WINNT_x86_64-msvc-x64)
             7z x ../"$pkg_file" > /dev/null
@@ -101,11 +103,11 @@ unpack_build () {
 
     if [ ! -z $update_settings_string ]; then
        echo "Modifying update-settings.ini"
-       cat  $update_settings_file | sed -e "s/^ACCEPTED_MAR_CHANNEL_IDS.*/ACCEPTED_MAR_CHANNEL_IDS=${update_settings_string}/" > ${update_settings_file}.new
-       diff -u $update_settings_file{,.new}
+       cat  "${update_settings_file}" | sed -e "s/^ACCEPTED_MAR_CHANNEL_IDS.*/ACCEPTED_MAR_CHANNEL_IDS=${update_settings_string}/" > "${update_settings_file}.new"
+       diff -u "{$update_settings_file}" "${update_settings_file}.new"
        echo " "
-       rm ${update_settings_file}
-       mv $update_settings_file{.new,}
+       rm "${update_settings_file}"
+       mv "${update_settings_file}.new" "${update_settings_file}"
     fi
 
     popd > /dev/null

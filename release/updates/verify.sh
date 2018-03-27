@@ -17,6 +17,7 @@ to=""
 to_build_id=""
 to_app_version=""
 to_display_version=""
+diff_summary_log="$PWD/diff-summary.log"
 
 pushd `dirname $0` &>/dev/null
 MY_DIR=$(pwd)
@@ -126,28 +127,28 @@ do
     rm -f update/partial.size update/complete.size
     for patch_type in $patch_types
     do
+      update_path="${product}/${release}/${build_id}/${platform}/${locale}/${channel}/default/default/default"
       if [ "$runmode" == "$MARS_ONLY" ] || [ "$runmode" == "$COMPLETE" ] ||
          [ "$runmode" == "$TEST_ONLY" ]
       then
         if [ "$runmode" == "$TEST_ONLY" ]
         then
-          download_mars "${aus_server}/update/3/$product/$release/$build_id/$platform/$locale/$channel/default/default/default/update.xml?force=1" $patch_type 1 \
+          download_mars "${aus_server}/update/3/${update_path}/default/update.xml?force=1" ${patch_type} 1 \
             "${to_build_id}" "${to_app_version}" "${to_display_version}"
           err=$?
         else
-          download_mars "${aus_server}/update/3/$product/$release/$build_id/$platform/$locale/$channel/default/default/default/update.xml?force=1" $patch_type 0 \
+          download_mars "${aus_server}/update/3/${update_path}/update.xml?force=1" ${patch_type} 0 \
             "${to_build_id}" "${to_app_version}" "${to_display_version}"
           err=$?
         fi
         if [ "$err" != "0" ]; then
-          echo "FAIL: [$release $locale $patch_type] download_mars returned non-zero exit code: $err"
+          echo "FAIL: [${release} ${locale} ${patch_type}] download_mars returned non-zero exit code: ${err}"
           continue
         fi
       else
-        update_path="$product/$release/$build_id/$platform/$locale/$channel/default/default/default"
-        mkdir -p updates/$update_path/complete
-        mkdir -p updates/$update_path/partial
-        $retry wget --no-check-certificate -q -O $patch_type updates/$update_path/$patch_type/update.xml "${aus_server}/update/3/$update_path/update.xml?force=1"
+        mkdir -p updates/${update_path}/complete
+        mkdir -p updates/${update_path}/partial
+        $retry wget --no-check-certificate -q -O ${patch_type} updates/${update_path}/${patch_type}/update.xml "${aus_server}/update/3/${update_path}/update.xml?force=1"
 
       fi
       if [ "$runmode" == "$COMPLETE" ]
@@ -216,7 +217,11 @@ do
         fi
         source_file=`basename "$from_path"`
         target_file=`basename "$to_path"`
-        check_updates "$platform" "downloads/$source_file" "downloads/$target_file" $locale $use_old_updater $updater $mar_channel_IDs
+        diff_file="results.diff"
+        if [ -e ${diff_file} ]; then
+          rm ${diff_file}
+        fi
+        check_updates "${platform}" "downloads/${source_file}" "downloads/${target_file}" ${locale} ${use_old_updater} ${updater} ${diff_file} ${mar_channel_IDs}
         err=$?
         if [ "$err" == "0" ]; then
           continue
@@ -226,6 +231,12 @@ do
           echo "WARN: [$release $locale $patch_type] check_updates returned warning for $platform downloads/$source_file vs. downloads/$target_file: $err"
         else
           echo "FAIL: [$release $locale $patch_type] check_updates returned unknown error for $platform downloads/$source_file vs. downloads/$target_file: $err"
+        fi
+
+        if [ -s $diff_file ]; then
+          echo "Found diffs for ${patch_type} update from ${aus_server}/update/3/${update_path}/update.xml?force=1" >> $diff_summary_log
+          cat ${diff_file} >> ${diff_summary_log}
+          echo "" >> ${diff_summary_log}
         fi
       fi
     done

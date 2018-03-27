@@ -88,14 +88,26 @@ print_failed_msg()
   return 1
 }
 
+print_warning_msg()
+{
+  echo "-------------------------"
+  echo "This run has warnings, see the above log"
+  echo
+  return 2
+}
+
 set +x
 
-echo "Scanning log for failures"
-echo "-------------------------"
+echo "Scanning log for failures and warnings"
+echo "--------------------------------------"
 
 # Test for a failure, note we are set -e.
 # Grep returns 0 on a match and 1 on no match
+# Testing for failures first is important because it's OK to to mark as failed
+# when there's failures+warnings, but not OK to mark as warnings in the same
+# situation.
 ( ! grep FAIL $SCRIPTS_DIR/../verify_log.txt ) || print_failed_msg
+( ! grep WARN $SCRIPTS_DIR/../verify_log.txt ) || print_warning_msg
 
 echo "-------------------------"
 echo "All is well"
