@@ -31,7 +31,7 @@ update_platform_map = {
     'android-aarch64': ['Android_aarch64-gcc3'],
     'linux': ['Linux_x86-gcc3'],
     'linux64': ['Linux_x86_64-gcc3'],
-    'linux64-asan': ['Linux_x86_64-gcc3-asan'],
+    'linux64-asan-reporter': ['Linux_x86_64-gcc3-asan'],
     'macosx64': ['Darwin_x86_64-gcc3-u-i386-x86_64',  # The main platofrm
                  'Darwin_x86-gcc3-u-i386-x86_64',
                 # We don't ship builds with these build targets, but some users
