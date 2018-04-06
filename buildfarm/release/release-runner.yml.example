@@ -26,6 +26,14 @@ release-runner:
   ssh_key: /home/cltbld/.ssh/release-runner
   docker_worker_key: /home/cltbld/docker-worker-public.pem
 
+git:
+  github_token: asdfasdfas
+
+partners:
+  partner_urls:
+    release-eme-free-repack: https://url
+  partner_min_version: 61
+
 symlinks:
   production_config.py: "{buildbot_configs}/mozilla/localconfig.py"
   thunderbird_production_config.py: "{buildbot_configs}/mozilla/thunderbird_localconfig.py"

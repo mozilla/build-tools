@@ -4,6 +4,7 @@ Release runner to schedule action tasks (in-tree scheduling)
 """
 
 import argparse
+from copy import deepcopy
 import logging
 import os
 import re
@@ -25,6 +26,7 @@ from kickoff import (ReleaseRunner, long_revision, email_release_drivers,
 from kickoff.sanity.partials import PartialsSanitizer
 from kickoff.sanity.revisions import RevisionsSanitizer
 from kickoff.actions import generate_action_task, submit_action_task, find_decision_task_id
+from kickoff.partners import get_partner_config_by_url
 
 
 log = logging.getLogger(__name__)
@@ -120,6 +122,17 @@ def get_beta_num(version):
         return int(parts[-1])
 
 
+def is_partner_enabled(release, min_version):
+    major_version = release['version'].split('.')[0]
+    if release["product"] == "firefox" and major_version >= min_version:
+        if is_beta(release['version']):
+            if get_beta_num(release['version']) >= 8:
+                return True
+        elif not is_esr(release['version']):
+            return True
+    return False
+
+
 def main(options):
     log.info('Loading config from %s' % options.config)
 
@@ -139,6 +152,8 @@ def main(options):
     username = config['api']['username']
     password = config['api']['password']
 
+    github_token = config['git']['github_token']
+    partner_config = deepcopy(config['partners'])
     rr_config = config['release-runner']
     sleeptime = rr_config['sleeptime']
     smtp_server = rr_config.get('smtp_server', 'localhost')
@@ -211,6 +226,12 @@ def main(options):
                     # so this isn't a missing feature for RCs specifically.
                     action_task_input["release_promotion_flavor"] = "{}_rc".format(
                         action_task_input["release_promotion_flavor"]
+                    )
+            if is_partner_enabled(release, partner_config['partner_min_version']):
+                action_task_input['release_partner_config'] = {}
+                for kind, url in partner_config['partner_urls'].items():
+                    action_task_input['release_partner_config'][kind] = get_partner_config_by_url(
+                        url, kind, github_token
                     )
             action_task_id, action_task = generate_action_task(
                 project=release["branchShortName"],
