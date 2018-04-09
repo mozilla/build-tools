@@ -123,7 +123,7 @@ def get_beta_num(version):
 
 
 def is_partner_enabled(release, min_version):
-    major_version = release['version'].split('.')[0]
+    major_version = int(release['version'].split('.')[0])
     if release["product"] == "firefox" and major_version >= min_version:
         if is_beta(release['version']):
             if get_beta_num(release['version']) >= 8:
