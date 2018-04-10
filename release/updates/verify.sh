@@ -18,6 +18,7 @@ to_build_id=""
 to_app_version=""
 to_display_version=""
 diff_summary_log="$PWD/diff-summary.log"
+touch ${diff_summary_log}
 
 pushd `dirname $0` &>/dev/null
 MY_DIR=$(pwd)
