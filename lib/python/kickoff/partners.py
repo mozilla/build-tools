@@ -229,7 +229,7 @@ def get_repack_configs(repackRepo, token):
     raw_configs = query_api(query, token)
     raw_configs = raw_configs['data']['repository']['object']['entries']
 
-    configs = {repo: {}}
+    configs = {}
     for sub_config in raw_configs:
         name = sub_config['name']
         for file in sub_config['object'].get('entries', []):
