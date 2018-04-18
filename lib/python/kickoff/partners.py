@@ -237,10 +237,10 @@ def get_repack_configs(repackRepo, token):
                 continue
             configs[name] = parse_config(file['object']['text'])
     ALLOWED_KEYS = ('locales', 'upload_to_candidates', 'platforms')
-        for subpartner, sub_config in configs.items():
-            for key in sub_config.keys():
-                if key not in ALLOWED_KEYS:
-                    del(sub_config[key])
+    for subpartner, sub_config in configs.items():
+        for key in sub_config.keys():
+            if key not in ALLOWED_KEYS:
+                del(sub_config[key])
     return configs
 
 
