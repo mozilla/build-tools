@@ -32,6 +32,10 @@ if __name__ == '__main__':
         jar_keyname=None,
         jar_sigalg=None,
         jar_digestalg=None,
+        focus_jar_keystore=None,
+        focus_jar_keyname=None,
+        focus_jar_sigalg=None,
+        focus_jar_digestalg=None,
         emevoucher_key=None,
         emevoucher_chain=None,
         widevine_key=None,
@@ -60,6 +64,14 @@ if __name__ == '__main__':
                       help="which digest algorithm to use for signing jar files")
     parser.add_option("--jar_sigalg", dest="jar_sigalg",
                       help="which signature algorithm to use for signing jar files")
+    parser.add_option("--focus_jar_keystore", dest="focus_jar_keystore",
+                      help="keystore for signing Firefox Focus")
+    parser.add_option("--focus_jar_keyname", dest="focus_jar_keyname",
+                      help="which key to use from focus_jar_keystore")
+    parser.add_option("--focus_jar_digestalg", dest="focus_jar_digestalg",
+                      help="which digest algorithm to use for signing Firefox Focus")
+    parser.add_option("--focus_jar_sigalg", dest="focus_jar_sigalg",
+                      help="which signature algorithm to use for signing Firefox Focus")
     parser.add_option("--emevoucher_key", dest="emevoucher_key",
                       help="The certificate to use for signing the eme voucher")
     parser.add_option("--emevoucher_chain", dest="emevoucher_chain",
@@ -168,15 +180,23 @@ if __name__ == '__main__':
             parser.error("mac_id required when format is dmg")
         safe_unlink(tmpfile)
         dmg_signpackage(inputfile, tmpfile, options.dmg_keychain, options.mac_id, options.mac_cert_subject_ou, options.fake, passphrase)
-    elif format_ == "jar":
-        if not options.jar_keystore:
-            parser.error("jar_keystore required when format is jar")
-        if not options.jar_keyname:
-            parser.error("jar_keyname required when format is jar")
+    elif format_ in ("jar", "focus-jar"):
+        if format_ == "jar":
+            keystore, keystore_config_name, keyname, keyname_config_name, digestalg, sigalg = (
+                options.jar_keystore, "jar_keystore", options.jar_keyname, "jar_keyname",
+                options.jar_digestalg, options.jar_sigalg
+            )
+        else:
+            keystore, keystore_config_name, keyname, keyname_config_name, digestalg, sigalg = (
+                options.focus_jar_keystore, "focus_jar_keystore", options.focus_jar_keyname, "focus_jar_keystore",
+                options.focus_jar_digestalg, options.focus_jar_sigalg
+            )
+        if not keystore:
+            parser.error("%s required when format is %s" % (keystore_config_name, format_))
+        if not keyname:
+            parser.error("%s required when format is %s" % (keyname_config_name, format_))
         copyfile(inputfile, tmpfile)
-        jar_signfile(tmpfile, options.jar_keystore,
-                     options.jar_keyname, options.jar_digestalg, options.jar_sigalg,
-                     options.fake, passphrase)
+        jar_signfile(tmpfile, keystore, keyname, digestalg, sigalg, options.fake, passphrase)
     elif format_ in ("widevine", "widevine_blessed"):
         safe_unlink(tmpfile)
         if not options.widevine_key:

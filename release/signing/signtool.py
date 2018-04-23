@@ -42,7 +42,8 @@ def is_authenticode_signed(filename):
 def main():
     allowed_formats = ("sha2signcode", "sha2signcodestub", "signcode",
                        "osslsigncode", "gpg", "mar", "mar_sha384", "dmg",
-                       "dmgv2", "macapp", "jar", "emevoucher",
+                       # "jar" alone is to sign Fennec
+                       "dmgv2", "macapp", "jar", "focus-jar" "emevoucher",
                        "widevine", "widevine_blessed")
 
     from optparse import OptionParser
