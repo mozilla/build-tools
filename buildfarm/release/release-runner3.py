@@ -227,12 +227,9 @@ def main(options):
                     action_task_input["release_promotion_flavor"] = "{}_rc".format(
                         action_task_input["release_promotion_flavor"]
                     )
-            if is_partner_enabled(release, partner_config['partner_min_version']):
-                action_task_input['release_partner_config'] = {}
-                for kind, url in partner_config['partner_urls'].items():
-                    action_task_input['release_partner_config'][kind] = get_partner_config_by_url(
-                        url, kind, github_token
-                    )
+            if not is_partner_enabled(release, partner_config['partner_min_version']):
+                action_task_input['release_enable_emefree'] = False
+                action_task_input['release_enable_partners'] = False
             action_task_id, action_task = generate_action_task(
                 project=release["branchShortName"],
                 revision=release["mozillaRevision"],
