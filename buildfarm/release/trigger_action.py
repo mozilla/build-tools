@@ -18,6 +18,7 @@ from kickoff.actions import generate_action_task, submit_action_task, find_decis
 
 log = logging.getLogger(__name__)
 SUPPORTED_ACTIONS = [
+    "promote_firefox_partners",
     "publish_fennec",
     "push_devedition",
     "push_firefox",
@@ -83,6 +84,10 @@ def main():
     parser.add_argument("--release-runner-config", required=True, type=argparse.FileType('r'),
                         help="Release runner config")
     parser.add_argument("--action-flavor", required=True, choices=SUPPORTED_ACTIONS)
+    parser.add_argument("--partner-build-num", type=int, default=1,
+                        help="Specify the partner build number")
+    parser.add_argument("--partner-subset", type=str,
+                        help="Specify a comma-delimited subset of partners to repack")
     parser.add_argument("--force", action="store_true", default=False,
                         help="Submit action task without asking")
     args = parser.parse_args()
@@ -121,6 +126,12 @@ def main():
         "release_promotion_flavor": args.action_flavor,
         "previous_graph_ids": previous_graph_ids + [args.action_task_id],
     })
+    if 'partner' in args.action_flavor:
+        action_task_input.update({
+            "release_partner_build_number": args.partner_build_num,
+        })
+        if args.partner_subset:
+            action_task_input['release_partners'] = args.partner_subset.split(',')
     action_task_id, action_task = generate_action_task(
             project=project,
             revision=revision,
