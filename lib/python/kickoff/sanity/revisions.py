@@ -33,8 +33,10 @@ class RevisionsTestSuite(ReleaseSanitizerTestSuite):
         with the current one coming from release runner
         """
         log.info("Testing version display validation in tree ...")
-        # esr-hack: ensure trimming the suffix before comparing
-        version = self.version.replace("esr", "")
+        version = self.version
+        if '52.' in version:
+            # esr-hack: ensure trimming the suffix before comparing, for < esr60
+            version = self.version.replace("esr", "")
 
         try:
             display_version = make_hg_get_request(self.repo_path, self.revision,
