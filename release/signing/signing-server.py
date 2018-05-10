@@ -287,6 +287,13 @@ if __name__ == '__main__':
         curdir = os.path.abspath(os.curdir)
         pidfile = os.path.abspath(options.pidfile)
         logfile = os.path.abspath(options.logfile)
+        # Clear out loggers before daemonize to avoid having duplicates
+        # after setting up logging again. For some reason the loggers
+        # don't work after daemonizing unless we set them up again,
+        # but if we don't clear them out *before* daemonizing we end up
+        # with two handlers, leading to duplicate log messages.
+        logger = logging.getLogger()
+        logger.handlers = []
 
         daemon_ctx = daemon.DaemonContext(
             # We do our own signal handling in run()
