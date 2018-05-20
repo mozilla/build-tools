@@ -104,7 +104,7 @@ unpack_build () {
     if [ ! -z $update_settings_string ]; then
        echo "Modifying update-settings.ini"
        cat  "${update_settings_file}" | sed -e "s/^ACCEPTED_MAR_CHANNEL_IDS.*/ACCEPTED_MAR_CHANNEL_IDS=${update_settings_string}/" > "${update_settings_file}.new"
-       diff -u "{$update_settings_file}" "${update_settings_file}.new"
+       diff -u "${update_settings_file}" "${update_settings_file}.new"
        echo " "
        rm "${update_settings_file}"
        mv "${update_settings_file}.new" "${update_settings_file}"

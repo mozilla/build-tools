@@ -18,6 +18,9 @@ to_build_id=""
 to_app_version=""
 to_display_version=""
 diff_summary_log="$PWD/diff-summary.log"
+if [ -e ${diff_summary_log} ]; then
+  rm ${diff_summary_log}
+fi
 touch ${diff_summary_log}
 
 pushd `dirname $0` &>/dev/null
@@ -222,7 +225,7 @@ do
         if [ -e ${diff_file} ]; then
           rm ${diff_file}
         fi
-        check_updates "${platform}" "downloads/${source_file}" "downloads/${target_file}" ${locale} ${use_old_updater} ${updater} ${diff_file} ${mar_channel_IDs}
+        check_updates "${platform}" "downloads/${source_file}" "downloads/${target_file}" ${locale} ${use_old_updater} ${updater} ${diff_file} ${channel} ${mar_channel_IDs}
         err=$?
         if [ "$err" == "0" ]; then
           continue
@@ -234,8 +237,8 @@ do
           echo "FAIL: [$release $locale $patch_type] check_updates returned unknown error for $platform downloads/$source_file vs. downloads/$target_file: $err"
         fi
 
-        if [ -s $diff_file ]; then
-          echo "Found diffs for ${patch_type} update from ${aus_server}/update/3/${update_path}/update.xml?force=1" >> $diff_summary_log
+        if [ -s ${diff_file} ]; then
+          echo "Found diffs for ${patch_type} update from ${aus_server}/update/3/${update_path}/update.xml?force=1" >> ${diff_summary_log}
           cat ${diff_file} >> ${diff_summary_log}
           echo "" >> ${diff_summary_log}
         fi

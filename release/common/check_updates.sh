@@ -1,6 +1,6 @@
 check_updates () {
-  # called with 8 args - platform, source package, target package, update package, old updater boolean,
-  # a path to the updater binary to use for the tests, a file to write diffs to,
+  # called with 9 args - platform, source package, target package, update package, old updater boolean,
+  # a path to the updater binary to use for the tests, a file to write diffs to, the update channel,
   # and (sometimes) update-settings.ini values
   update_platform=$1
   source_package=$2
@@ -9,7 +9,8 @@ check_updates () {
   use_old_updater=$5
   updater=$6
   diff_file=$7
-  mar_channel_IDs=$8
+  channel=$8
+  mar_channel_IDs=$9
 
   # cleanup
   rm -rf source/*
@@ -35,17 +36,6 @@ check_updates () {
           ;;
       Linux_x86-gcc | Linux_x86-gcc3 | Linux_x86_64-gcc3) 
           platform_dirname=`echo $product | tr '[A-Z]' '[a-z]'`
-          ;;
-  esac
-  case `uname` in
-      Darwin)
-          binary_file_pattern='^Binary files'
-          ;;
-      MINGW*)
-          binary_file_pattern='^Files.*and.*differ$'
-          ;;
-      Linux)
-          binary_file_pattern='^Binary files'
           ;;
   esac
 
@@ -109,34 +99,14 @@ check_updates () {
   fi
   cd ../..
 
-  diff -r source/${platform_dirname} target/${platform_dirname}  > "${diff_file}"
+  ../compare-directories.py source/${platform_dirname} target/${platform_dirname}  ${channel} > "${diff_file}"
   diffErr=$?
   cat "${diff_file}"
-  grep ^Only "${diff_file}" | sed 's/^Only in \(.*\): \(.*\)/\1\/\2/' | \
-  while read to_test; do
-    if [ -d "$to_test" ]; then 
-      echo Contents of $to_test dir only in source or target
-      find "$to_test" -ls | grep -v "${to_test}$"
-    fi
-  done
-  grep "${binary_file_pattern}" "${diff_file}" > /dev/null
-  grepErr=$?
-  if [ $grepErr == 0 ]
+  if [ $diffErr == 2 ]
   then
-    echo "FAIL: binary files found in diff"
+    echo "FAIL: differences found after update"
     return 1
-  elif [ $grepErr == 1 ]
-  then
-    if [ -s "${diff_file}" ]
-    then
-      echo "WARN: non-binary files found in diff"
-      return 2
-    fi
-  else
-    echo "FAIL: unknown error from grep: $grepErr"
-    return 3
-  fi
-  if [ $diffErr != 0 ]
+  elif [ $diffErr != 0 ]
   then
     echo "FAIL: unknown error from diff: $diffErr"
     return 3
