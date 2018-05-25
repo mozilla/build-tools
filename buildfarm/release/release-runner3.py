@@ -62,6 +62,9 @@ def check_allowed_branches(release_runner, release, releases_config):
 def assign_and_check_partial_updates(release_runner, release, releases_config):
     release['partial_updates'] = get_partials(
         release_runner, release['partials'], release['product'])
+    product = release['product']
+    if product in ('thunderbird',):
+        return
     PartialsSanitizer(**release).run()
 
 
