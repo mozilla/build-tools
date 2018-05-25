@@ -27,6 +27,8 @@ SUPPORTED_ACTIONS = [
     "ship_fennec_rc",
     "ship_firefox",
     "ship_firefox_rc",
+    "push_thunderbird",
+    "ship_thunderbird",
 ]
 
 
@@ -133,8 +135,7 @@ def main():
         if args.partner_subset:
             action_task_input['release_partners'] = args.partner_subset.split(',')
     action_task_id, action_task = generate_action_task(
-            project=project,
-            revision=revision,
+            decision_task_id=decision_task_id,
             action_task_input=action_task_input,
     )
 

@@ -24,16 +24,18 @@ def fetch_actions_json(task_id):
     q.raise_for_status()
     return q.json()
 
-
-def find_decision_task_id(project, revision):
-    decision_task_route = "gecko.v2.{project}.revision.{revision}.firefox.decision".format(
-         project=project, revision=revision)
+def find_decision_task_id(trust_domain, project, revision):
+    decision_task_route = "{trust_domain}.v2.{project}.revision.{revision}.taskgraph.decision".format(
+        trust_domain=trust_domain,
+        project=project,
+        revision=revision,
+    )
     index = taskcluster.Index()
     return index.findTask(decision_task_route)["taskId"]
 
 
-def generate_action_task(project, revision, action_task_input):
-    actions = fetch_actions_json(find_decision_task_id(project, revision))
+def generate_action_task(decision_task_id, action_task_input):
+    actions = fetch_actions_json(decision_task_id)
     relpro = find_action("release-promotion", actions)
     context = copy.deepcopy(actions["variables"])  # parameters
     action_task_id = slugid.nice()

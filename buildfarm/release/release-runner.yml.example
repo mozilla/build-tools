@@ -41,6 +41,7 @@ symlinks:
 releases:
   - product: firefox
     pattern: Firefox-.*
+    trust_domain: gecko
     checks:
       - long_revision
       - l10n_changesets
@@ -52,6 +53,7 @@ releases:
       - mozilla-esr*
   - product: fennec
     pattern: Fennec-.*
+    trust_domain: gecko
     checks:
       - long_revision
       - check_allowed_branches
@@ -59,3 +61,12 @@ releases:
       - mozilla-beta
       - mozilla-release
       - mozilla-esr*
+  - product: thunderbird
+    pattern: Thunderbird-.*
+    trust_domain: comm
+    checks:
+      - long_revision
+      - check_allowed_branches
+    allowed_branches:
+      - comm-beta
+      - comm-esr*

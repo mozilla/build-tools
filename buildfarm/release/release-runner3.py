@@ -39,6 +39,14 @@ def check_and_assign_long_revision(release_runner, release, releases_config):
         release['branch'], release['mozillaRevision'])
 
 
+def get_trust_domain(releases_config, release):
+    product = release['product']
+    for entry in releases_config:
+        if entry['product'] == product:
+            return entry['trust_domain']
+    raise RuntimeError("Unknown trust-domain for product %s", product)
+
+
 def check_allowed_branches(release_runner, release, releases_config):
     product = release['product']
     branch = release['branch']
@@ -198,7 +206,10 @@ def main(options):
             revision = release["mozillaRevision"]
             # XXX we probably want to find a decision task ID for the action, and a separate
             # one for the revision-to-promote, to allow for https://trello.com/c/u6MHrz8y .
-            decision_task_id = find_decision_task_id(project, revision)
+            decision_task_id = find_decision_task_id(
+                trust_domain=get_trust_domain(config['releases'], release),
+                project=project, revision=revision,
+            )
             action_task_input = {
                 "build_number": release["buildNumber"],
                 "next_version": next_version,
@@ -231,8 +242,7 @@ def main(options):
                 action_task_input['release_enable_emefree'] = False
                 action_task_input['release_enable_partners'] = False
             action_task_id, action_task = generate_action_task(
-                project=release["branchShortName"],
-                revision=release["mozillaRevision"],
+                decision_task_id=decision_task_id,
                 action_task_input=action_task_input,
             )
             submit_action_task(queue=queue, action_task_id=action_task_id,
