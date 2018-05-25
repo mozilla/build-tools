@@ -7,13 +7,19 @@ from kickoff.sanity.base import ReleaseSanitizerTestSuite, ReleaseSanitizerRunne
 
 log = logging.getLogger(__name__)
 
-VERSION_DISPLAY_CONFIG_URI = "browser/config/version_display.txt"
+VERSION_DISPLAY_CONFIG_URI = {
+    "fennec": "browser/config/version_display.txt",
+    "firefox": "browser/config/version_display.txt",
+    "devedition": "browser/config/version_display.txt",
+    "thunderbird": "mail/config/version_display.txt",
+}
 
 
 class RevisionsTestSuite(ReleaseSanitizerTestSuite):
     def __init__(self, **kwargs):
         ReleaseSanitizerTestSuite.__init__(self, **kwargs)
         self.version = self.kwargs['version']
+        self.product = self.kwargs['product']
 
     def test_versions_repo_and_revision_check(self, result):
         """test_versions method
@@ -37,8 +43,10 @@ class RevisionsTestSuite(ReleaseSanitizerTestSuite):
         version = self.version.replace("esr", "")
 
         try:
-            display_version = make_hg_get_request(self.repo_path, self.revision,
-                                                  filename=VERSION_DISPLAY_CONFIG_URI).strip()
+            display_version = make_hg_get_request(
+                self.repo_path, self.revision,
+                filename=VERSION_DISPLAY_CONFIG_URI[self.product],
+            ).strip()
         except requests.HTTPError as err:
             err_msg = ("display_version config file not found in {path} under"
                        " {rev} revision. URL: {url}").format(
