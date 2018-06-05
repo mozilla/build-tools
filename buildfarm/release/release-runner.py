@@ -34,13 +34,10 @@ from util.file import load_config, get_config
 log = logging.getLogger(__name__)
 
 
-# Filters out Firefox Desktop and Fennec releases as they're handled
-# separately within release promotion.
+# Thunderbird ESR 52 is the only release using the old-release-runner branch
 RELEASE_PATTERNS = [
-    # all Thunderbird betas
-    r"Thunderbird-\d+\.\db\d+-build\d+",
-    # all Thunderbird non-betas
-    r"Thunderbird-\d+\.\d+(\.\d+)?-build\d+",
+    # all Thunderbird esr52 releases
+    r"Thunderbird-52\.\d+(\.\d+)?-build\d+",
 ]
 
 
