@@ -90,8 +90,8 @@ def walk_dir(path):
         all_files.extend([os.path.join(root, f) for f in files])
 
     # trim off directory prefix for easier comparison
-    all_dirs = [d.replace(path + '/', '') for d in all_dirs]
-    all_files = [f.replace(path + '/', '') for f in all_files]
+    all_dirs = [d[len(path)+1:] for d in all_dirs]
+    all_files = [f[len(path)+1:] for f in all_files]
 
     return all_dirs, all_files
 
@@ -104,14 +104,14 @@ def compare_listings(source_list, target_list, label, source_dir, target_dir):
     left_diff = obj1 - obj2
     if left_diff:
         logging.error('{} only in {}:'.format(label, source_dir))
-        for d in left_diff:
+        for d in sorted(left_diff):
             logging.error('  {}'.format(d))
         difference_found = True
 
     right_diff = obj2 - obj1
     if right_diff:
         logging.error('{} only in {}:'.format(label, target_dir))
-        for d in right_diff:
+        for d in sorted(right_diff):
             logging.error('  {}'.format(d))
         difference_found = True
 
