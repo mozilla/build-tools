@@ -44,7 +44,15 @@ def get_trust_domain(releases_config, release):
     for entry in releases_config:
         if entry['product'] == product:
             return entry['trust_domain']
-    raise RuntimeError("Unknown trust-domain for product %s", product)
+    raise RuntimeError("Unknown product %s", product)
+
+
+def get_notify_to(releases_config, release, default):
+    product = release['product']
+    for entry in releases_config:
+        if entry['product'] == product:
+            return entry.get("notify_to_announce", default)
+    raise RuntimeError("Unknown product %s", product)
 
 
 def check_allowed_branches(release_runner, release, releases_config):
@@ -170,8 +178,6 @@ def main(options):
     smtp_server = rr_config.get('smtp_server', 'localhost')
     notify_from = rr_config.get('notify_from')
     notify_to = rr_config.get('notify_to_announce')
-    if isinstance(notify_to, basestring):
-        notify_to = [x.strip() for x in notify_to.split(',')]
 
     rr = ReleaseRunner(api_root=api_root, username=username, password=password)
     tc_config = {
@@ -253,7 +259,8 @@ def main(options):
             rr.mark_as_completed(release)
             l10n_url = rr.release_l10n_api.getL10nFullUrl(release['name'])
             email_release_drivers(smtp_server=smtp_server, from_=notify_from,
-                                  to=notify_to, release=release,
+                                  to=[get_notify_to(config['releases'], release, notify_to)],
+                                  release=release,
                                   task_group_id=action_task_id, l10n_url=l10n_url)
         except Exception as exception:
             # We explicitly do not raise an error here because there's no
