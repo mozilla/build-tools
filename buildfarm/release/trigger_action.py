@@ -32,6 +32,13 @@ SUPPORTED_ACTIONS = [
 ]
 
 
+def get_trust_domain(releases_config, product):
+    for entry in releases_config:
+        if entry['product'] == product:
+            return entry['trust_domain']
+    raise RuntimeError("Unknown product %s", product)
+
+
 def get_task(task_id):
     queue = taskcluster.Queue()
     return queue.task(task_id)
@@ -117,7 +124,12 @@ def main():
     revision = parameters["head_rev"]
 
     if not decision_task_id:
-        decision_task_id = find_decision_task_id(project, revision)
+        product = args.action_flavor.split('_')[1]
+        trust_domain = get_trust_domain(release_runner_config['releases'], product)
+        decision_task_id = find_decision_task_id(
+            trust_domain=trust_domain,
+            project=project, revision=revision,
+        )
 
     previous_graph_ids = []
     if args.previous_graph_ids:
