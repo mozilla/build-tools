@@ -44,11 +44,9 @@ def generate_action_task(decision_task_id, action_task_input):
         "ownTaskId": action_task_id,
         "taskId": None,
         "task": None,
-        "taskGroupId": action_task_id,
+        "taskGroupId": decision_task_id,
     })
     action_task = jsone.render(relpro["task"], context)
-    # override ACTION_TASK_GROUP_ID, so we know the new ID in advance
-    action_task["payload"]["env"]["ACTION_TASK_GROUP_ID"] = action_task_id
     return action_task_id, action_task
 
 
