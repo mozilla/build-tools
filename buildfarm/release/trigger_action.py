@@ -39,6 +39,13 @@ def get_trust_domain(releases_config, product):
     raise RuntimeError("Unknown product %s", product)
 
 
+def get_repo_param_prefix(releases_config, product):
+    for entry in releases_config:
+        if entry['product'] == product:
+            return entry.get('repo_param_prefix', '')
+    raise RuntimeError("Unknown product %s", product)
+
+
 def get_task(task_id):
     queue = taskcluster.Queue()
     return queue.task(task_id)
@@ -119,12 +126,14 @@ def main():
     else:
         params_yaml = get_artifact_text(queue, args.action_task_id, 'public/parameters.yml')
 
+    product = args.action_flavor.split('_')[1]
+    repo_param_prefix = get_repo_param_prefix(release_runner_config['releases'], product)
+
     parameters = yaml.safe_load(params_yaml)
     project = parameters["project"]
-    revision = parameters["head_rev"]
+    revision = parameters['{}head_rev'.format(repo_param_prefix)]
 
     if not decision_task_id:
-        product = args.action_flavor.split('_')[1]
         trust_domain = get_trust_domain(release_runner_config['releases'], product)
         decision_task_id = find_decision_task_id(
             trust_domain=trust_domain,

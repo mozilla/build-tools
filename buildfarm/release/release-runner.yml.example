@@ -64,6 +64,7 @@ releases:
   - product: thunderbird
     pattern: Thunderbird-.*
     trust_domain: comm
+    repo_param_prefix: comm_
     checks:
       - long_revision
       - check_allowed_branches
