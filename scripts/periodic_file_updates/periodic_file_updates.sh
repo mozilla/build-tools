@@ -203,7 +203,7 @@ function unpack_artifacts {
 
 # gtk3 is required to run xpcshell as of Gecko 42.
 function run_tooltool {
-    sh ${SCRIPTDIR}/../tooltool/tooltool_wrapper.sh ${SCRIPTDIR}/periodic_file_updates.manifest https://api.pub.build.mozilla.org/tooltool/ setup.sh /builds/tooltool.py --authentication-file /builds/relengapi.tok
+    sh ${SCRIPTDIR}/../tooltool/tooltool_wrapper.sh ${SCRIPTDIR}/periodic_file_updates.manifest https://tooltool.mozilla-releng.net/ setup.sh /builds/tooltool.py --authentication-file /builds/relengapi.tok
     LD_LIBRARY_PATH=${BASEDIR}/gtk3/usr/local/lib
     if [ -f "${BASEDIR}/gcc/lib/libstdc++.so" ]; then
         # We put both 32-bits and 64-bits library path in LD_LIBRARY_PATH: ld.so
