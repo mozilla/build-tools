@@ -370,7 +370,7 @@
     "role": "build",
     "release_branches": ["mozilla-esr52"],
     "mobile_release_branches": [],
-    "thunderbird_release_branches": ["comm-beta", "comm-esr52"],
+    "thunderbird_release_branches": ["comm-esr52"],
     "ssh_port": 7001,
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build1/tools"
@@ -398,7 +398,7 @@
     "role": "build",
     "release_branches": ["mozilla-esr52"],
     "mobile_release_branches": [],
-    "thunderbird_release_branches": ["comm-beta", "comm-esr52"],
+    "thunderbird_release_branches": ["comm-esr52"],
     "ssh_port": 7001,
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build1/tools"
@@ -426,7 +426,7 @@
     "role": "build",
     "release_branches": ["mozilla-esr52"],
     "mobile_release_branches": [],
-    "thunderbird_release_branches": ["comm-beta", "comm-esr52"],
+    "thunderbird_release_branches": ["comm-esr52"],
     "ssh_port": 7001,
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build1/tools"
@@ -479,7 +479,7 @@
     "role": "build",
     "release_branches": ["mozilla-esr52"],
     "mobile_release_branches": [],
-    "thunderbird_release_branches": ["comm-beta", "comm-esr52"],
+    "thunderbird_release_branches": ["comm-esr52"],
     "ssh_port": 7001,
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build1/tools"
@@ -532,7 +532,7 @@
     "ssh_port": 7301,
     "release_branches": ["mozilla-esr52"],
     "mobile_release_branches": [],
-    "thunderbird_release_branches": ["comm-beta", "comm-esr52"],
+    "thunderbird_release_branches": ["comm-esr52"],
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build_scheduler/tools"
   },
@@ -583,7 +583,7 @@
     "role": "build",
     "release_branches": ["mozilla-esr52"],
     "mobile_release_branches": [],
-    "thunderbird_release_branches": ["comm-beta", "comm-esr52"],
+    "thunderbird_release_branches": ["comm-esr52"],
     "ssh_port": 7001,
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build1/tools"
@@ -636,7 +636,7 @@
     "role": "build",
     "release_branches": ["mozilla-esr52"],
     "mobile_release_branches": [],
-    "thunderbird_release_branches": ["comm-beta", "comm-esr52"],
+    "thunderbird_release_branches": ["comm-esr52"],
     "ssh_port": 7001,
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build1/tools"
@@ -664,7 +664,7 @@
     "role": "build",
     "release_branches": ["mozilla-esr52"],
     "mobile_release_branches": [],
-    "thunderbird_release_branches": ["comm-beta", "comm-esr52"],
+    "thunderbird_release_branches": ["comm-esr52"],
     "ssh_port": 7001,
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build1/tools"
@@ -692,7 +692,7 @@
     "role": "build",
     "release_branches": ["mozilla-esr52"],
     "mobile_release_branches": [],
-    "thunderbird_release_branches": ["comm-beta", "comm-esr52"],
+    "thunderbird_release_branches": ["comm-esr52"],
     "ssh_port": 7001,
     "tools_branch": "default",
     "tools_dir": "/builds/buildbot/build1/tools"
