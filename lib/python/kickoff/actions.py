@@ -6,6 +6,8 @@ import requests
 import slugid
 import taskcluster
 
+from util.retry import retry
+
 log = logging.getLogger(__name__)
 
 
@@ -20,9 +22,14 @@ def find_action(name, actions):
 def fetch_actions_json(task_id):
     queue = taskcluster.Queue()
     actions_url = queue.buildUrl("getLatestArtifact", task_id, 'public/actions.json')
-    q = requests.get(actions_url)
-    q.raise_for_status()
-    return q.json()
+
+    def _get():
+        q = requests.get(actions_url)
+        q.raise_for_status()
+        return q.json()
+
+    return retry(_get)
+
 
 def find_decision_task_id(trust_domain, project, revision):
     decision_task_route = "{trust_domain}.v2.{project}.revision.{revision}.taskgraph.decision".format(
@@ -31,7 +38,11 @@ def find_decision_task_id(trust_domain, project, revision):
         revision=revision,
     )
     index = taskcluster.Index()
-    return index.findTask(decision_task_route)["taskId"]
+
+    def _get():
+        return index.findTask(decision_task_route)["taskId"]
+
+    return retry(_get)
 
 
 def generate_action_task(decision_task_id, action_task_input):
