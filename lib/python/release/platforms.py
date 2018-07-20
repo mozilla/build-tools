@@ -40,6 +40,7 @@ update_platform_map = {
                  'Darwin_x86-gcc3', 'Darwin_x86_64-gcc3'],
     'win32': ['WINNT_x86-msvc', 'WINNT_x86-msvc-x86', 'WINNT_x86-msvc-x64'],
     'win64': ['WINNT_x86_64-msvc', 'WINNT_x86_64-msvc-x64'],
+    'win64-asan-reporter': ['WINNT_x86_64-clangcl-asan'],
 }
 
 # These FTP -> other mappings are provided so that things interpreting patcher
