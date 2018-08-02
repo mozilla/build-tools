@@ -17,19 +17,50 @@ site.addsitedir(path.join(path.dirname(__file__), "../../lib/python"))
 from kickoff.actions import generate_action_task, submit_action_task, find_decision_task_id
 
 log = logging.getLogger(__name__)
-SUPPORTED_ACTIONS = [
-    "promote_firefox_partners",
-    "publish_fennec",
-    "push_devedition",
-    "push_firefox",
-    "ship_devedition",
-    "ship_fennec",
-    "ship_fennec_rc",
-    "ship_firefox",
-    "ship_firefox_rc",
-    "push_thunderbird",
-    "ship_thunderbird",
-]
+
+
+# data structure:
+# {action_name: tuple of possible cases}
+# A case is a tuple of required actions tasks
+REQUIRED_GRAPHS_PER_SUPPORTED_ACTION = {
+    'promote_firefox_partners': (
+        ('promote_firefox_rc',),
+        ('promote_firefox',),
+    ),
+    'publish_fennec': (
+        ('promote_fennec',),
+    ),
+    'push_devedition': (
+        ('promote_devedition',),
+    ),
+    'push_firefox': (
+        ('ship_firefox_rc', 'promote_firefox_rc',),
+        ('promote_firefox',),
+    ),
+    'ship_devedition': (
+        ('push_devedition', 'promote_devedition',),
+    ),
+    'ship_fennec': (
+        ('promote_fennec',),
+    ),
+    'ship_fennec_rc': (
+        ('ship_fennec_rc', 'promote_fennec',),   # There is no promote_fennec_rc
+        ('promote_fennec',),
+    ),
+    'ship_firefox': (
+        ('push_firefox', 'ship_firefox_rc', 'promote_firefox_rc',),
+        ('push_firefox', 'promote_firefox',),
+    ),
+    'ship_firefox_rc': (
+        ('promote_firefox_rc',),
+    ),
+    'push_thunderbird': (
+        ('promote_thunderbird',),
+    ),
+    'ship_thunderbird': (
+        ('push_thunderbird', 'promote_thunderbird',),
+    ),
+}
 
 
 def get_trust_domain(releases_config, product):
@@ -80,6 +111,36 @@ def get_artifact_text(queue, task_id, path):
     return r.text
 
 
+def get_release_flavors_of_previous_graphs(action_task_id, previous_graph_ids):
+    all_previous_graphs = [action_task_id] + previous_graph_ids
+
+    log.info('Fetching task definitions of: {}'.format(all_previous_graphs))
+    all_tasks_definitions_per_task_id = {task_id: get_task(task_id) for task_id in all_previous_graphs}
+    all_flavors_per_task_id = {
+        task_id: task_def.get('extra', {}).get('action', {}).get('context', {}).get('input', {})\
+        .get('release_promotion_flavor', None)
+        for task_id, task_def in all_tasks_definitions_per_task_id.items()
+    }
+    return {
+        task_id: flavor
+        for task_id, flavor in all_flavors_per_task_id.items()
+        if flavor is not None
+    }
+
+
+def check_required_previous_graphs_are_present(action_flavor, flavors_per_task_id):
+    required_flavors_cases = REQUIRED_GRAPHS_PER_SUPPORTED_ACTION[action_flavor]
+    for required_flavors in required_flavors_cases:
+        if all(flavor in flavors_per_task_id.values() for flavor in required_flavors):
+            log.info('Found all expected previous graphs for action "{}": "{}"'.format(action_flavor, required_flavors))
+            return
+
+    raise Exception('Previous graphs could not match any of the expected ones. Expected: {}. Given: {}'
+        .format(required_flavors_cases, flavors_per_task_id)
+    )
+
+
+
 def main():
     logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s",
                         level=logging.INFO)
@@ -99,7 +160,7 @@ def main():
                         help="Override previous graphs.")
     parser.add_argument("--release-runner-config", required=True, type=argparse.FileType('r'),
                         help="Release runner config")
-    parser.add_argument("--action-flavor", required=True, choices=SUPPORTED_ACTIONS)
+    parser.add_argument("--action-flavor", required=True, choices=REQUIRED_GRAPHS_PER_SUPPORTED_ACTION.keys())
     parser.add_argument("--partner-build-num", type=int, default=1,
                         help="Specify the partner build number")
     parser.add_argument("--partner-subset", type=str,
@@ -145,6 +206,10 @@ def main():
         previous_graph_ids.extend(args.previous_graph_ids.split(','))
     if decision_task_id not in previous_graph_ids:
         previous_graph_ids.insert(0, decision_task_id)
+
+    flavors_per_task_id = get_release_flavors_of_previous_graphs(args.action_task_id, previous_graph_ids)
+    check_required_previous_graphs_are_present(args.action_flavor, flavors_per_task_id)
+
     action_task_input.update({
         "release_promotion_flavor": args.action_flavor,
         "previous_graph_ids": previous_graph_ids + [args.action_task_id],
