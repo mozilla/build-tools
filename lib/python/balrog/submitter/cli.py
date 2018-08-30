@@ -40,10 +40,8 @@ class ReleaseCreatorBase(object):
         self.auth = auth
         self.suffix = suffix
         self.from_suffix = from_suffix
-        if dummy and not suffix:
-            self.suffix = "-dummy"
-        else:
-            self.suffix = suffix
+        if dummy:
+            self.suffix += "-dummy"
         self.complete_mar_filename_pattern = complete_mar_filename_pattern or '%s-%s.complete.mar'
         self.complete_mar_bouncer_product_pattern = complete_mar_bouncer_product_pattern or '%s-%s-complete'
 
@@ -273,10 +271,8 @@ class ReleaseCreatorV9(ReleaseCreatorFileUrlsMixin):
         self.auth = auth
         self.suffix = suffix
         self.from_suffix = from_suffix
-        if dummy and not suffix:
-            self.suffix = "-dummy"
-        else:
-            self.suffix = suffix
+        if dummy:
+            self.suffix += "-dummy"
         self.complete_mar_filename_pattern = complete_mar_filename_pattern or '%s-%s.complete.mar'
         self.complete_mar_bouncer_product_pattern = complete_mar_bouncer_product_pattern or '%s-%s-complete'
 
@@ -505,10 +501,9 @@ class ReleaseSubmitterBase(object):
     def __init__(self, api_root, auth, dummy=False, suffix="", from_suffix=""):
         self.api_root = api_root
         self.auth = auth
-        if dummy and not suffix:
-            self.suffix = "-dummy"
-        else:
-            self.suffix = suffix
+        self.suffix = suffix
+        if dummy:
+            self.suffix += "-dummy"
         self.from_suffix = from_suffix
 
     def run(self, platform, productName, appVersion, version, build_number, locale,
@@ -588,10 +583,9 @@ class ReleaseSubmitterV9(MultipleUpdatesReleaseMixin):
     def __init__(self, api_root, auth, dummy=False, suffix="", from_suffix=""):
         self.api_root = api_root
         self.auth = auth
-        if dummy and not suffix:
-            self.suffix = "-dummy"
-        else:
-            self.suffix = suffix
+        self.suffix = suffix
+        if dummy:
+            self.suffix += "-dummy"
         self.from_suffix = from_suffix
 
     def run(self, platform, productName, appVersion, version, build_number, locale,
@@ -626,10 +620,9 @@ class ReleasePusher(object):
     def __init__(self, api_root, auth, dummy=False, suffix=""):
         self.api_root = api_root
         self.auth = auth
-        if dummy and not suffix:
-            self.suffix = "-dummy"
-        else:
-            self.suffix = suffix
+        self.suffix = suffix
+        if dummy:
+            self.suffix += "-dummy"
 
     def run(self, productName, version, build_number, rule_ids, backgroundRate=None):
         name = get_release_blob_name(productName, version, build_number,
@@ -646,10 +639,9 @@ class ReleaseScheduler(object):
     def __init__(self, api_root, auth, dummy=False, suffix=""):
         self.api_root = api_root
         self.auth = auth
-        if dummy and not suffix:
+        self.suffix = suffix
+        if dummy:
             self.suffix = "-dummy"
-        else:
-            self.suffix = suffix
 
     def run(self, productName, version, build_number, rule_ids, when=None, backgroundRate=None):
         name = get_release_blob_name(productName, version, build_number,
