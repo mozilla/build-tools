@@ -20,7 +20,7 @@ done
 # strip out dos line returns from header if they occur
 # note: below, using $(printf '\r') for Darwin compatibility, rather than simple '\r'
 # (i.e. shell interprets '\r' rather than sed interpretting '\r')
-mar_actual_size="$(sed -e "s/$(printf '\r')//" -n -e 's/^Content-Range: bytes 0-2\///p' "${mar_headers_file}" | tail -1)"
+mar_actual_size="$(sed -e "s/$(printf '\r')//" -n -e 's/^Content-Range: bytes 0-2\///ip' "${mar_headers_file}" | tail -1)"
 mar_actual_url="$(sed -e "s/$(printf '\r')//" -n -e 's/^Location: //p' "${mar_headers_file}" | tail -1)"
 # note: below, sed -n '/^HTTP\//p' acts as grep '^HTTP/', but requires less overhead as sed already running
 http_response_code="$(sed -e "s/$(printf '\r')//" -n -e '/^HTTP\//p' "${mar_headers_file}" | tail -1)"
