@@ -40,10 +40,10 @@ REQUIRED_GRAPHS_PER_SUPPORTED_ACTION = {
     'ship_devedition': (
         ('push_devedition', 'promote_devedition',),
     ),
-    'ship_fennec': (
+    'ship_fennec_rc': (
         ('promote_fennec',),
     ),
-    'ship_fennec_rc': (
+    'ship_fennec': (
         ('ship_fennec_rc', 'promote_fennec',),   # There is no promote_fennec_rc
         ('promote_fennec',),
     ),
