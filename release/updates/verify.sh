@@ -17,6 +17,7 @@ to=""
 to_build_id=""
 to_app_version=""
 to_display_version=""
+override_certs=""
 diff_summary_log="$PWD/diff-summary.log"
 if [ -e ${diff_summary_log} ]; then
   rm ${diff_summary_log}
@@ -27,6 +28,11 @@ pushd `dirname $0` &>/dev/null
 MY_DIR=$(pwd)
 popd &>/dev/null
 retry="$MY_DIR/../../buildfarm/utils/retry.py -s 1 -r 3"
+cert_replacer="$MY_DIR/../replace-updater-certs.py"
+
+dep_overrides="nightly_aurora_level3_primary.der dep1.der nightly_aurora_level3_secondary.der dep2.der release_primary.der dep1.der release_secondary.der dep2.der"
+nightly_overrides="dep1.der nightly_aurora_level3_primary.der dep2.der nightly_aurora_level3_secondary.der release_primary.der nightly_aurora_level3_primary.der release_secondary.der nightly_aurora_level3_secondary.der"
+release_overrides="dep1.der release_primary.der dep2.der release_secondary.der nightly_aurora_level3_primary.der release_primary.der nightly_aurora_level3_secondary.der release_secondary.der"
 
 runmode=0
 config_file="updates.cfg"
@@ -205,6 +211,28 @@ do
                 break
             fi
         done
+
+        if [ ! -z "$override_certs" ]; then
+            echo "Replacing certs in updater binary"
+            cp "${updater}" "${updater}.orig"
+            case ${override_certs} in
+              dep)
+                overrides=${dep_overrides}
+                ;;
+              nightly)
+                overrides=${nightly_overrides}
+                ;;
+              release)
+                overrides=${release_overrides}
+                ;;
+              *)
+                echo "Unknown override cert - skipping"
+                ;;
+            esac
+            python "${cert_replacer}" "${MY_DIR}/../mar_certs" "${updater}.orig" "${updater}" ${overrides}
+        else
+            echo "override_certs is '${override_certs}', not replacing any certificates"
+        fi
 
         if [ "$updater" == "null" ]; then
             echo "Couldn't find updater binary"
