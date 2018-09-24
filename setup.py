@@ -17,27 +17,6 @@ setup(
 
     test_suite='mozilla_buildtools.test',
 
-    install_requires=[
-        'sqlalchemy',
-        'argparse',
-        'Twisted==10.1.0',
-        'simplejson',
-        'furl',
-        'requests',
-        'docopt',
-        'python-dateutil',
-        'jinja2',
-        'redo',
-    ],
-
-    entry_points={
-        'console_scripts': [
-            'slavealloc = slavealloc.scripts.main:main'
-        ],
-    },
-
-    scripts=["buildfarm/maintenance/reboot-idle-slaves.py"],
-
     # include files listed in MANIFEST.in
     include_package_data=True,
 )
