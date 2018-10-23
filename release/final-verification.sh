@@ -262,7 +262,7 @@ update_xml_urls="$(mktemp -t update_xml_urls.XXXXXXXXXX)"
 # generate full list of update.xml urls, followed by patch types,
 # as defined in the specified config files - and write into "${update_xml_urls}" file
 aus_server="https://aus5.mozilla.org"
-for cfg_file in "${configs}"
+for cfg_file in "${configs[@]}"
 do
     line_no=0
     sed -e 's/localtest/cdntest/' "${cfg_file}" | while read config_line
@@ -283,11 +283,21 @@ done > "${update_xml_urls}"
 
 # download update.xml files and grab the mar urls from downloaded file for each patch type required
 cat "${update_xml_urls}" | cut -f1-2 -d' ' | sort -u | xargs -n2 "-P${MAX_PROCS}" ../get-update-xml.sh
+if [ "$?" != 0 ]; then
+    flush_logs
+    log "Error generating update requests"
+    exit 70
+fi
 
 flush_logs
 
 # download http header for each mar url
 find "${TMPDIR}" -name 'update_xml_to_mar.*' -type f | xargs cat | cut -f1-2 -d' ' | sort -u | xargs -n2 "-P${MAX_PROCS}" ../test-mar-url.sh
+if [ "$?" != 0 ]; then
+    flush_logs
+    log "Error HEADing mar urls"
+    exit 71
+fi
 
 flush_logs
 
