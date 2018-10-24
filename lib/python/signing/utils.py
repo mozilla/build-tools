@@ -580,7 +580,7 @@ def shouldSign(filename, platform='win32'):
         if b.endswith('.app'):
             return True
     elif platform in ('win32', 'win64'):
-        if ext in ('.dll', '.exe') and not any(fnmatch.fnmatch(b, p) for p in _dont_sign):
+        if ext in ('.dll', '.exe', '.msi') and not any(fnmatch.fnmatch(b, p) for p in _dont_sign):
             return True
     else:
         # We should never get here.
