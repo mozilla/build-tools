@@ -4,9 +4,6 @@ from os import path
 import re
 import shutil
 import sys
-from urllib2 import urlopen
-
-from release.paths import makeCandidatesDir
 
 import logging
 log = logging.getLogger(__name__)
@@ -18,23 +15,6 @@ FINAL_RELEASE_REGEX = "^\d+\.\d+$"
 
 class ConfigError(Exception):
     pass
-
-
-def getBuildID(platform, product, version, buildNumber, nightlyDir='nightly',
-               server='stage.mozilla.org'):
-    infoTxt = makeCandidatesDir(product, version, buildNumber, nightlyDir,
-                                protocol='http', server=server) + \
-        '%s_info.txt' % platform
-    try:
-        buildInfo = urlopen(infoTxt).read()
-    except:
-        log.error("Failed to retrieve %s" % infoTxt)
-        raise
-
-    for line in buildInfo.splitlines():
-        key, value = line.rstrip().split('=', 1)
-        if key == 'buildID':
-            return value
 
 
 def getReleaseConfigName(product, branch, version, staging=False):
@@ -191,7 +171,3 @@ def fileInfo(filepath, product):
             raise ValueError("Unknown filetype for %s" % filepath)
 
         return ret
-
-
-def getProductDetails(product, appVersion):
-    return 'https://www.mozilla.org/%%LOCALE%%/%s/%s/releasenotes/' % (product, appVersion)
