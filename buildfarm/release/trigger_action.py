@@ -106,7 +106,7 @@ def requests_retry_session(
 def get_artifact_text(queue, task_id, path):
     """Retries download + returns the contents of the artifact"""
     url = unquote(queue.buildUrl('getLatestArtifact', task_id, path))
-    r = requests_retry_session().get(url, timeout=5)
+    r = requests_retry_session().get(url, timeout=60)
     r.raise_for_status()
     return r.text
 
