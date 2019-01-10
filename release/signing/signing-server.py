@@ -208,7 +208,7 @@ if __name__ == '__main__':
     # anything past here should only be done as user cltsign, remove
     # footgun
     if getpass.getuser() != 'cltsign':
-        log.error("Must run as user 'cltsign' for remaining actions")
+        print("Must run as user 'cltsign' for remaining actions")
         sys.exit(1)
 
     config = load_config(args[0])
