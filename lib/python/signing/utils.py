@@ -87,13 +87,13 @@ def osslsigncode_signfile(inputfile, outputfile, keydir, fake=False, passphrase=
     args = [
         '-certs', '%s/MozAuthenticode.spc' % keydir,
         '-key', '%s/MozAuthenticode.pvk' % keydir,
-        '-i', 'http://www.mozilla.com',
-        '-h', 'sha1',
+        '-i', 'https://www.mozilla.com',
+        '-h', 'sha2',
         '-in', inputfile,
         '-out', outputfile,
     ]
     if timestamp:
-        args.extend(['-t', 'http://timestamp.verisign.com/scripts/timestamp.dll'])
+        args.extend(['-ts', 'http://timestamp.digicert.com'])
     # requires osslsigncode >= 1.6
     if includedummycert:
         args.extend(['-ac', '%s/StubDummy.cert' % keydir])
