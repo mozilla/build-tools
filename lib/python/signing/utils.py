@@ -19,66 +19,25 @@ MAC_DESIGNATED_REQUIREMENTS = """\
 """
 
 
-def signfile(filename, keydir, fake=False, passphrase=None, timestamp=True):
-    """Perform authenticode signing on the given file with keys in keydir.
+def osslsigncode_signfile(inputfile, outputfile, keydir, fake=False,
+                          passphrase=None, timestamp='rfc3161', digest='sha2',
+                          includedummycert=False):
+    """
+    Perform Authenticode signing on "inputfile", writing a signed version to
+    "outputfile". includedummycert controls the inclusion of the extra cert
+    from bug 1261140, intended for stub installers only.
 
     If passphrase is set, it will be sent as stdin to the process.
 
     If fake is True, then don't actually sign anything, just sleep for a
     second to simulate signing time.
 
-    If timestamp is True, then a signed timestamp will be included with the
+    If timestamp is 'rfc3161', then an RFC3161 timestamp will be included with
+    the signature.  If timestamp is True, then an old style timestamp will be
+    included with the signature.
+
+    digest should be set to 'sha1' or 'sha2', and defaults to 'sha2'.
     signature."""
-    if fake:
-        time.sleep(1)
-        return
-    basename = os.path.basename(filename)
-    dirname = os.path.dirname(filename)
-    stdout = tempfile.TemporaryFile()
-    command = ['signcode',
-               '-spc', '%s/MozAuthenticode.spc' % keydir,
-               '-v', '%s/MozAuthenticode.pvk' % keydir,
-               ]
-    if timestamp:
-        command.extend(
-            ['-t', 'http://timestamp.verisign.com/scripts/timestamp.dll'])
-    command.extend([
-        '-i', 'http://www.mozilla.com',
-        '-a', 'sha1',
-        # Try 5 times, and wait 60 seconds between tries
-        '-tr', '5',
-        '-tw', '60',
-        basename])
-    try:
-        log.debug("Running %s", command)
-        proc = Popen(
-            command, cwd=dirname, stdout=stdout, stderr=STDOUT, stdin=PIPE)
-        if passphrase:
-            proc.stdin.write(passphrase)
-        proc.stdin.close()
-        if proc.wait() != 0:
-            raise ValueError("signcode didn't return with 0")
-        stdout.seek(0)
-        data = stdout.read()
-        # Make sure that the command output "Succeeded".  Sometimes signcode
-        # returns with 0, but doesn't output "Succeeded", which in the past has
-        # meant that the file has been signed, but is missing a timestmap.
-        if data.strip() != "Succeeded" and "Success" not in data:
-            raise ValueError("signcode didn't report success")
-    except:
-        stdout.seek(0)
-        data = stdout.read()
-        log.exception(data)
-        raise
-
-
-def osslsigncode_signfile(inputfile, outputfile, keydir, fake=False, passphrase=None,
-                          timestamp=None, includedummycert=False):
-    """Perform Authenticode signing on "inputfile", writing a signed version
-    to "outputfile". includedummycert controls the inclusion of the extra cert from bug
-    1261140, intended for stub installers only. See signfile() for a description
-    of other arguments.
-    """
     if fake:
         time.sleep(1)
         return
@@ -88,12 +47,14 @@ def osslsigncode_signfile(inputfile, outputfile, keydir, fake=False, passphrase=
         '-certs', '%s/MozAuthenticode.spc' % keydir,
         '-key', '%s/MozAuthenticode.pvk' % keydir,
         '-i', 'https://www.mozilla.com',
-        '-h', 'sha2',
+        '-h', digest,
         '-in', inputfile,
         '-out', outputfile,
     ]
-    if timestamp:
+    if timestamp == 'rfc3161':
         args.extend(['-ts', 'http://timestamp.digicert.com'])
+    elif timestamp:
+        args.extend(['-t', 'http://timestamp.verisign.com/scripts/timestamp.dll'])
     # requires osslsigncode >= 1.6
     if includedummycert:
         args.extend(['-ac', '%s/StubDummy.cert' % keydir])
@@ -147,41 +108,6 @@ I am ur signature!
             raise ValueError("gpg didn't return 0")
         stdout.seek(0)
         data = stdout.read()
-    except:
-        stdout.seek(0)
-        data = stdout.read()
-        log.exception(data)
-        raise
-
-
-def emevoucher_signfile(inputfile, outputfile, key, chain, fake=False, passphrase=None):
-    """Perform SMIME signing on "inputfile", writing a signed version
-    to "outputfile", using passed in "key". This is necessary for the EME voucher.
-
-    If fake is True, generate a fake signature and sleep for a bit.
-
-    If passphrase is set, it will be passed to gpg on stdin
-    """
-    if fake:
-        time.sleep(1)
-        return
-
-    stdout = tempfile.TemporaryFile()
-    args = ['smime', '-sign', '-in', inputfile,
-            '-out', outputfile, '-signer', key,
-            '-certfile', chain,
-            '-md', 'sha256', '-binary', '-nodetach',
-            '-outform', 'DER']
-
-    try:
-        import pexpect
-        proc = pexpect.spawn("openssl", args)
-        # We use logfile_read because we only want stdout/stderr, _not_ stdin.
-        proc.logfile_read = stdout
-        proc.expect('Enter pass phrase')
-        proc.sendline(passphrase)
-        if proc.wait() != 0:
-            raise ValueError("openssl didn't return 0")
     except:
         stdout.seek(0)
         data = stdout.read()

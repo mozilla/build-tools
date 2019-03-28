@@ -26,12 +26,10 @@ min_filesize = 10
 max_filesize_gpg = 524288000
 max_filesize_dmg = 52428800
 max_filesize_mar = 52428800
-max_filesize_mar_sha384 = 52428800
-max_filesize_signcode = 52428800
-max_filesize_osslsigncode = 52428800
 max_filesize_sha2signcode = 52428800
 max_filesize_sha2signcodestub = 52428800
-max_filesize_emevoucher = 52428800
+max_filesize_sha2signcode-v2 = 52428800
+max_filesize_sha2signcodestub-v2 = 52428800
 max_filesize_widevine = 52428800
 max_filesize_widevine_blessed = 52428800
 # Secret for signing tokens. This should be kept private!
@@ -59,7 +57,7 @@ unsigned_dir = unsigned-files
 
 [signing]
 # What signing formats we support
-formats = mar,mar_sha384,gpg,sha2signcode,sha2signcodestub,signcode,osslsigncode,emevoucher,widevine,widevine_blessed,jar,focus-jar
+formats = mar,gpg,sha2signcode,sha2signcodestub,sha2signcode-v2,sha2signcodestub-v2,widevine,widevine_blessed
 # Which script to run to sign files
 signscript = python ./signscript.py -c signing.ini
 # How many files to sign at once
@@ -67,39 +65,23 @@ concurrency = 4
 # Test files for the various signing formats
 # signscript will be run on each of these on startup to test that passphrases
 # have been entered correctly
-testfile_signcode = test.exe
-testfile_osslsigncode = test64.exe
 testfile_sha2signcode = test.exe
 testfile_sha2signcodestub = test.exe
+testfile_sha2signcode-v2 = test.exe
+testfile_sha2signcodestub-v2 = test.exe
 testfile_mar = test.mar
-testfile_mar_sha384 = test.mar
 testfile_gpg = test.mar
-testfile_emevoucher = test.bin
 testfile_widevine = test.tar.gz
 testfile_widevine_blessed = test.exe
 
 [signscript]
 # Various settings for signscript. signing-server.py doesn't look in here
 # Where are MozAuthenticode.{pvk,spc} located
-signcode_keydir = /path/to/keys
-osslsigncode_keydir = /path/to/keys
 sha2signcode_keydir = /path/to/keys
 # Where is the gpg directory with our private key
 gpg_homedir = /path/to/.gpg
-jar_keystore = /path/to/jar/keystore
-jar_keyname = some-name
-jar_digestalg = SHA1
-jar_sigalg = SHA1withRSA
-focus_jar_keystore = /path/to/jar/keystore
-focus_jar_keyname = some-name
-focus_jar_digestalg = SHA-256
-focus_jar_sigalg = SHA256withRSA
-# Where is the eme voucher private key
-emevoucher_key = /path/to/cert.pem
-emevoucher_chain = /path/to/chain.pem
 # How to run mar
 mar_cmd = /path/to/signmar -d /path/to/nsscerts -n keyname -s
-mar_sha384_cmd = /path/to/signmar-sha384 -d /path/to/nsscerts -n keyname -s
 # widevine info
 widevine_key = /path/to/key.pem
 widevine_cert = /path/to/cert.der
