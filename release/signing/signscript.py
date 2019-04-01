@@ -10,7 +10,7 @@ import logging
 import sys
 
 from util.file import copyfile, safe_unlink
-from signing.utils import shouldSign, signfile, osslsigncode_signfile
+from signing.utils import shouldSign, osslsigncode_signfile
 from signing.utils import gpg_signfile, mar_signfile, dmg_signpackage
 from signing.utils import widevine_signfile
 

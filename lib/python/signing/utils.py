@@ -174,42 +174,6 @@ def jar_unsignfile(filename):
         raise ValueError("Couldn't remove previous signature")
 
 
-def jar_signfile(filename, keystore, keyname, digestalg, sigalg, fake=False, passphrase=None):
-    """Sign a jar file
-    """
-    # unsign first
-    jar_unsignfile(filename)
-    command = [
-        "jarsigner",
-        "-keystore", keystore,
-        "-digestalg", digestalg,
-        "-sigalg", sigalg,
-        filename
-    ]
-    if keyname:
-        command.append(keyname)
-    stdout = tempfile.TemporaryFile()
-    try:
-        log.debug("running %s", command)
-        proc = Popen(command, stdout=stdout, stderr=STDOUT, stdin=PIPE)
-        if passphrase:
-            passphrases = passphrase.split(' ')
-            for p in passphrases:
-                proc.stdin.write(p)
-                proc.stdin.write("\n")
-        proc.stdin.close()
-        if proc.wait() != 0:
-            stdout.seek(0)
-            data = stdout.read()
-            log.error("jarsigner output: %s", data)
-            raise ValueError("jarsigner didn't return 0")
-    except:
-        stdout.seek(0)
-        data = stdout.read()
-        log.exception(data)
-        raise
-
-
 def get_bundle_executable(appdir):
     """Return the CFBundleIdentifier from a Mac application."""
     import plistlib
